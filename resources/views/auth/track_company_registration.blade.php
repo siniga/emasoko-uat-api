@@ -54,7 +54,7 @@
                                         </div><br />
                                     @elseif(session()->get('danger'))
                                         <div class="alert alert-danger">
-                                            {{ session()->get('danger') }}
+                                            {!! session()->get('danger') !!}
                                         </div><br />
                                     @endif
 

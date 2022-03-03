@@ -15,6 +15,41 @@
     @section('content')
         <div class="account-pages my-5 pt-sm-5">
             <div class="container">
+                <div class="row justify-content-center mt-4">
+                    <div class="col-lg-9 col-md-9">
+                        <!-- Header Start -->
+                        <div class="header">
+                            <div class="row">
+                                <div class="col-md-1"></div>
+                                <!--./col-md-1 -->
+
+                                <div class="col-md-2">
+                                    <div id="top-img">
+                                        <a href="{{ route('login') }}">
+                                            <img src="{{ asset('/assets/images/lainalogo.png') }}" />
+                                        </a>
+                                    </div>
+                                    <!--./img -->
+                                </div>
+                                <!--./col-md-2 -->
+                                <div class="col-md-8">
+                                    <div id="top-content">
+                                        <h1>eMakato</h1>
+                                        <h3>Company Registration</h3>
+                                    </div>
+                                    <!--./top-content -->
+                                </div>
+                                <!--./col-md-8 -->
+                                <div class="col-md-1"></div>
+                                <!--./col-md-1 -->
+                            </div>
+                            <!--./row -->
+                        </div><!-- Header End -->
+                    </div>
+                    <!--./col -->
+                </div>
+                <!--./row -->
+
                 <div class="row justify-content-center">
                     <div class="col-md-12 col-lg-12 col-xl-12">
                         <div class="card overflow-hidden">
@@ -34,85 +69,169 @@
                                         </div>
                                         <!--./row -->
 
-                                        <div class="row">
-                                            <div class="col-lg-4">
-                                                <div class="mb-3">
-                                                    <label for="basicpill-namecard-input">Account Category <span
-                                                            class="text-danger">*</span></label>
-                                                    @php
-                                                        $account_type_options = [];
-                                                        $options = [];
-                                                    @endphp
-                                                    @foreach ($account_types as $val)
+                                        @if ($company->partnerAccounts->isNotEmpty())
+                                            @foreach ($company->partnerAccounts as $data)
+                                                <div class="row">
+                                                    <div class="col-lg-4">
+                                                        <div class="mb-3">
+                                                            <label>Account Category <span
+                                                                    class="text-danger">*</span></label>
+                                                            @php
+                                                                $account_type_options = [];
+                                                                $options = [];
+                                                            @endphp
+                                                            @foreach ($account_types as $val)
+                                                                @php
+                                                                    $options[$val->id] = $val->name;
+                                                                @endphp
+                                                            @endforeach
+                                                            @php
+                                                                $account_type_options = $options;
+                                                                $options = ['' => 'Select'] + $options;
+                                                            @endphp
+
+                                                            {{ Form::select('account_type_id[]', $options, old('account_type_id[]', $data->account_type_id), ['class' => 'form-control account_type_id','id' => 'account_type_id','required']) }}
+                                                            <span class="text-danger"></span>
+                                                        </div>
+                                                    </div>
+                                                    <!--./col -->
+
+                                                    <div class="col-lg-4">
+                                                        <div class="mb-3">
+                                                            <label>Account Type <span
+                                                                    class="text-danger">*</span></label>
+                                                            @php $options = []; @endphp
+                                                            @foreach ($accounts as $val)
+                                                                @php
+                                                                    $options[$val->id] = $val->name;
+                                                                @endphp
+                                                            @endforeach
+                                                            @php
+                                                                $account_options = $options;
+                                                                $options = ['' => 'Select'] + $options;
+                                                                
+                                                            @endphp
+
+                                                            {{ Form::select('account_id[]', $options, old('account_id[]', $data->account_id), ['class' => 'form-control account_id','id' => 'account_id','required']) }}
+                                                            <span class="text-danger"></span>
+                                                        </div>
+                                                    </div>
+                                                    <!--./col -->
+
+                                                    <div class="col-lg-4">
+                                                        <div class="mb-3">
+                                                            <label>Account Name <span
+                                                                    class="text-danger">*</span></label>
+                                                            {{ Form::text('account_name[]', old('account_name[]', $data->account_name), ['class="form-control"','placeholder="Write account name..."','required']) }}
+                                                            <span class="text-danger"></span>
+                                                        </div>
+                                                    </div>
+                                                    <!--./col -->
+
+                                                    <div class="col-lg-4">
+                                                        <div class="mb-3">
+                                                            <label>Account Number <span
+                                                                    class="text-danger">*</span></label>
+                                                            {{ Form::text('account_number[]', old('account_number[]', $data->account_number), ['class="form-control"','placeholder="Write account number..."','required']) }}
+                                                            <span class="text-danger"></span>
+                                                        </div>
+                                                    </div>
+                                                    <!--./col -->
+
+                                                    <div class="col-lg-8">
+                                                        <div class="mt-4 pt-2 text-sm-end d-none d-sm-block">
+                                                            <button type="button" name="add" id="remove_button"
+                                                                class="btn btn-danger btn-sm text-medium">
+                                                                <i class="fa fa-times"></i>
+                                                            </button>
+                                                        </div>
+                                                        <!--./pull-right -->
+                                                    </div>
+                                                    <!--./col-lg-12 -->
+                                                </div>
+                                                <!--./row -->
+                                            @endforeach
+                                        @else
+                                            <div class="row">
+                                                <div class="col-lg-4">
+                                                    <div class="mb-3">
+                                                        <label for="basicpill-namecard-input">Account Category <span
+                                                                class="text-danger">*</span></label>
                                                         @php
-                                                            $options[$val->id] = $val->name;
+                                                            $account_type_options = [];
+                                                            $options = [];
                                                         @endphp
-                                                    @endforeach
-                                                    @php
-                                                        $account_type_options = $options;
-                                                        $options = ['' => 'Select'] + $options;
-                                                    @endphp
-
-                                                    {{ Form::select('account_type_id[]', $options, old('account_type_id[]'), ['class' => 'form-control account_type_id','id' => 'account_type_id','required']) }}
-                                                    <span class="text-danger"></span>
-                                                </div>
-                                            </div>
-                                            <!--./col -->
-
-                                            <div class="col-lg-4">
-                                                <div class="mb-3">
-                                                    <label for="basicpill-namecard-input">Account Type <span
-                                                            class="text-danger">*</span></label>
-                                                    @php $options = []; @endphp
-                                                    @foreach ($accounts as $val)
+                                                        @foreach ($account_types as $val)
+                                                            @php
+                                                                $options[$val->id] = $val->name;
+                                                            @endphp
+                                                        @endforeach
                                                         @php
-                                                            $options[$val->id] = $val->name;
+                                                            $account_type_options = $options;
+                                                            $options = ['' => 'Select'] + $options;
                                                         @endphp
-                                                    @endforeach
-                                                    @php
-                                                        $account_options = $options;
-                                                        $options = ['' => 'Select'] + $options;
-                                                        
-                                                    @endphp
 
-                                                    {{ Form::select('account_id[]', $options, old('account_id[]'), ['class' => 'form-control account_id','id' => 'account_id','required']) }}
-                                                    <span class="text-danger"></span>
+                                                        {{ Form::select('account_type_id[]', $options, old('account_type_id[]'), ['class' => 'form-control account_type_id','id' => 'account_type_id','required']) }}
+                                                        <span class="text-danger"></span>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <!--./col -->
+                                                <!--./col -->
 
-                                            <div class="col-lg-4">
-                                                <div class="mb-3">
-                                                    <label for="basicpill-namecard-input">Account Name <span
-                                                            class="text-danger">*</span></label>
-                                                    {{ Form::text('account_name[]', old('account_name[]'), ['class="form-control"','placeholder="Write account name..."','required']) }}
-                                                    <span class="text-danger"></span>
-                                                </div>
-                                            </div>
-                                            <!--./col -->
+                                                <div class="col-lg-4">
+                                                    <div class="mb-3">
+                                                        <label for="basicpill-namecard-input">Account Type <span
+                                                                class="text-danger">*</span></label>
+                                                        @php $options = []; @endphp
+                                                        @foreach ($accounts as $val)
+                                                            @php
+                                                                $options[$val->id] = $val->name;
+                                                            @endphp
+                                                        @endforeach
+                                                        @php
+                                                            $account_options = $options;
+                                                            $options = ['' => 'Select'] + $options;
+                                                            
+                                                        @endphp
 
-                                            <div class="col-lg-4">
-                                                <div class="mb-3">
-                                                    <label for="basicpill-namecard-input">Account Number <span
-                                                            class="text-danger">*</span></label>
-                                                    {{ Form::text('account_number[]', old('account_number[]'), ['class="form-control"','placeholder="Write account number..."','required']) }}
-                                                    <span class="text-danger"></span>
+                                                        {{ Form::select('account_id[]', $options, old('account_id[]'), ['class' => 'form-control account_id','id' => 'account_id','required']) }}
+                                                        <span class="text-danger"></span>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <!--./col -->
+                                                <!--./col -->
 
-                                            <div class="col-lg-8">
-                                                <div class="mt-4 pt-2 text-sm-end d-none d-sm-block">
-                                                    <button type="button" name="add" id="add_button"
-                                                        class="btn btn-info btn-sm text-medium">
-                                                        <i class="fa fa-plus"></i>
-                                                    </button>
+                                                <div class="col-lg-4">
+                                                    <div class="mb-3">
+                                                        <label for="basicpill-namecard-input">Account Name <span
+                                                                class="text-danger">*</span></label>
+                                                        {{ Form::text('account_name[]', old('account_name[]'), ['class="form-control"','placeholder="Write account name..."','required']) }}
+                                                        <span class="text-danger"></span>
+                                                    </div>
                                                 </div>
-                                                <!--./pull-right -->
+                                                <!--./col -->
+
+                                                <div class="col-lg-4">
+                                                    <div class="mb-3">
+                                                        <label for="basicpill-namecard-input">Account Number <span
+                                                                class="text-danger">*</span></label>
+                                                        {{ Form::text('account_number[]', old('account_number[]'), ['class="form-control"','placeholder="Write account number..."','required']) }}
+                                                        <span class="text-danger"></span>
+                                                    </div>
+                                                </div>
+                                                <!--./col -->
+
+                                                <div class="col-lg-8">
+                                                    <div class="mt-4 pt-2 text-sm-end d-none d-sm-block">
+                                                        <button type="button" name="add" id="add_button"
+                                                            class="btn btn-info btn-sm text-medium">
+                                                            <i class="fa fa-plus"></i>
+                                                        </button>
+                                                    </div>
+                                                    <!--./pull-right -->
+                                                </div>
+                                                <!--./col-lg-12 -->
                                             </div>
-                                            <!--./col-lg-12 -->
-                                        </div>
-                                        <!--./row -->
+                                            <!--./row -->
+                                        @endif
 
                                         <div class="field_wrapper"></div>
 
@@ -140,9 +259,9 @@
                         <div class="mt-2 text-center">
                             <div>
                                 <p>
-                                <script>
-                                    document.write(new Date().getFullYear())
-                                </script> eMakato. Developed by Laina Finance
+                                    <script>
+                                        document.write(new Date().getFullYear())
+                                    </script> eMakato. Developed by Laina Finance
                                 </p>
                             </div>
                         </div>

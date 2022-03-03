@@ -68,7 +68,7 @@
                                                 {{ $customer->status }}
                                             </td>
                                             <td>
-                                                <a href="{{ route('customers.details', $customer->id) }}" title="View"
+                                                <a href="{{ route('customers.details', $customer->uuid) }}" title="View"
                                                     class="btn btn-outline-primary btn-xss">
                                                     <i class="fa fa-folder-open"></i>
                                                 </a>

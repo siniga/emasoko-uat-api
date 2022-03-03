@@ -111,8 +111,17 @@ class RegisterController extends Controller
         //company
         $company = Partner::where(['uuid' => $uuid])->firstOrFail();
 
+        //assigned documents
+        $arr_documents = [];
+
+        if ($company->partnerDocuments->isNotEmpty()) {
+            foreach ($company->partnerDocuments as $val) {
+                array_push($arr_documents, $val->key);
+            }
+        }
+
         //render view
-        return view('auth.company_documents', compact('title', 'company'));
+        return view('auth.company_documents', compact('title', 'company', 'arr_documents'));
     }
 
     //store company details
@@ -240,7 +249,7 @@ class RegisterController extends Controller
 
         //partner
         $partner = Partner::findOrFail($id);
-        $partner->next_step = 'company-authorized-person/'. $uuid;
+        $partner->next_step = 'company-authorized-person/' . $uuid;
         $partner->save();
 
         //partner staff
@@ -401,7 +410,7 @@ class RegisterController extends Controller
             return Redirect::back()->with('danger', 'Company does not exist, please Apply Now!');
         } else {
             if ($partner->complete == 0) {
-                $message = "Company registration does not complete, please complete application by <a href='$partner->next_step'>Click here</a>.";
+                $message = "Company registration does not complete, please complete application by <a href='$partner->next_step'><b>Click here</b></a>.";
 
                 //redirect 
                 return Redirect::back()->with('danger', $message);

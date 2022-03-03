@@ -15,6 +15,41 @@
     @section('content')
         <div class="account-pages my-5 pt-sm-5">
             <div class="container">
+                <div class="row justify-content-center mt-4">
+                    <div class="col-lg-9 col-md-9">
+                        <!-- Header Start -->
+                        <div class="header">
+                            <div class="row">
+                                <div class="col-md-1"></div>
+                                <!--./col-md-1 -->
+
+                                <div class="col-md-2">
+                                    <div id="top-img">
+                                        <a href="{{ route('login') }}">
+                                            <img src="{{ asset('/assets/images/lainalogo.png') }}" />
+                                        </a>
+                                    </div>
+                                    <!--./img -->
+                                </div>
+                                <!--./col-md-2 -->
+                                <div class="col-md-8">
+                                    <div id="top-content">
+                                        <h1>eMakato</h1>
+                                        <h3>Company Registration</h3>
+                                    </div>
+                                    <!--./top-content -->
+                                </div>
+                                <!--./col-md-8 -->
+                                <div class="col-md-1"></div>
+                                <!--./col-md-1 -->
+                            </div>
+                            <!--./row -->
+                        </div><!-- Header End -->
+                    </div>
+                    <!--./col -->
+                </div>
+                <!--./row -->
+
                 <div class="row justify-content-center">
                     <div class="col-md-12 col-lg-12 col-xl-12">
                         <div class="card overflow-hidden">
@@ -33,81 +68,161 @@
                                         </div>
                                         <!--./row -->
 
-                                        <div class="row">
-                                            <div class="col-lg-4">
-                                                <div class="mb-3">
-                                                    <label for="basicpill-namecard-input">Staff Name <span
-                                                            class="text-danger">*</span></label>
-                                                    {{ Form::text('staff_name[]', old('staff_name[]'), ['class="form-control"','placeholder="Staff name..."','required=""']) }}
+                                        @if ($company->partnerStaff->isNotEmpty())
+                                            @foreach ($company->partnerStaff as $data)
+                                                <div class="row">
+                                                    <div class="col-lg-4">
+                                                        <div class="mb-3">
+                                                            <label for="basicpill-namecard-input">Staff Name <span
+                                                                    class="text-danger">*</span></label>
+                                                            {{ Form::text('staff_name[]', old('staff_name[]', $data->name), ['class="form-control"','placeholder="Staff name..."','required=""']) }}
 
+                                                        </div>
+                                                    </div>
+                                                    <!--./col -->
+
+                                                    <div class="col-lg-4">
+                                                        <div class="mb-3">
+                                                            <label for="basicpill-namecard-input">NIDA Number <span
+                                                                    class="text-danger">*</span></label>
+                                                            {{ Form::text('nida_number[]', old('nida_number[]', $data->NIDA_number), ['class="form-control input-mask"','placeholder="NIDA number..."','data-inputmask' => "'mask': '99999999-99999-99999-99'",'required=""']) }}
+
+                                                        </div>
+                                                    </div>
+                                                    <!--./col -->
+
+                                                    <div class="col-lg-4">
+                                                        <div class="mb-3">
+                                                            <label for="basicpill-namecard-input">Staff Email<span
+                                                                    class="text-danger">*</span></label>
+                                                            {{ Form::email('staff_email[]', old('staff_email[]', $data->email), ['class="form-control invinputs"','placeholder="Staff email..."','required=""']) }}
+
+                                                        </div>
+                                                    </div>
+                                                    <!--./col -->
                                                 </div>
-                                            </div>
-                                            <!--./col -->
+                                                <!--./row -->
 
-                                            <div class="col-lg-4">
-                                                <div class="mb-3">
-                                                    <label for="basicpill-namecard-input">NIDA Number <span
-                                                            class="text-danger">*</span></label>
-                                                    {{ Form::text('nida_number[]', old('nida_number[]'), ['class="form-control input-mask"','placeholder="NIDA number..."','data-inputmask' => "'mask': '99999999-99999-99999-99'",'required=""']) }}
+                                                <div class="row">
+                                                    <div class="col-lg-4">
+                                                        <div class="mb-3">
+                                                            <label for="basicpill-namecard-input">Staff Phone<span
+                                                                    class="text-danger">*</span></label>
+                                                            {{ Form::text('staff_phone[]', old('staff_phone[]', $data->phone), ['class="form-control invinputs"','placeholder="Staff phone..."','required=""']) }}
 
+                                                        </div>
+                                                    </div>
+                                                    <!--./col -->
+
+                                                    <div class="col-lg-4">
+                                                        <div class="mb-3">
+                                                            <label for="basicpill-namecard-input">Staff Title<span
+                                                                    class="text-danger">*</span></label>
+                                                            @php
+                                                                $options = [
+                                                                    'CEO' => 'Chief Executive Officer (CEO)',
+                                                                    'CFO' => 'Chief Finance Officer (CFO)',
+                                                                    'Company_Secretary' => 'Company Secretary',
+                                                                ];
+                                                                
+                                                                $staff_title_options = $options;
+                                                                $options = ['' => 'Select'] + $options;
+                                                            @endphp
+                                                            {{ Form::select('staff_title[]', $options, old('staff_title[]', $data->title), ['class= "form-control"','required=""']) }}
+                                                        </div>
+                                                    </div>
+                                                    <!--./col -->
+
+                                                    <div class="col-lg-4">
+                                                        <div class="mt-4 pt-2 text-sm-end d-none d-sm-block">
+                                                            <button type="button" name="add" id="remove_button"
+                                                                class="btn btn-danger btn-sm text-medium">
+                                                                <i class="fa fa-times"></i>
+                                                            </button>
+                                                        </div>
+                                                        <!--./pull-right -->
+                                                    </div>
+                                                    <!--./col-lg-12 -->
                                                 </div>
-                                            </div>
-                                            <!--./col -->
+                                                <!--./row -->
+                                            @endforeach
+                                        @else
+                                            <div class="row">
+                                                <div class="col-lg-4">
+                                                    <div class="mb-3">
+                                                        <label for="basicpill-namecard-input">Staff Name <span
+                                                                class="text-danger">*</span></label>
+                                                        {{ Form::text('staff_name[]', old('staff_name[]'), ['class="form-control"','placeholder="Staff name..."','required=""']) }}
 
-                                            <div class="col-lg-4">
-                                                <div class="mb-3">
-                                                    <label for="basicpill-namecard-input">Staff Email<span
-                                                            class="text-danger">*</span></label>
-                                                    {{ Form::email('staff_email[]', old('staff_email[]'), ['class="form-control invinputs"','placeholder="Staff email..."','required=""']) }}
-
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <!--./col -->
-                                        </div>
-                                        <!--./row -->
+                                                <!--./col -->
 
-                                        <div class="row">
-                                            <div class="col-lg-4">
-                                                <div class="mb-3">
-                                                    <label for="basicpill-namecard-input">Staff Phone<span
-                                                            class="text-danger">*</span></label>
-                                                    {{ Form::text('staff_phone[]', old('staff_phone[]'), ['class="form-control invinputs"','placeholder="Staff phone..."','required=""']) }}
+                                                <div class="col-lg-4">
+                                                    <div class="mb-3">
+                                                        <label for="basicpill-namecard-input">NIDA Number <span
+                                                                class="text-danger">*</span></label>
+                                                        {{ Form::text('nida_number[]', old('nida_number[]'), ['class="form-control input-mask"','placeholder="NIDA number..."','data-inputmask' => "'mask': '99999999-99999-99999-99'",'required=""']) }}
 
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <!--./col -->
+                                                <!--./col -->
 
-                                            <div class="col-lg-4">
-                                                <div class="mb-3">
-                                                    <label for="basicpill-namecard-input">Staff Title<span
-                                                            class="text-danger">*</span></label>
-                                                    @php
-                                                        $options = [
-                                                            'CEO' => 'Chief Executive Officer (CEO)',
-                                                            'CFO' => 'Chief Finance Officer (CFO)',
-                                                            'Company_Secretary' => 'Company Secretary',
-                                                        ];
-                                                        
-                                                        $staff_title_options = $options;
-                                                        $options = ['' => 'Select'] + $options;
-                                                    @endphp
-                                                    {{ Form::select('staff_title[]', $options, old('staff_title[]'), ['class= "form-control"', 'required=""']) }}
-                                                </div>
-                                            </div>
-                                            <!--./col -->
+                                                <div class="col-lg-4">
+                                                    <div class="mb-3">
+                                                        <label for="basicpill-namecard-input">Staff Email<span
+                                                                class="text-danger">*</span></label>
+                                                        {{ Form::email('staff_email[]', old('staff_email[]'), ['class="form-control invinputs"','placeholder="Staff email..."','required=""']) }}
 
-                                            <div class="col-lg-4">
-                                                <div class="mt-4 pt-2 text-sm-end d-none d-sm-block">
-                                                    <button type="button" name="add" id="add_button"
-                                                        class="btn btn-info btn-sm text-medium">
-                                                        <i class="fa fa-plus"></i>
-                                                    </button>
+                                                    </div>
                                                 </div>
-                                                <!--./pull-right -->
+                                                <!--./col -->
                                             </div>
-                                            <!--./col-lg-12 -->
-                                        </div>
-                                        <!--./row -->
+                                            <!--./row -->
+
+                                            <div class="row">
+                                                <div class="col-lg-4">
+                                                    <div class="mb-3">
+                                                        <label for="basicpill-namecard-input">Staff Phone<span
+                                                                class="text-danger">*</span></label>
+                                                        {{ Form::text('staff_phone[]', old('staff_phone[]'), ['class="form-control invinputs"','placeholder="Staff phone..."','required=""']) }}
+
+                                                    </div>
+                                                </div>
+                                                <!--./col -->
+
+                                                <div class="col-lg-4">
+                                                    <div class="mb-3">
+                                                        <label for="basicpill-namecard-input">Staff Title<span
+                                                                class="text-danger">*</span></label>
+                                                        @php
+                                                            $options = [
+                                                                'CEO' => 'Chief Executive Officer (CEO)',
+                                                                'CFO' => 'Chief Finance Officer (CFO)',
+                                                                'Company_Secretary' => 'Company Secretary',
+                                                            ];
+                                                            
+                                                            $staff_title_options = $options;
+                                                            $options = ['' => 'Select'] + $options;
+                                                        @endphp
+                                                        {{ Form::select('staff_title[]', $options, old('staff_title[]'), ['class= "form-control"', 'required=""']) }}
+                                                    </div>
+                                                </div>
+                                                <!--./col -->
+
+                                                <div class="col-lg-4">
+                                                    <div class="mt-4 pt-2 text-sm-end d-none d-sm-block">
+                                                        <button type="button" name="add" id="add_button"
+                                                            class="btn btn-info btn-sm text-medium">
+                                                            <i class="fa fa-plus"></i>
+                                                        </button>
+                                                    </div>
+                                                    <!--./pull-right -->
+                                                </div>
+                                                <!--./col-lg-12 -->
+                                            </div>
+                                            <!--./row -->
+                                        @endif
 
                                         <div class="field_wrapper"></div>
 
@@ -135,9 +250,9 @@
                         <div class="mt-2 text-center">
                             <div>
                                 <p>
-                                <script>
-                                    document.write(new Date().getFullYear())
-                                </script> eMakato. Developed by Laina Finance
+                                    <script>
+                                        document.write(new Date().getFullYear())
+                                    </script> eMakato. Developed by Laina Finance
                                 </p>
                             </div>
                         </div>

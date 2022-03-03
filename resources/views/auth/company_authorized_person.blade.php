@@ -15,6 +15,41 @@
     @section('content')
         <div class="account-pages my-5 pt-sm-5">
             <div class="container">
+                <div class="row justify-content-center mt-4">
+                    <div class="col-lg-9 col-md-9">
+                        <!-- Header Start -->
+                        <div class="header">
+                            <div class="row">
+                                <div class="col-md-1"></div>
+                                <!--./col-md-1 -->
+        
+                                <div class="col-md-2">
+                                    <div id="top-img">
+                                        <a href="{{ route('login') }}">
+                                            <img src="{{ asset('/assets/images/lainalogo.png') }}" />
+                                        </a>
+                                    </div>
+                                    <!--./img -->
+                                </div>
+                                <!--./col-md-2 -->
+                                <div class="col-md-8">
+                                    <div id="top-content">
+                                        <h1>eMakato</h1>
+                                        <h3>Company Registration</h3>
+                                    </div>
+                                    <!--./top-content -->
+                                </div>
+                                <!--./col-md-8 -->
+                                <div class="col-md-1"></div>
+                                <!--./col-md-1 -->
+                            </div>
+                            <!--./row -->
+                        </div><!-- Header End -->
+                    </div>
+                    <!--./col -->
+                </div>
+                <!--./row -->
+                
                 <div class="row justify-content-center">
                     <div class="col-md-12 col-lg-12 col-xl-12">
                         <div class="card overflow-hidden">

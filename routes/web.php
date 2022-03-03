@@ -38,7 +38,7 @@ use Illuminate\Support\Facades\Route;
 // //Language Translation
 // Route::get('index/{locale}', [App\Http\Controllers\HomeController::class, 'lang']);
 
-Route::get('/', [HomeController::class, 'index']);
+Route::get('/', [LoginController::class, 'showLoginForm'])->name('login');
 Route::get('home', [HomeController::class, 'index'])->name('home');
 Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 

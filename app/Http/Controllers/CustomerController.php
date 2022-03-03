@@ -29,7 +29,7 @@ class CustomerController extends Controller
         $title = 'Customers';
         //has_allowed('roles', 'lists');
 
-        $customers = Customer::all();
+        $customers = Customer::where_cond()->get();
 
         //render view
         return view('customers.lists', compact('title', 'customers'));

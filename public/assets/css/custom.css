@@ -28,6 +28,42 @@ h1, h2, h3, h4, h5, h6 {
     color: #424242;
 }
 
+/*===========================
+	Header Rules
+ ==========================*/
+ .header {
+  width: 100%;
+  background-color: inherit;
+}
+
+.header #top-bar {
+  width: 100%;
+}
+
+.header #top-img img {
+  padding-left: 30px;
+  padding-top: 10px;
+  height: 60px !important;
+}
+
+.header #top-content {
+  padding-top: 10px;
+}
+
+.header #top-content h1 {
+  color: #424242;
+  font-size: 24px;
+  text-align: center;
+}
+
+.header #top-content h3 {
+  color: #212121;
+  font-size: 24px;
+  padding-top: 10px;
+  text-align: center;
+  font-weight: 600;
+}
+
 
 /*===============================================|
 Button
