@@ -13,47 +13,58 @@
     @endsection
 
     @section('content')
-        <div class="account-pages my-5 pt-sm-5">
+        <div class="account-pages my-4">
             <div class="container">
-                <div class="row justify-content-center mt-4">
-                    <div class="col-lg-9 col-md-9">
-                        <!-- Header Start -->
-                        <div class="header">
-                            <div class="row">
-                                <div class="col-md-1"></div>
-                                <!--./col-md-1 -->
-        
-                                <div class="col-md-2">
-                                    <div id="top-img">
-                                        <a href="{{ route('login') }}">
-                                            <img src="{{ asset('/assets/images/lainalogo.png') }}" />
-                                        </a>
-                                    </div>
-                                    <!--./img -->
-                                </div>
-                                <!--./col-md-2 -->
-                                <div class="col-md-8">
-                                    <div id="top-content">
-                                        <h1>eMakato</h1>
-                                        <h3>Company Registration</h3>
-                                    </div>
-                                    <!--./top-content -->
-                                </div>
-                                <!--./col-md-8 -->
-                                <div class="col-md-1"></div>
-                                <!--./col-md-1 -->
-                            </div>
-                            <!--./row -->
-                        </div><!-- Header End -->
-                    </div>
-                    <!--./col -->
-                </div>
-                <!--./row -->
-
                 <div class="row justify-content-center">
                     <div class="col-md-12 col-lg-12 col-xl-12">
                         <div class="card overflow-hidden">
+                            <div class="bg-primary bg-soft">
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="text-center p-4">
+                                            <h2 class="text-primary">eMakato</h2>
+                                            <h3>Company Registration</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!--./soft -->
+
                             <div class="card-body pt-4">
+                                <div class="stepwizard mb-4">
+                                    <div class="stepwizard-row setup-panel">
+                                        <div class="stepwizard-step">
+                                            <a href="#step-1" type="button" class="btn btn-success btn-circle">1</a>
+                                            <span class="text-success">Company Information</span>
+                                        </div>
+
+                                        <div class="stepwizard-step">
+                                            <a href="#step-2" type="button" class="btn btn-secondary btn-circle"
+                                                disabled="disabled">2</a>
+                                            <span>Company Documents</span>
+                                        </div>
+
+                                        <div class="stepwizard-step">
+                                            <a href="#step-2" type="button" class="btn btn-default btn-circle"
+                                                disabled="disabled">3</a>
+                                            <span>Collection Accounts</span>
+                                        </div>
+
+                                        <div class="stepwizard-step">
+                                            <a href="#step-2" type="button" class="btn btn-default btn-circle"
+                                                disabled="disabled">4</a>
+                                            <span>Authorized Representative</span>
+                                        </div>
+
+                                        <div class="stepwizard-step">
+                                            <a href="#step-2" type="button" class="btn btn-default btn-circle"
+                                                disabled="disabled">5</a>
+                                            <span>Credentials</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--./form wizard -->
+
                                 <form action="#" id="registrationForm" enctype="multipart/form-data" autocomplete="off">
                                     <input type="hidden" name="partner_id" value="{{ $company->id }}">
                                     <input type="hidden" name="partner_uuid" value="{{ $company->uuid }}">
@@ -86,7 +97,7 @@
                                                                     'business_licence' => 'Business Licence',
                                                                     'certificate_of_incorporation' => 'Certificate of incorporation',
                                                                     'TIN_certificate' => 'TIN Certificate',
-                                                                    'brela_certificate' => 'BRELA certificate',
+                                                                    'brela_report' => 'BRELA report for shareholders',
                                                                     'audited_financial_statement' => 'Audited financial statement',
                                                                     'introduction_letter' => 'Introduction letter introducing director as a custodian of the account.',
                                                                     'annual_return' => 'Annual return',
@@ -96,10 +107,16 @@
                                                             <tbody>
                                                                 @foreach ($arr_attachments as $k => $val)
                                                                     <tr>
-                                                                        <td>{{ $val }}</td>
+                                                                        <td>
+                                                                            {{ $val }}
+                                                                            @if ($k == 'business_licence' || $k == 'certificate_of_incorporation' || $k == 'TIN_certificate')
+                                                                                <span class="text-danger">*</span>
+                                                                            @endif
+                                                                        </td>
                                                                         <td>
                                                                             @if (in_array($k, $arr_documents))
-                                                                                <a href="{{ asset('assets/uploads/docs') }}">{{ $k }}</a><br/>
+                                                                                <a
+                                                                                    href="{{ asset('assets/uploads/docs') }}">{{ $k }}</a><br />
                                                                             @endif
                                                                             {{ Form::file($k, old($k), ['class="form-control"', 'id="formFile"']) }}
                                                                         </td>
@@ -138,11 +155,15 @@
 
                         <div class="mt-2 text-center">
                             <div>
-                                <p>
+                                <p>Already have an account ? <a href="{{ url('login') }}" class="fw-medium text-primary">
+                                    Login</a>
+                            </p>
+
+                            <p>
                                 <script>
                                     document.write(new Date().getFullYear())
-                                </script> eMakato. Developed by Laina Finance
-                                </p>
+                                </script> eMakato. All rights reserved.
+                            </p>
                             </div>
                         </div>
                         <!--./text-center -->

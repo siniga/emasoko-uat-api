@@ -13,47 +13,57 @@
     @endsection
 
     @section('content')
-        <div class="account-pages my-5 pt-sm-5">
+        <div class="account-pages my-4">
             <div class="container">
-                <div class="row justify-content-center mt-4">
-                    <div class="col-lg-9 col-md-9">
-                        <!-- Header Start -->
-                        <div class="header">
-                            <div class="row">
-                                <div class="col-md-1"></div>
-                                <!--./col-md-1 -->
-        
-                                <div class="col-md-2">
-                                    <div id="top-img">
-                                        <a href="{{ route('login') }}">
-                                            <img src="{{ asset('/assets/images/lainalogo.png') }}" />
-                                        </a>
-                                    </div>
-                                    <!--./img -->
-                                </div>
-                                <!--./col-md-2 -->
-                                <div class="col-md-8">
-                                    <div id="top-content">
-                                        <h1>eMakato</h1>
-                                        <h3>Company Registration</h3>
-                                    </div>
-                                    <!--./top-content -->
-                                </div>
-                                <!--./col-md-8 -->
-                                <div class="col-md-1"></div>
-                                <!--./col-md-1 -->
-                            </div>
-                            <!--./row -->
-                        </div><!-- Header End -->
-                    </div>
-                    <!--./col -->
-                </div>
-                <!--./row -->
-                
                 <div class="row justify-content-center">
                     <div class="col-md-12 col-lg-12 col-xl-12">
                         <div class="card overflow-hidden">
+                            <div class="bg-primary bg-soft">
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="text-center p-4">
+                                            <h2 class="text-primary">eMakato</h2>
+                                            <h3>Company Registration</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!--./soft -->
+
                             <div class="card-body pt-4">
+                                <div class="stepwizard mb-4">
+                                    <div class="stepwizard-row setup-panel">
+                                        <div class="stepwizard-step">
+                                            <a href="#step-1" type="button" class="btn btn-success btn-circle">1</a>
+                                            <span class="text-success">Company Information</span>
+                                        </div>
+
+                                        <div class="stepwizard-step">
+                                            <a href="#step-2" type="button" class="btn btn-success btn-circle"
+                                                disabled="disabled">2</a>
+                                            <span>Company Documents</span>
+                                        </div>
+
+                                        <div class="stepwizard-step">
+                                            <a href="#step-2" type="button" class="btn btn-success btn-circle"
+                                                disabled="disabled">3</a>
+                                            <span>Collection Accounts</span>
+                                        </div>
+
+                                        <div class="stepwizard-step">
+                                            <a href="#step-2" type="button" class="btn btn-success btn-circle"
+                                                disabled="disabled">4</a>
+                                            <span>Authorized Representative</span>
+                                        </div>
+
+                                        <div class="stepwizard-step">
+                                            <a href="#step-2" type="button" class="btn btn-success btn-circle"
+                                                disabled="disabled">5</a>
+                                            <span>Credentials</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--./form wizard -->
                                 <form action="#" id="registrationForm" enctype="multipart/form-data" autocomplete="off">
                                     <input type="hidden" name="partner_id" value="{{ $company->id }}">
                                     <input type="hidden" name="partner_uuid" value="{{ $company->uuid }}">
@@ -201,7 +211,7 @@
 
                                         <div class="row mt-2">
                                             <div class="col-lg-12">
-                                                <h5 class="text-capitalize">Company Accounts</h5>
+                                                <h5 class="text-capitalize">Company Collection Accounts</h5>
                                                 <hr />
                                             </div>
                                             <!--./col -->
@@ -216,7 +226,7 @@
                                                             <tr>
                                                                 <th width="3%">#</th>
                                                                 <th width="20%">Account Type</th>
-                                                                <th width="20%">Account</th>
+                                                                <th width="20%">Bank/Institutions</th>
                                                                 <th width="25%">Account Name</th>
                                                                 <th width="20%">Account Number</th>
                                                             </tr>
@@ -245,7 +255,7 @@
 
                                         <div class="row mt-2">
                                             <div class="col-lg-12">
-                                                <h5 class="text-capitalize">Company Staff</h5>
+                                                <h5 class="text-capitalize">Authorized Representative</h5>
                                                 <hr />
                                             </div>
                                             <!--./col -->
@@ -291,7 +301,7 @@
 
                                         <div class="row mt-2">
                                             <div class="col-lg-12">
-                                                <h5 class="text-capitalize">Company Authorized Person</h5>
+                                                <h5 class="text-capitalize">Company Credentials</h5>
                                                 <hr />
                                             </div>
                                             <!--./col -->
@@ -302,25 +312,13 @@
                                             <div class="col-lg-12">
                                                 <table class="table table-stripped table-bordered">
                                                     <tr>
-                                                        <th width=25%>Person Name</th>
+                                                        <th width=25%>Company Name</th>
                                                         <td width=25%>
                                                             <span>{{ $company->partnerAuthorizeUser->user->name ?? '' }}</span>
                                                         </td>
 
-                                                        <th>NIDA Number</th>
-                                                        <td>
-                                                            <span>{{ $company->partnerAuthorizeUser->user->NIDA_number ?? '' }}</span>
-                                                        </td>
-                                                    </tr>
-
-                                                    <tr>
-                                                        <th>Email</th>
+                                                        <th>Email/Username</th>
                                                         <td>{{ $company->partnerAuthorizeUser->user->email ?? '' }}
-                                                        </td>
-
-                                                        <th>Phone</th>
-                                                        <td>
-                                                            {{ $company->partnerAuthorizeUser->user->phone ?? '' }}
                                                         </td>
                                                     </tr>
                                                 </table>
@@ -333,14 +331,21 @@
                                             <div class="row mt-2" id="btn-section" style="display: block;">
                                                 <div class="col-md-12">
                                                     <div class="mb-3 text-sm-end d-none d-sm-block">
-                                                        <a href="{{ url('company-authorized-person/' . $company->uuid) }}"
+                                                        <a href="{{ url('cancel-company-registration/' . $company->uuid) }}"
                                                             class="btn btn-danger text-medium">Cancel</a>
 
-                                                        <a href="{{ url('company-authorized-person/' . $company->uuid) }}"
-                                                            class="btn btn-info text-medium">Previous</a>
+                                                        <a href="{{ url('register/' . $company->uuid) }}"
+                                                            class="btn btn-info text-medium">Edit</a>
 
-                                                        <button type="submit" id="btnSubmit" class="btn btn-success">
-                                                            Submit <i
+                                                        <button type="submit" id="btnSave" name="save"
+                                                            class="btn btn-secondary">
+                                                            Save <i
+                                                                class="loading-spinner fa fa-lg fa fa-spinner fa-spin"></i>
+                                                        </button>
+
+                                                        <button type="submit" id="btnSubmit" name="submit"
+                                                            class="btn btn-success">
+                                                            Save & Submit <i
                                                                 class="loading-spinner fa fa-lg fa fa-spinner fa-spin"></i>
                                                         </button>
                                                     </div>
@@ -358,10 +363,14 @@
 
                         <div class="mt-2 text-center">
                             <div>
+                                <p>Already have an account ? <a href="{{ url('login') }}" class="fw-medium text-primary">
+                                        Login</a>
+                                </p>
+
                                 <p>
                                     <script>
                                         document.write(new Date().getFullYear())
-                                    </script> eMakato. Developed by Laina Finance
+                                    </script> eMakato. All rights reserved.
                                 </p>
                             </div>
                         </div>
@@ -375,40 +384,6 @@
         </div>
         <!--./account-pages -->
     @endsection
-
-    <!-- subscribeModal -->
-    <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header border-bottom-0">
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="text-center mb-4">
-                        <div class="avatar-md mx-auto mb-4">
-                            <div class="avatar-title bg-light rounded-circle text-primary h1">
-                                <i class="mdi mdi-email-open"></i>
-                            </div>
-                        </div>
-
-                        <div class="row justify-content-center">
-                            <div class="col-xl-10">
-                                <h4 class="text-success">Congrats !</h4>
-                                <p class="text-muted font-size-14 mb-4">Company registration complete, Please wait for
-                                    approval!</p>
-
-                                <p class="text-muted font-size-14 mb-4">You can track your application by clicking
-                                    <b>Track Application</b> link
-                                </p>
-
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- end modal -->
 
     @section('script')
         <script src="{{ URL::asset('/assets/libs/bootstrap-datepicker/bootstrap-datepicker.min.js') }}"></script>
@@ -436,7 +411,7 @@
                         data.append("_token", "{{ csrf_token() }}");
 
                         // disabled the submit button
-                        $("#btnSubmit").prop("disabled", true);
+                        //$("#btnSubmit").prop("disabled", true);
 
                         //post data 
                         $.ajax({
@@ -448,16 +423,23 @@
                             cache: false,
                             timeout: 800000,
                             success: function(data) {
-                                $("#btnSubmit").prop("disabled", false);
+                                //$("#btnSubmit").prop("disabled", false);
 
                                 // Deactivate Loading Spinner
                                 $('.loading-spinner').toggleClass('active');
 
-                                //hide and show sections
-                                $('#btn-section').css('display', 'none');
-                                $('#output').css('display', '');
-                                $("#output").text(data.success_msg);
-                                $('#track-app').css('display', '');
+                                if (data.action == 'save') {
+                                    //hide and show sections
+                                    $('#btn-section').css('display', '');
+                                    $("#success-msg").text(data.success_msg);
+                                    $('#track-app').css('display', '');
+                                } else {
+                                    //hide and show sections
+                                    $('#btn-section').css('display', 'none');
+                                    $("#success-msg").text(data.success_msg);
+                                    $('#track-app').css('display', '');
+                                }
+                                $('#subscribeModal').modal('show');
                             },
                             error: function(e) {
                                 $("#btnSubmit").prop("disabled", false);
@@ -468,8 +450,36 @@
                         return false;
                     },
                 });
-
-
             });
         </script>
     @endsection
+
+    <!-- subscribeModal -->
+    <div class="modal fade" id="subscribeModal" tabindex="-1" aria-labelledby="subscribeModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-bottom-0">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-4">
+                        <div class="avatar-md mx-auto mb-4">
+                            <div class="avatar-title bg-light rounded-circle text-success h1">
+                                <i class="mdi mdi-check"></i>
+                            </div>
+                        </div>
+
+                        <div class="row justify-content-center">
+                            <div class="col-xl-10">
+                                <h4 class="text-success">Congratulations</h4>
+                                <p class="text-muted font-size-14 mb-4" id="success-msg"></p>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- end modal -->

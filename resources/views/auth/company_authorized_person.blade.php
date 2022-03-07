@@ -13,103 +13,67 @@
     @endsection
 
     @section('content')
-        <div class="account-pages my-5 pt-sm-5">
+        <div class="account-pages my-4">
             <div class="container">
-                <div class="row justify-content-center mt-4">
-                    <div class="col-lg-9 col-md-9">
-                        <!-- Header Start -->
-                        <div class="header">
-                            <div class="row">
-                                <div class="col-md-1"></div>
-                                <!--./col-md-1 -->
-        
-                                <div class="col-md-2">
-                                    <div id="top-img">
-                                        <a href="{{ route('login') }}">
-                                            <img src="{{ asset('/assets/images/lainalogo.png') }}" />
-                                        </a>
-                                    </div>
-                                    <!--./img -->
-                                </div>
-                                <!--./col-md-2 -->
-                                <div class="col-md-8">
-                                    <div id="top-content">
-                                        <h1>eMakato</h1>
-                                        <h3>Company Registration</h3>
-                                    </div>
-                                    <!--./top-content -->
-                                </div>
-                                <!--./col-md-8 -->
-                                <div class="col-md-1"></div>
-                                <!--./col-md-1 -->
-                            </div>
-                            <!--./row -->
-                        </div><!-- Header End -->
-                    </div>
-                    <!--./col -->
-                </div>
-                <!--./row -->
-                
                 <div class="row justify-content-center">
                     <div class="col-md-12 col-lg-12 col-xl-12">
                         <div class="card overflow-hidden">
+                            <div class="bg-primary bg-soft">
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="text-center p-4">
+                                            <h2 class="text-primary">eMakato</h2>
+                                            <h3>Company Registration</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!--./soft -->
+
                             <div class="card-body pt-4">
+                                <div class="stepwizard mb-4">
+                                    <div class="stepwizard-row setup-panel">
+                                        <div class="stepwizard-step">
+                                            <a href="#step-1" type="button" class="btn btn-success btn-circle">1</a>
+                                            <span class="text-success">Company Information</span>
+                                        </div>
+
+                                        <div class="stepwizard-step">
+                                            <a href="#step-2" type="button" class="btn btn-success btn-circle"
+                                                disabled="disabled">2</a>
+                                            <span>Company Documents</span>
+                                        </div>
+
+                                        <div class="stepwizard-step">
+                                            <a href="#step-2" type="button" class="btn btn-success btn-circle"
+                                                disabled="disabled">3</a>
+                                            <span>Collection Accounts</span>
+                                        </div>
+
+                                        <div class="stepwizard-step">
+                                            <a href="#step-2" type="button" class="btn btn-success btn-circle"
+                                                disabled="disabled">4</a>
+                                            <span>Authorized Representative</span>
+                                        </div>
+
+                                        <div class="stepwizard-step">
+                                            <a href="#step-2" type="button" class="btn btn-secondary btn-circle"
+                                                disabled="disabled">5</a>
+                                            <span>Credentials</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--./form wizard -->
+
                                 <form action="#" id="registrationForm" enctype="multipart/form-data" autocomplete="off">
                                     <input type="hidden" name="partner_id" value="{{ $company->id }}">
                                     <input type="hidden" name="partner_uuid" value="{{ $company->uuid }}">
 
                                     <!-- Company Documents -->
                                     <section data-step="5">
-                                        <div class="row">
-                                            <div class="col-lg-12">
-                                                <h5 class="text-capitalize">Company Authorized Person</h5>
-                                                <hr />
-                                            </div>
-                                            <!--./col -->
-                                        </div>
-                                        <!--./row -->
-
-                                        <div class="row">
-                                            <div class="col-lg-3">
-                                                <div class="mb-3">
-                                                    <label for="tinno">Authorized Person Name <span
-                                                            class="text-danger">*</span></label>
-                                                    {{ Form::text('person_name', old('person_name'), ['class="form-control"','placeholder="Write a fullname..."','required']) }}
-                                                </div>
-                                            </div>
-                                            <!--./col -->
-
-                                            <div class="col-lg-3">
-                                                <div class="mb-3">
-                                                    <label for="email">NIDA Number <span
-                                                            class="text-danger">*</span></label>
-                                                    {{ Form::text('nida_number', old('nida_number'), ['class="form-control input-mask"','placeholder="Write number..."','data-inputmask' => "'mask': '99999999-99999-99999-99'",'required']) }}
-                                                </div>
-                                            </div>
-                                            <!--./col -->
-
-                                            <div class="col-lg-3">
-                                                <div class="mb-3">
-                                                    <label for="email">Email <span class="text-danger">*</span></label>
-                                                    {{ Form::email('email', old('email'), ['class="form-control"', 'placeholder="Write email..."', 'required']) }}
-                                                </div>
-                                            </div>
-                                            <!--./col -->
-
-                                            <div class="col-lg-3">
-                                                <div class="mb-3">
-                                                    <label for="location">Phone <span
-                                                            class="text-danger">*</span></label>
-                                                    {{ Form::text('phone', old('phone'), ['class="form-control"', 'placeholder="Write a phone..."', 'required']) }}
-                                                </div>
-                                            </div>
-                                            <!--./col -->
-                                        </div>
-                                        <!--./row -->
-
                                         <div class="row mt-3">
                                             <div class="col-lg-12">
-                                                <h5 class="text-capitalize font-weight-600">Authorized Person Login</h5>
+                                                <h5 class="text-capitalize font-weight-600"> Login Credentials</h5>
                                                 <hr />
                                             </div>
                                             <!--./col -->
@@ -117,6 +81,23 @@
                                         <!--./row -->
 
                                         <div class="row">
+                                            <div class="col-lg-6">
+                                                <div class="mb-3">
+                                                    <label for="email">Business Name <span class="text-danger">*</span></label>
+                                                    {{ Form::text('name', old('name', $company->business_name), ['class="form-control"', 'placeholder="Write business name..."', 'required']) }}
+                                                </div>
+                                            </div>
+                                            <!--./col -->
+
+                                            <div class="col-lg-6">
+                                                <div class="mb-3">
+                                                    <label for="email">Company Email <span class="text-danger">*</span></label>
+                                                    {{ Form::email('email', old('email', $company->email), ['class="form-control"', 'placeholder="Write email..."', 'required']) }}
+                                                </div>
+                                            </div>
+                                            <!--./col -->
+
+
                                             <div class="col-lg-6">
                                                 <div class="mb-3">
                                                     <label for="phone_number">Password <span
@@ -162,10 +143,15 @@
 
                         <div class="mt-2 text-center">
                             <div>
-                                <script>
-                                    document.write(new Date().getFullYear())
-                                </script> eMakato. Developed by LainaFinance
+                                <p>Already have an account ? <a href="{{ url('login') }}" class="fw-medium text-primary">
+                                        Login</a>
+                                </p>
 
+                                <p>
+                                    <script>
+                                        document.write(new Date().getFullYear())
+                                    </script> eMakato. All rights reserved.
+                                </p>
                             </div>
                         </div>
                         <!--./text-center -->

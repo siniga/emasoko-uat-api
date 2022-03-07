@@ -13,48 +13,58 @@
     @endsection
 
     @section('content')
-        <div class="account-pages my-5 pt-sm-5">
+        <div class="account-pages my-4">
             <div class="container">
-
-                <div class="row justify-content-center mt-4">
-                    <div class="col-lg-9 col-md-9">
-                        <!-- Header Start -->
-                        <div class="header">
-                            <div class="row">
-                                <div class="col-md-1"></div>
-                                <!--./col-md-1 -->
-
-                                <div class="col-md-2">
-                                    <div id="top-img">
-                                        <a href="{{ route('login') }}">
-                                            <img src="{{ asset('/assets/images/lainalogo.png') }}" />
-                                        </a>
-                                    </div>
-                                    <!--./img -->
-                                </div>
-                                <!--./col-md-2 -->
-                                <div class="col-md-8">
-                                    <div id="top-content">
-                                        <h1>eMakato</h1>
-                                        <h3>Company Registration</h3>
-                                    </div>
-                                    <!--./top-content -->
-                                </div>
-                                <!--./col-md-8 -->
-                                <div class="col-md-1"></div>
-                                <!--./col-md-1 -->
-                            </div>
-                            <!--./row -->
-                        </div><!-- Header End -->
-                    </div>
-                    <!--./col -->
-                </div>
-                <!--./row -->
-
                 <div class="row justify-content-center">
                     <div class="col-md-12 col-lg-12 col-xl-12">
                         <div class="card overflow-hidden">
+                            <div class="bg-primary bg-soft">
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="text-center p-4">
+                                            <h2 class="text-primary">eMakato</h2>
+                                            <h3>Company Registration</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div><!--./soft -->
+
                             <div class="card-body pt-4">
+                                <div class="stepwizard mb-4">
+                                    <div class="stepwizard-row setup-panel">
+                                        <div class="stepwizard-step">
+                                            <a href="#step-1" type="button" class="btn btn-secondary btn-circle">1</a>
+                                            <span class="text-primary">Company Information</span>
+                                        </div>
+
+                                        <div class="stepwizard-step">
+                                            <a href="#step-2" type="button" class="btn btn-default btn-circle"
+                                                disabled="disabled">2</a>
+                                            <span>Company Documents</span>
+                                        </div>
+
+                                        <div class="stepwizard-step">
+                                            <a href="#step-2" type="button" class="btn btn-default btn-circle"
+                                                disabled="disabled">3</a>
+                                            <span>Collection Accounts</span>
+                                        </div>
+
+                                        <div class="stepwizard-step">
+                                            <a href="#step-2" type="button" class="btn btn-default btn-circle"
+                                                disabled="disabled">4</a>
+                                            <span>Authorized Representative</span>
+                                        </div>
+
+                                        <div class="stepwizard-step">
+                                            <a href="#step-2" type="button" class="btn btn-default btn-circle"
+                                                disabled="disabled">5</a>
+                                            <span>Credentials</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--./form wizard -->
+
+
                                 <form action="#" id="registrationForm" enctype="multipart/form-data" autocomplete="off">
                                     <input type="hidden" name="partner_id" value="{{ $company->id ?? null }}">
                                     <input type="hidden" name="partner_uuid" value="{{ $company->uuid ?? null }}">
@@ -154,21 +164,37 @@
 
                                             <div class="col-lg-3">
                                                 <div class="mb-3">
-                                                    <label for="location">Company Phone <span
-                                                            class="text-danger">*</span></label>
-                                                    {{ Form::text('company_phone', old('company_phone', $company->phone ?? ''), ['class="form-control input-mask"','placeholder="Write company phone..."','data-inputmask' => "'mask': '9999999999'",'required']) }}
-                                                    <span class="text-danger"></span>
-                                                </div>
-                                            </div>
-                                            <!--./col -->
-
-                                            <div class="col-lg-6">
-                                                <div class="mb-3">
                                                     <label for="address">Website</label>
                                                     {{ Form::text('company_website', old('company_website', $company->website ?? ''), ['class="form-control"','placeholder="Write company website..."']) }}
                                                 </div>
                                             </div>
                                             <!--./col -->
+
+                                            <div class="col-lg-3">
+                                                <label for="email">Country Code<span class="text-danger">*</span></label>
+                                                @php $options = []; @endphp
+                                                @foreach ($countries as $country)
+                                                    @php
+                                                        $options[$country->code] = $country->name.' ('.$country->code.')';
+                                                    @endphp
+                                                @endforeach
+                                                @php
+                                                    $options = ['' => 'Select'] + $options;
+                                                @endphp
+
+                                                {{ Form::select('country_code', $options, old('country_code', substr($company->phone ?? '', 0, 3)), ['class' => 'form-control','id' => 'country_id','required']) }}
+                                            </div>
+                                            <!--./col -->   
+
+                                            <div class="col-lg-3">
+                                                <div class="mb-3">
+                                                    <label for="location">Company Phone <span
+                                                            class="text-danger">*</span></label>
+                                                    {{ Form::number('company_phone', old('company_phone', substr($company->phone ?? '', 3) ), ['class="form-control"','placeholder="Company phone..."','required']) }}
+                                                    <span class="text-danger"></span>
+                                                </div>
+                                            </div>
+                                            <!--./col -->   
                                         </div>
                                         <!--./row -->
 
@@ -182,7 +208,7 @@
                                         <!--./row -->
 
                                         <div class="row">
-                                            <div class="col-lg-6">
+                                            <div class="col-lg-3">
                                                 <div class="mb-3">
                                                     <label for="email">Region <span class="text-danger">*</span></label>
                                                     @php $options = []; @endphp
@@ -201,11 +227,19 @@
                                             </div>
                                             <!--./col -->
 
+                                            <div class="col-lg-3">
+                                                <div class="mb-3">
+                                                    <label for="location">Postal Address </label>
+                                                    {{ Form::text('postal_address', old('postal_address', $company->postal_address ?? ''), ['class="form-control"','placeholder="Company postal address..."',]) }}
+                                                </div>
+                                            </div>
+                                            <!--./col --> 
+
                                             <div class="col-lg-6">
                                                 <div class="mb-3">
-                                                    <label for="address">Address <span
+                                                    <label for="address">Physical Address <span
                                                             class="text-danger">*</span></label>
-                                                    {{ Form::textarea('company_address', old('company_address', $company->address ?? ''), ['class="form-control"','placeholder="Write company address..."','rows' => 2,'required']) }}
+                                                    {{ Form::textarea('physical_address', old('company_address', $company->physical_address ?? ''), ['class="form-control"','placeholder="Write company physical address..."','rows' => 1,'required']) }}
                                                     <span class="text-danger"></span>
                                                 </div>
                                             </div>
@@ -237,10 +271,11 @@
                                 <p>Already have an account ? <a href="{{ url('login') }}" class="fw-medium text-primary">
                                         Login</a>
                                 </p>
-                                <script>
-                                    document.write(new Date().getFullYear())
-                                </script> eMakato. Developed <i class="mdi mdi-heart text-danger"></i> by Laina
-                                Finance
+
+                                <p>
+                                    <script>
+                                        document.write(new Date().getFullYear())
+                                    </script> eMakato. All rights reserved.
                                 </p>
                             </div>
                         </div>
@@ -284,13 +319,16 @@
                             required: true,
                             email: true,
                         },
+                        country_code: {
+                            required: true
+                        },
                         company_phone: {
                             required: true
                         },
                         region_id: {
                             required: true
                         },
-                        company_address: {
+                        physical_address: {
                             required: true
                         }
                     },
@@ -314,14 +352,17 @@
                             required: "Company email required",
                             email: "Invalid email",
                         },
+                        country_code: {
+                            required: "Country required"
+                        },
                         company_phone: {
-                            required: "Company phone required"
+                            required: "Phone required"
                         },
                         region_id: {
                             required: "Region required"
                         },
-                        company_address: {
-                            required: "Company address required"
+                        physical_address: {
+                            required: "Physical address required"
                         }
                     },
                     submitHandler: function(form, e) {

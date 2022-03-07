@@ -13,47 +13,59 @@
     @endsection
 
     @section('content')
-        <div class="account-pages my-5 pt-sm-5">
+        <div class="account-pages my-4">
             <div class="container">
-                <div class="row justify-content-center mt-4">
-                    <div class="col-lg-9 col-md-9">
-                        <!-- Header Start -->
-                        <div class="header">
-                            <div class="row">
-                                <div class="col-md-1"></div>
-                                <!--./col-md-1 -->
-
-                                <div class="col-md-2">
-                                    <div id="top-img">
-                                        <a href="{{ route('login') }}">
-                                            <img src="{{ asset('/assets/images/lainalogo.png') }}" />
-                                        </a>
-                                    </div>
-                                    <!--./img -->
-                                </div>
-                                <!--./col-md-2 -->
-                                <div class="col-md-8">
-                                    <div id="top-content">
-                                        <h1>eMakato</h1>
-                                        <h3>Company Registration</h3>
-                                    </div>
-                                    <!--./top-content -->
-                                </div>
-                                <!--./col-md-8 -->
-                                <div class="col-md-1"></div>
-                                <!--./col-md-1 -->
-                            </div>
-                            <!--./row -->
-                        </div><!-- Header End -->
-                    </div>
-                    <!--./col -->
-                </div>
-                <!--./row -->
 
                 <div class="row justify-content-center">
                     <div class="col-md-12 col-lg-12 col-xl-12">
                         <div class="card overflow-hidden">
+                            <div class="bg-primary bg-soft">
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="text-center p-4">
+                                            <h2 class="text-primary">eMakato</h2>
+                                            <h3>Company Registration</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!--./soft -->
+
                             <div class="card-body pt-4">
+                                <div class="stepwizard mb-4">
+                                    <div class="stepwizard-row setup-panel">
+                                        <div class="stepwizard-step">
+                                            <a href="#step-1" type="button" class="btn btn-success btn-circle">1</a>
+                                            <span class="text-success">Company Information</span>
+                                        </div>
+
+                                        <div class="stepwizard-step">
+                                            <a href="#step-2" type="button" class="btn btn-success btn-circle"
+                                                disabled="disabled">2</a>
+                                            <span>Company Documents</span>
+                                        </div>
+
+                                        <div class="stepwizard-step">
+                                            <a href="#step-2" type="button" class="btn btn-secondary btn-circle"
+                                                disabled="disabled">3</a>
+                                            <span>Collection Accounts</span>
+                                        </div>
+
+                                        <div class="stepwizard-step">
+                                            <a href="#step-2" type="button" class="btn btn-default btn-circle"
+                                                disabled="disabled">4</a>
+                                            <span>Authorized Representative</span>
+                                        </div>
+
+                                        <div class="stepwizard-step">
+                                            <a href="#step-2" type="button" class="btn btn-default btn-circle"
+                                                disabled="disabled">5</a>
+                                            <span>Credentials</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--./form wizard -->
+
                                 <form action="#" id="registrationForm" enctype="multipart/form-data" autocomplete="off">
                                     <input type="hidden" name="partner_id" value="{{ $company->id }}">
                                     <input type="hidden" name="partner_uuid" value="{{ $company->uuid }}">
@@ -62,7 +74,7 @@
                                     <section data-step="3">
                                         <div class="row">
                                             <div class="col-lg-12">
-                                                <h5 class="text-capitalize">Company Accounts</h5>
+                                                <h5 class="text-capitalize">Company Collection Accounts</h5>
                                                 <hr />
                                             </div>
                                             <!--./col -->
@@ -71,7 +83,7 @@
 
                                         @if ($company->partnerAccounts->isNotEmpty())
                                             @foreach ($company->partnerAccounts as $data)
-                                                <div class="row">
+                                                <div class="row non-field-wrapper">
                                                     <div class="col-lg-4">
                                                         <div class="mb-3">
                                                             <label>Account Category <span
@@ -98,7 +110,7 @@
 
                                                     <div class="col-lg-4">
                                                         <div class="mb-3">
-                                                            <label>Account Type <span
+                                                            <label>Bank/Institution <span
                                                                     class="text-danger">*</span></label>
                                                             @php $options = []; @endphp
                                                             @foreach ($accounts as $val)
@@ -179,7 +191,7 @@
 
                                                 <div class="col-lg-4">
                                                     <div class="mb-3">
-                                                        <label for="basicpill-namecard-input">Account Type <span
+                                                        <label for="basicpill-namecard-input">Bank/Institution <span
                                                                 class="text-danger">*</span></label>
                                                         @php $options = []; @endphp
                                                         @foreach ($accounts as $val)
@@ -258,10 +270,14 @@
 
                         <div class="mt-2 text-center">
                             <div>
+                                <p>Already have an account ? <a href="{{ url('login') }}" class="fw-medium text-primary">
+                                        Login</a>
+                                </p>
+
                                 <p>
                                     <script>
                                         document.write(new Date().getFullYear())
-                                    </script> eMakato. Developed by Laina Finance
+                                    </script> eMakato. All rights reserved.
                                 </p>
                             </div>
                         </div>
@@ -292,7 +308,7 @@
                     let maxField = 5; //Input fields increment limitation
                     let wrapper = $('.field_wrapper'); //Input field wrapper
                     let fieldHTML =
-                        '<div class="row row-div" style="background: #FAFAFA; border: 1px solid #E0E0E0; border-radius: 5px; margin: 8px 0; padding: 10px;">' +
+                        '<div class="row row-div non-field-wrapper">' +
                         '<div class="col-lg-4">' +
                         '<div class="mb-3">' +
                         '<label>Account Category <span class="text-danger">*</span></label>';
@@ -306,7 +322,7 @@
 
                     fieldHTML += '<div class="col-lg-4 col-md-4">' +
                         '<div class="mb-3">' +
-                        '<label>Account Type <span class="text-danger">*</span></label>';
+                        '<label>Bank/Institution <span class="text-danger">*</span></label>';
                     fieldHTML += '<select name="account_id[]" class="form-control account_id">';
                     fieldHTML += "<option value=''>Select</option>";
                     $.each(accounts, function(key, value) {
@@ -418,6 +434,7 @@
                     e.preventDefault();
                     accountTypeId = $(this).val();
 
+                    //query for data
                     $.ajax({
                         url: '/account-types/' + accountTypeId,
                         type: "get",
@@ -426,7 +443,6 @@
                         }
                     });
                 });
-
             });
         </script>
     @endsection

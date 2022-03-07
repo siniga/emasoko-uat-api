@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\Account;
 use App\Models\AccountType;
+use App\Models\Country;
 use App\Models\Partner;
 use App\Models\PartnerAccount;
 use App\Models\PartnerCategory;
@@ -18,6 +19,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Validator;
 
 //use Interve
 
@@ -65,22 +67,38 @@ class RegisterController extends Controller
 
         //populate data
         $categories = PartnerCategory::all();
+        $countries = Country::all();
         $regions = Region::orderBy('name', 'ASC')->get();
 
         //render view
-        return view('auth.register', compact('title', 'categories', 'regions', 'company'));
+        return view('auth.register', compact('title', 'categories', 'countries', 'regions', 'company'));
     }
 
     //store company details
     function storeCompanyDetails(Request $request)
     {
         //validation 
+        $validator = Validator::make($request->all(), [
+            'tin_number' => 'required|unique',
+            'business_name' => 'required',
+            'partner_category_id' => 'required',
+            'year_of_incorporation' => 'required|numeric',
+            'number_of_staff' => 'required|numeric',
+            'country_code' => 'required',
+            'company_phone' => 'required',
+            'company_email' => 'required|email',
+            'region_id' => 'required',
+            'physical_address' => 'required',
+        ]);
 
         //capture if uuid is not null
         if ($request->input('partner_uuid') != null)
             $uuid = $request->input('partner_uuid');
         else
             $uuid = Str::uuid();
+
+        //phone 
+        $phone = $request->input('country_code') . cast_phone($request->input('company_phone'));
 
         //save company details
         $partner = Partner::firstOrNew([
@@ -92,9 +110,10 @@ class RegisterController extends Controller
         $partner->year_of_incorporation = ucwords($request->input('year_of_incorporation'));
         $partner->number_of_staff = $request->input('number_of_staff');
         $partner->region_id = $request->input('region_id');
-        $partner->phone = $request->input('company_phone');
+        $partner->phone = $phone;
         $partner->email = $request->input('company_email');
-        $partner->address = $request->input('company_address');
+        $partner->postal_address = $request->input('postal_address');
+        $partner->physical_address = $request->input('physical_address');
         $partner->website = $request->input('company_website');
         $partner->next_step = 'company-documents/' . $uuid;
         $partner->save();
@@ -232,9 +251,10 @@ class RegisterController extends Controller
 
         //company
         $company = Partner::where(['uuid' => $uuid])->firstOrFail();
+        $countries = Country::all();
 
         //render view
-        return view('auth.company_staff', compact('title', 'company'));
+        return view('auth.company_staff', compact('title', 'company', 'countries'));
     }
 
 
@@ -307,10 +327,8 @@ class RegisterController extends Controller
 
         //create user to store data
         $user = new User([
-            'name' => $request->input('person_name'),
+            'name' => $request->input('name'),
             'email' => $request->input('email'),
-            'phone' => $request->input('phone'),
-            'NIDA_number' => $request->input('nida_number'),
             'verify_token' => $token,
             'password' => Hash::make($password),
         ]);
@@ -352,15 +370,29 @@ class RegisterController extends Controller
         $id = $request->input('partner_id');
         $uuid = $request->input('partner_uuid');
 
+        $complete = 0;
+        $status = 0;
+        if (isset($_POST['save'])) {
+            $status = 0;
+            $complete = 0;
+            $action = 'save';
+            $message = 'Company information saved, please complete application';
+        } else if (isset($_POST['submit'])) {
+            $status = 1;
+            $complete = 1;
+            $action = 'submit';
+            $message = 'Company registration complete, Please wait for approval!';
+        }
+
         //partner
         $partner = Partner::findOrFail($id);
         $partner->next_step = 'company-info-overview/' . $uuid;
-        $partner->complete = 1;
-        $partner->status = 1;
+        $partner->complete = $complete;
+        $partner->status = $status;
         $partner->save();
 
         //response
-        return response()->json(['success' => true, 'success_msg' => 'Company registration complete, Please wait for approval!'], 200);
+        return response()->json(['success' => true, 'action' => $action, 'success_msg' => $message], 200);
     }
 
     //cancel registration

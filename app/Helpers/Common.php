@@ -7,7 +7,7 @@ if (!function_exists('calculate_end_date')) {
     {
         $date = strtotime($start_at);
 
-        if($periodicity == 'DAILY')
+        if ($periodicity == 'DAILY')
             $date = strtotime("+1 year", $date);
 
         echo date('Y/m/d', $date);
@@ -15,8 +15,14 @@ if (!function_exists('calculate_end_date')) {
 }
 
 
-
-
-
-
-
+//cast mobile number => remove 0 
+if (!function_exists('cast_phone')) {
+    function cast_phone($phone)
+    {
+        if (preg_match("~^0\d+$~", $phone)) {
+            return substr($phone, 1);
+        } else {
+            return $phone;
+        }
+    }
+}

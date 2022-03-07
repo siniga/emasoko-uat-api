@@ -17,15 +17,11 @@
                         <div class="card overflow-hidden">
                             <div class="bg-primary bg-soft">
                                 <div class="row">
-                                    <div class="col-7">
+                                    <div class="col-12">
                                         <div class="text-primary p-4">
-                                            <h5 class="text-primary">Welcome Back !</h5>
-                                            <p>Sign in to continue to Skote.</p>
+                                            <h5 class="text-primary">Login to your eMakato account!</h5>
+                                            <p>Please provide your credentials.</p>
                                         </div>
-                                    </div>
-                                    <div class="col-5 align-self-end">
-                                        <img src="{{ URL::asset('/assets/images/profile-img.png') }}" alt=""
-                                            class="img-fluid">
                                     </div>
                                 </div>
                             </div>
@@ -117,7 +113,7 @@
                                         <div class="mt-4 text-center">
                                             <p>Don't have an account ? <a href="{{ url('register') }}"
                                                     class="fw-medium text-primary">
-                                                    Apply Now </a>
+                                                    Register Now </a>
                                             </p>
 
                                             <p>Want to know status of application?
@@ -132,10 +128,10 @@
                         </div>
                         <div class="mt-2 text-center">
                             <div>
-                                <script>
-                                    document.write(new Date().getFullYear())
-                                </script> eMakato. Developed by Laina
-                                Finance
+                                <p>
+                                    <script>
+                                        document.write(new Date().getFullYear())
+                                    </script> eMakato. All rights reserved.
                                 </p>
                             </div>
                         </div>
