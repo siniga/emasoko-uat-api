@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Partner;
+use App\Models\PartnerApproval;
 use App\Models\PartnerUser;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -23,7 +24,7 @@ class CompanyController extends Controller
      */
     public function index()
     {
-        $title = 'Companies';
+        $title = 'Subscribers';
         //has_allowed('roles', 'lists');
 
         $companies = Partner::all();
@@ -68,18 +69,18 @@ class CompanyController extends Controller
         $company = Partner::findOrFail($id);
 
         //routes
-        $action = "";
-        $route = 'companies.show';
-        if ($company->status == 1) {
-            $action = "Verify Company";
-            $route = 'companies.verify';
-        } else if ($company->status == 2) {
-            $action = "Approve Company";
-            $route = 'companies.approve';
-        }
+        // $action = "";
+        // $route = 'companies.show';
+        // if ($company->status == 1) {
+        //     $action = "Verify Company";
+        //     $route = 'companies.verify';
+        // } else if ($company->status == 2) {
+        //     $action = "Approve Company";
+        //     $route = 'companies.approve';
+        // }
 
         //render view
-        return view('companies.show', compact('title', 'company', 'route', 'action'));
+        return view('companies.show', compact('title', 'company'));
     }
 
     /**
@@ -116,52 +117,91 @@ class CompanyController extends Controller
         //
     }
 
-    //verify company
-    function verify($id)
+    //company assessment
+    function assessment($id)
     {
+        $title = "Company Assessment";
+
         //company
         $company = Partner::findOrFail($id);
-        $company->status = 2;
-        $company->save();
 
-        //send email
 
-        //redirect 
-        return Redirect::back()->withSuccess("Company verified, Waiting for approval");
+
+        //render view
+        return view('companies.assessment', compact('title', 'company'));
     }
 
-    //approve company
-    function approve($id)
+    //verify company
+    function store_assessment(Request $request)
     {
+        //validation
+
+        //requests
+        $company_id = $request->input('company_id');
+        $assessment_criteria = $request->input('assessment_criteria');
+
         //company
-        $company = Partner::findOrFail($id);
-        $company->status = 3;
-        $company->save();
+        $company = Partner::findOrFail($company_id);
 
         //update user
-        $p_user = PartnerUser::where(['partner_id' => $id])->first();
+        $p_user = PartnerUser::where(['partner_id' => $company->id])->first();
 
-        //user
-        $user = User::findOrFail($p_user->user_id);
-        $user->active = 1;
-        $user->save();
+        //update all approval to active = 0
+        PartnerApproval::where(['partner_id' => $company->id])->update(['active' => 0]);
 
-        //construct message
-        $message = "Company registration has been approved by eMakato.";
-        $message .= "<br/>You can start using your eMakato account now. Login to your account by <a href=" . url('login') . ">click here.</a>";
+        //update
+        foreach ($assessment_criteria as $value) {
+            $partner_approval = PartnerApproval::where(['partner_id' => $company->id, 'key' => $value])->first();
+            $partner_approval->active = 1;
+            $partner_approval->save();
+        }
 
-        //send email
-        Mail::send(
-            ['html' => 'emails.template'],
-            ['name' => $user->name, 'body' => $message],
-            function ($message) use ($user) {
-                $message->to($user->email);
-                $message->subject('Company Approval');
-                $message->from('renfridfrancis@gmail.com', 'eMakato');
-            }
-        );
+        //check if all criteria active = 1
+        $inactive_partner_approvals = PartnerApproval::where(['partner_id' => $company->id, 'active' => 0])->count();
 
-        //redirect 
-        return Redirect::back()->withSuccess("Company approved");
+        if ($inactive_partner_approvals > 0) {
+            $company->status = 2;
+            $company->save();
+
+            //update user
+            $user = User::findOrFail($p_user->user_id);
+            $user->active = 0;
+            $user->save();
+
+            //success message
+            $success_message = "Company registration assessment saved, Continue with other criteria!";
+        } else {
+            $company->status = 3;
+            $company->save();
+
+            //update user
+            $user = User::findOrFail($p_user->user_id);
+            $user->active = 1;
+            $user->save();
+
+            //todo: register ALL authorized users
+
+
+            //construct message
+            $message = "Company registration has been approved by eMakato.";
+            $message .= "<br/>You can start using your eMakato account now. Login to your account by <a href=" . url('login') . ">click here.</a>";
+
+            //send email
+            Mail::send(
+                ['html' => 'emails.template'],
+                ['name' => $user->name, 'body' => $message],
+                function ($message) use ($user) {
+                    $message->to($user->email);
+                    $message->subject('Company Approval');
+                    $message->from('renfridfrancis@gmail.com', 'eMakato');
+                }
+            );
+
+            //success message
+            $success_message = "Company registration assessment successfully completed!";
+        }
+
+        //response
+        return response()->json(['error' => false, 'success_msg' => $success_message], 200);
     }
 }

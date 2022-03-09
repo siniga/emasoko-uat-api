@@ -8,6 +8,7 @@ use App\Models\AccountType;
 use App\Models\Country;
 use App\Models\Partner;
 use App\Models\PartnerAccount;
+use App\Models\PartnerApproval;
 use App\Models\PartnerCategory;
 use App\Models\PartnerDocument;
 use App\Models\PartnerStaff;
@@ -382,6 +383,23 @@ class RegisterController extends Controller
             $complete = 1;
             $action = 'submit';
             $message = 'Company registration complete, Please wait for approval!';
+
+            //store company aapprovals
+            $arr_assessment_criteria = [
+                'Company_Information' => 'Company Information',
+                'Company_Documents' => 'Company Documents',
+                'Company_Collection_Accounts' => 'Company Collection Accounts',
+                'Company_Authorized_Representative' => 'Company Authorized Representative',
+            ];
+
+            foreach ($arr_assessment_criteria as $key => $label) {
+                $partner_approval = PartnerApproval::firstOrNew([
+                    'partner_id' => $id,
+                    'key' => $key,
+                    'label' => $label
+                ]);
+                $partner_approval->save();
+            }
         }
 
         //partner

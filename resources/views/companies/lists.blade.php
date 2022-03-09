@@ -5,13 +5,12 @@
 @endsection
 
 @section('content')
-
     @component('components.breadcrumb')
         @slot('li_1')
             Companies
         @endslot
         @slot('title')
-            Companies
+            List of Companies
         @endslot
     @endcomponent
 
@@ -25,7 +24,7 @@
                                 <thead>
                                     <tr>
                                         <th width="3%">#</th>
-                                        <th width="24%">Bussiness Name</th>
+                                        <th width="22%">Bussiness Name</th>
                                         <th width="16%">Category</th>
                                         <th width="12%">TIN Number</th>
                                         <th width="12%">Year of Incorporation</th>
@@ -46,9 +45,9 @@
                                             <td>{{ $company->region->name ?? '' }}</td>
                                             <td>
                                                 @if ($company->status == 1)
-                                                    <span class="badge bg-success">Completed</span>
+                                                    <span class="badge bg-info">Completed Registration</span>
                                                 @elseif($company->status == 2)
-                                                    <span class="badge bg-success">Verified</span>
+                                                    <span class="badge bg-info">Assessment Process</span>
                                                 @elseif($company->status == 3)
                                                     <span class="badge bg-success">Approved</span>
                                                 @endif

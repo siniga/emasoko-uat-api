@@ -40,6 +40,11 @@ class Partner extends Model
         return $this->hasMany(PartnerStaff::class, 'partner_id');
     }
 
+    function partnerApprovals()
+    {
+        return $this->hasMany(PartnerApproval::class, 'partner_id');
+    }
+
     function region()
     {
         return $this->belongsTo(Region::class, 'region_id');

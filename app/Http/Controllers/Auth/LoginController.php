@@ -44,8 +44,13 @@ class LoginController extends Controller
 
         //check if user already login
         if (Auth::check()) {
-            // Authentication passed...
-            return Redirect::route('home')->with('success', 'Logged in successful');
+            if (Auth::user()->hasRole('admin')) {
+                // Authentication passed...
+                return Redirect::route('dashboard')->with('success', 'Logged in successful');
+            } else {
+                // Authentication passed...
+                return Redirect::route('customers.create')->with('success', 'Logged in successful');
+            }
         }
 
         //render view

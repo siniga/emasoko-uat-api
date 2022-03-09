@@ -39,7 +39,6 @@ use Illuminate\Support\Facades\Route;
 // Route::get('index/{locale}', [App\Http\Controllers\HomeController::class, 'lang']);
 
 Route::get('/', [LoginController::class, 'showLoginForm'])->name('login');
-Route::get('home', [HomeController::class, 'index'])->name('home');
 Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
 //registration of seller
@@ -96,8 +95,8 @@ Route::resources([
 ]);
 
 //companies
-Route::get('companies/{id}/verify-company', [CompanyController::class, 'verify'])->name('companies.verify');
-Route::get('companies/{id}/approve-company', [CompanyController::class, 'approve'])->name('companies.approve');
+Route::get('companies/{id}/assessment', [CompanyController::class, 'assessment'])->name('companies.assessment');
+Route::post('companies/store-assessment', [CompanyController::class, 'store_assessment'])->name('companies.store-assessment');
 
 //customers
 Route::get('customers/details/{uuid}', [CustomerController::class, 'details'])->name('customers.details');

@@ -215,9 +215,9 @@ table.table>:not(:last-child)>:last-child>* {
 offcanvas
 ============================================*/
 #offcanvas-wrp{
-    width: 64vw;
+    width: 56vw;
     height: 100%;
-    margin-top: 40px;
+    margin-top: 60px;
     padding: 20px 10px 48px 10px;
     background-color: #Fff;
     position: fixed;
@@ -231,7 +231,7 @@ offcanvas
   
   @media screen and (max-width: 600px) {
     #offcanvas-wrp{
-        width: 100vw;
+        width: 64vw;
         height: calc(100vh - 100px);
         margin-top: 40px;
     }
