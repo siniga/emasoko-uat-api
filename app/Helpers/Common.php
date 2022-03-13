@@ -2,6 +2,9 @@
 
 
 //media types function
+
+use App\Models\Partner;
+
 if (!function_exists('calculate_end_date')) {
     function calculate_end_date($start_at, $periodicity)
     {
@@ -23,6 +26,24 @@ if (!function_exists('cast_phone')) {
             return substr($phone, 1);
         } else {
             return $phone;
+        }
+    }
+}
+
+
+//complete registration notification
+if (!function_exists('get_booking_notification')) {
+    function get_company_notification()
+    {
+        $companies = Partner::where(function ($query) {
+            $query->where('status', '=', 1)
+                ->orWhere('status', '=', 2);
+        });
+
+        if ($companies->get()->isNotEmpty()) {
+            return $companies->count();
+        } else {
+            return null;
         }
     }
 }

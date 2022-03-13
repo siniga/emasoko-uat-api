@@ -170,8 +170,8 @@
                                             </div>
                                             <!--./col -->
 
-                                            <div class="col-lg-3">
-                                                <label for="email">Country Code<span class="text-danger">*</span></label>
+                                            <div class="col-lg-1">
+                                                <label for="email">Country<span class="text-danger">*</span></label>
                                                 @php $options = []; @endphp
                                                 @foreach ($countries as $country)
                                                     @php
@@ -186,7 +186,7 @@
                                             </div>
                                             <!--./col -->   
 
-                                            <div class="col-lg-3">
+                                            <div class="col-lg-2">
                                                 <div class="mb-3">
                                                     <label for="location">Company Phone <span
                                                             class="text-danger">*</span></label>

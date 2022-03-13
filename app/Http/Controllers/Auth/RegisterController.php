@@ -469,7 +469,7 @@ class RegisterController extends Controller
             //send verification code through email
             //construct message
             $message = "<p>Enter this 6 digit code on the verify company page to confirm your identity:</p>";
-            $message = "{$otp_token}";
+            $message .= "{$otp_token}";
             $message .= "<p>You can start using your eMakato account now. Login to your account by <a href=" . url('login') . ">click here.</a></p>";
 
             //send email
@@ -540,9 +540,18 @@ class RegisterController extends Controller
                     $message = "Company is in training stage";
 
                 //redirect 
-                return Redirect::back()->withSuccess($message);
+                return Redirect::route('company.verify-registration-success')->withSuccess($message);
             }
         }
+    }
+
+    //verify application
+    function verifyCompanyRegistrationSuccess()
+    {
+        $title = 'Track Application';
+
+        //render view
+        return view('auth.verify_company_registration_success', compact('title'));
     }
 
     //verify account

@@ -362,16 +362,18 @@ line-height: 1;
 /*========================================
 || 
  ========================================*/
- .non-field-wrapper {
-  background: #fff; 
-  margin: 8px 0; 
-  padding: 10px;
- }
-
- .field-wrapper {
+ .wrapper-plus {
   background: #FAFAFA; 
   border: 1px solid #E0E0E0; 
   border-radius: 5px; 
   margin: 8px 0; 
   padding: 10px;
  }
+
+ /* .field-wrapper {
+  background: #FAFAFA; 
+  border: 1px solid #E0E0E0; 
+  border-radius: 5px; 
+  margin: 8px 0; 
+  padding: 10px;
+ } */

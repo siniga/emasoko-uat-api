@@ -81,7 +81,7 @@
 
                                         @if ($company->partnerStaff->isNotEmpty())
                                             @foreach ($company->partnerStaff as $data)
-                                                <div class="row non-field-wrapper">
+                                                <div class="row">
                                                     <div class="col-lg-4">
                                                         <div class="mb-3">
                                                             <label for="basicpill-namecard-input">Staff Name <span
@@ -144,7 +144,7 @@
                                                 <!--./row -->
                                             @endforeach
                                         @else
-                                            <div class="row non-field-wrapper">
+                                            <div class="row">
                                                 <div class="col-lg-4">
                                                     <div class="mb-3">
                                                         <label for="basicpill-namecard-input">Staff Name <span
@@ -267,7 +267,7 @@
                     let maxField = 5; //Input fields increment limitation
                     let wrapper = $('.field_wrapper'); //Input field wrapper
                     let fieldHTML =
-                        '<div class="row row-div non-field-wrapper">' +
+                        '<div class="row row-div">' +
                         '<div class="col-lg-4">' +
                         '<div class="mb-3">' +
                         '<label>Staff Name <span class="text-danger">*</span></label>' +
@@ -300,9 +300,10 @@
 
                     fieldHTML += '<div class="col-lg-4 col-md-4">' +
                         '<div class="mt-4 pt-2 text-sm-end d-none d-sm-block">' +
-                        '<button type="button" name="add" id="remove_button" class="btn btn-danger btn-sm text-medium">' +
-                        '<i class="fa fa-times"></i>' +
-                        '</button>' +
+                        'Do you want to delete staff information? <input type="checkbox" id="remove_button" />' +
+                        // '<button type="button" name="add" id="remove_button" class="btn btn-danger btn-sm text-medium">' +
+                        // '<i class="fa fa-times"></i>' +
+                        // '</button>' +
                         '</div></div>';
 
                     fieldHTML += '</div>';

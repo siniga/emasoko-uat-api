@@ -74,6 +74,9 @@ Route::post('track-company-registration', [RegisterController::class, 'trackComp
 Route::get('verify-company-registration/{uuid}', [RegisterController::class, 'verifyCompanyRegistrationForm'])->name('company.verify-registration');
 Route::post('verify-company-registration/{uuid}', [RegisterController::class, 'verifyCompanyRegistration'])->name('company.verify-registration');
 
+//success verification
+Route::get('verify-company-registration-success', [RegisterController::class, 'verifyCompanyRegistrationSuccess'])->name('company.verify-registration-success');
+
 //account types
 Route::get('account-types/{id}', [AccountController::class, 'account_types'])->name('account-types');
 

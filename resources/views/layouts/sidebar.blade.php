@@ -21,6 +21,14 @@
                         <a href="{{ route('companies.index') }}" class="waves-effect">
                             <i class="bx bx-building"></i>
                             <span key="t-layouts">Companies</span>
+
+                            @php
+                                $notify = get_company_notification();
+                            @endphp
+
+                            @if ($notify != null)
+                            <span class="badge bg-danger">{{ $notify }}</span>
+                            @endif
                         </a>
                     </li>
                 @endif
