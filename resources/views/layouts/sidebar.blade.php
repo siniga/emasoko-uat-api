@@ -26,9 +26,9 @@
                 @endif
 
                 <li>
-                    <a href="{{ route('customers.index') }}" class="waves-effect">
+                    <a href="{{ route('customers.lists') }}" class="waves-effect">
                         <i class="bx bx-user"></i>
-                        <span key="t-layouts">Debit Orders</span>
+                        <span key="t-layouts">Payment Mandate</span>
                     </a>
                 </li>
 

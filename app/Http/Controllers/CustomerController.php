@@ -19,14 +19,19 @@ use Illuminate\Support\Str;
 
 class CustomerController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
     /**
      * Display a listing of the resource.
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function lists()
     {
-        $title = 'Customers';
+        $title = 'Payment Mandate';
         //has_allowed('roles', 'lists');
 
         $customers = Customer::where_cond()->get();
@@ -40,23 +45,23 @@ class CustomerController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create()
+    function registrationForm($uuid = null)
     {
-        $title = "Customer Registration";
+        $title = "Payment Mandate";
+
+        //if uuid =! null
+        $customer = [];
+        if ($uuid != null)
+            $customer = Customer::where(['uuid' => $uuid])->firstOrFail();
 
         //populate data
         $genders = Gender::all();
         $marital_status = MaritalStatus::all();
         $sectors = Sector::all();
         $occupations = Occupation::all();
-        $account_types = AccountType::all();
-        $accounts = Account::all();
-
-        //loans
-        $loan_purposes = LoanPurpose::all();
 
         //render view
-        return view('customers.create', compact('title', 'genders', 'marital_status', 'sectors', 'occupations', 'account_types', 'accounts', 'loan_purposes'));
+        return view('customers.create', compact('title', 'customer', 'genders', 'marital_status', 'sectors', 'occupations'));
     }
 
     /**
@@ -65,9 +70,13 @@ class CustomerController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function storeCustomerDetails(Request $request)
     {
-        $uuid = Str::uuid();
+        //capture if uuid is not null
+        if ($request->input('customer_uuid') != null)
+            $uuid = $request->input('customer_uuid');
+        else
+            $uuid = Str::uuid();
 
         //get customer id
         $user_id = Auth::user()->id;
@@ -90,8 +99,13 @@ class CustomerController extends Controller
         $customer->middle_name = $request->input('middle_name');
         $customer->last_name = $request->input('surname');
         $customer->dob = $dob;
-        $customer->id_type = 1;
-        $customer->id_number = $request->input('nida_number');
+
+        //check if nida number provided
+        if ($request->input('nida_number') != null) {
+            $customer->id_type = 1;
+            $customer->id_number = $request->input('nida_number');
+        }
+
         $customer->gender_id = $request->input('gender_id');
         $customer->marital_status_id = $request->input('marital_status_id');
         $customer->sector_id = $request->input('sector_id');
@@ -99,30 +113,111 @@ class CustomerController extends Controller
         $customer->created_by = Auth::user()->id;
         $customer->save();
 
-        //account details
+        //response
+        return response()->json(['success' => true, 'uuid' => $uuid], 200);
+    }
+
+    //payment details form
+    function paymentDetailsForm($uuid)
+    {
+        $title = "Payment Mandate";
+
+        //if uuid 
+        $customer = Customer::where(['uuid' => $uuid])->firstOrFail();
+
+        //populate data
+        $account_types = AccountType::all();
+        $accounts = Account::all();
+
+        //render view
+        return view('customers.payment_details', compact('title', 'customer', 'account_types', 'accounts'));
+    }
+
+    //store payment details
+    function storePaymentDetails(Request $request)
+    {
+        //validation 
+
+        //post data
+        $id = $request->input('customer_id');
+        $uuid = $request->input('customer_uuid');
+
+        $customer = Customer::findOrFail($id);
+
+        //save or update account details
         $customer_account = CustomerAccount::firstOrNew([
             'customer_id' => $customer->id,
             'account_type_id' => $request->input('account_type_id'),
-            'account_id' => $request->input('account_id')
+            'account_id' => $request->input('account_id'),
+            'account_number' => $request->input('account_number')
         ]);
-        $customer_account->account_number = $request->input('account_number');
+        $customer_account->account_name = $request->input('account_name');
         $customer_account->phone = $request->input('phone');
         $customer_account->created_by = Auth::user()->id;
         $customer_account->save();
+
+        //response
+        return response()->json(['success' => true, 'uuid' => $uuid], 200);
+    }
+
+    //deduction details
+    function deductionDetailsForm($uuid)
+    {
+        $title = "Payment Mandate";
+
+        //if uuid 
+        $customer = Customer::where(['uuid' => $uuid])->firstOrFail();
+
+        //populate data
+        $loan_purposes = LoanPurpose::all();
+
+        //render view
+        return view('customers.deduction_details', compact('title', 'customer', 'loan_purposes'));
+    }
+
+    //store deduction details
+    function storeDeductionDetails(Request $request)
+    {
+        //validation 
+
+        //post data
+        $id = $request->input('customer_id');
+        $uuid = $request->input('customer_uuid');
+
+        $customer = Customer::findOrFail($id);
+
+        //customer account
+        $customer_account = CustomerAccount::where(['customer_id' => $customer->id])->first();
 
         //loan details
         $debit_order = DebitOrder::firstOrNew([
             'customer_account_id' => $customer_account->id,
         ]);
-        $debit_order->loan_purpose_id = $request->input('loan_purpose_id');
         $debit_order->total_amount = floatval(str_replace(",", "", $request->input('loan_amount')));
-        $debit_order->installment_amount = floatval(str_replace(",", "", $request->input('installment_amount')));
-        $debit_order->installment_number = $request->input('number_of_installment');
-        $debit_order->periodicity = $request->input('peridiocity');
-        $debit_order->start_date = $request->input('start_date');
+        $debit_order->debit_type = $request->input('debit_type');
 
-        //calculate end data
-        //$debit_order->end_date = $request->input('loan_purpose_id');
+        //check for installment amount
+        if ($request->input('debit_type') == 'FIXED') {
+            $debit_order->max_installment_amount = floatval(str_replace(",", "", $request->input('installment_amount')));
+            $debit_order->min_installment_amount = 0;
+        } else if ($request->input('debit_type') == 'DYNAMIC') {
+            $debit_order->max_installment_amount = floatval(str_replace(",", "", $request->input('max_installment_amount')));
+            $debit_order->min_installment_amount = floatval(str_replace(",", "", $request->input('min_installment_amount')));
+        }
+
+        $debit_order->periodicity = $request->input('peridiocity');
+        $debit_order->installment_number = $request->input('number_of_installment');
+        $debit_order->start_date = $request->input('start_date');
+        $debit_order->deduction_end_date = $request->input('deduction_end_date');
+
+        //calculate end date
+        if ($request->input('deduction_end_date') == 'total_loan_covered') {
+            //calculate end date from start date
+            $debit_order->end_date = date('Y-m-d', strtotime($request->input('start_date') . '+2 year'));
+        } else if ($request->input('deduction_end_date') == 'specific_date') {
+            //fixed end date
+            $debit_order->end_date = $request->input('end_date');
+        }
 
         //evidence_of_aggrement attached
         if ($request->hasFile('evidence_of_aggrement')) {
@@ -137,6 +232,47 @@ class CustomerController extends Controller
         //response
         return response()->json(['success' => true, 'uuid' => $uuid], 200);
     }
+
+    //customer preview
+    function preview($uuid)
+    {
+        $title = "Payment Mandate";
+
+        //customer
+        $customer = Customer::where(['uuid' => $uuid])->firstOrFail();
+
+        //render view
+        return view('customers.preview', compact('title', 'customer'));
+    }
+
+    //confirm application
+    function confirmCustomerRegistration(Request $request)
+    {
+        //validation 
+
+        //post data
+        $id = $request->input('customer_id');
+        $uuid = $request->input('customer_uuid');
+
+        $status = 'inactive';
+        if (isset($_POST['save'])) {
+            $status = 'inactive';
+            $action = 'save';
+            $message = 'Payment mandate information saved!';
+        } else if (isset($_POST['submit'])) {
+            $status = 'active';
+            $action = 'submit';
+            $message = 'Payment mandate registration complete!';
+        }
+
+        $customer = Customer::findOrFail($id);
+        $customer->status = $status;
+        $customer->save();
+
+        //response
+        return response()->json(['success' => true, 'action' => $action, 'success_msg' => $message], 200);
+    }
+
 
     /**
      * Display the specified resource.
@@ -154,9 +290,22 @@ class CustomerController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+    public function edit($uuid)
     {
-        //
+        $title = "Payment Mandate";
+
+        $customer = Customer::where(['uuid' => $uuid])->firstOrFail();
+
+        //populate data
+        $genders = Gender::all();
+        $marital_status = MaritalStatus::all();
+        $sectors = Sector::all();
+        $occupations = Occupation::all();
+        $account_types = AccountType::all();
+        $accounts = Account::all();
+
+        //render view
+        return view('customers.edit', compact('title', 'customer', 'genders', 'marital_status', 'sectors', 'occupations', 'account_types', 'accounts'));
     }
 
     /**
@@ -166,9 +315,55 @@ class CustomerController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request)
     {
-        //
+        //validation
+
+        //post data
+        $id = $request->input('customer_id');
+        $uuid = $request->input('customer_uuid');
+
+        //dob
+        $year = $request->input('year');
+        $month = $request->input('month');
+        $day = $request->input('day');
+        $dob = $year . '-' . $month . '-' . $day;
+
+        //save customer details
+        $customer = Customer::findOrFail($id);
+        $customer->first_name = $request->input('first_name');
+        $customer->middle_name = $request->input('middle_name');
+        $customer->last_name = $request->input('surname');
+        $customer->dob = $dob;
+
+        //check if nida number provided
+        if ($request->input('nida_number') != null) {
+            $customer->id_type = 1;
+            $customer->id_number = $request->input('nida_number');
+        }
+
+        $customer->gender_id = $request->input('gender_id');
+        $customer->marital_status_id = $request->input('marital_status_id');
+        $customer->sector_id = $request->input('sector_id');
+        $customer->occupation_id = $request->input('occupation_id');
+        $customer->updated_by = Auth::user()->id;
+        $customer->save();
+
+
+        //save or update account details
+        $customer_account = CustomerAccount::firstOrNew([
+            'customer_id' => $customer->id,
+            'account_type_id' => $request->input('account_type_id'),
+            'account_id' => $request->input('account_id'),
+            'account_number' => $request->input('account_number')
+        ]);
+        $customer_account->account_name = $request->input('account_name');
+        $customer_account->phone = $request->input('phone');
+        $customer_account->created_by = Auth::user()->id;
+        $customer_account->save();
+
+        //response
+        return response()->json(['success' => true, 'uuid' => $uuid, 'success_msg' => "Customer Information updated!"], 200);
     }
 
     /**

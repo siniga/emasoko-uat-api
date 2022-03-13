@@ -8,7 +8,7 @@
             </div>
             <div class="col-sm-6">
                 <div class="text-sm-end d-none d-sm-block">
-                    Developed by Laina Finance
+                    Developed by SoloCodes
                 </div>
             </div>
         </div>

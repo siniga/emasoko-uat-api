@@ -1,17 +1,17 @@
 @extends('layouts.master')
 
 @section('title')
-    Customers
+    Payment Mandate
 @endsection
 
 @section('content')
 
     @component('components.breadcrumb')
         @slot('li_1')
-            Lists
+            Dashboard
         @endslot
         @slot('title')
-            Customers
+            Payment Mandate
         @endslot
     @endcomponent
 
@@ -21,8 +21,9 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-9">
-                            <a href="{{ route('customers.create') }}" class="btn btn-outline-primary btn-sm">
-                                <i class="fa fa-plus"></i> Register New
+                            <a href="{{ route('customers.register') }}"
+                                class="btn btn-secondary btn-sm waves-effect btn-label waves-light">
+                                <i class="bx bx-plus label-icon"></i> Register
                             </a>&nbsp;&nbsp;&nbsp;
 
                             {{-- <a href="{{ route('media.billboards.import') }}" class="btn btn-outline-info"><i
@@ -32,8 +33,7 @@
                         <!--./col-md-9 -->
 
                         <div class="col-md-3 pull-right">
-                            <input type="text" id="myCustomSearchBox" class="form-control"
-                                placeholder="Search details...">
+                            <input type="text" id="myCustomSearchBox" class="form-control" placeholder="Search details...">
                         </div>
                         <!--./col-md-4 -->
                     </div>
@@ -45,13 +45,14 @@
                                 <thead>
                                     <tr>
                                         <th width="3%">#</th>
-                                        <th width="24%">Full Name</th>
+                                        <th width="18%">Full Name</th>
                                         <th width="16%">NIDA Number</th>
-                                        <th width="12%">Date of Birth</th>
-                                        <th width="12%">Sector</th>
-                                        <th width="14%">Occupation</th>
+                                        <th width="8%">Payment Channel</th>
+                                        <th width="10%">Bank/Institution</th>
+                                        <th width="16%">Account</th>
+                                        <th width="10%">Phone</th>
                                         <th width="8%">Status</th>
-                                        <th style="width: 60px;">Actions</th>
+                                        <th style="width: 80px;">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -59,29 +60,36 @@
                                     @foreach ($customers as $customer)
                                         <tr>
                                             <td>{{ $serial }}</td>
-                                            <td>{{ $customer->first_name . ' ' . $customer->middle_name . ' ' . $customer->last_name }}</td>
-                                            <td>{{ $customer->id_number }}</td>
-                                            <td>{{ $customer->dob }}</td>
-                                            <td>{{ $customer->sector->name }}</td>
-                                            <td>{{ $customer->occupation->name ?? '' }}</td>
+                                            <td>{{ $customer->full_name }}</td>
+                                            <td>{{ $customer->id_number ?? 'NIL' }}</td>
+                                            <td>{{ $customer->customerAccount->accountType->name ?? '' }}</td>
+                                            <td>{{ $customer->customerAccount->account->name ?? '' }}</td>
                                             <td>
-                                                {{ $customer->status }}
+                                                {{ $customer->customerAccount->account_name ?? '' }}<br />
+                                                {{ $customer->customerAccount->account_number ?? '' }}
+                                            </td>
+                                            <td>{{ $customer->customerAccount->phone ?? '' }}</td>
+                                            <td>
+                                                @if ($customer->status == 'active')
+                                                    <span class="badge bg-success">Active</span>
+                                                @elseif($customer->status == 'inactive')
+                                                    <span class="badge bg-danger">Inactive</span>
+                                                @endif
                                             </td>
                                             <td>
+                                                
                                                 <a href="{{ route('customers.details', $customer->uuid) }}" title="View"
                                                     class="btn btn-outline-primary btn-xss">
-                                                    <i class="fa fa-folder-open"></i>
+                                                    <i class="bx bx-folder-open text-center"></i>
                                                 </a>
 
-                                                {{-- <a href="{{ route('users.change-status', $values->id) }}"
-                                                title="Change status" class="btn btn-outline-info btn-xs">
-                                                <i class="fa fa-info-circle"></i>
-                                            </a>
+                                                <a href="{{ route('customers.edit', $customer->uuid) }}" title="Edit" class="btn btn-outline-secondary btn-xss">
+                                                    <i class="bx bx-pencil text-center"></i>
+                                                </a>
 
-                                            <a href="{{ route('users.delete', $values->id) }}" title="Delete"
-                                                class="btn btn-outline-danger btn-xs delete">
-                                                <i class="fa fa-trash text-danger"></i>
-                                            </a> --}}
+                                                <a href="#" title="Delete" class="btn btn-outline-danger btn-xss delete">
+                                                    <i class="bx bx-trash"></i>
+                                                </a>
                                             </td>
                                         </tr>
                                         @php $serial++; @endphp

@@ -10,6 +10,11 @@ class CustomerAccount extends Model
     use HasFactory;
     protected $guarded = [];
 
+    function accountType()
+    {
+        return $this->belongsTo(AccountType::class, 'account_type_id');
+    }
+
     function account()
     {
         return $this->belongsTo(Account::class, 'account_id');

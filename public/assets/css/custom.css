@@ -28,6 +28,42 @@ h1, h2, h3, h4, h5, h6 {
     color: #424242;
 }
 
+.font-weight-600{
+  font-weight: 600 !important;
+}
+
+.font-weight-700{
+  font-weight: 700 !important;
+}
+
+.font-weight-800{
+  font-weight: 800 !important;
+}
+
+.text-lg {
+  font-size: 32px !important;
+}
+
+.text-m {
+  font-size: 24px !important;
+}
+
+.text-x {
+  font-size: 20px !important;
+}
+
+.text-xs {
+  font-size: 18px !important;
+}
+
+.text-xss {
+font-size: 16px !important;
+}
+
+.text-xsss {
+font-size: 12px !important;
+}
+
 /*===========================
 	Header Rules
  ==========================*/
@@ -69,9 +105,9 @@ h1, h2, h3, h4, h5, h6 {
 Button
 ||==============================================*/
 .btn-xss{
-  padding:.10rem .27rem;
-  font-size: .700rem;
-  line-height: 1.6;
+  padding:.12rem .24rem;
+  font-size: .800rem;
+  /* line-height: 1.4; */
   border-radius: 3px;
 }
 
@@ -112,7 +148,7 @@ Button
   .btn-secondary:hover, .btn-secondary:focus, .btn-secondary:active, .btn-secondary.active, .open .dropdown-toggle.btn-secondary {
     color: #ffffff;
     background-color: #1565C0;
-    border-color: #222831;
+    border-color: #1565C0;
   }
   
   .btn-secondary:active, .btn-secondary.active, .open .dropdown-toggle.btn-secondary {

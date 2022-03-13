@@ -91,7 +91,7 @@ Route::resources([
     'roles' => RoleController::class,
     'users' => UserController::class,
     'companies' => CompanyController::class,
-    'customers' => CustomerController::class
+    //'customers' => CustomerController::class
 ]);
 
 //companies
@@ -99,7 +99,28 @@ Route::get('companies/{id}/assessment', [CompanyController::class, 'assessment']
 Route::post('companies/store-assessment', [CompanyController::class, 'store_assessment'])->name('companies.store-assessment');
 
 //customers
+Route::get('customers/lists', [CustomerController::class, 'lists'])->name('customers.lists');
+
+//customer information
+Route::get('customers/register/{uuid?}', [CustomerController::class, 'registrationForm'])->name('customers.register');
+Route::post('store-customer-details', [CustomerController::class, 'storeCustomerDetails'])->name('customers.store-details');
+
+//payment details
+Route::get('customers/payment-details/{uuid}', [CustomerController::class, 'paymentDetailsForm'])->name('customers.register-payment-details');
+Route::post('store-customer-payment-details', [CustomerController::class, 'storePaymentDetails'])->name('customers.store-payment-details');
+
+//deduction details
+Route::get('customers/deduction-details/{uuid}', [CustomerController::class, 'deductionDetailsForm'])->name('customers.register-deduction-details');
+Route::post('store-customer-deduction-details', [CustomerController::class, 'storeDeductionDetails'])->name('customers.store-deduction-details');
+
+//preview
+Route::get('customers/preview/{uuid}', [CustomerController::class, 'preview'])->name('customers.preview');
+Route::post('confirm-customer-registration', [CustomerController::class, 'confirmCustomerRegistration'])->name('customers.confirm-registration');
+
+//details
 Route::get('customers/details/{uuid}', [CustomerController::class, 'details'])->name('customers.details');
+Route::get('customers/edit/{uuid}', [CustomerController::class, 'edit'])->name('customers.edit');
+Route::post('customers/update-details', [CustomerController::class, 'update'])->name('customers.update');
 
 //users
 Route::get('users/{id}/change-status', [UserController::class, 'change_status'])->name('users.change-status');

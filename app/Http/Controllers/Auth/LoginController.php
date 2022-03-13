@@ -87,7 +87,7 @@ class LoginController extends Controller
                     return Redirect::route('dashboard')->with('success', 'Logged in successful');
                 } else {
                     // Authentication passed...
-                    return Redirect::route('customers.create')->with('success', 'Logged in successful');
+                    return Redirect::route('customers.register')->with('success', 'Logged in successful');
                 }
             } else {
                 Auth::logout();
