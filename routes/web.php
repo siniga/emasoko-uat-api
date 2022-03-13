@@ -70,6 +70,10 @@ Route::post('confirm-company-registration', [RegisterController::class, 'confirm
 Route::get('track-company-registration', [RegisterController::class, 'trackCompanyRegistrationForm'])->name('company.track-registration');
 Route::post('track-company-registration', [RegisterController::class, 'trackCompanyRegistration'])->name('company.track-registration');
 
+//verify company registration
+Route::get('verify-company-registration/{uuid}', [RegisterController::class, 'verifyCompanyRegistrationForm'])->name('company.verify-registration');
+Route::post('verify-company-registration/{uuid}', [RegisterController::class, 'verifyCompanyRegistration'])->name('company.verify-registration');
+
 //account types
 Route::get('account-types/{id}', [AccountController::class, 'account_types'])->name('account-types');
 

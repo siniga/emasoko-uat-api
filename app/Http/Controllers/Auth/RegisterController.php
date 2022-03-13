@@ -459,6 +459,71 @@ class RegisterController extends Controller
             //redirect
             return Redirect::back()->with('danger', 'Company does not exist, please Apply Now!');
         } else {
+            //create otp token
+            $otp_token = $this->generateOtpToken();
+
+            //update company token
+            $partner->otp_token = $otp_token;
+            $partner->save();
+
+            //send verification code through email
+            //construct message
+            $message = "<p>Enter this 6 digit code on the verify company page to confirm your identity:</p>";
+            $message = "{$otp_token}";
+            $message .= "<p>You can start using your eMakato account now. Login to your account by <a href=" . url('login') . ">click here.</a></p>";
+
+            //send email
+            Mail::send(
+                ['html' => 'emails.template'],
+                ['name' => $partner->business_name, 'body' => $message],
+                function ($message) use ($partner) {
+                    $message->to($partner->email);
+                    $message->subject('Company Verification Code');
+                    $message->from('renfridfrancis@gmail.com', 'eMakato');
+                }
+            );
+
+            //redirect to verify company registration
+            return Redirect::route('company.verify-registration', $partner->uuid)->with('success', 'Verification code sent');
+        }
+    }
+
+
+    //verify application
+    function verifyCompanyRegistrationForm($uuid)
+    {
+        $title = 'Track Application';
+
+        //company
+        $company = Partner::where(['uuid' => $uuid])->firstOrFail();
+
+        //render view
+        return view('auth.verify_company_registration', compact('title', 'company'));
+    }
+
+    //track company registration
+    function verifyCompanyRegistration(Request $request, $uuid)
+    {
+        //validation
+        $this->validate(
+            $request,
+            [
+                'verification_code' => 'required'
+            ],
+            [
+                'verification_code.required' => 'Verification code required',
+            ]
+        );
+
+        //post data
+        $verification_code = $request->input('verification_code');
+
+        $partner = Partner::where(['uuid' => $uuid, 'otp_token' => $verification_code])->first();
+
+        if (!$partner) {
+            //redirect
+            return Redirect::back()->with('danger', 'Invalid verification code!');
+        } else {
             if ($partner->complete == 0) {
                 $message = "Company registration does not complete, please complete application by <a href='$partner->next_step'><b>Click here</b></a>.";
 
@@ -499,5 +564,19 @@ class RegisterController extends Controller
             //redirect
             return Redirect::route('login')->with('danger', 'Failed to activate account');
         }
+    }
+
+    //generate message_id
+    function generateOtpToken()
+    {
+        //the characters you want in your id
+        $characters = '0123456789';
+        $max = strlen($characters) - 1;
+        $string = '';
+
+        for ($i = 1; $i <= 6; $i++) {
+            $string .= $characters[mt_rand(0, $max)];
+        }
+        return $string;
     }
 }

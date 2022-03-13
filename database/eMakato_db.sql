@@ -1,10 +1,10 @@
 -- -------------------------------------------------------------
--- TablePlus 4.5.2(402)
+-- TablePlus 4.6.0(406)
 --
 -- https://tableplus.com/
 --
 -- Database: eMakato_db
--- Generation Time: 2022-03-07 15:34:27.2020
+-- Generation Time: 2022-03-13 14:16:50.5530
 -- -------------------------------------------------------------
 
 
@@ -73,7 +73,7 @@ CREATE TABLE `customer_accounts` (
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb3;
 
 DROP TABLE IF EXISTS `customers`;
 CREATE TABLE `customers` (
@@ -85,19 +85,20 @@ CREATE TABLE `customers` (
   `last_name` varchar(45) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
   `middle_name` varchar(45) CHARACTER SET utf8 COLLATE utf8_unicode_ci DEFAULT NULL,
   `dob` date DEFAULT NULL,
-  `id_type` int NOT NULL,
-  `id_number` varchar(50) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
-  `gender_id` int NOT NULL,
-  `marital_status_id` int NOT NULL,
+  `id_type` int DEFAULT NULL,
+  `id_number` varchar(50) CHARACTER SET utf8 COLLATE utf8_unicode_ci DEFAULT NULL,
+  `gender_id` int DEFAULT NULL,
+  `marital_status_id` int DEFAULT NULL,
   `region_id` int DEFAULT NULL,
-  `sector_id` int NOT NULL,
-  `occupation_id` int NOT NULL,
+  `sector_id` int DEFAULT NULL,
+  `occupation_id` int DEFAULT NULL,
   `acquisition_id` int DEFAULT NULL,
   `dependant` int DEFAULT NULL,
-  `status` varchar(10) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL DEFAULT 'Active',
+  `status` varchar(20) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL DEFAULT 'inactive',
   `created_by` int NOT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `updated_by` int DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `added_by` (`created_by`),
   KEY `id_type` (`id_type`,`region_id`,`acquisition_id`),
@@ -107,7 +108,7 @@ CREATE TABLE `customers` (
   KEY `sector_id` (`sector_id`),
   KEY `gender_id` (`gender_id`),
   KEY `martial_status_id` (`marital_status_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb3 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb3 COLLATE=utf8_unicode_ci;
 
 DROP TABLE IF EXISTS `debit_orders`;
 CREATE TABLE `debit_orders` (
@@ -118,9 +119,12 @@ CREATE TABLE `debit_orders` (
   `total_amount` float NOT NULL,
   `paid_amount` float NOT NULL DEFAULT '0',
   `outstanding_amount` float NOT NULL DEFAULT '0',
-  `installment_amount` float NOT NULL,
+  `debit_type` varchar(20) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
+  `min_installment_amount` float DEFAULT '0',
+  `max_installment_amount` float DEFAULT '0',
   `installment_number` int NOT NULL,
   `periodicity` enum('ANNUALLY','MONTHLY','WEEKLY','DAILY') NOT NULL DEFAULT 'MONTHLY',
+  `deduction_end_date` varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
   `start_date` date DEFAULT NULL,
   `end_date` date DEFAULT NULL,
   `evidence_of_aggrement` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
@@ -131,7 +135,7 @@ CREATE TABLE `debit_orders` (
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb3;
 
 DROP TABLE IF EXISTS `failed_jobs`;
 CREATE TABLE `failed_jobs` (
@@ -212,6 +216,16 @@ CREATE TABLE `partner_accounts` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb3;
 
+DROP TABLE IF EXISTS `partner_approvals`;
+CREATE TABLE `partner_approvals` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `partner_id` int DEFAULT NULL,
+  `key` varchar(255) DEFAULT NULL,
+  `label` varchar(255) DEFAULT NULL,
+  `active` int DEFAULT '0',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 DROP TABLE IF EXISTS `partner_categories`;
 CREATE TABLE `partner_categories` (
   `id` int NOT NULL,
@@ -279,6 +293,7 @@ CREATE TABLE `partners` (
   `complete` int NOT NULL DEFAULT '0',
   `status` int NOT NULL DEFAULT '0',
   `next_step` text CHARACTER SET utf8 COLLATE utf8_unicode_ci,
+  `otp_token` varchar(20) CHARACTER SET utf8 COLLATE utf8_unicode_ci DEFAULT NULL,
   `created_by` int DEFAULT NULL,
   `updated_by` int DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -472,15 +487,18 @@ INSERT INTO `countries` (`id`, `code`, `name`, `created_at`, `updated_at`) VALUE
 
 INSERT INTO `customer_accounts` (`id`, `customer_id`, `account_type_id`, `account_id`, `account_number`, `account_name`, `phone`, `created_by`, `created_at`, `updated_at`) VALUES
 (1, 1, 1, 1, '011877465544', NULL, '0717705746', 21, '2022-03-03 11:46:29', '2022-03-03 11:46:29'),
-(2, 2, 1, 1, '012345678', NULL, '0717705746', 23, '2022-03-03 15:14:48', '2022-03-03 15:14:48');
+(2, 2, 1, 1, '012345678', NULL, '0717705746', 23, '2022-03-03 15:14:48', '2022-03-03 15:14:48'),
+(3, 3, 1, 1, '0117645544338', 'Renfrid Ngolongolo', '0717705746', 24, '2022-03-12 10:02:13', '2022-03-12 10:02:13');
 
-INSERT INTO `customers` (`id`, `uuid`, `partner_id`, `phone`, `first_name`, `last_name`, `middle_name`, `dob`, `id_type`, `id_number`, `gender_id`, `marital_status_id`, `region_id`, `sector_id`, `occupation_id`, `acquisition_id`, `dependant`, `status`, `created_by`, `created_at`, `updated_at`) VALUES
-(1, 'df728d58-39b3-4e01-946e-87db6ab5a61d', '1', NULL, 'Renfrid', 'Ngolongolo', 'W', '1947-06-06', 1, '88366465-53553-55252-55', 1, 1, NULL, 1, 1, NULL, NULL, 'Active', 21, '2022-03-03 11:46:29', '2022-03-03 11:46:29'),
-(2, '826f9072-4e7b-4d96-9a03-1c2c202ede81', '1', NULL, 'Renfrid', 'William', 'W', '1949-04-06', 1, '18877366-35553-66535-55', 1, 1, NULL, 1, 1, NULL, NULL, 'Active', 23, '2022-03-03 15:14:48', '2022-03-03 15:14:48');
+INSERT INTO `customers` (`id`, `uuid`, `partner_id`, `phone`, `first_name`, `last_name`, `middle_name`, `dob`, `id_type`, `id_number`, `gender_id`, `marital_status_id`, `region_id`, `sector_id`, `occupation_id`, `acquisition_id`, `dependant`, `status`, `created_by`, `created_at`, `updated_at`, `updated_by`) VALUES
+(1, 'df728d58-39b3-4e01-946e-87db6ab5a61d', '1', NULL, 'Renfrid', 'Ngolongolo', 'W', '1947-06-06', 1, '88366465-53553-55252-55', 1, 1, NULL, 1, 1, NULL, NULL, 'Active', 21, '2022-03-03 11:46:29', '2022-03-03 11:46:29', NULL),
+(2, '826f9072-4e7b-4d96-9a03-1c2c202ede81', '1', NULL, 'Renfrid', 'William', 'W', '1949-04-06', 1, '18877366-35553-66535-55', 1, 1, NULL, 1, 1, NULL, NULL, 'Active', 23, '2022-03-03 15:14:48', '2022-03-03 15:14:48', NULL),
+(3, 'afb0016f-ba0d-4362-815c-94ca3844121e', '2', NULL, 'Renfrid', 'ngolongolo', 'William', '1987-11-08', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'active', 24, '2022-03-12 09:20:03', '2022-03-13 09:48:37', 24);
 
-INSERT INTO `debit_orders` (`id`, `customer_account_id`, `code`, `loan_purpose_id`, `total_amount`, `paid_amount`, `outstanding_amount`, `installment_amount`, `installment_number`, `periodicity`, `start_date`, `end_date`, `evidence_of_aggrement`, `approved`, `approved_by`, `approver_at`, `approve_code`, `created_at`, `updated_at`) VALUES
-(1, 1, NULL, 2, 1000000, 0, 0, 100000, 10, 'MONTHLY', '2022-03-10', NULL, 'Sample Template.xlsx', 0, NULL, NULL, NULL, '2022-03-03 11:46:29', '2022-03-03 11:46:29'),
-(2, 2, NULL, 2, 1000000, 0, 0, 100000, 10, 'MONTHLY', '2022-03-10', NULL, NULL, 0, NULL, NULL, NULL, '2022-03-03 15:14:48', '2022-03-03 15:14:48');
+INSERT INTO `debit_orders` (`id`, `customer_account_id`, `code`, `loan_purpose_id`, `total_amount`, `paid_amount`, `outstanding_amount`, `debit_type`, `min_installment_amount`, `max_installment_amount`, `installment_number`, `periodicity`, `deduction_end_date`, `start_date`, `end_date`, `evidence_of_aggrement`, `approved`, `approved_by`, `approver_at`, `approve_code`, `created_at`, `updated_at`) VALUES
+(1, 1, NULL, 2, 1000000, 0, 0, NULL, 100000, NULL, 10, 'MONTHLY', NULL, '2022-03-10', NULL, 'Sample Template.xlsx', 0, NULL, NULL, NULL, '2022-03-03 11:46:29', '2022-03-03 11:46:29'),
+(2, 2, NULL, 2, 1000000, 0, 0, NULL, 100000, NULL, 10, 'MONTHLY', NULL, '2022-03-10', NULL, NULL, 0, NULL, NULL, NULL, '2022-03-03 15:14:48', '2022-03-03 15:14:48'),
+(3, 3, NULL, NULL, 2000000, 0, 0, 'FIXED', 0, 120000, 20, 'MONTHLY', 'specific_date', '2022-03-19', '2022-04-10', 'phems.pdf', 0, NULL, NULL, NULL, '2022-03-12 12:02:29', '2022-03-12 12:02:29');
 
 INSERT INTO `gender` (`id`, `name`, `created_at`, `updated_at`) VALUES
 (1, 'Male', '2021-10-14 00:00:00', '2021-10-26 01:12:57'),
@@ -524,6 +542,12 @@ INSERT INTO `partner_accounts` (`id`, `partner_id`, `account_type_id`, `partner_
 (1, 1, 1, '5c5bd81a-2ee3-49b0-8d33-11ef3f96b8cf', 1, 'Laina Finance', '0233445567', 0, NULL, '2022-03-03 14:22:41', '2022-03-03 14:22:41'),
 (2, 2, 1, 'c4056861-0c4c-4e4b-a522-2cc1de3a2fa0', 1, 'Laina Finance', '01124786663553', 0, NULL, '2022-03-07 10:26:14', '2022-03-07 10:26:14');
 
+INSERT INTO `partner_approvals` (`id`, `partner_id`, `key`, `label`, `active`) VALUES
+(1, 2, 'Company_Information', 'Company Information', 1),
+(2, 2, 'Company_Documents', 'Company Documents', 1),
+(3, 2, 'Company_Collection_Accounts', 'Company Collection Accounts', 1),
+(4, 2, 'Company_Authorized_Representative', 'Company Authorized Representative', 1);
+
 INSERT INTO `partner_categories` (`id`, `name`, `description`, `created_at`, `updated_at`) VALUES
 (1, 'MICROFINANCE', 'Shop owned by Vodacom', '2021-10-25 23:31:18', '2021-11-04 16:46:59'),
 (2, 'SHOPS', 'Other Shop which are not owned by MNO', '2021-10-25 23:36:03', '2021-11-04 16:47:09'),
@@ -545,9 +569,9 @@ INSERT INTO `partner_users` (`id`, `user_id`, `partner_id`, `partner_uuid`, `aut
 (1, 23, 1, '5c5bd81a-2ee3-49b0-8d33-11ef3f96b8cf', 1, '2022-03-03 14:32:26', '2022-03-03 14:32:26'),
 (2, 24, 2, 'c4056861-0c4c-4e4b-a522-2cc1de3a2fa0', 1, '2022-03-07 11:18:26', '2022-03-07 11:18:26');
 
-INSERT INTO `partners` (`id`, `uuid`, `partner_category_id`, `business_name`, `year_of_incorporation`, `tin_number`, `number_of_staff`, `region_id`, `phone`, `email`, `website`, `postal_address`, `physical_address`, `complete`, `status`, `next_step`, `created_by`, `updated_by`, `created_at`, `updated_at`) VALUES
-(1, '5c5bd81a-2ee3-49b0-8d33-11ef3f96b8cf', 1, 'Laina Finance', '2013', '003-435-289', 12, '2', '0717705746', 'info@lainafinance.com', NULL, NULL, 'Mikocheni', 1, 3, 'company-info-overview/5c5bd81a-2ee3-49b0-8d33-11ef3f96b8cf', NULL, NULL, '2022-03-03 14:14:41', '2022-03-03 14:46:12'),
-(2, 'c4056861-0c4c-4e4b-a522-2cc1de3a2fa0', 1, 'Smart Wallet', '2020', '998-377-363', 10, '2', '255717705746', 'info@smartwallet.co.tz', NULL, 'P.0 Box 1443', 'Mikocheni, Dar es Salaam', 0, 0, 'company-info-overview/c4056861-0c4c-4e4b-a522-2cc1de3a2fa0', NULL, NULL, '2022-03-07 09:33:20', '2022-03-07 11:17:37');
+INSERT INTO `partners` (`id`, `uuid`, `partner_category_id`, `business_name`, `year_of_incorporation`, `tin_number`, `number_of_staff`, `region_id`, `phone`, `email`, `website`, `postal_address`, `physical_address`, `complete`, `status`, `next_step`, `otp_token`, `created_by`, `updated_by`, `created_at`, `updated_at`) VALUES
+(1, '5c5bd81a-2ee3-49b0-8d33-11ef3f96b8cf', 1, 'Laina Finance', '2013', '003-435-289', 12, '2', '0717705746', 'info@lainafinance.com', NULL, NULL, 'Mikocheni', 1, 3, 'company-info-overview/5c5bd81a-2ee3-49b0-8d33-11ef3f96b8cf', NULL, NULL, NULL, '2022-03-03 14:14:41', '2022-03-03 14:46:12'),
+(2, 'c4056861-0c4c-4e4b-a522-2cc1de3a2fa0', 1, 'Smart Wallet', '2020', '998-377-363', 10, '2', '255717705746', 'info@smartwallet.co.tz', NULL, 'P.0 Box 1443', 'Mikocheni, Dar es Salaam', 1, 3, 'company-info-overview/c4056861-0c4c-4e4b-a522-2cc1de3a2fa0', '548180', NULL, NULL, '2022-03-07 09:33:20', '2022-03-13 11:13:58');
 
 INSERT INTO `payment_histories` (`id`, `debit_order_id`, `expected_amount`, `paid_amount`, `payment_reference`, `created_at`, `updated_at`) VALUES
 (9, 25, 7168, 15000, 'laf89-093240', '2021-10-21 17:49:35', '2021-10-26 01:12:57'),
@@ -606,11 +630,11 @@ INSERT INTO `sectors` (`id`, `name`, `description`, `created_at`, `updated_at`) 
 (2, 'PRIVATE', 'SME', '2021-10-14 16:28:21', '2021-11-04 14:12:05');
 
 INSERT INTO `users` (`id`, `name`, `email`, `phone`, `NIDA_number`, `email_verified_at`, `password`, `remember_token`, `verify_token`, `active`, `created_at`, `updated_at`) VALUES
-(1, 'Renfrid William', 'admin@lainafinance.co.tz', NULL, NULL, NULL, '$2y$10$0b/tjmMN.FnQhhmwRh2WkuW5FzSMrIPqOXbd1CPw/rcLQcV7z/mL2', NULL, NULL, 1, NULL, NULL),
+(1, 'Admin Solocodes', 'admin@lainafinance.co.tz', NULL, NULL, NULL, '$2y$10$0b/tjmMN.FnQhhmwRh2WkuW5FzSMrIPqOXbd1CPw/rcLQcV7z/mL2', NULL, NULL, 1, NULL, NULL),
 (21, 'Tony', 'julius@lainafinance.com', '0717705746', '38736262-53552-35325-53', NULL, '$2y$10$xYSjDvPy1VrBqiqINaHAoOh21yvQgiPN.rckzpYa8BOVbQ8DNvCaS', NULL, 'CiMalabq8KsSNOQuodAkej4KlRQ0etfaMy9J2rYsQO3yJ6w9gmRiDEHopcTdiC5C', 1, '2022-03-03 11:32:16', '2022-03-03 11:39:08'),
 (22, 're', 're@gmail.com', '099882772', '73437648-23476-32647-82', NULL, '$2y$10$VRccDCp1OZOylLTvvDjgpe6fzwI/CKExKU3WZCCkJhAwbKasW4VOO', NULL, 'xJZCpme6DL6uRroBCBw3dEwS52HVRR1noQjyoxF5y6qf1BY6GLZSTbrgJeynfWQ8', 0, '2022-03-03 13:49:06', '2022-03-03 13:49:06'),
 (23, 'Renfrid', 'renfridfrancis@gmail.com', '0717705746', '66455599-44444-44444-12', NULL, '$2y$10$qVJEpok88l4bsXuMRenDcOhzfZeif48YNapH/bcz.rap7iaATTzdK', NULL, 'blqarJfItSfgeEJWPwrbtL4a5UnVOJQDMvFpwvFLPWWULno9IdPDbpl6LV6v1UYj', 1, '2022-03-03 14:32:26', '2022-03-03 14:46:12'),
-(24, 'Smart Wallet', 'info@smartwallet.co.tz', NULL, NULL, NULL, '$2y$10$QeMk0yw99miNENHUNcTeiOJ6axasqAO9qWfLlJzFFzr4UU4sCd/Ta', NULL, 'a0p4YQWP51DZMQn4teF9SrMAba7UwwIk6rDElimAK82QL5F8udCNVmxxZ0EMC86G', 0, '2022-03-07 11:18:26', '2022-03-07 11:18:26');
+(24, 'Smart Wallet', 'info@smartwallet.co.tz', NULL, NULL, NULL, '$2y$10$QeMk0yw99miNENHUNcTeiOJ6axasqAO9qWfLlJzFFzr4UU4sCd/Ta', NULL, 'a0p4YQWP51DZMQn4teF9SrMAba7UwwIk6rDElimAK82QL5F8udCNVmxxZ0EMC86G', 1, '2022-03-07 11:18:26', '2022-03-12 07:12:41');
 
 
 

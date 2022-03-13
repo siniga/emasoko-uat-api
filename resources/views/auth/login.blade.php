@@ -27,7 +27,7 @@
                             </div>
                             <div class="card-body pt-0">
                                 <div class="auth-logo">
-                                    <a href="index" class="auth-logo-light">
+                                    <a href="#" class="auth-logo-light">
                                         <div class="avatar-md profile-user-wid mb-4">
                                             <span class="avatar-title rounded-circle bg-light">
                                                 <img src="{{ URL::asset('/assets/images/logo-light.svg') }}" alt=""
@@ -36,7 +36,7 @@
                                         </div>
                                     </a>
 
-                                    <a href="index" class="auth-logo-dark">
+                                    <a href="#" class="auth-logo-dark">
                                         <div class="avatar-md profile-user-wid mb-4">
                                             <span class="avatar-title rounded-circle bg-light">
                                                 <img src="{{ URL::asset('/assets/images/logo.svg') }}" alt=""

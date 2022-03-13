@@ -37,14 +37,17 @@
   },
     chart = new ApexCharts(document.querySelector("#line-chart"), options);
   chart.render();
+
+
+  //donut chart
   options = {
-    series: [60, 30],
+    series: [60, 40],
     chart: {
       type: "donut",
       height: 262
     },
     labels: ["Approved", "Pending"],
-    colors: ["#34c38f", "#f46a6a"],
+    colors: ["#388E3C", "#C62828"],
     legend: {
       show: !1
     },
@@ -57,6 +60,42 @@
     }
   };
   (chart = new ApexCharts(document.querySelector("#donut-chart"), options)).render();
+
+  var options = {
+    series: [{
+      name: "Approved",
+      data: [44, 55, 41, 64]
+    }, {
+      name: "Rejected",
+      data: [53, 32, 33, 52]
+    }],
+    chart: {
+      type: 'bar',
+      height: 350
+    },
+    plotOptions: {
+      bar: {
+        borderRadius: 4,
+        horizontal: true,
+        dataLabels: {
+          position: 'bottom'
+        },
+      }
+    },
+    dataLabels: {
+      enabled: false
+    },
+    xaxis: {
+      categories: ['NMB Bank', 'Vodacom', 'Tigo Pesa', 'Airtel'],
+    },
+    labels: ["Approved", "Pending"],
+    colors: ["#388E3C", "#C62828"],
+  };
+
+  var chart = new ApexCharts(document.querySelector("#bar-chart"), options);
+  chart.render();
+
+  //radio
   var radialoptions1 = {
     series: [37],
     chart: {

@@ -28,7 +28,7 @@
                             </div>
                             <div class="card-body pt-0">
                                 <div class="auth-logo">
-                                    <a href="index" class="auth-logo-light">
+                                    <a href="#" class="auth-logo-light">
                                         <div class="avatar-md profile-user-wid mb-4">
                                             <span class="avatar-title rounded-circle bg-light">
                                                 <img src="{{ URL::asset('/assets/images/logo-light.svg') }}" alt=""
@@ -37,7 +37,7 @@
                                         </div>
                                     </a>
 
-                                    <a href="index" class="auth-logo-dark">
+                                    <a href="#" class="auth-logo-dark">
                                         <div class="avatar-md profile-user-wid mb-4">
                                             <span class="avatar-title rounded-circle bg-light">
                                                 <img src="{{ URL::asset('/assets/images/logo.svg') }}" alt=""
@@ -105,13 +105,10 @@
                         </div>
                         <div class="mt-2 text-center">
                             <div>
-                                <p>Already have an account ? <a href="{{ url('login') }}" class="fw-medium text-primary">
-                                    Login</a>
-                            </p>
-                                <script>
-                                    document.write(new Date().getFullYear())
-                                </script> eMakato. Developed by Laina
-                                Finance
+                                <p>
+                                    <script>
+                                        document.write(new Date().getFullYear())
+                                    </script> eMakato. All rights reserved.
                                 </p>
                             </div>
                         </div>
