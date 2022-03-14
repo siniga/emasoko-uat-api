@@ -47,7 +47,7 @@
 
                         <!-- Customer Information -->
                         <section>
-                            <div class="row mb-4">
+                            {{-- <div class="row mb-4">
                                 <div class="col-lg-12">
                                     <div class="alert alert-info alert-dismissible fade show" role="alert">
                                         <b>Note: </b> Register first name, middle name and surname as appear in bank
@@ -57,7 +57,7 @@
                                     </div>
                                 </div>
                                 <!--./col -->
-                            </div>
+                            </div> --}}
                             <!--./row -->
 
                             <div class="row">
@@ -65,7 +65,7 @@
                                     <div class="mb-3">
                                         <label for="businessname">First Name <span class="text-danger">*</span>
                                         </label>
-                                        {{ Form::text('first_name', old('first_name', $customer->first_name ?? ''), ['class="form-control"','placeholder="Write first name..."']) }}
+                                        {{ Form::text('first_name', old('first_name', $customer->first_name ?? ''), ['class="form-control"','placeholder="Enter first name as appears in bank account..."']) }}
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -74,7 +74,7 @@
                                     <div class="mb-3">
                                         <label for="businessname">Middle Name
                                         </label>
-                                        {{ Form::text('middle_name', old('middle_name', $customer->middle_name ?? ''), ['class="form-control"','placeholder="Write middle name..."']) }}
+                                        {{ Form::text('middle_name', old('middle_name', $customer->middle_name ?? ''), ['class="form-control"','placeholder="Enter middle name..."']) }}
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -83,7 +83,7 @@
                                     <div class="mb-3">
                                         <label for="businessname">Surname <span class="text-danger">*</span>
                                         </label>
-                                        {{ Form::text('surname', old('surname', $customer->last_name ?? ''), ['class="form-control"','placeholder="Write surname..."']) }}
+                                        {{ Form::text('surname', old('surname', $customer->last_name ?? ''), ['class="form-control"','placeholder="Enter surname as appears in bank account..."']) }}
                                         <span class="text-danger"></span>
                                     </div>
                                 </div>

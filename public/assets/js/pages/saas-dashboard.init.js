@@ -9,7 +9,7 @@
       data: [31, 40, 36, 51, 49, 72, 69, 56, 68, 82, 68, 76]
     },
     {
-      name: "Rejected",
+      name: "Pending",
       data: [12, 20, 16, 41, 29, 62, 49, 66, 48, 72, 48, 76]
     }
     ],
@@ -44,7 +44,7 @@
     series: [60, 40],
     chart: {
       type: "donut",
-      height: 262
+      height: 260,
     },
     labels: ["Approved", "Pending"],
     colors: ["#388E3C", "#C62828"],
@@ -66,12 +66,12 @@
       name: "Approved",
       data: [44, 55, 41, 64]
     }, {
-      name: "Rejected",
+      name: "Pending",
       data: [53, 32, 33, 52]
     }],
     chart: {
       type: 'bar',
-      height: 350
+      height: 320,
     },
     plotOptions: {
       bar: {

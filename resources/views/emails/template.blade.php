@@ -9,5 +9,5 @@ Dear <strong>{{ $name }}</strong>,
 <p>
     Sincerely,<br />
     eMakato Team<br />
-    <a href="http://www.emakato.lainafinance.co.tz" target="_blank">http://www.emakato.lainafinance.co.tz</a>
+    <a href="http://www.emakato.co.tz" target="_blank">http://www.emakato.co.tz</a>
 </p>

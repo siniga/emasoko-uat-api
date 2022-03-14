@@ -47,18 +47,6 @@
 
                         <!-- Customer Information -->
                         <section>
-                            <div class="row mb-4">
-                                <div class="col-lg-12">
-                                    <div class="alert alert-info alert-dismissible fade show" role="alert">
-                                        <b>Note: </b> 
-                                        <button type="button" class="btn-close" data-bs-dismiss="alert"
-                                            aria-label="Close"></button>
-                                    </div>
-                                </div>
-                                <!--./col -->
-                            </div>
-                            <!--./row -->
-
                             
                             <div class="row ">
                                 <div class="col-lg-4">
@@ -87,7 +75,7 @@
 
                                 <div class="col-lg-4">
                                     <div class="mb-3">
-                                        <label for="basicpill-namecard-input">Bank/Institution <span
+                                        <label for="basicpill-namecard-input">Bank Name/MNO <span
                                                 class="text-danger">*</span></label>
                                         @php $options = []; @endphp
                                         {{-- @foreach ($accounts as $val)
@@ -109,7 +97,7 @@
                                     <div class="mb-3">
                                         <label>Account Name <span
                                                 class="text-danger">*</span></label>
-                                        {{ Form::text('account_name', old('account_name', $customer->customerAccount->account_name ?? ''), ['class="form-control"','placeholder="Write account name..."','required']) }}
+                                        {{ Form::text('account_name', old('account_name', $customer->customerAccount->account_name ?? ''), ['class="form-control"','placeholder="Enter account name..."','required']) }}
                                         <span class="text-danger"></span>
                                     </div>
                                 </div>
@@ -119,7 +107,7 @@
                                     <div class="mb-3">
                                         <label for="basicpill-namecard-input">Account Number <span
                                                 class="text-danger">*</span></label>
-                                        {{ Form::text('account_number', old('account_number', $customer->customerAccount->account_number ?? ''), ['class="form-control"','placeholder="Write account number..."']) }}
+                                        {{ Form::text('account_number', old('account_number', $customer->customerAccount->account_number ?? ''), ['class="form-control"','placeholder="Enter account number..."']) }}
                                         <span class="text-danger"></span>
                                     </div>
                                 </div>
@@ -127,9 +115,9 @@
 
                                 <div class="col-lg-4" id="account_phone" style="display: block;">
                                     <div class="mb-3">
-                                        <label for="basicpill-namecard-input">Phone <small>(Linked to Bank Account)</small><span
+                                        <label for="basicpill-namecard-input">Phone<span
                                             class="text-danger">*</span></label>
-                                        {{ Form::text('phone', old('phone', $customer->customerAccount->phone ?? ''), ['class="form-control input-mask"','placeholder="Write phone..."','data-inputmask' => "'mask': '9999999999'"]) }}
+                                        {{ Form::text('phone', old('phone', $customer->customerAccount->phone ?? ''), ['class="form-control input-mask"','placeholder="Enter phone connected to the bank account..."','data-inputmask' => "'mask': '9999999999'"]) }}
                                         <span class="text-danger"></span>
                                     </div>
                                 </div>

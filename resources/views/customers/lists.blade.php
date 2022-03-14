@@ -21,14 +21,7 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-9">
-                            <a href="{{ route('customers.register') }}"
-                                class="btn btn-secondary btn-sm waves-effect btn-label waves-light">
-                                <i class="bx bx-plus label-icon"></i> Register
-                            </a>&nbsp;&nbsp;&nbsp;
-
-                            {{-- <a href="{{ route('media.billboards.import') }}" class="btn btn-outline-info"><i
-                                    class="fa fa-upload"></i> Import
-                            </a>&nbsp;&nbsp;&nbsp; --}}
+                            
                         </div>
                         <!--./col-md-9 -->
 
@@ -45,13 +38,14 @@
                                 <thead>
                                     <tr>
                                         <th width="3%">#</th>
-                                        <th width="18%">Full Name</th>
-                                        <th width="16%">NIDA Number</th>
+                                        <th width="18%">Account Name</th>
+                                        <th width="14%">NIDA Number</th>
                                         <th width="8%">Payment Channel</th>
-                                        <th width="10%">Bank/Institution</th>
-                                        <th width="16%">Account</th>
-                                        <th width="10%">Phone</th>
-                                        <th width="8%">Status</th>
+                                        <th width="10%">Bank Name/MNO</th>
+                                        <th width="12%">Account Number</th>
+                                        <th width="12%">Phone<br/><small>(Connected to Bank)</small></th>
+                                        <th width="6%">Status</th>
+                                        <th width="8%">Consent Status</th>
                                         <th style="width: 80px;">Actions</th>
                                     </tr>
                                 </thead>
@@ -60,12 +54,11 @@
                                     @foreach ($customers as $customer)
                                         <tr>
                                             <td>{{ $serial }}</td>
-                                            <td>{{ $customer->full_name }}</td>
-                                            <td>{{ $customer->id_number ?? 'NIL' }}</td>
+                                            <td>{{ $customer->customerAccount->account_name ?? '' }}</td>
+                                            <td><small>{{ $customer->id_number ?? 'NIL' }}</small></td>
                                             <td>{{ $customer->customerAccount->accountType->name ?? '' }}</td>
                                             <td>{{ $customer->customerAccount->account->name ?? '' }}</td>
                                             <td>
-                                                {{ $customer->customerAccount->account_name ?? '' }}<br />
                                                 {{ $customer->customerAccount->account_number ?? '' }}
                                             </td>
                                             <td>{{ $customer->customerAccount->phone ?? '' }}</td>
@@ -76,6 +69,11 @@
                                                     <span class="badge bg-danger">Inactive</span>
                                                 @endif
                                             </td>
+
+                                            <td>
+                                                <span class="badge bg-danger">Pending</span>
+                                            </td>
+
                                             <td>
                                                 
                                                 <a href="{{ route('customers.details', $customer->uuid) }}" title="View"
@@ -86,10 +84,10 @@
                                                 <a href="{{ route('customers.edit', $customer->uuid) }}" title="Edit" class="btn btn-outline-secondary btn-xss">
                                                     <i class="bx bx-pencil text-center"></i>
                                                 </a>
-
+                                                {{-- 
                                                 <a href="#" title="Delete" class="btn btn-outline-danger btn-xss delete">
                                                     <i class="bx bx-trash"></i>
-                                                </a>
+                                                </a> --}}
                                             </td>
                                         </tr>
                                         @php $serial++; @endphp

@@ -86,7 +86,7 @@
                                                 <div class="row">
                                                     <div class="col-lg-4">
                                                         <div class="mb-3">
-                                                            <label>Account Category <span
+                                                            <label>Account Type <span
                                                                     class="text-danger">*</span></label>
                                                             @php
                                                                 $account_type_options = [];
@@ -110,7 +110,7 @@
 
                                                     <div class="col-lg-4">
                                                         <div class="mb-3">
-                                                            <label>Bank/Institution <span
+                                                            <label>Bank Name <span
                                                                     class="text-danger">*</span></label>
                                                             @php $options = []; @endphp
                                                             @foreach ($accounts as $val)
@@ -167,7 +167,7 @@
                                             <div class="row">
                                                 <div class="col-lg-4">
                                                     <div class="mb-3">
-                                                        <label for="basicpill-namecard-input">Account Category <span
+                                                        <label for="basicpill-namecard-input">Account Type <span
                                                                 class="text-danger">*</span></label>
                                                         @php
                                                             $account_type_options = [];
@@ -191,7 +191,7 @@
 
                                                 <div class="col-lg-4">
                                                     <div class="mb-3">
-                                                        <label for="basicpill-namecard-input">Bank/Institution <span
+                                                        <label for="basicpill-namecard-input">Bank Name <span
                                                                 class="text-danger">*</span></label>
                                                         @php $options = []; @endphp
                                                         @foreach ($accounts as $val)
@@ -235,7 +235,7 @@
                                                     <div class="mt-4 pt-2 text-sm-end d-none d-sm-block">
                                                         <button type="button" name="add" id="add_button"
                                                             class="btn btn-info btn-sm text-medium">
-                                                            <i class="fa fa-plus"></i>
+                                                            <i class="fa fa-plus"></i> Add another account
                                                         </button>
                                                     </div>
                                                     <!--./pull-right -->
@@ -311,7 +311,7 @@
                         '<div class="row row-div">' +
                         '<div class="col-lg-4">' +
                         '<div class="mb-3">' +
-                        '<label>Account Category <span class="text-danger">*</span></label>';
+                        '<label>Account Type <span class="text-danger">*</span></label>';
                     fieldHTML += '<select name="account_type_id[]" class="form-control account_type_id">';
                     fieldHTML += "<option value=''>Select</option>";
                     $.each(account_types, function(key, value) {
@@ -322,7 +322,7 @@
 
                     fieldHTML += '<div class="col-lg-4 col-md-4">' +
                         '<div class="mb-3">' +
-                        '<label>Bank/Institution <span class="text-danger">*</span></label>';
+                        '<label>Bank Name <span class="text-danger">*</span></label>';
                     fieldHTML += '<select name="account_id[]" class="form-control account_id">';
                     fieldHTML += "<option value=''>Select</option>";
                     $.each(accounts, function(key, value) {
@@ -345,7 +345,7 @@
 
                     fieldHTML += '<div class="col-lg-8 col-md-8">' +
                         '<div class="mt-4 pt-2 text-sm-end d-none d-sm-block">' +
-                        'Do you want to delete account details? <input type="checkbox" id="remove_button" />' +
+                        'Do you want to delete this account? <input type="checkbox" id="remove_button" />' +
                         // '<button type="button" name="add" id="remove_button" class="btn btn-danger btn-sm text-medium">' +
                         // '<i class="fa fa-times"></i>' +
                         // '</button>' +

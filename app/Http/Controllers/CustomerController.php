@@ -262,7 +262,7 @@ class CustomerController extends Controller
         } else if (isset($_POST['submit'])) {
             $status = 'active';
             $action = 'submit';
-            $message = 'Payment mandate registration complete!';
+            $message = 'Payment mandate registration complete, waiting for consent from customer!';
         }
 
         $customer = Customer::findOrFail($id);

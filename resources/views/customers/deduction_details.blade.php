@@ -48,18 +48,7 @@
 
                         <!-- Customer Information -->
                         <section>
-                            <div class="row mb-4">
-                                <div class="col-lg-12">
-                                    <div class="alert alert-info alert-dismissible fade show" role="alert">
-                                        <b>Note: </b>
-
-                                        <button type="button" class="btn-close" data-bs-dismiss="alert"
-                                            aria-label="Close"></button>
-                                    </div>
-                                </div>
-                                <!--./col -->
-                            </div>
-                            <!--./row -->
+                            
 
                             <div class="row ">
                                 <div class="col-lg-3">
@@ -182,7 +171,7 @@
                                     <div class="mb-3">
                                         <label for="formFile" class="form-label">Evidence of Aggrement</label>
                                         <input class="form-control" type="file" id="formFile"
-                                            name="evidence_of_aggrement" />
+                                            name="evidence_of_aggrement" accept="application/pdf" />
                                     </div>
                                 </div>
                                 <!--./col -->

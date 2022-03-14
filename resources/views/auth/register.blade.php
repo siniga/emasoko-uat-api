@@ -175,7 +175,7 @@
                                                 @php $options = []; @endphp
                                                 @foreach ($countries as $country)
                                                     @php
-                                                        $options[$country->code] = $country->name.' ('.$country->code.')';
+                                                        $options[$country->code] = $country->code;
                                                     @endphp
                                                 @endforeach
                                                 @php

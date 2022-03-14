@@ -304,7 +304,9 @@
             //btn close
             $('.btn-close').on('click', function(e) {
                 e.preventDefault();
-                location.reload(); //reload page
+
+                //redirect to show
+                window.location.href = "/customers/register"
             });
 
 

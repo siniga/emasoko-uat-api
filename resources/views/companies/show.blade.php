@@ -18,15 +18,6 @@
         <div class="col-lg-12">
             <div class="card">
                 <div class="card-body">
-                    {{-- @if ($company->status == 1 || $company->status == 2)
-                        <div class="mb-3 text-sm-start d-none d-sm-block">
-                            <a href="{{ route($route, $company->id) }}" title="{{ $action }}"
-                                class="btn btn-sm btn-success">
-                                <span class="text-capitalize">
-                                    <i class="fa fa-check"></i> {{ $action }}</span>
-                            </a>
-                        </div>
-                    @endif --}}
 
                     @if (session()->get('success'))
                         <div class="alert alert-success">
@@ -116,6 +107,14 @@
                         </tr>
                     </table>
 
+                    <div class="text-sm-end d-none d-sm-block mt-2 mb-4">
+                        {{ Form::checkbox('assessment_criteria', 1, old('assessment_criteria')) }}
+                        <label> Accept</label>&nbsp;&nbsp;
+
+                        {{ Form::checkbox('assessment_criteria', 0, old('assessment_criteria')) }}
+                        <label> Reject</label>&nbsp;&nbsp;
+                    </div>
+
                     <h5 class="text-capitalize">Company Documents</h5>
                     <hr />
 
@@ -146,6 +145,14 @@
                                 @endforeach
                             </tbody>
                         </table>
+
+                        <div class="text-sm-end d-none d-sm-block mt-2 mb-4">
+                            {{ Form::checkbox('assessment_criteria', 1, old('assessment_criteria')) }}
+                            <label> Accept</label>&nbsp;&nbsp;
+
+                            {{ Form::checkbox('assessment_criteria', 0, old('assessment_criteria')) }}
+                            <label> Reject</label>&nbsp;&nbsp;
+                        </div>
                     @else
                         <div class="alert">No any document at the moment!</div>
                     @endif
@@ -159,7 +166,7 @@
                                 <tr>
                                     <th width="3%">#</th>
                                     <th width="20%">Account Type</th>
-                                    <th width="20%">Bank/Institutions</th>
+                                    <th width="20%">Bank/MNO</th>
                                     <th width="25%">Account Name</th>
                                     <th width="20%">Account Number</th>
                                 </tr>
@@ -178,6 +185,14 @@
                                 @endforeach
                             </tbody>
                         </table>
+
+                        <div class="text-sm-end d-none d-sm-block mt-2 mb-4">
+                            {{ Form::checkbox('assessment_criteria', 1, old('assessment_criteria')) }}
+                            <label> Accept</label>&nbsp;&nbsp;
+
+                            {{ Form::checkbox('assessment_criteria', 0, old('assessment_criteria')) }}
+                            <label> Reject</label>&nbsp;&nbsp;
+                        </div>
                     @else
                         <div class="alert">No any collection account at the moment!</div>
                     @endif
@@ -212,6 +227,14 @@
                                 @endforeach
                             </tbody>
                         </table>
+
+                        <div class="text-sm-end d-none d-sm-block mt-2 mb-4">
+                            {{ Form::checkbox('assessment_criteria', 1, old('assessment_criteria')) }}
+                            <label> Accept</label>&nbsp;&nbsp;
+
+                            {{ Form::checkbox('assessment_criteria', 0, old('assessment_criteria')) }}
+                            <label> Reject</label>&nbsp;&nbsp;
+                        </div>
                     @else
                         <div class="alert">No any staff at the moment!</div>
                     @endif

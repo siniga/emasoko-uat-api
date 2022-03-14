@@ -12,7 +12,7 @@
                 <li>
                     <a href="{{ route('dashboard') }}" class="waves-effect">
                         <i class="bx bx-home"></i>
-                        <span key="t-dashboards">@lang('translation.Dashboards')</span>
+                        <span key="t-dashboards">Dashboard</span>
                     </a>
                 </li>
 
@@ -34,9 +34,23 @@
                 @endif
 
                 <li>
+                    <a href="{{ route('customers.register') }}" class="waves-effect">
+                        <i class="bx bx-user-plus"></i>
+                        <span key="t-layouts">Create Payment Mandate</span>
+                    </a>
+                </li>
+
+                <li>
                     <a href="{{ route('customers.lists') }}" class="waves-effect">
                         <i class="bx bx-user"></i>
                         <span key="t-layouts">Payment Mandate</span>
+                    </a>
+                </li>
+
+                <li>
+                    <a href="#" class="waves-effect">
+                        <i class="bx bx-collection"></i>
+                        <span key="t-layouts">My Usage</span>
                     </a>
                 </li>
 

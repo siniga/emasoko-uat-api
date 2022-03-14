@@ -118,7 +118,10 @@
                                                                                 <a
                                                                                     href="{{ asset('assets/uploads/docs') }}">{{ $k }}</a><br />
                                                                             @endif
-                                                                            {{ Form::file($k, old($k), ['class="form-control"', 'id="formFile"']) }}
+                                                                            <input type="file" name="{{$k}}" id="formFile" class="form-control" accept="application/pdf" /> 
+
+
+                                                                            {{-- {{ Form::file($k, old($k), ['class="form-control"', 'id="formFile"', 'accept="application/pdf"']) }} --}}
                                                                         </td>
                                                                     </tr>
                                                                 @endforeach
