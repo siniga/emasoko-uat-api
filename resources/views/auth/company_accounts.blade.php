@@ -110,7 +110,7 @@
 
                                                     <div class="col-lg-4">
                                                         <div class="mb-3">
-                                                            <label>Bank Name <span
+                                                            <label class="bank_mno_name">Bank Name <span
                                                                     class="text-danger">*</span></label>
                                                             @php $options = []; @endphp
                                                             @foreach ($accounts as $val)
@@ -152,10 +152,12 @@
 
                                                     <div class="col-lg-8">
                                                         <div class="mt-4 pt-2 text-sm-end d-none d-sm-block">
-                                                            <button type="button" name="add" id="remove_button"
+                                                            Do you want to delete this account? <input type="checkbox"
+                                                                id="remove_button" />
+                                                            {{-- <button type="button" name="add" id="remove_button"
                                                                 class="btn btn-danger btn-sm text-medium">
                                                                 <i class="fa fa-times"></i>
-                                                            </button>
+                                                            </button> --}}
                                                         </div>
                                                         <!--./pull-right -->
                                                     </div>
@@ -191,7 +193,7 @@
 
                                                 <div class="col-lg-4">
                                                     <div class="mb-3">
-                                                        <label for="basicpill-namecard-input">Bank Name <span
+                                                        <label class="bank_mno_name">Bank Name <span
                                                                 class="text-danger">*</span></label>
                                                         @php $options = []; @endphp
                                                         @foreach ($accounts as $val)
@@ -299,75 +301,117 @@
 
         <script type="text/javascript">
             $(document).ready(function() {
+                //on select account category
+                $('.account_type_id').on('change', function(e) {
+                    e.preventDefault();
+                    accountTypeId = $(this).val();
+
+                    //change bank or mno name
+                    if (accountTypeId == 1)
+                        $('.bank_mno_name').html('Bank Name <span class="text-danger">*</span>');
+                    else if (accountTypeId == 2)
+                        $('.bank_mno_name').html('MNO Name <span class="text-danger">*</span>');
+
+                    //query for data
+                    $.ajax({
+                        url: '/account-types/' + accountTypeId,
+                        type: "get",
+                        success: function(data) {
+                            $('.account_id').html(data);
+                        }
+                    });
+                });
+
                 //data
                 var account_types = {!! json_encode($account_type_options) !!}
                 var accounts = {!! json_encode($account_options) !!}
 
                 //add more accounts
-                $(document).ready(function() {
-                    let maxField = 5; //Input fields increment limitation
-                    let wrapper = $('.field_wrapper'); //Input field wrapper
-                    let fieldHTML =
-                        '<div class="row row-div">' +
-                        '<div class="col-lg-4">' +
-                        '<div class="mb-3">' +
-                        '<label>Account Type <span class="text-danger">*</span></label>';
-                    fieldHTML += '<select name="account_type_id[]" class="form-control account_type_id">';
-                    fieldHTML += "<option value=''>Select</option>";
-                    $.each(account_types, function(key, value) {
-                        fieldHTML += "<option value='" + value + "'>" + value + "</option>";
-                    });
-                    fieldHTML += '</select>';
-                    fieldHTML += '</div></div>';
+                // $(document).ready(function() {
+                let maxField = 5; //Input fields increment limitation
+                let wrapper = $('.field_wrapper'); //Input field wrapper
+                let fieldHTML =
+                    '<div class="row row-div">' +
+                    '<div class="col-lg-4">' +
+                    '<div class="mb-3">' +
+                    '<label>Account Type <span class="text-danger">*</span></label>';
+                fieldHTML += '<select name="account_type_id[]" class="form-control account_type_id">';
+                fieldHTML += "<option value=''>Select</option>";
+                $.each(account_types, function(key, value) {
+                    fieldHTML += "<option value='" + key + "'>" + value + "</option>";
+                });
+                fieldHTML += '</select>';
+                fieldHTML += '</div></div>';
 
-                    fieldHTML += '<div class="col-lg-4 col-md-4">' +
-                        '<div class="mb-3">' +
-                        '<label>Bank Name <span class="text-danger">*</span></label>';
-                    fieldHTML += '<select name="account_id[]" class="form-control account_id">';
-                    fieldHTML += "<option value=''>Select</option>";
-                    $.each(accounts, function(key, value) {
-                        fieldHTML += "<option value='" + value + "'>" + value + "</option>";
-                    });
-                    fieldHTML += '</select>';
-                    fieldHTML += '</div></div>';
+                fieldHTML += '<div class="col-lg-4 col-md-4">' +
+                    '<div class="mb-3">' +
+                    '<label class="bank_mno_name">Bank Name <span class="text-danger">*</span></label>';
+                fieldHTML += '<select name="account_id[]" class="form-control account_id">';
+                fieldHTML += "<option value=''>Select</option>";
+                $.each(accounts, function(key, value) {
+                    fieldHTML += "<option value='" + key + "'>" + value + "</option>";
+                });
+                fieldHTML += '</select>';
+                fieldHTML += '</div></div>';
 
-                    fieldHTML += '<div class="col-lg-4 col-md-4">' +
-                        '<div class="mb-3">' +
-                        '<label>Account Name <span class="text-danger">*</span></label>' +
-                        '<input type="text" id="account_name" name="account_name[]" placeholder="Write account name..." class="form-control">' +
-                        '</div></div>';
+                fieldHTML += '<div class="col-lg-4 col-md-4">' +
+                    '<div class="mb-3">' +
+                    '<label>Account Name <span class="text-danger">*</span></label>' +
+                    '<input type="text" id="account_name" name="account_name[]" placeholder="Write account name..." class="form-control">' +
+                    '</div></div>';
 
-                    fieldHTML += '<div class="col-lg-4 col-md-4">' +
-                        '<div class="mb-3">' +
-                        '<label>Account Number <span class="text-danger">*</span></label>' +
-                        '<input type="text" id="account_number" name="account_number[]" placeholder="Write account number..." class="form-control">' +
-                        '</div></div>';
+                fieldHTML += '<div class="col-lg-4 col-md-4">' +
+                    '<div class="mb-3">' +
+                    '<label>Account Number <span class="text-danger">*</span></label>' +
+                    '<input type="text" id="account_number" name="account_number[]" placeholder="Write account number..." class="form-control">' +
+                    '</div></div>';
 
-                    fieldHTML += '<div class="col-lg-8 col-md-8">' +
-                        '<div class="mt-4 pt-2 text-sm-end d-none d-sm-block">' +
-                        'Do you want to delete this account? <input type="checkbox" id="remove_button" />' +
-                        // '<button type="button" name="add" id="remove_button" class="btn btn-danger btn-sm text-medium">' +
-                        // '<i class="fa fa-times"></i>' +
-                        // '</button>' +
-                        '</div></div>';
+                fieldHTML += '<div class="col-lg-8 col-md-8">' +
+                    '<div class="mt-4 pt-2 text-sm-end d-none d-sm-block">' +
+                    'Do you want to delete this account? <input type="checkbox" id="remove_button" />' +
+                    // '<button type="button" name="add" id="remove_button" class="btn btn-danger btn-sm text-medium">' +
+                    // '<i class="fa fa-times"></i>' +
+                    // '</button>' +
+                    '</div></div>';
 
-                    fieldHTML += '</div>';
+                fieldHTML += '</div>';
 
-                    let x = 1; //Initial field counter is 1
-                    //Once add button is clicked
-                    $('#add_button').click(function() {
-                        //Check maximum number of input fields
-                        if (x < maxField) {
-                            x++; //Increment field counter
-                            $(wrapper).append(fieldHTML); //Add field html
+                let x = 1; //Initial field counter is 1
+                //Once add button is clicked
+                $('#add_button').click(function() {
+                    //Check maximum number of input fields
+                    if (x < maxField) {
+                        x++; //Increment field counter
+                        $(wrapper).append(fieldHTML); //Add field html
+                    }
+                });
+
+                //Once remove button is clicked
+                $(wrapper).on('click', '#remove_button', function(e) {
+                    e.preventDefault();
+                    $(this).closest('.row-div').remove();
+                    x--; //Decrement field counter
+                });
+                // });
+
+                //wrapper on select account type
+                $(wrapper).on('change', '.account_type_id', function(e) {
+                    e.preventDefault();
+                    accountTypeId = $(this).val();
+
+                    //change bank or mno name
+                    if (accountTypeId == 1)
+                        $('.field_wrapper .bank_mno_name').html('Bank Name <span class="text-danger">*</span>');
+                    else if (accountTypeId == 2)
+                        $('.field_wrapper .bank_mno_name').html('MNO Name <span class="text-danger">*</span>');
+
+                    //query for data
+                    $.ajax({
+                        url: '/account-types/' + accountTypeId,
+                        type: "get",
+                        success: function(data) {
+                            $('.field_wrapper .account_id').html(data);
                         }
-                    });
-
-                    //Once remove button is clicked
-                    $(wrapper).on('click', '#remove_button', function(e) {
-                        e.preventDefault();
-                        $(this).closest('.row-div').remove();
-                        x--; //Decrement field counter
                     });
                 });
 
@@ -380,8 +424,8 @@
                         "account_number[]": "required",
                     },
                     messages: {
-                        "account_type_id[]": "Account category required",
-                        "account_id[]": "Account type required",
+                        "account_type_id[]": "Account type required",
+                        "account_id[]": "Bank/MNO name required",
                         "account_name[]": "Account name required",
                         "account_number[]": "Account number required",
                     },
@@ -427,22 +471,6 @@
                         });
                         return false;
                     },
-                });
-
-
-                //on select account category
-                $('.account_type_id').on('change', function(e) {
-                    e.preventDefault();
-                    accountTypeId = $(this).val();
-
-                    //query for data
-                    $.ajax({
-                        url: '/account-types/' + accountTypeId,
-                        type: "get",
-                        success: function(data) {
-                            $('.account_id').html(data);
-                        }
-                    });
                 });
             });
         </script>

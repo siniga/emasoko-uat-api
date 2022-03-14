@@ -327,22 +327,23 @@ class RegisterController extends Controller
         $password = $request->input('password');
 
         //create user to store data
-        $user = new User([
-            'name' => $request->input('name'),
-            'email' => $request->input('email'),
-            'verify_token' => $token,
-            'password' => Hash::make($password),
+        $user = User::firstOrNew([
+            'email' => $request->input('email')
         ]);
+        $user->name = $request->input('name');
+        $user->verify_token = $token;
+        $user->password = Hash::make($password);
         $user->save();
 
         //insert role
         $user->roles()->attach(2);
 
         //partner user
-        $partner_user = new PartnerUser();
-        $partner_user->user_id = $user->id;
-        $partner_user->partner_id = $id;
-        $partner_user->partner_uuid = $uuid;
+        $partner_user = PartnerUser::firstOrNew([
+            'user_id' => $user->id,
+            'partner_id' => $id,
+            'partner_uuid' => $uuid
+        ]);
         $partner_user->authorize = 1;
         $partner_user->save();
 

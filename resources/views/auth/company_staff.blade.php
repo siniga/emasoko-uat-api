@@ -132,10 +132,11 @@
 
                                                     <div class="col-lg-4">
                                                         <div class="mt-4 pt-2 text-sm-end d-none d-sm-block">
-                                                            <button type="button" name="add" id="remove_button"
+                                                            Do you want to delete this staff information? <input type="checkbox" id="remove_button" />
+                                                            {{-- <button type="button" name="add" id="remove_button"
                                                                 class="btn btn-danger btn-sm text-medium">
                                                                 <i class="fa fa-times"></i> 
-                                                            </button>
+                                                            </button> --}}
                                                         </div>
                                                         <!--./pull-right -->
                                                     </div>
