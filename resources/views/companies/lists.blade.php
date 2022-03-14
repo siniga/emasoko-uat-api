@@ -18,6 +18,19 @@
         <div class="col-lg-12">
             <div class="card">
                 <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-9">
+
+                        </div>
+                        <!--./col-md-9 -->
+
+                        <div class="col-md-3 pull-right">
+                            <input type="text" id="myCustomSearchBox" class="form-control" placeholder="Search details...">
+                        </div>
+                        <!--./col-md-4 -->
+                    </div>
+                    <!--./row -->
+
                     <div class="table-responsive">
                         @if (isset($companies) && $companies)
                             <table id="dt" class="table table-hover table-bordered">

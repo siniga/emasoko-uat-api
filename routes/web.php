@@ -102,8 +102,9 @@ Route::resources([
 ]);
 
 //companies
-Route::get('companies/{id}/assessment', [CompanyController::class, 'assessment'])->name('companies.assessment');
+Route::get('companies/{id}/assessment', [CompanyController::class, 'companyAssessment'])->name('companies.assessment');
 Route::post('companies/store-assessment', [CompanyController::class, 'store_assessment'])->name('companies.store-assessment');
+Route::post('companies/confirm-assessment', [CompanyController::class, 'confirm_assessment'])->name('companies.confirm-assessment');
 
 //customers
 Route::get('customers/lists', [CustomerController::class, 'lists'])->name('customers.lists');

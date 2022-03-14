@@ -33,7 +33,7 @@
                     <hr />
 
                     <div class="text-sm-end d-none d-sm-block">
-                        <a id="assess-company" title="Company Assessment" class="btn btn-info text-medium btn-sm"
+                        <a id="assess-company-information" title="Company Assessment" class="btn btn-info text-medium btn-sm"
                             company-id="{{ $company->id }}">
                             <span class="text-capitalize">
                                 <i class="fa fa-check"></i> Company Assessment</span>
@@ -107,14 +107,6 @@
                         </tr>
                     </table>
 
-                    <div class="text-sm-end d-none d-sm-block mt-2 mb-4">
-                        {{ Form::checkbox('assessment_criteria', 1, old('assessment_criteria')) }}
-                        <label> Accept</label>&nbsp;&nbsp;
-
-                        {{ Form::checkbox('assessment_criteria', 0, old('assessment_criteria')) }}
-                        <label> Reject</label>&nbsp;&nbsp;
-                    </div>
-
                     <h5 class="text-capitalize">Company Documents</h5>
                     <hr />
 
@@ -145,14 +137,6 @@
                                 @endforeach
                             </tbody>
                         </table>
-
-                        <div class="text-sm-end d-none d-sm-block mt-2 mb-4">
-                            {{ Form::checkbox('assessment_criteria', 1, old('assessment_criteria')) }}
-                            <label> Accept</label>&nbsp;&nbsp;
-
-                            {{ Form::checkbox('assessment_criteria', 0, old('assessment_criteria')) }}
-                            <label> Reject</label>&nbsp;&nbsp;
-                        </div>
                     @else
                         <div class="alert">No any document at the moment!</div>
                     @endif
@@ -185,14 +169,6 @@
                                 @endforeach
                             </tbody>
                         </table>
-
-                        <div class="text-sm-end d-none d-sm-block mt-2 mb-4">
-                            {{ Form::checkbox('assessment_criteria', 1, old('assessment_criteria')) }}
-                            <label> Accept</label>&nbsp;&nbsp;
-
-                            {{ Form::checkbox('assessment_criteria', 0, old('assessment_criteria')) }}
-                            <label> Reject</label>&nbsp;&nbsp;
-                        </div>
                     @else
                         <div class="alert">No any collection account at the moment!</div>
                     @endif
@@ -227,14 +203,6 @@
                                 @endforeach
                             </tbody>
                         </table>
-
-                        <div class="text-sm-end d-none d-sm-block mt-2 mb-4">
-                            {{ Form::checkbox('assessment_criteria', 1, old('assessment_criteria')) }}
-                            <label> Accept</label>&nbsp;&nbsp;
-
-                            {{ Form::checkbox('assessment_criteria', 0, old('assessment_criteria')) }}
-                            <label> Reject</label>&nbsp;&nbsp;
-                        </div>
                     @else
                         <div class="alert">No any staff at the moment!</div>
                     @endif
@@ -273,19 +241,124 @@
             });
 
             //add rate card
-            $(document).on('click', '#assess-company', function(event) {
+            $(document).on('click', '#assess-company-information', function(event) {
                 event.preventDefault();
 
                 $('#offcanvas-wrp').animate({
                     width: "show"
                 });
 
-                var companyId = $(this).attr('company-id'); //company-id
+                //company-id
+                var companyId = $(this).attr('company-id');
 
                 //ajax request
                 var jqXHR = $.ajax({
                     type: "GET",
-                    url: "/companies/" + companyId + "/assessment",
+                    url: "/companies/" + companyId + "/assessment/?page=companyInformation",
+                }).done(function(data) {
+                    $('#offcanvas-wrp').html(data);
+
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+                    alert('Failed to update progress');
+                    if (console && console.log) {
+                        console.log("Loading Ajax: " + textStatus + ", " + errorThrown);
+                    }
+                });
+            });
+
+            //company documents
+            $(document).on('click', '#company-documents', function(event) {
+                event.preventDefault();
+
+                $('#offcanvas-wrp').animate({
+                    width: "show"
+                });
+
+                //company-id
+                var companyId = $(this).attr('company-id');
+
+                //ajax request
+                var jqXHR = $.ajax({
+                    type: "GET",
+                    url: "/companies/" + companyId + "/assessment/?page=companyDocuments",
+                }).done(function(data) {
+                    $('#offcanvas-wrp').html(data);
+
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+                    alert('Failed to update progress');
+                    if (console && console.log) {
+                        console.log("Loading Ajax: " + textStatus + ", " + errorThrown);
+                    }
+                });
+            });
+
+            //collection account assessment
+            $(document).on('click', '#collection-accounts', function(event) {
+                event.preventDefault();
+
+                $('#offcanvas-wrp').animate({
+                    width: "show"
+                });
+
+                //company-id
+                var companyId = $(this).attr('company-id');
+
+                //ajax request
+                var jqXHR = $.ajax({
+                    type: "GET",
+                    url: "/companies/" + companyId + "/assessment/?page=collectionAccount",
+                }).done(function(data) {
+                    $('#offcanvas-wrp').html(data);
+
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+                    alert('Failed to update progress');
+                    if (console && console.log) {
+                        console.log("Loading Ajax: " + textStatus + ", " + errorThrown);
+                    }
+                });
+            });
+
+            //collection account assessment
+            $(document).on('click', '#authorized-representative', function(event) {
+                event.preventDefault();
+
+                $('#offcanvas-wrp').animate({
+                    width: "show"
+                });
+
+                //company-id
+                var companyId = $(this).attr('company-id');
+
+                //ajax request
+                var jqXHR = $.ajax({
+                    type: "GET",
+                    url: "/companies/" + companyId + "/assessment/?page=authorizedRespesentative",
+                }).done(function(data) {
+                    $('#offcanvas-wrp').html(data);
+
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+                    alert('Failed to update progress');
+                    if (console && console.log) {
+                        console.log("Loading Ajax: " + textStatus + ", " + errorThrown);
+                    }
+                });
+            });
+
+            //confirm assessment
+            $(document).on('click', '#confirm-assessment', function(event) {
+                event.preventDefault();
+
+                $('#offcanvas-wrp').animate({
+                    width: "show"
+                });
+
+                //company-id
+                var companyId = $(this).attr('company-id');
+
+                //ajax request
+                var jqXHR = $.ajax({
+                    type: "GET",
+                    url: "/companies/" + companyId + "/assessment/?page=ConfirmAssessment",
                 }).done(function(data) {
                     $('#offcanvas-wrp').html(data);
 

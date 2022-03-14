@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Classes\CompanyAssessment;
 use App\Models\Partner;
 use App\Models\PartnerApproval;
 use App\Models\PartnerUser;
@@ -27,10 +28,10 @@ class CompanyController extends Controller
         $title = 'Subscribers';
         //has_allowed('roles', 'lists');
 
-        $companies = Partner::all();
+        $companies = Partner::where('complete', '=', 1)->get();
 
         //render view
-        return view('companies.lists', compact('companies', 'title'));
+        return view('companies.lists', compact('title', 'companies'));
     }
 
     /**
@@ -118,90 +119,85 @@ class CompanyController extends Controller
     }
 
     //company assessment
-    function assessment($id)
+    function companyAssessment(Request $request, $id)
     {
         $title = "Company Assessment";
+
+        //page
+        $page = $request->get('page');
 
         //company
         $company = Partner::findOrFail($id);
 
-
+        if ($page == 'companyInformation')
+            $view = 'companies.information_assessment';
+        else if ($page == 'companyDocuments')
+            $view = 'companies.documents_assessment';
+        else if ($page == 'collectionAccount')
+            $view = 'companies.collection_account_assessment';
+        else if ($page == 'authorizedRespesentative')
+            $view = 'companies.authorized_representative_assessment';
+        else if ($page == 'ConfirmAssessment')
+            $view = 'companies.confirm_assessment';
 
         //render view
-        return view('companies.assessment', compact('title', 'company'));
+        return view($view, compact('title', 'company'));
     }
 
-    //verify company
+    //company assessment
     function store_assessment(Request $request)
     {
         //validation
 
         //requests
         $company_id = $request->input('company_id');
-        $assessment_criteria = $request->input('assessment_criteria');
+        $key = $request->input('key');
 
         //company
         $company = Partner::findOrFail($company_id);
 
-        //update user
-        $p_user = PartnerUser::where(['partner_id' => $company->id])->first();
+        //update partner approval
+        $partner_approval = PartnerApproval::where(['partner_id' => $company->id, 'key' => $key])->first();
+        $partner_approval->status = $request->input('assessment_criteria');
+        $partner_approval->remarks = $request->input('remarks');
+        $partner_approval->save();
 
-        //update all approval to active = 0
-        PartnerApproval::where(['partner_id' => $company->id])->update(['active' => 0]);
+        //check for key
+        if ($key == 'Company_Information')
+            $message = 'Company information assessment saved';
+        else if ($key == 'Company_Documents')
+            $message = 'Company documents assessment saved';
+        else if ($key == 'Company_Collection_Accounts')
+            $message = 'Company collection accounts assessment saved';
+        else if ($key == 'Company_Authorized_Representative')
+            $message = 'Company authorized representative assessment saved';
 
-        //update
-        foreach ($assessment_criteria as $value) {
-            $partner_approval = PartnerApproval::where(['partner_id' => $company->id, 'key' => $value])->first();
-            $partner_approval->active = 1;
-            $partner_approval->save();
-        }
+        //response
+        return response()->json(['error' => false, 'success_msg' => $message], 200);
+    }
 
-        //check if all criteria active = 1
-        $inactive_partner_approvals = PartnerApproval::where(['partner_id' => $company->id, 'active' => 0])->count();
+    //verify company
+    function confirm_assessment(Request $request)
+    {
+        //validation
 
-        if ($inactive_partner_approvals > 0) {
-            $company->status = 2;
-            $company->save();
+        //requests
+        $company_id = $request->input('company_id');
 
-            //update user
-            $user = User::findOrFail($p_user->user_id);
-            $user->active = 0;
-            $user->save();
+        //company
+        $company = Partner::findOrFail($company_id);
 
-            //success message
-            $success_message = "Company registration assessment saved, Continue with other criteria!";
-        } else {
-            $company->status = 3;
-            $company->save();
+        //call company assessment 
+        $company_assessment = new CompanyAssessment();
+        $boolean = $company_assessment->process($company->id);
 
-            //update user
-            $user = User::findOrFail($p_user->user_id);
-            $user->active = 1;
-            $user->save();
-
-            //todo: register ALL authorized users
-
-
-            //construct message
-            $message = "Company registration has been approved by eMakato.";
-            $message .= "<br/>You can start using your eMakato account now. Login to your account by <a href=" . url('login') . ">click here.</a>";
-
-            //send email
-            Mail::send(
-                ['html' => 'emails.template'],
-                ['name' => $user->name, 'body' => $message],
-                function ($message) use ($user) {
-                    $message->to($user->email);
-                    $message->subject('Company Approval');
-                    $message->from('renfridfrancis@gmail.com', 'eMakato');
-                }
-            );
-
-            //success message
-            $success_message = "Company registration assessment successfully completed!";
+        if ($boolean == true) {
+            $message = 'Company assessment completed and approval email sent to company authorized representative!';
+        } else if ($boolean == false) {
+            $message = 'Company assessment confirmed but still there are pending or rejected criteria!';
         }
 
         //response
-        return response()->json(['error' => false, 'success_msg' => $success_message], 200);
+        return response()->json(['error' => false, 'success_msg' => $message], 200);
     }
 }

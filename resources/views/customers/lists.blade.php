@@ -21,7 +21,33 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-9">
-                            
+                            {{-- <div class="row">
+                    <div class="col-md-12">
+                        <div class="float-right">
+                            {!! Form::open(['url' => route('.index'), 'method' => 'POST', 'class' => 'form-inline']) !!}
+                            {{ Form::token() }}
+
+                            <div class="form-group">
+                                {{ Form::date('start_at', old('start_at'), ['placeholder="Start Date..."', 'class="form-control"']) }}
+                            </div>
+                            <!--./form-group -->&nbsp;&nbsp;
+
+                            <div class="form-group">
+                                {{ Form::date('end_at', old('end_at'), ['placeholder="End Date..."', 'class="form-control"']) }}
+                            </div>
+                            <!--./form-group -->&nbsp;&nbsp;
+
+                            <div class="form-group">
+                                <button type="submit" name="filter" class="btn btn-secondary">Filter</button>
+                            </div>
+                            <!--./form-group -->
+                            {{ Form::close() }}
+                        </div>
+                        <!--./float-right -->
+                    </div>
+                    <!--./col-md-12 -->
+                </div>
+                <!--./row --> --}}
                         </div>
                         <!--./col-md-9 -->
 
