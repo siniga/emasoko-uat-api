@@ -1,7 +1,7 @@
 @extends('layouts.master')
 
 @section('title')
-    Payment Mandate
+    My Usage
 @endsection
 
 @section('content')
@@ -11,7 +11,7 @@
             Dashboard
         @endslot
         @slot('title')
-            Payment Mandate
+            My Usage
         @endslot
     @endcomponent
 
@@ -50,16 +50,11 @@
                 <!--./row --> --}}
                         </div>
                         <!--./col-md-9 -->
-
-                        <div class="col-md-3 pull-right">
-                            <input type="text" id="myCustomSearchBox" class="form-control" placeholder="Search details...">
-                        </div>
-                        <!--./col-md-4 -->
                     </div>
                     <!--./row -->
 
                     <div class="table-responsive">
-                        @if (isset($customers) && $customers)
+                        @if (isset($debit_orders) && $debit_orders)
                             <table id="dt" class="table table-hover table-bordered">
                                 <thead>
                                     <tr>
@@ -69,17 +64,16 @@
                                         <th width="8%">Payment Channel</th>
                                         <th width="10%">Bank Name/MNO</th>
                                         <th width="12%">Account Number</th>
-                                        <th width="12%">Phone<br/><small>(Connected to Bank)</small></th>
-                                        <th width="6%">Status</th>
+                                        <th width="12%">Phone<br /><small>(Connected to Bank)</small></th>
                                         <th width="8%">Consent Status</th>
                                         <th style="width: 80px;">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @php $serial = 1; @endphp
-                                    @foreach ($customers as $customer)
+                                    @foreach ($debit_orders as $value)
                                         <tr>
-                                            <td>{{ $serial }}</td>
+                                            {{-- <td>{{ $serial }}</td>
                                             <td>{{ $customer->customerAccount->account_name ?? '' }}</td>
                                             <td><small>{{ $customer->id_number ?? 'NIL' }}</small></td>
                                             <td>{{ $customer->customerAccount->accountType->name ?? '' }}</td>
@@ -97,21 +91,26 @@
                                             </td>
 
                                             <td>
-                                                <span class="badge bg-danger">Pending</span>
-                                            </td>
+                                                @if ($customer->consent_status == 'pending')
+                                                    <span class="badge bg-warning">Pending</span>
+                                                @elseif($customer->consent_status == 'approved')
+                                                    <span class="badge bg-success">Approved</span>
+                                                @elseif($customer->consent_status == 'rejected')
+                                                    <span class="badge bg-danger">Rejected</span>
+                                                @endif
+                                            </td> --}}
 
                                             <td>
-                                                
-                                                <a href="{{ route('customers.details', $customer->uuid) }}" title="View"
+                                                {{-- <a href="{{ route('customers.details', $customer->uuid) }}" title="View"
                                                     class="btn btn-outline-primary btn-xss">
                                                     <i class="bx bx-folder-open text-center"></i>
                                                 </a>
 
-                                                <a href="{{ route('customers.edit', $customer->uuid) }}" title="Edit" class="btn btn-outline-secondary btn-xss">
+                                                <a href="{{ route('customers.edit', $customer->uuid) }}" title="Edit"
+                                                    class="btn btn-outline-secondary btn-xss">
                                                     <i class="bx bx-pencil text-center"></i>
-                                                </a>
-                                                {{-- 
-                                                <a href="#" title="Delete" class="btn btn-outline-danger btn-xss delete">
+                                                </a> --}}
+                                                {{-- <a href="#" title="Delete" class="btn btn-outline-danger btn-xss delete">
                                                     <i class="bx bx-trash"></i>
                                                 </a> --}}
                                             </td>
@@ -121,7 +120,7 @@
                                 </tbody>
                             </table>
                         @else
-                            <div class="alert alert-danger"> No any customer registered</div>
+                            <div class="alert alert-danger"> No any pending debit order</div>
                         @endif
                     </div>
                 </div>
@@ -129,13 +128,4 @@
         </div>
     </div>
     <!-- end row -->
-
-
-@endsection
-@section('script')
-    <!-- apexcharts -->
-    <script src="{{ URL::asset('/assets/libs/apexcharts/apexcharts.min.js') }}"></script>
-
-    <!-- dashboard init -->
-    <script src="{{ URL::asset('/assets/js/pages/dashboard.init.js') }}"></script>
 @endsection

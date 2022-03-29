@@ -353,6 +353,10 @@ font-weight: 600;
 line-height: 1;
 }
 
+.stepwizard-step a.btn-success{
+  border: none;
+}
+
 .stepwizard-step span{
   font-size: 12px;
   color: #757575;

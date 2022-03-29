@@ -35,7 +35,8 @@
             "Database\\Seeders\\": "database/seeders/"
         },
         "files": [
-            "app/Helpers/Common.php"
+            "app/Helpers/Common.php",
+            "app/Helpers/DebitOrder.php"
         ],
         "classmap": [
             "app/Classes"

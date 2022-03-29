@@ -22,96 +22,23 @@
                     <div class="stepwizard mb-4">
                         <div class="stepwizard-row setup-panel">
                             <div class="stepwizard-step">
-                                <a href="#step-1" type="button" class="btn btn-success btn-circle">1</a>
-                                <span class="text-primary">Customer Information</span>
-                            </div>
-
-                            <div class="stepwizard-step">
-                                <a href="#step-2" type="button" class="btn btn-success btn-circle" disabled="disabled">2</a>
+                                <a href="#step-1" type="button" class="btn btn-success btn-circle" disabled="disabled">1</a>
                                 <span>Deduction Channel</span>
                             </div>
 
                             <div class="stepwizard-step">
-                                <a href="#step-2" type="button" class="btn btn-success btn-circle" disabled="disabled">3</a>
+                                <a href="#step-2" type="button" class="btn btn-success btn-circle" disabled="disabled">2</a>
                                 <span>Customer Deduction Details</span>
                             </div>
-
-
                         </div>
                     </div>
                     <!--./form wizard -->
 
                     <form action="#" id="registrationForm" enctype="multipart/form-data" autocomplete="off">
-                        <input type="hidden" name="customer_id" value="{{ $customer->id ?? null }}">
-                        <input type="hidden" name="customer_uuid" value="{{ $customer->uuid ?? null }}">
+                        <input type="hidden" name="uuid" value="{{ $customer_account->uuid ?? null }}">
 
                         <!-- Customer Information -->
                         <section>
-                            <div class="row">
-                                <div class="col-lg-12">
-                                    <h5 class="text-capitalize">Customer Information</h5>
-                                    <hr />
-                                </div>
-                                <!--./col -->
-                            </div>
-                            <!--./row -->
-
-                            <div class="row">
-                                <div class="col-lg-12">
-                                    <table class="table table-stripped table-bordered">
-                                        <tr>
-                                            <th width=25%>Fullname</th>
-                                            <td width=25%>
-                                                <span>{{ $customer->full_name }}</span>
-                                            </td>
-
-                                            <th>Status</th>
-                                            <td>
-                                                <span>{{ ucfirst($customer->status) }}</span>
-                                            </td>
-                                        </tr>
-
-                                        <tr>
-                                            <th width=25%>Date of Birth</th>
-                                            <td width=25%>
-                                                <span>{{ $customer->dob }}</span>
-                                            </td>
-
-                                            <th>NIDA Number</th>
-                                            <td>
-                                                <span>{{ $customer->id_number ?? 'NIL' }}</span>
-                                            </td>
-                                        </tr>
-
-                                        <tr>
-                                            <th width=25%>Marital status</th>
-                                            <td width=25%>
-                                                <span>{{ $customer->maritalStatus->name ?? 'NIL' }}</span>
-                                            </td>
-
-                                            <th>Gender</th>
-                                            <td>
-                                                <span>{{ $customer->gender->name ?? 'NIL' }}</span>
-                                            </td>
-                                        </tr>
-
-                                        <tr>
-                                            <th width=25%>Sector</th>
-                                            <td width=25%>
-                                                <span>{{ $customer->sector->name ?? 'NIL' }}</span>
-                                            </td>
-
-                                            <th>Occupation</th>
-                                            <td>
-                                                <span>{{ $customer->occupation->name ?? 'NIL' }}</span>
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </div>
-                                <!--./col -->
-                            </div>
-                            <!--./row-->
-
                             <div class="row mt-4">
                                 <div class="col-lg-12">
                                     <h5 class="text-capitalize">Deduction Channel</h5>
@@ -127,31 +54,31 @@
                                         <tr>
                                             <th width=25%>Payment Channel</th>
                                             <td width=25%>
-                                                <span>{{ $customer->customerAccount->accountType->name ?? '' }}</span>
+                                                <span>{{ $customer_account->accountType->name ?? '' }}</span>
                                             </td>
 
-                                            <th>Bank/Institution</th>
+                                            <th>Bank/MNO</th>
                                             <td>
-                                                <span>{{ $customer->customerAccount->account->name ?? '' }}</span>
+                                                <span>{{ $customer_account->account->name ?? '' }}</span>
                                             </td>
                                         </tr>
 
                                         <tr>
-                                            <th width=25%>Account Name</th>
+                                            <th width=25%>Name of Account Holder</th>
                                             <td width=25%>
-                                                <span>{{ $customer->customerAccount->account_name ?? '' }}</span>
+                                                <span>{{ $customer_account->account_name ?? '' }}</span>
                                             </td>
 
                                             <th>Account Number</th>
                                             <td>
-                                                <span>{{ $customer->customerAccount->account_number ?? '' }}</span>
+                                                <span>{{ $customer_account->account_number ?? '' }}</span>
                                             </td>
                                         </tr>
 
                                         <tr>
-                                            <th>Phone <small>(Linked to Bank Account)</small></th>
+                                            <th>Phone <small>(Connected to Bank)</small></th>
                                             <td colspan="4">
-                                                <span>{{ $customer->customerAccount->phone ?? '' }}</span>
+                                                <span>{{ $customer_account->phone ?? '' }}</span>
                                             </td>
                                         </tr>
                                     </table>
@@ -171,7 +98,7 @@
 
                             <div class="row">
                                 <div class="col-lg-12">
-                                    @if ($customer->customerAccount->debitOrders)
+                                    @if ($customer_account->debitOrders)
                                         <table class="table table-bordered" id="dynamicTable">
                                             <tr>
                                                 <th width="3%">#</th>
@@ -185,7 +112,7 @@
                                                 <th width="15%">Evidence of Aggrement</th>
                                             </tr>
 
-                                            @foreach ($customer->customerAccount->debitOrders as $val)
+                                            @foreach ($customer_account->debitOrders as $val)
                                                 <tr>
                                                     <td>{{ $loop->iteration }}</td>
                                                     <td>{{ number_format($val->total_amount) ?? '' }}</td>
@@ -212,13 +139,13 @@
                             </div>
                             <!--./row -->
 
-                            @if ($customer->status == 'inactive')
+                            {{-- @if ($customer->status == 'inactive') --}}
                                 <div class="row mt-2" id="btn-section" style="display: block;">
                                     <div class="col-md-12">
                                         <div class="mb-3 text-sm-end d-none d-sm-block">
                                             <a href="#" class="btn btn-danger text-medium">Cancel</a>
 
-                                            <a href="{{ url('customers/register/' . $customer->uuid) }}"
+                                            <a href="{{ url('payment-mandate/create-account/' . $customer_account->uuid) }}"
                                                 class="btn btn-info text-medium">Edit</a>
 
                                             <button type="submit" id="btnSave" name="save" class="btn btn-secondary">
@@ -233,7 +160,7 @@
                                     <!--./col -->
                                 </div>
                                 <!--./row -->
-                            @endif
+                            {{-- @endif --}}
                         </section>
                     </form>
                 </div>
@@ -269,7 +196,7 @@
                     //post data 
                     $.ajax({
                         type: "POST",
-                        url: "{{ route('customers.confirm-registration') }}",
+                        url: "{{ route('payment-mandate.confirm-registration') }}",
                         data: data,
                         processData: false,
                         contentType: false,
@@ -284,12 +211,18 @@
 
                             if (data.action == 'save') {
                                 //hide and show sections
+                                $('#btn-okay').css('display', '');
                                 $('#btn-section').css('display', '');
-                                $("#success-msg").text(data.success_msg);
+                                $('#btn-yes').css('display', 'none');
+                                $('#btn-no').css('display', 'none');
+                                $("#success-msg").html(data.success_msg);
                             } else {
                                 //hide and show sections
+                                $('#btn-okay').css('display', 'none');
                                 $('#btn-section').css('display', 'none');
-                                $("#success-msg").text(data.success_msg);
+                                $('#btn-yes').css('display', '');
+                                $('#btn-no').css('display', '');
+                                $("#success-msg").html(data.success_msg);
                             }
                             $('#subscribeModal').modal('show');
                         },
@@ -302,18 +235,34 @@
             });
 
             //btn close
-            $('.btn-close').on('click', function(e) {
+            $('#btn-okay').on('click', function(e) {
                 e.preventDefault();
 
                 //redirect to show
-                window.location.href = "/customers/register"
+                location.reload();
             });
 
+            //button => yes
+            $('#btn-yes').on('click', function(e) {
+                e.preventDefault();
+
+                //redirect to show
+                window.location.href = "/payment-mandate/create-account"
+            });
+
+            //button => no
+            $('#btn-no').on('click', function(e) {
+                e.preventDefault();
+
+                //reload page
+                location.reload();
+            });
 
             //type of debit
             $('#debit_type').on('change', function(e) {
                 debitType = $(this).val();
 
+                //debit type
                 if (debitType === 'FIXED') {
                     $('#standard_deduction').css('display', '');
                     $('#max_min_deduction').css('display', 'none');
@@ -332,19 +281,6 @@
                 else
                     $('#end_date').css('display', 'none');
             });
-
-            //format amount 
-            document.getElementById('number_comma').addEventListener('input', event =>
-                event.target.value = (parseInt(event.target.value.replace(/[^\d]+/gi, '')) || 0).toLocaleString(
-                    'en-US')
-            );
-
-            //format amount 
-            document.getElementById('number_comma2').addEventListener('input', event =>
-                event.target.value = (parseInt(event.target.value.replace(/[^\d]+/gi, '')) || 0).toLocaleString(
-                    'en-US')
-            );
-
         });
     </script>
 @endsection
@@ -355,8 +291,9 @@
     data-keyboard="false" data-backdrop="static">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header border-bottom-0">
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header border-bottom-0 justify-content-center">
+                <h5 class="text-uppercase">Saving Payment Mandate</h5>
+                {{-- <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button> --}}
             </div>
             <div class="modal-body">
                 <div class="text-center mb-4">
@@ -370,6 +307,12 @@
                         <div class="col-xl-10">
                             <p class="text-muted font-size-14 mb-4" id="success-msg"></p>
 
+                            <button type="button" id="btn-okay" name="Okay" class="btn btn-success"
+                                style="display: none;">Okay</button>
+                            <button type="button" id="btn-yes" name="yes" class="btn btn-success"
+                                style="display: none;">Yes</button>
+                            <button type="button" id="btn-no" name="no" class="btn btn-danger"
+                                style="display: none;">No</button>
                         </div>
                     </div>
                 </div>

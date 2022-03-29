@@ -138,7 +138,7 @@
                                 </tr>
 
                                 <tr>
-                                    <th>Phone <small>(Linked to Bank Account)</small></th>
+                                    <th>Phone <small>(Connected to Bank)</small></th>
                                     <td colspan="4">
                                         <span>{{ $customer->customerAccount->phone ?? '' }}</span>
                                     </td>

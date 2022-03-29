@@ -203,8 +203,7 @@
                                                         @endforeach
                                                         @php
                                                             $account_options = $options;
-                                                            $options = ['' => 'Select'] + $options;
-                                                            
+                                                            $options = ['' => 'Select'] + $options;    
                                                         @endphp
 
                                                         {{ Form::select('account_id[]', $options, old('account_id[]'), ['class' => 'form-control account_id','id' => 'account_id','required']) }}

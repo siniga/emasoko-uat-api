@@ -8,7 +8,9 @@ use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\PaymentMandateController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\TaskController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -107,28 +109,27 @@ Route::post('companies/store-assessment', [CompanyController::class, 'store_asse
 Route::post('companies/confirm-assessment', [CompanyController::class, 'confirm_assessment'])->name('companies.confirm-assessment');
 
 //customers
-Route::get('customers/lists', [CustomerController::class, 'lists'])->name('customers.lists');
+Route::get('payment-mandate/lists', [PaymentMandateController::class, 'lists'])->name('payment-mandate.lists');
 
-//customer information
-Route::get('customers/register/{uuid?}', [CustomerController::class, 'registrationForm'])->name('customers.register');
-Route::post('store-customer-details', [CustomerController::class, 'storeCustomerDetails'])->name('customers.store-details');
-
-//payment details
-Route::get('customers/payment-details/{uuid}', [CustomerController::class, 'paymentDetailsForm'])->name('customers.register-payment-details');
-Route::post('store-customer-payment-details', [CustomerController::class, 'storePaymentDetails'])->name('customers.store-payment-details');
+//account details
+Route::get('payment-mandate/create-account/{uuid?}', [PaymentMandateController::class, 'accountDetailsForm'])->name('payment-mandate.create-account');
+Route::post('payment-mandate/store-account', [PaymentMandateController::class, 'storePaymentDetails'])->name('payment-mandate.store-account-details');
 
 //deduction details
-Route::get('customers/deduction-details/{uuid}', [CustomerController::class, 'deductionDetailsForm'])->name('customers.register-deduction-details');
-Route::post('store-customer-deduction-details', [CustomerController::class, 'storeDeductionDetails'])->name('customers.store-deduction-details');
+Route::get('payment-mandate/deduction-details/{uuid}', [PaymentMandateController::class, 'deductionDetailsForm'])->name('payment-mandate.create-deduction');
+Route::post('payment-mandate/store-deduction-details', [PaymentMandateController::class, 'storeDeductionDetails'])->name('payment-mandate.store-deduction-details');
 
 //preview
-Route::get('customers/preview/{uuid}', [CustomerController::class, 'preview'])->name('customers.preview');
-Route::post('confirm-customer-registration', [CustomerController::class, 'confirmCustomerRegistration'])->name('customers.confirm-registration');
+Route::get('payment-mandate/preview/{uuid}', [PaymentMandateController::class, 'preview'])->name('payment-mandate.preview');
+Route::post('payment-mandate/confirm-registration', [PaymentMandateController::class, 'confirmRegistration'])->name('payment-mandate.confirm-registration');
 
 //details
 Route::get('customers/details/{uuid}', [CustomerController::class, 'details'])->name('customers.details');
 Route::get('customers/edit/{uuid}', [CustomerController::class, 'edit'])->name('customers.edit');
 Route::post('customers/update-details', [CustomerController::class, 'update'])->name('customers.update');
+
+//tasks
+Route::get('tasks/lists', [TaskController::class, 'lists'])->name('tasks.lists');
 
 //users
 Route::get('users/{id}/change-status', [UserController::class, 'change_status'])->name('users.change-status');

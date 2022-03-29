@@ -27,30 +27,37 @@
                             @endphp
 
                             @if ($notify != null)
-                            <span class="badge bg-danger">{{ $notify }}</span>
+                                <span class="badge bg-danger">{{ $notify }}</span>
                             @endif
                         </a>
                     </li>
                 @endif
 
                 <li>
-                    <a href="{{ route('customers.register') }}" class="waves-effect">
+                    <a href="{{ route('payment-mandate.create-account') }}" class="waves-effect">
                         <i class="bx bx-user-plus"></i>
                         <span key="t-layouts">Create Payment Mandate</span>
                     </a>
                 </li>
 
                 <li>
-                    <a href="{{ route('customers.lists') }}" class="waves-effect">
+                    <a href="{{ route('payment-mandate.lists') }}" class="waves-effect">
                         <i class="bx bx-user"></i>
                         <span key="t-layouts">Payment Mandate</span>
                     </a>
                 </li>
 
                 <li>
-                    <a href="#" class="waves-effect">
+                    <a href="{{ route('tasks.lists') }}" class="waves-effect">
                         <i class="bx bx-collection"></i>
                         <span key="t-layouts">My Usage</span>
+                        @php
+                            $notify = get_pending_debit_orders();
+                        @endphp
+
+                        @if ($notify != null)
+                            <span class="badge bg-danger">{{ $notify }}</span>
+                        @endif
                     </a>
                 </li>
 

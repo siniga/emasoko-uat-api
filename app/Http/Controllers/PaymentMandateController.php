@@ -17,7 +17,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
-class CustomerController extends Controller
+class PaymentMandateController extends Controller
 {
     public function __construct()
     {
@@ -34,103 +34,28 @@ class CustomerController extends Controller
         $title = 'Payment Mandate';
         //has_allowed('roles', 'lists');
 
-        $customers = Customer::where_cond()->get();
+        $debit_orders = DebitOrder::where_cond()->get();
 
         //render view
-        return view('customers.lists', compact('title', 'customers'));
+        return view('payment_mandate.lists', compact('title', 'debit_orders'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    function registrationForm($uuid = null)
+    //payment details form
+    function accountDetailsForm($uuid = null)
     {
         $title = "Payment Mandate";
 
         //if uuid =! null
-        $customer = [];
+        $customer_account = [];
         if ($uuid != null)
-            $customer = Customer::where(['uuid' => $uuid])->firstOrFail();
-
-        //populate data
-        $genders = Gender::all();
-        $marital_status = MaritalStatus::all();
-        $sectors = Sector::all();
-        $occupations = Occupation::all();
-
-        //render view
-        return view('customers.create', compact('title', 'customer', 'genders', 'marital_status', 'sectors', 'occupations'));
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function storeCustomerDetails(Request $request)
-    {
-        //capture if uuid is not null
-        if ($request->input('customer_uuid') != null)
-            $uuid = $request->input('customer_uuid');
-        else
-            $uuid = Str::uuid();
-
-        //get customer id
-        $user_id = Auth::user()->id;
-
-        //partner user
-        $partner_user = PartnerUser::where(['user_id' => $user_id])->first();
-
-        //dob
-        $year = $request->input('year');
-        $month = $request->input('month');
-        $day = $request->input('day');
-        $dob = $year . '-' . $month . '-' . $day;
-
-        //save customer details
-        $customer = Customer::firstOrNew([
-            'uuid' => $uuid,
-        ]);
-        $customer->partner_id = $partner_user->partner_id;
-        $customer->first_name = $request->input('first_name');
-        $customer->middle_name = $request->input('middle_name');
-        $customer->last_name = $request->input('surname');
-        $customer->dob = $dob;
-
-        //check if nida number provided
-        if ($request->input('nida_number') != null) {
-            $customer->id_type = 1;
-            $customer->id_number = $request->input('nida_number');
-        }
-
-        $customer->gender_id = $request->input('gender_id');
-        $customer->marital_status_id = $request->input('marital_status_id');
-        $customer->sector_id = $request->input('sector_id');
-        $customer->occupation_id = $request->input('occupation_id');
-        $customer->created_by = Auth::user()->id;
-        $customer->save();
-
-        //response
-        return response()->json(['success' => true, 'uuid' => $uuid], 200);
-    }
-
-    //payment details form
-    function paymentDetailsForm($uuid)
-    {
-        $title = "Payment Mandate";
-
-        //if uuid 
-        $customer = Customer::where(['uuid' => $uuid])->firstOrFail();
+            $customer_account = CustomerAccount::where(['uuid' => $uuid])->firstOrFail();
 
         //populate data
         $account_types = AccountType::all();
         $accounts = Account::all();
 
         //render view
-        return view('customers.payment_details', compact('title', 'customer', 'account_types', 'accounts'));
+        return view('payment_mandate.account_details_form', compact('title', 'customer_account', 'account_types', 'accounts'));
     }
 
     //store payment details
@@ -138,21 +63,24 @@ class CustomerController extends Controller
     {
         //validation 
 
-        //post data
-        $id = $request->input('customer_id');
-        $uuid = $request->input('customer_uuid');
-
-        $customer = Customer::findOrFail($id);
+        //capture if uuid is not null
+        if ($request->input('uuid') != null)
+            $uuid = $request->input('uuid');
+        else
+            $uuid = Str::uuid();
 
         //save or update account details
         $customer_account = CustomerAccount::firstOrNew([
-            'customer_id' => $customer->id,
+            'uuid' => $uuid,
             'account_type_id' => $request->input('account_type_id'),
             'account_id' => $request->input('account_id'),
-            'account_number' => $request->input('account_number')
+            'account_number' => $request->input('account_number'),
+            'account_name' => $request->input('account_name')
         ]);
-        $customer_account->account_name = $request->input('account_name');
         $customer_account->phone = $request->input('phone');
+        $customer_account->email = $request->input('email');
+        $customer_account->id_number = $request->input('nida_number');
+        $customer_account->address = $request->input('address');
         $customer_account->created_by = Auth::user()->id;
         $customer_account->save();
 
@@ -165,14 +93,11 @@ class CustomerController extends Controller
     {
         $title = "Payment Mandate";
 
-        //if uuid 
-        $customer = Customer::where(['uuid' => $uuid])->firstOrFail();
-
-        //populate data
-        $loan_purposes = LoanPurpose::all();
+        //customer account
+        $customer_account = CustomerAccount::where(['uuid' => $uuid])->firstOrFail();
 
         //render view
-        return view('customers.deduction_details', compact('title', 'customer', 'loan_purposes'));
+        return view('payment_mandate.deduction_details', compact('title', 'customer_account'));
     }
 
     //store deduction details
@@ -181,13 +106,10 @@ class CustomerController extends Controller
         //validation 
 
         //post data
-        $id = $request->input('customer_id');
-        $uuid = $request->input('customer_uuid');
-
-        $customer = Customer::findOrFail($id);
+        $uuid = $request->input('uuid');
 
         //customer account
-        $customer_account = CustomerAccount::where(['customer_id' => $customer->id])->first();
+        $customer_account = CustomerAccount::where(['uuid' => $uuid])->firstOrFail();
 
         //loan details
         $debit_order = DebitOrder::firstOrNew([
@@ -238,21 +160,20 @@ class CustomerController extends Controller
     {
         $title = "Payment Mandate";
 
-        //customer
-        $customer = Customer::where(['uuid' => $uuid])->firstOrFail();
+        //customer account
+        $customer_account = CustomerAccount::where(['uuid' => $uuid])->firstOrFail();
 
         //render view
-        return view('customers.preview', compact('title', 'customer'));
+        return view('payment_mandate.preview', compact('title', 'customer_account'));
     }
 
     //confirm application
-    function confirmCustomerRegistration(Request $request)
+    function confirmRegistration(Request $request)
     {
         //validation 
 
         //post data
-        $id = $request->input('customer_id');
-        $uuid = $request->input('customer_uuid');
+        $uuid = $request->input('uuid');
 
         $status = 'inactive';
         if (isset($_POST['save'])) {
@@ -262,12 +183,10 @@ class CustomerController extends Controller
         } else if (isset($_POST['submit'])) {
             $status = 'active';
             $action = 'submit';
-            $message = 'Payment mandate registration complete, waiting for consent from customer!';
+            $message = 'Payment mandate registration complete, waiting for consent from customer!. <br /><br />Do you want to create new payment mandate?';
         }
 
-        $customer = Customer::findOrFail($id);
-        $customer->status = $status;
-        $customer->save();
+        //todo: update approve status
 
         //response
         return response()->json(['success' => true, 'action' => $action, 'success_msg' => $message], 200);

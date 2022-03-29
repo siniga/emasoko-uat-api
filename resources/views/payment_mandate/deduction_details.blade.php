@@ -22,18 +22,13 @@
                     <div class="stepwizard mb-4">
                         <div class="stepwizard-row setup-panel">
                             <div class="stepwizard-step">
-                                <a href="#step-1" type="button" class="btn btn-success btn-circle">1</a>
-                                <span class="text-primary">Customer Information</span>
-                            </div>
-
-                            <div class="stepwizard-step">
-                                <a href="#step-2" type="button" class="btn btn-success btn-circle" disabled="disabled">2</a>
+                                <a href="#step-1" type="button" class="btn btn-success btn-circle" disabled="disabled">1</a>
                                 <span>Deduction Channel</span>
                             </div>
 
                             <div class="stepwizard-step">
                                 <a href="#step-2" type="button" class="btn btn-secondary btn-circle"
-                                    disabled="disabled">3</a>
+                                    disabled="disabled">2</a>
                                 <span>Customer Deduction Details</span>
                             </div>
 
@@ -43,18 +38,15 @@
                     <!--./form wizard -->
 
                     <form action="#" id="registrationForm" enctype="multipart/form-data" autocomplete="off">
-                        <input type="hidden" name="customer_id" value="{{ $customer->id ?? null }}">
-                        <input type="hidden" name="customer_uuid" value="{{ $customer->uuid ?? null }}">
+                        <input type="hidden" name="uuid" value="{{ $customer_account->uuid ?? null }}">
 
                         <!-- Customer Information -->
                         <section>
-                            
-
                             <div class="row ">
                                 <div class="col-lg-3">
                                     <div class="mb-3">
                                         <label>Loan Amount <span class="text-danger">*</span></label>
-                                        {{ Form::text('loan_amount', old('loan_amount'), ['class="form-control"','id="number_comma"','placeholder="Write total loan amount..."']) }}
+                                        {{ Form::text('loan_amount', old('loan_amount'), ['class="form-control number-separator"','placeholder="Write total loan amount..."']) }}
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -78,7 +70,7 @@
                                 <div class="col-lg-3" id="standard_deduction" style="display: block">
                                     <div class="mb-3">
                                         <label>Deduction Amount <span class="text-danger">*</span></label>
-                                        {{ Form::text('installment_amount', old('installment_amount'), ['class="form-control"','id="number_comma2"','placeholder="Write deduction amount..."']) }}
+                                        {{ Form::text('installment_amount', old('installment_amount'), ['class="form-control number-separator"','placeholder="Write deduction amount..."']) }}
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -89,16 +81,14 @@
                                         <div class="row">
                                             <div class="col-lg-6">
                                                 <div class="form-group">
-                                                    {{ Form::text('min_installment_amount', old('min_installment_amount'), ['class="form-control"','id="number_comma2"','placeholder="Minimum deduction amount..."']) }}
-
+                                                    {{ Form::text('min_installment_amount', old('min_installment_amount'), ['class="form-control number-separator"','placeholder="Minimum deduction amount..."']) }}
                                                 </div>
                                             </div>
                                             <!--./col -->
 
                                             <div class="col-lg-6">
                                                 <div class="form-group">
-                                                    {{ Form::text('max_installment_amount', old('max_installment_amount'), ['class="form-control"','id="number_comma2"','placeholder="Maximum deduction amount..."']) }}
-
+                                                    {{ Form::text('max_installment_amount', old('max_installment_amount'), ['class="form-control number-separator"','placeholder="Maximum deduction amount..."']) }}
                                                 </div>
                                             </div>
                                             <!--./col -->
@@ -170,8 +160,8 @@
                                 <div class="col-lg-3">
                                     <div class="mb-3">
                                         <label for="formFile" class="form-label">Evidence of Aggrement</label>
-                                        <input class="form-control" type="file" id="formFile"
-                                            name="evidence_of_aggrement" accept="application/pdf" />
+                                        <input class="form-control" type="file" id="formFile" name="evidence_of_aggrement"
+                                            accept="application/pdf" />
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -181,7 +171,7 @@
                             <div class="row">
                                 <div class="col-md-12">
                                     <div class="mb-3 text-sm-end d-none d-sm-block">
-                                        <a href="{{ url('customers/payment-details/' . $customer->uuid) }}"
+                                        <a href="{{ url('payment-mandate/deduction-details/' . $customer_account->uuid) }}"
                                             class="btn btn-info text-medium">Previous</a>
 
                                         <button type="submit" id="btnSubmit" class="btn btn-primary">
@@ -250,7 +240,7 @@
                     //post data 
                     $.ajax({
                         type: "POST",
-                        url: "{{ route('customers.store-deduction-details') }}",
+                        url: "{{ route('payment-mandate.store-deduction-details') }}",
                         data: data,
                         processData: false,
                         contentType: false,
@@ -258,13 +248,12 @@
                         timeout: 800000,
                         success: function(data) {
                             $("#btnSubmit").prop("disabled", false);
-                            //$(this)[0].reset();
 
                             // Deactivate Loading Spinner
                             $('.loading-spinner').toggleClass('active');
 
                             //redirect to show
-                            window.location.href = "/customers/preview/" + data.uuid
+                            window.location.href = "/payment-mandate/preview/" + data.uuid
                         },
                         error: function(e) {
                             $("#btnSubmit").prop("disabled", false);

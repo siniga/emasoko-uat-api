@@ -1,8 +1,5 @@
 <?php
 
-
-//media types function
-
 use App\Models\Partner;
 
 if (!function_exists('calculate_end_date')) {
@@ -32,7 +29,7 @@ if (!function_exists('cast_phone')) {
 
 
 //complete registration notification
-if (!function_exists('get_booking_notification')) {
+if (!function_exists('get_company_notification')) {
     function get_company_notification()
     {
         $companies = Partner::where(function ($query) {

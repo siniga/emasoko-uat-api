@@ -1,7 +1,7 @@
 @extends('layouts.master')
 
 @section('title')
-    Create Payment Mandate
+    Edit Payment Mandate
 @endsection
 
 @section('content')
@@ -10,7 +10,7 @@
             Payment Mandate
         @endslot
         @slot('title')
-            Create Payment Mandate
+            Edit Payment Mandate
         @endslot
     @endcomponent
 
@@ -18,46 +18,19 @@
         <div class="col-lg-12">
             <div class="card">
                 <div class="card-body">
-
-                    <div class="stepwizard mb-4">
-                        <div class="stepwizard-row setup-panel">
-                            <div class="stepwizard-step">
-                                <a href="#step-1" type="button" class="btn btn-secondary btn-circle">1</a>
-                                <span class="text-primary">Customer Information</span>
-                            </div>
-
-                            <div class="stepwizard-step">
-                                <a href="#step-2" type="button" class="btn btn-default btn-circle" disabled="disabled">2</a>
-                                <span>Deduction Channel</span>
-                            </div>
-
-                            <div class="stepwizard-step">
-                                <a href="#step-2" type="button" class="btn btn-default btn-circle" disabled="disabled">3</a>
-                                <span>Customer Deduction Details</span>
-                            </div>
-
-
-                        </div>
-                    </div>
-                    <!--./form wizard -->
-
                     <form action="#" id="registrationForm" enctype="multipart/form-data" autocomplete="off">
                         <input type="hidden" name="customer_id" value="{{ $customer->id ?? null }}">
                         <input type="hidden" name="customer_uuid" value="{{ $customer->uuid ?? null }}">
 
                         <!-- Customer Information -->
                         <section>
-                            {{-- <div class="row mb-4">
+                            <div class="row">
                                 <div class="col-lg-12">
-                                    <div class="alert alert-info alert-dismissible fade show" role="alert">
-                                        <b>Note: </b> Register first name, middle name and surname as appear in bank
-                                        account!
-                                        <button type="button" class="btn-close" data-bs-dismiss="alert"
-                                            aria-label="Close"></button>
-                                    </div>
+                                    <h5 class="text-capitalize">Customer Information</h5>
+                                    <hr />
                                 </div>
                                 <!--./col -->
-                            </div> --}}
+                            </div>
                             <!--./row -->
 
                             <div class="row">
@@ -95,7 +68,7 @@
                                 <div class="col-lg-6">
                                     <div class="mb-3">
                                         <label>NIDA Number</label>
-                                        {{ Form::text('nida_number', old('nida_number', $customer->id_number ?? ''), ['class="form-control input-mask"','placeholder="Write NIDA number..."','data-inputmask' => "'mask': '99999999-99999-99999-99'"]) }}
+                                        {{ Form::text('nida_number', old('nida_number', $customer->id_number ?? ''), ['class="form-control input-mask"','placeholder="Enter NIDA number..."','data-inputmask' => "'mask': '99999999-99999-99999-99'"]) }}
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -251,13 +224,98 @@
                             </div>
                             <!--./row -->
 
+                            <div class="row mt-4">
+                                <div class="col-lg-12">
+                                    <h5 class="text-capitalize">Deduction Channel</h5>
+                                    <hr />
+                                </div>
+                                <!--./col -->
+                            </div>
+                            <!--./row -->
+
+                            <div class="row ">
+                                <div class="col-lg-4">
+                                    <div class="mb-3">
+                                        <label for="basicpill-namecard-input">Payment Channel <span
+                                                class="text-danger">*</span></label>
+                                        @php
+                                            $account_type_options = [];
+                                            $options = [];
+                                        @endphp
+                                        @foreach ($account_types as $val)
+                                            @php
+                                                $options[$val->id] = $val->name;
+                                            @endphp
+                                        @endforeach
+                                        @php
+                                            $account_type_options = $options;
+                                            $options = ['' => 'Select'] + $options;
+                                        @endphp
+
+                                        {{ Form::select('account_type_id',$options,old('account_type_id', $customer->customerAccount->account_type_id ?? ''),['class' => 'form-control account_type_id', 'id' => 'account_type_id']) }}
+                                        <span class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <!--./col -->
+
+                                <div class="col-lg-4">
+                                    <div class="mb-3">
+                                        <label class="bank_mno_name">Bank Name/MNO <span
+                                                class="text-danger">*</span></label>
+                                        @php $options = []; @endphp
+                                        @foreach ($accounts as $val)
+                                            @php
+                                                $options[$val->id] = $val->name;
+                                            @endphp
+                                        @endforeach
+                                        @php
+                                            $options = ['' => 'Select'] + $options;
+                                        @endphp
+
+                                        {{ Form::select('account_id', $options, old('account_id', $customer->customerAccount->account_id ?? ''), ['class' => 'form-control account_id','id' => 'account_id']) }}
+                                        <span class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <!--./col -->
+
+                                <div class="col-lg-4">
+                                    <div class="mb-3">
+                                        <label>Account Name <span class="text-danger">*</span></label>
+                                        {{ Form::text('account_name', old('account_name', $customer->customerAccount->account_name ?? ''), ['class="form-control"','placeholder="Write account name..."','required']) }}
+                                        <span class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <!--./col -->
+
+                                <div class="col-lg-4">
+                                    <div class="mb-3">
+                                        <label for="basicpill-namecard-input">Account Number <span
+                                                class="text-danger">*</span></label>
+                                        {{ Form::text('account_number', old('account_number', $customer->customerAccount->account_number ?? ''), ['class="form-control"','placeholder="Write account number..."']) }}
+                                        <span class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <!--./col -->
+
+                                <div class="col-lg-4 account_phone" style="display: block;">
+                                    <div class="mb-3">
+                                        <label for="basicpill-namecard-input">Phone <span
+                                                class="text-danger">*</span></label>
+                                        {{ Form::text('phone', old('phone', $customer->customerAccount->phone ?? ''), ['class="form-control input-mask"','placeholder="Write phone..."','data-inputmask' => "'mask': '9999999999'"]) }}
+                                        <span class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <!--./col -->
+                            </div>
+                            <!--./row -->
 
                             <div class="row">
                                 <div class="col-md-12">
                                     <div class="mb-3 text-sm-end d-none d-sm-block">
-                                        <a href="{{ route('customers.lists')}}" class="btn btn-danger text-medium ">Cancel</a>
+                                        <a href="{{ route('customers.lists') }}"
+                                            class="btn btn-danger text-medium ">Cancel</a>
                                         <button type="submit" id="btnSubmit" class="btn btn-primary">
-                                            Next <i class="loading-spinner fa fa-lg fa fa-spinner fa-spin"></i>
+                                            Update <i class="loading-spinner fa fa-lg fa fa-spinner fa-spin"></i>
                                         </button>
                                     </div>
                                 </div>
@@ -276,6 +334,42 @@
 @section('script')
     <script type="text/javascript">
         $(document).ready(function() {
+            //before change account type
+            let accountTypeId = $('.account_type_id').val();
+
+            //change bank or mno name
+            if (accountTypeId == 1) {
+                $('.bank_mno_name').html('Bank Name <span class="text-danger">*</span>');
+                $('.account_phone').css('display', '');
+            } else if (accountTypeId == 2) {
+                $('.bank_mno_name').html('MNO Name <span class="text-danger">*</span>');
+                $('.account_phone').css('display', 'none');
+            }
+
+            //on change account type
+            $('.account_type_id').on('change', function(e) {
+                e.preventDefault();
+                accountTypeId = $(this).val();
+
+                //change bank or mno name
+                if (accountTypeId == 1) {
+                    $('.bank_mno_name').html('Bank Name <span class="text-danger">*</span>');
+                    $('.account_phone').css('display', '');
+                } else if (accountTypeId == 2) {
+                    $('.bank_mno_name').html('MNO Name <span class="text-danger">*</span>');
+                    $('.account_phone').css('display', 'none');
+                }
+
+                //query for data
+                $.ajax({
+                    url: '/account-types/' + accountTypeId,
+                    type: "get",
+                    success: function(data) {
+                        $('.account_id').html(data);
+                    }
+                });
+            });
+
             //validate form and submit
             $("#registrationForm").validate({
                 rules: {
@@ -293,7 +387,22 @@
                     },
                     day: {
                         required: true
-                    }
+                    },
+                    account_type_id: {
+                        required: true
+                    },
+                    account_id: {
+                        required: true
+                    },
+                    account_name: {
+                        required: true
+                    },
+                    account_number: {
+                        required: true
+                    },
+                    phone: {
+                        required: true
+                    },
                 },
                 messages: {
                     first_name: {
@@ -311,6 +420,18 @@
                     day: {
                         required: "Day required"
                     },
+                    account_type_id: {
+                        required: "Payment channel required"
+                    },
+                    account_id: {
+                        required: "Bank/MNO name required"
+                    },
+                    account_name: {
+                        required: "Account name required"
+                    },
+                    account_number: {
+                        required: "Account number required"
+                    }
                 },
                 submitHandler: function(form, e) {
                     e.preventDefault();
@@ -333,7 +454,7 @@
                     //post data 
                     $.ajax({
                         type: "POST",
-                        url: "{{ route('customers.store-details') }}",
+                        url: "{{ route('customers.update') }}",
                         data: data,
                         processData: false,
                         contentType: false,
@@ -341,13 +462,14 @@
                         timeout: 800000,
                         success: function(data) {
                             $("#btnSubmit").prop("disabled", false);
-                            //$(this)[0].reset();
 
                             // Deactivate Loading Spinner
                             $('.loading-spinner').toggleClass('active');
 
-                            //redirect to show
-                            window.location.href = "/customers/payment-details/" + data.uuid
+                            //success message
+                            $("#success-msg").html(data.success_msg);
+                            $('#btn-okay').css('display', '');
+                            $('#subscribeModal').modal('show');
                         },
                         error: function(e) {
                             $("#btnSubmit").prop("disabled", false);
@@ -355,6 +477,15 @@
                     });
                     return false;
                 },
+            });
+
+            //btn close
+            $('#btn-okay').on('click', function(e) {
+                uuid = $(this).attr('customer-uuid');
+                e.preventDefault();
+
+                //redirect to show
+                window.location.href = "/customers/details/" + uuid
             });
 
             //on select account category
@@ -380,19 +511,37 @@
                 else
                     $('#account_phone').css('display', 'none');
             });
-
-            //format amount 
-            document.getElementById('number_comma').addEventListener('input', event =>
-                event.target.value = (parseInt(event.target.value.replace(/[^\d]+/gi, '')) || 0).toLocaleString(
-                    'en-US')
-            );
-
-            //format amount 
-            document.getElementById('number_comma2').addEventListener('input', event =>
-                event.target.value = (parseInt(event.target.value.replace(/[^\d]+/gi, '')) || 0).toLocaleString(
-                    'en-US')
-            );
-
         });
     </script>
 @endsection
+
+<!-- subscribeModal -->
+<div class="modal fade" id="subscribeModal" tabindex="-1" aria-labelledby="subscribeModalLabel" aria-hidden="true"
+    data-keyboard="false" data-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-bottom-0 justify-content-center">
+                <h5 class="text-uppercase">Update Payment Mandate</h5>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-4">
+                    <div class="avatar-md mx-auto mb-4">
+                        <div class="avatar-title bg-light rounded-circle text-success h1">
+                            <i class="mdi mdi-check"></i>
+                        </div>
+                    </div>
+
+                    <div class="row justify-content-center">
+                        <div class="col-xl-10">
+                            <p class="text-muted font-size-14 mb-4" id="success-msg"></p>
+
+                            <button type="button" id="btn-okay" name="Okay" class="btn btn-success" customer-uuid="{{ $customer->uuid ?? null }}"
+                                style="display: none;">Okay</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- end modal -->

@@ -23,4 +23,8 @@
 <!-- App js -->
 <script src="{{ URL::asset('assets/js/app.min.js') }}"></script>
 
+<!-- A js -->
+<script src="{{ URL::asset('assets/js/easy-number-separator.js') }}"></script>
+
+
 @yield('script-bottom')

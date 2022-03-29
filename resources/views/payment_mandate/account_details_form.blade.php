@@ -22,17 +22,13 @@
                     <div class="stepwizard mb-4">
                         <div class="stepwizard-row setup-panel">
                             <div class="stepwizard-step">
-                                <a href="#step-1" type="button" class="btn btn-success btn-circle">1</a>
-                                <span class="text-primary">Customer Information</span>
-                            </div>
-
-                            <div class="stepwizard-step">
-                                <a href="#step-2" type="button" class="btn btn-secondary btn-circle" disabled="disabled">2</a>
+                                <a href="#step-1" type="button" class="btn btn-secondary btn-circle"
+                                    disabled="disabled">1</a>
                                 <span>Deduction Channel</span>
                             </div>
 
                             <div class="stepwizard-step">
-                                <a href="#step-2" type="button" class="btn btn-default btn-circle" disabled="disabled">3</a>
+                                <a href="#step-2" type="button" class="btn btn-default btn-circle" disabled="disabled">2</a>
                                 <span>Customer Deduction Details</span>
                             </div>
 
@@ -42,12 +38,11 @@
                     <!--./form wizard -->
 
                     <form action="#" id="registrationForm" enctype="multipart/form-data" autocomplete="off">
-                        <input type="hidden" name="customer_id" value="{{ $customer->id ?? null }}">
-                        <input type="hidden" name="customer_uuid" value="{{ $customer->uuid ?? null }}">
+                        <input type="hidden" name="uuid" value="{{ $customer_account->uuid ?? null }}">
 
                         <!-- Customer Information -->
                         <section>
-                            
+
                             <div class="row ">
                                 <div class="col-lg-4">
                                     <div class="mb-3">
@@ -67,7 +62,7 @@
                                             $options = ['' => 'Select'] + $options;
                                         @endphp
 
-                                        {{ Form::select('account_type_id', $options, old('account_type_id', $customer->customerAccount->account_type_id ?? ''), ['class' => 'form-control','id' => 'account_type_id']) }}
+                                        {{ Form::select('account_type_id', $options, old('account_type_id', $customer_account->account_type_id ?? ''), ['class' => 'form-control account_type_id','id' => 'account_type_id']) }}
                                         <span class="text-danger"></span>
                                     </div>
                                 </div>
@@ -75,19 +70,19 @@
 
                                 <div class="col-lg-4">
                                     <div class="mb-3">
-                                        <label for="basicpill-namecard-input">Bank Name/MNO <span
+                                        <label class="bank_mno_name">Bank Name/MNO <span
                                                 class="text-danger">*</span></label>
                                         @php $options = []; @endphp
-                                        {{-- @foreach ($accounts as $val)
+                                        @foreach ($accounts as $val)
                                             @php
                                                 $options[$val->id] = $val->name;
                                             @endphp
-                                        @endforeach --}}
+                                        @endforeach
                                         @php
-                                            $options = ['' => 'Select'] + $options;       
+                                            $options = ['' => 'Select'] + $options;
                                         @endphp
 
-                                        {{ Form::select('account_id', $options, old('account_id', $customer->customerAccount->account_id ?? ''), ['class' => 'form-control', 'id' => 'account_id']) }}
+                                        {{ Form::select('account_id', $options, old('account_id', $customer_account->account_id ?? ''), ['class' => 'form-control account_id','id' => 'account_id']) }}
                                         <span class="text-danger"></span>
                                     </div>
                                 </div>
@@ -95,9 +90,8 @@
 
                                 <div class="col-lg-4">
                                     <div class="mb-3">
-                                        <label>Account Name <span
-                                                class="text-danger">*</span></label>
-                                        {{ Form::text('account_name', old('account_name', $customer->customerAccount->account_name ?? ''), ['class="form-control"','placeholder="Enter account name..."','required']) }}
+                                        <label>Name of Account Holder <span class="text-danger">*</span></label>
+                                        {{ Form::text('account_name', old('account_name', $customer_account->account_name ?? ''), ['class="form-control"','placeholder="Enter name of account holder..."','required']) }}
                                         <span class="text-danger"></span>
                                     </div>
                                 </div>
@@ -107,28 +101,52 @@
                                     <div class="mb-3">
                                         <label for="basicpill-namecard-input">Account Number <span
                                                 class="text-danger">*</span></label>
-                                        {{ Form::text('account_number', old('account_number', $customer->customerAccount->account_number ?? ''), ['class="form-control"','placeholder="Enter account number..."']) }}
+                                        {{ Form::text('account_number', old('account_number', $customer_account->account_number ?? ''), ['class="form-control"','placeholder="Enter account number..."']) }}
                                         <span class="text-danger"></span>
                                     </div>
                                 </div>
                                 <!--./col -->
 
-                                <div class="col-lg-4" id="account_phone" style="display: block;">
+                                <div class="col-lg-4 account_phone" style="display: block;">
                                     <div class="mb-3">
-                                        <label for="basicpill-namecard-input">Phone<span
-                                            class="text-danger">*</span></label>
-                                        {{ Form::text('phone', old('phone', $customer->customerAccount->phone ?? ''), ['class="form-control input-mask"','placeholder="Enter phone connected to the bank account..."','data-inputmask' => "'mask': '9999999999'"]) }}
+                                        <label for="basicpill-namecard-input">Phone <span
+                                                class="text-danger">*</span></label>
+                                        {{ Form::text('phone', old('phone', $customer_account->phone ?? ''), ['class="form-control input-mask"','placeholder="Enter phone connected to the bank account..."','data-inputmask' => "'mask': '9999999999'"]) }}
                                         <span class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <!--./col -->
+
+                                <div class="col-lg-4">
+                                    <div class="mb-3">
+                                        <label>NIDA Number</label>
+                                        {{ Form::text('nida_number', old('nida_number', $customer_account->id_number ?? ''), ['class="form-control input-mask"','placeholder="Enter NIDA number..."','data-inputmask' => "'mask': '99999999-99999-99999-99'"]) }}
+                                    </div>
+                                </div>
+                                <!--./col -->
+
+                                <div class="col-lg-4">
+                                    <div class="mb-3">
+                                        <label>Email</label>
+                                        {{ Form::email('email', old('email', $customer_account->email ?? ''), ['class="form-control input-mask"','placeholder="Enter email..."']) }}
+                                    </div>
+                                </div>
+                                <!--./col -->
+
+                                <div class="col-lg-4">
+                                    <div class="mb-3">
+                                        <label>Address</label>
+                                        {{ Form::text('address', old('address', $customer_account->address ?? ''), ['class="form-control input-mask"','placeholder="Enter address..."']) }}
                                     </div>
                                 </div>
                                 <!--./col -->
                             </div>
                             <!--./row -->
-                            
+
                             <div class="row">
                                 <div class="col-md-12">
                                     <div class="mb-3 text-sm-end d-none d-sm-block">
-                                        <a href="{{ url('customers/register/' . $customer->uuid) }}"
+                                        <a href="{{ route('payment-mandate.lists') }}"
                                             class="btn btn-info text-medium">Previous</a>
 
                                         <button type="submit" id="btnSubmit" class="btn btn-primary">
@@ -151,6 +169,30 @@
 @section('script')
     <script type="text/javascript">
         $(document).ready(function() {
+            //on select account category
+            $('.account_type_id').on('change', function(e) {
+                e.preventDefault();
+                accountTypeId = $(this).val();
+
+                //change bank or mno name
+                if (accountTypeId == 1) {
+                    $('.bank_mno_name').html('Bank Name <span class="text-danger">*</span>');
+                    $('.account_phone').css('display', '');
+                } else if (accountTypeId == 2) {
+                    $('.bank_mno_name').html('MNO Name <span class="text-danger">*</span>');
+                    $('.account_phone').css('display', 'none');
+                }
+
+                //query for data
+                $.ajax({
+                    url: '/account-types/' + accountTypeId,
+                    type: "get",
+                    success: function(data) {
+                        $('.account_id').html(data);
+                    }
+                });
+            });
+
             //validate form and submit
             $("#registrationForm").validate({
                 rules: {
@@ -175,7 +217,7 @@
                         required: "Payment channel required"
                     },
                     account_id: {
-                        required: "Bank/Institution required"
+                        required: "Bank/MNO name required"
                     },
                     account_name: {
                         required: "Account name required"
@@ -184,8 +226,8 @@
                         required: "Account number required"
                     },
                     phone: {
-                        required: "Phone required"
-                    },
+                        required: "Phone number required"
+                    }
                 },
                 submitHandler: function(form, e) {
                     e.preventDefault();
@@ -208,7 +250,7 @@
                     //post data 
                     $.ajax({
                         type: "POST",
-                        url: "{{ route('customers.store-payment-details') }}",
+                        url: "{{ route('payment-mandate.store-account-details') }}",
                         data: data,
                         processData: false,
                         contentType: false,
@@ -216,13 +258,13 @@
                         timeout: 800000,
                         success: function(data) {
                             $("#btnSubmit").prop("disabled", false);
-                            //$(this)[0].reset();
 
                             // Deactivate Loading Spinner
                             $('.loading-spinner').toggleClass('active');
 
                             //redirect to show
-                            window.location.href = "/customers/deduction-details/" + data.uuid
+                            window.location.href = "/payment-mandate/deduction-details/" + data
+                                .uuid
                         },
                         error: function(e) {
                             $("#btnSubmit").prop("disabled", false);
@@ -231,43 +273,6 @@
                     return false;
                 },
             });
-
-            //on select account category
-            $('#account_type_id').on('change', function(e) {
-                e.preventDefault();
-                accountTypeId = $(this).val();
-
-                $.ajax({
-                    url: '/account-types/' + accountTypeId,
-                    type: "get",
-                    success: function(data) {
-                        $('#account_id').html(data);
-                    }
-                });
-            });
-
-            //filter
-            $('#account_type_id').on('change', function(e) {
-                accountTypeId = $(this).val();
-
-                if (accountTypeId == 1)
-                    $('#account_phone').css('display', '');
-                else
-                    $('#account_phone').css('display', 'none');
-            });
-
-            //format amount 
-            document.getElementById('number_comma').addEventListener('input', event =>
-                event.target.value = (parseInt(event.target.value.replace(/[^\d]+/gi, '')) || 0).toLocaleString(
-                    'en-US')
-            );
-
-            //format amount 
-            document.getElementById('number_comma2').addEventListener('input', event =>
-                event.target.value = (parseInt(event.target.value.replace(/[^\d]+/gi, '')) || 0).toLocaleString(
-                    'en-US')
-            );
-
         });
     </script>
 @endsection
