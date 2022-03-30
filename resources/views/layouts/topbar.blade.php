@@ -2,7 +2,7 @@
     <div class="navbar-header">
         <div class="d-flex">
             <!-- LOGO -->
-            <div class="navbar-brand-box">
+            <div class="navbar-brand-box bg-primary">
                 <a href="index" class="logo logo-dark">
                     <span class="logo-sm text-large">
                         e-Makato
@@ -68,37 +68,33 @@
             </button>
         </div>
 
-        <div class="dropdown d-inline-block">
+        {{-- <div class="dropdown d-inline-block">
             <button type="button" class="btn header-item noti-icon waves-effect" id="page-header-notifications-dropdown"
                 data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 <i class="bx bx-bell bx-tada"></i>
                 <span class="badge bg-danger rounded-pill"></span>
             </button>  
-        </div>
+        </div> --}}
 
         <div class="dropdown d-inline-block">
             <button type="button" class="btn header-item waves-effect" id="page-header-user-dropdown"
                 data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <img class="rounded-circle header-profile-user" src="{{ isset(Auth::user()->avatar) ? asset(Auth::user()->avatar) : asset('/assets/images/users/avatar99.png') }}"
-                    alt="Header Avatar">
+                {{-- <img class="rounded-circle header-profile-user" src="{{ isset(Auth::user()->avatar) ? asset(Auth::user()->avatar) : asset('/assets/images/users/avatar99.png') }}"
+                    alt="Header Avatar"> --}}
                 <span class="d-none d-xl-inline-block ms-1" key="t-henry">
                     {{ucfirst(Auth::user()->name)}}<br/>
-                    {{Auth::user()->email }}
+                    {{Auth::user()->email }}<br/>
                 </span>
                 <i class="mdi mdi-chevron-down d-none d-xl-inline-block"></i>
             </button>
             <div class="dropdown-menu dropdown-menu-end">
                 <!-- item-->
                 <a class="dropdown-item" href="contacts-profile"><i class="bx bx-user font-size-16 align-middle me-1"></i> <span key="t-profile">@lang('translation.Profile')</span></a>
-                <a class="dropdown-item" href="#"><i class="bx bx-wallet font-size-16 align-middle me-1"></i> <span key="t-my-wallet">@lang('translation.My_Wallet')</span></a>
+                {{-- <a class="dropdown-item" href="#"><i class="bx bx-wallet font-size-16 align-middle me-1"></i> <span key="t-my-wallet">@lang('translation.My_Wallet')</span></a> --}}
                 {{-- <a class="dropdown-item d-block" href="#" data-bs-toggle="modal" data-bs-target=".change-password"><span class="badge bg-success float-end">11</span><i class="bx bx-wrench font-size-16 align-middle me-1"></i> <span key="t-settings">@lang('translation.Settings')</span></a> --}}
                 {{-- <a class="dropdown-item" href="#"><i class="bx bx-lock-open font-size-16 align-middle me-1"></i> <span key="t-lock-screen">@lang('translation.Lock_screen')</span></a> --}}
                 <div class="dropdown-divider"></div>
                 <a class="dropdown-item text-danger" href="{{ route('logout') }}">Logout</a>
-                {{-- <a class="dropdown-item text-danger" href="javascript:void();" onclick="event.preventDefault(); document.getElementById('logout-form').submit();"><i class="bx bx-power-off font-size-16 align-middle me-1 text-danger"></i> <span key="t-logout">@lang('translation.Logout')</span></a>
-                <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
-                    @csrf
-                </form> --}}
             </div>
         </div>        
     </div>

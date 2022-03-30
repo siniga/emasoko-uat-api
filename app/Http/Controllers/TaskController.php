@@ -23,9 +23,16 @@ class TaskController extends Controller
         $title = 'Payment Mandate';
         //has_allowed('roles', 'lists');
 
-        $debit_orders = DebitOrder::where(['approved' => 0])->get();
+        //pending debit orders
+        $pending_debit_orders = DebitOrder::where(['approved' => 0])->get();
+
+        //approved debit orders
+        $approved_debit_orders = DebitOrder::where(['approved' => 1])->get();
+
+        //rejected debit orders
+        $rejected_debit_orders = DebitOrder::where(['approved' => 99])->get();
 
         //render view
-        return view('tasks.lists', compact('title', 'debit_orders'));
+        return view('tasks.lists', compact('title', 'pending_debit_orders', 'approved_debit_orders', 'rejected_debit_orders'));
     }
 }

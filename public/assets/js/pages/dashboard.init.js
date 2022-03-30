@@ -6,6 +6,9 @@ var __webpack_exports__ = {};
 setTimeout(function () {
   $("#subscribeModal").modal("show");
 }, 2e3);
+
+
+
 var options = {
   chart: {
     height: 360,

@@ -100,10 +100,16 @@ font-size: 12px !important;
   font-weight: 600;
 }
 
+/*===============================================|
+Background Color
+================================================*/
+.bg-primary {
+  background: #022859 !important;
+}
 
 /*===============================================|
 Button
-||==============================================*/
+================================================*/
 .btn-xss{
   padding:.12rem .24rem;
   font-size: .800rem;
@@ -373,11 +379,3 @@ line-height: 1;
   margin: 8px 0; 
   padding: 10px;
  }
-
- /* .field-wrapper {
-  background: #FAFAFA; 
-  border: 1px solid #E0E0E0; 
-  border-radius: 5px; 
-  margin: 8px 0; 
-  padding: 10px;
- } */

@@ -1,10 +1,9 @@
 <!-- ========== Left Sidebar Start ========== -->
-<div class="vertical-menu">
+<div class="vertical-menu bg-primary">
 
     <div data-simplebar class="h-100">
-
         <!--- Sidemenu -->
-        <div id="sidebar-menu">
+        <div id="sidebar-menu" >
             <!-- Left Menu Start -->
             <ul class="metismenu list-unstyled" id="side-menu">
                 <li class="menu-title" key="t-menu">@lang('translation.Menu')</li>
