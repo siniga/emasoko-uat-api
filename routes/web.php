@@ -35,13 +35,13 @@ use Illuminate\Support\Facades\Route;
 // Route::post('/update-profile/{id}', [App\Http\Controllers\HomeController::class, 'updateProfile'])->name('updateProfile');
 // Route::post('/update-password/{id}', [App\Http\Controllers\HomeController::class, 'updatePassword'])->name('updatePassword');
 
-// Route::get('{any}', [App\Http\Controllers\HomeController::class, 'index'])->name('index');
-
 // //Language Translation
 // Route::get('index/{locale}', [App\Http\Controllers\HomeController::class, 'lang']);
 
+
 Route::get('/', [LoginController::class, 'showLoginForm'])->name('login');
 Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+Route::get('index', [DashboardController::class, 'index'])->name('index');
 
 //registration of seller
 Route::get('register/{uuid?}', [RegisterController::class, 'registrationForm'])->name('company.register');
@@ -113,7 +113,7 @@ Route::get('payment-mandate/lists', [PaymentMandateController::class, 'lists'])-
 
 //account details
 Route::get('payment-mandate/create-account/{uuid?}', [PaymentMandateController::class, 'accountDetailsForm'])->name('payment-mandate.create-account');
-Route::post('payment-mandate/store-account', [PaymentMandateController::class, 'storePaymentDetails'])->name('payment-mandate.store-account-details');
+Route::post('payment-mandate/store-account', [PaymentMandateController::class, 'storeAccountDetails'])->name('payment-mandate.store-account-details');
 
 //deduction details
 Route::get('payment-mandate/deduction-details/{uuid}', [PaymentMandateController::class, 'deductionDetailsForm'])->name('payment-mandate.create-deduction');
@@ -121,10 +121,11 @@ Route::post('payment-mandate/store-deduction-details', [PaymentMandateController
 
 //preview
 Route::get('payment-mandate/preview/{uuid}', [PaymentMandateController::class, 'preview'])->name('payment-mandate.preview');
+Route::get('payment-mandate/cancel-registration/{uuid}', [PaymentMandateController::class, 'cancelRegistration'])->name('payment-mandate.cancel-registration');
 Route::post('payment-mandate/confirm-registration', [PaymentMandateController::class, 'confirmRegistration'])->name('payment-mandate.confirm-registration');
 
 //details
-Route::get('customers/details/{uuid}', [CustomerController::class, 'details'])->name('customers.details');
+Route::get('payment-mandate/details/{uuid}', [PaymentMandateController::class, 'details'])->name('payment-mandate.details');
 Route::get('customers/edit/{uuid}', [CustomerController::class, 'edit'])->name('customers.edit');
 Route::post('customers/update-details', [CustomerController::class, 'update'])->name('customers.update');
 

@@ -15,6 +15,7 @@ use App\Models\PartnerUser;
 use App\Models\Sector;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Str;
 
 class PaymentMandateController extends Controller
@@ -59,7 +60,7 @@ class PaymentMandateController extends Controller
     }
 
     //store payment details
-    function storePaymentDetails(Request $request)
+    function storeAccountDetails(Request $request)
     {
         //validation 
 
@@ -75,7 +76,7 @@ class PaymentMandateController extends Controller
             'account_type_id' => $request->input('account_type_id'),
             'account_id' => $request->input('account_id'),
             'account_number' => $request->input('account_number'),
-            'account_name' => $request->input('account_name')
+            'account_name' => strtoupper($request->input('account_name'))
         ]);
         $customer_account->phone = $request->input('phone');
         $customer_account->email = $request->input('email');
@@ -96,8 +97,11 @@ class PaymentMandateController extends Controller
         //customer account
         $customer_account = CustomerAccount::where(['uuid' => $uuid])->firstOrFail();
 
+        //debit order
+        $debit_order = DebitOrder::where(['customer_account_id' => $customer_account->id, 'customer_account_uuid' => $uuid])->firstOrFail();
+
         //render view
-        return view('payment_mandate.deduction_details', compact('title', 'customer_account'));
+        return view('payment_mandate.deduction_details_form', compact('title', 'customer_account', 'debit_order'));
     }
 
     //store deduction details
@@ -114,6 +118,7 @@ class PaymentMandateController extends Controller
         //loan details
         $debit_order = DebitOrder::firstOrNew([
             'customer_account_id' => $customer_account->id,
+            'customer_account_uuid' => $uuid
         ]);
         $debit_order->total_amount = floatval(str_replace(",", "", $request->input('loan_amount')));
         $debit_order->debit_type = $request->input('debit_type');
@@ -163,15 +168,32 @@ class PaymentMandateController extends Controller
         //customer account
         $customer_account = CustomerAccount::where(['uuid' => $uuid])->firstOrFail();
 
+        //debit order
+        $debit_order = DebitOrder::where(['customer_account_id' => $customer_account->id, 'customer_account_uuid' => $uuid])->firstOrFail();
+
         //render view
-        return view('payment_mandate.preview', compact('title', 'customer_account'));
+        return view('payment_mandate.preview', compact('title', 'customer_account', 'debit_order'));
+    }
+
+    //cancel registration
+    function cancelRegistration($uuid)
+    {
+        //customer account
+        $customer_account = CustomerAccount::where(['uuid' => $uuid])->firstOrFail();
+
+        //debit order
+        $debit_order = DebitOrder::where(['customer_account_id' => $customer_account->id, 'customer_account_uuid' => $uuid])->firstOrFail();
+
+        //delete debit order
+        $debit_order->delete();
+
+        //redirect
+        return Redirect::route('payment-mandate.lists')->with('danger', 'Debit order cancelled!');
     }
 
     //confirm application
     function confirmRegistration(Request $request)
     {
-        //validation 
-
         //post data
         $uuid = $request->input('uuid');
 
@@ -193,14 +215,16 @@ class PaymentMandateController extends Controller
     }
 
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
+    //customer details
+    function details($uuid)
     {
+        $title = "Debit Order Information";
+
+        //debit order
+        $debit_order = DebitOrder::where(['customer_account_uuid' => $uuid])->firstOrFail();
+
+        //render view
+        return view('payment_mandate.details', compact('title', 'debit_order'));
     }
 
     /**
@@ -294,17 +318,5 @@ class PaymentMandateController extends Controller
     public function destroy($id)
     {
         //
-    }
-
-    //customer details
-    function details($uuid)
-    {
-        $title = "Customer Information";
-
-        //customer
-        $customer = Customer::where(['uuid' => $uuid])->firstOrFail();
-
-        //render view
-        return view('customers.show', compact('title', 'customer'));
     }
 }

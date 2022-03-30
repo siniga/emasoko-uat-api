@@ -7,14 +7,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta content="e-Makato" name="description" />
     <meta content="Laina Finance" name="author" />
+
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     <!-- App favicon -->
     <link rel="shortcut icon" href="{{ URL::asset('assets/images/favicon.ico') }}">
     @include('layouts.head-css')
 </head>
 
 @section('body')
+
     <body data-sidebar="dark">
-@show
+    @show
     <!-- Begin page -->
     <div id="layout-wrapper">
         @include('layouts.topbar')

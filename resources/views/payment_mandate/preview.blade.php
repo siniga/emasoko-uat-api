@@ -10,7 +10,7 @@
             Payment Mandate
         @endslot
         @slot('title')
-            Create Payment Mandate
+            Summary of Payment Mandate
         @endslot
     @endcomponent
 
@@ -57,7 +57,7 @@
                                                 <span>{{ $customer_account->accountType->name ?? '' }}</span>
                                             </td>
 
-                                            <th>Bank/MNO</th>
+                                            <th>Bank/MNO Name</th>
                                             <td>
                                                 <span>{{ $customer_account->account->name ?? '' }}</span>
                                             </td>
@@ -107,8 +107,8 @@
                                                 <th width="10%">Installment Amount</th>
                                                 <th width="10%">Peridiocity</th>
                                                 <th width="10%">Number of Deduction</th>
-                                                <th width="12%">Start Date</th>
-                                                <th width="12%">End Date</th>
+                                                <th width="12%">Deduction <br />Start Date</th>
+                                                <th width="12%">Deduction <br />End Date</th>
                                                 <th width="15%">Evidence of Aggrement</th>
                                             </tr>
 
@@ -128,6 +128,8 @@
                                                                 href="{{ asset('assets/uploads/docs' . $val->evidence_of_aggrement) }}">
                                                                 {{ $val->evidence_of_aggrement }}
                                                             </a>
+                                                        @else
+                                                            NIL
                                                         @endif
                                                     </td>
                                                 </tr>
@@ -140,26 +142,31 @@
                             <!--./row -->
 
                             {{-- @if ($customer->status == 'inactive') --}}
-                                <div class="row mt-2" id="btn-section" style="display: block;">
-                                    <div class="col-md-12">
-                                        <div class="mb-3 text-sm-end d-none d-sm-block">
-                                            <a href="#" class="btn btn-danger text-medium">Cancel</a>
+                            <div class="row mt-2" id="btn-section" style="display: block;">
+                                <div class="col-md-12">
+                                    <div class="mb-3 text-sm-end d-none d-sm-block">
+                                        <a href="{{ route('payment-mandate.cancel-registration', $customer_account->uuid) }}"
+                                            class="btn btn-danger text-medium">
+                                            Cancel
+                                        </a>
 
-                                            <a href="{{ url('payment-mandate/create-account/' . $customer_account->uuid) }}"
-                                                class="btn btn-info text-medium">Edit</a>
+                                        <a href="{{ route('payment-mandate.create-account', $customer_account->uuid) }}"
+                                            class="btn btn-info text-medium">
+                                            Edit
+                                        </a>
 
-                                            <button type="submit" id="btnSave" name="save" class="btn btn-secondary">
-                                                Save <i class="loading-spinner fa fa-lg fa fa-spinner fa-spin"></i>
-                                            </button>
+                                        <button type="submit" id="btnSave" name="save" class="btn btn-secondary">
+                                            Save <i class="loading-spinner fa fa-lg fa fa-spinner fa-spin"></i>
+                                        </button>
 
-                                            <button type="submit" id="btnSubmit" name="submit" class="btn btn-success">
-                                                Save & Submit <i class="loading-spinner fa fa-lg fa fa-spinner fa-spin"></i>
-                                            </button>
-                                        </div>
+                                        <button type="submit" id="btnSubmit" name="submit" class="btn btn-success">
+                                            Save & Submit <i class="loading-spinner fa fa-lg fa fa-spinner fa-spin"></i>
+                                        </button>
                                     </div>
-                                    <!--./col -->
                                 </div>
-                                <!--./row -->
+                                <!--./col -->
+                            </div>
+                            <!--./row -->
                             {{-- @endif --}}
                         </section>
                     </form>
@@ -204,7 +211,6 @@
                         timeout: 800000,
                         success: function(data) {
                             $("#btnSubmit").prop("disabled", false);
-                            //$(this)[0].reset();
 
                             // Deactivate Loading Spinner
                             $('.loading-spinner').toggleClass('active');

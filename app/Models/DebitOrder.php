@@ -19,13 +19,13 @@ class DebitOrder extends Model
         //customers
         $debit_orders = static::orderBy('debit_orders.created_at', 'DESC');
 
-        if (Auth::user()->hasRole('company_approver')) {
-            $partner_user = PartnerUser::where(['user_id' => $user_id])->first();
+        // if (Auth::user()->hasRole('company_approver')) {
+        //     $partner_user = PartnerUser::where(['user_id' => $user_id])->first();
 
-            if ($partner_user) {
-                $debit_orders = $debit_orders->where('debit_orders.partner_id', '=', $partner_user->partner_id);
-            }
-        }
+        //     if ($partner_user) {
+        //         $debit_orders = $debit_orders->where('debit_orders.partner_id', '=', $partner_user->partner_id);
+        //     }
+        // }
 
         return $debit_orders;
     }

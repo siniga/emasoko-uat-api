@@ -60,12 +60,11 @@
                                     <tr>
                                         <th width="3%">#</th>
                                         <th width="18%">Account Name</th>
-                                        <th width="14%">NIDA Number</th>
+                                        <th width="16%">NIDA Number</th>
                                         <th width="8%">Payment Channel</th>
                                         <th width="10%">Bank Name/MNO</th>
                                         <th width="12%">Account Number</th>
                                         <th width="12%">Phone<br /><small>(Connected to Bank)</small></th>
-                                        <th width="6%">Status</th>
                                         <th width="8%">Consent Status</th>
                                         <th style="width: 80px;">Actions</th>
                                     </tr>
@@ -75,7 +74,7 @@
                                     @foreach ($debit_orders as $values)
                                         <tr>
                                             <td>{{ $serial }}</td>
-                                            <td>{{ $values->customerAccount->account_name ?? '' }}</td>
+                                            <td>{{ strtoupper($values->customerAccount->account_name ?? '') }}</td>
                                             <td><small>{{ $values->customerAccount->id_number ?? 'NIL' }}</small></td>
                                             <td>{{ $values->customerAccount->accountType->name ?? '' }}</td>
                                             <td>{{ $values->customerAccount->account->name ?? '' }}</td>
@@ -83,29 +82,23 @@
                                                 {{ $values->customerAccount->account_number ?? '' }}
                                             </td>
                                             <td>{{ $values->customerAccount->phone ?? '' }}</td>
-                                            <td>
-                                                {{-- @if ($values->status == 'active')
-                                                    <span class="badge bg-success">Active</span>
-                                                @elseif($values->status == 'inactive')
-                                                    <span class="badge bg-danger">Inactive</span>
-                                                @endif --}}
-                                            </td>
 
                                             <td>
-                                                {{-- @if ($values->consent_status == 'pending')
+                                                @if ($values->approved == 0)
                                                     <span class="badge bg-warning">Pending</span>
-                                                @elseif($values->consent_status == 'approved')
+                                                @elseif($values->approved == 1)
                                                     <span class="badge bg-success">Approved</span>
-                                                @elseif($values->consent_status == 'rejected')
+                                                @elseif($values->approved == 99)
                                                     <span class="badge bg-danger">Rejected</span>
-                                                @endif --}}
+                                                @endif
                                             </td>
 
                                             <td>
-                                                {{-- <a href="{{ route('customers.details', $values->uuid) }}" title="View"
+                                                <a href="{{ route('payment-mandate.details', $values->customer_account_uuid) }}" title="View"
                                                     class="btn btn-outline-primary btn-xss">
                                                     <i class="bx bx-folder-open text-center"></i>
                                                 </a>
+                                                {{-- 
 
                                                 <a href="{{ route('customers.edit', $values->uuid) }}" title="Edit"
                                                     class="btn btn-outline-secondary btn-xss">
