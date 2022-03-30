@@ -4,7 +4,7 @@
 -- https://tableplus.com/
 --
 -- Database: emakato_db
--- Generation Time: 2022-03-29 19:25:14.8280
+-- Generation Time: 2022-03-30 09:20:13.0950
 -- -------------------------------------------------------------
 
 
@@ -76,7 +76,7 @@ CREATE TABLE `customer_accounts` (
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb3;
 
 DROP TABLE IF EXISTS `customers`;
 CREATE TABLE `customers` (
@@ -118,6 +118,7 @@ CREATE TABLE `debit_orders` (
   `id` int NOT NULL AUTO_INCREMENT,
   `partner_id` int DEFAULT NULL,
   `customer_account_id` int NOT NULL,
+  `customer_account_uuid` text CHARACTER SET utf8 COLLATE utf8_general_ci,
   `code` varchar(11) DEFAULT NULL,
   `loan_purpose_id` int DEFAULT NULL,
   `total_amount` float NOT NULL,
@@ -139,7 +140,7 @@ CREATE TABLE `debit_orders` (
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb3;
 
 DROP TABLE IF EXISTS `failed_jobs`;
 CREATE TABLE `failed_jobs` (
@@ -492,16 +493,15 @@ INSERT INTO `countries` (`id`, `code`, `name`, `created_at`, `updated_at`) VALUE
 
 INSERT INTO `customer_accounts` (`id`, `uuid`, `account_type_id`, `account_id`, `account_number`, `account_name`, `phone`, `id_number`, `email`, `address`, `created_by`, `created_at`, `updated_at`) VALUES
 (3, '3c65aa8a-07fe-411c-866e-216ef8d7b6b7', 1, 1, '01189377455', 'Renfrid Ngolongolo', '0717705746', '99388477-47477-47474-77', 'renfridfrancis@gmail.com', 'Ubungo Kibangu', 25, '2022-03-29 15:32:50', '2022-03-29 15:32:50'),
-(4, 'e7e0f555-ab4e-4c2f-88ff-5fa332218036', 1, 1, '4455434333', 'tonny', '0717705746', NULL, NULL, NULL, 25, '2022-03-29 16:00:54', '2022-03-29 16:00:54');
+(4, 'e7e0f555-ab4e-4c2f-88ff-5fa332218036', 1, 1, '4455434333', 'tonny', '0717705746', NULL, NULL, NULL, 25, '2022-03-29 16:00:54', '2022-03-29 16:00:54'),
+(5, '48803c9b-14f4-419d-9ed0-b9cb400608e2', 1, 1, '0881774774', 'TONNY', '0717705746', '99848577-57577-57477-47', 'renfridfrancis@gmail.com', NULL, 25, '2022-03-30 05:02:54', '2022-03-30 05:02:54');
 
 INSERT INTO `customers` (`id`, `uuid`, `partner_id`, `phone`, `first_name`, `last_name`, `middle_name`, `dob`, `id_type`, `id_number`, `gender_id`, `marital_status_id`, `region_id`, `sector_id`, `occupation_id`, `acquisition_id`, `dependant`, `status`, `created_by`, `created_at`, `updated_at`, `updated_by`) VALUES
 (1, 'dad5a311-9834-48fe-a4d9-eba90579af28', '1', NULL, 'Renfrid', 'Ngolongolo', 'W', '1960-04-06', 1, '40985777-66566-46636-63', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'active', 25, '2022-03-29 09:48:19', '2022-03-29 13:15:31', 25),
 (2, 'e6cabe7e-29d2-405e-9aa9-51eb11c53956', '1', NULL, 'hjh', 'b jh', 'bjb', '1944-07-08', 1, '77888777-77777-77777-77', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'inactive', 25, '2022-03-29 13:51:20', '2022-03-29 14:10:30', NULL);
 
-INSERT INTO `debit_orders` (`id`, `partner_id`, `customer_account_id`, `code`, `loan_purpose_id`, `total_amount`, `paid_amount`, `outstanding_amount`, `debit_type`, `min_installment_amount`, `max_installment_amount`, `installment_number`, `periodicity`, `deduction_end_date`, `start_date`, `end_date`, `evidence_of_aggrement`, `approved`, `approved_by`, `approver_at`, `approve_code`, `created_at`, `updated_at`) VALUES
-(1, NULL, 1, NULL, NULL, 1000000, 0, 0, 'FIXED', 0, 10000, 10, 'MONTHLY', 'total_loan_covered', '2022-04-01', '2024-04-01', 'Receipt _ LinkedIn.pdf', 0, NULL, NULL, NULL, '2022-03-29 10:38:02', '2022-03-29 10:38:02'),
-(2, NULL, 3, NULL, NULL, 1000000, 0, 0, 'FIXED', 0, 10000, 10, 'MONTHLY', 'total_loan_covered', '2022-03-31', '2024-03-31', NULL, 0, NULL, NULL, NULL, '2022-03-29 15:45:23', '2022-03-29 15:45:23'),
-(3, NULL, 4, NULL, NULL, 1000000, 0, 0, 'DYNAMIC', 10000, 100000, 10, 'MONTHLY', 'total_loan_covered', '2022-03-31', '2024-03-31', 'Receipt _ LinkedIn.pdf', 0, NULL, NULL, NULL, '2022-03-29 16:02:05', '2022-03-29 16:02:05');
+INSERT INTO `debit_orders` (`id`, `partner_id`, `customer_account_id`, `customer_account_uuid`, `code`, `loan_purpose_id`, `total_amount`, `paid_amount`, `outstanding_amount`, `debit_type`, `min_installment_amount`, `max_installment_amount`, `installment_number`, `periodicity`, `deduction_end_date`, `start_date`, `end_date`, `evidence_of_aggrement`, `approved`, `approved_by`, `approver_at`, `approve_code`, `created_at`, `updated_at`) VALUES
+(4, NULL, 5, '48803c9b-14f4-419d-9ed0-b9cb400608e2', NULL, NULL, 1000000, 0, 0, 'DYNAMIC', 10000, 20000, 10, 'MONTHLY', 'total_loan_covered', '2022-03-31', '2024-03-31', NULL, 0, NULL, NULL, NULL, '2022-03-30 05:04:56', '2022-03-30 05:11:15');
 
 INSERT INTO `gender` (`id`, `name`, `created_at`, `updated_at`) VALUES
 (1, 'Male', '2021-10-14 00:00:00', '2021-10-26 01:12:57'),
