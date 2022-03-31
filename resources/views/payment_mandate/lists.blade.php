@@ -94,9 +94,9 @@
                                             </td>
 
                                             <td>
-                                                <a href="{{ route('payment-mandate.details', $values->customer_account_uuid) }}" title="View"
-                                                    class="btn btn-outline-primary btn-sm">
-                                                    <i class="bx bx-folder-open"></i>
+                                                <a href="{{ route('payment-mandate.details', $values->customer_account_uuid) }}"
+                                                    title="View">
+                                                    <i class="bx bx-folder-open bx-border bx-xs"></i>
                                                 </a>
                                                 {{-- 
 

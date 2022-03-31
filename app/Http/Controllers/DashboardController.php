@@ -24,15 +24,24 @@ class DashboardController extends Controller
         $debit_orders = DebitOrder::where_cond()->get();
 
         //pending debit orders
-        $pending_debit_orders = DebitOrder::where(['approved' => 0])->count();
+        $number_of_pending = DebitOrder::where(['approved' => 0])->count();
 
         //approved debit orders
-        $approved_debit_orders = DebitOrder::where(['approved' => 1])->count();
+        $number_of_approved = DebitOrder::where(['approved' => 1])->count();
 
         //rejected debit orders
-        $rejected_debit_orders = DebitOrder::where(['approved' => 99])->count();
+        $number_of_rejected = DebitOrder::where(['approved' => 99])->count();
+
+        //pending debit orders
+        $pending_debit_orders = DebitOrder::where(['approved' => 0])->get();
+
+        //approved debit orders
+        $approved_debit_orders = DebitOrder::where(['approved' => 1])->get();
+
+        //rejected debit orders
+        $rejected_debit_orders = DebitOrder::where(['approved' => 99])->get();
 
         //render view
-        return view('dashboard', compact('title', 'debit_orders', 'pending_debit_orders', 'approved_debit_orders', 'rejected_debit_orders'));
+        return view('dashboard', compact('title', 'debit_orders', 'number_of_pending', 'number_of_approved', 'number_of_rejected', 'pending_debit_orders', 'approved_debit_orders', 'rejected_debit_orders'));
     }
 }

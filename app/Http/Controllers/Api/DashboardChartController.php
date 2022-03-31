@@ -55,6 +55,11 @@ class DashboardChartController extends Controller
                 ->groupBy('debit_orders.approved')
                 ->orderBy('debit_orders.approved', 'DESC');
 
+            if (isset($_GET['month']) && $_GET['month'] != null) {
+                $debit_orders = $debit_orders->whereMonth('created_at', $_GET['month'])
+                    ->whereYear('created_at', date('Y'));
+            }
+
             $debit_orders = $debit_orders->get();
 
             //pending

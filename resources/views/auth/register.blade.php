@@ -191,6 +191,7 @@
                                                     <!--./prepend -->
 
                                                     {{ Form::number('company_phone', old('company_phone', substr($company->phone ?? '', 3)), ['class="form-control"','placeholder="Company phone..."','required']) }}
+                                                    <span class="error"></span>
                                                 </div>
                                             </div>
                                             <!--./col -->
@@ -352,7 +353,7 @@
                             email: "Invalid email",
                         },
                         country_code: {
-                            required: "Country required"
+                            required: "Required"
                         },
                         company_phone: {
                             required: "Phone required"
