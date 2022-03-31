@@ -11,6 +11,7 @@
 
 <!--jquery validation -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.0/jquery.validate.min.js"></script>
+{{-- <script src="http://jqueryvalidation.org/files/dist/additional-methods.min.js"></script> --}}
 
 <!-- form mask -->
 <script src="{{ URL::asset('assets/libs/inputmask/inputmask.min.js') }}"></script>

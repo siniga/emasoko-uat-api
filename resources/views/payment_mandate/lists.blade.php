@@ -20,36 +20,88 @@
             <div class="card">
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-9">
-                            {{-- <div class="row">
-                    <div class="col-md-12">
-                        <div class="float-right">
-                            {!! Form::open(['url' => route('.index'), 'method' => 'POST', 'class' => 'form-inline']) !!}
+                        <div class="col-lg-12">
+                            {!! Form::open(['url' => url('#'), 'method' => 'POST', 'class' => 'form-horizontal']) !!}
                             {{ Form::token() }}
 
-                            <div class="form-group">
-                                {{ Form::date('start_at', old('start_at'), ['placeholder="Start Date..."', 'class="form-control"']) }}
-                            </div>
-                            <!--./form-group -->&nbsp;&nbsp;
+                            <div class="row">
+                                <div class="col-lg-2">
+                                    <div class="mb-3">
+                                        {{ Form::date('start_at', old('start_at'), ['placeholder="Start Date..."', 'class="form-control"']) }}
+                                    </div>
+                                </div>
+                                <!--./col -->
 
-                            <div class="form-group">
-                                {{ Form::date('end_at', old('end_at'), ['placeholder="End Date..."', 'class="form-control"']) }}
-                            </div>
-                            <!--./form-group -->&nbsp;&nbsp;
+                                <div class="col-lg-2">
+                                    <div class="mb-3">
+                                        {{ Form::date('end_at', old('end_at'), ['placeholder="End Date..."', 'class="form-control"']) }}
+                                    </div>
+                                </div>
+                                <!--./col -->
 
-                            <div class="form-group">
-                                <button type="submit" name="filter" class="btn btn-secondary">Filter</button>
+                                <div class="col-lg-2">
+                                    <div class="mb-3">
+                                        @php
+                                            $account_type_options = [];
+                                            $options = [];
+                                        @endphp
+                                        @foreach ($account_types as $val)
+                                            @php
+                                                $options[$val->id] = $val->name;
+                                            @endphp
+                                        @endforeach
+                                        @php
+                                            $account_type_options = $options;
+                                            $options = ['' => 'Payment Channel'] + $options;
+                                        @endphp
+
+                                        {{ Form::select('account_type_id', $options, old('account_type_id'), ['class' => 'form-control account_type_id','id' => 'account_type_id']) }}
+                                    </div>
+                                </div>
+                                <!--./col -->
+
+                                <div class="col-lg-2">
+                                    <div class="mb-3">
+                                        @php $options = []; @endphp
+                                        @foreach ($accounts as $val)
+                                            @php
+                                                $options[$val->id] = $val->name;
+                                            @endphp
+                                        @endforeach
+                                        @php
+                                            $options = ['' => 'Bank/MNO Name'] + $options;
+                                        @endphp
+
+                                        {{ Form::select('account_id', $options, old('account_id'), ['class' => 'form-control account_id','id' => 'account_id']) }}
+                                    </div>
+                                </div>
+                                <!--./col -->
+
+                                <div class="col-lg-4">
+                                    <div class="mb-3">
+                                        {{ Form::text('keyword', old('keyword'), ['class="form-control"','placeholder="Search by name of account holder or number..."']) }}
+                                    </div>
+                                </div>
+                                <!--./col -->
                             </div>
-                            <!--./form-group -->
+                            <!--./row -->
+
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="mb-3">
+                                        <div class="text-sm-end d-none d-sm-block">
+                                            <button type="submit" name="filter" class="btn btn-secondary">
+                                                <i class="bx bx bx-search"></i> Filter
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--./col -->
+                            </div>
+                            <!--./row -->
                             {{ Form::close() }}
                         </div>
-                        <!--./float-right -->
-                    </div>
-                    <!--./col-md-12 -->
-                </div>
-                <!--./row --> --}}
-                        </div>
-                        <!--./col-md-9 -->
+                        <!--./col-lg-12 -->
                     </div>
                     <!--./row -->
 
@@ -98,8 +150,9 @@
                                                     title="View">
                                                     <i class="bx bx-folder-open bx-border bx-xs"></i>
                                                 </a>
-                                                
-                                                <a href="{{ route('payment-mandate.edit', $values->customer_account_uuid) }}" title="Edit">
+
+                                                <a href="{{ route('payment-mandate.edit', $values->customer_account_uuid) }}"
+                                                    title="Edit">
                                                     <i class="bx bx-edit-alt bx-border bx-xs"></i>
                                                 </a>
                                                 {{-- <a href="#" title="Delete" class="btn btn-outline-danger btn-xss delete">
@@ -129,4 +182,24 @@
 
     <!-- dashboard init -->
     <script src="{{ URL::asset('/assets/js/pages/dashboard.init.js') }}"></script>
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            //on select account category
+            $('.account_type_id').on('change', function(e) {
+                e.preventDefault();
+                accountTypeId = $(this).val();
+
+                //query for data
+                $.ajax({
+                    url: '/account-types/' + accountTypeId,
+                    type: "get",
+                    success: function(data) {
+                        $('.account_id').html(data);
+                    }
+                });
+            });
+
+        });
+    </script>
 @endsection

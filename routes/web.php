@@ -128,8 +128,8 @@ Route::post('payment-mandate/confirm-registration', [PaymentMandateController::c
 
 //details
 Route::get('payment-mandate/details/{uuid}', [PaymentMandateController::class, 'details'])->name('payment-mandate.details');
-Route::get('payment-mandate/edit/{uuid}', [ApiPaymentMandateController::class, 'edit'])->name('payment-mandate.edit');
-Route::post('customers/update-details', [CustomerController::class, 'update'])->name('customers.update');
+Route::get('payment-mandate/edit/{uuid}', [PaymentMandateController::class, 'edit'])->name('payment-mandate.edit');
+Route::post('payment-mandate/update-details', [PaymentMandateController::class, 'update'])->name('payment-mandate.update');
 
 //tasks
 Route::get('tasks/lists', [TaskController::class, 'lists'])->name('tasks.lists');

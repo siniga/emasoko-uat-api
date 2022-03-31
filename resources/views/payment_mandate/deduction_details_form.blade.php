@@ -70,7 +70,8 @@
                                 <div class="col-lg-3" id="standard_deduction" style="display: block">
                                     <div class="mb-3">
                                         <label>Deduction Amount <span class="text-danger">*</span></label>
-                                        {{ Form::text('installment_amount',old('installment_amount', $debit_order->max_installment_amount ?? ''),['class="form-control number-separator"', 'placeholder="Write deduction amount..."']) }}
+                                        {{ Form::text('installment_amount', old('installment_amount', $debit_order->max_installment_amount ?? ''), ['class="form-control number-separator"','placeholder="Write deduction amount..."']) }}
+                                        <span class="text-danger" id="installmentAmountError"></span>
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -81,14 +82,16 @@
                                         <div class="row">
                                             <div class="col-lg-6">
                                                 <div class="form-group">
-                                                    {{ Form::text('min_installment_amount',old('min_installment_amount', $debit_order->min_installment_amount ?? ''),['class="form-control number-separator"', 'placeholder="Minimum deduction amount..."']) }}
+                                                    {{ Form::text('min_installment_amount',old('min_installment_amount', $debit_order->min_installment_amount ?? ''),['class="form-control number-separator"','placeholder="Minimum deduction amount..."','id="min_installment_amount"']) }}
+                                                    <span class="text-danger" id="minInstallmentAmountError"></span>
                                                 </div>
                                             </div>
                                             <!--./col -->
 
                                             <div class="col-lg-6">
                                                 <div class="form-group">
-                                                    {{ Form::text('max_installment_amount',old('max_installment_amount', $debit_order->max_installment_amount ?? ''),['class="form-control number-separator"', 'placeholder="Maximum deduction amount..."']) }}
+                                                    {{ Form::text('max_installment_amount',old('max_installment_amount', $debit_order->max_installment_amount ?? ''),['class="form-control number-separator"','placeholder="Maximum deduction amount..."','id="max_installment_amount"']) }}
+                                                    <span class="text-danger" id="maxInstallmentAmountError"></span>
                                                 </div>
                                             </div>
                                             <!--./col -->
@@ -135,16 +138,16 @@
 
                                 <div class="col-lg-3">
                                     <div class="mb-3">
-                                        <label>Deduction End Date <span class="text-danger">*</span></label>
+                                        <label>Deduction End<span class="text-danger">*</span></label>
                                         @php
                                             $options = [
-                                                'total_loan_covered' => 'Until total loan covered',
-                                                'specific_date' => 'Specific date',
+                                                'totalLoanCovered' => 'Until total loan covered',
+                                                'specificDate' => 'Specific date',
                                             ];
                                             $options = ['' => 'Select'] + $options;
                                         @endphp
 
-                                        {{ Form::select('deduction_end_date', $options, old('deduction_end_date', $debit_order->deduction_end_date ?? ''), ['class' => 'form-control','id' => 'deduction_end_date']) }}
+                                        {{ Form::select('deduction_end', $options, old('deduction_end', $debit_order->deduction_end_date ?? ''), ['class' => 'form-control','id' => 'deduction_end']) }}
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -152,7 +155,7 @@
                                 <div class="col-lg-3" id="end_date" style="display: none;">
                                     <div class="mb-3">
                                         <label>End Date <span class="text-danger">*</span></label>
-                                        {{ Form::date('end_date', old('end_date', $debit_order->start_date ?? ''), ['class="form-control"']) }}
+                                        {{ Form::date('end_date', old('end_date', $debit_order->start_date ?? ''), ['class="form-control"','id="end_date"']) }}
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -196,12 +199,43 @@
         $(document).ready(function() {
             //validate form and submit
             $("#registrationForm").validate({
+                //rules
                 rules: {
                     loan_amount: {
                         required: true
                     },
                     debit_type: {
                         required: true
+                    },
+                    installment_amount: {
+                        required: function(element) {
+                            var debitType = $("#debit_type").val();
+                            if (debitType == "FIXED") {
+                                return true;
+                            } else {
+                                return false;
+                            }
+                        }
+                    },
+                    min_installment_amount: {
+                        required: function(element) {
+                            var debitType = $("#debit_type").val();
+                            if (debitType == "DYNAMIC") {
+                                return true;
+                            } else {
+                                return false;
+                            }
+                        }
+                    },
+                    max_installment_amount: {
+                        required: function(element) {
+                            var debitType = $("#debit_type").val();
+                            if (debitType == "DYNAMIC") {
+                                return true;
+                            } else {
+                                return false;
+                            }
+                        }
                     },
                     peridiocity: {
                         required: true
@@ -212,12 +246,53 @@
                     start_date: {
                         required: true
                     },
-                    deduction_end_date: {
+                    deduction_end: {
                         required: true
                     },
+                    end_date: {
+                        required: function(element) {
+                            var deductionEnd = $("#deduction_end").val();
+                            if (deductionEnd == "specificDate") {
+                                return true;
+                            } else {
+                                return false;
+                            }
+                        }
+                    },
                 },
-                messages: {
 
+                //message
+                messages: {
+                    loan_amount: {
+                        required: "Loan amount required"
+                    },
+                    debit_type: {
+                        required: 'Debit type required'
+                    },
+                    installment_amount: {
+                        required: "Deduction amount required "
+                    },
+                    min_installment_amount: {
+                        required: "Minimum deduction amount required"
+                    },
+                    max_installment_amount: {
+                        required: "Maximum deduction amount required"
+                    },
+                    peridiocity: {
+                        required: 'Frequency of installment required'
+                    },
+                    number_of_installment: {
+                        required: 'Number of installment required'
+                    },
+                    start_date: {
+                        required: 'Deduction start date required'
+                    },
+                    deduction_end: {
+                        required: 'Deduction end required'
+                    },
+                    end_date: {
+                        required: 'Deduction end date required'
+                    }
                 },
                 submitHandler: function(form, e) {
                     e.preventDefault();
@@ -246,17 +321,30 @@
                         contentType: false,
                         cache: false,
                         timeout: 800000,
-                        success: function(data) {
+                        success: function(response) {
+                            //activate submit button
                             $("#btnSubmit").prop("disabled", false);
 
                             // Deactivate Loading Spinner
                             $('.loading-spinner').toggleClass('active');
 
+                            //uuid
+                            uuid = response.uuid
+
                             //redirect to show
-                            window.location.href = "/payment-mandate/preview/" + data.uuid
+                            window.location.href = "/payment-mandate/preview/" + uuid
                         },
-                        error: function(e) {
+                        error: function(response) {
+                            //activate submit button
                             $("#btnSubmit").prop("disabled", false);
+
+                            // Deactivate Loading Spinner
+                            $('.loading-spinner').toggleClass('active');
+
+                            //write error message
+                            $('#installmentAmountError').text(response.responseJSON.errors.installment_amount);
+                            $('#minInstallmentAmountError').text(response.responseJSON.errors.min_installment_amount);
+                            $('#maxInstallmentAmountError').text(response.responseJSON.errors.max_installment_amount);
                         }
                     });
                     return false;
@@ -288,18 +376,18 @@
             });
 
             //before on change start and end date
-            deductionEndDate = $('#deduction_end_date').val();
+            deductionEndDate = $('#deduction_end').val();
 
-            if (deductionEndDate === 'specific_date')
+            if (deductionEndDate === 'specificDate')
                 $('#end_date').css('display', '');
             else
                 $('#end_date').css('display', 'none');
 
             //on change deduction start and end date
-            $('#deduction_end_date').on('change', function(e) {
+            $('#deduction_end').on('change', function(e) {
                 deductionEndDate = $(this).val();
 
-                if (deductionEndDate === 'specific_date')
+                if (deductionEndDate === 'specificDate')
                     $('#end_date').css('display', '');
                 else
                     $('#end_date').css('display', 'none');

@@ -1,7 +1,7 @@
 @extends('layouts.master')
 
 @section('title')
-    Edit Payment Mandate
+    Update Deduction Channel
 @endsection
 
 @section('content')
@@ -10,7 +10,7 @@
             Payment Mandate
         @endslot
         @slot('title')
-            Edit Payment Mandate
+            Update Deduction Channel
         @endslot
     @endcomponent
 
@@ -19,212 +19,11 @@
             <div class="card">
                 <div class="card-body">
                     <form action="#" id="registrationForm" enctype="multipart/form-data" autocomplete="off">
-                        <input type="hidden" name="customer_id" value="{{ $customer->id ?? null }}">
-                        <input type="hidden" name="customer_uuid" value="{{ $customer->uuid ?? null }}">
+                        <input type="hidden" name="uuid" value="{{ $customer_account->uuid ?? null }}">
 
                         <!-- Customer Information -->
                         <section>
                             <div class="row">
-                                <div class="col-lg-12">
-                                    <h5 class="text-capitalize">Customer Information</h5>
-                                    <hr />
-                                </div>
-                                <!--./col -->
-                            </div>
-                            <!--./row -->
-
-                            <div class="row">
-                                <div class="col-lg-6">
-                                    <div class="mb-3">
-                                        <label for="businessname">First Name <span class="text-danger">*</span>
-                                        </label>
-                                        {{ Form::text('first_name', old('first_name', $customer->first_name ?? ''), ['class="form-control"','placeholder="Enter first name as appears in bank account..."']) }}
-                                    </div>
-                                </div>
-                                <!--./col -->
-
-                                <div class="col-lg-2">
-                                    <div class="mb-3">
-                                        <label for="businessname">Middle Name
-                                        </label>
-                                        {{ Form::text('middle_name', old('middle_name', $customer->middle_name ?? ''), ['class="form-control"','placeholder="Enter middle name..."']) }}
-                                    </div>
-                                </div>
-                                <!--./col -->
-
-                                <div class="col-lg-4">
-                                    <div class="mb-3">
-                                        <label for="businessname">Surname <span class="text-danger">*</span>
-                                        </label>
-                                        {{ Form::text('surname', old('surname', $customer->last_name ?? ''), ['class="form-control"','placeholder="Enter surname as appears in bank account..."']) }}
-                                        <span class="text-danger"></span>
-                                    </div>
-                                </div>
-                                <!--./col -->
-                            </div>
-                            <!--./row -->
-
-                            <div class="row">
-                                <div class="col-lg-6">
-                                    <div class="mb-3">
-                                        <label>NIDA Number</label>
-                                        {{ Form::text('nida_number', old('nida_number', $customer->id_number ?? ''), ['class="form-control input-mask"','placeholder="Enter NIDA number..."','data-inputmask' => "'mask': '99999999-99999-99999-99'"]) }}
-                                    </div>
-                                </div>
-                                <!--./col -->
-
-                                <div class="col-lg-6">
-                                    <div class="mb-3">
-                                        <label>Date of Birth <span style="color: red;">*</span></label>
-                                        <div class="row">
-                                            <div class="col-lg-4">
-                                                <div class="form-group">
-                                                    @php
-                                                        $year_options = [];
-                                                        $current_year = date('Y');
-                                                    @endphp
-
-                                                    @foreach (range(1940, $current_year - 15) as $v)
-                                                        @php $year_options[$v] = $v; @endphp
-                                                    @endforeach
-
-                                                    @php $year_options = ['' => 'Year'] + $year_options; @endphp
-                                                    {{ Form::select('year', $year_options, old('year', $customer ? date('Y', strtotime($customer->dob)) : ''), ['class' => 'form-control']) }}
-                                                </div>
-                                            </div>
-                                            <!--./col-lg-4 -->
-
-                                            <div class="col-lg-4">
-                                                <div class="mb-3">
-                                                    @php $month_options = []; @endphp
-
-                                                    @foreach (range(1, 12) as $v)
-                                                        @php
-                                                            $month_name = date('F', mktime(0, 0, 0, $v, 10)); // convert number to month
-                                                            $month_options[$v] = $month_name;
-                                                        @endphp
-                                                    @endforeach
-                                                    @php $month_options = ['' => 'Month'] + $month_options; @endphp
-                                                    {{ Form::select('month', $month_options, old('month', $customer ? date('n', strtotime($customer->dob)) : ''), ['class' => 'form-control']) }}
-                                                </div>
-                                            </div>
-                                            <!--./col-lg-4 -->
-
-                                            <div class="col-lg-4">
-                                                <div class="mb-3">
-                                                    <?php
-                                                    $day_options = [];
-                                                    $number_of_days = date('t');
-                                                    
-                                                    foreach (range(1, 31) as $v) {
-                                                        $day_options[$v] = $v;
-                                                    }
-                                                    $day_options = ['' => 'Day'] + $day_options;
-                                                    ?>
-                                                    {{ Form::select('day', $day_options, old('day', $customer ? date('j', strtotime($customer->dob)) : ''), ['class' => 'form-control']) }}
-                                                </div>
-                                            </div>
-                                            <!--./col-lg-4 -->
-                                        </div>
-                                        <!--./row -->
-                                    </div>
-                                </div>
-                                <!--./col -->
-                            </div>
-                            <!--./row -->
-
-                            <div class="row">
-                                <div class="col-lg-3">
-                                    <div class="mb-3">
-                                        <label>Gender</label>
-                                        @php
-                                            $options = [];
-                                        @endphp
-
-                                        @foreach ($genders as $item)
-                                            @php
-                                                $options[$item->id] = $item->name;
-                                            @endphp
-                                        @endforeach
-
-                                        @php
-                                            $options = ['' => 'Select'] + $options;
-                                        @endphp
-                                        {{ Form::select('gender_id', $options, old('gender_id', $customer->gender_id ?? ''), ['class' => 'form-control']) }}
-                                        <span class="text-danger">{{ $errors->first('gender_id') }}</span>
-                                    </div>
-                                </div>
-                                <!--./col-lg-3 -->
-
-                                <div class="col-lg-3">
-                                    <div class="mb-3">
-                                        <label>Marital Status</label>
-                                        @php
-                                            $options = [];
-                                        @endphp
-
-                                        @foreach ($marital_status as $item)
-                                            @php
-                                                $options[$item->id] = $item->name;
-                                            @endphp
-                                        @endforeach
-
-                                        @php
-                                            $options = ['' => 'Select'] + $options;
-                                        @endphp
-                                        {{ Form::select('marital_status_id', $options, old('marital_status_id', $customer->marital_status_id ?? ''), ['class' => 'form-control']) }}
-                                        <span class="text-danger">{{ $errors->first('marital_status_id') }}</span>
-                                    </div>
-                                </div>
-                                <!--./col-lg-3 -->
-
-                                <div class="col-lg-3">
-                                    <div class="mb-3">
-                                        <label>Sector</label>
-                                        @php
-                                            $options = [];
-                                        @endphp
-
-                                        @foreach ($sectors as $item)
-                                            @php
-                                                $options[$item->id] = $item->name;
-                                            @endphp
-                                        @endforeach
-
-                                        @php
-                                            $options = ['' => 'Select'] + $options;
-                                        @endphp
-                                        {{ Form::select('sector_id', $options, old('sector_id', $customer->sector_id ?? ''), ['class' => 'form-control']) }}
-                                        <span class="text-danger">{{ $errors->first('sector_id') }}</span>
-                                    </div>
-                                </div>
-                                <!--./col-lg-3 -->
-
-                                <div class="col-lg-3">
-                                    <div class="mb-3">
-                                        <label>Occupation</label>
-                                        @php
-                                            $options = [];
-                                        @endphp
-
-                                        @foreach ($occupations as $item)
-                                            @php
-                                                $options[$item->id] = $item->name;
-                                            @endphp
-                                        @endforeach
-
-                                        @php
-                                            $options = ['' => 'Select'] + $options;
-                                        @endphp
-                                        {{ Form::select('occupation_id', $options, old('occupation_id', $customer->occupation_id ?? ''), ['class' => 'form-control']) }}
-                                        <span class="text-danger">{{ $errors->first('occupation_id') }}</span>
-                                    </div>
-                                </div>
-                                <!--./col-lg-3 -->
-                            </div>
-                            <!--./row -->
-
-                            <div class="row mt-4">
                                 <div class="col-lg-12">
                                     <h5 class="text-capitalize">Deduction Channel</h5>
                                     <hr />
@@ -252,7 +51,7 @@
                                             $options = ['' => 'Select'] + $options;
                                         @endphp
 
-                                        {{ Form::select('account_type_id',$options,old('account_type_id', $customer->customerAccount->account_type_id ?? ''),['class' => 'form-control account_type_id', 'id' => 'account_type_id']) }}
+                                        {{ Form::select('account_type_id', $options, old('account_type_id', $customer_account->account_type_id ?? ''), ['class' => 'form-control account_type_id','id' => 'account_type_id']) }}
                                         <span class="text-danger"></span>
                                     </div>
                                 </div>
@@ -272,7 +71,7 @@
                                             $options = ['' => 'Select'] + $options;
                                         @endphp
 
-                                        {{ Form::select('account_id', $options, old('account_id', $customer->customerAccount->account_id ?? ''), ['class' => 'form-control account_id','id' => 'account_id']) }}
+                                        {{ Form::select('account_id', $options, old('account_id', $customer_account->account_id ?? ''), ['class' => 'form-control account_id','id' => 'account_id']) }}
                                         <span class="text-danger"></span>
                                     </div>
                                 </div>
@@ -280,8 +79,8 @@
 
                                 <div class="col-lg-4">
                                     <div class="mb-3">
-                                        <label>Account Name <span class="text-danger">*</span></label>
-                                        {{ Form::text('account_name', old('account_name', $customer->customerAccount->account_name ?? ''), ['class="form-control"','placeholder="Write account name..."','required']) }}
+                                        <label>Name of Account Holder <span class="text-danger">*</span></label>
+                                        {{ Form::text('account_name', old('account_name', $customer_account->account_name ?? ''), ['class="form-control"','placeholder="Enter name of account holder..."','required']) }}
                                         <span class="text-danger"></span>
                                     </div>
                                 </div>
@@ -291,7 +90,7 @@
                                     <div class="mb-3">
                                         <label for="basicpill-namecard-input">Account Number <span
                                                 class="text-danger">*</span></label>
-                                        {{ Form::text('account_number', old('account_number', $customer->customerAccount->account_number ?? ''), ['class="form-control"','placeholder="Write account number..."']) }}
+                                        {{ Form::text('account_number', old('account_number', $customer_account->account_number ?? ''), ['class="form-control"','placeholder="Enter account number..."']) }}
                                         <span class="text-danger"></span>
                                     </div>
                                 </div>
@@ -301,8 +100,32 @@
                                     <div class="mb-3">
                                         <label for="basicpill-namecard-input">Phone <span
                                                 class="text-danger">*</span></label>
-                                        {{ Form::text('phone', old('phone', $customer->customerAccount->phone ?? ''), ['class="form-control input-mask"','placeholder="Write phone..."','data-inputmask' => "'mask': '9999999999'"]) }}
-                                        <span class="text-danger"></span>
+                                        {{ Form::text('phone', old('phone', $customer_account->phone ?? ''), ['class="form-control input-mask"','placeholder="Enter phone connected to the bank account..."','data-inputmask' => "'mask': '9999999999'"]) }}
+                                        <span class="text-danger" id="phoneError"></span>
+                                    </div>
+                                </div>
+                                <!--./col -->
+
+                                <div class="col-lg-4">
+                                    <div class="mb-3">
+                                        <label>NIDA Number</label>
+                                        {{ Form::text('nida_number', old('nida_number', $customer_account->id_number ?? ''), ['class="form-control input-mask"','placeholder="Enter NIDA number..."','data-inputmask' => "'mask': '99999999-99999-99999-99'"]) }}
+                                    </div>
+                                </div>
+                                <!--./col -->
+
+                                <div class="col-lg-4">
+                                    <div class="mb-3">
+                                        <label>Email</label>
+                                        {{ Form::email('email', old('email', $customer_account->email ?? ''), ['class="form-control input-mask"','placeholder="Enter email..."']) }}
+                                    </div>
+                                </div>
+                                <!--./col -->
+
+                                <div class="col-lg-4">
+                                    <div class="mb-3">
+                                        <label>Address</label>
+                                        {{ Form::text('address', old('address', $customer_account->address ?? ''), ['class="form-control input-mask"','placeholder="Enter address..."']) }}
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -312,7 +135,7 @@
                             <div class="row">
                                 <div class="col-md-12">
                                     <div class="mb-3 text-sm-end d-none d-sm-block">
-                                        <a href="{{ route('customers.lists') }}"
+                                        <a href="{{ route('payment-mandate.lists') }}"
                                             class="btn btn-danger text-medium ">Cancel</a>
                                         <button type="submit" id="btnSubmit" class="btn btn-primary">
                                             Update <i class="loading-spinner fa fa-lg fa fa-spinner fa-spin"></i>
@@ -334,19 +157,7 @@
 @section('script')
     <script type="text/javascript">
         $(document).ready(function() {
-            //before change account type
-            let accountTypeId = $('.account_type_id').val();
-
-            //change bank or mno name
-            if (accountTypeId == 1) {
-                $('.bank_mno_name').html('Bank Name <span class="text-danger">*</span>');
-                $('.account_phone').css('display', '');
-            } else if (accountTypeId == 2) {
-                $('.bank_mno_name').html('MNO Name <span class="text-danger">*</span>');
-                $('.account_phone').css('display', 'none');
-            }
-
-            //on change account type
+            //on select account category
             $('.account_type_id').on('change', function(e) {
                 e.preventDefault();
                 accountTypeId = $(this).val();
@@ -373,21 +184,6 @@
             //validate form and submit
             $("#registrationForm").validate({
                 rules: {
-                    first_name: {
-                        required: true
-                    },
-                    surname: {
-                        required: true
-                    },
-                    year: {
-                        required: true
-                    },
-                    month: {
-                        required: true
-                    },
-                    day: {
-                        required: true
-                    },
                     account_type_id: {
                         required: true
                     },
@@ -405,21 +201,6 @@
                     },
                 },
                 messages: {
-                    first_name: {
-                        required: "First name required"
-                    },
-                    surname: {
-                        required: "Surname required"
-                    },
-                    year: {
-                        required: "Year required"
-                    },
-                    month: {
-                        required: "Month required"
-                    },
-                    day: {
-                        required: "Day required"
-                    },
                     account_type_id: {
                         required: "Payment channel required"
                     },
@@ -431,6 +212,9 @@
                     },
                     account_number: {
                         required: "Account number required"
+                    },
+                    phone: {
+                        required: "Phone number required"
                     }
                 },
                 submitHandler: function(form, e) {
@@ -454,30 +238,39 @@
                     //post data 
                     $.ajax({
                         type: "POST",
-                        url: "{{ route('customers.update') }}",
+                        url: "{{ route('payment-mandate.update') }}",
                         data: data,
                         processData: false,
                         contentType: false,
                         cache: false,
                         timeout: 800000,
-                        success: function(data) {
+                        success: function(response) {
+                            //activate submit button
                             $("#btnSubmit").prop("disabled", false);
 
                             // Deactivate Loading Spinner
                             $('.loading-spinner').toggleClass('active');
 
                             //success message
-                            $("#success-msg").html(data.success_msg);
+                            $("#success-msg").html(response.success_msg);
                             $('#btn-okay').css('display', '');
                             $('#subscribeModal').modal('show');
                         },
-                        error: function(e) {
+                        error: function(response) {
+                            //activate submit button
                             $("#btnSubmit").prop("disabled", false);
+
+                            // Deactivate Loading Spinner
+                            $('.loading-spinner').toggleClass('active');
+
+                            //write error message
+                            $('#phoneError').text(response.responseJSON.errors.phone);
                         }
                     });
                     return false;
                 },
             });
+
 
             //btn close
             $('#btn-okay').on('click', function(e) {
@@ -485,31 +278,7 @@
                 e.preventDefault();
 
                 //redirect to show
-                window.location.href = "/customers/details/" + uuid
-            });
-
-            //on select account category
-            $('#account_type_id').on('change', function(e) {
-                e.preventDefault();
-                accountTypeId = $(this).val();
-
-                $.ajax({
-                    url: '/account-types/' + accountTypeId,
-                    type: "get",
-                    success: function(data) {
-                        $('#account_id').html(data);
-                    }
-                });
-            });
-
-            //filter
-            $('#account_type_id').on('change', function(e) {
-                accountTypeId = $(this).val();
-
-                if (accountTypeId == 1)
-                    $('#account_phone').css('display', '');
-                else
-                    $('#account_phone').css('display', 'none');
+                window.location.href = "/payment-mandate/details/" + uuid
             });
         });
     </script>
@@ -535,8 +304,8 @@
                         <div class="col-xl-10">
                             <p class="text-muted font-size-14 mb-4" id="success-msg"></p>
 
-                            <button type="button" id="btn-okay" name="Okay" class="btn btn-success" customer-uuid="{{ $customer->uuid ?? null }}"
-                                style="display: none;">Okay</button>
+                            <button type="button" id="btn-okay" name="Okay" class="btn btn-success"
+                                customer-uuid="{{ $customer_account->uuid ?? null }}" style="display: none;">Okay</button>
                         </div>
                     </div>
                 </div>

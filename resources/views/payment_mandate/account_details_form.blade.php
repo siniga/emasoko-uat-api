@@ -42,7 +42,6 @@
 
                         <!-- Customer Information -->
                         <section>
-
                             <div class="row ">
                                 <div class="col-lg-4">
                                     <div class="mb-3">
@@ -112,7 +111,7 @@
                                         <label for="basicpill-namecard-input">Phone <span
                                                 class="text-danger">*</span></label>
                                         {{ Form::text('phone', old('phone', $customer_account->phone ?? ''), ['class="form-control input-mask"','placeholder="Enter phone connected to the bank account..."','data-inputmask' => "'mask': '9999999999'"]) }}
-                                        <span class="text-danger"></span>
+                                        <span class="text-danger" id="phoneError"></span>
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -256,18 +255,29 @@
                         contentType: false,
                         cache: false,
                         timeout: 800000,
-                        success: function(data) {
+                        success: function(response) {
+                            //activate submit button
                             $("#btnSubmit").prop("disabled", false);
 
                             // Deactivate Loading Spinner
                             $('.loading-spinner').toggleClass('active');
 
+                            //uuid
+                            uuid = response.uuid
+
                             //redirect to show
-                            window.location.href = "/payment-mandate/deduction-details/" + data
-                                .uuid
+                            window.location.href = "/payment-mandate/deduction-details/" +
+                                uuid
                         },
-                        error: function(e) {
+                        error: function(response) {
+                            //activate submit button
                             $("#btnSubmit").prop("disabled", false);
+
+                            // Deactivate Loading Spinner
+                            $('.loading-spinner').toggleClass('active');
+
+                            //write error message
+                            $('#phoneError').text(response.responseJSON.errors.phone);
                         }
                     });
                     return false;

@@ -17,6 +17,7 @@ use App\Rules\PhoneNumber;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
 class PaymentMandateController extends Controller
@@ -39,8 +40,13 @@ class PaymentMandateController extends Controller
         //debit
         $debit_orders = DebitOrder::where_cond()->get();
 
+
+        //populate data
+        $account_types = AccountType::all();
+        $accounts = Account::all();
+
         //render view
-        return view('payment_mandate.lists', compact('title', 'debit_orders'));
+        return view('payment_mandate.lists', compact('title', 'debit_orders', 'account_types', 'accounts'));
     }
 
     //payment details form
@@ -65,13 +71,23 @@ class PaymentMandateController extends Controller
     function storeAccountDetails(Request $request)
     {
         //validation 
-        // $this->validate($request, [
-        //     'account_type_id' => 'required',
-        //     'account_id' => 'required',
-        //     'account_number' => 'required',
-        //     'account_name' => 'required',
-        //     //'phone' => ['required', new PhoneNumber(), 'unique:customer_accounts,phone'],
-        // ]);
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'phone' => ['required', new PhoneNumber()]
+            ],
+            [
+                'phone.required' => 'Phone number required',
+            ]
+        );
+
+        if ($validator->fails()) {
+            //return response
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
 
         //capture if uuid is not null
         if ($request->input('uuid') != null)
@@ -81,13 +97,13 @@ class PaymentMandateController extends Controller
 
         //save or update account details
         $customer_account = CustomerAccount::firstOrNew([
-            'uuid' => $uuid,
             'account_type_id' => $request->input('account_type_id'),
             'account_id' => $request->input('account_id'),
             'account_number' => $request->input('account_number'),
-            'account_name' => strtoupper($request->input('account_name'))
+            'account_name' => strtoupper($request->input('account_name')),
+            'phone' => $request->input('phone'),
+            'uuid' => $uuid
         ]);
-        $customer_account->phone = $request->input('phone');
         $customer_account->email = $request->input('email');
         $customer_account->id_number = $request->input('nida_number');
         $customer_account->address = $request->input('address');
@@ -117,6 +133,22 @@ class PaymentMandateController extends Controller
     function storeDeductionDetails(Request $request)
     {
         //validation 
+        // $validator = Validator::make(
+        //     $request->all(),
+        //     [
+        //         'installment_amount' => 'required_if:debit_type,==,FIXED|lt:loan_amout',
+        //         'min_installment_amount' => 'required_if:debit_type,==,DYNAMIClt:loan_amout',
+        //         'max_installment_amount' => 'required_if:debit_type,==,DYNAMIC|gt:min_installment_amount|lt:loan_amout',
+        //     ]
+        // );
+
+        // if ($validator->fails()) {
+        //     //return response
+        //     return response()->json([
+        //         'success' => false,
+        //         'errors' => $validator->errors()
+        //     ], 422);
+        // }
 
         //post data
         $uuid = $request->input('uuid');
@@ -124,7 +156,7 @@ class PaymentMandateController extends Controller
         //customer account
         $customer_account = CustomerAccount::where(['uuid' => $uuid])->firstOrFail();
 
-        //loan details
+        //debit order
         $debit_order = DebitOrder::firstOrNew([
             'customer_account_id' => $customer_account->id,
             'customer_account_uuid' => $uuid
@@ -144,13 +176,13 @@ class PaymentMandateController extends Controller
         $debit_order->periodicity = $request->input('peridiocity');
         $debit_order->installment_number = $request->input('number_of_installment');
         $debit_order->start_date = $request->input('start_date');
-        $debit_order->deduction_end_date = $request->input('deduction_end_date');
+        $debit_order->deduction_end_date = $request->input('deduction_end');
 
         //calculate end date
-        if ($request->input('deduction_end_date') == 'total_loan_covered') {
+        if ($request->input('deduction_end_date') === 'totalLoanCovered') {
             //calculate end date from start date
             $debit_order->end_date = date('Y-m-d', strtotime($request->input('start_date') . '+2 year'));
-        } else if ($request->input('deduction_end_date') == 'specific_date') {
+        } else if ($request->input('deduction_end_date') == 'specificDate') {
             //fixed end date
             $debit_order->end_date = $request->input('end_date');
         }
@@ -246,18 +278,14 @@ class PaymentMandateController extends Controller
     {
         $title = "Payment Mandate";
 
-        $customer = Customer::where(['uuid' => $uuid])->firstOrFail();
+        $customer_account = CustomerAccount::where(['uuid' => $uuid])->firstOrFail();
 
         //populate data
-        $genders = Gender::all();
-        $marital_status = MaritalStatus::all();
-        $sectors = Sector::all();
-        $occupations = Occupation::all();
         $account_types = AccountType::all();
         $accounts = Account::all();
 
         //render view
-        return view('customers.edit', compact('title', 'customer', 'genders', 'marital_status', 'sectors', 'occupations', 'account_types', 'accounts'));
+        return view('payment_mandate.edit', compact('title', 'customer_account', 'account_types', 'accounts'));
     }
 
     /**
@@ -269,53 +297,46 @@ class PaymentMandateController extends Controller
      */
     public function update(Request $request)
     {
-        //validation
+        //validation 
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'phone' => ['required', new PhoneNumber()]
+            ],
+            [
+                'phone.required' => 'Phone number required',
+            ]
+        );
 
-        //post data
-        $id = $request->input('customer_id');
-        $uuid = $request->input('customer_uuid');
-
-        //dob
-        $year = $request->input('year');
-        $month = $request->input('month');
-        $day = $request->input('day');
-        $dob = $year . '-' . $month . '-' . $day;
-
-        //save customer details
-        $customer = Customer::findOrFail($id);
-        $customer->first_name = $request->input('first_name');
-        $customer->middle_name = $request->input('middle_name');
-        $customer->last_name = $request->input('surname');
-        $customer->dob = $dob;
-
-        //check if nida number provided
-        if ($request->input('nida_number') != null) {
-            $customer->id_type = 1;
-            $customer->id_number = $request->input('nida_number');
+        if ($validator->fails()) {
+            //return response
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
         }
 
-        $customer->gender_id = $request->input('gender_id');
-        $customer->marital_status_id = $request->input('marital_status_id');
-        $customer->sector_id = $request->input('sector_id');
-        $customer->occupation_id = $request->input('occupation_id');
-        $customer->updated_by = Auth::user()->id;
-        $customer->save();
-
+        //capture if uuid is not null
+        $uuid = $request->input('uuid');
 
         //save or update account details
         $customer_account = CustomerAccount::firstOrNew([
-            'customer_id' => $customer->id,
-            'account_type_id' => $request->input('account_type_id'),
-            'account_id' => $request->input('account_id'),
-            'account_number' => $request->input('account_number')
+            'uuid' => $uuid
         ]);
-        $customer_account->account_name = $request->input('account_name');
+        $customer_account->account_type_id = $request->input('account_type_id');
+        $customer_account->account_id = $request->input('account_id');
+        $customer_account->account_number = $request->input('account_number');
+        $customer_account->account_name = strtoupper($request->input('account_name'));
         $customer_account->phone = $request->input('phone');
+        $customer_account->email = $request->input('email');
+        $customer_account->id_number = $request->input('nida_number');
+        $customer_account->address = $request->input('address');
         $customer_account->created_by = Auth::user()->id;
         $customer_account->save();
 
+
         //response
-        return response()->json(['success' => true, 'uuid' => $uuid, 'success_msg' => "Customer Information updated!"], 200);
+        return response()->json(['success' => true, 'uuid' => $uuid, 'success_msg' => "Deduction channel updated!"], 200);
     }
 
     /**

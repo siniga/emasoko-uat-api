@@ -33,12 +33,12 @@
                             <h5 class="text-capitalize">Deduction Channel</h5>
                             <hr />
 
-                            {{-- <span class="text-sm-end d-none d-sm-block">
-                                <a href="{{ route('customers.edit', $customer->uuid) }}" title="Edit"
+                            <span class="text-sm-end d-none d-sm-block">
+                                <a href="#" title="Send remainder sms"
                                     class="btn btn-secondary btn-sm waves-effect btn-label waves-light">
-                                        <i class="bx bx-pencil label-icon"></i> Edit
-                                </a>&nbsp;&nbsp;
-                            </span> --}}
+                                        Send SMS <i class="bx bx bx-comment label-icon"></i>
+                                </a>
+                            </span>
                         </div>
                         <!--./col -->
                     </div>
@@ -101,12 +101,13 @@
                                         <th width="12%">Loan Amount</th>
                                         <th width="10%">Debit Type</th>
                                         <th width="10%">Installment Amount</th>
-                                        <th width="10%">Peridiocity</th>
+                                        <th width="8%">Peridiocity</th>
                                         <th width="10%">Number of Deduction</th>
-                                        <th width="12%">Deduction <br/>Start Date</th>
-                                        <th width="12%">Deduction <br/>End Date</th>
+                                        <th width="10%">Deduction <br/>Start Date</th>
+                                        <th width="10%">Deduction <br/>End Date</th>
                                         <th width="10%">Evidence of Aggrement</th>
                                         <th width="8%">Consent Status</th>
+                                        <th style="width: 40px;">Actions</th>
                                     </tr>
 
                                     <tr>
@@ -136,6 +137,14 @@
                                             @elseif($debit_order->approved == 99)
                                                 <span class="badge badge-pill badge-soft-danger">Rejected</span>
                                             @endif
+                                        </td>
+                                        <td> 
+                                            <a href="#" title="Edit Mandate">
+                                                <i class="bx bx-edit-alt bx-border bx-xs"></i>
+                                            </a>
+                                            <a href="#" title="Delete" class="delete">
+                                                <i class="bx bx-trash bx-border bx-xs text-danger"></i>
+                                            </a>
                                         </td>
                                     </tr>
                                 </table>
