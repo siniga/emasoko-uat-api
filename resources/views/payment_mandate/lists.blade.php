@@ -55,18 +55,18 @@
 
                     <div class="table-responsive">
                         @if (isset($debit_orders) && $debit_orders)
-                            <table id="dt" class="table table-hover table-bordered">
+                            <table class="table table-bordered" id="dynamicTable">
                                 <thead>
                                     <tr>
                                         <th width="3%">#</th>
-                                        <th width="18%">Account Name</th>
+                                        <th width="20%">Account Name</th>
                                         <th width="16%">NIDA Number</th>
-                                        <th width="8%">Payment Channel</th>
+                                        <th width="10%">Payment Channel</th>
                                         <th width="10%">Bank Name/MNO</th>
                                         <th width="12%">Account Number</th>
                                         <th width="12%">Phone<br /><small>(Connected to Bank)</small></th>
                                         <th width="8%">Consent Status</th>
-                                        <th style="width: 80px;">Actions</th>
+                                        <th style="width: 60px;">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -98,12 +98,10 @@
                                                     title="View">
                                                     <i class="bx bx-folder-open bx-border bx-xs"></i>
                                                 </a>
-                                                {{-- 
-
-                                                <a href="{{ route('customers.edit', $values->uuid) }}" title="Edit"
-                                                    class="btn btn-outline-secondary btn-xss">
-                                                    <i class="bx bx-pencil text-center"></i>
-                                                </a> --}}
+                                                
+                                                <a href="{{ route('payment-mandate.edit', $values->customer_account_uuid) }}" title="Edit">
+                                                    <i class="bx bx-edit-alt bx-border bx-xs"></i>
+                                                </a>
                                                 {{-- <a href="#" title="Delete" class="btn btn-outline-danger btn-xss delete">
                                                     <i class="bx bx-trash"></i>
                                                 </a> --}}

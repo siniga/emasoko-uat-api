@@ -46,7 +46,7 @@
                                 <div class="col-lg-3">
                                     <div class="mb-3">
                                         <label>Loan Amount <span class="text-danger">*</span></label>
-                                        {{ Form::text('loan_amount', old('loan_amount', number_format($debit_order->total_amount)), ['class="form-control number-separator"','placeholder="Write total loan amount..."']) }}
+                                        {{ Form::text('loan_amount', old('loan_amount', $debit_order->total_amount ?? ''), ['class="form-control number-separator"','placeholder="Write total loan amount..."']) }}
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -62,7 +62,7 @@
                                             $options = ['' => 'Select'] + $options;
                                         @endphp
 
-                                        {{ Form::select('debit_type', $options, old('debit_type', $debit_order->debit_type), ['class' => 'form-control','id' => 'debit_type']) }}
+                                        {{ Form::select('debit_type', $options, old('debit_type', $debit_order->debit_type ?? ''), ['class' => 'form-control','id' => 'debit_type']) }}
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -70,7 +70,7 @@
                                 <div class="col-lg-3" id="standard_deduction" style="display: block">
                                     <div class="mb-3">
                                         <label>Deduction Amount <span class="text-danger">*</span></label>
-                                        {{ Form::text('installment_amount',old('installment_amount', number_format($debit_order->max_installment_amount)),['class="form-control number-separator"', 'placeholder="Write deduction amount..."']) }}
+                                        {{ Form::text('installment_amount',old('installment_amount', $debit_order->max_installment_amount ?? ''),['class="form-control number-separator"', 'placeholder="Write deduction amount..."']) }}
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -81,14 +81,14 @@
                                         <div class="row">
                                             <div class="col-lg-6">
                                                 <div class="form-group">
-                                                    {{ Form::text('min_installment_amount',old('min_installment_amount', number_format($debit_order->min_installment_amount)),['class="form-control number-separator"', 'placeholder="Minimum deduction amount..."']) }}
+                                                    {{ Form::text('min_installment_amount',old('min_installment_amount', $debit_order->min_installment_amount ?? ''),['class="form-control number-separator"', 'placeholder="Minimum deduction amount..."']) }}
                                                 </div>
                                             </div>
                                             <!--./col -->
 
                                             <div class="col-lg-6">
                                                 <div class="form-group">
-                                                    {{ Form::text('max_installment_amount',old('max_installment_amount', number_format($debit_order->max_installment_amount)),['class="form-control number-separator"', 'placeholder="Maximum deduction amount..."']) }}
+                                                    {{ Form::text('max_installment_amount',old('max_installment_amount', $debit_order->max_installment_amount ?? ''),['class="form-control number-separator"', 'placeholder="Maximum deduction amount..."']) }}
                                                 </div>
                                             </div>
                                             <!--./col -->
@@ -110,7 +110,7 @@
                                             $options = ['' => 'Select'] + $options;
                                         @endphp
 
-                                        {{ Form::select('peridiocity', $options, old('peridiocity', $debit_order->periodicity), ['class' => 'form-control']) }}
+                                        {{ Form::select('peridiocity', $options, old('peridiocity', $debit_order->periodicity ?? ''), ['class' => 'form-control']) }}
                                         <span class="text-danger"></span>
                                     </div>
                                 </div>
@@ -119,7 +119,7 @@
                                 <div class="col-lg-3">
                                     <div class="mb-3">
                                         <label>Number of deduction <span class="text-danger">*</span></label>
-                                        {{ Form::number('number_of_installment', old('number_of_installment', $debit_order->installment_number), ['class="form-control"','placeholder="Write number installment..."','min' => 1]) }}
+                                        {{ Form::number('number_of_installment', old('number_of_installment', $debit_order->installment_number ?? ''), ['class="form-control"','placeholder="Write number installment..."','min' => 1]) }}
                                         <span class="text-danger"></span>
                                     </div>
                                 </div>
@@ -128,7 +128,7 @@
                                 <div class="col-lg-3">
                                     <div class="mb-3">
                                         <label>Deduction Start Date <span class="text-danger">*</span></label>
-                                        {{ Form::date('start_date', old('start_date', $debit_order->start_date), ['class="form-control"']) }}
+                                        {{ Form::date('start_date', old('start_date', $debit_order->start_date ?? ''), ['class="form-control"']) }}
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -144,7 +144,7 @@
                                             $options = ['' => 'Select'] + $options;
                                         @endphp
 
-                                        {{ Form::select('deduction_end_date', $options, old('deduction_end_date', $debit_order->deduction_end_date), ['class' => 'form-control','id' => 'deduction_end_date']) }}
+                                        {{ Form::select('deduction_end_date', $options, old('deduction_end_date', $debit_order->deduction_end_date ?? ''), ['class' => 'form-control','id' => 'deduction_end_date']) }}
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -152,7 +152,7 @@
                                 <div class="col-lg-3" id="end_date" style="display: none;">
                                     <div class="mb-3">
                                         <label>End Date <span class="text-danger">*</span></label>
-                                        {{ Form::date('end_date', old('end_date', $debit_order->start_date), ['class="form-control"']) }}
+                                        {{ Form::date('end_date', old('end_date', $debit_order->start_date ?? ''), ['class="form-control"']) }}
                                     </div>
                                 </div>
                                 <!--./col -->

@@ -13,6 +13,7 @@ use App\Models\MaritalStatus;
 use App\Models\Occupation;
 use App\Models\PartnerUser;
 use App\Models\Sector;
+use App\Rules\PhoneNumber;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
@@ -64,6 +65,13 @@ class PaymentMandateController extends Controller
     function storeAccountDetails(Request $request)
     {
         //validation 
+        // $this->validate($request, [
+        //     'account_type_id' => 'required',
+        //     'account_id' => 'required',
+        //     'account_number' => 'required',
+        //     'account_name' => 'required',
+        //     //'phone' => ['required', new PhoneNumber(), 'unique:customer_accounts,phone'],
+        // ]);
 
         //capture if uuid is not null
         if ($request->input('uuid') != null)
@@ -99,7 +107,7 @@ class PaymentMandateController extends Controller
         $customer_account = CustomerAccount::where(['uuid' => $uuid])->firstOrFail();
 
         //debit order
-        $debit_order = DebitOrder::where(['customer_account_id' => $customer_account->id, 'customer_account_uuid' => $uuid])->firstOrFail();
+        $debit_order = DebitOrder::where(['customer_account_id' => $customer_account->id, 'customer_account_uuid' => $uuid])->first();
 
         //render view
         return view('payment_mandate.deduction_details_form', compact('title', 'customer_account', 'debit_order'));

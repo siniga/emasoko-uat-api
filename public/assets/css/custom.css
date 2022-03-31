@@ -191,7 +191,7 @@ table.table th {
     color: #212121;
     padding: 10px !important;
     background: #ECEFF1;
-    border: 1px solid #fff;
+    /* border: 1px solid #fff; */
 }
 
 table.table td {
@@ -200,7 +200,7 @@ table.table td {
     background: #FFF;
     color: #212121;
     vertical-align: middle;
-    border-bottom: 1px solid #E3E3E3;
+    /* border-bottom: 1px solid #E3E3E3; */
     padding: 12px !important;
 }
 

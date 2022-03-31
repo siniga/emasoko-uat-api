@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\Api\DashboardChartController;
+use App\Http\Controllers\Api\PaymentMandateController as ApiPaymentMandateController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
@@ -127,7 +128,7 @@ Route::post('payment-mandate/confirm-registration', [PaymentMandateController::c
 
 //details
 Route::get('payment-mandate/details/{uuid}', [PaymentMandateController::class, 'details'])->name('payment-mandate.details');
-Route::get('customers/edit/{uuid}', [CustomerController::class, 'edit'])->name('customers.edit');
+Route::get('payment-mandate/edit/{uuid}', [ApiPaymentMandateController::class, 'edit'])->name('payment-mandate.edit');
 Route::post('customers/update-details', [CustomerController::class, 'update'])->name('customers.update');
 
 //tasks

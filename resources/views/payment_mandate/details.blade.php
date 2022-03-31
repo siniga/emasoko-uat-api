@@ -130,11 +130,11 @@
                                         </td>
                                         <td>
                                             @if ($debit_order->approved == 0)
-                                                <span class="badge bg-warning">Pending</span>
+                                                <span class="badge badge-pill badge-soft-danger">Pending</span>
                                             @elseif($debit_order->approved == 1)
-                                                <span class="badge bg-success">Approved</span>
+                                                <span class="badge badge-pill badge-soft-success">Approved</span>
                                             @elseif($debit_order->approved == 99)
-                                                <span class="badge bg-danger">Rejected</span>
+                                                <span class="badge badge-pill badge-soft-danger">Rejected</span>
                                             @endif
                                         </td>
                                     </tr>
