@@ -35,6 +35,7 @@ class PaymentMandateController extends Controller
         $title = 'Payment Mandate';
         //has_allowed('roles', 'lists');
 
+        //debit
         $debit_orders = DebitOrder::where_cond()->get();
 
         //render view

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\Api\DashboardChartController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
@@ -140,3 +141,8 @@ Route::get('users/{id}/delete', [UserController::class, 'delete'])->name('users.
 //roles
 Route::get('roles/{id}/assign-perms', [RoleController::class, 'assign_perms'])->name('roles.assign-perms');
 Route::post('roles/{id}/store-perms', [RoleController::class, 'store_perms'])->name('roles.store-perms');
+
+
+//charts
+Route::get('api/dashboard/consent-percentage', [DashboardChartController::class, 'getPercentageConsent']);
+Route::get('api/dashboard/consent-per-channel', [DashboardChartController::class, 'getConsentPerChannel']);

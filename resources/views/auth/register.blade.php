@@ -27,7 +27,8 @@
                                         </div>
                                     </div>
                                 </div>
-                            </div><!--./soft -->
+                            </div>
+                            <!--./soft -->
 
                             <div class="card-body pt-4">
                                 <div class="stepwizard mb-4">
@@ -170,31 +171,29 @@
                                             </div>
                                             <!--./col -->
 
-                                            <div class="col-lg-1">
-                                                <label for="email">Country<span class="text-danger">*</span></label>
-                                                @php $options = []; @endphp
-                                                @foreach ($countries as $country)
-                                                    @php
-                                                        $options[$country->code] = $country->code;
-                                                    @endphp
-                                                @endforeach
-                                                @php
-                                                    $options = ['' => 'Select'] + $options;
-                                                @endphp
+                                            <div class="col-lg-3">
+                                                <label for="email">Company Phone <span class="flag-icon flag-icon-tz"></span> <span
+                                                        class="text-danger">*</span></label>
+                                                <div class="input-group mb-3">
+                                                    <div class="input-group-prepend">
+                                                        @php $options = []; @endphp
+                                                        @foreach ($countries as $country)
+                                                            @php
+                                                                $options[$country->code] = $country->code;
+                                                            @endphp
+                                                        @endforeach
+                                                        @php
+                                                            $options = ['' => 'Select'] + $options;
+                                                        @endphp
 
-                                                {{ Form::select('country_code', $options, old('country_code', substr($company->phone ?? '', 0, 3)), ['class' => 'form-control','id' => 'country_id','required']) }}
-                                            </div>
-                                            <!--./col -->   
+                                                        {{ Form::select('country_code', $options, old('country_code', substr($company->phone ?? '', 0, 3)), ['class' => 'form-control','id' => 'country_id','required']) }}
+                                                    </div>
+                                                    <!--./prepend -->
 
-                                            <div class="col-lg-2">
-                                                <div class="mb-3">
-                                                    <label for="location">Company Phone <span
-                                                            class="text-danger">*</span></label>
-                                                    {{ Form::number('company_phone', old('company_phone', substr($company->phone ?? '', 3) ), ['class="form-control"','placeholder="Company phone..."','required']) }}
-                                                    <span class="text-danger"></span>
+                                                    {{ Form::number('company_phone', old('company_phone', substr($company->phone ?? '', 3)), ['class="form-control"','placeholder="Company phone..."','required']) }}
                                                 </div>
                                             </div>
-                                            <!--./col -->   
+                                            <!--./col -->
                                         </div>
                                         <!--./row -->
 
@@ -230,10 +229,10 @@
                                             <div class="col-lg-3">
                                                 <div class="mb-3">
                                                     <label for="location">Postal Address </label>
-                                                    {{ Form::text('postal_address', old('postal_address', $company->postal_address ?? ''), ['class="form-control"','placeholder="Company postal address..."',]) }}
+                                                    {{ Form::text('postal_address', old('postal_address', $company->postal_address ?? ''), ['class="form-control"','placeholder="Company postal address..."']) }}
                                                 </div>
                                             </div>
-                                            <!--./col --> 
+                                            <!--./col -->
 
                                             <div class="col-lg-6">
                                                 <div class="mb-3">

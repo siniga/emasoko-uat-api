@@ -20,6 +20,9 @@ class DashboardController extends Controller
     {
         $title = 'Dashboard';
 
+        //debit order
+        $debit_orders = DebitOrder::where_cond()->get();
+
         //pending debit orders
         $pending_debit_orders = DebitOrder::where(['approved' => 0])->count();
 
@@ -30,6 +33,6 @@ class DashboardController extends Controller
         $rejected_debit_orders = DebitOrder::where(['approved' => 99])->count();
 
         //render view
-        return view('dashboard', compact('title', 'pending_debit_orders', 'approved_debit_orders', 'rejected_debit_orders'));
+        return view('dashboard', compact('title', 'debit_orders', 'pending_debit_orders', 'approved_debit_orders', 'rejected_debit_orders'));
     }
 }

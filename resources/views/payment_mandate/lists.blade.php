@@ -85,18 +85,18 @@
 
                                             <td>
                                                 @if ($values->approved == 0)
-                                                    <span class="badge bg-warning">Pending</span>
+                                                    <span class="badge badge-pill badge-soft-danger">Pending</span>
                                                 @elseif($values->approved == 1)
-                                                    <span class="badge bg-success">Approved</span>
+                                                    <span class="badge badge-pill badge-soft-success">Approved</span>
                                                 @elseif($values->approved == 99)
-                                                    <span class="badge bg-danger">Rejected</span>
+                                                    <span class="badge badge-pill badge-soft-danger">Rejected</span>
                                                 @endif
                                             </td>
 
                                             <td>
                                                 <a href="{{ route('payment-mandate.details', $values->customer_account_uuid) }}" title="View"
-                                                    class="btn btn-outline-primary btn-xss">
-                                                    <i class="bx bx-folder-open text-center"></i>
+                                                    class="btn btn-outline-primary btn-sm">
+                                                    <i class="bx bx-folder-open"></i>
                                                 </a>
                                                 {{-- 
 
