@@ -80,16 +80,16 @@ class PaymentMandateController extends Controller
     //update customer terms and condition
     function updateCustomerTerms(Request $request)
     {
-        if ($request->phone != null && $request->terms_and_conditions != null) {
+        if ($request->phone != null && $request->consent != null) {
             //customer account
             $customer_account = CustomerAccount::where(['phone' => $request->phone])->first();
 
             if ($customer_account) {
                 //update status of customer
-                if ($request->terms_and_conditions == 1) {
+                if ($request->consent == 1) {
                     $customer_account->status = 'FullReg';
                     $customer_account->remarks = 'Customer agreed terms and condition';
-                } else if ($request->terms_and_conditions == 0) {
+                } else if ($request->consent == 0) {
                     $customer_account->status = 'PartialReg';
                     $customer_account->remarks = 'Customer reject terms and condition';
                 }
