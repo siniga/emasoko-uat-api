@@ -172,19 +172,19 @@
                                             <!--./col -->
 
                                             <div class="col-lg-3">
-                                                <label for="email">Company Phone <span class="flag-icon flag-icon-tz"></span> <span
+                                                <label for="email">Company Phone <span
                                                         class="text-danger">*</span></label>
                                                 <div class="input-group mb-3">
                                                     <div class="input-group-prepend">
                                                         @php $options = []; @endphp
-                                                        @foreach ($countries as $country)
+                                                        @foreach ($arr_countries as $key => $country)
                                                             @php
-                                                                $options[$country->code] = $country->code;
+                                                                $options[$key] = $country;
                                                             @endphp
                                                         @endforeach
-                                                        @php
+                                                        {{-- @php
                                                             $options = ['' => 'Select'] + $options;
-                                                        @endphp
+                                                        @endphp --}}
 
                                                         {{ Form::select('country_code', $options, old('country_code', substr($company->phone ?? '', 0, 3)), ['class' => 'form-control','id' => 'country_id','required']) }}
                                                     </div>

@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Validator;
+use Stidges\CountryFlags\CountryFlag;
 
 //use Interve
 
@@ -61,6 +62,8 @@ class RegisterController extends Controller
     {
         $title = 'Company Registration';
 
+        $flag = new CountryFlag;
+
         //if uuid =! null
         $company = [];
         if ($uuid != null)
@@ -71,8 +74,12 @@ class RegisterController extends Controller
         $countries = Country::all();
         $regions = Region::orderBy('name', 'ASC')->get();
 
+        $arr_countries = [];
+        foreach ($countries as $val) {
+            $arr_countries[$val->code] = $flag->get(strtoupper($val->initial)) . ' ' . $val->code;
+        }
         //render view
-        return view('auth.register', compact('title', 'categories', 'countries', 'regions', 'company'));
+        return view('auth.register', compact('title', 'categories', 'arr_countries', 'regions', 'company'));
     }
 
     //store company details
