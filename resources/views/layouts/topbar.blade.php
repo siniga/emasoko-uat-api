@@ -5,22 +5,22 @@
             <div class="navbar-brand-box bg-primary">
                 <a href="index" class="logo logo-dark">
                     <span class="logo-sm text-large">
-                        e-Makato
+                        e
                         {{-- <img src="{{ URL::asset('/assets/images/logo.svg') }}" alt="" height="22"> --}}
                     </span>
                     <span class="logo-lg text-large">
-                        e-Makato
+                        eMakato
                         {{-- <img src="{{ URL::asset('/assets/images/logo-dark.png') }}" alt="" height="17"> --}}
                     </span>
                 </a>
 
                 <a href="index" class="logo logo-light">
-                    <span class="logo-sm text-large">
-                        e-Makato
+                    <span class="logo-sm text-large text-white">
+                        e
                         {{-- <img src="{{ URL::asset('/assets/images/logo-light.svg') }}" alt="" height="22"> --}}
                     </span>
-                    <span class="logo-lg text-large">
-                        e-Makato
+                    <span class="logo-lg text-large text-white">
+                        eMakato
                         {{-- <img src="{{ URL::asset('/assets/images/logo-light.png') }}" alt="" height="19"> --}}
                     </span>
                 </a>
@@ -83,7 +83,7 @@
                     alt="Header Avatar"> --}}
                 <span class="d-none d-xl-inline-block ms-1" key="t-henry">
                     {{ucfirst(Auth::user()->name)}}<br/>
-                    {{Auth::user()->email }}<br/>
+                    {{Auth::user()->email }}
                 </span>
                 <i class="mdi mdi-chevron-down d-none d-xl-inline-block"></i>
             </button>

@@ -77,6 +77,18 @@
                                         <span>{{ $debit_order->customerAccount->phone ?? '' }}</span>
                                     </td>
                                 </tr>
+
+                                <tr>
+                                    <th width=25%>Status</th>
+                                    <td width=25%>
+                                        <span>{{ $debit_order->customerAccount->status ?? '' }}</span>
+                                    </td>
+
+                                    <th>Remarks</th>
+                                    <td>
+                                        <span>{{ $debit_order->customerAccount->remarks ?? '' }}</span>
+                                    </td>
+                                </tr>
                             </table>
                         </div>
                         <!--./col -->
