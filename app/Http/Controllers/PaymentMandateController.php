@@ -16,6 +16,7 @@ use App\Models\Sector;
 use App\Rules\PhoneNumber;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -132,23 +133,37 @@ class PaymentMandateController extends Controller
     //store deduction details
     function storeDeductionDetails(Request $request)
     {
-        //validation 
-        // $validator = Validator::make(
-        //     $request->all(),
-        //     [
-        //         'installment_amount' => 'required_if:debit_type,==,FIXED|lt:loan_amout',
-        //         'min_installment_amount' => 'required_if:debit_type,==,DYNAMIClt:loan_amout',
-        //         'max_installment_amount' => 'required_if:debit_type,==,DYNAMIC|gt:min_installment_amount|lt:loan_amout',
-        //     ]
-        // );
+        $loan_amount = floatval(str_replace(',', '', $request->input('loan_amount')));
+        $installment_amount = floatval(str_replace(',', '', $request->input('installment_amount')));
+        $min_installment_amount = floatval(str_replace(',', '', $request->input('min_installment_amount')));
+        $max_installment_amount = floatval(str_replace(',', '', $request->input('max_installment_amount')));
 
-        // if ($validator->fails()) {
-        //     //return response
-        //     return response()->json([
-        //         'success' => false,
-        //         'errors' => $validator->errors()
-        //     ], 422);
-        // }
+        //Validate your data
+        $validator = Validator::make($request->all(), [
+            'installment_amount' => [
+                'required_if:debit_type,==,FIXED'
+            ],
+            'min_installment_amount' => [
+                'required_if:debit_type,==,DYNAMIC'
+            ],
+            'max_installment_amount' => [
+                'required_if:debit_type,==,DYNAMIC',
+                function ($attribute, $value, $fail) use ($min_installment_amount, $max_installment_amount) {
+                    if ($min_installment_amount > $max_installment_amount) {
+                        return $fail('Maximum deduction should not be less than minimum deduction amount');
+                    }
+                }
+            ]
+
+        ]);
+
+        if ($validator->fails()) {
+            //return response
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 400);
+        }
 
         //post data
         $uuid = $request->input('uuid');
@@ -166,8 +181,7 @@ class PaymentMandateController extends Controller
 
         //check for installment amount
         if ($request->input('debit_type') == 'FIXED') {
-            $debit_order->max_installment_amount = floatval(str_replace(",", "", $request->input('installment_amount')));
-            $debit_order->min_installment_amount = 0;
+            $debit_order->installment_amount = floatval(str_replace(",", "", $request->input('installment_amount')));
         } else if ($request->input('debit_type') == 'DYNAMIC') {
             $debit_order->max_installment_amount = floatval(str_replace(",", "", $request->input('max_installment_amount')));
             $debit_order->min_installment_amount = floatval(str_replace(",", "", $request->input('min_installment_amount')));
@@ -179,10 +193,10 @@ class PaymentMandateController extends Controller
         $debit_order->deduction_end_date = $request->input('deduction_end');
 
         //calculate end date
-        if ($request->input('deduction_end_date') === 'totalLoanCovered') {
+        if ($request->input('deduction_end') === 'totalLoanCovered') {
             //calculate end date from start date
             $debit_order->end_date = date('Y-m-d', strtotime($request->input('start_date') . '+2 year'));
-        } else if ($request->input('deduction_end_date') == 'specificDate') {
+        } else if ($request->input('deduction_end') == 'specificDate') {
             //fixed end date
             $debit_order->end_date = $request->input('end_date');
         }

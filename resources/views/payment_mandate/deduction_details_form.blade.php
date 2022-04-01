@@ -46,7 +46,7 @@
                                 <div class="col-lg-3">
                                     <div class="mb-3">
                                         <label>Loan Amount <span class="text-danger">*</span></label>
-                                        {{ Form::text('loan_amount', old('loan_amount', $debit_order->total_amount ?? ''), ['class="form-control number-separator"','placeholder="Write total loan amount..."']) }}
+                                        {{ Form::text('loan_amount',old('loan_amount', $debit_order ? number_format($debit_order->total_amount) : ''),['class="form-control number-separator"', 'placeholder="Write total loan amount..."']) }}
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -70,7 +70,7 @@
                                 <div class="col-lg-3" id="standard_deduction" style="display: block">
                                     <div class="mb-3">
                                         <label>Deduction Amount <span class="text-danger">*</span></label>
-                                        {{ Form::text('installment_amount', old('installment_amount', $debit_order->max_installment_amount ?? ''), ['class="form-control number-separator"','placeholder="Write deduction amount..."']) }}
+                                        {{ Form::text('installment_amount', old('installment_amount', $debit_order ? number_format($debit_order->installment_amount) : ''), ['class="form-control number-separator"','placeholder="Write deduction amount..."']) }}
                                         <span class="text-danger" id="installmentAmountError"></span>
                                     </div>
                                 </div>
@@ -82,7 +82,7 @@
                                         <div class="row">
                                             <div class="col-lg-6">
                                                 <div class="form-group">
-                                                    {{ Form::text('min_installment_amount',old('min_installment_amount', $debit_order->min_installment_amount ?? ''),['class="form-control number-separator"','placeholder="Minimum deduction amount..."','id="min_installment_amount"']) }}
+                                                    {{ Form::text('min_installment_amount',old('min_installment_amount', $debit_order ? number_format($debit_order->min_installment_amount) : ''),['class="form-control number-separator"','placeholder="Minimum deduction amount..."','id="min_installment_amount"']) }}
                                                     <span class="text-danger" id="minInstallmentAmountError"></span>
                                                 </div>
                                             </div>
@@ -90,7 +90,7 @@
 
                                             <div class="col-lg-6">
                                                 <div class="form-group">
-                                                    {{ Form::text('max_installment_amount',old('max_installment_amount', $debit_order->max_installment_amount ?? ''),['class="form-control number-separator"','placeholder="Maximum deduction amount..."','id="max_installment_amount"']) }}
+                                                    {{ Form::text('max_installment_amount',old('max_installment_amount', $debit_order ? number_format($debit_order->max_installment_amount) : ''),['class="form-control number-separator"','placeholder="Maximum deduction amount..."','id="max_installment_amount"']) }}
                                                     <span class="text-danger" id="maxInstallmentAmountError"></span>
                                                 </div>
                                             </div>
@@ -338,13 +338,18 @@
                             //activate submit button
                             $("#btnSubmit").prop("disabled", false);
 
+                            console.log(response);
+
                             // Deactivate Loading Spinner
                             $('.loading-spinner').toggleClass('active');
 
                             //write error message
-                            $('#installmentAmountError').text(response.responseJSON.errors.installment_amount);
-                            $('#minInstallmentAmountError').text(response.responseJSON.errors.min_installment_amount);
-                            $('#maxInstallmentAmountError').text(response.responseJSON.errors.max_installment_amount);
+                            $('#installmentAmountError').text(response.responseJSON.errors
+                                .installment_amount);
+                            $('#minInstallmentAmountError').text(response.responseJSON
+                                .errors.min_installment_amount);
+                            $('#maxInstallmentAmountError').text(response.responseJSON
+                                .errors.max_installment_amount);
                         }
                     });
                     return false;

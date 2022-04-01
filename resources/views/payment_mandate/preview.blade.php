@@ -117,7 +117,15 @@
                                                     <td>{{ $loop->iteration }}</td>
                                                     <td>{{ number_format($val->total_amount) ?? '' }}</td>
                                                     <td>{{ $val->debit_type ?? '' }}</td>
-                                                    <td>{{ number_format($val->max_installment_amount) ?? '' }}</td>
+                                                    <td>
+                                                        @if ($val->debit_type == 'FIXED')
+                                                            {{ number_format($val->installment_amount) ?? '' }}
+                                                        @elseif($val->debit_type == 'DYNAMIC')
+                                                            Min:
+                                                            {{ number_format($val->min_installment_amount) ?? '' }}<br />
+                                                            Max: {{ number_format($val->max_installment_amount) ?? '' }}
+                                                        @endif
+                                                    </td>
                                                     <td>{{ $val->periodicity }}</td>
                                                     <td>{{ $val->installment_number ?? '' }}</td>
                                                     <td>{{ date('d-m-Y', strtotime($val->start_date)) }}</td>

@@ -36,7 +36,7 @@
                             <span class="text-sm-end d-none d-sm-block">
                                 <a href="#" title="Send remainder sms"
                                     class="btn btn-secondary btn-sm waves-effect btn-label waves-light">
-                                        Send SMS <i class="bx bx bx-comment label-icon"></i>
+                                    Send SMS <i class="bx bx bx-comment label-icon"></i>
                                 </a>
                             </span>
                         </div>
@@ -115,8 +115,8 @@
                                         <th width="10%">Installment Amount</th>
                                         <th width="8%">Peridiocity</th>
                                         <th width="10%">Number of Deduction</th>
-                                        <th width="10%">Deduction <br/>Start Date</th>
-                                        <th width="10%">Deduction <br/>End Date</th>
+                                        <th width="10%">Deduction <br />Start Date</th>
+                                        <th width="10%">Deduction <br />End Date</th>
                                         <th width="10%">Evidence of Aggrement</th>
                                         <th width="8%">Consent Status</th>
                                         <th style="width: 40px;">Actions</th>
@@ -126,7 +126,15 @@
                                         <td>1</td>
                                         <td>{{ number_format($debit_order->total_amount) ?? '' }}</td>
                                         <td>{{ $debit_order->debit_type ?? '' }}</td>
-                                        <td>{{ number_format($debit_order->max_installment_amount) ?? '' }}</td>
+                                        <td>
+                                            @if ($debit_order->debit_type == 'FIXED')
+                                                {{ number_format($debit_order->installment_amount) ?? '' }}
+                                            @elseif($debit_order->debit_type == 'DYNAMIC')
+                                                Min:
+                                                {{ number_format($debit_order->min_installment_amount) ?? '' }}<br />
+                                                Max: {{ number_format($debit_order->max_installment_amount) ?? '' }}
+                                            @endif
+                                        </td>
                                         <td>{{ $debit_order->periodicity }}</td>
                                         <td>{{ $debit_order->installment_number ?? '' }}</td>
                                         <td>{{ date('d-m-Y', strtotime($debit_order->start_date)) }}</td>
@@ -150,7 +158,7 @@
                                                 <span class="badge badge-pill badge-soft-danger">Rejected</span>
                                             @endif
                                         </td>
-                                        <td> 
+                                        <td>
                                             <a href="#" title="Edit Mandate">
                                                 <i class="bx bx-edit-alt bx-border bx-xs"></i>
                                             </a>
