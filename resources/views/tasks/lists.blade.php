@@ -66,11 +66,6 @@
                                                     title="View">
                                                     <i class="bx bx-folder-open bx-border bx-xs"></i>
                                                 </a>
-
-                                                <a href="#"
-                                                    title="Send Remainder">
-                                                    <i class="bx bx bx-comment bx-border bx-xs"></i>
-                                                </a>
                                             </td>
                                         </tr>
                                         @php $serial++; @endphp
