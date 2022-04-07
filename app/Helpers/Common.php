@@ -28,6 +28,19 @@ if (!function_exists('cast_phone')) {
 }
 
 
+if (!function_exists('casting_phone')) {
+    function casting_phone($phone)
+    {
+        if (preg_match("~^0\d+$~", $phone)) {
+            return '255' . substr($phone, 1);
+        } else {
+            return $phone;
+        }
+    }
+}
+
+
+
 //complete registration notification
 if (!function_exists('get_company_notification')) {
     function get_company_notification()

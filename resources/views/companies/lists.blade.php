@@ -66,9 +66,9 @@
                                                 @endif
                                             </td>
                                             <td>
-                                                <a href="{{ route('companies.show', $company->id) }}" title="View"
-                                                    class="btn btn-outline-primary btn-xss">
-                                                    <i class="fa fa-folder-open"></i>
+                                                <a href="{{ route('companies.show', $company->id) }}"
+                                                    title="View">
+                                                    <i class="bx bx-folder-open bx-border bx-xs"></i>
                                                 </a>
 
                                                 {{-- <a href="{{ route('users.change-status', $values->id) }}"

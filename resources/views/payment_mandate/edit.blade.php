@@ -10,7 +10,7 @@
             Payment Mandate
         @endslot
         @slot('title')
-            Update Deduction Channel
+            Update Payment Mandate
         @endslot
     @endcomponent
 
@@ -19,7 +19,7 @@
             <div class="card">
                 <div class="card-body">
                     <form action="#" id="registrationForm" enctype="multipart/form-data" autocomplete="off">
-                        <input type="hidden" name="uuid" value="{{ $customer_account->uuid ?? null }}">
+                        <input type="hidden" name="uuid" value="{{ $debit_order->customerAccount->uuid ?? null }}">
 
                         <!-- Customer Information -->
                         <section>
@@ -51,7 +51,7 @@
                                             $options = ['' => 'Select'] + $options;
                                         @endphp
 
-                                        {{ Form::select('account_type_id', $options, old('account_type_id', $customer_account->account_type_id ?? ''), ['class' => 'form-control account_type_id','id' => 'account_type_id']) }}
+                                        {{ Form::select('account_type_id',$options,old('account_type_id', $debit_order->customerAccount->account_type_id ?? ''),['class' => 'form-control account_type_id', 'id' => 'account_type_id']) }}
                                         <span class="text-danger"></span>
                                     </div>
                                 </div>
@@ -71,7 +71,7 @@
                                             $options = ['' => 'Select'] + $options;
                                         @endphp
 
-                                        {{ Form::select('account_id', $options, old('account_id', $customer_account->account_id ?? ''), ['class' => 'form-control account_id','id' => 'account_id']) }}
+                                        {{ Form::select('account_id', $options, old('account_id', $debit_order->customerAccount->account_id ?? ''), ['class' => 'form-control account_id','id' => 'account_id']) }}
                                         <span class="text-danger"></span>
                                     </div>
                                 </div>
@@ -80,7 +80,7 @@
                                 <div class="col-lg-4">
                                     <div class="mb-3">
                                         <label>Name of Account Holder <span class="text-danger">*</span></label>
-                                        {{ Form::text('account_name', old('account_name', $customer_account->account_name ?? ''), ['class="form-control"','placeholder="Enter name of account holder..."','required']) }}
+                                        {{ Form::text('account_name', old('account_name', $debit_order->customerAccount->account_name ?? ''), ['class="form-control"','placeholder="Enter name of account holder..."','required']) }}
                                         <span class="text-danger"></span>
                                     </div>
                                 </div>
@@ -90,7 +90,7 @@
                                     <div class="mb-3">
                                         <label for="basicpill-namecard-input">Account Number <span
                                                 class="text-danger">*</span></label>
-                                        {{ Form::text('account_number', old('account_number', $customer_account->account_number ?? ''), ['class="form-control"','placeholder="Enter account number..."']) }}
+                                        {{ Form::text('account_number', old('account_number', $debit_order->customerAccount->account_number ?? ''), ['class="form-control"','placeholder="Enter account number..."']) }}
                                         <span class="text-danger"></span>
                                     </div>
                                 </div>
@@ -100,7 +100,7 @@
                                     <div class="mb-3">
                                         <label for="basicpill-namecard-input">Phone <span
                                                 class="text-danger">*</span></label>
-                                        {{ Form::text('phone', old('phone', $customer_account->phone ?? ''), ['class="form-control input-mask"','placeholder="Enter phone connected to the bank account..."','data-inputmask' => "'mask': '9999999999'"]) }}
+                                        {{ Form::text('phone', old('phone', $debit_order->customerAccount->phone ?? ''), ['class="form-control input-mask"','placeholder="Enter phone connected to the bank account..."','data-inputmask' => "'mask': '9999999999'"]) }}
                                         <span class="text-danger" id="phoneError"></span>
                                     </div>
                                 </div>
@@ -109,7 +109,7 @@
                                 <div class="col-lg-4">
                                     <div class="mb-3">
                                         <label>NIDA Number</label>
-                                        {{ Form::text('nida_number', old('nida_number', $customer_account->id_number ?? ''), ['class="form-control input-mask"','placeholder="Enter NIDA number..."','data-inputmask' => "'mask': '99999999-99999-99999-99'"]) }}
+                                        {{ Form::text('nida_number', old('nida_number', $debit_order->customerAccount->id_number ?? ''), ['class="form-control input-mask"','placeholder="Enter NIDA number..."','data-inputmask' => "'mask': '99999999-99999-99999-99'"]) }}
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -117,7 +117,7 @@
                                 <div class="col-lg-4">
                                     <div class="mb-3">
                                         <label>Email</label>
-                                        {{ Form::email('email', old('email', $customer_account->email ?? ''), ['class="form-control input-mask"','placeholder="Enter email..."']) }}
+                                        {{ Form::email('email', old('email', $debit_order->customerAccount->email ?? ''), ['class="form-control input-mask"','placeholder="Enter email..."']) }}
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -125,7 +125,145 @@
                                 <div class="col-lg-4">
                                     <div class="mb-3">
                                         <label>Address</label>
-                                        {{ Form::text('address', old('address', $customer_account->address ?? ''), ['class="form-control input-mask"','placeholder="Enter address..."']) }}
+                                        {{ Form::text('address', old('address', $debit_order->customerAccount->address ?? ''), ['class="form-control input-mask"','placeholder="Enter address..."']) }}
+                                    </div>
+                                </div>
+                                <!--./col -->
+                            </div>
+                            <!--./row -->
+
+                            <div class="row mt-4">
+                                <div class="col-lg-12">
+                                    <h5 class="text-capitalize">Customer Deduction Details</h5>
+                                    <hr />
+                                </div>
+                                <!--./col -->
+                            </div>
+                            <!--./row -->
+
+                            <div class="row ">
+                                <div class="col-lg-3">
+                                    <div class="mb-3">
+                                        <label>Loan Amount <span class="text-danger">*</span></label>
+                                        {{ Form::text('loan_amount',old('loan_amount', $debit_order ? number_format($debit_order->total_amount) : ''),['class="form-control number-separator"', 'placeholder="Write total loan amount..."']) }}
+                                    </div>
+                                </div>
+                                <!--./col -->
+
+                                <div class="col-lg-3">
+                                    <div class="mb-3">
+                                        <label>Debit Type <span class="text-danger">*</span></label>
+                                        @php
+                                            $options = [
+                                                'FIXED' => 'Fixed',
+                                                'DYNAMIC' => 'Dynamic',
+                                            ];
+                                            $options = ['' => 'Select'] + $options;
+                                        @endphp
+
+                                        {{ Form::select('debit_type', $options, old('debit_type', $debit_order->debit_type ?? ''), ['class' => 'form-control','id' => 'debit_type']) }}
+                                    </div>
+                                </div>
+                                <!--./col -->
+
+                                <div class="col-lg-3" id="standard_deduction" style="display: block">
+                                    <div class="mb-3">
+                                        <label>Deduction Amount <span class="text-danger">*</span></label>
+                                        {{ Form::text('installment_amount',old('installment_amount', $debit_order ? number_format($debit_order->installment_amount) : ''),['class="form-control number-separator"', 'placeholder="Write deduction amount..."']) }}
+                                        <span class="text-danger" id="installmentAmountError"></span>
+                                    </div>
+                                </div>
+                                <!--./col -->
+
+                                <div class="col-lg-6" id="max_min_deduction" style="display: none">
+                                    <div class="mb-3">
+                                        <label>Deduction Amount <span class="text-danger">*</span></label>
+                                        <div class="row">
+                                            <div class="col-lg-6">
+                                                <div class="form-group">
+                                                    {{ Form::text('min_installment_amount',old('min_installment_amount', $debit_order ? number_format($debit_order->min_installment_amount) : ''),['class="form-control number-separator"','placeholder="Minimum deduction amount..."','id="min_installment_amount"']) }}
+                                                    <span class="text-danger" id="minInstallmentAmountError"></span>
+                                                </div>
+                                            </div>
+                                            <!--./col -->
+
+                                            <div class="col-lg-6">
+                                                <div class="form-group">
+                                                    {{ Form::text('max_installment_amount',old('max_installment_amount', $debit_order ? number_format($debit_order->max_installment_amount) : ''),['class="form-control number-separator"','placeholder="Maximum deduction amount..."','id="max_installment_amount"']) }}
+                                                    <span class="text-danger" id="maxInstallmentAmountError"></span>
+                                                </div>
+                                            </div>
+                                            <!--./col -->
+                                        </div>
+                                        <!--row -->
+
+                                    </div>
+                                </div>
+                                <!--./col -->
+
+                                <div class="col-lg-3">
+                                    <div class="mb-3">
+                                        <label>Frequency of Installment <span class="text-danger">*</span></label>
+                                        @php
+                                            $options = [
+                                                'MONTHLY' => 'Monthly',
+                                                'WEEKLY' => 'Weekly',
+                                            ];
+                                            $options = ['' => 'Select'] + $options;
+                                        @endphp
+
+                                        {{ Form::select('peridiocity', $options, old('peridiocity', $debit_order->periodicity ?? ''), ['class' => 'form-control']) }}
+                                        <span class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <!--./col -->
+
+                                <div class="col-lg-3">
+                                    <div class="mb-3">
+                                        <label>Number of deduction <span class="text-danger">*</span></label>
+                                        {{ Form::number('number_of_installment', old('number_of_installment', $debit_order->installment_number ?? ''), ['class="form-control"','placeholder="Write number installment..."','min' => 1]) }}
+                                        <span class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <!--./col -->
+
+                                <div class="col-lg-3">
+                                    <div class="mb-3">
+                                        <label>Deduction Start Date <span class="text-danger">*</span></label>
+                                        {{ Form::date('start_date', old('start_date', $debit_order->start_date ?? ''), ['class="form-control"']) }}
+                                    </div>
+                                </div>
+                                <!--./col -->
+
+                                <div class="col-lg-3">
+                                    <div class="mb-3">
+                                        <label>Deduction End<span class="text-danger">*</span></label>
+                                        @php
+                                            $options = [
+                                                'totalLoanCovered' => 'Until total loan covered',
+                                                'specificDate' => 'Specific date',
+                                            ];
+                                            $options = ['' => 'Select'] + $options;
+                                        @endphp
+
+                                        {{ Form::select('deduction_end', $options, old('deduction_end', $debit_order->deduction_end_date ?? ''), ['class' => 'form-control','id' => 'deduction_end']) }}
+                                    </div>
+                                </div>
+                                <!--./col -->
+
+                                <div class="col-lg-3" id="end_date" style="display: none;">
+                                    <div class="mb-3">
+                                        <label>End Date <span class="text-danger">*</span></label>
+                                        {{ Form::date('end_date', old('end_date', $debit_order->end_date ?? ''), ['class="form-control"','id="end_date"']) }}
+                                    </div>
+                                </div>
+                                <!--./col -->
+
+                                <div class="col-lg-3">
+                                    <div class="mb-3">
+                                        <label for="formFile" class="form-label">Evidence of Aggrement</label>
+                                        <input class="form-control" type="file" id="formFile" name="evidence_of_aggrement"
+                                            accept="application/pdf" />
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -179,6 +317,48 @@
                         $('.account_id').html(data);
                     }
                 });
+            });
+
+            //before on change debit order
+            debitType = $('#debit_type').val();
+
+            if (debitType === 'FIXED') {
+                $('#standard_deduction').css('display', '');
+                $('#max_min_deduction').css('display', 'none');
+            } else if (debitType === 'DYNAMIC') {
+                $('#max_min_deduction').css('display', '');
+                $('#standard_deduction').css('display', 'none');
+            }
+
+            //type of debit on change
+            $('#debit_type').on('change', function(e) {
+                debitType = $(this).val();
+
+                if (debitType === 'FIXED') {
+                    $('#standard_deduction').css('display', '');
+                    $('#max_min_deduction').css('display', 'none');
+                } else if (debitType === 'DYNAMIC') {
+                    $('#max_min_deduction').css('display', '');
+                    $('#standard_deduction').css('display', 'none');
+                }
+            });
+
+            //before on change start and end date
+            deductionEndDate = $('#deduction_end').val();
+
+            if (deductionEndDate === 'specificDate')
+                $('#end_date').css('display', '');
+            else
+                $('#end_date').css('display', 'none');
+
+            //on change deduction start and end date
+            $('#deduction_end').on('change', function(e) {
+                deductionEndDate = $(this).val();
+
+                if (deductionEndDate === 'specificDate')
+                    $('#end_date').css('display', '');
+                else
+                    $('#end_date').css('display', 'none');
             });
 
             //validate form and submit
@@ -305,7 +485,8 @@
                             <p class="text-muted font-size-14 mb-4" id="success-msg"></p>
 
                             <button type="button" id="btn-okay" name="Okay" class="btn btn-success"
-                                customer-uuid="{{ $customer_account->uuid ?? null }}" style="display: none;">Okay</button>
+                                customer-uuid="{{ $customer_account->uuid ?? null }}"
+                                style="display: none;">Okay</button>
                         </div>
                     </div>
                 </div>

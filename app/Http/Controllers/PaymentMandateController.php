@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\PaymentMandateExport;
 use App\Models\Account;
 use App\Models\AccountType;
 use App\Models\Customer;
@@ -16,10 +17,12 @@ use App\Models\Sector;
 use App\Rules\PhoneNumber;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Maatwebsite\Excel\Facades\Excel;
 
 class PaymentMandateController extends Controller
 {
@@ -33,21 +36,94 @@ class PaymentMandateController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function lists()
+    public function lists(Request $request, $consent = null)
     {
         $title = 'Payment Mandate';
         //has_allowed('roles', 'lists');
 
         //debit
-        $debit_orders = DebitOrder::where_cond()->get();
+        $debit_orders = DebitOrder::where_cond();
 
+        if (isset($_POST['filter'])) {
+            $start_at = $request->input('start_at');
+            $end_at = $request->input('end_at');
+            $account_type_id = $request->input('account_type_id');
+            $account_id = $request->input('account_id');
+            $status = $request->input('status');
+            $keyword = $request->input('keyword');
+
+            //join
+            $debit_orders = $debit_orders->join('customer_accounts', 'customer_accounts.id', '=', 'debit_orders.customer_account_id');
+
+            //start data and end date
+            if ($start_at != null && $end_at != null) {
+                $start_at = date('Y-m-d', strtotime($start_at));
+                $end_at = date('Y-m-d', strtotime($end_at));
+
+                $debit_orders = $debit_orders->whereBetween('debit_orders.created_at', [$start_at, $end_at]);
+            }
+
+            //payment channel
+            if ($account_type_id != null) {
+                $debit_orders = $debit_orders->where('customer_accounts.account_type_id', $account_type_id);
+            }
+
+            //bank account
+            if ($account_id != null) {
+                $debit_orders = $debit_orders->where('customer_accounts.account_id', $account_id);
+            }
+
+            //status
+            if ($status != null)
+                $debit_orders = $debit_orders->where('debit_orders.approved', $status);
+
+            //keyword
+            if ($keyword != null) {
+                $debit_orders = $debit_orders->where(function ($query) use ($keyword) {
+                    $query->orWhere('customer_accounts.account_name', 'LIKE', "%$keyword%")
+                        ->orWhere('customer_accounts.account_number', 'LIKE', "%$keyword%");
+                });
+            }
+
+            //debit orders
+            $debit_orders = $debit_orders->get();
+        } else {
+            //if consent not null
+            if ($consent != null) {
+                if ($consent == 'pending') {
+                    $consent = 0;
+                } else if ($consent == 'approved') {
+                    $consent = 1;
+                } else if ($consent == 'rejected') {
+                    $consent = 99;
+                }
+                $debit_orders = $debit_orders->where('debit_orders.approved', $consent);
+            }
+
+            //passing variables
+            $start_at = null;
+            $end_at = null;
+            $account_type_id = null;
+            $account_id = null;
+            $status = $consent;
+            $keyword = null;
+
+            //debit orders
+            $debit_orders = $debit_orders->get();
+        }
 
         //populate data
         $account_types = AccountType::all();
         $accounts = Account::all();
 
         //render view
-        return view('payment_mandate.lists', compact('title', 'debit_orders', 'account_types', 'accounts'));
+        return view('payment_mandate.lists', compact('title', 'account_types', 'accounts', 'debit_orders', 'start_at', 'end_at', 'account_type_id', 'account_id', 'status', 'keyword'));
+    }
+
+    //export xls
+    function exportXLS(Request $request)
+    {
+        return Excel::download(new PaymentMandateExport($request->start_at, $request->end_at, $request->account_type_id, $request->account_id, $request->status, $request->keyword), date('YmdHis') . '-PaymentMandate.xlsx');
     }
 
     //payment details form
@@ -96,18 +172,27 @@ class PaymentMandateController extends Controller
         else
             $uuid = Str::uuid();
 
+        //register customer
+        $customer = Customer::firstOrNew([
+            'phone' => $request->input('phone')
+        ]);
+        $customer->fullname = strtoupper($request->input('account_name'));
+        $customer->email = $request->input('email');
+        $customer->id_number = $request->input('nida_number');
+        $customer->address = $request->input('address');
+        $customer->created_by = Auth::user()->id;
+        $customer->save();
+
         //save or update account details
         $customer_account = CustomerAccount::firstOrNew([
             'account_type_id' => $request->input('account_type_id'),
             'account_id' => $request->input('account_id'),
             'account_number' => $request->input('account_number'),
             'account_name' => strtoupper($request->input('account_name')),
-            'phone' => $request->input('phone'),
-            'uuid' => $uuid
+            'phone' => $request->input('phone')
         ]);
-        $customer_account->email = $request->input('email');
-        $customer_account->id_number = $request->input('nida_number');
-        $customer_account->address = $request->input('address');
+        $customer_account->customer_id = $customer->id;
+        $customer_account->uuid = $uuid;
         $customer_account->created_by = Auth::user()->id;
         $customer_account->save();
 
@@ -171,10 +256,14 @@ class PaymentMandateController extends Controller
         //customer account
         $customer_account = CustomerAccount::where(['uuid' => $uuid])->firstOrFail();
 
+        //partner user
+        $p_user = PartnerUser::where(['user_id' => Auth::user()->id])->first();
+
         //debit order
         $debit_order = DebitOrder::firstOrNew([
             'customer_account_id' => $customer_account->id,
-            'customer_account_uuid' => $uuid
+            'customer_account_uuid' => $uuid,
+            'partner_id' => $p_user->partner_id
         ]);
         $debit_order->total_amount = floatval(str_replace(",", "", $request->input('loan_amount')));
         $debit_order->debit_type = $request->input('debit_type');
@@ -252,6 +341,9 @@ class PaymentMandateController extends Controller
         //post data
         $uuid = $request->input('uuid');
 
+        //customer account
+        $customer_account = CustomerAccount::where(['uuid' => $uuid])->firstOrFail();
+
         $status = 'inactive';
         if (isset($_POST['save'])) {
             $status = 'inactive';
@@ -261,9 +353,16 @@ class PaymentMandateController extends Controller
             $status = 'active';
             $action = 'submit';
             $message = 'Payment mandate registration complete, waiting for consent from customer!. <br /><br />Do you want to create new payment mandate?';
-        }
 
-        //todo: update approve status
+            //send sms
+            $response = Http::post(
+                'https://portal.lainafinance.co.tz/api/send-sms',
+                [
+                    'phone' => casting_phone($customer_account->phone),
+                    'msg' => "Laina Finance imeweka makato yako"
+                ]
+            );
+        }
 
         //response
         return response()->json(['success' => true, 'action' => $action, 'success_msg' => $message], 200);
@@ -292,14 +391,15 @@ class PaymentMandateController extends Controller
     {
         $title = "Payment Mandate";
 
-        $customer_account = CustomerAccount::where(['uuid' => $uuid])->firstOrFail();
+        //debit order
+        $debit_order = DebitOrder::where(['customer_account_uuid' => $uuid])->firstOrFail();
 
         //populate data
         $account_types = AccountType::all();
         $accounts = Account::all();
 
         //render view
-        return view('payment_mandate.edit', compact('title', 'customer_account', 'account_types', 'accounts'));
+        return view('payment_mandate.edit', compact('title', 'debit_order', 'account_types', 'accounts'));
     }
 
     /**
@@ -312,23 +412,23 @@ class PaymentMandateController extends Controller
     public function update(Request $request)
     {
         //validation 
-        $validator = Validator::make(
-            $request->all(),
-            [
-                'phone' => ['required', new PhoneNumber()]
-            ],
-            [
-                'phone.required' => 'Phone number required',
-            ]
-        );
+        // $validator = Validator::make(
+        //     $request->all(),
+        //     [
+        //         'phone' => ['required', new PhoneNumber()]
+        //     ],
+        //     [
+        //         'phone.required' => 'Phone number required',
+        //     ]
+        // );
 
-        if ($validator->fails()) {
-            //return response
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
-        }
+        // if ($validator->fails()) {
+        //     //return response
+        //     return response()->json([
+        //         'success' => false,
+        //         'errors' => $validator->errors()
+        //     ], 422);
+        // }
 
         //capture if uuid is not null
         $uuid = $request->input('uuid');
@@ -362,5 +462,21 @@ class PaymentMandateController extends Controller
     public function destroy($id)
     {
         //
+    }
+
+
+    //send remainder for payment mandate
+    public function sendRemainder($id)
+    {
+        $title = "Send Remainder";
+
+        $debit_order = DebitOrder::findOrFail($id);
+
+        //populate data
+        $account_types = AccountType::all();
+        $accounts = Account::all();
+
+        //render view
+        return view('payment_mandate.send_remainder', compact('title', 'debit_order'));
     }
 }

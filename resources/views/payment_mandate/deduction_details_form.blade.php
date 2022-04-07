@@ -155,7 +155,7 @@
                                 <div class="col-lg-3" id="end_date" style="display: none;">
                                     <div class="mb-3">
                                         <label>End Date <span class="text-danger">*</span></label>
-                                        {{ Form::date('end_date', old('end_date', $debit_order->start_date ?? ''), ['class="form-control"','id="end_date"']) }}
+                                        {{ Form::date('end_date', old('end_date', $debit_order->end_date ?? ''), ['class="form-control"','id="end_date"']) }}
                                     </div>
                                 </div>
                                 <!--./col -->

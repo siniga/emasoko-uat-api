@@ -159,19 +159,23 @@
                                             @endif
                                         </td>
                                         <td>
-                                            @if ($debit_order->approved == 0)
-                                                <a href="#" title="Edit Mandate">
-                                                    <i class="bx bx-edit-alt bx-border bx-xs"></i>
+                                            @if (!Auth::user()->hasRole('admin'))
+                                                {{-- @if ($debit_order->approved == 0)
+                                                    <a title="Edit Mandate" class="update-mandate"
+                                                        debit-order-id="{{ $debit_order->id }}">
+                                                        <i class="bx bx-edit-alt bx-border bx-xs"></i>
+                                                    </a>
+                                                @endif --}}
+
+                                                <a title="Send Remainder" class="send-remainder"
+                                                    debit-order-id="{{ $debit_order->id }}">
+                                                    <i class="bx bx bx-comment bx-border bx-xs"></i>
+                                                </a>
+
+                                                <a href="#" title="Delete" class="delete">
+                                                    <i class="bx bx-trash bx-border bx-xs text-danger"></i>
                                                 </a>
                                             @endif
-
-                                            <a href="#" title="Send Remainder">
-                                                <i class="bx bx bx-comment bx-border bx-xs"></i>
-                                            </a>
-
-                                            <a href="#" title="Delete" class="delete">
-                                                <i class="bx bx-trash bx-border bx-xs text-danger"></i>
-                                            </a>
                                         </td>
                                     </tr>
                                 </table>
@@ -180,7 +184,6 @@
                         <!--./col -->
                     </div>
                     <!--./row -->
-
                 </div>
                 <!--./card-body -->
             </div>
@@ -189,4 +192,77 @@
         <!--./col -->
     </div>
     <!-- end row -->
+
+    <div id="offcanvas-wrp"></div>
+    <!--./offcanvas -->
+@endsection
+
+@section('script')
+    <script type="text/javascript">
+        $(document).ready(function() {
+            //close offcanvas wrp
+            $('#offcanvas-wrp').hide();
+
+            //close canvas
+            $(document).on('click', '#close-offcanvas', function(event) {
+                $('#offcanvas-wrp').animate({
+                    width: "hide"
+                });
+                //reload page
+                location.reload();
+            });
+
+            //update payment mandate
+            $(document).on('click', '.update-mandate', function(event) {
+                event.preventDefault();
+
+                $('#offcanvas-wrp').animate({
+                    width: "show"
+                });
+
+                //debit-order-id
+                var debitOrderId = $(this).attr('debit-order-id');
+
+                //ajax request
+                // var jqXHR = $.ajax({
+                //     type: "GET",
+                //     url: "/companies/" + companyId + "/assessment/?page=companyInformation",
+                // }).done(function(data) {
+                //     $('#offcanvas-wrp').html(data);
+
+                // }).fail(function(jqXHR, textStatus, errorThrown) {
+                //     alert('Failed to update progress');
+                //     if (console && console.log) {
+                //         console.log("Loading Ajax: " + textStatus + ", " + errorThrown);
+                //     }
+                // });
+            });
+
+            //send remainder
+            $(document).on('click', '.send-remainder', function(event) {
+                event.preventDefault();
+
+                $('#offcanvas-wrp').animate({
+                    width: "show"
+                });
+
+                //debit-order-id
+                var debitOrderId = $(this).attr('debit-order-id');
+
+                //ajax request
+                var jqXHR = $.ajax({
+                    type: "GET",
+                    url: "/payment-mandate/send-remainder/" + debitOrderId,
+                }).done(function(data) {
+                    $('#offcanvas-wrp').html(data);
+
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+                    alert('Failed to update progress');
+                    if (console && console.log) {
+                        console.log("Loading Ajax: " + textStatus + ", " + errorThrown);
+                    }
+                });
+            });
+        });
+    </script>
 @endsection

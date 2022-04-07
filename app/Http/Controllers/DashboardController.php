@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\DebitOrder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
 
 class DashboardController extends Controller
 {
@@ -21,27 +24,30 @@ class DashboardController extends Controller
         $title = 'Dashboard';
 
         //debit order
-        $debit_orders = DebitOrder::where_cond()->get();
+        $debit_orders = DebitOrder::where_cond();
 
         //pending debit orders
-        $number_of_pending = DebitOrder::where(['approved' => 0])->count();
+        $pending = $debit_orders->select(DB::raw('SUM(total_amount) as total_amount'), DB::raw('COUNT(id) as count'))
+            ->where(['approved' => 0])->get();
 
         //approved debit orders
-        $number_of_approved = DebitOrder::where(['approved' => 1])->count();
+        $approved = $debit_orders->select(DB::raw('SUM(total_amount) as total_amount'), DB::raw('COUNT(id) as count'))
+            ->where(['approved' => 1])->get();
 
         //rejected debit orders
-        $number_of_rejected = DebitOrder::where(['approved' => 99])->count();
+        $rejected = $debit_orders->select(DB::raw('SUM(total_amount) as total_amount'), DB::raw('COUNT(id) as count'))
+            ->where(['approved' => 99])->get();
 
         //pending debit orders
-        $pending_debit_orders = DebitOrder::where(['approved' => 0])->get();
+        $pending_debit_orders = DebitOrder::where_cond()->where(['approved' => 0])->get();
 
         //approved debit orders
-        $approved_debit_orders = DebitOrder::where(['approved' => 1])->get();
+        $approved_debit_orders = DebitOrder::where_cond()->where(['approved' => 1])->get();
 
         //rejected debit orders
-        $rejected_debit_orders = DebitOrder::where(['approved' => 99])->get();
+        $rejected_debit_orders = DebitOrder::where_cond()->where(['approved' => 99])->get();
 
         //render view
-        return view('dashboard', compact('title', 'debit_orders', 'number_of_pending', 'number_of_approved', 'number_of_rejected', 'pending_debit_orders', 'approved_debit_orders', 'rejected_debit_orders'));
+        return view('dashboard', compact('title', 'pending', 'approved', 'rejected', 'pending_debit_orders', 'approved_debit_orders', 'rejected_debit_orders'));
     }
 }

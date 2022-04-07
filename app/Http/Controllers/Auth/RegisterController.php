@@ -87,17 +87,25 @@ class RegisterController extends Controller
     {
         //validation 
         $validator = Validator::make($request->all(), [
-            'tin_number' => 'required|unique',
+            'tin_number' => 'required|unique:partners,tin_number',
             'business_name' => 'required',
             'partner_category_id' => 'required',
             'year_of_incorporation' => 'required|numeric',
             'number_of_staff' => 'required|numeric',
             'country_code' => 'required',
             'company_phone' => 'required',
-            'company_email' => 'required|email',
+            'company_email' => 'required|email|unique:partners,email',
             'region_id' => 'required',
             'physical_address' => 'required',
         ]);
+
+        // if ($validator->fails()) {
+        //     //return response
+        //     return response()->json([
+        //         'success' => false,
+        //         'errors' => $validator->errors()
+        //     ], 422);
+        // }
 
         //capture if uuid is not null
         if ($request->input('partner_uuid') != null)

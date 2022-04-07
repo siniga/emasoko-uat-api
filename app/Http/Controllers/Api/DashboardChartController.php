@@ -16,13 +16,14 @@ class DashboardChartController extends Controller
         $data_array = [];
         $percent_data = '';
 
-
+        //debit order
+        $debit_orders = DebitOrder::where_cond();
 
         //pending debit orders
-        $pending_debit_orders = DebitOrder::where(['approved' => 0])->count();
+        $pending_debit_orders = $debit_orders->where(['approved' => 0])->count();
 
         //approved debit orders
-        $approved_debit_orders = DebitOrder::where(['approved' => 1])->count();
+        $approved_debit_orders = $debit_orders->where(['approved' => 1])->count();
 
         //aggregate
         $aggregate = $pending_debit_orders + $approved_debit_orders;
@@ -35,13 +36,55 @@ class DashboardChartController extends Controller
         echo json_encode(['error' => FALSE, 'approved' => $percent_approved, 'pending' => $percent_pending], 200);
     }
 
+    //consent value
+    function getConsentValue()
+    {
+        //query per channel
+        $debit_orders = DebitOrder::select('debit_orders.approved', DB::raw('COUNT(debit_orders.id) as count_approved'))
+            ->where(function ($query) {
+                $query->where('debit_orders.approved', '=', 1)
+                    ->orWhere('debit_orders.approved', '=', 0);
+            })
+            ->groupBy('debit_orders.approved')
+            ->orderBy('debit_orders.approved', 'DESC');
+
+        if (isset($_GET['month']) && $_GET['month'] != null) {
+            $debit_orders = $debit_orders->whereMonth('created_at', $_GET['month'])
+                ->whereYear('created_at', date('Y'));
+        }
+
+        $debit_orders = $debit_orders->get();
+
+        //pending
+        $pending = 0;
+        if (isset($debit_orders[0]->count_approved) && $debit_orders[0]->count_approved != null)
+            $pending = $debit_orders[0]->count_approved;
+
+        //approve 
+        $approved = 0;
+        if (isset($debit_orders[1]->count_approved) && $debit_orders[1]->count_approved != null)
+            $approved = $debit_orders[1]->count_approved;
+
+        //create data array
+        $data_array[] = [
+            "pending" =>  (int) $pending,
+            "approved" => (int) $approved
+        ];
+
+        //response
+        echo json_encode(['error' => FALSE, 'data_array' => $data_array], 200);
+    }
 
     //consent per channel
     function getConsentPerChannel()
     {
+        //debit order
+        $debit_orders = DebitOrder::where_cond();
+
         //acounts
         $accounts = Account::all();
 
+        //declare array
         $data_array = [];
         foreach ($accounts as $key => $val) {
             //query per channel

@@ -111,7 +111,8 @@ Route::post('companies/store-assessment', [CompanyController::class, 'store_asse
 Route::post('companies/confirm-assessment', [CompanyController::class, 'confirm_assessment'])->name('companies.confirm-assessment');
 
 //customers
-Route::get('payment-mandate/lists', [PaymentMandateController::class, 'lists'])->name('payment-mandate.lists');
+Route::any('payment-mandate/lists/{consent?}', [PaymentMandateController::class, 'lists'])->name('payment-mandate.lists');
+Route::get('payment-mandate/export-xls', [PaymentMandateController::class, 'exportXLS'])->name('payment-mandate.export-xls');
 
 //account details
 Route::get('payment-mandate/create-account/{uuid?}', [PaymentMandateController::class, 'accountDetailsForm'])->name('payment-mandate.create-account');
@@ -131,6 +132,8 @@ Route::get('payment-mandate/details/{uuid}', [PaymentMandateController::class, '
 Route::get('payment-mandate/edit/{uuid}', [PaymentMandateController::class, 'edit'])->name('payment-mandate.edit');
 Route::post('payment-mandate/update-details', [PaymentMandateController::class, 'update'])->name('payment-mandate.update');
 
+Route::get('payment-mandate/send-remainder/{id}', [PaymentMandateController::class, 'sendRemainder'])->name('payment-mandate.send-remainder');
+
 //tasks
 Route::get('tasks/lists', [TaskController::class, 'lists'])->name('tasks.lists');
 
@@ -145,5 +148,6 @@ Route::post('roles/{id}/store-perms', [RoleController::class, 'store_perms'])->n
 
 
 //charts
+Route::get('api/dashboard/consent-value', [DashboardChartController::class, 'getConsentValue']);
 Route::get('api/dashboard/consent-percentage', [DashboardChartController::class, 'getPercentageConsent']);
 Route::get('api/dashboard/consent-per-channel', [DashboardChartController::class, 'getConsentPerChannel']);

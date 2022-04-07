@@ -68,15 +68,15 @@ class CompanyAssessment
             $message .= "<br/>You can start using your eMakato account now. Login to your account by <a href=" . url('login') . ">click here.</a>";
 
             //send email
-            Mail::send(
-                ['html' => 'emails.template'],
-                ['name' => $user->name, 'body' => $message],
-                function ($message) use ($user) {
-                    $message->to($user->email);
-                    $message->subject('Company Assessment Approval');
-                    $message->from('renfridfrancis@gmail.com', 'eMakato');
-                }
-            );
+            // Mail::send(
+            //     ['html' => 'emails.template'],
+            //     ['name' => $user->name, 'body' => $message],
+            //     function ($message) use ($user) {
+            //         $message->to($user->email);
+            //         $message->subject('Company Assessment Approval');
+            //         $message->from('renfridfrancis@gmail.com', 'eMakato');
+            //     }
+            // );
             return true;
         }
     }

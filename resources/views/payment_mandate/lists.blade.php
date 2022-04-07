@@ -21,20 +21,20 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-lg-12">
-                            {!! Form::open(['url' => url('#'), 'method' => 'POST', 'class' => 'form-horizontal']) !!}
+                            {!! Form::open(['url' => route('payment-mandate.lists'), 'method' => 'POST', 'class' => 'form-horizontal']) !!}
                             {{ Form::token() }}
 
                             <div class="row">
                                 <div class="col-lg-2">
                                     <div class="mb-3">
-                                        {{ Form::date('start_at', old('start_at'), ['placeholder="Start Date..."', 'class="form-control"']) }}
+                                        {{ Form::date('start_at', old('start_at', $start_at), ['placeholder="Start Date..."', 'class="form-control"']) }}
                                     </div>
                                 </div>
                                 <!--./col -->
 
                                 <div class="col-lg-2">
                                     <div class="mb-3">
-                                        {{ Form::date('end_at', old('end_at'), ['placeholder="End Date..."', 'class="form-control"']) }}
+                                        {{ Form::date('end_at', old('end_at', $end_at), ['placeholder="End Date..."', 'class="form-control"']) }}
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -52,15 +52,15 @@
                                         @endforeach
                                         @php
                                             $account_type_options = $options;
-                                            $options = ['' => 'Payment Channel'] + $options;
+                                            $options = ['' => 'Payment channel'] + $options;
                                         @endphp
 
-                                        {{ Form::select('account_type_id', $options, old('account_type_id'), ['class' => 'form-control account_type_id','id' => 'account_type_id']) }}
+                                        {{ Form::select('account_type_id', $options, old('account_type_id', $account_type_id), ['class' => 'form-control account_type_id','id' => 'account_type_id']) }}
                                     </div>
                                 </div>
                                 <!--./col -->
 
-                                <div class="col-lg-2">
+                                <div class="col-lg-3">
                                     <div class="mb-3">
                                         @php $options = []; @endphp
                                         @foreach ($accounts as $val)
@@ -69,17 +69,26 @@
                                             @endphp
                                         @endforeach
                                         @php
-                                            $options = ['' => 'Bank/MNO Name'] + $options;
+                                            $options = ['' => 'Bank/MNO name'] + $options;
                                         @endphp
 
-                                        {{ Form::select('account_id', $options, old('account_id'), ['class' => 'form-control account_id','id' => 'account_id']) }}
+                                        {{ Form::select('account_id', $options, old('account_id', $account_id), ['class' => 'form-control account_id','id' => 'account_id']) }}
                                     </div>
                                 </div>
                                 <!--./col -->
 
-                                <div class="col-lg-4">
+                                <div class="col-lg-3">
                                     <div class="mb-3">
-                                        {{ Form::text('keyword', old('keyword'), ['class="form-control"','placeholder="Search by name of account holder or number..."']) }}
+                                        @php
+                                            $options = [
+                                                0 => 'Pending',
+                                                1 => 'Approved',
+                                                99 => 'Rejected',
+                                            ];
+                                            $options = ['' => 'Consent status'] + $options;
+                                        @endphp
+
+                                        {{ Form::select('status', $options, old('status', $status), ['class' => 'form-control']) }}
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -87,11 +96,18 @@
                             <!--./row -->
 
                             <div class="row">
-                                <div class="col-lg-12">
+                                <div class="col-lg-6">
+                                    <div class="mb-3">
+                                        {{ Form::text('keyword', old('keyword', $keyword), ['class="form-control"','placeholder="Search by name of account holder or number..."']) }}
+                                    </div>
+                                </div>
+                                <!--./col -->
+
+                                <div class="col-lg-6">
                                     <div class="mb-3">
                                         <div class="text-sm-end d-none d-sm-block">
                                             <button type="submit" name="filter" class="btn btn-secondary">
-                                                <i class="bx bx bx-search"></i> Filter
+                                                <i class="bx bx-search"></i> Filter
                                             </button>
                                         </div>
                                     </div>
@@ -104,9 +120,27 @@
                         <!--./col-lg-12 -->
                     </div>
                     <!--./row -->
+                </div>
+            </div>
 
+            <div class="card">
+                <div class="card-body">
                     <div class="table-responsive">
-                        @if (isset($debit_orders) && $debit_orders)
+                        @if (isset($debit_orders) && count($debit_orders) > 0)
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <b>Payment mandate: {{ number_format(count($debit_orders)) }}</b>
+                                </div>
+
+                                <div class="col-lg-6">
+                                    <div class="text-sm-end d-none d-sm-block">
+                                        <a title="Export" class="btn btn-outline-success btn-sm"
+                                            href="{{ route('payment-mandate.export-xls', ['start_at' => $start_at,'end_at' => $end_at,'account_type_id' => $account_type_id,'account_id' => $account_id,'status' => $status,'keyword' => $keyword]) }}">
+                                            <i class="bx bx-export"></i> XLS</a>
+                                    </div>
+                                </div>
+                            </div>
+
                             <table class="table table-bordered" id="dynamicTable">
                                 <thead>
                                     <tr>
@@ -127,7 +161,8 @@
                                         <tr>
                                             <td>{{ $serial }}</td>
                                             <td>{{ strtoupper($values->customerAccount->account_name ?? '') }}</td>
-                                            <td><small>{{ $values->customerAccount->id_number ?? 'NIL' }}</small></td>
+                                            <td><small>{{ $values->customerAccount->customer->id_number ?? 'NIL' }}</small>
+                                            </td>
                                             <td>{{ $values->customerAccount->accountType->name ?? '' }}</td>
                                             <td>{{ $values->customerAccount->account->name ?? '' }}</td>
                                             <td>
@@ -137,7 +172,7 @@
 
                                             <td>
                                                 @if ($values->approved == 0)
-                                                    <span class="badge badge-pill badge-soft-danger">Pending</span>
+                                                    <span class="badge badge-pill badge-soft-warning">Pending</span>
                                                 @elseif($values->approved == 1)
                                                     <span class="badge badge-pill badge-soft-success">Approved</span>
                                                 @elseif($values->approved == 99)
@@ -151,10 +186,12 @@
                                                     <i class="bx bx-folder-open bx-border bx-xs"></i>
                                                 </a>
 
-                                                <a href="{{ route('payment-mandate.edit', $values->customer_account_uuid) }}"
-                                                    title="Edit">
-                                                    <i class="bx bx-edit-alt bx-border bx-xs"></i>
-                                                </a>
+                                                @if (!Auth::user()->hasRole('admin'))
+                                                    <a href="{{ route('payment-mandate.edit', $values->customer_account_uuid) }}"
+                                                        title="Edit">
+                                                        <i class="bx bx-edit-alt bx-border bx-xs"></i>
+                                                    </a>
+                                                @endif
                                                 {{-- <a href="#" title="Delete" class="btn btn-outline-danger btn-xss delete">
                                                     <i class="bx bx-trash"></i>
                                                 </a> --}}
@@ -165,7 +202,7 @@
                                 </tbody>
                             </table>
                         @else
-                            <div class="alert alert-danger"> No any customer registered</div>
+                            <div class="alert alert-danger"> No any payment mandate at the moment!</div>
                         @endif
                     </div>
                 </div>

@@ -117,7 +117,7 @@
                                                     <label for="tinno">TIN Number <span
                                                             class="text-danger">*</span></label>
                                                     {{ Form::text('tin_number', old('tin_number', $company->tin_number ?? ''), ['class="form-control input-mask"','data-inputmask' => "'mask': '999-999-999'",'placeholder="Write tin number..."','required']) }}
-                                                    <span class="text-danger"></span>
+                                                    <span id="tinNumberError"></span>
                                                 </div>
                                             </div>
                                         </div>
@@ -158,7 +158,7 @@
                                                     <label for="email">Company Email <span class="text-danger">*</span>
                                                     </label>
                                                     {{ Form::email('company_email', old('company_email', $company->email ?? ''), ['class="form-control"','placeholder="Write company email..."','required']) }}
-                                                    <span class="text-danger"></span>
+                                                    <span id="companyEmailError"></span>
                                                 </div>
                                             </div>
                                             <!--./col -->
@@ -186,12 +186,11 @@
                                                             $options = ['' => 'Select'] + $options;
                                                         @endphp --}}
 
-                                                        {{ Form::select('country_code', $options, old('country_code', substr($company->phone ?? '', 0, 3)), ['class' => 'form-control','id' => 'country_id','required']) }}
+                                                        {{ Form::select('country_code', $options, old('country_code', substr($company->phone ?? '', 0, 3)), ['class' => 'form-control','id' => 'country_id']) }}
                                                     </div>
                                                     <!--./prepend -->
 
-                                                    {{ Form::number('company_phone', old('company_phone', substr($company->phone ?? '', 3)), ['class="form-control"','placeholder="Company phone..."','required']) }}
-                                                    <span class="error"></span>
+                                                    {{ Form::number('company_phone', old('company_phone', substr($company->phone ?? '', 3)), ['class="form-control"','placeholder="Company phone..."']) }}
                                                 </div>
                                             </div>
                                             <!--./col -->
@@ -299,6 +298,8 @@
             $(document).ready(function() {
                 //validate form and submit
                 $("#registrationForm").validate({
+                    // errorClass: "formError",
+                    // errorElement: "span",
                     rules: {
                         business_name: {
                             required: true
@@ -392,17 +393,33 @@
                             contentType: false,
                             cache: false,
                             timeout: 800000,
-                            success: function(data) {
+                            success: function(response) {
+                                //activate submit button
                                 $("#btnSubmit").prop("disabled", false);
+
+                                //deactivate loading spinner
+                                $('.loading-spinner').toggleClass('active');
+
+                                //uuid
+                                uuid = response.uuid
+
+                                //redirect
+                                window.location.href = "/company-documents/" + uuid
+                            },
+                            error: function(response) {
+                                //activate submit button
+                                $("#btnSubmit").prop("disabled", false);
+
+                                console.log(response);
 
                                 // Deactivate Loading Spinner
                                 $('.loading-spinner').toggleClass('active');
 
-                                //redirect
-                                window.location.href = "/company-documents/" + data.uuid
-                            },
-                            error: function(e) {
-                                $("#btnSubmit").prop("disabled", false);
+                                //write error message
+                                $('#tinNumberError').text(response.responseJSON.errors
+                                    .tin_number);
+                                $('#companyEmailError').text(response.responseJSON.errors
+                                    .company_email);
                             }
                         });
                         return false;

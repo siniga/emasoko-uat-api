@@ -119,7 +119,7 @@
                                 <div class="col-lg-4">
                                     <div class="mb-3">
                                         <label>NIDA Number</label>
-                                        {{ Form::text('nida_number', old('nida_number', $customer_account->id_number ?? ''), ['class="form-control input-mask"','placeholder="Enter NIDA number..."','data-inputmask' => "'mask': '99999999-99999-99999-99'"]) }}
+                                        {{ Form::text('nida_number', old('nida_number', $customer_account->customer->id_number ?? ''), ['class="form-control input-mask"','placeholder="Enter NIDA number..."','data-inputmask' => "'mask': '99999999-99999-99999-99'"]) }}
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -127,7 +127,7 @@
                                 <div class="col-lg-4">
                                     <div class="mb-3">
                                         <label>Email</label>
-                                        {{ Form::email('email', old('email', $customer_account->email ?? ''), ['class="form-control input-mask"','placeholder="Enter email..."']) }}
+                                        {{ Form::email('email', old('email', $customer_account->customer->email ?? ''), ['class="form-control input-mask"','placeholder="Enter email..."']) }}
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -135,7 +135,7 @@
                                 <div class="col-lg-4">
                                     <div class="mb-3">
                                         <label>Address</label>
-                                        {{ Form::text('address', old('address', $customer_account->address ?? ''), ['class="form-control input-mask"','placeholder="Enter address..."']) }}
+                                        {{ Form::text('address', old('address', $customer_account->customer->address ?? ''), ['class="form-control input-mask"','placeholder="Enter address..."']) }}
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -259,7 +259,7 @@
                             //activate submit button
                             $("#btnSubmit").prop("disabled", false);
 
-                            // Deactivate Loading Spinner
+                            // deactivate Loading Spinner
                             $('.loading-spinner').toggleClass('active');
 
                             //uuid

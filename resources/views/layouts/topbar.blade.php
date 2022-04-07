@@ -82,17 +82,25 @@
                 {{-- <img class="rounded-circle header-profile-user" src="{{ isset(Auth::user()->avatar) ? asset(Auth::user()->avatar) : asset('/assets/images/users/avatar99.png') }}"
                     alt="Header Avatar"> --}}
                 <span class="d-none d-xl-inline-block ms-1" key="t-henry">
-                    {{ucfirst(Auth::user()->name)}}<br/>
-                    {{Auth::user()->email }}
+                    {{ucfirst(Auth::user()->name)}}
                 </span>
                 <i class="mdi mdi-chevron-down d-none d-xl-inline-block"></i>
             </button>
             <div class="dropdown-menu dropdown-menu-end">
+                <span class="dropdown-item font-weight-600">Personal Information</span>
                 <!-- item-->
-                <a class="dropdown-item" href="contacts-profile"><i class="bx bx-user font-size-16 align-middle me-1"></i> <span key="t-profile">@lang('translation.Profile')</span></a>
-                {{-- <a class="dropdown-item" href="#"><i class="bx bx-wallet font-size-16 align-middle me-1"></i> <span key="t-my-wallet">@lang('translation.My_Wallet')</span></a> --}}
-                {{-- <a class="dropdown-item d-block" href="#" data-bs-toggle="modal" data-bs-target=".change-password"><span class="badge bg-success float-end">11</span><i class="bx bx-wrench font-size-16 align-middle me-1"></i> <span key="t-settings">@lang('translation.Settings')</span></a> --}}
-                {{-- <a class="dropdown-item" href="#"><i class="bx bx-lock-open font-size-16 align-middle me-1"></i> <span key="t-lock-screen">@lang('translation.Lock_screen')</span></a> --}}
+                <span class="dropdown-item" href="contacts-profile">
+                    <small><i>Name:</i></small> {{ucfirst(Auth::user()->name)}}
+                </span>
+
+                <span class="dropdown-item" href="contacts-profile">
+                    <small><i>Email:</i></small> {{Auth::user()->email }}
+                </span>
+
+                <span class="dropdown-item" href="contacts-profile">
+                    <small><i>Phone:</i></small> {{Auth::user()->phone ?? 'NIL' }}
+                </span>
+
                 <div class="dropdown-divider"></div>
                 <a class="dropdown-item text-danger" href="{{ route('logout') }}">Logout</a>
             </div>
