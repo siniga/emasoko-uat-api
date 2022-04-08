@@ -57,6 +57,6 @@ class Customer extends Model
 
     function customerAccount()
     {
-        return $this->hasOne(CustomerAccount::class, 'customer_id');
+        return $this->hasMany(CustomerAccount::class, 'customer_id');
     }
 }

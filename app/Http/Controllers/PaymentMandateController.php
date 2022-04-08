@@ -174,7 +174,7 @@ class PaymentMandateController extends Controller
 
         //register customer
         $customer = Customer::firstOrNew([
-            'phone' => $request->input('phone')
+            'phone' => casting_phone($request->input('phone'))
         ]);
         $customer->fullname = strtoupper($request->input('account_name'));
         $customer->email = $request->input('email');
@@ -189,7 +189,7 @@ class PaymentMandateController extends Controller
             'account_id' => $request->input('account_id'),
             'account_number' => $request->input('account_number'),
             'account_name' => strtoupper($request->input('account_name')),
-            'phone' => $request->input('phone')
+            'phone' => casting_phone($request->input('phone'))
         ]);
         $customer_account->customer_id = $customer->id;
         $customer_account->uuid = $uuid;
@@ -358,7 +358,7 @@ class PaymentMandateController extends Controller
             $response = Http::post(
                 'https://portal.lainafinance.co.tz/api/send-sms',
                 [
-                    'phone' => casting_phone($customer_account->phone),
+                    'phone' => $customer_account->phone,
                     'msg' => "Laina Finance imeweka makato yako"
                 ]
             );
@@ -441,7 +441,7 @@ class PaymentMandateController extends Controller
         $customer_account->account_id = $request->input('account_id');
         $customer_account->account_number = $request->input('account_number');
         $customer_account->account_name = strtoupper($request->input('account_name'));
-        $customer_account->phone = $request->input('phone');
+        $customer_account->phone = casting_phone($request->input('phone'));
         $customer_account->email = $request->input('email');
         $customer_account->id_number = $request->input('nida_number');
         $customer_account->address = $request->input('address');

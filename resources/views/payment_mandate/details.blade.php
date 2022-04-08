@@ -151,7 +151,7 @@
                                         </td>
                                         <td>
                                             @if ($debit_order->approved == 0)
-                                                <span class="badge badge-pill badge-soft-danger">Pending</span>
+                                                <span class="badge badge-pill badge-soft-warning">Pending</span>
                                             @elseif($debit_order->approved == 1)
                                                 <span class="badge badge-pill badge-soft-success">Approved</span>
                                             @elseif($debit_order->approved == 99)

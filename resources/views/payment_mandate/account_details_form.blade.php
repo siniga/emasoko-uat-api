@@ -110,7 +110,7 @@
                                     <div class="mb-3">
                                         <label for="basicpill-namecard-input">Phone <span
                                                 class="text-danger">*</span></label>
-                                        {{ Form::text('phone', old('phone', $customer_account->phone ?? ''), ['class="form-control input-mask"','placeholder="Enter phone connected to the bank account..."','data-inputmask' => "'mask': '9999999999'"]) }}
+                                        {{ Form::text('phone', old('phone', $customer_account->phone ?? ''), ['class="form-control"','placeholder="Enter phone connected to the bank account..."']) }}
                                         <span class="text-danger" id="phoneError"></span>
                                     </div>
                                 </div>

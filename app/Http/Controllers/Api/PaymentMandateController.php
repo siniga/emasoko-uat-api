@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Customer;
 use App\Models\CustomerAccount;
 use Illuminate\Http\Request;
 
@@ -12,44 +13,60 @@ class PaymentMandateController extends Controller
     public function customer(Request $request)
     {
         if ($request->phone != null) {
-            //customer account
-            $customer_account = CustomerAccount::where(['phone' => $request->phone])->first();
+            //customer
+            $customer = Customer::where(['phone' => $request->phone])->first();
 
-            if ($customer_account) {
-                //debit orders
-                $arr_debit_orders = [];
-                if ($customer_account->debitOrders) {
-                    foreach ($customer_account->debitOrders as $val) {
-                        $arr_debit_orders[] = [
-                            'loan_amout' => $val->total_amount,
-                            'paid_amout' => $val->paid_amount,
-                            'outstanding_amout' => $val->outstanding_amount,
-                            'debit_type' => $val->debit_type,
-                            'min_installment_amount' => $val->min_installment_amount,
-                            'max_installment_amount' => $val->max_installment_amount,
-                            'number_of_installment' => $val->installment_number,
-                            'periodicity' => $val->periodicity,
-                            'start_date' => $val->start_date,
-                            'end_date' => $val->end_date,
-                            'approved' => $val->approved,
-                            'remarks' => $val->remarks,
+            if ($customer) {
+                //customer account
+                $customer_accounts = CustomerAccount::where(['phone' => $request->phone])->get();
+
+                //declare customer accounts 
+                $arr_customer_accounts = [];
+
+                //check if customer accounts exists
+                if ($customer_accounts) {
+                    foreach ($customer_accounts as $customer_account) {
+                        //debit orders
+                        $arr_debit_orders = [];
+                        if ($customer_account->debitOrders) {
+                            foreach ($customer_account->debitOrders as $val) {
+                                $arr_debit_orders[] = [
+                                    'loan_amout' => $val->total_amount,
+                                    'paid_amout' => $val->paid_amount,
+                                    'outstanding_amout' => $val->outstanding_amount,
+                                    'debit_type' => $val->debit_type,
+                                    'min_installment_amount' => $val->min_installment_amount,
+                                    'max_installment_amount' => $val->max_installment_amount,
+                                    'number_of_installment' => $val->installment_number,
+                                    'periodicity' => $val->periodicity,
+                                    'start_date' => $val->start_date,
+                                    'end_date' => $val->end_date,
+                                    'approved' => $val->approved,
+                                    'remarks' => $val->remarks,
+                                ];
+                            }
+                        }
+
+                        //array data
+                        $arr_customer_accounts[] = [
+                            'account_type' => $customer_account->accountType->name,
+                            'account' => $customer_account->account->name,
+                            'account_name' => $customer_account->account_name,
+                            'account_number' => $customer_account->account_number,
+                            'debit_orders' => $arr_debit_orders
                         ];
                     }
                 }
 
                 //array data
                 $arr_data = [
-                    'account_type' => $customer_account->accountType->name,
-                    'account' => $customer_account->account->name,
-                    'account_name' => $customer_account->account_name,
-                    'account_number' => $customer_account->account_number,
-                    'phone' => $customer_account->phone,
-                    'NIN' => $customer_account->id_number,
-                    'email' => $customer_account->email,
-                    'address' => $customer_account->address,
-                    'status' => $customer_account->status,
-                    'remarks' => $customer_account->remarks,
-                    'debit_orders' => $arr_debit_orders
+                    'phone' => $customer->phone,
+                    'NIN' => $customer->id_number,
+                    'email' => $customer->email,
+                    'address' => $customer->address,
+                    'status' => $customer->status,
+                    'remarks' => $customer->remarks,
+                    'customer_accounts' => $arr_customer_accounts
                 ];
 
                 //response
@@ -81,54 +98,70 @@ class PaymentMandateController extends Controller
     function updateCustomerTerms(Request $request)
     {
         if ($request->phone != null && $request->consent != null) {
-            //customer account
-            $customer_account = CustomerAccount::where(['phone' => $request->phone])->first();
+            //customer
+            $customer = Customer::where(['phone' => $request->phone])->first();
 
-            if ($customer_account) {
+            if ($customer) {
                 //update status of customer
                 if ($request->consent == 1) {
-                    $customer_account->status = 'FullReg';
-                    $customer_account->remarks = 'Customer agreed terms and condition';
+                    $customer->status = 'registered';
+                    $customer->remarks = 'Customer agreed terms and condition';
                 } else if ($request->consent == 0) {
-                    $customer_account->status = 'PartialReg';
-                    $customer_account->remarks = 'Customer reject terms and condition';
+                    $customer->status = 'partial';
+                    $customer->remarks = 'Customer reject terms and condition';
                 }
-                $customer_account->save(); //save
+                $customer->save(); //save
 
-                //debit orders
-                $arr_debit_orders = [];
-                if ($customer_account->debitOrders) {
-                    foreach ($customer_account->debitOrders as $val) {
-                        $arr_debit_orders[] = [
-                            'loan_amout' => $val->total_amount,
-                            'paid_amout' => $val->paid_amount,
-                            'outstanding_amout' => $val->outstanding_amount,
-                            'debit_type' => $val->debit_type,
-                            'min_installment_amount' => $val->min_installment_amount,
-                            'max_installment_amount' => $val->max_installment_amount,
-                            'number_of_installment' => $val->installment_number,
-                            'periodicity' => $val->periodicity,
-                            'start_date' => $val->start_date,
-                            'end_date' => $val->end_date,
-                            'approved' => $val->approved,
-                            'remarks' => $val->remarks,
+                //customer account
+                $customer_accounts = CustomerAccount::where(['phone' => $request->phone])->get();
+
+                //declare customer accounts 
+                $arr_customer_accounts = [];
+
+                //check if customer accounts exists
+                if ($customer_accounts) {
+                    foreach ($customer_accounts as $customer_account) {
+                        //debit orders
+                        $arr_debit_orders = [];
+                        if ($customer_account->debitOrders) {
+                            foreach ($customer_account->debitOrders as $val) {
+                                $arr_debit_orders[] = [
+                                    'loan_amout' => $val->total_amount,
+                                    'paid_amout' => $val->paid_amount,
+                                    'outstanding_amout' => $val->outstanding_amount,
+                                    'debit_type' => $val->debit_type,
+                                    'min_installment_amount' => $val->min_installment_amount,
+                                    'max_installment_amount' => $val->max_installment_amount,
+                                    'number_of_installment' => $val->installment_number,
+                                    'periodicity' => $val->periodicity,
+                                    'start_date' => $val->start_date,
+                                    'end_date' => $val->end_date,
+                                    'approved' => $val->approved,
+                                    'remarks' => $val->remarks,
+                                ];
+                            }
+                        }
+
+                        //array data
+                        $arr_customer_accounts[] = [
+                            'account_type' => $customer_account->accountType->name,
+                            'account' => $customer_account->account->name,
+                            'account_name' => $customer_account->account_name,
+                            'account_number' => $customer_account->account_number,
+                            'debit_orders' => $arr_debit_orders
                         ];
                     }
                 }
 
                 //array data
                 $arr_data = [
-                    'account_type' => $customer_account->accountType->name,
-                    'account' => $customer_account->account->name,
-                    'account_name' => $customer_account->account_name,
-                    'account_number' => $customer_account->account_number,
-                    'phone' => $customer_account->phone,
-                    'NIN' => $customer_account->id_number,
-                    'email' => $customer_account->email,
-                    'address' => $customer_account->address,
-                    'status' => $customer_account->status,
-                    'remarks' => $customer_account->remarks,
-                    'debit_orders' => $arr_debit_orders
+                    'phone' => $customer->phone,
+                    'NIN' => $customer->id_number,
+                    'email' => $customer->email,
+                    'address' => $customer->address,
+                    'status' => $customer->status,
+                    'remarks' => $customer->remarks,
+                    'customer_accounts' => $arr_customer_accounts
                 ];
 
                 //response
@@ -144,6 +177,8 @@ class PaymentMandateController extends Controller
                     'message' => 'Customer does not exists!',
                 ];
             }
+
+            //return response
             return response()->json($response, 200);
         } else {
             $response = [
@@ -153,5 +188,20 @@ class PaymentMandateController extends Controller
 
             return response()->json($response, 404);
         }
+    }
+
+    //payment
+    function payment()
+    {
+
+        //response
+        $response = [
+            'error' => false,
+            'message' => 'Payment success',
+        ];
+
+
+        //return response
+        return response()->json($response, 200);
     }
 }
