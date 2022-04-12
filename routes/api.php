@@ -21,6 +21,6 @@ use Illuminate\Support\Facades\Route;
 
 
 Route::post('customer', [PaymentMandateController::class, 'customer']);
-Route::post('customer-info', [PaymentMandateController::class, 'customerInfo']);
+Route::post('customerInfo', [PaymentMandateController::class, 'customerInfo']);
 Route::post('customerUpdateTerms', [PaymentMandateController::class, 'updateCustomerTerms']);
 Route::post('customerPayment', [PaymentMandateController::class, 'payment']);
