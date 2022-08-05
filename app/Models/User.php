@@ -90,12 +90,11 @@ class User extends Authenticatable
     public static function rules(): array
     {
         return [
-            'first_name' => 'required|string',
-            'surname' => 'required|string',
+            'name' => 'required|string',
             'email' => 'required|string|max:255|unique:users',
             'phone' => ['required', new PhoneNumber()],
             'role_ids' => 'required',
-            'password' => 'required|string|min:8|regex:/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/',
+            'password' => 'required|string|min:8',
             'password_confirm' => 'required|same:password'
         ];
     }
@@ -104,8 +103,7 @@ class User extends Authenticatable
     public static function messages(): array
     {
         return [
-            'first_name.required' => 'First name is required',
-            'surnname.required' => 'Surname is required',
+            'name.required' => 'Fullname is required',
             'email.required' => 'Email is required',
             'email.unique' => 'Email must be unique',
             'phone.required' => 'Phone is required',

@@ -87,7 +87,7 @@
                                                     <label for="businessname">Business Name <span
                                                             class="text-danger">*</span>
                                                     </label>
-                                                    {{ Form::text('business_name', old('business_name', $company->business_name ?? ''), ['class="form-control"','placeholder="Write business name..."','required']) }}
+                                                    {{ Form::text('business_name', old('business_name', $company->business_name ?? ''), ['class="form-control"', 'placeholder="Write business name..."', 'required']) }}
                                                     <span class="text-danger"></span>
                                                 </div>
                                             </div>
@@ -106,7 +106,7 @@
                                                         $options = ['' => 'Select'] + $options;
                                                     @endphp
 
-                                                    {{ Form::select('category_id', $options, old('category_id', $company->partner_category_id ?? ''), ['class' => 'form-control','id' => 'category_id','required']) }}
+                                                    {{ Form::select('category_id', $options, old('category_id', $company->partner_category_id ?? ''), ['class' => 'form-control', 'id' => 'category_id', 'required']) }}
                                                     <span class="text-danger"></span>
                                                 </div>
                                             </div>
@@ -116,7 +116,7 @@
                                                 <div class="mb-3">
                                                     <label for="tinno">TIN Number <span
                                                             class="text-danger">*</span></label>
-                                                    {{ Form::text('tin_number', old('tin_number', $company->tin_number ?? ''), ['class="form-control input-mask"','data-inputmask' => "'mask': '999-999-999'",'placeholder="Write tin number..."','required']) }}
+                                                    {{ Form::text('tin_number', old('tin_number', $company->tin_number ?? ''), ['class="form-control input-mask"', 'data-inputmask' => "'mask': '999-999-999'", 'placeholder="Write tin number..."', 'required']) }}
                                                     <span id="tinNumberError"></span>
                                                 </div>
                                             </div>
@@ -138,7 +138,7 @@
                                                     @endforeach
 
                                                     @php $year_options = ['' => 'Select'] + $year_options; @endphp
-                                                    {{ Form::select('year_of_incorporation',$year_options,old('year_of_incorporation', $company->year_of_incorporation ?? ''),['class' => 'form-control', 'required' => '']) }}
+                                                    {{ Form::select('year_of_incorporation', $year_options, old('year_of_incorporation', $company->year_of_incorporation ?? ''), ['class' => 'form-control', 'required' => '']) }}
                                                 </div>
                                             </div>
                                             <!--./col -->
@@ -147,7 +147,7 @@
                                                 <div class="mb-3">
                                                     <label for="email">Number of Staff <span class="text-danger">*</span>
                                                     </label>
-                                                    {{ Form::number('number_of_staff', old('number_of_staff', $company->number_of_staff ?? ''), ['class="form-control"','placeholder="Write number of staff..."','min' => 1,'required']) }}
+                                                    {{ Form::number('number_of_staff', old('number_of_staff', $company->number_of_staff ?? ''), ['class="form-control"', 'placeholder="Write number of staff..."', 'min' => 1, 'required']) }}
                                                     <span class="text-danger"></span>
                                                 </div>
                                             </div>
@@ -157,7 +157,7 @@
                                                 <div class="mb-3">
                                                     <label for="email">Company Email <span class="text-danger">*</span>
                                                     </label>
-                                                    {{ Form::email('company_email', old('company_email', $company->email ?? ''), ['class="form-control"','placeholder="Write company email..."','required']) }}
+                                                    {{ Form::email('company_email', old('company_email', $company->email ?? ''), ['class="form-control"', 'placeholder="Write company email..."', 'required']) }}
                                                     <span id="companyEmailError"></span>
                                                 </div>
                                             </div>
@@ -166,7 +166,7 @@
                                             <div class="col-lg-3">
                                                 <div class="mb-3">
                                                     <label for="address">Website</label>
-                                                    {{ Form::text('company_website', old('company_website', $company->website ?? ''), ['class="form-control"','placeholder="Write company website..."']) }}
+                                                    {{ Form::text('company_website', old('company_website', $company->website ?? ''), ['class="form-control"', 'placeholder="Write company website..."']) }}
                                                 </div>
                                             </div>
                                             <!--./col -->
@@ -186,12 +186,13 @@
                                                             $options = ['' => 'Select'] + $options;
                                                         @endphp --}}
 
-                                                        {{ Form::select('country_code', $options, old('country_code', substr($company->phone ?? '', 0, 3)), ['class' => 'form-control','id' => 'country_id']) }}
+                                                        {{ Form::select('country_code', $options, old('country_code', substr($company->phone ?? '', 0, 3)), ['class' => 'form-control', 'id' => 'country_id']) }}
                                                     </div>
                                                     <!--./prepend -->
 
-                                                    {{ Form::number('company_phone', old('company_phone', substr($company->phone ?? '', 3)), ['class="form-control"','placeholder="Company phone..."']) }}
+                                                    {{ Form::number('company_phone', old('company_phone', substr($company->phone ?? '', 3)), ['class="form-control"', 'placeholder="Company phone..."']) }}
                                                 </div>
+                                                <span id="companyPhoneError"></span>
                                             </div>
                                             <!--./col -->
                                         </div>
@@ -209,7 +210,8 @@
                                         <div class="row">
                                             <div class="col-lg-3">
                                                 <div class="mb-3">
-                                                    <label for="email">Region <span class="text-danger">*</span></label>
+                                                    <label for="email">Region <span
+                                                            class="text-danger">*</span></label>
                                                     @php $options = []; @endphp
                                                     @foreach ($regions as $region)
                                                         @php
@@ -220,7 +222,7 @@
                                                         $options = ['' => 'Select'] + $options;
                                                     @endphp
 
-                                                    {{ Form::select('region_id', $options, old('region_id', $company->region_id ?? ''), ['class' => 'form-control','id' => 'region_id','required']) }}
+                                                    {{ Form::select('region_id', $options, old('region_id', $company->region_id ?? ''), ['class' => 'form-control', 'id' => 'region_id', 'required']) }}
                                                     <span class="text-danger"></span>
                                                 </div>
                                             </div>
@@ -229,7 +231,7 @@
                                             <div class="col-lg-3">
                                                 <div class="mb-3">
                                                     <label for="location">Postal Address </label>
-                                                    {{ Form::text('postal_address', old('postal_address', $company->postal_address ?? ''), ['class="form-control"','placeholder="Company postal address..."']) }}
+                                                    {{ Form::text('postal_address', old('postal_address', $company->postal_address ?? ''), ['class="form-control"', 'placeholder="Company postal address..."']) }}
                                                 </div>
                                             </div>
                                             <!--./col -->
@@ -238,7 +240,7 @@
                                                 <div class="mb-3">
                                                     <label for="address">Physical Address <span
                                                             class="text-danger">*</span></label>
-                                                    {{ Form::textarea('physical_address', old('company_address', $company->physical_address ?? ''), ['class="form-control"','placeholder="Write company physical address..."','rows' => 1,'required']) }}
+                                                    {{ Form::textarea('physical_address', old('company_address', $company->physical_address ?? ''), ['class="form-control"', 'placeholder="Write company physical address..."', 'rows' => 1, 'required']) }}
                                                     <span class="text-danger"></span>
                                                 </div>
                                             </div>
@@ -249,7 +251,8 @@
                                         <div class="row">
                                             <div class="col-md-12">
                                                 <div class="mb-3 text-sm-end d-none d-sm-block">
-                                                    <button type="reset" class="btn btn-danger text-medium ">Reset</button>
+                                                    <button type="reset"
+                                                        class="btn btn-danger text-medium ">Reset</button>
                                                     <button type="submit" id="btnSubmit" class="btn btn-primary">
                                                         Next <i class="loading-spinner fa fa-lg fa fa-spinner fa-spin"></i>
                                                     </button>
@@ -267,10 +270,10 @@
 
                         <div class="mt-2 text-center">
                             <div>
-                                <p>Already have an account ? <a href="{{ url('login') }}" class="fw-medium text-primary">
+                                <p>Already have an account ? <a href="{{ url('login') }}"
+                                        class="fw-medium text-primary">
                                         Login</a>
                                 </p>
-
                                 <p>
                                     <script>
                                         document.write(new Date().getFullYear())

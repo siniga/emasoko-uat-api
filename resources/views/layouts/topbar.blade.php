@@ -2,24 +2,24 @@
     <div class="navbar-header">
         <div class="d-flex">
             <!-- LOGO -->
-            <div class="navbar-brand-box bg-primary">
+            <div class="navbar-brand-box bg-dark-blue">
                 <a href="index" class="logo logo-dark">
-                    <span class="logo-sm text-large">
+                    <span class="logo-sm font-size-20">
                         e
                         {{-- <img src="{{ URL::asset('/assets/images/logo.svg') }}" alt="" height="22"> --}}
                     </span>
-                    <span class="logo-lg text-large">
+                    <span class="logo-lg font-size-20">
                         eMakato
                         {{-- <img src="{{ URL::asset('/assets/images/logo-dark.png') }}" alt="" height="17"> --}}
                     </span>
                 </a>
 
                 <a href="index" class="logo logo-light">
-                    <span class="logo-sm text-large text-white">
+                    <span class="logo-sm font-size-20 text-white">
                         e
                         {{-- <img src="{{ URL::asset('/assets/images/logo-light.svg') }}" alt="" height="22"> --}}
                     </span>
-                    <span class="logo-lg text-large text-white">
+                    <span class="logo-lg font-size-20 text-white">
                         eMakato
                         {{-- <img src="{{ URL::asset('/assets/images/logo-light.png') }}" alt="" height="19"> --}}
                     </span>
@@ -89,16 +89,16 @@
             <div class="dropdown-menu dropdown-menu-end">
                 <span class="dropdown-item font-weight-600">Personal Information</span>
                 <!-- item-->
-                <span class="dropdown-item" href="contacts-profile">
-                    <small><i>Name:</i></small> {{ucfirst(Auth::user()->name)}}
+                <span class="dropdown-item">
+                    {{ucfirst(Auth::user()->name)}}
                 </span>
 
-                <span class="dropdown-item" href="contacts-profile">
-                    <small><i>Email:</i></small> {{Auth::user()->email }}
+                <span class="dropdown-item">
+                    {{Auth::user()->email }}
                 </span>
 
-                <span class="dropdown-item" href="contacts-profile">
-                    <small><i>Phone:</i></small> {{Auth::user()->phone ?? 'NIL' }}
+                <span class="dropdown-item">
+                    {{Auth::user()->phone ?? '' }}
                 </span>
 
                 <div class="dropdown-divider"></div>

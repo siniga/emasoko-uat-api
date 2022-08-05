@@ -74,7 +74,7 @@ class UserController extends Controller
         $user = User::findOrFail($id);
 
         //roles
-        $roles = Role::orderBy('sequence')->get();
+        $roles = Role::all();
 
         //current roles
         $current_roles = DB::table('role_user')->where('user_id', $id)->get();
@@ -104,7 +104,7 @@ class UserController extends Controller
         //validate password
         if ($request->input('password') != null || $request->input('password') != '') {
             $this->validate($request, [
-                'password' => 'required|string|min:8|regex:/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/',
+                'password' => 'required|string|min:8',
                 'password_confirm' => 'required|string|min:8|same:password'
             ], [
                 'password.required' => 'Password is required',

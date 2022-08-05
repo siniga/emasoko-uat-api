@@ -39,65 +39,6 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 800 !important;
 }
 
-.text-lg {
-  font-size: 32px !important;
-}
-
-.text-m {
-  font-size: 24px !important;
-}
-
-.text-x {
-  font-size: 20px !important;
-}
-
-.text-xs {
-  font-size: 18px !important;
-}
-
-.text-xss {
-  font-size: 16px !important;
-}
-
-.text-xsss {
-  font-size: 12px !important;
-}
-
-/*===========================
-	Header Rules
- ==========================*/
-.header {
-  width: 100%;
-  background-color: inherit;
-}
-
-.header #top-bar {
-  width: 100%;
-}
-
-.header #top-img img {
-  padding-left: 30px;
-  padding-top: 10px;
-  height: 60px !important;
-}
-
-.header #top-content {
-  padding-top: 10px;
-}
-
-.header #top-content h1 {
-  color: #424242;
-  font-size: 24px;
-  text-align: center;
-}
-
-.header #top-content h3 {
-  color: #212121;
-  font-size: 24px;
-  padding-top: 10px;
-  text-align: center;
-  font-weight: 600;
-}
 
 /*===============================================|
 Background Color
@@ -106,6 +47,7 @@ Background Color
   background: #022859 !important;
 }
 
+
 .bg-success {
   background: #388E3C !important;
 }
@@ -113,26 +55,40 @@ Background Color
 .bg-danger {
   background: #C62828 !important;
 }
+
+.bg-light-grey {
+  background-color: #f2f5f7 !important;
+}
+
+.bg-dark-blue {
+  background-color: #0D47A1 !important;
+}
+
+.bg-dark-1 {
+  background-color: #2c3e50 !important;
+}
+
 /*===============================================|
 Button
 ================================================*/
 .btn-xss {
-  padding: .12rem .24rem;
+  padding: .10rem .24rem;
   font-size: .800rem;
-  /* line-height: 1.4; */
-  border-radius: 3px;
+  line-height: 1.4;
+  border-radius: 2px;
+  transition: all 300ms ease;
 }
 
 .btn-primary {
-  background: #022859;
-  border-color: #022859;
+  background: #0D47A1;
+  border-color: #0D47A1;
   color: #ffffff;
 }
 
 .btn-primary:hover, .btn-primary:focus, .btn-primary:active, .btn-primary.active, .open .dropdown-toggle.btn-primary {
   color: #ffffff;
-  background-color: #022859;
-  border-color: #022859;
+  background-color: #0D47A1;
+  border-color: #0D47A1;
 }
 
 .btn-primary:active, .btn-primary.active, .open .dropdown-toggle.btn-primary {
@@ -141,13 +97,13 @@ Button
 
 .btn-outline-primary {
   background: #ffffff;
-  border-color: #022859;
-  color: #022859;
+  border-color: #0D47A1;
+  color: #0D47A1;
 }
 
 .btn-outline-primary:hover, .btn-outline-primary:focus, .btn-outline-primary:active, .btn-outline-primary.active, .open .dropdown-toggle.btn-outline-primary {
-  background: #022859;
-  border-color: #022859;
+  background: #0D47A1;
+  border-color: #0D47A1;
   color: #FFFFFF;
 }
 
@@ -183,30 +139,30 @@ Button
 /*===============================================
 Tables
 ===============================================*/
-table.table {
+ table.table {
   border-collapse: collapse;
   border-spacing: 0;
-  margin: 10px 0 1em 1px;
   width: 100%;
 }
 
+
 table.table th {
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
   text-align: left;
   color: #212121;
-  padding: 10px !important;
+  /* padding: 10px !important; */
   background: #ECEFF1;
-  /* border: 1px solid #fff; */
+  border: 1px solid #FFFFFF;
 }
 
+/*
 table.table td {
   font-size: 12px;
   font-weight: 400;
   background: #FFF;
   color: #212121;
   vertical-align: middle;
-  /* border-bottom: 1px solid #E3E3E3; */
   padding: 12px !important;
 }
 
@@ -259,7 +215,7 @@ table.table>:not(:last-child)>:last-child>* {
 
 #dt tr:hover, .tr_active {
   background-color: aliceblue !important;
-}
+} */
 
 
 /*=============================================
@@ -397,7 +353,7 @@ Loader-spinner button
 /*========================================
 || 
  ========================================*/
-.wrapper-plus {
+/* .wrapper-plus {
   background: #FAFAFA;
   border: 1px solid #E0E0E0;
   border-radius: 5px;
@@ -430,4 +386,4 @@ Loader-spinner button
   padding-left: 12px;
   -ms-flex-wrap: wrap;
   flex-wrap: wrap
-}
+} */

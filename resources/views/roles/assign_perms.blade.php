@@ -5,7 +5,6 @@
 @endsection
 
 @section('content')
-
     @component('components.breadcrumb')
         @slot('li_1')
             Roles
@@ -19,57 +18,61 @@
         <div class="col-lg-12">
             <div class="card">
                 <div class="card-body">
-                    
 
-                    <div class="table-responsive">
-                        @if (isset($roles) && $roles)
-                            <table class="table table-bordered mb-0">
-                                <thead>
+                    @if (session()->get('success'))
+                        <div class="alert alert-success">
+                            {{ session()->get('success') }}
+                        </div><br />
+                    @endif
+
+                    {{ Form::open(['url' => route('roles.store-perms', $role->id), 'method' => 'POST', 'class' => 'form-horizontal']) }}
+                    {{ Form::token() }}
+
+                    @foreach ($perms as $key => $value)
+                        <div class="mt-2"></div>
+                        <h6 class="font-weight-600"> {{ $key }}</h6>
+                        <input type="hidden" name="classes[]" value="{{ $key }}">
+                        <input type="hidden" name="role_id" value="{{ $role->id }}">
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                <table>
                                     <tr>
-                                        <th width="3%">#</th>
-                                        <th width="20%">Name</th>
-                                        <th width="65%">Description</th>
-                                        <th style="width: 60px;">Actions</th>
+                                        <?php $serial = 0; ?>
+                                        @foreach ($value as $k => $v)
+                                            @if ($serial % 5 == 0)
                                     </tr>
-                                </thead>
-                                <tbody>
-                                    @php $serial = 1; @endphp
-                                    @foreach ($roles as $values)
-                                        <tr>
-                                            <td>{{ $serial }}</td>
-                                            <td>{{ $values->name }}</td>
-                                            <td>{{ $values->description }}</td>
-                                            <td>
-                                                <a href="{{ route('roles.edit', $values->id) }}" title="Edit"
-                                                    class="btn btn-default btn-sm">
-                                                    <i class="fas fa-pencil"></i>
-                                                </a>
+                                    <tr>
+                    @endif
+                    <td>
+                        <input type="checkbox" name="perms[]" value="{{ $v[1] }}"
+                            {{ in_array($v[1], $assigned_perms) ? 'checked' : '' }} />
+                        <label>{{ $v[2] }} &nbsp;&nbsp;&nbsp;</label>&nbsp;
+                    </td>
+                    <?php $serial++; ?>
+                    @endforeach
+                    </tr>
+                    </table>
+                </div><!-- ./col-sm-12 -->
+            </div><!-- ./row -->
+            @endforeach
 
-                                                <a href="{{ route('roles.assign-perms', $values->id) }}"
-                                                    title="Assign Permission" class="btn btn-secondary btn-sm">
-                                                    <i class="fas fa-user-secret"></i>
-                                                </a>
-                                            </td>
-                                        </tr>
-                                        @php $serial++; @endphp
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        @else
-                            <div class="alert alert-danger"> No any role created.</div>
-                        @endif
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="mb-3">
+                        <button type="submit" class="btn btn-primary btn-xs text-medium">Assign</button>
+                        <a href="{{ route('roles.index') }}" class="btn btn-danger btn-xs text-medium">Cancel</a>
                     </div>
                 </div>
+                <!--./col-lg-12 -->
             </div>
+            <!--./row -->
+            {{ Form::close() }}
+
+
         </div>
     </div>
+    </div>
+    </div>
     <!-- end row -->
-
-@endsection
-@section('script')
-    <!-- apexcharts -->
-    <script src="{{ URL::asset('/assets/libs/apexcharts/apexcharts.min.js') }}"></script>
-
-    <!-- dashboard init -->
-    <script src="{{ URL::asset('/assets/js/pages/dashboard.init.js') }}"></script>
 @endsection

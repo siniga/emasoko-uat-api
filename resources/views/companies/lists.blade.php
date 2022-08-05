@@ -18,18 +18,7 @@
         <div class="col-lg-12">
             <div class="card">
                 <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-9">
-
-                        </div>
-                        <!--./col-md-9 -->
-
-                        <div class="col-md-3 pull-right">
-                            <input type="text" id="myCustomSearchBox" class="form-control" placeholder="Search details...">
-                        </div>
-                        <!--./col-md-4 -->
-                    </div>
-                    <!--./row -->
+                    
 
                     <div class="table-responsive">
                         @if (isset($companies) && $companies)
@@ -67,8 +56,8 @@
                                             </td>
                                             <td>
                                                 <a href="{{ route('companies.show', $company->id) }}"
-                                                    title="View">
-                                                    <i class="bx bx-folder-open bx-border bx-xs"></i>
+                                                    title="View" class="btn btn-outline-secondary btn-xss">
+                                                    <i class="bx bx-folder-open"></i>
                                                 </a>
 
                                                 {{-- <a href="{{ route('users.change-status', $values->id) }}"

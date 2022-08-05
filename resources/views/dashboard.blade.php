@@ -15,103 +15,95 @@
     @endcomponent
 
     <div class="row">
-        <div class="col-xl-4">
-            <div class="card">
+        <div class="col-md-3">
+            <div class="card mini-stats-wid">
                 <div class="card-body">
-                    <div>
-                        <h5 class="mt-1 mb-2">{{ ucfirst(Auth::user()->name) }}</h5>
-                        <p class="text-muted mb-2">{{ Auth::user()->email }}</p>
-                        <p class="text-muted mb-4">{{ Auth::user()->phone ?? 'NIL' }}</p>
-                    </div>
+                    <h6 class="mt-1 mb-2">{{ ucfirst(Auth::user()->name) }}</h6>
+                    <p class="text-muted mb-2">{{ Auth::user()->email ?? '' }}</p>
+                    <p class="text-muted mb-4">{{ Auth::user()->phone ?? '' }}</p>
                 </div>
             </div>
         </div>
 
-        <div class="col-xl-8">
-            <div class="row">
-                <div class="col-md-4">
-                    <a href="{{ route('payment-mandate.lists', 'pending') }}">
-                        <div class="card mini-stats-wid">
-                            <div class="card-body">
-                                <div class="d-flex">
-                                    <div class="flex-grow-1">
-                                        <p class="text-muted fw-medium">Pending Mandate</p>
-                                        <h4 class="mb-4">{{ $pending[0]->count }}</h4>
+        <div class="col-md-3">
+            <a href="{{ route('payment-mandate.lists', 'pending') }}">
+                <div class="card mini-stats-wid">
+                    <div class="card-body">
+                        <div class="d-flex">
+                            <div class="flex-grow-1">
+                                <p class="text-muted fw-medium">Pending Mandate</p>
+                                <h4 class="mb-4">{{ $pending[0]->count }}</h4>
 
-                                        <h6>Value: {{ number_format($pending[0]->total_amount) }}</h6>
-                                    </div>
+                                <h6>Value: {{ number_format($pending[0]->total_amount) }}</h6>
+                            </div>
 
-                                    <div class="flex-shrink-0 align-self-center">
-                                        <div class="mini-stat-icon avatar-sm rounded-circle bg-warning">
-                                            <span class="avatar-title">
-                                                <i class="bx bx-copy-alt font-size-24"></i>
-                                            </span>
-                                        </div>
-                                    </div>
+                            <div class="flex-shrink-0 align-self-center">
+                                <div class="mini-stat-icon avatar-sm rounded-circle">
+                                    <span class="avatar-title">
+                                        <i class="bx bx-copy-alt font-size-24"></i>
+                                    </span>
                                 </div>
                             </div>
                         </div>
-                    </a>
+                    </div>
                 </div>
-                <!--./col -->
+            </a>
+        </div>
+        <!--./col -->
 
-                <div class="col-md-4">
-                    <a href="{{ route('payment-mandate.lists', 'rejected') }}">
-                        <div class="card mini-stats-wid">
-                            <div class="card-body">
-                                <div class="d-flex">
-                                    <div class="flex-grow-1">
-                                        <p class="text-muted fw-medium">Rejected Mandate</p>
-                                        <h4 class="mb-4">{{ $rejected[0]->count }}</h4>
+        <div class="col-md-3">
+            <a href="{{ route('payment-mandate.lists', 'rejected') }}">
+                <div class="card mini-stats-wid">
+                    <div class="card-body">
+                        <div class="d-flex">
+                            <div class="flex-grow-1">
+                                <p class="text-muted fw-medium">Rejected Mandate</p>
+                                <h4 class="mb-4">{{ $rejected[0]->count }}</h4>
 
-                                        <h6>Value: {{ number_format($rejected[0]->total_amount) }}</h6>
-                                    </div>
+                                <h6>Value: {{ number_format($rejected[0]->total_amount) }}</h6>
+                            </div>
 
-                                    <div class="flex-shrink-0 align-self-center">
-                                        <div class="mini-stat-icon avatar-sm rounded-circle bg-danger">
-                                            <span class="avatar-title">
-                                                <i class="bx bx-copy-alt font-size-24"></i>
-                                            </span>
-                                        </div>
-                                    </div>
+                            <div class="flex-shrink-0 align-self-center">
+                                <div class="mini-stat-icon avatar-sm rounded-circle bg-danger">
+                                    <span class="avatar-title">
+                                        <i class="bx bx-copy-alt font-size-24"></i>
+                                    </span>
                                 </div>
                             </div>
                         </div>
-                    </a>
+                    </div>
                 </div>
-                <!--./col -->
+            </a>
+        </div>
+        <!--./col -->
 
-                <div class="col-md-4">
-                    <a href="{{ route('payment-mandate.lists', 'approved') }}">
-                        <div class="card mini-stats-wid">
-                            <div class="card-body">
-                                <div class="d-flex">
-                                    <div class="flex-grow-1">
-                                        <p class="text-muted fw-medium">Approved Mandate</p>
-                                        <h4 class="mb-4">{{ $approved[0]->count }}</h4>
+        <div class="col-md-3">
+            <a href="{{ route('payment-mandate.lists', 'approved') }}">
+                <div class="card mini-stats-wid">
+                    <div class="card-body">
+                        <div class="d-flex">
+                            <div class="flex-grow-1">
+                                <p class="text-muted fw-medium">Approved Mandate</p>
+                                <h4 class="mb-4">{{ $approved[0]->count }}</h4>
 
-                                        <h6>Value: {{ number_format($approved[0]->total_amount) }}</h6>
-                                    </div>
+                                <h6>Value: {{ number_format($approved[0]->total_amount) }}</h6>
+                            </div>
 
-                                    <div class="flex-shrink-0 align-self-center">
-                                        <div class="mini-stat-icon avatar-sm rounded-circle bg-success">
-                                            <span class="avatar-title">
-                                                <i class="bx bx-copy-alt font-size-24"></i>
-                                            </span>
-                                        </div>
-                                    </div>
+                            <div class="flex-shrink-0 align-self-center">
+                                <div class="mini-stat-icon avatar-sm rounded-circle bg-success">
+                                    <span class="avatar-title">
+                                        <i class="bx bx-copy-alt font-size-24"></i>
+                                    </span>
                                 </div>
                             </div>
                         </div>
-                    </a>
+                    </div>
                 </div>
-                <!--./col -->
-            </div>
-            <!--./row -->
+            </a>
         </div>
         <!--./col -->
     </div>
-    <!-- end row -->
+    <!--./row -->
 
     <div class="row">
         <div class="col-xl-8">
@@ -261,7 +253,6 @@
                                                 <th width="12%">Account Number</th>
                                                 <th width="12%">Phone<br /><small>(Connected to Bank)</small></th>
                                                 <th width="8%">Consent Status</th>
-                                                <th style="width: 60px;">Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -292,13 +283,6 @@
                                                                 class="badge badge-pill badge-soft-danger">Rejected</span>
                                                         @endif
                                                     </td>
-
-                                                    <td>
-                                                        <a href="{{ route('payment-mandate.details', $values->customer_account_uuid) }}"
-                                                            title="View">
-                                                            <i class="bx bx-folder-open bx-border bx-xs"></i>
-                                                        </a>
-                                                    </td>
                                                 </tr>
                                                 @php $serial++; @endphp
                                             @endforeach
@@ -326,7 +310,6 @@
                                                 <th width="12%">Account Number</th>
                                                 <th width="12%">Phone<br /><small>(Connected to Bank)</small></th>
                                                 <th width="8%">Consent Status</th>
-                                                <th style="width: 60px;">Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -357,13 +340,6 @@
                                                                 class="badge badge-pill badge-soft-danger">Rejected</span>
                                                         @endif
                                                     </td>
-
-                                                    <td>
-                                                        <a href="{{ route('payment-mandate.details', $values->customer_account_uuid) }}"
-                                                            title="View">
-                                                            <i class="bx bx-folder-open bx-border bx-xs"></i>
-                                                        </a>
-                                                    </td>
                                                 </tr>
                                                 @php $serial++; @endphp
                                             @endforeach
@@ -391,7 +367,6 @@
                                                 <th width="12%">Account Number</th>
                                                 <th width="12%">Phone<br /><small>(Connected to Bank)</small></th>
                                                 <th width="8%">Consent Status</th>
-                                                <th style="width: 60px;">Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -422,13 +397,6 @@
                                                                 class="badge badge-pill badge-soft-danger">Rejected</span>
                                                         @endif
                                                     </td>
-
-                                                    <td>
-                                                        <a href="{{ route('payment-mandate.details', $values->customer_account_uuid) }}"
-                                                            title="View">
-                                                            <i class="bx bx-folder-open bx-border bx-xs"></i>
-                                                        </a>
-                                                    </td>
                                                 </tr>
                                                 @php $serial++; @endphp
                                             @endforeach
@@ -443,8 +411,6 @@
                         <!--./tab-pane -->
                     </div>
                     <!--./tab-content -->
-
-
                 </div>
             </div>
         </div>

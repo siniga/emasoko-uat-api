@@ -42,14 +42,13 @@ $.getJSON('api/dashboard/consent-value', (data) => {
 
         var options = {
             series: [{
-                name: "Approved",
-                data: arrApproved
-            },
-            {
                 name: "Pending",
                 data: arrPending
-            }
-            ],
+            },
+            {
+                name: "Approved",
+                data: arrApproved
+            }],
             chart: {
                 height: 320,
                 type: "line",
@@ -66,7 +65,7 @@ $.getJSON('api/dashboard/consent-value', (data) => {
             dataLabels: {
                 enabled: !1
             },
-            colors: ["#388E3C", "#f1b44c"],
+            colors: ["#f1b44c", "#388E3C"],
             stroke: {
                 curve: "smooth",
                 width: 3
@@ -94,11 +93,11 @@ $.getJSON('api/dashboard/consent-per-channel', (data) => {
         //charts
         var options = {
             series: [{
-                name: "Approved",
-                data: arrApproved
-            }, {
                 name: "Pending",
                 data: arrPending
+            }, {
+                name: "Approved",
+                data: arrApproved
             }],
             chart: {
                 type: 'bar',
@@ -119,8 +118,8 @@ $.getJSON('api/dashboard/consent-per-channel', (data) => {
             xaxis: {
                 categories: arrChannels,
             },
-            labels: ["Approved", "Pending"],
-            colors: ["#388E3C", "#f1b44c"],
+            labels: ["Pending", "Approved"],
+            colors: ["#f1b44c", "#388E3C"],
         };
 
         var chart = new ApexCharts(document.querySelector("#bar-chart"), options);
@@ -151,11 +150,11 @@ $('#select-month').on('change', function (e) {
             //charts
             var options = {
                 series: [{
-                    name: "Approved",
-                    data: arrApproved
-                }, {
                     name: "Pending",
                     data: arrPending
+                }, {
+                    name: "Approved",
+                    data: arrApproved
                 }],
                 chart: {
                     type: 'bar',
@@ -176,8 +175,8 @@ $('#select-month').on('change', function (e) {
                 xaxis: {
                     categories: arrChannels,
                 },
-                labels: ["Approved", "Pending"],
-                colors: ["#388E3C", "#f1b44c"],
+                labels: ["Pending", "Approved"],
+                colors: ["#f1b44c", "#388E3C"],
             };
 
             var chart = new ApexCharts(document.querySelector("#bar-chart"), options);

@@ -29,23 +29,26 @@
                         </div><br />
                     @endif
 
-                    <h5 class="text-capitalize">Company Information</h5>
-                    <hr />
+                    <div class="d-flex justify-content-between mb-2">
+                        <div>
+                            <h5 class="text-capitalize">Company Information</h5>
+                        </div>
 
-                    <div class="text-sm-end d-none d-sm-block">
-                        <a id="assess-company-information" title="Company Assessment" class="btn btn-info text-medium btn-sm"
-                            company-id="{{ $company->id }}">
-                            <span class="text-capitalize">
-                                <i class="fa fa-check"></i> Company Assessment</span>
-                        </a>&nbsp;&nbsp;
+                        <div class="text-sm-end d-none d-sm-block">
+                            <a href="#" title="Company Assessment" data-bs-toggle="modal"
+                                data-bs-target=".bs-example-modal-lg" class="btn btn-outline-primary text-medium btn-sm"
+                                company-id="{{ $company->id }}">
+                                <i class="fa fa-check"></i> Company Assessment
+                            </a>
+                        </div>
                     </div>
 
                     <table class="table table-stripped table-bordered mb-4">
-                        <tr>
+                        {{-- <tr>
                             <td colspan="4">
                                 <b>Company Information</b>
                             </td>
-                        </tr>
+                        </tr> --}}
                         <tr>
                             <th width=25%>Business Name</th>
                             <td width=25%>
@@ -86,7 +89,7 @@
 
                         <tr>
                             <td colspan="4">
-                                <b>Company Address</b>
+                                <span class="font-weight-600 font-size-12">Company Address</span>
                             </td>
                         </tr>
 
@@ -215,155 +218,53 @@
     </div>
     <!-- end row -->
 
-    <div id="offcanvas-wrp"></div>
-    <!--./offcanvas -->
-@endsection
+    <!--  Extra Large modal example -->
+    <div class="modal fade bs-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myExtraLargeModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="myExtraLargeModalLabel">Company Assessment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div
+                        class="d-flex flex-column justify-content-start flex-md-row justify-content-md-between p-2 border-bottom">
+                        <div class="align-self-center">
+                            <button type="button" id="assess-company-information"
+                                class="btn btn-outline-dark waves-effect text-medium btn-sm"
+                                company-id="{{ $company->id }}"> Company
+                                Information
+                            </button>
 
-@section('script')
-    <script type="text/javascript">
-        $(document).ready(function() {
-            //close offcanvas wrp
-            $('#offcanvas-wrp').hide();
+                            <button type="button" id="company-documents"
+                                class="btn btn-outline-dark waves-effect text-medium btn-sm"
+                                company-id="{{ $company->id }}">Company Documents
+                            </button>
 
-            //close canvas
-            $(document).on('click', '#close-offcanvas', function(event) {
-                $('#offcanvas-wrp').animate({
-                    width: "hide"
-                });
-                //reload page
-                location.reload();
-            });
+                            <button type="button" id="collection-accounts"
+                                class="btn btn-outline-dark waves-effect text-medium btn-sm"
+                                company-id="{{ $company->id }}">Collection Accounts
+                            </button>
 
-            //add rate card
-            $(document).on('click', '#assess-company-information', function(event) {
-                event.preventDefault();
+                            <button type="button" id="authorized-representative"
+                                class="btn btn-outline-dark waves-effect text-medium btn-sm"
+                                company-id="{{ $company->id }}">Authorized Representative
+                            </button>
 
-                $('#offcanvas-wrp').animate({
-                    width: "show"
-                });
+                            <button type="button" id="confirm-assessment"
+                                class="btn btn-outline-dark waves-effect text-medium btn-sm"
+                                company-id="{{ $company->id }}">Confirmation
+                            </button>
+                        </div>
+                    </div>
+                    <!--./buttons -->
 
-                //company-id
-                var companyId = $(this).attr('company-id');
 
-                //ajax request
-                var jqXHR = $.ajax({
-                    type: "GET",
-                    url: "/companies/" + companyId + "/assessment/?page=companyInformation",
-                }).done(function(data) {
-                    $('#offcanvas-wrp').html(data);
 
-                }).fail(function(jqXHR, textStatus, errorThrown) {
-                    alert('Failed to update progress');
-                    if (console && console.log) {
-                        console.log("Loading Ajax: " + textStatus + ", " + errorThrown);
-                    }
-                });
-            });
 
-            //company documents
-            $(document).on('click', '#company-documents', function(event) {
-                event.preventDefault();
-
-                $('#offcanvas-wrp').animate({
-                    width: "show"
-                });
-
-                //company-id
-                var companyId = $(this).attr('company-id');
-
-                //ajax request
-                var jqXHR = $.ajax({
-                    type: "GET",
-                    url: "/companies/" + companyId + "/assessment/?page=companyDocuments",
-                }).done(function(data) {
-                    $('#offcanvas-wrp').html(data);
-
-                }).fail(function(jqXHR, textStatus, errorThrown) {
-                    alert('Failed to update progress');
-                    if (console && console.log) {
-                        console.log("Loading Ajax: " + textStatus + ", " + errorThrown);
-                    }
-                });
-            });
-
-            //collection account assessment
-            $(document).on('click', '#collection-accounts', function(event) {
-                event.preventDefault();
-
-                $('#offcanvas-wrp').animate({
-                    width: "show"
-                });
-
-                //company-id
-                var companyId = $(this).attr('company-id');
-
-                //ajax request
-                var jqXHR = $.ajax({
-                    type: "GET",
-                    url: "/companies/" + companyId + "/assessment/?page=collectionAccount",
-                }).done(function(data) {
-                    $('#offcanvas-wrp').html(data);
-
-                }).fail(function(jqXHR, textStatus, errorThrown) {
-                    alert('Failed to update progress');
-                    if (console && console.log) {
-                        console.log("Loading Ajax: " + textStatus + ", " + errorThrown);
-                    }
-                });
-            });
-
-            //collection account assessment
-            $(document).on('click', '#authorized-representative', function(event) {
-                event.preventDefault();
-
-                $('#offcanvas-wrp').animate({
-                    width: "show"
-                });
-
-                //company-id
-                var companyId = $(this).attr('company-id');
-
-                //ajax request
-                var jqXHR = $.ajax({
-                    type: "GET",
-                    url: "/companies/" + companyId + "/assessment/?page=authorizedRespesentative",
-                }).done(function(data) {
-                    $('#offcanvas-wrp').html(data);
-
-                }).fail(function(jqXHR, textStatus, errorThrown) {
-                    alert('Failed to update progress');
-                    if (console && console.log) {
-                        console.log("Loading Ajax: " + textStatus + ", " + errorThrown);
-                    }
-                });
-            });
-
-            //confirm assessment
-            $(document).on('click', '#confirm-assessment', function(event) {
-                event.preventDefault();
-
-                $('#offcanvas-wrp').animate({
-                    width: "show"
-                });
-
-                //company-id
-                var companyId = $(this).attr('company-id');
-
-                //ajax request
-                var jqXHR = $.ajax({
-                    type: "GET",
-                    url: "/companies/" + companyId + "/assessment/?page=ConfirmAssessment",
-                }).done(function(data) {
-                    $('#offcanvas-wrp').html(data);
-
-                }).fail(function(jqXHR, textStatus, errorThrown) {
-                    alert('Failed to update progress');
-                    if (console && console.log) {
-                        console.log("Loading Ajax: " + textStatus + ", " + errorThrown);
-                    }
-                });
-            });
-
-        });
-    </script>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
 @endsection

@@ -12,10 +12,10 @@ class Perm extends Model
     public static function get_perms_all()
     {
         $classes = array();
-        $perm_classes = DB::table("perm_classes")->get();
+        $perm_classes = PermClass::all();
 
         foreach ($perm_classes as $key => $value) {
-            $methods = DB::table("perm_methods")->where("class_id", $value->id)->get();
+            $methods = PermMethod::where(['class_id' => $value->id])->get();
 
             foreach ($methods as $k => $v) {
                 $classes[$value->name][$v->name] = array($value->id, $v->id, $v->name);

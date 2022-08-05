@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Perm;
+use App\Models\PermMethod;
+use App\Models\PermRole;
 use App\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -10,7 +12,7 @@ use Illuminate\Support\Facades\Redirect;
 
 class RoleController extends Controller
 {
-        /**
+    /**
      * Create a new controller instance.
      */
     public function __construct()
@@ -73,7 +75,7 @@ class RoleController extends Controller
         //role
         $role = Role::findOrFail($id);
 
-        return view('backend.roles.edit', compact('role', 'title'));
+        return view('roles.edit', compact('role', 'title'));
     }
 
     //update user
@@ -107,6 +109,9 @@ class RoleController extends Controller
     {
         //has_allowed('roles', 'assign_perms');
 
+        //title
+        $title = 'Assign Permission';
+
         //role
         $role = Role::findOrFail($id);
 
@@ -115,18 +120,15 @@ class RoleController extends Controller
 
         //assigned perms
         $assigned_perms = [];
-        $perm_role = DB::table("perm_roles")->where('role_id', $id)->first();
+        $perm_role = PermRole::where('role_id', $id)->first();
         ($perm_role) ? $methods = explode(',', $perm_role->methods) : $methods = [];
 
         foreach ($methods as $v) {
             array_push($assigned_perms, $v);
         }
 
-        //title
-        $title = 'Assign Perms: ' . $role->name;
-
         //render view
-        return view('roles.assign_perms', compact('title'));
+        return view('roles.assign_perms', compact('title', 'role', 'perms', 'assigned_perms'));
     }
 
     //store perms
@@ -139,28 +141,17 @@ class RoleController extends Controller
             $classes = [];
             foreach ($perms as $perm) {
                 //method
-                $method = DB::table("perm_methods")->where('id', $perm)->first();
+                $method = PermMethod::where(['id' => $perm])->first();
 
                 if (!in_array($method->class_id, $classes))
                     array_push($classes, $method->class_id);
             }
 
-            //perm role
-            $perm_role = DB::table("perm_roles")->where('role_id', $role_id)->first();
-
-            if ($perm_role) {
-                $classes = join(',', $classes);
-                $methods = join(',', $perms);
-
-                //update
-                DB::table('perm_roles')
-                    ->where('role_id', $role_id)
-                    ->update(['classes' => $classes, 'methods' => $methods]);
-            } else {
-                DB::table('perm_roles')->insert(
-                    ['role_id' => $role_id, 'classes' => join(',', $classes), 'methods' => join(',', $perms)]
-                );
-            }
+            //insert or update roles
+            $perm_role = PermRole::firstOrNew(['role_id' => $role_id]);
+            $perm_role->classes = join(',', $classes);
+            $perm_role->methods = join(',', $perms);
+            $perm_role->save();
 
             return Redirect::route('roles.assign-perms', $role_id)->with('success', 'Permission updated');
         } else {

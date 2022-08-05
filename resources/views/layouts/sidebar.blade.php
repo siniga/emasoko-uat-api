@@ -1,16 +1,16 @@
 <!-- ========== Left Sidebar Start ========== -->
-<div class="vertical-menu bg-primary">
+<div class="vertical-menu bg-dark-blue">
 
     <div data-simplebar class="h-100">
         <!--- Sidemenu -->
         <div id="sidebar-menu">
             <!-- Left Menu Start -->
             <ul class="metismenu list-unstyled" id="side-menu">
-                <li class="menu-title" key="t-menu">@lang('translation.Menu')</li>
+                <li class="menu-title text-white" key="t-menu">@lang('translation.Menu')</li>
 
                 <li>
                     <a href="{{ route('dashboard') }}" class="waves-effect">
-                        <i class="bx bx-home"></i>
+                        <i class="bx bx-home text-white"></i>
                         <span key="t-dashboards">Dashboard</span>
                     </a>
                 </li>
@@ -18,7 +18,7 @@
                 @if (Auth::user()->hasRole('admin'))
                     <li>
                         <a href="{{ route('companies.index') }}" class="waves-effect">
-                            <i class="bx bx-building"></i>
+                            <i class="bx bx-building text-white"></i>
                             <span key="t-layouts">Companies</span>
 
                             @php
@@ -35,7 +35,7 @@
                 @if (!Auth::user()->hasRole('admin'))
                     <li>
                         <a href="{{ route('payment-mandate.create-account') }}" class="waves-effect">
-                            <i class="bx bx-user-plus"></i>
+                            <i class="bx bx-user-plus text-white"></i>
                             <span key="t-layouts">Create Payment Mandate</span>
                         </a>
                     </li>
@@ -43,7 +43,7 @@
 
                 <li>
                     <a href="{{ route('payment-mandate.lists') }}" class="waves-effect">
-                        <i class="bx bx-user"></i>
+                        <i class="bx bxs-wallet-alt text-white"></i>
                         <span key="t-layouts">Payment Mandate</span>
                     </a>
                 </li>
@@ -65,18 +65,42 @@
                 @endif --}}
 
                 @if (Auth::user()->hasRole('admin'))
-                    <li class="menu-title" key="t-apps">Authentication</li>
+                    <li class="menu-title text-white" key="t-apps">Setup</li>
+
+                    <li>
+                        <a href="#" class="waves-effect">
+                            <i class="bx bxs-bank text-white"></i>
+                            <span key="t-chat">Banks</span>
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="#" class="waves-effect">
+                            <i class="bx bx-copy text-white"></i>
+                            <span key="t-chat">MNOs</span>
+                        </a>
+                    </li>
+
+                    {{-- <li>
+                        <a href="#" class="waves-effect">
+                            <i class="bx bx-user-plus text-white"></i>
+                            <span key="t-chat">Debit</span>
+                        </a>
+                    </li> --}}
+
+
+                    <li class="menu-title text-white" key="t-apps">Authentication</li>
 
                     <li>
                         <a href="{{ route('users.index') }}" class="waves-effect">
-                            <i class="bx bx-user-plus"></i>
+                            <i class="bx bx-user-plus text-white"></i>
                             <span key="t-chat">Users</span>
                         </a>
                     </li>
 
                     <li>
                         <a href="{{ route('roles.index') }}" class="waves-effect">
-                            <i class="bx bx-user-pin"></i>
+                            <i class="bx bx-user-pin text-white"></i>
                             <span key="t-chat">Roles</span>
                         </a>
                     </li>

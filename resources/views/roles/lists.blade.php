@@ -19,7 +19,32 @@
         <div class="col-lg-12">
             <div class="card">
                 <div class="card-body">
-                    
+
+                    @if (session()->get('success'))
+                        <div class="alert alert-success">
+                            {{ session()->get('success') }}
+                        </div>
+                    @endif
+
+                    <div class="row mb-2">
+                        <div class="col-md-9 col-12">
+                            <div class="float-left">
+                                <a href="{{ route('roles.create') }}" class="btn btn-outline-primary btn-xs">
+                                    <i class="fa fa-plus"></i> Create New
+                                </a>
+                            </div>
+                        </div>
+                        <!--./col-md-9 -->
+    
+                        <div class="col-md-3 col-12">
+                            <div class="float-right">
+                                <input type="text" id="myCustomSearchBox" class="form-control"
+                            placeholder="Search details...">
+                            </div>
+                        </div>
+                        <!--./col-md-4 -->
+                    </div>
+                    <!--./row -->
 
                     <div class="table-responsive">
                         @if (isset($roles) && $roles)
@@ -41,13 +66,13 @@
                                             <td>{{ $values->description }}</td>
                                             <td>
                                                 <a href="{{ route('roles.edit', $values->id) }}" title="Edit"
-                                                    class="btn btn-default btn-sm">
-                                                    <i class="fas fa-pencil"></i>
+                                                    class="btn btn-outline-secondary btn-xss">
+                                                    <i class='bx bx-edit font-size-16'></i>
                                                 </a>
 
                                                 <a href="{{ route('roles.assign-perms', $values->id) }}"
-                                                    title="Assign Permission" class="btn btn-secondary btn-sm">
-                                                    <i class="fas fa-user-secret"></i>
+                                                    title="Assign Permission" class="btn btn-outline-danger btn-xss">
+                                                    <i class="bx bxs-user-pin font-size-16"></i>
                                                 </a>
                                             </td>
                                         </tr>
@@ -66,10 +91,4 @@
     <!-- end row -->
 
 @endsection
-@section('script')
-    <!-- apexcharts -->
-    <script src="{{ URL::asset('/assets/libs/apexcharts/apexcharts.min.js') }}"></script>
 
-    <!-- dashboard init -->
-    <script src="{{ URL::asset('/assets/js/pages/dashboard.init.js') }}"></script>
-@endsection
