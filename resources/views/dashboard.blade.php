@@ -16,14 +16,31 @@
 
     <div class="row">
         <div class="col-md-3">
-            <div class="card mini-stats-wid">
-                <div class="card-body">
-                    <h6 class="mt-1 mb-2">{{ ucfirst(Auth::user()->name) }}</h6>
-                    <p class="text-muted mb-2">{{ Auth::user()->email ?? '' }}</p>
-                    <p class="text-muted mb-4">{{ Auth::user()->phone ?? '' }}</p>
+            <a href="{{ route('payment-mandate.lists') }}">
+                <div class="card mini-stats-wid">
+                    <div class="card-body">
+                        <div class="d-flex">
+                            <div class="flex-grow-1">
+                                <p class="text-muted fw-medium">Payment Mandate</p>
+                                <h4 class="mb-4">{{ $total[0]->count }}</h4>
+
+                                <h6>Value: {{ number_format($total[0]->total_amount) }}</h6>
+                            </div>
+
+                            <div class="flex-shrink-0 align-self-center">
+                                <div class="mini-stat-icon avatar-sm rounded-circle">
+                                    <span class="avatar-title bg-primary">
+                                        <i class="bx bx-copy-alt font-size-24"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            </a>
         </div>
+        <!--./col -->
+
 
         <div class="col-md-3">
             <a href="{{ route('payment-mandate.lists', 'pending') }}">
@@ -39,7 +56,7 @@
 
                             <div class="flex-shrink-0 align-self-center">
                                 <div class="mini-stat-icon avatar-sm rounded-circle">
-                                    <span class="avatar-title">
+                                    <span class="avatar-title bg-warning">
                                         <i class="bx bx-copy-alt font-size-24"></i>
                                     </span>
                                 </div>
@@ -64,8 +81,8 @@
                             </div>
 
                             <div class="flex-shrink-0 align-self-center">
-                                <div class="mini-stat-icon avatar-sm rounded-circle bg-danger">
-                                    <span class="avatar-title">
+                                <div class="mini-stat-icon avatar-sm rounded-circle">
+                                    <span class="avatar-title bg-danger">
                                         <i class="bx bx-copy-alt font-size-24"></i>
                                     </span>
                                 </div>
@@ -90,8 +107,8 @@
                             </div>
 
                             <div class="flex-shrink-0 align-self-center">
-                                <div class="mini-stat-icon avatar-sm rounded-circle bg-success">
-                                    <span class="avatar-title">
+                                <div class="mini-stat-icon avatar-sm rounded-circle">
+                                    <span class="avatar-title bg-success">
                                         <i class="bx bx-copy-alt font-size-24"></i>
                                     </span>
                                 </div>
@@ -247,12 +264,12 @@
                                             <tr>
                                                 <th width="3%">#</th>
                                                 <th width="20%">Account Name</th>
-                                                <th width="16%">NIDA Number</th>
+                                                <th width="20%">NIDA Number</th>
                                                 <th width="10%">Payment Channel</th>
                                                 <th width="10%">Bank Name/MNO</th>
                                                 <th width="12%">Account Number</th>
                                                 <th width="12%">Phone<br /><small>(Connected to Bank)</small></th>
-                                                <th width="8%">Consent Status</th>
+                                                <th width="4%">Action</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -272,16 +289,10 @@
                                                     <td>{{ $values->customerAccount->phone ?? '' }}</td>
 
                                                     <td>
-                                                        @if ($values->approved == 0)
-                                                            <span
-                                                                class="badge badge-pill badge-soft-warning">Pending</span>
-                                                        @elseif($values->approved == 1)
-                                                            <span
-                                                                class="badge badge-pill badge-soft-success">Approved</span>
-                                                        @elseif($values->approved == 99)
-                                                            <span
-                                                                class="badge badge-pill badge-soft-danger">Rejected</span>
-                                                        @endif
+                                                        <a href="{{ route('payment-mandate.details', $values->customer_account_uuid) }}"
+                                                            title="View">
+                                                            <i class="bx bx-folder-open bx-border text-primary font-size-18"></i>
+                                                        </a>
                                                     </td>
                                                 </tr>
                                                 @php $serial++; @endphp

@@ -127,16 +127,16 @@
                 <div class="card-body">
                     <div class="table-responsive">
                         @if (isset($debit_orders) && count($debit_orders) > 0)
-                            <div class="row">
-                                <div class="col-lg-6">
+                            <div class="row mb-2">
+                                <div class="col-md-6">
                                     <b>Payment mandate: {{ number_format(count($debit_orders)) }}</b>
                                 </div>
 
-                                <div class="col-lg-6">
+                                <div class="col-md-6">
                                     <div class="text-sm-end d-none d-sm-block">
                                         <a title="Export" class="btn btn-outline-success btn-sm"
                                             href="{{ route('payment-mandate.export-xls', ['start_at' => $start_at,'end_at' => $end_at,'account_type_id' => $account_type_id,'account_id' => $account_id,'status' => $status,'keyword' => $keyword]) }}">
-                                            <i class="bx bx-export"></i> XLS</a>
+                                            <i class="bx bx-export"></i> Export XLS</a>
                                     </div>
                                 </div>
                             </div>
@@ -183,15 +183,15 @@
                                             <td>
                                                 <a href="{{ route('payment-mandate.details', $values->customer_account_uuid) }}"
                                                     title="View">
-                                                    <i class="bx bx-folder-open bx-border bx-xs"></i>
+                                                    <i class="bx bx-folder-open bx-border text-primary font-size-18"></i>
                                                 </a>
 
-                                                @if (!Auth::user()->hasRole('admin'))
+                                           
                                                     <a href="{{ route('payment-mandate.edit', $values->customer_account_uuid) }}"
                                                         title="Edit">
-                                                        <i class="bx bx-edit-alt bx-border bx-xs"></i>
+                                                        <i class="bx bx-edit-alt bx-border font-size-18"></i>
                                                     </a>
-                                                @endif
+                                      
                                                 {{-- <a href="#" title="Delete" class="btn btn-outline-danger btn-xss delete">
                                                     <i class="bx bx-trash"></i>
                                                 </a> --}}

@@ -40,13 +40,45 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 
+.text-faded {
+  color: rgba(255, 255, 255, .7);
+}
+
+.text-gray-800 {
+  color: #424242
+}
+
+.text-grey-700 {
+  color: #616161;
+}
+
+.text-grey-600 {
+  color: #757575;
+}
+
+.text-grey-500 {
+  color: #9E9E9E;
+}
+
+.text-primary {
+  color: #0D47A1 !important;
+}
+
+.text-secondary {
+  color: #2e2d2d !important;
+}
+
+.text-dark-blue {
+  color: #022859 !important;
+}
+
+
 /*===============================================|
 Background Color
 ================================================*/
 .bg-primary {
-  background: #022859 !important;
+  background: #0D47A1 !important;
 }
-
 
 .bg-success {
   background: #388E3C !important;
@@ -139,7 +171,7 @@ Button
 /*===============================================
 Tables
 ===============================================*/
- table.table {
+table.table {
   border-collapse: collapse;
   border-spacing: 0;
   width: 100%;

@@ -21,7 +21,8 @@
     <nav class="navbar navbar-expand-lg navigation fixed-top sticky">
         <div class="container">
             <a class="navbar-logo" href="#">
-                <span class="font-size-24 text-white">eMakato</span>
+                <span class="logo logo-dark font-size-24 text-dark">eMakato</span>
+                <span class="logo logo-light font-size-24 text-white">eMakato</span>
                 {{-- <img src="{{ URL::asset('/assets/images/logo-dark.png') }}" alt="" height="19" class="logo logo-dark">
                 <img src="{{ URL::asset('/assets/images/logo-light.png') }}" alt="" height="19" class="logo logo-light"> --}}
             </a>
@@ -37,20 +38,17 @@
                         <a class="nav-link active" href="#home">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#about">About</a>
+                        <a class="nav-link" href="#about">About eMakato</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="#features">Features</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#roadmap">Customer Journey</a>
+                        <a class="nav-link" href="#roadmap">How it works</a>
                     </li>
-                    {{-- <li class="nav-item">
-                        <a class="nav-link" href="#team">Team</a>
-                    </li> --}}
-                    {{-- <li class="nav-item">
-                        <a class="nav-link" href="#news">News</a>
-                    </li> --}}
+                    <li class="nav-item">
+                        <a class="nav-link" href="#team">Our Team</a>
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link" href="#faqs">FAQs</a>
                     </li>
@@ -72,52 +70,17 @@
             <div class="row align-items-center">
                 <div class="col-lg-8">
                     <div class="text-white-50">
-                        <h1 class="text-white fw-semibold mb-3 hero-title">eMakato - Lorem Ipsum</h1>
+                        <h1 class="text-white fw-semibold mb-3 hero-title">Start your financial future today</h1>
                         <p class="font-size-14">Lorem ipsum dolor sit amet, consectetur adipiscing elit,
                             sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
                             quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
 
                         <div class="d-flex flex-wrap gap-2 mt-4">
-                            <a href="{{ url('login') }}" class="btn btn-success">Get Started</a>
-                            <a href="#" class="btn btn-light">How it work</a>
+                            <a href="{{ url('login') }}" class="btn btn-primary">Get Started</a>
+                            <a href="#about" class="btn btn-light">How it work</a>
                         </div>
                     </div>
                 </div>
-                {{-- <div class="col-lg-5 col-md-8 col-sm-10 ms-lg-auto">
-                    <div class="card overflow-hidden mb-0 mt-5 mt-lg-0">
-                        <div class="card-header text-center">
-                            <h5 class="mb-0">ICO Countdown time</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="text-center">
-
-                                <h5>Time left to Ico :</h5>
-                                <div class="mt-4">
-                                    <div data-countdown="2021/12/31" class="counter-number ico-countdown"></div>
-                                </div>
-
-                                <div class="mt-4">
-                                    <button type="button" class="btn btn-success w-md">Get Token</button>
-                                </div>
-
-                                <div class="mt-5">
-                                    <h4 class="fw-semibold">1 ETH = 2235 SKT</h4>
-                                    <div class="clearfix mt-4">
-                                        <h5 class="float-end font-size-14">5234.43</h5>
-                                    </div>
-                                    <div class="progress p-1 progress-xl softcap-progress">
-                                        <div class="progress-bar bg-info" role="progressbar" style="width: 15%" aria-valuenow="15" aria-valuemin="0" aria-valuemax="100">
-                                            <div class="progress-label">15 %</div>
-                                        </div>
-                                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 30%" aria-valuenow="30" aria-valuemin="0" aria-valuemax="100">
-                                            <div class="progress-label">30 %</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div> --}}
             </div>
             <!-- end row -->
         </div>
@@ -131,66 +94,71 @@
             <div class="currency-price">
                 <div class="row">
                     <div class="col-md-4">
-                        <div class="card">
+                        <div class="card border">
                             <div class="card-body">
                                 <div class="d-flex">
                                     <div class="flex-shrink-0 me-3">
                                         <div class="avatar-xs">
                                             <span
-                                                class="avatar-title rounded-circle bg-warning bg-soft text-warning font-size-18">
-                                                <i class="mdi mdi-bitcoin"></i>
+                                                class="avatar-title rounded-circle bg-success text-white font-size-18">
+                                                <i class="mdi mdi-bank"></i>
                                             </span>
                                         </div>
                                     </div>
                                     <div class="flex-grow-1">
-                                        <p class="text-muted">Bitcoin</p>
-                                        <h5>$ 9134.39</h5>
-                                        <p class="text-muted text-truncate mb-0">+ 0.0012.23 ( 0.2 % ) <i
-                                                class="mdi mdi-arrow-up ms-1 text-success"></i></p>
+                                        <p class="text-muted font-size-14">Microfinances</p>
+                                        <h5>40</h5>
+                                        <p class="text-muted text-truncate mb-0">0.0012.23 ( 0.2 % ) 
+                                            <i class="mdi mdi-arrow-up ms-1 text-success"></i>
+                                        </p>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+
                     <div class="col-md-4">
-                        <div class="card">
+                        <div class="card border">
                             <div class="card-body">
                                 <div class="d-flex">
                                     <div class="flex-shrink-0 me-3">
                                         <div class="avatar-xs">
                                             <span
-                                                class="avatar-title rounded-circle bg-primary bg-soft text-primary font-size-18">
-                                                <i class="mdi mdi-ethereum"></i>
+                                                class="avatar-title rounded-circle bg-primary text-white font-size-22">
+                                                <i class="mdi mdi-bank-transfer"></i>
                                             </span>
                                         </div>
                                     </div>
                                     <div class="flex-grow-1">
-                                        <p class="text-muted">Ethereum</p>
-                                        <h5>$ 245.44</h5>
-                                        <p class="text-muted text-truncate mb-0">- 004.12 ( 0.1 % ) <i
-                                                class="mdi mdi-arrow-down ms-1 text-danger"></i></p>
+                                        <p class="text-muted font-size-14">Payment Mandate</p>
+                                        <h5>657</h5>
+                                        <p class="text-muted text-truncate mb-0"> 004.12 ( 0.1 % )
+                                            <i class="mdi mdi-arrow-up ms-1 text-success"></i>
+                                        </p>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+
                     <div class="col-md-4">
-                        <div class="card">
+                        <div class="card border">
                             <div class="card-body">
                                 <div class="d-flex">
                                     <div class="flex-shrink-0 me-3">
                                         <div class="avatar-xs">
                                             <span
-                                                class="avatar-title rounded-circle bg-info bg-soft text-info font-size-18">
-                                                <i class="mdi mdi-litecoin"></i>
+                                                class="avatar-title rounded-circle bg-info text-white font-size-18">
+                                                <i class="mdi mdi-cellphone-information"></i>
                                             </span>
                                         </div>
                                     </div>
                                     <div class="flex-grow-1">
-                                        <p class="text-muted">Litecoin</p>
-                                        <h5>$ 63.61</h5>
-                                        <p class="text-muted text-truncate mb-0">+ 0.0001.12 ( 0.1 % ) <i
-                                                class="mdi mdi-arrow-up ms-1 text-success"></i></p>
+                                        <p class="text-muted font-size-14">Partners</p>
+                                        <h5>20</h5>
+                                        <p class="text-muted text-truncate mb-0">3
+                                            <i class="mdi mdi-arrow-up ms-1 text-success"></i>
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -225,25 +193,10 @@
                              quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
                         </p>
 
-                        <div class="d-flex flex-wrap gap-2">
-                            <a href="#" class="btn btn-success">Read More</a>
-                            <a href="#" class="btn btn-outline-primary">How It work</a>
-                        </div>
-
-                        <div class="row mt-4">
-                            <div class="col-lg-4 col-6">
-                                <div class="mt-4">
-                                    <h4>2,456</h4>
-                                    <p>Shops</p>
-                                </div>
-                            </div>
-                            <div class="col-lg-4 col-6">
-                                <div class="mt-4">
-                                    <h4>1,245</h4>
-                                    <p>MFI</p>
-                                </div>
-                            </div>
-                        </div>
+                        <p>
+                            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
+                             quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                        </p>
                     </div>
                 </div>
 
@@ -413,8 +366,8 @@
             <div class="row">
                 <div class="col-lg-12">
                     <div class="text-center mb-5">
-                        <div class="small-title">Timeline</div>
-                        <h4>Customer Journey</h4>
+                        <div class="small-title"></div>
+                        <h4>How eMakato works</h4>
                     </div>
                 </div>
             </div>
@@ -427,8 +380,8 @@
                             <div class="item event-list">
                                 <div>
                                     <div class="event-date">
-                                        <div class="text-primary mb-1">December, 2019</div>
-                                        <h5 class="mb-4">ICO Platform Idea</h5>
+                                        <div class="text-primary mb-1">Step 1</div>
+                                        <h5 class="mb-4">Registration</h5>
                                     </div>
                                     <div class="event-down-icon">
                                         <i class="bx bx-down-arrow-circle h1 text-primary down-arrow-icon"></i>
@@ -444,8 +397,8 @@
                             <div class="item event-list">
                                 <div>
                                     <div class="event-date">
-                                        <div class="text-primary mb-1">January, 2020</div>
-                                        <h5 class="mb-4">Research on project</h5>
+                                        <div class="text-primary mb-1">Step 2</div>
+                                        <h5 class="mb-4">MFI verification</h5>
                                     </div>
                                     <div class="event-down-icon">
                                         <i class="bx bx-down-arrow-circle h1 text-primary down-arrow-icon"></i>
@@ -462,8 +415,8 @@
                             <div class="item event-list active">
                                 <div>
                                     <div class="event-date">
-                                        <div class="text-primary mb-1">February, 2020</div>
-                                        <h5 class="mb-4">ICO & Token Design</h5>
+                                        <div class="text-primary mb-1">Step 3</div>
+                                        <h5 class="mb-4">Step 3</h5>
                                     </div>
                                     <div class="event-down-icon">
                                         <i class="bx bx-down-arrow-circle h1 text-primary down-arrow-icon"></i>
@@ -479,8 +432,8 @@
                             <div class="item event-list">
                                 <div>
                                     <div class="event-date">
-                                        <div class="text-primary mb-1">March, 2020</div>
-                                        <h5 class="mb-4">ICO Launch Platform</h5>
+                                        <div class="text-primary mb-1">Step 4</div>
+                                        <h5 class="mb-4">Step 4</h5>
                                     </div>
                                     <div class="event-down-icon">
                                         <i class="bx bx-down-arrow-circle h1 text-primary down-arrow-icon"></i>
@@ -496,8 +449,8 @@
                             <div class="item event-list">
                                 <div>
                                     <div class="event-date">
-                                        <div class="text-primary mb-1">April, 2020</div>
-                                        <h5 class="mb-4">Token sale round 1</h5>
+                                        <div class="text-primary mb-1">Step 5</div>
+                                        <h5 class="mb-4">Step 5</h5>
                                     </div>
                                     <div class="event-down-icon">
                                         <i class="bx bx-down-arrow-circle h1 text-primary down-arrow-icon"></i>
@@ -513,8 +466,8 @@
                             <div class="item event-list">
                                 <div>
                                     <div class="event-date">
-                                        <div class="text-primary mb-1">May, 2020</div>
-                                        <h5 class="mb-4">Token sale round 2</h5>
+                                        <div class="text-primary mb-1">Step 6</div>
+                                        <h5 class="mb-4">Step 6</h5>
                                     </div>
                                     <div class="event-down-icon">
                                         <i class="bx bx-down-arrow-circle h1 text-primary down-arrow-icon"></i>
@@ -557,13 +510,13 @@
                         <div class="card text-center team-box">
                             <div class="card-body">
                                 <div>
-                                    <img src="{{ URL::asset('/assets/images/users/avatar-2.jpg') }}" alt=""
+                                    <img src="{{ URL::asset('/assets/images/users/max.jpeg') }}" alt=""
                                         class="rounded">
                                 </div>
 
                                 <div class="mt-3">
-                                    <h5>Mark Hurley</h5>
-                                    <P class="text-muted mb-0">CEO & Lead</P>
+                                    <h5>Max Gylling</h5>
+                                    <P class="text-muted mb-0">CEO - Director</P>
                                 </div>
                             </div>
                             <div class="card-footer bg-transparent border-top">
@@ -594,13 +547,13 @@
                         <div class="card text-center team-box">
                             <div class="card-body">
                                 <div>
-                                    <img src="{{ URL::asset('/assets/images/users/avatar-3.jpg') }}" alt=""
+                                    <img src="{{ URL::asset('/assets/images/users/tonny.jpeg') }}" alt=""
                                         class="rounded">
                                 </div>
 
                                 <div class="mt-3">
-                                    <h5>Calvin Smith</h5>
-                                    <P class="text-muted mb-0">Blockchain developer</P>
+                                    <h5>Tony Misokia</h5>
+                                    <P class="text-muted mb-0">Director - Business Development</P>
                                 </div>
                             </div>
                             <div class="card-footer bg-transparent border-top">
@@ -631,12 +584,12 @@
                         <div class="card text-center team-box">
                             <div class="card-body">
                                 <div>
-                                    <img src="{{ URL::asset('/assets/images/users/avatar-8.jpg') }}" alt=""
+                                    <img src="{{ URL::asset('/assets/images/users/avatar99.png') }}" alt=""
                                         class="rounded">
                                 </div>
                                 <div class="mt-3">
-                                    <h5>Vickie Sample</h5>
-                                    <P class="text-muted mb-0">Designer</P>
+                                    <h5>NN</h5>
+                                    <P class="text-muted mb-0">Software Developer</P>
                                 </div>
                             </div>
                             <div class="card-footer bg-transparent border-top">
@@ -667,13 +620,13 @@
                         <div class="card text-center team-box">
                             <div class="card-body">
                                 <div>
-                                    <img src="{{ URL::asset('/assets/images/users/avatar-5.jpg') }}" alt=""
+                                    <img src="{{ URL::asset('/assets/images/users/avatar99.png') }}" alt=""
                                         class="rounded">
                                 </div>
 
                                 <div class="mt-3">
-                                    <h5>Alma Farley</h5>
-                                    <P class="text-muted mb-0">App developer</P>
+                                    <h5>LL</h5>
+                                    <P class="text-muted mb-0">App Developer</P>
                                 </div>
                             </div>
                             <div class="card-footer bg-transparent border-top">
@@ -1103,28 +1056,21 @@
     <!-- Footer start -->
     <footer class="landing-footer">
         <div class="container">
-
-            {{-- <div class="row">
+            <div class="row">
                 <div class="col-lg-3 col-sm-6">
                     <div class="mb-4 mb-lg-0">
-                        <h5 class="mb-3 footer-list-title">Company</h5>
-                        <ul class="list-unstyled footer-list-menu">
-                            <li><a href="#">About Us</a></li>
-                            <li><a href="#">Features</a></li>
-                            <li><a href="#">Team</a></li>
-                            <li><a href="#">News</a></li>
-                            <li><a href="#">FAQs</a></li>
-                        </ul>
+                        <h5 class="mb-3 footer-list-title">About eMakato</h5>
+                        <p></p>
                     </div>
                 </div>
                 <div class="col-lg-3 col-sm-6">
                     <div class="mb-4 mb-lg-0">
                         <h5 class="mb-3 footer-list-title">Resources</h5>
                         <ul class="list-unstyled footer-list-menu">
-                            <li><a href="#">Whitepaper</a></li>
-                            <li><a href="#">Token sales</a></li>
                             <li><a href="#">Privacy Policy</a></li>
                             <li><a href="#">Terms & Conditions</a></li>
+                            <li><a href="#">FAQs</a></li>
+                            <li><a href="#">Support</a></li>
                         </ul>
                     </div>
                 </div>
@@ -1132,47 +1078,35 @@
                     <div class="mb-4 mb-lg-0">
                         <h5 class="mb-3 footer-list-title">Links</h5>
                         <ul class="list-unstyled footer-list-menu">
-                            <li><a href="#">Tokens</a></li>
+                            {{-- <li><a href="#">Tokens</a></li>
                             <li><a href="#">Roadmap</a></li>
-                            <li><a href="#">FAQs</a></li>
+                            <li><a href="#">FAQs</a></li> --}}
                         </ul>
                     </div>
                 </div>
 
                 <div class="col-lg-3 col-sm-6">
                     <div class="mb-4 mb-lg-0">
-                        <h5 class="mb-3 footer-list-title">Latest News</h5>
-                        <div class="blog-post">
-                            <a href="#" class="post">
-                                <div class="badge badge-soft-success font-size-11 mb-3">Cryptocurrency</div>
-                                <h5 class="post-title">Donec pede justo aliquet nec</h5>
-                                <p class="mb-0"><i class="bx bx-calendar me-1"></i> 04 Mar, 2020</p>
-                            </a>
-                            <a href="#" class="post">
-                                <div class="badge badge-soft-success font-size-11 mb-3">Cryptocurrency</div>
-                                <h5 class="post-title">In turpis, Pellentesque</h5>
-                                <p class="mb-0"><i class="bx bx-calendar me-1"></i> 12 Mar, 2020</p>
-                            </a>
-
-                        </div>
+                        <h5 class="mb-3 footer-list-title">Contacts</h5>
+                        
                     </div>
                 </div>
             </div>
-            <!-- end row --> --}}
+            <!-- end row -->
 
-            {{-- <hr class="footer-border my-5"> --}}
+            <hr class="footer-border my-2">
 
             <div class="row">
                 <div class="col-lg-6">
                     <div class="mb-4">
-                        eMakato
                         {{-- <img src="{{ URL::asset('/assets/images/logo-light.png') }}" alt="" height="20"> --}}
                     </div>
 
-                    <p class="mb-2">
+                    <p class="mb-2 text-white">
+                        Copyright
                         <script>
                             document.write(new Date().getFullYear())
-                        </script>eMakato. All rights reserved.
+                        </script>  © eMakato. All rights reserved.
                     </p>
                 </div>
 

@@ -26,6 +26,9 @@ class DashboardController extends Controller
         //debit order
         $debit_orders = DebitOrder::where_cond();
 
+        //total mandate
+        $total = $debit_orders->select(DB::raw('SUM(total_amount) as total_amount'), DB::raw('COUNT(id) as count'))->get();
+
         //pending debit orders
         $pending = $debit_orders->select(DB::raw('SUM(total_amount) as total_amount'), DB::raw('COUNT(id) as count'))
             ->where(['approved' => 0])->get();
@@ -48,6 +51,6 @@ class DashboardController extends Controller
         $rejected_debit_orders = DebitOrder::where_cond()->where(['approved' => 99])->get();
 
         //render view
-        return view('dashboard', compact('title', 'pending', 'approved', 'rejected', 'pending_debit_orders', 'approved_debit_orders', 'rejected_debit_orders'));
+        return view('dashboard', compact('title', 'total', 'pending', 'approved', 'rejected', 'pending_debit_orders', 'approved_debit_orders', 'rejected_debit_orders'));
     }
 }
