@@ -1,40 +1,6 @@
-<div class="d-flex flex-column justify-content-start flex-md-row justify-content-md-between p-2 border-bottom">
-    <div class="align-self-center">
-        <button type="button" id="assess-company-information"
-            class="btn btn-outline-dark waves-effect text-medium btn-sm" company-id="{{ $company->id }}"> Company
-            Information
-        </button>
-
-        <button type="button" id="company-documents" class="btn btn-outline-dark waves-effect text-medium btn-sm"
-            company-id="{{ $company->id }}">Company Documents
-        </button>
-
-        <button type="button" id="collection-accounts" class="btn btn-info waves-effect text-medium btn-sm"
-            company-id="{{ $company->id }}">Collection Accounts
-        </button>
-
-        <button type="button" id="authorized-representative" class="btn btn-outline-dark waves-effect text-medium btn-sm"
-            company-id="{{ $company->id }}">Authorized Representative
-        </button>
-
-        <button type="button" id="confirm-assessment" class="btn btn-outline-dark waves-effect text-medium btn-sm"
-            company-id="{{ $company->id }}">Confirmation
-        </button>
-    </div>
-
-    <div class="align-self-center">
-        <button type="button" class="btn btn-outline-danger waves-effect text-medium btn-sm" id="close-offcanvas"><i
-                class="bx bx-right-arrow-alt"></i></button>
-    </div>
-</div>
-<!--./buttons -->
-
-
-<div class="d-flex flex-column justify-content-start mt-4">
-    <h5 class="text-uppercase">Company Assessment</h5>
-
+<div class="d-flex flex-column justify-content-start">
     @if ($company->partnerAccounts->isNotEmpty())
-        <table class="table table-nowrap align-middle table-bordered mb-4">
+        <table class="table table-bordered mb-4">
             <thead>
                 <tr>
                     <th width="3%">#</th>
@@ -83,12 +49,13 @@
             {{ Form::textarea('remarks', old('remarks', $company->partnerApprovals[2]->remarks), ['class="form-control"','placeholder="Enter remarks here..."','rows="2"']) }}
         </div>
 
-        @if ($company->status != 3)
+        @if ($company->partnerApprovals[2]->status != 'approved')
             <div class="mb-3 text-sm-end d-none d-sm-block">
+                <button type='reset' class="btn btn-outline-danger text-medium">Reset</button>
+                
                 <button type='submit' id="btnSubmit" class="btn btn-primary text-medium">
                     Submit <i class="loading-spinner fa fa-lg fa fa-spinner fa-spin"></i>
                 </button>
-                <button type='reset' class="btn btn-danger text-medium">Reset</button>
             </div>
         @endif
     </form>

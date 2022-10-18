@@ -2,6 +2,7 @@
 
 namespace App\Classes;
 
+use App\Jobs\SendEmailJob;
 use App\Models\Partner;
 use App\Models\PartnerApproval;
 use App\Models\PartnerUser;
@@ -61,22 +62,19 @@ class CompanyAssessment
 
             //todo: register ALL authorized users
 
-
             //send email to company email
             //construct message
             $message = "Company registration has been approved by eMakato.";
             $message .= "<br/>You can start using your eMakato account now. Login to your account by <a href=" . url('login') . ">click here.</a>";
 
-            //send email
-            // Mail::send(
-            //     ['html' => 'emails.template'],
-            //     ['name' => $user->name, 'body' => $message],
-            //     function ($message) use ($user) {
-            //         $message->to($user->email);
-            //         $message->subject('Company Assessment Approval');
-            //         $message->from('renfridfrancis@gmail.com', 'eMakato');
-            //     }
-            // );
+            $data = [
+                "email" => $company->email,
+                "name" => $company->business_name,
+                "subject" => "Company Assessment Approval",
+                "body" => $message
+            ];
+            dispatch(new SendEmailJob($data));
+
             return true;
         }
     }

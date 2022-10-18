@@ -46,7 +46,9 @@
                                             <td>{{ $company->year_of_incorporation }}</td>
                                             <td>{{ $company->region->name ?? '' }}</td>
                                             <td>
-                                                @if ($company->status == 1)
+                                                @if ($company->status == 0)
+                                                    <span class="badge bg-warning">Registration Process</span>
+                                                @elseif ($company->status == 1)
                                                     <span class="badge bg-info">Completed Registration</span>
                                                 @elseif($company->status == 2)
                                                     <span class="badge bg-info">Assessment Process</span>
@@ -56,7 +58,7 @@
                                             </td>
                                             <td>
                                                 <a href="{{ route('companies.show', $company->id) }}"
-                                                    title="View" class="btn btn-outline-secondary btn-xss">
+                                                    title="View" class="btn btn-xss">
                                                     <i class="bx bx-folder-open"></i>
                                                 </a>
 

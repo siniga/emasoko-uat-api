@@ -39,16 +39,15 @@
                                 data-bs-target=".bs-example-modal-lg" class="btn btn-outline-primary text-medium btn-sm"
                                 company-id="{{ $company->id }}">
                                 <i class="fa fa-check"></i> Company Assessment
-                            </a>
+                            </a>&nbsp;
+
+                            @if ($company_info_approval->status == 'approved')
+                                <button class="btn btn-success btn-sm">Pass <i class="fa fa-check"></i></button>
+                            @endif
                         </div>
                     </div>
 
                     <table class="table table-stripped table-bordered mb-4">
-                        {{-- <tr>
-                            <td colspan="4">
-                                <b>Company Information</b>
-                            </td>
-                        </tr> --}}
                         <tr>
                             <th width=25%>Business Name</th>
                             <td width=25%>
@@ -77,7 +76,9 @@
 
                             <th>Status</th>
                             <td colspan="3">
-                                @if ($company->status == 1)
+                                @if ($company->status == 0)
+                                    <span class="badge bg-warning">Registration Process</span>
+                                @elseif ($company->status == 1)
                                     <span class="badge bg-info">Completed Registration</span>
                                 @elseif($company->status == 2)
                                     <span class="badge bg-info">Assessment Process</span>
@@ -91,6 +92,7 @@
                             <td colspan="4">
                                 <span class="font-weight-600 font-size-12">Company Address</span>
                             </td>
+
                         </tr>
 
                         <tr>
@@ -110,8 +112,17 @@
                         </tr>
                     </table>
 
-                    <h5 class="text-capitalize">Company Documents</h5>
-                    <hr />
+                    <div class="d-flex justify-content-between mb-2">
+                        <div>
+                            <h5 class="text-capitalize">Company Documents</h5>
+                        </div>
+
+                        <div class="text-sm-end d-none d-sm-block">
+                            @if ($company_docs_approval->status == 'approved')
+                                <button class="btn btn-success btn-sm">Pass <i class="fa fa-check"></i></button>
+                            @endif
+                        </div>
+                    </div>
 
                     @if ($company->partnerDocuments->isNotEmpty())
                         <table class="table table-nowrap align-middle table-bordered mb-4">
@@ -144,8 +155,17 @@
                         <div class="alert">No any document at the moment!</div>
                     @endif
 
-                    <h5 class="text-capitalize">Company Collection Accounts</h5>
-                    <hr />
+                    <div class="d-flex justify-content-between mb-2">
+                        <div>
+                            <h5 class="text-capitalize">Company Collection Accounts</h5>
+                        </div>
+
+                        <div class="text-sm-end d-none d-sm-block">
+                            @if ($company_accounts_approval->status == 'approved')
+                                <button class="btn btn-success btn-sm">Pass <i class="fa fa-check"></i></button>
+                            @endif
+                        </div>
+                    </div>
 
                     @if ($company->partnerAccounts->isNotEmpty())
                         <table class="table table-nowrap align-middle table-bordered mb-4">
@@ -176,8 +196,17 @@
                         <div class="alert">No any collection account at the moment!</div>
                     @endif
 
-                    <h5 class="text-capitalize">Company Authorized Representative</h5>
-                    <hr />
+                    <div class="d-flex justify-content-between mb-2">
+                        <div>
+                            <h5 class="text-capitalize">Company Authorized Representative</h5>
+                        </div>
+
+                        <div class="text-sm-end d-none d-sm-block">
+                            @if ($company_staff_approval->status == 'approved')
+                                <button class="btn btn-success btn-sm">Pass <i class="fa fa-check"></i></button>
+                            @endif
+                        </div>
+                    </div>
 
                     @if ($company->partnerStaff->isNotEmpty())
                         <table class="table table-nowrap align-middle table-bordered">
@@ -232,39 +261,147 @@
                         class="d-flex flex-column justify-content-start flex-md-row justify-content-md-between p-2 border-bottom">
                         <div class="align-self-center">
                             <button type="button" id="assess-company-information"
-                                class="btn btn-outline-dark waves-effect text-medium btn-sm"
+                                class="btn @if ($company_info_approval->status == 'approved') btn-success @else btn-outline-dark @endif waves-effect text-medium btn-sm"
                                 company-id="{{ $company->id }}"> Company
                                 Information
                             </button>
 
                             <button type="button" id="company-documents"
-                                class="btn btn-outline-dark waves-effect text-medium btn-sm"
+                                class="btn @if ($company_docs_approval->status == 'approved') btn-success @else btn-outline-dark @endif waves-effect text-medium btn-sm"
                                 company-id="{{ $company->id }}">Company Documents
                             </button>
 
                             <button type="button" id="collection-accounts"
-                                class="btn btn-outline-dark waves-effect text-medium btn-sm"
+                                class="btn @if ($company_accounts_approval->status == 'approved') btn-success @else btn-outline-dark @endif waves-effect text-medium btn-sm"
                                 company-id="{{ $company->id }}">Collection Accounts
                             </button>
 
                             <button type="button" id="authorized-representative"
-                                class="btn btn-outline-dark waves-effect text-medium btn-sm"
+                                class="btn @if ($company_staff_approval->status == 'approved') btn-success @else btn-outline-dark @endif waves-effect text-medium btn-sm"
                                 company-id="{{ $company->id }}">Authorized Representative
                             </button>
 
                             <button type="button" id="confirm-assessment"
-                                class="btn btn-outline-dark waves-effect text-medium btn-sm"
+                                class="btn @if ($company->status == 3) btn-success @else btn-outline-dark @endif waves-effect text-medium btn-sm"
                                 company-id="{{ $company->id }}">Confirmation
                             </button>
                         </div>
                     </div>
                     <!--./buttons -->
 
-
-
-
+                    <div class="mt-2" id="modal-contents"></div>
                 </div>
             </div><!-- /.modal-content -->
         </div><!-- /.modal-dialog -->
     </div><!-- /.modal -->
+@endsection
+
+@section('script')
+    <script type="text/javascript">
+        $(document).ready(function() {
+            //company information assessment without click
+
+            //company information assessment
+            $('#assess-company-information').on("click", function(e) {
+                e.preventDefault();
+
+                //company-id
+                var companyId = $(this).attr('company-id');
+
+                //ajax request
+                var jqXHR = $.ajax({
+                    type: "GET",
+                    url: "/companies/" + companyId + "/assessment/?page=companyInformation",
+                }).done(function(data) {
+                    $('#modal-contents').html(data);
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+                    alert('Failed to update progress');
+                    if (console && console.log) {
+                        console.log("Loading Ajax: " + textStatus + ", " + errorThrown);
+                    }
+                });
+            });
+
+            //company documents
+            $('#company-documents').on("click", function(e) {
+                e.preventDefault();
+
+                //company-id
+                var companyId = $(this).attr('company-id');
+                //ajax request
+                var jqXHR = $.ajax({
+                    type: "GET",
+                    url: "/companies/" + companyId + "/assessment/?page=companyDocuments",
+                }).done(function(data) {
+                    $('#modal-contents').html(data);
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+                    alert('Failed to update progress');
+                    if (console && console.log) {
+                        console.log("Loading Ajax: " + textStatus + ", " + errorThrown);
+                    }
+                });
+
+            });
+
+            //collection accounts
+            $('#collection-accounts').on("click", function(e) {
+                e.preventDefault();
+
+                //company-id
+                var companyId = $(this).attr('company-id');
+                //ajax request
+                var jqXHR = $.ajax({
+                    type: "GET",
+                    url: "/companies/" + companyId + "/assessment/?page=collectionAccount",
+                }).done(function(data) {
+                    $('#modal-contents').html(data);
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+                    alert('Failed to update progress');
+                    if (console && console.log) {
+                        console.log("Loading Ajax: " + textStatus + ", " + errorThrown);
+                    }
+                });
+            });
+
+            //authorized personnels
+            $('#authorized-representative').on("click", function(e) {
+                e.preventDefault();
+
+                //company-id
+                var companyId = $(this).attr('company-id');
+                //ajax request
+                var jqXHR = $.ajax({
+                    type: "GET",
+                    url: "/companies/" + companyId + "/assessment/?page=authorizedRespesentative",
+                }).done(function(data) {
+                    $('#modal-contents').html(data);
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+                    alert('Failed to update progress');
+                    if (console && console.log) {
+                        console.log("Loading Ajax: " + textStatus + ", " + errorThrown);
+                    }
+                });
+            });
+
+            //confirmation
+            $('#confirm-assessment').on("click", function(e) {
+                e.preventDefault();
+
+                //company-id
+                var companyId = $(this).attr('company-id');
+                //ajax request
+                var jqXHR = $.ajax({
+                    type: "GET",
+                    url: "/companies/" + companyId + "/assessment/?page=ConfirmAssessment",
+                }).done(function(data) {
+                    $('#modal-contents').html(data);
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+                    alert('Failed to update progress');
+                    if (console && console.log) {
+                        console.log("Loading Ajax: " + textStatus + ", " + errorThrown);
+                    }
+                });
+            });
+        });
+    </script>
 @endsection

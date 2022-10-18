@@ -1,6 +1,5 @@
-Dear <strong>{{ $name }}</strong>,
-<p>{!! $body !!}</p>
-
+Dear <strong>{{ $data['name'] }}</strong>,
+<p>{!! $data['body'] !!}</p>
 
 <p>If any of the above link is not clickable, please copy the whole link and
     paste it in your browser.

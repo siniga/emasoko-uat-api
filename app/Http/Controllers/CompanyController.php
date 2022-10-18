@@ -69,19 +69,20 @@ class CompanyController extends Controller
         //company
         $company = Partner::findOrFail($id);
 
-        //routes
-        // $action = "";
-        // $route = 'companies.show';
-        // if ($company->status == 1) {
-        //     $action = "Verify Company";
-        //     $route = 'companies.verify';
-        // } else if ($company->status == 2) {
-        //     $action = "Approve Company";
-        //     $route = 'companies.approve';
-        // }
+        //company information  approval
+        $company_info_approval = PartnerApproval::where(['partner_id' => $company->id, 'key' => 'Company_Information'])->first();
+
+        //company documents
+        $company_docs_approval = PartnerApproval::where(['partner_id' => $company->id, 'key' => 'Company_Documents'])->first();
+
+        //collection accounts
+        $company_accounts_approval = PartnerApproval::where(['partner_id' => $company->id, 'key' => 'Company_Collection_Accounts'])->first();
+
+        //authorized personnels
+        $company_staff_approval = PartnerApproval::where(['partner_id' => $company->id, 'key' => 'Company_Authorized_Representative'])->first();
 
         //render view
-        return view('companies.show', compact('title', 'company'));
+        return view('companies.show', compact('title', 'company', 'company_info_approval', 'company_docs_approval', 'company_accounts_approval', 'company_staff_approval'));
     }
 
     /**
@@ -155,6 +156,8 @@ class CompanyController extends Controller
 
         //company
         $company = Partner::findOrFail($company_id);
+        $company->status = 2;
+        $company->save();
 
         //update partner approval
         $partner_approval = PartnerApproval::where(['partner_id' => $company->id, 'key' => $key])->first();

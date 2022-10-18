@@ -1,38 +1,4 @@
-<div class="d-flex flex-column justify-content-start flex-md-row justify-content-md-between p-2 border-bottom">
-    <div class="align-self-center">
-        <button type="button" id="assess-company-information"
-            class="btn btn-outline-dark waves-effect text-medium btn-sm" company-id="{{ $company->id }}"> Company
-            Information
-        </button>
-
-        <button type="button" id="company-documents" class="btn btn-outline-dark waves-effect text-medium btn-sm"
-            company-id="{{ $company->id }}">Company Documents
-        </button>
-
-        <button type="button" id="collection-accounts" class="btn btn-outline-dark waves-effect text-medium btn-sm"
-            company-id="{{ $company->id }}">Collection Accounts
-        </button>
-
-        <button type="button" id="authorized-representative" class="btn btn-outline-dark waves-effect text-medium btn-sm"
-            company-id="{{ $company->id }}">Authorized Representative
-        </button>
-
-        <button type="button" id="confirm-assessment" class="btn btn-info waves-effect text-medium btn-sm"
-            company-id="{{ $company->id }}">Confirmation
-        </button>
-    </div>
-
-    <div class="align-self-center">
-        <button type="button" class="btn btn-outline-danger waves-effect text-medium btn-sm" id="close-offcanvas"><i
-                class="bx bx-right-arrow-alt"></i></button>
-    </div>
-</div>
-<!--./buttons -->
-
-
-<div class="d-flex flex-column justify-content-start mt-4">
-    <h5 class="text-uppercase">Confirm Company Assessment</h5>
-
+<div class="d-flex flex-column justify-content-start">
     <div id="output" class="alert alert-success" style="display: none;"></div>
 
     <form id="myform" role="form" autocomplete="off">
@@ -58,6 +24,10 @@
                 </thead>
 
                 <tbody>
+                    @php
+                        $serial = 0;
+                    @endphp
+
                     @foreach ($company->partnerApprovals as $val)
                         <tr>
                             <td>{{ $loop->iteration }}</td>
@@ -72,17 +42,24 @@
                                 @endif
                             </td>
                         </tr>
+                        @if ($val->status == 'approved')
+                            @php
+                                $serial++;
+                            @endphp
+                        @endif
                     @endforeach
                 </tbody>
-            </table>
+            </table> 
         </div>
 
-        <div class="mb-3 text-sm-end d-none d-sm-block">
-            <button type='submit' id="btnSubmit" class="btn btn-primary text-medium">
-                Confirm <i class="loading-spinner fa fa-lg fa fa-spinner fa-spin"></i>
-            </button>
-            <button type='reset' class="btn btn-danger text-medium">Reset</button>
-        </div>
+        @if ($serial == 4 && $company->status != 3)
+            <div class="mb-3 text-sm-end d-none d-sm-block">
+                <button type='reset' class="btn btn-outline-danger text-medium">Reset</button>
+                <button type='submit' id="btnSubmit" class="btn btn-primary text-medium">
+                    Confirm <i class="loading-spinner fa fa-lg fa fa-spinner fa-spin"></i>
+                </button>
+            </div>
+        @endif
     </form>
 </div>
 <!--./flex -->
