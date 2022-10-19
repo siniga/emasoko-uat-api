@@ -49,7 +49,7 @@ return [
 
     'channels' => [
         'stack' => [
-            'driver' => 'daily',
+            'driver' => 'stack',
             'channels' => ['daily'],
             'ignore_exceptions' => false,
         ],

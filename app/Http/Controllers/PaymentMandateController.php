@@ -127,14 +127,14 @@ class PaymentMandateController extends Controller
     }
 
     //payment details form
-    function accountDetailsForm($uuid = null)
+    function accountDetailsForm($id = null)
     {
         $title = "Payment Mandate";
 
         //if uuid =! null
         $customer_account = [];
-        if ($uuid != null)
-            $customer_account = CustomerAccount::where(['uuid' => $uuid])->firstOrFail();
+        if ($id != null)
+            $customer_account = CustomerAccount::findOrFail($id);
 
         //populate data
         $account_types = AccountType::all();
@@ -151,10 +151,20 @@ class PaymentMandateController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'phone' => ['required', new PhoneNumber()]
+                'account_type_id' => 'required',
+                'account_id' => 'required',
+                'account_name' => 'required_if:account_type_id,1',
+                'account_number' => 'required_if:account_type_id,1',
+                'phone' => new PhoneNumber(),
+                'account_number_phone' => new PhoneNumber(),
             ],
             [
-                'phone.required' => 'Phone number required',
+                'account_type_id.required' => 'Payment channel required',
+                'account_id.required' => 'Bank/MNO name required',
+                'account_name.required_if' => 'Name of account holder required',
+                'account_number.required_if' => 'Account number required',
+                'phone.required_if' => 'Phone connected to bank required',
+                'account_number_phone.required_if' => 'MNO Phone required',
             ]
         );
 
@@ -172,9 +182,16 @@ class PaymentMandateController extends Controller
         else
             $uuid = Str::uuid();
 
+        //unique number 
+        if ($request->input('account_type_id') == 1) {
+            $unique_phone =casting_phone($request->input('phone'));
+        } else if ($request->input('account_type_id') == 2) {
+            $unique_phone =  casting_phone($request->input('account_number_phone'));
+        }
+
         //register customer
         $customer = Customer::firstOrNew([
-            'phone' => casting_phone($request->input('phone'))
+            'phone' => $unique_phone
         ]);
         $customer->fullname = strtoupper($request->input('account_name'));
         $customer->email = $request->input('email');
@@ -187,29 +204,29 @@ class PaymentMandateController extends Controller
         $customer_account = CustomerAccount::firstOrNew([
             'account_type_id' => $request->input('account_type_id'),
             'account_id' => $request->input('account_id'),
-            'account_number' => $request->input('account_number'),
-            'account_name' => strtoupper($request->input('account_name')),
-            'phone' => casting_phone($request->input('phone'))
+            'phone' => $unique_phone,
         ]);
-        $customer_account->customer_id = $customer->id;
         $customer_account->uuid = $uuid;
+        $customer_account->account_name = strtoupper($request->input('account_name'));
+        $customer_account->account_number = $request->input('account_number');
+        $customer_account->customer_id = $customer->id;
         $customer_account->created_by = Auth::user()->id;
         $customer_account->save();
 
         //response
-        return response()->json(['success' => true, 'uuid' => $uuid], 200);
+        return response()->json(['success' => true, 'uuid' => $customer_account->id, "success_msg" => "Customer deduction channel saved!"], 200);
     }
 
     //deduction details
-    function deductionDetailsForm($uuid)
+    function deductionDetailsForm($id)
     {
         $title = "Payment Mandate";
 
         //customer account
-        $customer_account = CustomerAccount::where(['uuid' => $uuid])->firstOrFail();
+        $customer_account = CustomerAccount::where(['id' => $id])->firstOrFail();
 
         //debit order
-        $debit_order = DebitOrder::where(['customer_account_id' => $customer_account->id, 'customer_account_uuid' => $uuid])->first();
+        $debit_order = DebitOrder::where(['customer_account_id' => $customer_account->id, 'customer_account_uuid' => $id])->first();
 
         //render view
         return view('payment_mandate.deduction_details_form', compact('title', 'customer_account', 'debit_order'));

@@ -118,7 +118,7 @@ Route::any('payment-mandate/lists/{consent?}', [PaymentMandateController::class,
 Route::get('payment-mandate/export-xls', [PaymentMandateController::class, 'exportXLS'])->name('payment-mandate.export-xls');
 
 //account details
-Route::get('payment-mandate/create-account/{uuid?}', [PaymentMandateController::class, 'accountDetailsForm'])->name('payment-mandate.create-account');
+Route::get('payment-mandate/create-account/{id?}', [PaymentMandateController::class, 'accountDetailsForm'])->name('payment-mandate.create-account');
 Route::post('payment-mandate/store-account', [PaymentMandateController::class, 'storeAccountDetails'])->name('payment-mandate.store-account-details');
 
 //deduction details

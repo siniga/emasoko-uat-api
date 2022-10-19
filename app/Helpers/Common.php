@@ -39,6 +39,17 @@ if (!function_exists('casting_phone')) {
     }
 }
 
+if (!function_exists('reverse_casting_phone')) {
+    function reverse_casting_phone($phone)
+    {
+        if (preg_match("~^255\d+$~", $phone)) {
+            return '0' . substr($phone, 3);
+        } else {
+            return $phone;
+        }
+    }
+}
+
 
 
 //complete registration notification

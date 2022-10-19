@@ -25,7 +25,10 @@ class PhoneNumber implements Rule
      */
     public function passes($attribute, $value)
     {
-        return preg_match("/^0[6-7]{1}[0-9]{8}/", $value);
+        if($value != "" || $value != null)
+            return preg_match("/^0[6-7]{1}[0-9]{8}/", $value);
+        else
+            return true;
     }
 
     /**

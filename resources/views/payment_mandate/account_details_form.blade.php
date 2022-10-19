@@ -22,20 +22,22 @@
                     <div class="stepwizard mb-4">
                         <div class="stepwizard-row setup-panel">
                             <div class="stepwizard-step">
-                                <a href="#step-1" type="button" class="btn btn-secondary btn-circle"
-                                    disabled="disabled">1</a>
+                                <a href="#step-1" type="button" class="btn btn-secondary btn-circle" disabled="disabled">1</a>
                                 <span>Deduction Channel</span>
                             </div>
 
                             <div class="stepwizard-step">
-                                <a href="#step-2" type="button" class="btn btn-default btn-circle" disabled="disabled">2</a>
+                                <a href="#step-2" type="button" class="btn btn-default btn-circle"
+                                    disabled="disabled">2</a>
                                 <span>Customer Deduction Details</span>
                             </div>
-
-
                         </div>
                     </div>
                     <!--./form wizard -->
+
+                    <div class="col-md-12 mb-3">
+                        <div id="error-messages" style="display: none;"></div>
+                    </div>
 
                     <form action="#" id="registrationForm" enctype="multipart/form-data" autocomplete="off">
                         <input type="hidden" name="uuid" value="{{ $customer_account->uuid ?? null }}">
@@ -61,8 +63,7 @@
                                             $options = ['' => 'Select'] + $options;
                                         @endphp
 
-                                        {{ Form::select('account_type_id', $options, old('account_type_id', $customer_account->account_type_id ?? ''), ['class' => 'form-control account_type_id','id' => 'account_type_id']) }}
-                                        <span class="text-danger"></span>
+                                        {{ Form::select('account_type_id', $options, old('account_type_id', $customer_account->account_type_id ?? ''), ['class' => 'form-control account_type_id', 'id' => 'account_type_id']) }}
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -81,37 +82,39 @@
                                             $options = ['' => 'Select'] + $options;
                                         @endphp
 
-                                        {{ Form::select('account_id', $options, old('account_id', $customer_account->account_id ?? ''), ['class' => 'form-control account_id','id' => 'account_id']) }}
-                                        <span class="text-danger"></span>
+                                        {{ Form::select('account_id', $options, old('account_id', $customer_account->account_id ?? ''), ['class' => 'form-control account_id', 'id' => 'account_id']) }}
                                     </div>
                                 </div>
                                 <!--./col -->
 
-                                <div class="col-lg-4">
+                                <div class="col-lg-4" id="account_name" style="display: block;">
                                     <div class="mb-3">
                                         <label>Name of Account Holder <span class="text-danger">*</span></label>
-                                        {{ Form::text('account_name', old('account_name', $customer_account->account_name ?? ''), ['class="form-control"','placeholder="Enter name of account holder..."','required']) }}
-                                        <span class="text-danger"></span>
+                                        {{ Form::text('account_name', old('account_name', $customer_account->account_name ?? ''), ['class="form-control"', 'placeholder="Enter name of account holder..."', 'id="account_name"']) }}
                                     </div>
                                 </div>
                                 <!--./col -->
 
-                                <div class="col-lg-4">
+                                <div class="col-lg-4" id="account_number" style="display: block;">
                                     <div class="mb-3">
-                                        <label for="basicpill-namecard-input">Account Number <span
-                                                class="text-danger">*</span></label>
-                                        {{ Form::text('account_number', old('account_number', $customer_account->account_number ?? ''), ['class="form-control"','placeholder="Enter account number..."']) }}
-                                        <span class="text-danger"></span>
+                                        <label>Bank Account Number <span class="text-danger">*</span></label>
+                                        {{ Form::text('account_number', old('account_number', $customer_account->account_number ?? ''), ['class="form-control"', 'placeholder="Enter account number..."']) }}
                                     </div>
                                 </div>
                                 <!--./col -->
 
-                                <div class="col-lg-4 account_phone" style="display: block;">
+                                <div class="col-lg-4" id="account_number_phone" style="display: none;">
                                     <div class="mb-3">
-                                        <label for="basicpill-namecard-input">Phone <span
-                                                class="text-danger">*</span></label>
-                                        {{ Form::text('phone', old('phone', $customer_account->phone ?? ''), ['class="form-control"','placeholder="Enter phone connected to the bank account..."']) }}
-                                        <span class="text-danger" id="phoneError"></span>
+                                        <label>MNO Phone <span class="text-danger">*</span></label>
+                                        {{ Form::text('account_number_phone', old('account_number_phone', $customer_account ? reverse_casting_phone($customer_account->phone) : ''), ['class="form-control"', 'placeholder="Enter phone number..."']) }}
+                                    </div>
+                                </div>
+                                <!--./col -->
+
+                                <div class="col-lg-4" id="account_phone" style="display: block;">
+                                    <div class="mb-3">
+                                        <label>Phone <span class="text-danger">*</span></label>
+                                        {{ Form::text('phone', old('phone', $customer_account ? reverse_casting_phone($customer_account->phone) : ''), ['class="form-control"', 'placeholder="Enter phone connected to the bank account..."']) }}
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -119,7 +122,7 @@
                                 <div class="col-lg-4">
                                     <div class="mb-3">
                                         <label>NIDA Number</label>
-                                        {{ Form::text('nida_number', old('nida_number', $customer_account->customer->id_number ?? ''), ['class="form-control input-mask"','placeholder="Enter NIDA number..."','data-inputmask' => "'mask': '99999999-99999-99999-99'"]) }}
+                                        {{ Form::text('nida_number', old('nida_number', $customer_account->customer->id_number ?? ''), ['class="form-control input-mask"', 'placeholder="Enter NIDA number..."', 'data-inputmask' => "'mask': '99999999-99999-99999-99'"]) }}
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -127,7 +130,7 @@
                                 <div class="col-lg-4">
                                     <div class="mb-3">
                                         <label>Email</label>
-                                        {{ Form::email('email', old('email', $customer_account->customer->email ?? ''), ['class="form-control input-mask"','placeholder="Enter email..."']) }}
+                                        {{ Form::email('email', old('email', $customer_account->customer->email ?? ''), ['class="form-control input-mask"', 'placeholder="Enter email..."']) }}
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -135,7 +138,7 @@
                                 <div class="col-lg-4">
                                     <div class="mb-3">
                                         <label>Address</label>
-                                        {{ Form::text('address', old('address', $customer_account->customer->address ?? ''), ['class="form-control input-mask"','placeholder="Enter address..."']) }}
+                                        {{ Form::text('address', old('address', $customer_account->customer->address ?? ''), ['class="form-control input-mask"', 'placeholder="Enter address..."']) }}
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -168,7 +171,31 @@
 @section('script')
     <script type="text/javascript">
         $(document).ready(function() {
-            //on select account category
+            //before on change
+            var accountTypeId = $(".account_type_id").val();
+
+            if (accountTypeId == 1 || accountTypeId == 2) {
+                //change bank or mno name
+                if (accountTypeId == 1) {
+                    $('.bank_mno_name').html('Bank Name <span class="text-danger">*</span>');
+
+                    //hide or show
+                    $('#account_name').css('display', '')
+                    $('#account_number').css('display', '')
+                    $('#account_number_phone').css('display', 'none')
+                    $('#account_phone').css('display', '')
+                } else if (accountTypeId == 2) {
+                    $('.bank_mno_name').html('MNO Name <span class="text-danger">*</span>');
+
+                    //hide or show
+                    $('#account_name').css('display', 'none')
+                    $('#account_number').css('display', 'none')
+                    $('#account_number_phone').css('display', '')
+                    $('#account_phone').css('display', 'none')
+                }
+            }
+
+            //on select account account type id
             $('.account_type_id').on('change', function(e) {
                 e.preventDefault();
                 accountTypeId = $(this).val();
@@ -176,10 +203,20 @@
                 //change bank or mno name
                 if (accountTypeId == 1) {
                     $('.bank_mno_name').html('Bank Name <span class="text-danger">*</span>');
-                    $('.account_phone').css('display', '');
+
+                    //hide or show
+                    $('#account_name').css('display', '')
+                    $('#account_number').css('display', '')
+                    $('#account_number_phone').css('display', 'none')
+                    $('#account_phone').css('display', '')
                 } else if (accountTypeId == 2) {
                     $('.bank_mno_name').html('MNO Name <span class="text-danger">*</span>');
-                    $('.account_phone').css('display', 'none');
+
+                    //hide or show
+                    $('#account_name').css('display', 'none')
+                    $('#account_number').css('display', 'none')
+                    $('#account_number_phone').css('display', '')
+                    $('#account_phone').css('display', 'none')
                 }
 
                 //query for data
@@ -194,6 +231,9 @@
 
             //validate form and submit
             $("#registrationForm").validate({
+                errorLabelContainer: ".form-error",
+
+                //rules
                 rules: {
                     account_type_id: {
                         required: true
@@ -202,15 +242,48 @@
                         required: true
                     },
                     account_name: {
-                        required: true
+                        required: function() {
+                            if ($("select[name=account_type_id]").val() == 1 || $(
+                                    "select[name=account_type_id]").val() == "") {
+                                return true;
+                            } else {
+                                return false;
+                            }
+                        }
                     },
                     account_number: {
-                        required: true
+                        required: function() {
+                            if ($("select[name=account_type_id]").val() == 1 || $(
+                                    "select[name=account_type_id]").val() == "") {
+                                return true;
+                            } else {
+                                return false;
+                            }
+                        }
                     },
                     phone: {
-                        required: true
+                        required: function() {
+                            if ($("select[name=account_type_id]").val() == 1 || $(
+                                    "select[name=account_type_id]").val() == "") {
+                                return true;
+                            } else {
+                                return false;
+                            }
+                        }
                     },
+
+                    account_number_phone: {
+                        required: function() {
+                            if ($("select[name=account_type_id]").val() == 2) {
+                                return true;
+                            } else {
+                                return false;
+                            }
+                        }
+                    }
                 },
+
+                //message
                 messages: {
                     account_type_id: {
                         required: "Payment channel required"
@@ -219,13 +292,16 @@
                         required: "Bank/MNO name required"
                     },
                     account_name: {
-                        required: "Account name required"
+                        required: "Name of account holder required"
                     },
                     account_number: {
                         required: "Account number required"
                     },
                     phone: {
-                        required: "Phone number required"
+                        required: "Phone connected to bank account required"
+                    },
+                    account_number_phone: {
+                        required: "MNO Phone number is required"
                     }
                 },
                 submitHandler: function(form, e) {
@@ -262,12 +338,20 @@
                             // deactivate Loading Spinner
                             $('.loading-spinner').toggleClass('active');
 
-                            //uuid
-                            uuid = response.uuid
+                            //hide error msg
+                            $("#error-messages").css('display', 'none');
 
-                            //redirect to show
-                            window.location.href = "/payment-mandate/deduction-details/" +
-                                uuid
+                            $.notify(response.success_msg, 'success');
+
+                            setTimeout(function() {
+                                //uuid
+                                uuid = response.uuid
+
+                                //redirect to show
+                                window.location.href =
+                                    "/payment-mandate/deduction-details/" +
+                                    uuid
+                            }, 1000);
                         },
                         error: function(response) {
                             //activate submit button
@@ -276,8 +360,14 @@
                             // Deactivate Loading Spinner
                             $('.loading-spinner').toggleClass('active');
 
-                            //write error message
-                            $('#phoneError').text(response.responseJSON.errors.phone);
+                            //show error msg
+                            $("#error-messages").css('display', '');
+
+                            $.each(response.responseJSON.errors, function(key, item) {
+                                $("#error-messages").append(
+                                    '<span>' + item +
+                                    '</span><br />');
+                            });
                         }
                     });
                     return false;

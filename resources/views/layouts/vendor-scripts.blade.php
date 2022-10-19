@@ -27,5 +27,7 @@
 <!-- A js -->
 <script src="{{ URL::asset('assets/js/easy-number-separator.js') }}"></script>
 
+<!-- notify js -->
+<script src="{{ URL::asset('assets/js/notify.js') }}"></script>
 
 @yield('script-bottom')

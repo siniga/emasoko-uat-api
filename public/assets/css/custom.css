@@ -72,6 +72,10 @@ h1, h2, h3, h4, h5, h6 {
   color: #022859 !important;
 }
 
+.text-light-blue {
+  color: #1976D2 !important;
+}
+
 
 /*===============================================|
 Background Color
@@ -94,6 +98,10 @@ Background Color
 
 .bg-dark-blue {
   background-color: #0D47A1 !important;
+}
+
+.bg-light-blue {
+  background-color: #1976D2 !important;
 }
 
 .bg-dark-1 {
@@ -387,37 +395,47 @@ Loader-spinner button
 /*========================================
 || 
  ========================================*/
-/* .wrapper-plus {
-  background: #FAFAFA;
-  border: 1px solid #E0E0E0;
-  border-radius: 5px;
-  margin: 8px 0;
-  padding: 10px;
+.error {
+  color: #f00;
 }
 
-
-.avatar-title {
-  -webkit-box-align: center;
-  -ms-flex-align: center;
-  align-items: center;
-  background-color: inherit;
-  color: #fff;
-  font-weight: 500;
-  height: 100%;
-  -webkit-box-pack: center;
-  -ms-flex-pack: center;
-  justify-content: center;
-  width: 100%
-}
-
-.avatar-group, .avatar-title {
-  display: -webkit-box;
-  display: -ms-flexbox;
-  display: flex
-}
-
-.avatar-group {
+.error-messages {
+  border-radius: 4px;
   padding-left: 12px;
-  -ms-flex-wrap: wrap;
-  flex-wrap: wrap
-} */
+  background-color: #FFEBEE;
+  color: #f00;
+}
+
+#error-messages {
+  border-radius: 4px;
+  padding: 12px;
+  background-color: #FFEBEE;
+  color: #f00;
+}
+
+#error-messages span {
+  display: block;
+}
+
+.success-messages, #success-messages {
+  border-radius: 4px;
+  padding: 16px;
+  background-color: #E8F5E9;
+  color: #43A047;
+  font-weight: 500;
+}
+
+
+ul.header-social-icon li {
+  display: inline;
+  list-style-type: none;
+}
+
+ul.header-social-icon li a {
+  color: #1684fc;
+  font-size: 1.4375em
+}
+
+ul.header-social-icon i{
+  font-size:24px
+}

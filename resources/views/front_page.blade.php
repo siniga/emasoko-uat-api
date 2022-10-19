@@ -68,16 +68,55 @@
         <div class="bg-overlay bg-primary"></div>
         <div class="container">
             <div class="row align-items-center">
-                <div class="col-lg-8">
+                <div class="col-lg-5">
                     <div class="text-white-50">
-                        <h1 class="text-white fw-semibold mb-3 hero-title">Start your financial future today</h1>
-                        <p class="font-size-14">Lorem ipsum dolor sit amet, consectetur adipiscing elit,
-                            sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-                            quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+                        <h1 class="text-white fw-semibold mb-3 hero-title">eMakato Deduction Solution</h1>
+                        <p class="font-size-16 text-white">
+                            We enable MFI’s and Saccos to set debit instruction directly to the customer bank or mobile
+                            account upon receiving consent.
+                        </p>
 
                         <div class="d-flex flex-wrap gap-2 mt-4">
-                            <a href="{{ url('login') }}" class="btn btn-primary">Get Started</a>
+                            <a href="{{ url('login') }}" class="btn btn-success">Get Started</a>
                             <a href="#about" class="btn btn-light">How it work</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-5 col-md-8 col-sm-10 ms-lg-auto">
+                    <div class="card overflow-hidden mb-0 mt-5 mt-lg-0">
+                        <div class="card-header text-center">
+                            <h5 class="mb-0">ICO Countdown time</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="text-center">
+
+                                <h5>Time left to Ico :</h5>
+                                <div class="mt-4">
+                                    <div data-countdown="2021/12/31" class="counter-number ico-countdown"></div>
+                                </div>
+
+                                <div class="mt-4">
+                                    <button type="button" class="btn btn-success w-md">Get Token</button>
+                                </div>
+
+                                <div class="mt-5">
+                                    <h4 class="fw-semibold">1 ETH = 2235 SKT</h4>
+                                    <div class="clearfix mt-4">
+                                        <h5 class="float-end font-size-14">5234.43</h5>
+                                    </div>
+                                    <div class="progress p-1 progress-xl softcap-progress">
+                                        <div class="progress-bar bg-info" role="progressbar" style="width: 15%"
+                                            aria-valuenow="15" aria-valuemin="0" aria-valuemax="100">
+                                            <div class="progress-label">15 %</div>
+                                        </div>
+                                        <div class="progress-bar progress-bar-striped progress-bar-animated"
+                                            role="progressbar" style="width: 30%" aria-valuenow="30" aria-valuemin="0"
+                                            aria-valuemax="100">
+                                            <div class="progress-label">30 %</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -106,9 +145,9 @@
                                         </div>
                                     </div>
                                     <div class="flex-grow-1">
-                                        <p class="text-muted font-size-14">Microfinances</p>
-                                        <h5>40</h5>
-                                        <p class="text-muted text-truncate mb-0">0.0012.23 ( 0.2 % ) 
+                                        <p class="text-muted font-size-16">Number of MFI</p>
+                                        <h5>0</h5>
+                                        <p class="text-muted text-truncate mb-0">0 ( 0 % )
                                             <i class="mdi mdi-arrow-up ms-1 text-success"></i>
                                         </p>
                                     </div>
@@ -130,9 +169,9 @@
                                         </div>
                                     </div>
                                     <div class="flex-grow-1">
-                                        <p class="text-muted font-size-14">Payment Mandate</p>
-                                        <h5>657</h5>
-                                        <p class="text-muted text-truncate mb-0"> 004.12 ( 0.1 % )
+                                        <p class="text-muted font-size-16">Payment Mandate</p>
+                                        <h5>0</h5>
+                                        <p class="text-muted text-truncate mb-0"> 0 ( 0 % )
                                             <i class="mdi mdi-arrow-up ms-1 text-success"></i>
                                         </p>
                                     </div>
@@ -147,16 +186,15 @@
                                 <div class="d-flex">
                                     <div class="flex-shrink-0 me-3">
                                         <div class="avatar-xs">
-                                            <span
-                                                class="avatar-title rounded-circle bg-info text-white font-size-18">
+                                            <span class="avatar-title rounded-circle bg-info text-white font-size-18">
                                                 <i class="mdi mdi-cellphone-information"></i>
                                             </span>
                                         </div>
                                     </div>
                                     <div class="flex-grow-1">
-                                        <p class="text-muted font-size-14">Partners</p>
-                                        <h5>20</h5>
-                                        <p class="text-muted text-truncate mb-0">3
+                                        <p class="text-muted font-size-16">Transactions</p>
+                                        <h5>0</h5>
+                                        <p class="text-muted text-truncate mb-0">0
                                             <i class="mdi mdi-arrow-up ms-1 text-success"></i>
                                         </p>
                                     </div>
@@ -186,17 +224,43 @@
             <div class="row align-items-center">
                 <div class="col-lg-5">
 
-                    <div class="text-muted">
-                        <h4>Best solution for your business.</h4>
-                        <p>
-                            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-                             quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                    <div class="">
+                        <h4 class="text-primary font-size-24">The Solution.</h4>
+                        <p class="mb-4 text-muted font-size-14">
+                            <b>A platform</b> that comprises of mobile application, web portal and USSD application to
+                            <b>enable MFI’s and Saccos</b> to set <b>debit instruction directly</b> to the
+                            <b>customer bank</b> or <b>mobile account</b> upon receiving consent.
                         </p>
 
-                        <p>
-                            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-                             quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                        <h4 class="text-primary font-size-24">Potential Impact</h4>
+                        <p class="text-muted font-size-14">
+                            Collection Efficiency Maximization for MFI, Saccos and some trading companies. The potential
+                            impact for the first phase is as illustrated below
                         </p>
+
+                        <div class="row mt-4">
+                            <div class="col-lg-4 col-4">
+                                <div class="mt-4">
+                                    <h4>10K+</h4>
+                                    <p>Number of Business Accounts</p>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-4 col-4">
+                                <div class="mt-4">
+                                    <h4>2M+</h4>
+                                    <p>Consumers</p>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-4 col-4">
+                                <div class="mt-4">
+                                    <h4>4M+</h4>
+                                    <p>Transactions per month</p>
+                                </div>
+                            </div>
+                        </div>
+                        <!--./row -->
                     </div>
                 </div>
 
@@ -204,80 +268,65 @@
                     <div class="mt-4 mt-lg-0">
                         <div class="row">
                             <div class="col-sm-6">
-                                <div class="card border">
+                                <div class="card border bg-light-blue">
                                     <div class="card-body">
-                                        <div class="mb-3">
-                                            <i class="mdi mdi-bitcoin h2 text-success"></i>
+                                        <div class="mb-2 text-center">
+                                            <i class="mdi mdi-numeric-1-circle h1 fw-semibold text-white"></i>
                                         </div>
-                                        <h5>Lending</h5>
-                                        <p class="text-muted mb-0">At vero eos et accusamus et iusto blanditiis</p>
+                                        <h5 class="text-white mb-3">Benefits for Subscribers</h5>
 
-                                    </div>
-                                    <div class="card-footer bg-transparent border-top text-center">
-                                        <a href="#" class="text-primary">Learn more</a>
+                                        <p class="text-white mb-2">
+                                            <i class="mdi mdi-circle-medium"></i> Easy to use web service and fully
+                                            electronic processes
+                                        </p>
+
+                                        <p class="text-white mb-2">
+                                            &nbsp;&nbsp;<i class="mdi mdi-chevron-right"></i> less hassle
+                                        </p>
+
+                                        <p class="text-white mb-2">
+                                            <i class="mdi mdi-circle-medium"></i> Less credit losses
+                                        </p>
+
+                                        <p class="text-white mb-0">
+                                            &nbsp;&nbsp;<i class="mdi mdi-chevron-right"></i> better profitability
+                                            (est. effect on net profit 2-20%)
+                                        </p>
+
                                     </div>
                                 </div>
                             </div>
                             <div class="col-sm-6">
-                                <div class="card border mt-lg-5">
+                                <div class="card border mt-lg-5 bg-secondary">
                                     <div class="card-body">
-                                        <div class="mb-3">
-                                            <i class="mdi mdi-wallet-outline h2 text-success"></i>
+                                        <div class="mb-2 text-center">
+                                            <i class="mdi mdi-numeric-2-circle h1 fw-semibold text-white"></i>
                                         </div>
-                                        <h5>Wallet</h5>
-                                        <p class="text-muted mb-0">Quis autem vel eum iure reprehenderit</p>
 
-                                    </div>
-                                    <div class="card-footer bg-transparent border-top text-center">
-                                        <a href="#" class="text-primary">Learn more</a>
+                                        <h5 class="text-white mb-3">Benefits for market</h5>
+
+                                        <p class="text-white mb-2">
+                                            <i class="mdi mdi-circle-medium"></i> Better transparency
+                                        </p>
+
+                                        <p class="text-white mb-2">
+                                            <i class="mdi mdi-circle-medium"></i> Better predictability
+                                        </p>
+
+                                        <p class="text-white mb-2">
+                                            <i class="mdi mdi-circle-medium"></i> Increased trust
+                                        </p>
+
+                                        <p class="text-white mb-2">
+                                            <i class="mdi mdi-circle-medium"></i> Reduced costs
+                                        </p>
+
+                                        <p class="text-white mb-2">
+                                            <i class="mdi mdi-circle-medium"></i> Enhanced money circulation
+                                        </p>
+
                                     </div>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- end row -->
-
-            <hr class="my-5">
-
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="owl-carousel owl-theme clients-carousel" id="clients-carousel" dir="ltr">
-                        <div class="item">
-                            <div class="client-images">
-                                <img src="{{ URL::asset('/assets/images/clients/1.png') }}" alt="client-img"
-                                    class="mx-auto img-fluid d-block">
-                            </div>
-                        </div>
-                        <div class="item">
-                            <div class="client-images">
-                                <img src="{{ URL::asset('/assets/images/clients/2.png') }}" alt="client-img"
-                                    class="mx-auto img-fluid d-block">
-                            </div>
-                        </div>
-                        <div class="item">
-                            <div class="client-images">
-                                <img src="{{ URL::asset('/assets/images/clients/3.png') }}" alt="client-img"
-                                    class="mx-auto img-fluid d-block">
-                            </div>
-                        </div>
-                        <div class="item">
-                            <div class="client-images">
-                                <img src="{{ URL::asset('/assets/images/clients/4.png') }}" alt="client-img"
-                                    class="mx-auto img-fluid d-block">
-                            </div>
-                        </div>
-                        <div class="item">
-                            <div class="client-images">
-                                <img src="{{ URL::asset('/assets/images/clients/5.png') }}" alt="client-img"
-                                    class="mx-auto img-fluid d-block">
-                            </div>
-                        </div>
-                        <div class="item">
-                            <div class="client-images">
-                                <img src="{{ URL::asset('/assets/images/clients/6.png') }}" alt="client-img"
-                                    class="mx-auto img-fluid d-block">
                             </div>
                         </div>
                     </div>
@@ -292,16 +341,6 @@
     <!-- Features start -->
     <section class="section" id="features">
         <div class="container">
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="text-center mb-5">
-                        <div class="small-title">Features</div>
-                        <h4>Key Features</h4>
-                    </div>
-                </div>
-            </div>
-            <!-- end row -->
-
             <div class="row align-items-center pt-4">
                 <div class="col-md-6 col-sm-8">
                     <div>
@@ -311,19 +350,34 @@
                 </div>
                 <div class="col-md-5 ms-auto">
                     <div class="mt-4 mt-md-auto">
-                        <div class="d-flex align-items-center mb-2">
+                        <div class="d-flex align-items-center mb-4">
                             <div class="features-number fw-semibold display-4 me-3">01</div>
-                            <h4 class="mb-0">Lending</h4>
+                            <h4 class="mb-0 font-size-24">CASE Summary</h4>
                         </div>
-                        <p class="text-muted">If several languages coalesce, the grammar of the resulting language is
-                            more simple and regular than of the individual will be more simple and regular than the
-                            existing.</p>
-                        <div class="text-muted mt-4">
-                            <p class="mb-2"><i class="mdi mdi-circle-medium text-success me-1"></i>Donec pede justo
-                                vel
-                                aliquet</p>
-                            <p><i class="mdi mdi-circle-medium text-success me-1"></i>Aenean et nisl sagittis</p>
+
+                        <div class="d-flex justify-content-between mb-4">
+                            <div class="text-muted font-weight-600 font-size-16">Number of MFI</div>
+                            <div class="font-size-14 font-weight-600 text-primary">550 registered under TAMFI</div>
                         </div>
+
+                        <div class="d-flex justify-content-between mb-4">
+                            <div class="text-muted font-weight-600 font-size-16">Number of Saccos</div>
+                            <div class="font-size-14 font-weight-600 text-primary">4,000 registered under TCDC</div>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-4">
+                            <div class="text-muted font-weight-600 font-size-16">Organization</div>
+                            <div></div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <div class="text-muted font-weight-600 font-size-16">Partner network</div>
+                            <div class="font-size-14">
+                                <b class="font-weight-600 text-primary">TAMFI</b> and <b
+                                    class="font-weight-600 text-primary">TCDC</b> onboard
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -332,17 +386,17 @@
             <div class="row align-items-center mt-5 pt-md-5">
                 <div class="col-md-5">
                     <div class="mt-4 mt-md-0">
-                        <div class="d-flex align-items-center mb-2">
+                        <div class="d-flex align-items-center mb-4">
                             <div class="features-number fw-semibold display-4 me-3">02</div>
-                            <h4 class="mb-0">Wallet</h4>
+                            <h4 class="mb-0 font-size-24">Commercial Models</h4>
                         </div>
-                        <p class="text-muted">It will be as simple as Occidental; in fact, it will be Occidental. To an
-                            English person, it will seem like simplified English, as a skeptical Cambridge friend.</p>
+                        <p class="font-size-16">
+                            Subscribers may opt to pay for the service by choosing to pay for every mandate uploaded or
+                            for every successful debit
+                        </p>
+
                         <div class="text-muted mt-4">
-                            <p class="mb-2"><i class="mdi mdi-circle-medium text-success me-1"></i>Donec pede justo
-                                vel
-                                aliquet</p>
-                            <p><i class="mdi mdi-circle-medium text-success me-1"></i>Aenean et nisl sagittis</p>
+
                         </div>
                     </div>
                 </div>
@@ -366,7 +420,7 @@
             <div class="row">
                 <div class="col-lg-12">
                     <div class="text-center mb-5">
-                        <div class="small-title"></div>
+                        <div class="small-title">Our Roadmap</div>
                         <h4>How eMakato works</h4>
                     </div>
                 </div>
@@ -381,16 +435,16 @@
                                 <div>
                                     <div class="event-date">
                                         <div class="text-primary mb-1">Step 1</div>
-                                        <h5 class="mb-4">Registration</h5>
+                                        <h5 class="mb-4">Registering</h5>
                                     </div>
                                     <div class="event-down-icon">
                                         <i class="bx bx-down-arrow-circle h1 text-primary down-arrow-icon"></i>
                                     </div>
 
-                                    <div class="mt-3 px-3">
+                                    {{-- <div class="mt-3 px-3">
                                         <p class="text-muted">It will be as simple as occidental in fact it will be
                                             Cambridge</p>
-                                    </div>
+                                    </div> --}}
                                 </div>
                             </div>
 
@@ -398,16 +452,10 @@
                                 <div>
                                     <div class="event-date">
                                         <div class="text-primary mb-1">Step 2</div>
-                                        <h5 class="mb-4">MFI verification</h5>
+                                        <h5 class="mb-4">Deduction uploading</h5>
                                     </div>
                                     <div class="event-down-icon">
                                         <i class="bx bx-down-arrow-circle h1 text-primary down-arrow-icon"></i>
-                                    </div>
-
-                                    <div class="mt-3 px-3">
-                                        <p class="text-muted">To an English person, it will seem like simplified
-                                            English
-                                            existence.</p>
                                     </div>
                                 </div>
                             </div>
@@ -416,15 +464,10 @@
                                 <div>
                                     <div class="event-date">
                                         <div class="text-primary mb-1">Step 3</div>
-                                        <h5 class="mb-4">Step 3</h5>
+                                        <h5 class="mb-4">Notifications</h5>
                                     </div>
                                     <div class="event-down-icon">
                                         <i class="bx bx-down-arrow-circle h1 text-primary down-arrow-icon"></i>
-                                    </div>
-
-                                    <div class="mt-3 px-3">
-                                        <p class="text-muted">For science, music, sport, etc, Europe uses the same
-                                            vocabulary.</p>
                                     </div>
                                 </div>
                             </div>
@@ -433,15 +476,10 @@
                                 <div>
                                     <div class="event-date">
                                         <div class="text-primary mb-1">Step 4</div>
-                                        <h5 class="mb-4">Step 4</h5>
+                                        <h5 class="mb-4">Notice of accept Or Reject</h5>
                                     </div>
                                     <div class="event-down-icon">
                                         <i class="bx bx-down-arrow-circle h1 text-primary down-arrow-icon"></i>
-                                    </div>
-
-                                    <div class="mt-3 px-3">
-                                        <p class="text-muted">New common language will be more simple than existing.
-                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -450,15 +488,10 @@
                                 <div>
                                     <div class="event-date">
                                         <div class="text-primary mb-1">Step 5</div>
-                                        <h5 class="mb-4">Step 5</h5>
+                                        <h5 class="mb-4">Deduction Notices</h5>
                                     </div>
                                     <div class="event-down-icon">
                                         <i class="bx bx-down-arrow-circle h1 text-primary down-arrow-icon"></i>
-                                    </div>
-
-                                    <div class="mt-3 px-3">
-                                        <p class="text-muted">It will be as simple as occidental in fact it will be
-                                            Cambridge</p>
                                     </div>
                                 </div>
                             </div>
@@ -467,19 +500,38 @@
                                 <div>
                                     <div class="event-date">
                                         <div class="text-primary mb-1">Step 6</div>
-                                        <h5 class="mb-4">Step 6</h5>
+                                        <h5 class="mb-4">Deductions</h5>
                                     </div>
                                     <div class="event-down-icon">
                                         <i class="bx bx-down-arrow-circle h1 text-primary down-arrow-icon"></i>
                                     </div>
+                                </div>
+                            </div>
 
-                                    <div class="mt-3 px-3">
-                                        <p class="text-muted">To an English person, it will seem like simplified
-                                            English
-                                            existence.</p>
+                            <div class="item event-list">
+                                <div>
+                                    <div class="event-date">
+                                        <div class="text-primary mb-1">Step 7</div>
+                                        <h5 class="mb-4">Dispute Handling</h5>
+                                    </div>
+                                    <div class="event-down-icon">
+                                        <i class="bx bx-down-arrow-circle h1 text-primary down-arrow-icon"></i>
                                     </div>
                                 </div>
                             </div>
+
+                            <div class="item event-list">
+                                <div>
+                                    <div class="event-date">
+                                        <div class="text-primary mb-1">Step 8</div>
+                                        <h5 class="mb-4"> Recovery Completion</h5>
+                                    </div>
+                                    <div class="event-down-icon">
+                                        <i class="bx bx-down-arrow-circle h1 text-primary down-arrow-icon"></i>
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
 
@@ -510,13 +562,13 @@
                         <div class="card text-center team-box">
                             <div class="card-body">
                                 <div>
-                                    <img src="{{ URL::asset('/assets/images/users/max.jpeg') }}" alt=""
+                                    <img src="{{ URL::asset('/assets/images/users/user.png') }}" alt=""
                                         class="rounded">
                                 </div>
 
                                 <div class="mt-3">
-                                    <h5>Max Gylling</h5>
-                                    <P class="text-muted mb-0">CEO - Director</P>
+                                    <h5>Lorem Ipsum</h5>
+                                    <P class="text-muted mb-0">Director</P>
                                 </div>
                             </div>
                             <div class="card-footer bg-transparent border-top">
@@ -547,12 +599,12 @@
                         <div class="card text-center team-box">
                             <div class="card-body">
                                 <div>
-                                    <img src="{{ URL::asset('/assets/images/users/tonny.jpeg') }}" alt=""
+                                    <img src="{{ URL::asset('/assets/images/users/user.png') }}" alt=""
                                         class="rounded">
                                 </div>
 
                                 <div class="mt-3">
-                                    <h5>Tony Misokia</h5>
+                                    <h5>Lorem Ipsum</h5>
                                     <P class="text-muted mb-0">Director - Business Development</P>
                                 </div>
                             </div>
@@ -584,11 +636,11 @@
                         <div class="card text-center team-box">
                             <div class="card-body">
                                 <div>
-                                    <img src="{{ URL::asset('/assets/images/users/avatar99.png') }}" alt=""
+                                    <img src="{{ URL::asset('/assets/images/users/user.png') }}" alt=""
                                         class="rounded">
                                 </div>
                                 <div class="mt-3">
-                                    <h5>NN</h5>
+                                    <h5>Lorem Ipsum</h5>
                                     <P class="text-muted mb-0">Software Developer</P>
                                 </div>
                             </div>
@@ -620,12 +672,12 @@
                         <div class="card text-center team-box">
                             <div class="card-body">
                                 <div>
-                                    <img src="{{ URL::asset('/assets/images/users/avatar99.png') }}" alt=""
+                                    <img src="{{ URL::asset('/assets/images/users/user.png') }}" alt=""
                                         class="rounded">
                                 </div>
 
                                 <div class="mt-3">
-                                    <h5>LL</h5>
+                                    <h5>Lorem Ipsum</h5>
                                     <P class="text-muted mb-0">App Developer</P>
                                 </div>
                             </div>
@@ -654,40 +706,84 @@
                         </div>
                     </div>
 
-                    <div class="item">
-                        <div class="card text-center team-box">
-                            <div class="card-body">
-                                <div>
-                                    <img src="{{ URL::asset('/assets/images/users/avatar-1.jpg') }}" alt=""
-                                        class="rounded">
-                                </div>
+                </div>
+            </div>
+            <!-- end row -->
+        </div>
+        <!-- end container -->
+    </section>
+    <!-- Team end -->
 
-                                <div class="mt-3">
-                                    <h5>Amy Hood </h5>
-                                    <P class="text-muted mb-0">Designer</P>
-                                </div>
+    <!-- Blog start -->
+    <section class="section bg-white" id="news">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="text-center mb-5">
+                        <div class="small-title">Hear from us</div>
+                        <h4>Success Stories</h4>
+                    </div>
+                </div>
+            </div>
+            <!-- end row -->
+
+            <div class="row">
+                <div class="col-xl-4 col-sm-6">
+                    <div class="blog-box mb-4 mb-xl-0">
+                        <div class="position-relative">
+                            <img src="assets/images/crypto/blog/img-1.jpg" alt=""
+                                class="rounded img-fluid mx-auto d-block">
+                            <div class="badge bg-success blog-badge font-size-11">Cryptocurrency</div>
+                        </div>
+
+                        <div class="mt-4 text-muted">
+                            <p class="mb-2"><i class="bx bx-calendar me-1"></i> 04 Mar, 2020</p>
+                            <h5 class="mb-3">Donec pede justo, fringilla vele</h5>
+                            <p>If several languages coalesce, the grammar of the resulting language</p>
+
+                            <div>
+                                <a href="javascript: void(0);">Read more</a>
                             </div>
-                            <div class="card-footer bg-transparent border-top">
-                                <div class="d-flex mb-0 team-social-links" id="tooltip-container5">
-                                    <div class="flex-fill">
-                                        <a href="#" data-bs-toggle="tooltip"
-                                            data-bs-container="#tooltip-container5" title="Facebook">
-                                            <i class="mdi mdi-facebook"></i>
-                                        </a>
-                                    </div>
-                                    <div class="flex-fill">
-                                        <a href="#" data-bs-toggle="tooltip"
-                                            data-bs-container="#tooltip-container5" title="Linkedin">
-                                            <i class="mdi mdi-linkedin"></i>
-                                        </a>
-                                    </div>
-                                    <div class="flex-fill">
-                                        <a href="#" data-bs-toggle="tooltip"
-                                            data-bs-container="#tooltip-container5" title="Google">
-                                            <i class="mdi mdi-google"></i>
-                                        </a>
-                                    </div>
-                                </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-4 col-sm-6">
+                    <div class="blog-box mb-4 mb-xl-0">
+
+                        <div class="position-relative">
+                            <img src="assets/images/crypto/blog/img-2.jpg" alt=""
+                                class="rounded img-fluid mx-auto d-block">
+                            <div class="badge bg-success blog-badge font-size-11">Cryptocurrency</div>
+                        </div>
+
+                        <div class="mt-4 text-muted">
+                            <p class="mb-2"><i class="bx bx-calendar me-1"></i> 12 Feb, 2020</p>
+                            <h5 class="mb-3">Aenean ut eros et nisl</h5>
+                            <p>Everyone realizes why a new common language would be desirable</p>
+
+                            <div>
+                                <a href="javascript: void(0);">Read more</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-4 col-sm-6">
+                    <div class="blog-box mb-4 mb-xl-0">
+                        <div class="position-relative">
+                            <img src="assets/images/crypto/blog/img-3.jpg" alt=""
+                                class="rounded img-fluid mx-auto d-block">
+                            <div class="badge bg-success blog-badge font-size-11">Cryptocurrency</div>
+                        </div>
+
+                        <div class="mt-4 text-muted">
+                            <p class="mb-2"><i class="bx bx-calendar me-1"></i> 06 Jan, 2020</p>
+                            <h5 class="mb-3">In turpis, pellentesque posuere</h5>
+                            <p>To an English person, it will seem like simplified English, as a skeptical Cambridge</p>
+
+                            <div>
+                                <a href="javascript: void(0);">Read more</a>
                             </div>
                         </div>
                     </div>
@@ -697,10 +793,10 @@
         </div>
         <!-- end container -->
     </section>
-    <!-- Team end -->
+    <!-- Blog end -->
 
     <!-- Faqs start -->
-    <section class="section bg-white" id="faqs">
+    <section class="section" id="faqs">
         <div class="container">
             <div class="row">
                 <div class="col-lg-12">
@@ -1052,43 +1148,48 @@
     </section>
     <!-- Faqs end -->
 
-
     <!-- Footer start -->
     <footer class="landing-footer">
         <div class="container">
             <div class="row">
                 <div class="col-lg-3 col-sm-6">
                     <div class="mb-4 mb-lg-0">
-                        <h5 class="mb-3 footer-list-title">About eMakato</h5>
-                        <p></p>
+                        <h5 class="mb-3 footer-list-title">eMakato</h5>
+
                     </div>
                 </div>
+
                 <div class="col-lg-3 col-sm-6">
                     <div class="mb-4 mb-lg-0">
-                        <h5 class="mb-3 footer-list-title">Resources</h5>
+                        <h5 class="mb-3 footer-list-title">Company</h5>
                         <ul class="list-unstyled footer-list-menu">
-                            <li><a href="#">Privacy Policy</a></li>
-                            <li><a href="#">Terms & Conditions</a></li>
-                            <li><a href="#">FAQs</a></li>
-                            <li><a href="#">Support</a></li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-sm-6">
-                    <div class="mb-4 mb-lg-0">
-                        <h5 class="mb-3 footer-list-title">Links</h5>
-                        <ul class="list-unstyled footer-list-menu">
-                            {{-- <li><a href="#">Tokens</a></li>
-                            <li><a href="#">Roadmap</a></li>
-                            <li><a href="#">FAQs</a></li> --}}
+                            <li><a href="javascript: void(0);">About Us</a></li>
+                            <li><a href="javascript: void(0);">Features</a></li>
+                            <li><a href="javascript: void(0);">Privacy Policy</a></li>
+                            <li><a href="javascript: void(0);">Terms & Conditions</a></li>
+                            <li><a href="javascript: void(0);">FAQs</a></li>
                         </ul>
                     </div>
                 </div>
 
                 <div class="col-lg-3 col-sm-6">
                     <div class="mb-4 mb-lg-0">
-                        <h5 class="mb-3 footer-list-title">Contacts</h5>
-                        
+                        <h5 class="mb-3 footer-list-title">Platforms</h5>
+                        <ul class="list-unstyled footer-list-menu">
+                            <li><a href="#">eMakato</a></li>
+                            <li><a href="#">eMazao</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-sm-6">
+                    <div class="mb-4 mb-lg-0">
+                        <h5 class="mb-3 footer-list-title">Resources</h5>
+                        <ul class="list-unstyled footer-list-menu">
+                            <li><a href="javascript: void(0);">Case Studies</a></li>
+                            <li><a href="javascript: void(0);">Roadmap</a></li>
+                            <li><a href="javascript: void(0);">Blog</a></li>
+                        </ul>
                     </div>
                 </div>
             </div>
@@ -1098,18 +1199,40 @@
 
             <div class="row">
                 <div class="col-lg-6">
-                    <div class="mb-4">
-                        {{-- <img src="{{ URL::asset('/assets/images/logo-light.png') }}" alt="" height="20"> --}}
+                    <div class="mb-2">
+                        <span class="font-size-24 text-white">eMakato</span>
+                        {{-- <img src="assets/images/logo-light.png" alt="" height="20"> --}}
                     </div>
 
-                    <p class="mb-2 text-white">
+                    <p class="mb-0 text-white">
                         Copyright
                         <script>
                             document.write(new Date().getFullYear())
-                        </script>  © eMakato. All rights reserved.
+                        </script> © eMakato. All rights reserved.
                     </p>
                 </div>
 
+                <div class="col-lg-6">
+                    <div class="mt-2 d-flex justify-content-end">
+                        <ul class="header-social-icon">
+                            <li>
+                                <a href="#" target="_blank"><i class="mdi mdi-twitter text-white"></i></a>
+                            </li>
+                            <li>
+                                <a href="#" target="_blank"><i class="mdi mdi-facebook text-white"></i></a>
+                            </li>
+                            <li>
+                                <a href="#" target="_blank"><i class="mdi mdi-instagram text-white"></i></a>
+                            </li>
+                            <li>
+                                <a href="#" target="_blank"><i class="mdi mdi-youtube text-white"></i></a>
+                            </li>
+                            <li>
+                                <a href="#" target="_blank"><i class="mdi mdi-linkedin text-white" data-path="4"></i></a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
             </div>
         </div>
         <!-- end container -->
