@@ -80,6 +80,7 @@ class RegisterController extends Controller
         foreach ($countries as $val) {
             $arr_countries[$val->code] = $flag->get(strtoupper($val->initial)) . ' ' . $val->code;
         }
+        
         //render view
         return view('auth.register', compact('title', 'categories', 'arr_countries', 'regions', 'company'));
     }

@@ -3,7 +3,6 @@
 namespace App\Exports;
 
 use App\Models\DebitOrder;
-use App\Models\MediaProgram;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;

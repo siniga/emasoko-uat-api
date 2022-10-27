@@ -10,7 +10,7 @@
             Companies
         @endslot
         @slot('title')
-            List of Companies
+            Companies
         @endslot
     @endcomponent
 
@@ -18,10 +18,140 @@
         <div class="col-lg-12">
             <div class="card">
                 <div class="card-body">
-                    
+                    <div class="row">
+                        <div class="col-lg-12">
+                            {!! Form::open(['url' => route('companies.lists'), 'method' => 'POST', 'class' => 'form-horizontal']) !!}
+                            {{ Form::token() }}
+
+                            <div class="row">
+                                <div class="col-lg-2">
+                                    <div class="mb-3">
+                                        {{ Form::date('start_at', old('start_at', $post_data['start_at']), ['placeholder="Start Date..."', 'class="form-control"']) }}
+                                    </div>
+                                </div>
+                                <!--./col -->
+
+                                <div class="col-lg-2">
+                                    <div class="mb-3">
+                                        {{ Form::date('end_at', old('end_at', $post_data['end_at']), ['placeholder="End Date..."', 'class="form-control"']) }}
+                                    </div>
+                                </div>
+                                <!--./col -->
+
+                                <div class="col-lg-2">
+                                    <div class="mb-3">
+                                        @php
+                                            $options = [];
+                                        @endphp
+                                        @foreach ($categories as $val)
+                                            @php
+                                                $options[$val->id] = $val->name;
+                                            @endphp
+                                        @endforeach
+                                        @php
+                                            $options = ['' => 'Category'] + $options;
+                                        @endphp
+
+                                        {{ Form::select('category_id', $options, old('category_id', $post_data['category_id']), ['class' => 'form-control', 'id' => 'category_id']) }}
+                                    </div>
+                                </div>
+                                <!--./col -->
+
+                                <div class="col-lg-3">
+                                    <div class="mb-3">
+                                        @php $options = []; @endphp
+                                        @foreach ($regions as $val)
+                                            @php
+                                                $options[$val->id] = $val->name;
+                                            @endphp
+                                        @endforeach
+                                        @php
+                                            $options = ['' => 'Region'] + $options;
+                                        @endphp
+
+                                        {{ Form::select('region_id', $options, old('region_id', $post_data['region_id']), ['class' => 'form-control select2', 'id' => 'region_id']) }}
+                                    </div>
+                                </div>
+                                <!--./col -->
+
+                                <div class="col-lg-3">
+                                    <div class="mb-3">
+                                        @php
+                                            $options = [
+                                                0 => 'Registration Process',
+                                                1 => 'Completed Registration',
+                                                2 => 'Assessment Process',
+                                                3 => 'Approved',
+                                            ];
+                                            $options = ['' => 'Status'] + $options;
+                                        @endphp
+
+                                        {{ Form::select('status', $options, old('status', $post_data['status']), ['class' => 'form-control']) }}
+                                    </div>
+                                </div>
+                                <!--./col -->
+                            </div>
+                            <!--./row -->
+
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <div class="mb-3">
+                                        {{ Form::text('keyword', old('keyword', $post_data['keyword']), ['class="form-control"', 'placeholder="Search by business name  or TIN number..."']) }}
+                                    </div>
+                                </div>
+                                <!--./col -->
+
+                                <div class="col-lg-6">
+                                    <div class="mb-3">
+                                        <div class="text-sm-end d-none d-sm-block">
+                                            <button type="submit" name="filter" class="btn btn-secondary">
+                                                <i class="bx bx-search"></i> Filter
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--./col -->
+                            </div>
+                            <!--./row -->
+                            {{ Form::close() }}
+                        </div>
+                        <!--./col-lg-12 -->
+                    </div>
+                    <!--./row -->
+                </div>
+            </div>
+
+            @if (session()->get('success'))
+                <div class="alert alert-success">
+                    {{ session()->get('success') }}
+                </div><br />
+            @elseif(session()->get('danger'))
+                <div class="alert alert-danger">
+                    {{ session()->get('danger') }}
+                </div><br />
+            @endif
+
+            <div class="card">
+                <div class="card-body">
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mb-2 text-sm-end d-none d-sm-block">
+                                <a class="btn btn-outline-success btn-sm"
+                                    href="{{ route('companies.export-xls', ['start_at' => $post_data['start_at'], 'end_at' => $post_data['end_at'], 'category_id' => $post_data['category_id'], 'region_id' => $post_data['region_id'], 'status' => $post_data['status'], 'keyword' => $post_data['keyword']]) }}">
+                                    <i class="fas fa-file-excel"></i> Export XLS
+                                </a>
+
+                                <a class="btn btn-outline-danger btn-sm"
+                                    href="{{ route('companies.export-pdf', ['start_at' => $post_data['start_at'], 'end_at' => $post_data['end_at'], 'category_id' => $post_data['category_id'], 'region_id' => $post_data['region_id'], 'status' => $post_data['status'], 'keyword' => $post_data['keyword']]) }}">
+                                    <i class="fas fa-file-pdf"></i> Export PDF
+                                </a>
+                            </div>
+                        </div>
+                    </div>
 
                     <div class="table-responsive">
-                        @if (isset($companies) && $companies)
+                        @if (isset($companies) && $companies->isNotEmpty())
                             <table id="dt" class="table table-hover table-bordered">
                                 <thead>
                                     <tr>
@@ -29,8 +159,8 @@
                                         <th width="22%">Bussiness Name</th>
                                         <th width="16%">Category</th>
                                         <th width="12%">TIN Number</th>
-                                        <th width="12%">Year of Incorporation</th>
-                                        <th width="14%">Region</th>
+                                        <th width="10%">Year of Incorporation</th>
+                                        <th width="12%">Region</th>
                                         <th width="8%">Status</th>
                                         <th style="width: 60px;">Actions</th>
                                     </tr>
@@ -53,24 +183,24 @@
                                                 @elseif($company->status == 2)
                                                     <span class="badge bg-info">Assessment Process</span>
                                                 @elseif($company->status == 3)
-                                                    <span class="badge bg-success">Approved</span>
+                                                    <span class="badge bg-success">Assessment Approved</span>
                                                 @endif
                                             </td>
                                             <td>
-                                                <a href="{{ route('companies.show', $company->id) }}"
-                                                    title="View" class="btn btn-xss">
+                                                <a href="{{ route('companies.show', $company->id) }}" title="View"
+                                                    class="btn btn-xss">
                                                     <i class="bx bx-folder-open"></i>
                                                 </a>
 
-                                                {{-- <a href="{{ route('users.change-status', $values->id) }}"
-                                                title="Change status" class="btn btn-outline-info btn-xs">
-                                                <i class="fa fa-info-circle"></i>
-                                            </a>
+                                                <a href="{{ route('companies.edit', $company->id) }}" title="Edit"
+                                                    class="btn btn-xss">
+                                                    <i class="bx bx-edit text-secondary"></i>
+                                                </a>
 
-                                            <a href="{{ route('users.delete', $values->id) }}" title="Delete"
-                                                class="btn btn-outline-danger btn-xs delete">
-                                                <i class="fa fa-trash text-danger"></i>
-                                            </a> --}}
+                                                <a href="{{ route('companies.delete', $company->id) }}" title="Delete"
+                                                    class="btn btn-xss delete">
+                                                    <i class="bx bx-trash text-danger"></i>
+                                                </a>
                                             </td>
                                         </tr>
                                         @php $serial++; @endphp
@@ -78,7 +208,7 @@
                                 </tbody>
                             </table>
                         @else
-                            <div class="alert alert-danger"> No any user registered</div>
+                            <div class="alert alert-danger"> No any company registered</div>
                         @endif
                     </div>
                 </div>
@@ -90,9 +220,4 @@
 
 @endsection
 @section('script')
-    <!-- apexcharts -->
-    <script src="{{ URL::asset('/assets/libs/apexcharts/apexcharts.min.js') }}"></script>
-
-    <!-- dashboard init -->
-    <script src="{{ URL::asset('/assets/js/pages/dashboard.init.js') }}"></script>
 @endsection

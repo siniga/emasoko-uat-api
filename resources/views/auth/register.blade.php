@@ -234,7 +234,7 @@
                                                 $options = ['' => 'Select'] + $options;
                                             @endphp
 
-                                            {{ Form::select('region_id', $options, old('region_id', $company->region_id ?? ''), ['class' => 'form-control', 'id' => 'region_id', 'required']) }}
+                                            {{ Form::select('region_id', $options, old('region_id', $company->region_id ?? ''), ['class' => 'form-control select2', 'id' => 'region_id', 'required']) }}
                                             <div class="invalid-feedback">
                                                 Region required
                                             </div>

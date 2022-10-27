@@ -75,7 +75,7 @@
                             <td>{{ $company->number_of_staff }}</td>
 
                             <th>Status</th>
-                            <td colspan="3">
+                            <td colspan="3" id="company-status">
                                 @if ($company->status == 0)
                                     <span class="badge bg-warning">Registration Process</span>
                                 @elseif ($company->status == 1)
@@ -83,7 +83,7 @@
                                 @elseif($company->status == 2)
                                     <span class="badge bg-info">Assessment Process</span>
                                 @elseif($company->status == 3)
-                                    <span class="badge bg-success">Approved</span>
+                                    <span class="badge bg-success">Assessment Approved</span>
                                 @endif
                             </td>
                         </tr>
@@ -301,6 +301,7 @@
         $(document).ready(function() {
             //company information assessment without click
 
+
             //company information assessment
             $('#assess-company-information').on("click", function(e) {
                 e.preventDefault();
@@ -313,6 +314,7 @@
                     type: "GET",
                     url: "/companies/" + companyId + "/assessment/?page=companyInformation",
                 }).done(function(data) {
+                    //modal contents
                     $('#modal-contents').html(data);
                 }).fail(function(jqXHR, textStatus, errorThrown) {
                     alert('Failed to update progress');
@@ -333,6 +335,7 @@
                     type: "GET",
                     url: "/companies/" + companyId + "/assessment/?page=companyDocuments",
                 }).done(function(data) {
+                    //model contents
                     $('#modal-contents').html(data);
                 }).fail(function(jqXHR, textStatus, errorThrown) {
                     alert('Failed to update progress');
@@ -340,7 +343,6 @@
                         console.log("Loading Ajax: " + textStatus + ", " + errorThrown);
                     }
                 });
-
             });
 
             //collection accounts
@@ -354,6 +356,7 @@
                     type: "GET",
                     url: "/companies/" + companyId + "/assessment/?page=collectionAccount",
                 }).done(function(data) {
+                    //modal contents
                     $('#modal-contents').html(data);
                 }).fail(function(jqXHR, textStatus, errorThrown) {
                     alert('Failed to update progress');
@@ -374,6 +377,7 @@
                     type: "GET",
                     url: "/companies/" + companyId + "/assessment/?page=authorizedRespesentative",
                 }).done(function(data) {
+                    //modal contents
                     $('#modal-contents').html(data);
                 }).fail(function(jqXHR, textStatus, errorThrown) {
                     alert('Failed to update progress');
@@ -394,6 +398,7 @@
                     type: "GET",
                     url: "/companies/" + companyId + "/assessment/?page=ConfirmAssessment",
                 }).done(function(data) {
+                    //modal contents
                     $('#modal-contents').html(data);
                 }).fail(function(jqXHR, textStatus, errorThrown) {
                     alert('Failed to update progress');

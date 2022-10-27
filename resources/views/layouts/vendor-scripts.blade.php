@@ -23,6 +23,9 @@
 <script src="{{ URL::asset('assets/libs/bootstrap-touchspin/bootstrap-touchspin.min.js') }}"></script>
 <script src="{{ URL::asset('assets/libs/bootstrap-maxlength/bootstrap-maxlength.min.js') }}"></script>
 
+<!-- Sweet Alerts js -->
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
 <!-- form mask -->
 <script src="{{ URL::asset('assets/libs/inputmask/inputmask.min.js') }}"></script>
 
@@ -40,6 +43,7 @@
 
 <!-- App js -->
 <script src="{{ URL::asset('assets/js/app.min.js') }}"></script>
+<script src="{{ URL::asset('assets/js/custom.js') }}"></script>
 
 @yield('script')
 

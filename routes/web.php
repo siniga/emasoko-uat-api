@@ -100,6 +100,12 @@ Route::post('forget-password', [ForgotPasswordController::class, 'submitForgetPa
 Route::get('reset-password/{token}', [ForgotPasswordController::class, 'showResetPasswordForm'])->name('reset.password.get');
 Route::post('reset-password', [ForgotPasswordController::class, 'submitResetPasswordForm'])->name('reset.password.post');
 
+//companies
+Route::any('companies/lists', [CompanyController::class, 'index'])->name('companies.lists');
+Route::get('companies/{id}/delete', [CompanyController::class, 'destroy'])->name('companies.delete');
+Route::get('companies/export-xls', [CompanyController::class, 'export_xls'])->name('companies.export-xls');
+Route::get('companies/export-pdf', [CompanyController::class, 'export_pdf'])->name('companies.export-pdf');
+
 //resources routes
 Route::resources([
     'roles' => RoleController::class,

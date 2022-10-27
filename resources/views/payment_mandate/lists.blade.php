@@ -126,7 +126,7 @@
             <div class="card">
                 <div class="card-body">
                     <div class="table-responsive">
-                        @if (isset($debit_orders) && count($debit_orders) > 0)
+                        @if (isset($debit_orders) && $debit_orders->isNotEmpty())
                             <div class="row mb-2">
                                 <div class="col-md-6">
                                     <b>Payment mandate: {{ number_format(count($debit_orders)) }}</b>

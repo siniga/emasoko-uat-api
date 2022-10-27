@@ -49,7 +49,7 @@
                         @endif
                     @endforeach
                 </tbody>
-            </table> 
+            </table>
         </div>
 
         @if ($serial == 4 && $company->status != 3)
@@ -99,6 +99,16 @@
                         $('#output').css('display', '');
                         $("#output").text(data.success_msg);
                         $("#btnSubmit").prop("disabled", false);
+
+                        //add class
+                        $("#confirm-assessment").addClass(
+                            "btn btn-success waves-effect text-medium btn-sm");
+
+                        //change status 
+                        $('#company-status').html('');
+                        $('#company-status').html(
+                            '<span class="badge bg-success">Assessment Approved</span>'
+                            );
 
                         // Deactivate Loading Spinner
                         $('.loading-spinner').toggleClass('active');

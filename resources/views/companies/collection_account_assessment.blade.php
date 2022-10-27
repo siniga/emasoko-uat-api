@@ -114,6 +114,10 @@
                         $("#output").text(data.success_msg);
                         $("#btnSubmit").prop("disabled", false);
 
+                        //add class
+                        $("#collection-accounts").addClass(
+                            "btn btn-success waves-effect text-medium btn-sm");
+
                         // Deactivate Loading Spinner
                         $('.loading-spinner').toggleClass('active');
                     },

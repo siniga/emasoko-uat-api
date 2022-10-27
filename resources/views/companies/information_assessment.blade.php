@@ -85,8 +85,6 @@
             </div>
         @endif
     </form>
-
-
 </div>
 <!--./flex -->
 
@@ -138,6 +136,10 @@
                         $('#output').css('display', '');
                         $("#output").text(data.success_msg);
                         $("#btnSubmit").prop("disabled", false);
+
+                        //add class
+                        $("#assess-company-information").addClass(
+                            "btn btn-success waves-effect text-medium btn-sm");
 
                         // Deactivate Loading Spinner
                         $('.loading-spinner').toggleClass('active');

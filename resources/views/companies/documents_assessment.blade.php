@@ -115,6 +115,10 @@
                         $("#output").text(data.success_msg);
                         $("#btnSubmit").prop("disabled", false);
 
+                        //add class
+                        $("#company-documents").addClass(
+                            "btn btn-success waves-effect text-medium btn-sm");
+
                         // Deactivate Loading Spinner
                         $('.loading-spinner').toggleClass('active');
                     },
