@@ -54,50 +54,58 @@
                                     </div><br />
                                 @endif
 
-                                <form class="form-horizontal" method="POST"
-                                    action="{{ route('company.track-registration') }}">
-                                    @csrf
-                                    <div class="mb-3">
-                                        <label for="username" class="form-label">Company Email</label>
-                                        <input name="email" type="email"
-                                            class="form-control @error('email') is-invalid @enderror"
-                                            value="{{ old('email') }}" id="username" placeholder="Enter Email..."
-                                            autocomplete="email" autofocus>
-                                        @error('email')
-                                            <span class="invalid-feedback" role="alert">
-                                                <strong>{{ $message }}</strong>
-                                            </span>
-                                        @enderror
-                                    </div>
+                                {{ Form::open(['url' => route('company.track-registration'), 'class' => 'form-horizontal needs-validation', 'novalidate']) }}
+                                @method('POST')
+                                {{ Form::token() }}
 
-                                    <div class="mb-3">
-                                        <label for="username" class="form-label">Company TIN Number</label>
-                                        <input name="tin_number" type="text"
-                                            class="form-control input-mask @error('tin_number') is-invalid @enderror"
-                                            value="{{ old('tin_number') }}" id="tin_number"
-                                            placeholder="Enter TIN Number..." autocomplete="tin_number"
-                                            data-inputmask="'mask': '999-999-999'" autofocus>
-                                        @error('tin_number')
-                                            <span class="invalid-feedback" role="alert">
-                                                <strong>{{ $message }}</strong>
-                                            </span>
-                                        @enderror
-                                    </div>
+                                <div class="mb-3">
+                                    <label for="username" class="form-label">Company Email</label>
+                                    <input name="email" type="email"
+                                        class="form-control @error('email') is-invalid @enderror"
+                                        value="{{ old('email') }}" id="username" placeholder="Enter Email..."
+                                        autocomplete="email" required>
+                                    @error('email')
+                                        <span class="invalid-feedback" role="alert">
+                                            <strong>{{ $message }}</strong>
+                                        </span>
+                                    @enderror
 
-                                    <div class="mt-3 d-grid">
-                                        <button class="btn btn-primary waves-effect waves-light" type="submit">
-                                            Track
-                                        </button>
+                                    <div class="invalid-feedback">
+                                        Company email required
                                     </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="username" class="form-label">Company TIN Number</label>
+                                    <input name="tin_number" type="text"
+                                        class="form-control input-mask @error('tin_number') is-invalid @enderror"
+                                        value="{{ old('tin_number') }}" id="tin_number" placeholder="Enter TIN Number..."
+                                        autocomplete="tin_number" data-inputmask="'mask': '999-999-999'" required>
+                                    @error('tin_number')
+                                        <span class="invalid-feedback" role="alert">
+                                            <strong>{{ $message }}</strong>
+                                        </span>
+                                    @enderror
+
+                                    <div class="invalid-feedback">
+                                        TIN number required
+                                    </div>
+                                </div>
+
+                                <div class="mt-3 d-grid">
+                                    <button class="btn btn-primary waves-effect waves-light" type="submit">
+                                        Track
+                                    </button>
+                                </div>
 
 
-                                    <div class="mt-4 text-center">
-                                        <p>Don't have an account ? <a href="{{ url('register') }}"
-                                                class="fw-medium text-primary">
-                                                Apply Now </a>
-                                        </p>
-                                    </div>
-                                </form>
+                                <div class="mt-4 text-center">
+                                    <p>Don't have an account ? <a href="{{ url('register') }}"
+                                            class="fw-medium text-primary">
+                                            Register Now </a>
+                                    </p>
+                                </div>
+                                {{ Form::close() }}
                             </div>
                         </div>
                     </div>

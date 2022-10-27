@@ -52,19 +52,23 @@
                                     </div><br />
                                 @endif
 
-                                <form class="form-horizontal" method="POST" action="{{ route('login') }}">
+                                <form class="form-horizontal needs-validation" method="POST" action="{{ route('login') }}" novalidate>
                                     @csrf
                                     <div class="mb-3">
                                         <label for="username" class="form-label">Email</label>
                                         <input name="email" type="email"
                                             class="form-control @error('email') is-invalid @enderror"
                                             value="{{ old('email') }}" id="username" placeholder="Enter Email..."
-                                            autocomplete="email" autofocus>
+                                            autocomplete="email" required>
                                         @error('email')
                                             <span class="invalid-feedback" role="alert">
-                                                <strong>{{ $message }}</strong>
+                                                {{ $message }}
                                             </span>
                                         @enderror
+
+                                        <div class="invalid-feedback">
+                                            Email required
+                                        </div>
                                     </div>
 
                                     <div class="mb-3">
@@ -74,14 +78,18 @@
                                             <input type="password" name="password"
                                                 class="form-control  @error('password') is-invalid @enderror"
                                                 id="userpassword" placeholder="Enter password..." aria-label="Password"
-                                                aria-describedby="password-addon">
+                                                aria-describedby="password-addon" required>
                                             <button class="btn btn-light " type="button" id="password-addon"><i
                                                     class="mdi mdi-eye-outline"></i></button>
                                             @error('password')
                                                 <span class="invalid-feedback" role="alert">
-                                                    <strong>{{ $message }}</strong>
+                                                    {{ $message }}
                                                 </span>
                                             @enderror
+
+                                            <div class="invalid-feedback">
+                                                Password required
+                                            </div>
                                         </div>
                                     </div>
 

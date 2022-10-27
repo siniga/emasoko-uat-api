@@ -3,11 +3,6 @@
 @section('title')
     @lang('translation.Register')
 @endsection
-@section('css')
-    <link href="{{ URL::asset('/assets/libs/bootstrap-datepicker/bootstrap-datepicker.min.css') }}" rel="stylesheet"
-        type="text/css">
-@endsection
-
 
 @section('content')
     <div class="account-pages my-5 pt-sm-5">
@@ -61,6 +56,17 @@
                                 </div>
                             </div>
                             <!--./form wizard -->
+
+                            @if (session()->get('success'))
+                                <div class="alert alert-success">
+                                    {{ session()->get('success') }}
+                                </div><br />
+                            @elseif(session()->get('danger'))
+                                <div class="alert alert-danger">
+                                    {{ session()->get('danger') }}
+                                </div><br />
+                            @endif
+
                             <form action="#" id="registrationForm" enctype="multipart/form-data" autocomplete="off">
                                 <input type="hidden" name="partner_id" value="{{ $company->id }}">
                                 <input type="hidden" name="partner_uuid" value="{{ $company->uuid }}">
@@ -69,9 +75,7 @@
                                 <section data-step="6">
                                     <div class="row">
                                         <div class="col-lg-12">
-                                            <h5 class="text-capitalize">Company Information
-
-                                            </h5>
+                                            <h5 class="text-capitalize">Company Information</h5>
                                             <hr />
                                         </div>
                                         <!--./col -->
@@ -379,14 +383,39 @@
         <!--./container -->
     </div>
     <!--./account-pages -->
+
+    <!-- subscribeModal -->
+    <div class="modal fade" id="subscribeModal" tabindex="-1" aria-labelledby="subscribeModalLabel" aria-hidden="true"
+        data-keyboard="false" data-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-bottom-0">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-4">
+                        <div class="avatar-md mx-auto mb-4">
+                            <div class="avatar-title bg-light rounded-circle text-success h1">
+                                <i class="mdi mdi-check"></i>
+                            </div>
+                        </div>
+
+                        <div class="row justify-content-center">
+                            <div class="col-xl-10">
+                                <h4 class="text-success">Congratulations</h4>
+                                <p class="text-muted font-size-14 mb-4" id="success-msg"></p>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- end modal -->
 @endsection
 
 @section('script')
-    <script src="{{ URL::asset('/assets/libs/bootstrap-datepicker/bootstrap-datepicker.min.js') }}"></script>
-
-    <!--jquery validation -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.0/jquery.validate.min.js"></script>
-
     <script type="text/javascript">
         $(document).ready(function() {
             //validate form and submit
@@ -449,33 +478,3 @@
         });
     </script>
 @endsection
-
-<!-- subscribeModal -->
-<div class="modal fade" id="subscribeModal" tabindex="-1" aria-labelledby="subscribeModalLabel" aria-hidden="true"
-    data-keyboard="false" data-backdrop="static">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header border-bottom-0">
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="text-center mb-4">
-                    <div class="avatar-md mx-auto mb-4">
-                        <div class="avatar-title bg-light rounded-circle text-success h1">
-                            <i class="mdi mdi-check"></i>
-                        </div>
-                    </div>
-
-                    <div class="row justify-content-center">
-                        <div class="col-xl-10">
-                            <h4 class="text-success">Congratulations</h4>
-                            <p class="text-muted font-size-14 mb-4" id="success-msg"></p>
-
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-<!-- end modal -->

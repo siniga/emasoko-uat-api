@@ -3,11 +3,6 @@
 @section('title')
     @lang('translation.Register')
 @endsection
-@section('css')
-    <link href="{{ URL::asset('/assets/libs/bootstrap-datepicker/bootstrap-datepicker.min.css') }}" rel="stylesheet"
-        type="text/css">
-@endsection
-
 
 @section('content')
     <div class="account-pages my-5 pt-sm-5">
@@ -62,93 +57,41 @@
                             </div>
                             <!--./form wizard -->
 
-                            <form action="#" id="registrationForm" enctype="multipart/form-data" autocomplete="off">
-                                <input type="hidden" name="partner_id" value="{{ $company->id }}">
-                                <input type="hidden" name="partner_uuid" value="{{ $company->uuid }}">
+                            @if (session()->get('success'))
+                                <div class="alert alert-success">
+                                    {{ session()->get('success') }}
+                                </div><br />
+                            @elseif(session()->get('danger'))
+                                <div class="alert alert-danger">
+                                    {{ session()->get('danger') }}
+                                </div><br />
+                            @endif
 
-                                <section data-step="4">
-                                    <div class="row">
-                                        <div class="col-lg-12">
-                                            <h5 class="text-capitalize">Company Authorized Representative</h5>
-                                            <hr />
-                                        </div>
-                                        <!--./col -->
+                            {{ Form::open(['url' => route('company.store-staff'), 'class' => 'form-horizontal needs-validation', 'enctype' => 'multipart/form-data', 'novalidate']) }}
+                            @method('POST')
+                            {{ Form::token() }}
+
+                            <input type="hidden" name="partner_id" value="{{ $company->id }}">
+                            <input type="hidden" name="partner_uuid" value="{{ $company->uuid }}">
+
+                            <section data-step="4">
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <h5 class="text-capitalize">Company Authorized Representative</h5>
+                                        <hr />
                                     </div>
-                                    <!--./row -->
+                                    <!--./col -->
+                                </div>
+                                <!--./row -->
 
-                                    @if ($company->partnerStaff->isNotEmpty())
-                                        @foreach ($company->partnerStaff as $data)
-                                            <div class="row">
-                                                <div class="col-lg-4">
-                                                    <div class="mb-3">
-                                                        <label for="basicpill-namecard-input">Staff Name <span
-                                                                class="text-danger">*</span></label>
-                                                        {{ Form::text('staff_name[]', old('staff_name[]', $data->name), ['class="form-control"', 'placeholder="Staff name..."', 'required=""']) }}
-
-                                                    </div>
-                                                </div>
-                                                <!--./col -->
-
-                                                <div class="col-lg-4">
-                                                    <div class="mb-3">
-                                                        <label for="basicpill-namecard-input">NIDA Number <span
-                                                                class="text-danger">*</span></label>
-                                                        {{ Form::text('nida_number[]', old('nida_number[]', $data->NIDA_number), ['class="form-control input-mask"', 'placeholder="NIDA number..."', 'data-inputmask' => "'mask': '99999999-99999-99999-99'", 'required=""']) }}
-
-                                                    </div>
-                                                </div>
-                                                <!--./col -->
-
-                                                <div class="col-lg-4">
-                                                    <div class="mb-3">
-                                                        <label for="basicpill-namecard-input">Staff Email<span
-                                                                class="text-danger">*</span></label>
-                                                        {{ Form::email('staff_email[]', old('staff_email[]', $data->email), ['class="form-control invinputs"', 'placeholder="Staff email..."', 'required=""']) }}
-
-                                                    </div>
-                                                </div>
-                                                <!--./col -->
-
-                                                <div class="col-lg-4">
-                                                    <div class="mb-3">
-                                                        <label for="basicpill-namecard-input">Staff Phone<span
-                                                                class="text-danger">*</span></label>
-                                                        {{ Form::number('staff_phone[]', old('staff_phone[]', $data->phone), ['class="form-control"', 'placeholder="Staff phone..."', 'required=""']) }}
-                                                    </div>
-                                                </div>
-                                                <!--./col -->
-
-                                                <div class="col-lg-4">
-                                                    <div class="mb-3">
-                                                        <label for="basicpill-namecard-input">Staff Title<span
-                                                                class="text-danger">*</span></label>
-                                                        {{ Form::text('staff_title[]', old('staff_title[]', $data->title), ['class= "form-control"', 'required=""']) }}
-                                                    </div>
-                                                </div>
-                                                <!--./col -->
-
-                                                <div class="col-lg-4">
-                                                    <div class="mt-4 pt-2 text-sm-end d-none d-sm-block">
-                                                        Do you want to delete this staff information? <input type="checkbox"
-                                                            id="remove_button" />
-                                                        {{-- <button type="button" name="add" id="remove_button"
-                                                                class="btn btn-danger btn-sm text-medium">
-                                                                <i class="fa fa-times"></i> 
-                                                            </button> --}}
-                                                    </div>
-                                                    <!--./pull-right -->
-                                                </div>
-                                                <!--./col-lg-12 -->
-                                            </div>
-                                            <!--./row -->
-                                        @endforeach
-                                    @else
+                                @if ($company->partnerStaff->isNotEmpty())
+                                    @foreach ($company->partnerStaff as $data)
                                         <div class="row">
                                             <div class="col-lg-4">
                                                 <div class="mb-3">
                                                     <label for="basicpill-namecard-input">Staff Name <span
                                                             class="text-danger">*</span></label>
-                                                    {{ Form::text('staff_name[]', old('staff_name[]'), ['class="form-control"', 'placeholder="Staff name..."', 'required=""']) }}
+                                                    {{ Form::text('staff_name[]', old('staff_name[]', $data->name), ['class="form-control"', 'placeholder="Staff name..."', 'required=""']) }}
 
                                                 </div>
                                             </div>
@@ -158,7 +101,7 @@
                                                 <div class="mb-3">
                                                     <label for="basicpill-namecard-input">NIDA Number <span
                                                             class="text-danger">*</span></label>
-                                                    {{ Form::text('nida_number[]', old('nida_number[]'), ['class="form-control input-mask"', 'placeholder="NIDA number..."', 'data-inputmask' => "'mask': '99999999-99999-99999-99'", 'required=""']) }}
+                                                    {{ Form::text('nida_number[]', old('nida_number[]', $data->NIDA_number), ['class="form-control input-mask"', 'placeholder="NIDA number..."', 'data-inputmask' => "'mask': '99999999-99999-99999-99'", 'required=""']) }}
 
                                                 </div>
                                             </div>
@@ -166,9 +109,9 @@
 
                                             <div class="col-lg-4">
                                                 <div class="mb-3">
-                                                    <label for="basicpill-namecard-input">Staff Email<span
+                                                    <label for="basicpill-namecard-input">Staff Email <span
                                                             class="text-danger">*</span></label>
-                                                    {{ Form::email('staff_email[]', old('staff_email[]'), ['class="form-control invinputs"', 'placeholder="Staff email..."', 'required=""']) }}
+                                                    {{ Form::email('staff_email[]', old('staff_email[]', $data->email), ['class="form-control invinputs"', 'placeholder="Staff email..."', 'required=""']) }}
 
                                                 </div>
                                             </div>
@@ -176,54 +119,115 @@
 
                                             <div class="col-lg-4">
                                                 <div class="mb-3">
-                                                    <label for="basicpill-namecard-input">Staff Phone<span
+                                                    <label for="basicpill-namecard-input">Staff Phone <span
                                                             class="text-danger">*</span></label>
-                                                    {{ Form::number('staff_phone[]', old('staff_phone[]'), ['class="form-control invinputs"', 'placeholder="255xxxxxxxxx..."', 'required=""']) }}
+                                                    {{ Form::number('staff_phone[]', old('staff_phone[]', $data->phone), ['class="form-control"', 'placeholder="Staff phone..."', 'required=""']) }}
                                                 </div>
                                             </div>
                                             <!--./col -->
 
                                             <div class="col-lg-4">
                                                 <div class="mb-3">
-                                                    <label for="basicpill-namecard-input">Staff Title<span
+                                                    <label for="basicpill-namecard-input">Staff Title <span
                                                             class="text-danger">*</span></label>
-                                                    {{ Form::text('staff_title[]', old('staff_title[]'), ['class= "form-control"', 'placeholder="Write title..."', 'required=""']) }}
+                                                    {{ Form::text('staff_title[]', old('staff_title[]', $data->title), ['class= "form-control"', 'required=""']) }}
                                                 </div>
                                             </div>
                                             <!--./col -->
 
                                             <div class="col-lg-4">
                                                 <div class="mt-4 pt-2 text-sm-end d-none d-sm-block">
-                                                    <button type="button" name="add" id="add_button"
-                                                        class="btn btn-info btn-sm text-medium">
-                                                        <i class="fa fa-plus"></i> Add another staff
-                                                    </button>
+                                                    Do you want to delete this staff information? <input type="checkbox"
+                                                        id="remove_button" />
                                                 </div>
                                                 <!--./pull-right -->
                                             </div>
                                             <!--./col-lg-12 -->
                                         </div>
                                         <!--./row -->
-                                    @endif
-
-                                    <div class="field_wrapper"></div>
-
+                                    @endforeach
+                                @else
                                     <div class="row">
-                                        <div class="col-md-12">
-                                            <div class="mb-3 text-sm-end d-none d-sm-block">
-                                                <a href="{{ url('company-accounts/' . $company->uuid) }}"
-                                                    class="btn btn-info text-medium">Previous</a>
+                                        <div class="col-lg-4">
+                                            <div class="mb-3">
+                                                <label for="basicpill-namecard-input">Staff Name <span
+                                                        class="text-danger">*</span></label>
+                                                {{ Form::text('staff_name[]', old('staff_name[]'), ['class="form-control"', 'placeholder="Staff name..."', 'required=""']) }}
 
-                                                <button type="submit" id="btnSubmit" class="btn btn-primary">
-                                                    Next <i class="loading-spinner fa fa-lg fa fa-spinner fa-spin"></i>
-                                                </button>
                                             </div>
                                         </div>
                                         <!--./col -->
+
+                                        <div class="col-lg-4">
+                                            <div class="mb-3">
+                                                <label for="basicpill-namecard-input">NIDA Number <span
+                                                        class="text-danger">*</span></label>
+                                                {{ Form::text('nida_number[]', old('nida_number[]'), ['class="form-control input-mask"', 'placeholder="NIDA number..."', 'data-inputmask' => "'mask': '99999999-99999-99999-99'", 'required=""']) }}
+
+                                            </div>
+                                        </div>
+                                        <!--./col -->
+
+                                        <div class="col-lg-4">
+                                            <div class="mb-3">
+                                                <label for="basicpill-namecard-input">Staff Email <span
+                                                        class="text-danger">*</span></label>
+                                                {{ Form::email('staff_email[]', old('staff_email[]'), ['class="form-control invinputs"', 'placeholder="Staff email..."', 'required=""']) }}
+
+                                            </div>
+                                        </div>
+                                        <!--./col -->
+
+                                        <div class="col-lg-4">
+                                            <div class="mb-3">
+                                                <label for="basicpill-namecard-input">Staff Phone <span
+                                                        class="text-danger">*</span></label>
+                                                {{ Form::number('staff_phone[]', old('staff_phone[]'), ['class="form-control invinputs"', 'placeholder="255xxxxxxxxx..."', 'required=""']) }}
+                                            </div>
+                                        </div>
+                                        <!--./col -->
+
+                                        <div class="col-lg-4">
+                                            <div class="mb-3">
+                                                <label for="basicpill-namecard-input">Staff Title <span
+                                                        class="text-danger">*</span></label>
+                                                {{ Form::text('staff_title[]', old('staff_title[]'), ['class= "form-control"', 'placeholder="Write title..."', 'required=""']) }}
+                                            </div>
+                                        </div>
+                                        <!--./col -->
+
+                                        <div class="col-lg-4">
+                                            <div class="mt-4 pt-2 text-sm-end d-none d-sm-block">
+                                                <button type="button" name="add" id="add_button"
+                                                    class="btn btn-info btn-sm text-medium">
+                                                    <i class="fa fa-plus"></i> Add another staff
+                                                </button>
+                                            </div>
+                                            <!--./pull-right -->
+                                        </div>
+                                        <!--./col-lg-12 -->
                                     </div>
                                     <!--./row -->
-                                </section>
-                            </form>
+                                @endif
+
+                                <div class="field_wrapper"></div>
+
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="mb-3 text-sm-end d-none d-sm-block">
+                                            <a href="{{ url('company-accounts/' . $company->uuid) }}"
+                                                class="btn btn-info text-medium">Previous</a>
+
+                                            <button type="submit" id="btnSubmit" class="btn btn-primary">
+                                                Next <i class="loading-spinner fa fa-lg fa fa-spinner fa-spin"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <!--./col -->
+                                </div>
+                                <!--./row -->
+                            </section>
+                            {{ Form::close() }}
                         </div>
                         <!--./card-body -->
                     </div>
@@ -300,9 +304,6 @@
                 fieldHTML += '<div class="col-lg-4 col-md-4">' +
                     '<div class="mt-4 pt-2 text-sm-end d-none d-sm-block">' +
                     'Do you want to delete this staff information? <input type="checkbox" id="remove_button" />' +
-                    // '<button type="button" name="add" id="remove_button" class="btn btn-danger btn-sm text-medium">' +
-                    // '<i class="fa fa-times"></i>' +
-                    // '</button>' +
                     '</div></div>';
 
                 fieldHTML += '</div>';
@@ -324,68 +325,6 @@
                     x--; //Decrement field counter
                 });
             });
-
-            //validate form and submit
-            $("#registrationForm").validate({
-                rules: {
-                    "staff_name[]": "required",
-                    "staff_email[]": "required",
-                    "staff_phone[]": "required",
-                    "staff_title[]": "required",
-                    "nida_number[]": "required",
-                },
-                messages: {
-                    "staff_name[]": "Staff name required",
-                    "staff_email[]": "Email required",
-                    "staff_phone[]": "Phone required",
-                    "staff_title[]": "Staff title required",
-                    "nida_number[]": "NIDA number required",
-                },
-                submitHandler: function(form, e) {
-
-                    e.preventDefault();
-
-                    // Activate the loading spinner
-                    $('.loading-spinner').toggleClass('active');
-
-                    // Get form
-                    var form = $(form)[0];
-
-                    // FormData object 
-                    var data = new FormData(form);
-
-                    //append token
-                    data.append("_token", "{{ csrf_token() }}");
-
-                    // disabled the submit button
-                    $("#btnSubmit").prop("disabled", true);
-
-                    //post data 
-                    $.ajax({
-                        type: "POST",
-                        url: "{{ url('store-company-staff') }}",
-                        data: data,
-                        processData: false,
-                        contentType: false,
-                        cache: false,
-                        timeout: 800000,
-                        success: function(data) {
-                            $("#btnSubmit").prop("disabled", false);
-
-                            // Deactivate Loading Spinner
-                            $('.loading-spinner').toggleClass('active');
-
-                            //redirect
-                            window.location.href = "/company-authorized-person/" + data.uuid
-                        },
-                        error: function(e) {
-                            $("#btnSubmit").prop("disabled", false);
-                        }
-                    });
-                    return false;
-                },
-            });
-
 
         });
     </script>

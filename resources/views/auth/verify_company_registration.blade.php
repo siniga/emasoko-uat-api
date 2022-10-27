@@ -55,8 +55,8 @@
                                     </div><br />
                                 @endif
 
-                                <form class="form-horizontal" method="POST"
-                                    action="{{ route('company.verify-registration', $company->uuid) }}">
+                                <form class="form-horizontal needs-validation" method="POST"
+                                    action="{{ route('company.verify-registration', $company->uuid) }}" novalidate>
                                     @csrf
 
                                     <div class="mb-3">
@@ -65,12 +65,15 @@
                                             class="form-control input-mask @error('verification_code') is-invalid @enderror"
                                             value="{{ old('verification_code') }}" id="verification_code"
                                             placeholder="Enter verification code..." autocomplete="verification_code"
-                                            data-inputmask="'mask': '999999'" autofocus>
+                                            data-inputmask="'mask': '999999'" required>
                                         @error('verification_code')
                                             <span class="invalid-feedback" role="alert">
-                                                <strong>{{ $message }}</strong>
+                                                {{ $message }}
                                             </span>
                                         @enderror
+                                        <div class="invalid-feedback">
+                                            This field required
+                                        </div>
                                     </div>
 
                                     <div class="mt-3 d-grid">

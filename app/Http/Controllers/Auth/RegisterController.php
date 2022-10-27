@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\SendEmailJob;
 use App\Models\Account;
 use App\Models\AccountType;
 use App\Models\Country;
+use App\Models\DocumentCategory;
 use App\Models\Partner;
 use App\Models\PartnerAccount;
 use App\Models\PartnerApproval;
@@ -99,14 +101,6 @@ class RegisterController extends Controller
             'physical_address' => 'required',
         ]);
 
-        // if ($validator->fails()) {
-        //     //return response
-        //     return response()->json([
-        //         'success' => false,
-        //         'errors' => $validator->errors()
-        //     ], 422);
-        // }
-
         //capture if uuid is not null
         if ($request->input('partner_uuid') != null)
             $uuid = $request->input('partner_uuid');
@@ -134,8 +128,8 @@ class RegisterController extends Controller
         $partner->next_step = 'company-documents/' . $uuid;
         $partner->save();
 
-        //response
-        return response()->json(['success' => true, 'uuid' => $uuid], 200);
+        //redirect
+        return Redirect::route('company.register-documents', $uuid)->with('success', "Company information saved!");
     }
 
     //company documents
@@ -145,6 +139,9 @@ class RegisterController extends Controller
 
         //company
         $company = Partner::where(['uuid' => $uuid])->firstOrFail();
+
+        //document categories
+        $categories = DocumentCategory::all();
 
         //assigned documents
         $arr_documents = [];
@@ -156,7 +153,7 @@ class RegisterController extends Controller
         }
 
         //render view
-        return view('auth.company_documents', compact('title', 'company', 'arr_documents'));
+        return view('auth.company_documents', compact('title', 'company', 'categories', 'arr_documents'));
     }
 
     //store company details
@@ -173,21 +170,13 @@ class RegisterController extends Controller
         $partner->next_step = 'company-accounts/' . $uuid;
         $partner->save();
 
-        //attachments
-        $arr_attachments = [
-            'business_licence' => 'Business Licence',
-            'certificate_of_incorporation' => 'Certificate of incorporation',
-            'TIN_certificate' => 'TIN Certificate',
-            'brela_certificate' => 'BRELA certificate',
-            'audited_financial_statement' => 'Audited financial statement',
-            'introduction_letter' => 'Introduction letter introducing director as a custodian of the account.',
-            'annual_return' => 'Annual return',
-        ];
+        //document categories
+        $categories = DocumentCategory::all();
 
-        foreach ($arr_attachments as $k => $val) {
+        foreach ($categories as $val) {
             //business licennce
-            if ($request->hasFile($k)) {
-                $path = $request->file($k);
+            if ($request->hasFile($val->key)) {
+                $path = $request->file($val->key);
                 $docsName = $path->getClientOriginalName();
 
                 $path->move('assets/uploads/docs', $docsName);
@@ -196,16 +185,16 @@ class RegisterController extends Controller
                 $partner_document = PartnerDocument::firstOrNew([
                     'partner_id' => $id,
                     'partner_uuid' => $uuid,
-                    'key' => $k,
-                    'name' => $val
+                    'key' => $val->key,
+                    'name' => $val->name
                 ]);
                 $partner_document->attachment = $docsName;
                 $partner_document->save();
             }
         }
 
-        //response
-        return response()->json(['success' => true, 'uuid' => $uuid], 200);
+        //redirect
+        return Redirect::route('company.register-accounts', $uuid)->with('success', "Company documents saved!");
     }
 
     //company Account
@@ -255,8 +244,8 @@ class RegisterController extends Controller
             }
         }
 
-        //response
-        return response()->json(['success' => true, 'uuid' => $uuid], 200);
+        //redirect
+        return Redirect::route('company.register-staff', $uuid)->with('success', "Company collection account(s) saved!");
     }
 
 
@@ -307,8 +296,8 @@ class RegisterController extends Controller
             }
         }
 
-        //response
-        return response()->json(['success' => true, 'uuid' => $uuid], 200);
+        //redirect
+        return Redirect::route('company.register-authorized-person', $uuid)->with('success', "Company authorized personnel(s) saved!");
     }
 
     //authorized person
@@ -362,8 +351,8 @@ class RegisterController extends Controller
         $partner_user->authorize = 1;
         $partner_user->save();
 
-        //response
-        return response()->json(['success' => true, 'uuid' => $uuid], 200);
+        //redirect
+        return Redirect::route('company.info-overview', $uuid)->with('success', "Company authorized credentials saved!");
     }
 
     //company info overview
@@ -398,7 +387,7 @@ class RegisterController extends Controller
             $status = 1;
             $complete = 1;
             $action = 'submit';
-            $message = 'Company registration complete, Please wait for approval!';
+            $message = 'Company registration complete, Please wait for approval from eMakato Team!';
 
             //store company aapprovals
             $arr_assessment_criteria = [
@@ -488,19 +477,17 @@ class RegisterController extends Controller
             $message .= "{$otp_token}";
             $message .= "<p>You can start using your eMakato account now. Login to your account by <a href=" . url('login') . ">click here.</a></p>";
 
-            //send email
-            Mail::send(
-                ['html' => 'emails.template'],
-                ['name' => $partner->business_name, 'body' => $message],
-                function ($message) use ($partner) {
-                    $message->to($partner->email);
-                    $message->subject('Company Verification Code');
-                    $message->from('renfridfrancis@gmail.com', 'eMakato');
-                }
-            );
+            //send email for verification
+            $data = [
+                "email" => $partner->email,
+                "name" => $partner->business_name,
+                "subject" => "Company Verification Code",
+                "body" => $message
+            ];
+            dispatch(new SendEmailJob($data));
 
             //redirect to verify company registration
-            return Redirect::route('company.verify-registration', $partner->uuid)->with('success', 'Verification code sent');
+            return Redirect::route('company.verify-registration', $partner->uuid)->with('success', 'Verification code sent to your email.');
         }
     }
 

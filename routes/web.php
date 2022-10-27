@@ -54,19 +54,19 @@ Route::post('store-company-details', [RegisterController::class, 'storeCompanyDe
 
 //company documents
 Route::get('company-documents/{uuid}', [RegisterController::class, 'companyDocumentsForm'])->name('company.register-documents');
-Route::post('store-company-documents', [RegisterController::class, 'storeCompanyDocuments'])->name('company.register-documents');
+Route::post('store-company-documents', [RegisterController::class, 'storeCompanyDocuments'])->name('company.store-documents');
 
 //company accounts
 Route::get('company-accounts/{uuid}', [RegisterController::class, 'companyAccountForm'])->name('company.register-accounts');
-Route::post('store-company-accounts', [RegisterController::class, 'storeCompanyAccounts'])->name('company.register-accounts');
+Route::post('store-company-accounts', [RegisterController::class, 'storeCompanyAccounts'])->name('company.store-accounts');
 
 //company staff
 Route::get('company-staff/{uuid}', [RegisterController::class, 'companyStaffForm'])->name('company.register-staff');
-Route::post('store-company-staff', [RegisterController::class, 'storeCompanyStaff'])->name('company.register-staff');
+Route::post('store-company-staff', [RegisterController::class, 'storeCompanyStaff'])->name('company.store-staff');
 
 //company authorized person
 Route::get('company-authorized-person/{uuid}', [RegisterController::class, 'companyAuthorizedPersonForm'])->name('company.register-authorized-person');
-Route::post('store-company-authorized-person', [RegisterController::class, 'storeCompanyAuthorizedPerson'])->name('company.register-authorized-person');
+Route::post('store-company-authorized-person', [RegisterController::class, 'storeCompanyAuthorizedPerson'])->name('company.store-authorized-person');
 
 //company details overview
 Route::get('company-info-overview/{uuid}', [RegisterController::class, 'companyInfoOverview'])->name('company.info-overview');
