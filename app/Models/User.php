@@ -103,7 +103,7 @@ class User extends Authenticatable
     public static function messages(): array
     {
         return [
-            'name.required' => 'Fullname is required',
+            'name.required' => 'Full name is required',
             'email.required' => 'Email is required',
             'email.unique' => 'Email must be unique',
             'phone.required' => 'Phone is required',

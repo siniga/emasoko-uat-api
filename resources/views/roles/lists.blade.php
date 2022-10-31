@@ -29,7 +29,7 @@
                     <div class="row mb-2">
                         <div class="col-md-9 col-12">
                             <div class="float-left">
-                                <a href="{{ route('roles.create') }}" class="btn btn-outline-primary btn-xs">
+                                <a href="{{ route('roles.create') }}" class="btn btn-outline-primary btn-sm">
                                     <i class="fa fa-plus"></i> Create New
                                 </a>
                             </div>
@@ -66,13 +66,13 @@
                                             <td>{{ $values->description }}</td>
                                             <td>
                                                 <a href="{{ route('roles.edit', $values->id) }}" title="Edit"
-                                                    class="btn btn-outline-secondary btn-xss">
-                                                    <i class='bx bx-edit font-size-16'></i>
+                                                    class="btn btn-xss">
+                                                    <i class='bx bx-edit font-size-14'></i>
                                                 </a>
 
                                                 <a href="{{ route('roles.assign-perms', $values->id) }}"
-                                                    title="Assign Permission" class="btn btn-outline-danger btn-xss">
-                                                    <i class="bx bxs-user-pin font-size-16"></i>
+                                                    title="Assign Permission" class="btn btn-xss">
+                                                    <i class="bx bxs-user-pin text-secondary font-size-14"></i>
                                                 </a>
                                             </td>
                                         </tr>

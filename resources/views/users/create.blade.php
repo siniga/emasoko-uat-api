@@ -24,15 +24,19 @@
                         </div><br />
                     @endif
 
-                    {{ Form::open(['url' => route('users.store'), 'method' => 'POST', 'class' => 'form-horizontal']) }}
+                    {{ Form::open(['url' => route('users.store'), 'method' => 'POST', 'class' => 'form-horizontal needs-validation', 'novalidate']) }}
                     {{ Form::token() }}
 
                     <div class="row">
                         <div class="col-lg-6 col-12">
                             <div class="mb-3">
-                                <label>Fullname <span class="red">*</span></label>
-                                {{ Form::text('name', old('name'), ['class="form-control"', 'placeholder="Write a full name..."']) }}
+                                <label>Name <span class="red">*</span></label>
+                                {{ Form::text('name', old('name'), ['class="form-control"', 'placeholder="Write a full name..."', 'required']) }}
                                 <span class="text-danger">{{ $errors->first('name') }}</span>
+
+                                <div class="invalid-feedback">
+                                    Name required
+                                </div>
                             </div>
                         </div>
                         <!--./col-lg-4 -->
@@ -40,8 +44,12 @@
                         <div class="col-lg-3 col-12">
                             <div class="mb-3">
                                 <label>Email <span class="red">*</span></label>
-                                {{ Form::text('email', old('email'), ['class="form-control"', 'placeholder="Write a email address..."']) }}
-                                <span class="text-danger">{{ $errors->first('email') }}</span>
+                                {{ Form::email('email', old('email'), ['class="form-control"', 'placeholder="Write a email address..."',  'required']) }}
+                                <span class="invalid-feedback">{{ $errors->first('email') }}</span>
+
+                                <div class="invalid-feedback">
+                                    Email required
+                                </div>
                             </div>
                         </div>
                         <!--./col-lg-4 -->
@@ -49,8 +57,12 @@
                         <div class="col-lg-3 col-12">
                             <div class="mb-3">
                                 <label>Phone <span class="red">*</span></label>
-                                {{ Form::text('phone', old('phone'), ['class="form-control"', 'placeholder="Write a phone..."']) }}
-                                <span class="text-danger">{{ $errors->first('phone') }}</span>
+                                {{ Form::text('phone', old('phone'), ['class="form-control"', 'placeholder="Write a phone..."',  'required']) }}
+                                <span class="invalid-feedback">{{ $errors->first('phone') }}</span>
+
+                                <div class="invalid-feedback">
+                                    Phone required
+                                </div>
                             </div>
                         </div>
                         <!--./col-lg-4 -->
@@ -86,7 +98,7 @@
                                         @endforeach
                                     </tr>
                                 </table>
-                                <span class="text-danger">{{ $errors->first('role_ids') }}</span>
+                                <span class="invalid-feedback">{{ $errors->first('role_ids') }}</span>
                             </div>
                         </div>
                         <!--./col-lg-12 -->
@@ -97,8 +109,12 @@
                         <div class="col-lg-6">
                             <div class="mb-3">
                                 <label>Password <span class="red">*</span></label>
-                                {{ Form::password('password', ['placeholder="Write a password..."', 'class="form-control"']) }}
-                                <span class="text-danger">{{ $errors->first('password') }}</span>
+                                {{ Form::password('password', ['placeholder="Write a password..."', 'class="form-control"',  'required']) }}
+                                <span class="invalid-feedback">{{ $errors->first('password') }}</span>
+
+                                <div class="invalid-feedback">
+                                    Password required
+                                </div>
                             </div>
                         </div>
                         <!--./col-lg-6 -->
@@ -106,8 +122,12 @@
                         <div class="col-lg-6">
                             <div class="mb-3">
                                 <label>Confirm Password <span class="red">*</span> </label>
-                                {{ Form::password('password_confirm', ['placeholder="Confirm password..."', 'class="form-control"']) }}
-                                <span class="text-danger">{{ $errors->first('password_confirm') }}</span>
+                                {{ Form::password('password_confirm', ['placeholder="Confirm password..."', 'class="form-control"',  'required']) }}
+                                <span class="invalid-feedback">{{ $errors->first('password_confirm') }}</span>
+
+                                <div class="invalid-feedback">
+                                    Confirmation password required
+                                </div>
                             </div>
                         </div>
                         <!--./col-lg-6 -->
@@ -116,10 +136,10 @@
 
                     <div class="row">
                         <div class="col-lg-12">
-                            <div class="mb-3">
-                                <button type="submit" class="btn btn-secondary text-medium">Register</button>
+                            <div class="mb-3 text-sm-end d-none d-sm-block">
                                 <a href="{{ route('users.index') }}"
                                     class="btn btn-danger text-medium">Cancel</a>
+                                <button type="submit" class="btn btn-primary text-medium">Submit</button>
                             </div>
                         </div>
                         <!--./col-lg-12 -->

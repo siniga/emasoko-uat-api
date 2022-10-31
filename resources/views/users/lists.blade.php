@@ -29,7 +29,7 @@
                     <div class="row mb-2">
                         <div class="col-md-9 col-12">
                             <div class="float-left">
-                                <a href="{{ route('users.create') }}" class="btn btn-outline-primary btn-xs">
+                                <a href="{{ route('users.create') }}" class="btn btn-outline-primary btn-sm">
                                     <i class="fa fa-plus"></i> Register New
                                 </a>
                             </div>
@@ -86,19 +86,19 @@
                                             </td>
                                             <td>
                                                 <a href="{{ route('users.edit', $values->id) }}" title="Edit"
-                                                    class="btn btn-outline-secondary btn-xss">
-                                                    <i class='bx bx-edit font-size-16'></i>
+                                                    class="btn btn-xss">
+                                                    <i class='bx bx-edit font-size-14'></i>
                                                 </a>
 
-                                                {{-- <a href="{{ route('users.change-status', $values->id) }}"
-                                                    title="Change status" class="btn btn-outline-info btn-xs">
-                                                    <i class="fa fa-info-circle"></i>
-                                                </a> --}}
+                                                <a href="{{ route('users.change-status', $values->id) }}"
+                                                    title="Change status" class="btn btn-xss">
+                                                    <i class='bx bx-info-circle font-size-14 text-secondary'></i>
+                                                </a>
 
-                                                {{-- <a href="{{ route('users.delete', $values->id) }}" title="Delete"
-                                                    class="btn btn-outline-danger btn-xs delete">
-                                                    <i class="fa fa-trash text-danger"></i>
-                                                </a> --}}
+                                                <a href="{{ route('users.delete', $values->id) }}" title="Delete"
+                                                    class="btn btn-xss delete">
+                                                    <i class="bx bx-trash font-size-14 text-danger"></i>
+                                                </a>
                                             </td>
                                         </tr>
                                         @php $serial++; @endphp

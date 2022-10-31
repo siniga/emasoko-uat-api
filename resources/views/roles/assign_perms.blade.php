@@ -59,9 +59,9 @@
 
             <div class="row">
                 <div class="col-md-12">
-                    <div class="mb-3">
-                        <button type="submit" class="btn btn-primary btn-xs text-medium">Assign</button>
+                    <div class="mb-3 text-sm-end d-none d-sm-block">
                         <a href="{{ route('roles.index') }}" class="btn btn-danger btn-xs text-medium">Cancel</a>
+                        <button type="submit" class="btn btn-primary btn-xs text-medium">Assign</button>
                     </div>
                 </div>
                 <!--./col-lg-12 -->

@@ -159,12 +159,23 @@ class UserController extends Controller
             ['status.required' => 'Status required']
         );
 
+        //status
+        $status = $request->input('status');
+
+
+        //update user status
         $user = User::findOrFail($id);
-        $user->active = $request->input('status');
+        $user->active = $status;
         $user->save();
 
+        //design message
+        if($status == 1)
+            $message = 'User account activated';
+        else if($status == 0)
+            $message = 'User account deactivated';    
+
         //redirect
-        return Redirect::route('users.index')->with('success', 'Status changed');
+        return Redirect::route('users.index')->with('success', $message);
     }
 
     //delete
@@ -176,6 +187,7 @@ class UserController extends Controller
         $user = User::findOrFail($id);
 
         if ($del = $user->delete()) {
+            //todo => delete other user information
 
             //redirect
             return Redirect::route('users.index')->with('success', 'User deleted');

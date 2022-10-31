@@ -189,17 +189,17 @@
                                             <td>
                                                 <a href="{{ route('companies.show', $company->id) }}" title="View"
                                                     class="btn btn-xss">
-                                                    <i class="bx bx-folder-open"></i>
+                                                    <i class="bx bx-folder-open font-size-14"></i>
                                                 </a>
 
                                                 <a href="{{ route('companies.edit', $company->id) }}" title="Edit"
                                                     class="btn btn-xss">
-                                                    <i class="bx bx-edit text-secondary"></i>
+                                                    <i class="bx bx-edit text-secondary font-size-14"></i>
                                                 </a>
 
                                                 <a href="{{ route('companies.delete', $company->id) }}" title="Delete"
                                                     class="btn btn-xss delete">
-                                                    <i class="bx bx-trash text-danger"></i>
+                                                    <i class="bx bx-trash text-danger font-size-14"></i>
                                                 </a>
                                             </td>
                                         </tr>
