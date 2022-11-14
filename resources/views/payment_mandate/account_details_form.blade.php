@@ -7,7 +7,7 @@
 @section('content')
     @component('components.breadcrumb')
         @slot('li_1')
-            Payment Mandate
+            Dashboard
         @endslot
         @slot('title')
             Create Payment Mandate
@@ -39,7 +39,7 @@
                         <div id="error-messages" style="display: none;"></div>
                     </div>
 
-                    <form action="#" id="registrationForm" enctype="multipart/form-data" autocomplete="off">
+                    <form action="#" id="Loan-Form" enctype="multipart/form-data" autocomplete="off">
                         <input type="hidden" name="uuid" value="{{ $customer_account->uuid ?? null }}">
 
                         <!-- Customer Information -->
@@ -149,7 +149,7 @@
                                 <div class="col-md-12">
                                     <div class="mb-3 text-sm-end d-none d-sm-block">
                                         <a href="{{ route('payment-mandate.lists') }}"
-                                            class="btn btn-info text-medium">Previous</a>
+                                            class="btn btn-danger text-medium">Cancel</a>
 
                                         <button type="submit" id="btnSubmit" class="btn btn-primary">
                                             Next <i class="loading-spinner fa fa-lg fa fa-spinner fa-spin"></i>
@@ -230,7 +230,7 @@
             });
 
             //validate form and submit
-            $("#registrationForm").validate({
+            $("#Loan-Form").validate({
                 errorLabelContainer: ".form-error",
 
                 //rules

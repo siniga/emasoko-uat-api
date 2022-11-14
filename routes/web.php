@@ -7,10 +7,12 @@ use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\CustomerAccountController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FrontPageController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\PaymentChannelController;
 use App\Http\Controllers\PaymentMandateController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\TaskController;
@@ -106,11 +108,19 @@ Route::get('companies/{id}/delete', [CompanyController::class, 'destroy'])->name
 Route::get('companies/export-xls', [CompanyController::class, 'export_xls'])->name('companies.export-xls');
 Route::get('companies/export-pdf', [CompanyController::class, 'export_pdf'])->name('companies.export-pdf');
 
+//customer accounts
+Route::any('customer-accounts/lists', [CustomerAccountController::class, 'lists'])->name('customer-accounts.lists');
+Route::get('customer-accounts/{id}/delete', [CustomerAccountController::class, 'destroy'])->name('customer-accounts.delete');
+Route::get('customer-accounts/export-xls', [CustomerAccountController::class, 'export_xls'])->name('customer-accounts.export-xls');
+Route::get('customer-accounts/export-pdf', [CustomerAccountController::class, 'export_pdf'])->name('customer-accounts.export-pdf');
+
 //resources routes
 Route::resources([
+    'payment-channels' => PaymentChannelController::class,
     'roles' => RoleController::class,
     'users' => UserController::class,
     'companies' => CompanyController::class,
+    'customer-accounts' => CustomerAccountController::class,
     //'customers' => CustomerController::class
 ]);
 
@@ -119,12 +129,13 @@ Route::get('companies/{id}/assessment', [CompanyController::class, 'companyAsses
 Route::post('companies/store-assessment', [CompanyController::class, 'store_assessment'])->name('companies.store-assessment');
 Route::post('companies/confirm-assessment', [CompanyController::class, 'confirm_assessment'])->name('companies.confirm-assessment');
 
-//customers
+
+//payment mandate
 Route::any('payment-mandate/lists/{consent?}', [PaymentMandateController::class, 'lists'])->name('payment-mandate.lists');
 Route::get('payment-mandate/export-xls', [PaymentMandateController::class, 'exportXLS'])->name('payment-mandate.export-xls');
 
 //account details
-Route::get('payment-mandate/create-account/{id?}', [PaymentMandateController::class, 'accountDetailsForm'])->name('payment-mandate.create-account');
+Route::get('payment-mandate/create-account/{uuid?}', [PaymentMandateController::class, 'accountDetailsForm'])->name('payment-mandate.create-account');
 Route::post('payment-mandate/store-account', [PaymentMandateController::class, 'storeAccountDetails'])->name('payment-mandate.store-account-details');
 
 //deduction details

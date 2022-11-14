@@ -127,14 +127,14 @@ class PaymentMandateController extends Controller
     }
 
     //payment details form
-    function accountDetailsForm($id = null)
+    function accountDetailsForm($uuid = null)
     {
         $title = "Payment Mandate";
 
         //if uuid =! null
         $customer_account = [];
-        if ($id != null)
-            $customer_account = CustomerAccount::findOrFail($id);
+        if ($uuid != null)
+            $customer_account = CustomerAccount::where(['uuid' => $uuid])->first();
 
         //populate data
         $account_types = AccountType::all();
@@ -191,7 +191,7 @@ class PaymentMandateController extends Controller
 
         //register customer
         $customer = Customer::firstOrNew([
-            'phone' => $unique_phone
+            'phone' => $unique_phone,
         ]);
         $customer->fullname = strtoupper($request->input('account_name'));
         $customer->email = $request->input('email');
@@ -205,8 +205,8 @@ class PaymentMandateController extends Controller
             'account_type_id' => $request->input('account_type_id'),
             'account_id' => $request->input('account_id'),
             'phone' => $unique_phone,
+            'uuid' => $uuid
         ]);
-        $customer_account->uuid = $uuid;
         $customer_account->account_name = strtoupper($request->input('account_name'));
         $customer_account->account_number = $request->input('account_number');
         $customer_account->customer_id = $customer->id;
@@ -214,19 +214,19 @@ class PaymentMandateController extends Controller
         $customer_account->save();
 
         //response
-        return response()->json(['success' => true, 'uuid' => $customer_account->id, "success_msg" => "Customer deduction channel saved!"], 200);
+        return response()->json(['success' => true, 'uuid' => $uuid, "success_msg" => "Customer deduction channel saved!"], 200);
     }
 
     //deduction details
-    function deductionDetailsForm($id)
+    function deductionDetailsForm($uuid)
     {
         $title = "Payment Mandate";
 
         //customer account
-        $customer_account = CustomerAccount::where(['id' => $id])->firstOrFail();
+        $customer_account = CustomerAccount::where(['uuid' => $uuid])->firstOrFail();
 
         //debit order
-        $debit_order = DebitOrder::where(['customer_account_id' => $customer_account->id, 'customer_account_uuid' => $id])->first();
+        $debit_order = DebitOrder::where(['customer_account_id' => $customer_account->id, 'customer_account_uuid' => $uuid])->first();
 
         //render view
         return view('payment_mandate.deduction_details_form', compact('title', 'customer_account', 'debit_order'));
@@ -318,7 +318,7 @@ class PaymentMandateController extends Controller
         $debit_order->save();
 
         //response
-        return response()->json(['success' => true, 'uuid' => $uuid], 200);
+        return response()->json(['success' => true, 'uuid' => $uuid, "success_msg" => "Loan details saved!"], 200);
     }
 
     //customer preview

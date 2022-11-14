@@ -1,13 +1,13 @@
 @extends('layouts.master')
 
 @section('title')
-    Payment Mandate
+    Summary of Payment Mandate
 @endsection
 
 @section('content')
     @component('components.breadcrumb')
         @slot('li_1')
-            Payment Mandate
+            Dashboard
         @endslot
         @slot('title')
             Summary of Payment Mandate
@@ -27,14 +27,15 @@
                             </div>
 
                             <div class="stepwizard-step">
-                                <a href="#step-2" type="button" class="btn btn-success btn-circle" disabled="disabled">2</a>
+                                <a href="#step-2" type="button" class="btn btn-success btn-circle"
+                                    disabled="disabled">2</a>
                                 <span>Customer Deduction Details</span>
                             </div>
                         </div>
                     </div>
                     <!--./form wizard -->
 
-                    <form action="#" id="registrationForm" enctype="multipart/form-data" autocomplete="off">
+                    <form action="#" id="Loan-Form" enctype="multipart/form-data" autocomplete="off">
                         <input type="hidden" name="uuid" value="{{ $customer_account->uuid ?? null }}">
 
                         <!-- Customer Information -->
@@ -183,13 +184,49 @@
         </div>
     </div>
     <!-- end row -->
+
+    <!-- subscribeModal -->
+    <div class="modal fade" id="subscribeModal" tabindex="-1" aria-labelledby="subscribeModalLabel" aria-hidden="true"
+        data-keyboard="false" data-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-bottom-0 justify-content-center">
+                    <h5 class="text-uppercase">Saving Payment Mandate</h5>
+                    {{-- <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button> --}}
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-4">
+                        <div class="avatar-md mx-auto mb-4">
+                            <div class="avatar-title bg-light rounded-circle text-success h1">
+                                <i class="mdi mdi-check"></i>
+                            </div>
+                        </div>
+
+                        <div class="row justify-content-center">
+                            <div class="col-xl-10">
+                                <p class="text-muted font-size-14 mb-4" id="success-msg"></p>
+
+                                <button type="button" id="btn-okay" name="Okay" class="btn btn-success"
+                                    style="display: none;">Okay</button>
+                                <button type="button" id="btn-yes" name="yes" class="btn btn-success"
+                                    style="display: none;">Yes</button>
+                                <button type="button" id="btn-no" name="no" class="btn btn-danger"
+                                    style="display: none;">No</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- end modal -->
 @endsection
 
 @section('script')
     <script type="text/javascript">
         $(document).ready(function() {
             //validate form and submit
-            $("#registrationForm").validate({
+            $("#Loan-Form").validate({
                 submitHandler: function(form, e) {
                     e.preventDefault();
 
@@ -298,40 +335,3 @@
         });
     </script>
 @endsection
-
-
-<!-- subscribeModal -->
-<div class="modal fade" id="subscribeModal" tabindex="-1" aria-labelledby="subscribeModalLabel" aria-hidden="true"
-    data-keyboard="false" data-backdrop="static">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header border-bottom-0 justify-content-center">
-                <h5 class="text-uppercase">Saving Payment Mandate</h5>
-                {{-- <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button> --}}
-            </div>
-            <div class="modal-body">
-                <div class="text-center mb-4">
-                    <div class="avatar-md mx-auto mb-4">
-                        <div class="avatar-title bg-light rounded-circle text-success h1">
-                            <i class="mdi mdi-check"></i>
-                        </div>
-                    </div>
-
-                    <div class="row justify-content-center">
-                        <div class="col-xl-10">
-                            <p class="text-muted font-size-14 mb-4" id="success-msg"></p>
-
-                            <button type="button" id="btn-okay" name="Okay" class="btn btn-success"
-                                style="display: none;">Okay</button>
-                            <button type="button" id="btn-yes" name="yes" class="btn btn-success"
-                                style="display: none;">Yes</button>
-                            <button type="button" id="btn-no" name="no" class="btn btn-danger"
-                                style="display: none;">No</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-<!-- end modal -->

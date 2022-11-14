@@ -7,7 +7,7 @@
 @section('content')
     @component('components.breadcrumb')
         @slot('li_1')
-            Companies
+            Dashboard
         @endslot
         @slot('title')
             Edit Company Information

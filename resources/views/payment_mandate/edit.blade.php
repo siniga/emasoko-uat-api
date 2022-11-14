@@ -1,13 +1,13 @@
 @extends('layouts.master')
 
 @section('title')
-    Update Deduction Channel
+Update Payment Mandate
 @endsection
 
 @section('content')
     @component('components.breadcrumb')
         @slot('li_1')
-            Payment Mandate
+            Dashboard
         @endslot
         @slot('title')
             Update Payment Mandate
@@ -18,7 +18,7 @@
         <div class="col-lg-12">
             <div class="card">
                 <div class="card-body">
-                    <form action="#" id="registrationForm" enctype="multipart/form-data" autocomplete="off">
+                    <form action="#" id="Loan-Form" enctype="multipart/form-data" autocomplete="off">
                         <input type="hidden" name="uuid" value="{{ $debit_order->customerAccount->uuid ?? null }}">
 
                         <!-- Customer Information -->
@@ -362,7 +362,7 @@
             });
 
             //validate form and submit
-            $("#registrationForm").validate({
+            $("#Loan-Form").validate({
                 rules: {
                     account_type_id: {
                         required: true
@@ -464,34 +464,4 @@
     </script>
 @endsection
 
-<!-- subscribeModal -->
-<div class="modal fade" id="subscribeModal" tabindex="-1" aria-labelledby="subscribeModalLabel" aria-hidden="true"
-    data-keyboard="false" data-backdrop="static">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header border-bottom-0 justify-content-center">
-                <h5 class="text-uppercase">Update Payment Mandate</h5>
-            </div>
-            <div class="modal-body">
-                <div class="text-center mb-4">
-                    <div class="avatar-md mx-auto mb-4">
-                        <div class="avatar-title bg-light rounded-circle text-success h1">
-                            <i class="mdi mdi-check"></i>
-                        </div>
-                    </div>
 
-                    <div class="row justify-content-center">
-                        <div class="col-xl-10">
-                            <p class="text-muted font-size-14 mb-4" id="success-msg"></p>
-
-                            <button type="button" id="btn-okay" name="Okay" class="btn btn-success"
-                                customer-uuid="{{ $customer_account->uuid ?? null }}"
-                                style="display: none;">Okay</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-<!-- end modal -->

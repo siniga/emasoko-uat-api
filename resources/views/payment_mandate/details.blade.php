@@ -1,13 +1,13 @@
 @extends('layouts.master')
 
 @section('title')
-    Payment Mandate Overview
+    Summary of Payment Mandate
 @endsection
 
 @section('content')
     @component('components.breadcrumb')
         @slot('li_1')
-            Payment Mandate
+            Dashboard
         @endslot
         @slot('title')
             Summary of Payment Mandate

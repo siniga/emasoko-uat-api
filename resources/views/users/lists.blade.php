@@ -27,28 +27,20 @@
                     @endif
 
                     <div class="row mb-2">
-                        <div class="col-md-9 col-12">
-                            <div class="float-left">
+                        <div class="col-md-12 col-12">
+                            <div class="text-sm-end">
                                 <a href="{{ route('users.create') }}" class="btn btn-outline-primary btn-sm">
                                     <i class="fa fa-plus"></i> Register New
                                 </a>
                             </div>
                         </div>
                         <!--./col-md-9 -->
-    
-                        <div class="col-md-3 col-12">
-                            <div class="float-right">
-                                <input type="text" id="myCustomSearchBox" class="form-control"
-                            placeholder="Search details...">
-                            </div>
-                        </div>
-                        <!--./col-md-4 -->
                     </div>
                     <!--./row -->
 
                     <div class="table-responsive">
                         @if (isset($users) && $users)
-                            <table id="dt" class="table table-hover table-bordered">
+                            <table id="datatable" class="table table-hover table-bordered">
                                 <thead>
                                     <tr>
                                         <th width="3%">#</th>
@@ -92,7 +84,7 @@
 
                                                 <a href="{{ route('users.change-status', $values->id) }}"
                                                     title="Change status" class="btn btn-xss">
-                                                    <i class='bx bx-info-circle font-size-14 text-secondary'></i>
+                                                    <i class='bx bx-info-circle font-size-14 text-primary'></i>
                                                 </a>
 
                                                 <a href="{{ route('users.delete', $values->id) }}" title="Delete"

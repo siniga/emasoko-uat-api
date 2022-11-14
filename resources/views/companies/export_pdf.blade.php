@@ -52,6 +52,7 @@
         <div class="title" align="center">
             {{-- <img src="<?= base_url('assets/img/logo_icon.png') ?>" width="75"/> --}}
             <h2>eMakato Deduction Solution</h2>
+            <h4>Companies Report</h4>
         </div>
 
 

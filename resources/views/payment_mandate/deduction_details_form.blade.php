@@ -7,7 +7,7 @@
 @section('content')
     @component('components.breadcrumb')
         @slot('li_1')
-            Payment Mandate
+            Dashboard
         @endslot
         @slot('title')
             Create Payment Mandate
@@ -31,13 +31,15 @@
                                     disabled="disabled">2</a>
                                 <span>Customer Deduction Details</span>
                             </div>
-
-
                         </div>
                     </div>
                     <!--./form wizard -->
 
-                    <form action="#" id="registrationForm" enctype="multipart/form-data" autocomplete="off">
+                    <div class="col-md-12 mb-3">
+                        <div id="error-messages" style="display: none;"></div>
+                    </div>
+
+                    <form action="#" id="Loan-Form" enctype="multipart/form-data" autocomplete="off">
                         <input type="hidden" name="uuid" value="{{ $customer_account->uuid ?? null }}">
 
                         <!-- Customer Information -->
@@ -46,7 +48,7 @@
                                 <div class="col-lg-3">
                                     <div class="mb-3">
                                         <label>Loan Amount <span class="text-danger">*</span></label>
-                                        {{ Form::text('loan_amount',old('loan_amount', $debit_order ? number_format($debit_order->total_amount) : ''),['class="form-control number-separator"', 'placeholder="Write total loan amount..."']) }}
+                                        {{ Form::text('loan_amount', old('loan_amount', $debit_order ? number_format($debit_order->total_amount) : ''), ['class="form-control number-separator"', 'placeholder="Write total loan amount..."']) }}
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -62,7 +64,7 @@
                                             $options = ['' => 'Select'] + $options;
                                         @endphp
 
-                                        {{ Form::select('debit_type', $options, old('debit_type', $debit_order->debit_type ?? ''), ['class' => 'form-control','id' => 'debit_type']) }}
+                                        {{ Form::select('debit_type', $options, old('debit_type', $debit_order->debit_type ?? ''), ['class' => 'form-control', 'id' => 'debit_type']) }}
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -70,7 +72,7 @@
                                 <div class="col-lg-3" id="standard_deduction" style="display: block">
                                     <div class="mb-3">
                                         <label>Deduction Amount <span class="text-danger">*</span></label>
-                                        {{ Form::text('installment_amount', old('installment_amount', $debit_order ? number_format($debit_order->installment_amount) : ''), ['class="form-control number-separator"','placeholder="Write deduction amount..."']) }}
+                                        {{ Form::text('installment_amount', old('installment_amount', $debit_order ? number_format($debit_order->installment_amount) : ''), ['class="form-control number-separator"', 'placeholder="Write deduction amount..."']) }}
                                         <span class="text-danger" id="installmentAmountError"></span>
                                     </div>
                                 </div>
@@ -82,7 +84,7 @@
                                         <div class="row">
                                             <div class="col-lg-6">
                                                 <div class="form-group">
-                                                    {{ Form::text('min_installment_amount',old('min_installment_amount', $debit_order ? number_format($debit_order->min_installment_amount) : ''),['class="form-control number-separator"','placeholder="Minimum deduction amount..."','id="min_installment_amount"']) }}
+                                                    {{ Form::text('min_installment_amount', old('min_installment_amount', $debit_order ? number_format($debit_order->min_installment_amount) : ''), ['class="form-control number-separator"', 'placeholder="Minimum deduction amount..."', 'id="min_installment_amount"']) }}
                                                     <span class="text-danger" id="minInstallmentAmountError"></span>
                                                 </div>
                                             </div>
@@ -90,7 +92,7 @@
 
                                             <div class="col-lg-6">
                                                 <div class="form-group">
-                                                    {{ Form::text('max_installment_amount',old('max_installment_amount', $debit_order ? number_format($debit_order->max_installment_amount) : ''),['class="form-control number-separator"','placeholder="Maximum deduction amount..."','id="max_installment_amount"']) }}
+                                                    {{ Form::text('max_installment_amount', old('max_installment_amount', $debit_order ? number_format($debit_order->max_installment_amount) : ''), ['class="form-control number-separator"', 'placeholder="Maximum deduction amount..."', 'id="max_installment_amount"']) }}
                                                     <span class="text-danger" id="maxInstallmentAmountError"></span>
                                                 </div>
                                             </div>
@@ -122,7 +124,7 @@
                                 <div class="col-lg-3">
                                     <div class="mb-3">
                                         <label>Number of deduction <span class="text-danger">*</span></label>
-                                        {{ Form::number('number_of_installment', old('number_of_installment', $debit_order->installment_number ?? ''), ['class="form-control"','placeholder="Write number installment..."','min' => 1]) }}
+                                        {{ Form::number('number_of_installment', old('number_of_installment', $debit_order->installment_number ?? ''), ['class="form-control"', 'placeholder="Write number installment..."', 'min' => 1]) }}
                                         <span class="text-danger"></span>
                                     </div>
                                 </div>
@@ -131,7 +133,7 @@
                                 <div class="col-lg-3">
                                     <div class="mb-3">
                                         <label>Deduction Start Date <span class="text-danger">*</span></label>
-                                        {{ Form::date('start_date', old('start_date', $debit_order->start_date ?? ''), ['class="form-control"']) }}
+                                        {{ Form::date('start_date', old('start_date', $debit_order->start_date ?? ''), ['class="form-control"', 'min' => date('Y-m-d')]) }}
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -147,7 +149,7 @@
                                             $options = ['' => 'Select'] + $options;
                                         @endphp
 
-                                        {{ Form::select('deduction_end', $options, old('deduction_end', $debit_order->deduction_end_date ?? ''), ['class' => 'form-control','id' => 'deduction_end']) }}
+                                        {{ Form::select('deduction_end', $options, old('deduction_end', $debit_order->deduction_end_date ?? ''), ['class' => 'form-control', 'id' => 'deduction_end']) }}
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -155,7 +157,7 @@
                                 <div class="col-lg-3" id="end_date" style="display: none;">
                                     <div class="mb-3">
                                         <label>End Date <span class="text-danger">*</span></label>
-                                        {{ Form::date('end_date', old('end_date', $debit_order->end_date ?? ''), ['class="form-control"','id="end_date"']) }}
+                                        {{ Form::date('end_date', old('end_date', $debit_order->end_date ?? ''), ['class="form-control"', 'id="end_date"']) }}
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -163,8 +165,8 @@
                                 <div class="col-lg-3">
                                     <div class="mb-3">
                                         <label for="formFile" class="form-label">Evidence of Aggrement</label>
-                                        <input class="form-control" type="file" id="formFile" name="evidence_of_aggrement"
-                                            accept="application/pdf" />
+                                        <input class="form-control" type="file" id="formFile"
+                                            name="evidence_of_aggrement" accept="application/pdf" />
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -174,7 +176,7 @@
                             <div class="row">
                                 <div class="col-md-12">
                                     <div class="mb-3 text-sm-end d-none d-sm-block">
-                                        <a href="{{ url('payment-mandate/create-account/' . $customer_account->uuid) }}"
+                                        <a href="{{ route('payment-mandate.create-account', $customer_account->uuid) }}"
                                             class="btn btn-info text-medium">Previous</a>
 
                                         <button type="submit" id="btnSubmit" class="btn btn-primary">
@@ -198,7 +200,7 @@
     <script type="text/javascript">
         $(document).ready(function() {
             //validate form and submit
-            $("#registrationForm").validate({
+            $("#Loan-Form").validate({
                 //rules
                 rules: {
                     loan_amount: {
@@ -328,28 +330,44 @@
                             // Deactivate Loading Spinner
                             $('.loading-spinner').toggleClass('active');
 
-                            //uuid
-                            uuid = response.uuid
+                            //hide error msg
+                            $("#error-messages").css('display', 'none');
 
-                            //redirect to show
-                            window.location.href = "/payment-mandate/preview/" + uuid
+                            $.notify(response.success_msg, 'success');
+
+                            setTimeout(function() {
+                                //uuid
+                                uuid = response.uuid
+
+                                //redirect to show
+                                window.location.href =
+                                    "/payment-mandate/preview/" +
+                                    uuid
+                            }, 1000);
                         },
                         error: function(response) {
                             //activate submit button
                             $("#btnSubmit").prop("disabled", false);
 
-                            console.log(response);
-
                             // Deactivate Loading Spinner
                             $('.loading-spinner').toggleClass('active');
 
+                            //show error msg
+                            $("#error-messages").css('display', '');
+
+                            // $('#installmentAmountError').text(response.responseJSON.errors
+                            //     .installment_amount);
+                            // $('#minInstallmentAmountError').text(response.responseJSON
+                            //     .errors.min_installment_amount);
+                            // $('#maxInstallmentAmountError').text(response.responseJSON
+                            //     .errors.max_installment_amount);
+
                             //write error message
-                            $('#installmentAmountError').text(response.responseJSON.errors
-                                .installment_amount);
-                            $('#minInstallmentAmountError').text(response.responseJSON
-                                .errors.min_installment_amount);
-                            $('#maxInstallmentAmountError').text(response.responseJSON
-                                .errors.max_installment_amount);
+                            $.each(response.responseJSON.errors, function(key, item) {
+                                $("#error-messages").append(
+                                    '<span>' + item +
+                                    '</span><br />');
+                            });
                         }
                     });
                     return false;

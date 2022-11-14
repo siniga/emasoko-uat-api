@@ -23,6 +23,12 @@
 <script src="{{ URL::asset('assets/libs/bootstrap-touchspin/bootstrap-touchspin.min.js') }}"></script>
 <script src="{{ URL::asset('assets/libs/bootstrap-maxlength/bootstrap-maxlength.min.js') }}"></script>
 
+<!-- Required datatable js -->
+<script src="{{ URL::asset('assets/libs/datatables/datatables.min.js') }}"></script>
+
+<!-- Datatable init js -->
+<script src="assets/js/pages/datatables.init.js"></script>
+
 <!-- Sweet Alerts js -->
 <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
 
@@ -34,6 +40,9 @@
 
 <!-- form advanced init -->
 <script src="{{ URL::asset('assets/js/pages/form-advanced.init.js') }}"></script>
+
+<!-- Datatable init js -->
+<script src="{{ URL::asset('assets/js/pages/datatables.init.js') }}"></script>
 
 <!-- notify js -->
 <script src="{{ URL::asset('assets/js/notify.js') }}"></script>

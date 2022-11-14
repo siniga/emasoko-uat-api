@@ -1,13 +1,13 @@
 @extends('layouts.master')
 
 @section('title')
-    Companies
+    Company Information
 @endsection
 
 @section('content')
     @component('components.breadcrumb')
         @slot('li_1')
-            Companies
+            Dashboard
         @endslot
         @slot('title')
             Company Information

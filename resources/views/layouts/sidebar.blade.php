@@ -32,6 +32,13 @@
                     </li>
                 @endif
 
+                <li>
+                    <a href="{{ route('customer-accounts.lists') }}" class="waves-effect">
+                        <i class='bx bxs-user-badge text-white'></i>
+                        <span key="t-layouts">Customer Accounts</span>
+                    </a>
+                </li>
+
                 @if (!Auth::user()->hasRole('admin'))
                     <li>
                         <a href="{{ route('payment-mandate.create-account') }}" class="waves-effect">
@@ -48,36 +55,13 @@
                     </a>
                 </li>
 
-                {{-- @if (!Auth::user()->hasRole('admin'))
-                    <li>
-                        <a href="{{ route('tasks.lists') }}" class="waves-effect">
-                            <i class="bx bx-collection"></i>
-                            <span key="t-layouts">My Usage</span>
-                            @php
-                                $notify = get_pending_debit_orders();
-                            @endphp
-
-                            @if ($notify != null)
-                                <span class="badge bg-danger">{{ $notify }}</span>
-                            @endif
-                        </a>
-                    </li>
-                @endif --}}
-
                 @if (Auth::user()->hasRole('admin'))
                     <li class="menu-title text-white" key="t-apps">Setup</li>
 
                     <li>
-                        <a href="#" class="waves-effect">
-                            <i class="bx bxs-bank text-white"></i>
-                            <span key="t-chat">Banks</span>
-                        </a>
-                    </li>
-
-                    <li>
-                        <a href="#" class="waves-effect">
+                        <a href="{{ route('payment-channels.index') }}" class="waves-effect">
                             <i class="bx bx-copy text-white"></i>
-                            <span key="t-chat">MNOs</span>
+                            <span key="t-chat">Payment Channel</span>
                         </a>
                     </li>
 

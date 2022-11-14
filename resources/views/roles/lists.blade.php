@@ -27,28 +27,20 @@
                     @endif
 
                     <div class="row mb-2">
-                        <div class="col-md-9 col-12">
-                            <div class="float-left">
+                        <div class="col-md-12 col-12">
+                            <div class="text-sm-end">
                                 <a href="{{ route('roles.create') }}" class="btn btn-outline-primary btn-sm">
                                     <i class="fa fa-plus"></i> Create New
                                 </a>
                             </div>
                         </div>
                         <!--./col-md-9 -->
-    
-                        <div class="col-md-3 col-12">
-                            <div class="float-right">
-                                <input type="text" id="myCustomSearchBox" class="form-control"
-                            placeholder="Search details...">
-                            </div>
-                        </div>
-                        <!--./col-md-4 -->
                     </div>
                     <!--./row -->
 
                     <div class="table-responsive">
                         @if (isset($roles) && $roles)
-                            <table class="table table-bordered mb-0">
+                            <table id="datatable" class="table table-bordered mb-0">
                                 <thead>
                                     <tr>
                                         <th width="3%">#</th>

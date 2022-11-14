@@ -7,7 +7,7 @@
 @section('content')
     @component('components.breadcrumb')
         @slot('li_1')
-            Companies
+            Dashboard
         @endslot
         @slot('title')
             Companies
@@ -121,22 +121,30 @@
                 </div>
             </div>
 
-            @if (session()->get('success'))
-                <div class="alert alert-success">
-                    {{ session()->get('success') }}
-                </div><br />
-            @elseif(session()->get('danger'))
-                <div class="alert alert-danger">
-                    {{ session()->get('danger') }}
-                </div><br />
-            @endif
-
             <div class="card">
                 <div class="card-body">
 
                     <div class="row">
                         <div class="col-md-12">
-                            <div class="mb-2 text-sm-end d-none d-sm-block">
+                            @if (session()->get('success'))
+                                <div class="alert alert-success">
+                                    {{ session()->get('success') }}
+                                </div>
+                            @elseif(session()->get('danger'))
+                                <div class="alert alert-danger">
+                                    {{ session()->get('danger') }}
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+
+                    <div class="row mb-2">
+                        <div class="col-md-6">
+                            <span class="font-weight-500">No. of companies: {{ number_format(count($companies)) }} </span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="text-sm-end d-none d-sm-block">
                                 <a class="btn btn-outline-success btn-sm"
                                     href="{{ route('companies.export-xls', ['start_at' => $post_data['start_at'], 'end_at' => $post_data['end_at'], 'category_id' => $post_data['category_id'], 'region_id' => $post_data['region_id'], 'status' => $post_data['status'], 'keyword' => $post_data['keyword']]) }}">
                                     <i class="fas fa-file-excel"></i> Export XLS

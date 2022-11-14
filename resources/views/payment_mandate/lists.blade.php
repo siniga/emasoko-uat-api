@@ -55,7 +55,7 @@
                                             $options = ['' => 'Payment channel'] + $options;
                                         @endphp
 
-                                        {{ Form::select('account_type_id', $options, old('account_type_id', $account_type_id), ['class' => 'form-control account_type_id','id' => 'account_type_id']) }}
+                                        {{ Form::select('account_type_id', $options, old('account_type_id', $account_type_id), ['class' => 'form-control account_type_id', 'id' => 'account_type_id']) }}
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -72,7 +72,7 @@
                                             $options = ['' => 'Bank/MNO name'] + $options;
                                         @endphp
 
-                                        {{ Form::select('account_id', $options, old('account_id', $account_id), ['class' => 'form-control account_id','id' => 'account_id']) }}
+                                        {{ Form::select('account_id', $options, old('account_id', $account_id), ['class' => 'form-control account_id', 'id' => 'account_id']) }}
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -98,7 +98,7 @@
                             <div class="row">
                                 <div class="col-lg-6">
                                     <div class="mb-3">
-                                        {{ Form::text('keyword', old('keyword', $keyword), ['class="form-control"','placeholder="Search by name of account holder or number..."']) }}
+                                        {{ Form::text('keyword', old('keyword', $keyword), ['class="form-control"', 'placeholder="Search by name of account holder or number..."']) }}
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -129,13 +129,13 @@
                         @if (isset($debit_orders) && $debit_orders->isNotEmpty())
                             <div class="row mb-2">
                                 <div class="col-md-6">
-                                    <b>Payment mandate: {{ number_format(count($debit_orders)) }}</b>
+                                    <span class="font-weight-500">No. of payment mandate: {{ number_format(count($debit_orders)) }}</span>
                                 </div>
 
                                 <div class="col-md-6">
                                     <div class="text-sm-end d-none d-sm-block">
                                         <a title="Export" class="btn btn-outline-success btn-sm"
-                                            href="{{ route('payment-mandate.export-xls', ['start_at' => $start_at,'end_at' => $end_at,'account_type_id' => $account_type_id,'account_id' => $account_id,'status' => $status,'keyword' => $keyword]) }}">
+                                            href="{{ route('payment-mandate.export-xls', ['start_at' => $start_at, 'end_at' => $end_at, 'account_type_id' => $account_type_id, 'account_id' => $account_id, 'status' => $status, 'keyword' => $keyword]) }}">
                                             <i class="bx bx-export"></i> Export XLS</a>
                                     </div>
                                 </div>
@@ -145,14 +145,14 @@
                                 <thead>
                                     <tr>
                                         <th width="3%">#</th>
-                                        <th width="20%">Account Name</th>
+                                        <th width="18%">Account Name</th>
                                         <th width="16%">NIDA Number</th>
                                         <th width="10%">Payment Channel</th>
                                         <th width="10%">Bank Name/MNO</th>
                                         <th width="12%">Account Number</th>
                                         <th width="12%">Phone<br /><small>(Connected to Bank)</small></th>
                                         <th width="8%">Consent Status</th>
-                                        <th style="width: 60px;">Actions</th>
+                                        <th style="width: 80px; !important">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -166,35 +166,34 @@
                                             <td>{{ $values->customerAccount->accountType->name ?? '' }}</td>
                                             <td>{{ $values->customerAccount->account->name ?? '' }}</td>
                                             <td>
-                                                {{ $values->customerAccount->account_number ?? '' }}
+                                                {{ $values->customerAccount->account_number ?? $values->customerAccount->phone }}
                                             </td>
                                             <td>{{ $values->customerAccount->phone ?? '' }}</td>
 
                                             <td>
                                                 @if ($values->approved == 0)
-                                                    <span class="badge badge-pill badge-soft-warning">Pending</span>
+                                                    <span class="badge bg-danger">Pending</span>
                                                 @elseif($values->approved == 1)
-                                                    <span class="badge badge-pill badge-soft-success">Approved</span>
+                                                    <span class="badge bg-success">Approved</span>
                                                 @elseif($values->approved == 99)
-                                                    <span class="badge badge-pill badge-soft-danger">Rejected</span>
+                                                    <span class="badge bg-danger">Rejected</span>
                                                 @endif
                                             </td>
 
                                             <td>
                                                 <a href="{{ route('payment-mandate.details', $values->customer_account_uuid) }}"
-                                                    title="View">
-                                                    <i class="bx bx-folder-open bx-border text-primary font-size-18"></i>
+                                                    title="View" class="btn btn-xss">
+                                                    <i class="bx bx-folder-open text-primary font-size-14"></i>
                                                 </a>
 
-                                           
-                                                    <a href="{{ route('payment-mandate.edit', $values->customer_account_uuid) }}"
-                                                        title="Edit">
-                                                        <i class="bx bx-edit-alt bx-border font-size-18"></i>
-                                                    </a>
-                                      
-                                                {{-- <a href="#" title="Delete" class="btn btn-outline-danger btn-xss delete">
-                                                    <i class="bx bx-trash"></i>
-                                                </a> --}}
+                                                <a href="{{ route('payment-mandate.edit', $values->customer_account_uuid) }}"
+                                                    title="Edit" class="btn btn-xss">
+                                                    <i class="bx bx-edit text-secondary font-size-14"></i>
+                                                </a>
+
+                                                <a href="#" title="Delete" class="btn btn-xss delete">
+                                                    <i class="bx bx-trash text-danger font-size-14"></i>
+                                                </a>
                                             </td>
                                         </tr>
                                         @php $serial++; @endphp
@@ -210,15 +209,8 @@
         </div>
     </div>
     <!-- end row -->
-
-
 @endsection
 @section('script')
-    <!-- apexcharts -->
-    <script src="{{ URL::asset('/assets/libs/apexcharts/apexcharts.min.js') }}"></script>
-
-    <!-- dashboard init -->
-    <script src="{{ URL::asset('/assets/js/pages/dashboard.init.js') }}"></script>
 
     <script type="text/javascript">
         $(document).ready(function() {
