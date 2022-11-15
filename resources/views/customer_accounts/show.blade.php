@@ -51,34 +51,38 @@
 
                     <table class="table table-stripped table-bordered">
                         <tr>
-                            <th colspan="4" class="font-weight-600">Customer Account Information</th>
+                            <th colspan="2" class="font-weight-600">Customer Account Information</th>
                         </tr>
                         <tr>
-                            <th width=25%>Payment Channel</th>
-                            <td width=25%>
+                            <td width=25%>Payment Channel</td>
+                            <td width=75%>
                                 <span>{{ $customer_account->accountType->name ?? '' }}</span>
                             </td>
+                        </tr>
 
-                            <th>Bank/MNO Name</th>
+                        <tr>
+                            <td>Bank/MNO Name</td>
                             <td>
                                 <span>{{ $customer_account->account->name ?? '' }}</span>
                             </td>
                         </tr>
 
                         <tr>
-                            <th width=25%>Name of Account Holder</th>
-                            <td width=25%>
+                            <td>Name of Account Holder</td>
+                            <td>
                                 <span>{{ $customer_account->account_name ?? '' }}</span>
                             </td>
+                        </tr>
 
-                            <th>Account Number</th>
+                        <tr>
+                            <td>Account Number</td>
                             <td>
                                 <span>{{ $customer_account->account_number ?? $customer_account->phone }}</span>
                             </td>
                         </tr>
 
                         <tr>
-                            <th>Phone <small>(Connected to Bank)</small></th>
+                            <td>Phone <small>(Connected to Bank)</small></td>
                             <td colspan="4">
                                 <span>{{ $customer_account->phone ?? '' }}</span>
                             </td>
@@ -88,6 +92,13 @@
                     <div class="d-flex justify-content-between mb-2">
                         <div>
                             <h5 class="text-capitalize">Payment Mandates</h5>
+                        </div>
+
+                        <div class="text-sm-end">
+                            <a href="{{ route('payment-mandate.create-deduction-info', [$customer_account->id]) }}"
+                                title="New Payment Mandate" class="btn btn-outline-primary text-medium btn-sm">
+                                <i class="bx bx-plus font-size-12"></i> Create Payment Mandate
+                            </a>
                         </div>
                     </div>
 
@@ -100,9 +111,10 @@
                                 <th width="10%">Installment Amount</th>
                                 <th width="10%">Peridiocity</th>
                                 <th width="10%">Number of Deduction</th>
-                                <th width="12%">Deduction <br />Start Date</th>
-                                <th width="12%">Deduction <br />End Date</th>
-                                <th width="15%">Evidence of Aggrement</th>
+                                <th width="10%">Deduction <br />Start Date</th>
+                                <th width="10%">Deduction <br />End Date</th>
+                                <th width="15%">Evidence <br />of Aggrement</th>
+                                <th width="8%">Approved</th>
                             </tr>
 
                             @foreach ($customer_account->debitOrders as $val)
@@ -129,8 +141,13 @@
                                                 href="{{ asset('assets/uploads/docs' . $val->evidence_of_aggrement) }}">
                                                 {{ $val->evidence_of_aggrement }}
                                             </a>
-                                        @else
-                                            NIL
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if ($val->approved == 1)
+                                            <span class="badge badge-pill badge-soft-success">Yes</span>
+                                        @elseif($val->approved == 0)
+                                            <span class="badge badge-pill badge-soft-danger">No</span>
                                         @endif
                                     </td>
                                 </tr>
