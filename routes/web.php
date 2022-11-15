@@ -132,25 +132,27 @@ Route::post('companies/confirm-assessment', [CompanyController::class, 'confirm_
 
 //payment mandate
 Route::any('payment-mandate/lists/{consent?}', [PaymentMandateController::class, 'lists'])->name('payment-mandate.lists');
-Route::get('payment-mandate/export-xls', [PaymentMandateController::class, 'exportXLS'])->name('payment-mandate.export-xls');
+Route::get('payment-mandate/export-xls', [PaymentMandateController::class, 'export_xls'])->name('payment-mandate.export-xls');
+Route::get('payment-mandate/export-pdf', [PaymentMandateController::class, 'export_pdf'])->name('payment-mandate.export-pdf');
 
-//account details
-Route::get('payment-mandate/create-account/{uuid?}', [PaymentMandateController::class, 'accountDetailsForm'])->name('payment-mandate.create-account');
-Route::post('payment-mandate/store-account', [PaymentMandateController::class, 'storeAccountDetails'])->name('payment-mandate.store-account-details');
+//account info
+Route::get('payment-mandate/create-account/{id?}/{do_id?}', [PaymentMandateController::class, 'create_account'])->name('payment-mandate.create-account');
+Route::post('payment-mandate/store-account', [PaymentMandateController::class, 'store_account'])->name('payment-mandate.store-account');
 
-//deduction details
-Route::get('payment-mandate/deduction-details/{uuid}', [PaymentMandateController::class, 'deductionDetailsForm'])->name('payment-mandate.create-deduction');
-Route::post('payment-mandate/store-deduction-details', [PaymentMandateController::class, 'storeDeductionDetails'])->name('payment-mandate.store-deduction-details');
+//deduction info
+Route::get('payment-mandate/create-deduction-info/{id}/{do_id?}', [PaymentMandateController::class, 'create_deduction_info'])->name('payment-mandate.create-deduction-info');
+Route::post('payment-mandate/store-deduction-info', [PaymentMandateController::class, 'store_deduction_info'])->name('payment-mandate.store-deduction-info');
 
 //preview
-Route::get('payment-mandate/preview/{uuid}', [PaymentMandateController::class, 'preview'])->name('payment-mandate.preview');
-Route::get('payment-mandate/cancel-registration/{uuid}', [PaymentMandateController::class, 'cancelRegistration'])->name('payment-mandate.cancel-registration');
-Route::post('payment-mandate/confirm-registration', [PaymentMandateController::class, 'confirmRegistration'])->name('payment-mandate.confirm-registration');
+Route::get('payment-mandate/preview/{id}/{do_id}', [PaymentMandateController::class, 'preview'])->name('payment-mandate.preview');
+Route::get('payment-mandate/cancel/{id}/{do_id}', [PaymentMandateController::class, 'cancel'])->name('payment-mandate.cancel');
+Route::post('payment-mandate/confirm', [PaymentMandateController::class, 'confirm'])->name('payment-mandate.confirm');
 
 //details
-Route::get('payment-mandate/details/{uuid}', [PaymentMandateController::class, 'details'])->name('payment-mandate.details');
-Route::get('payment-mandate/edit/{uuid}', [PaymentMandateController::class, 'edit'])->name('payment-mandate.edit');
-Route::post('payment-mandate/update-details', [PaymentMandateController::class, 'update'])->name('payment-mandate.update');
+Route::get('payment-mandate/{id}/show', [PaymentMandateController::class, 'show'])->name('payment-mandate.show');
+Route::get('payment-mandate/{id}/edit', [PaymentMandateController::class, 'edit'])->name('payment-mandate.edit');
+Route::put('payment-mandate/{id}/update', [PaymentMandateController::class, 'update'])->name('payment-mandate.update');
+Route::post('payment-mandate/{id}/delete', [PaymentMandateController::class, 'destroy'])->name('payment-mandate.delete');
 
 Route::get('payment-mandate/send-remainder/{id}', [PaymentMandateController::class, 'sendRemainder'])->name('payment-mandate.send-remainder');
 

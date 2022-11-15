@@ -40,7 +40,8 @@
                     </div>
 
                     <form action="#" id="Loan-Form" enctype="multipart/form-data" autocomplete="off">
-                        <input type="hidden" name="uuid" value="{{ $customer_account->uuid ?? null }}">
+                        <input type="hidden" name="id" value="{{ $customer_account->uuid ?? null }}">
+                        <input type="hidden" name="do_id" value="{{ $debit_order->id ?? null }}">
 
                         <!-- Customer Information -->
                         <section>
@@ -325,7 +326,7 @@
                     //post data 
                     $.ajax({
                         type: "POST",
-                        url: "{{ route('payment-mandate.store-account-details') }}",
+                        url: "{{ route('payment-mandate.store-account') }}",
                         data: data,
                         processData: false,
                         contentType: false,
@@ -344,13 +345,18 @@
                             $.notify(response.success_msg, 'success');
 
                             setTimeout(function() {
-                                //uuid
-                                uuid = response.uuid
+                                //customer account id
+                                id = response.id
+
+                                //debit order id
+                                do_id = ''
+                                if (response.do_id != null)
+                                    do_id = response.do_id
 
                                 //redirect to show
                                 window.location.href =
-                                    "/payment-mandate/deduction-details/" +
-                                    uuid
+                                    "/payment-mandate/create-deduction-info/" + id +
+                                    "/" + do_id
                             }, 1000);
                         },
                         error: function(response) {

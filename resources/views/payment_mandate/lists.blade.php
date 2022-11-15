@@ -126,17 +126,42 @@
             <div class="card">
                 <div class="card-body">
                     <div class="table-responsive">
+                        <div class="row">
+                            <div class="col-md-12">
+                                @if (session()->get('success'))
+                                    <div class="alert alert-success">
+                                        {{ session()->get('success') }}
+                                    </div>
+                                @elseif(session()->get('warning'))
+                                    <div class="alert alert-warning">
+                                        {{ session()->get('warning') }}
+                                    </div>
+                                @elseif(session()->get('danger'))
+                                    <div class="alert alert-danger">
+                                        {{ session()->get('danger') }}
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+
                         @if (isset($debit_orders) && $debit_orders->isNotEmpty())
                             <div class="row mb-2">
                                 <div class="col-md-6">
-                                    <span class="font-weight-500">No. of payment mandate: {{ number_format(count($debit_orders)) }}</span>
+                                    <span class="font-weight-500">No. of payment mandate:
+                                        {{ number_format(count($debit_orders)) }}</span>
                                 </div>
 
                                 <div class="col-md-6">
                                     <div class="text-sm-end d-none d-sm-block">
                                         <a title="Export" class="btn btn-outline-success btn-sm"
                                             href="{{ route('payment-mandate.export-xls', ['start_at' => $start_at, 'end_at' => $end_at, 'account_type_id' => $account_type_id, 'account_id' => $account_id, 'status' => $status, 'keyword' => $keyword]) }}">
-                                            <i class="bx bx-export"></i> Export XLS</a>
+                                            <i class="bx bx-export"></i> Export XLS
+                                        </a>
+
+                                        <a title="Export" class="btn btn-outline-danger btn-sm"
+                                            href="{{ route('payment-mandate.export-pdf', ['start_at' => $start_at, 'end_at' => $end_at, 'account_type_id' => $account_type_id, 'account_id' => $account_id, 'status' => $status, 'keyword' => $keyword]) }}">
+                                            <i class="fas fa-file-pdf"></i> Export PDF
+                                        </a>
                                     </div>
                                 </div>
                             </div>
@@ -146,13 +171,13 @@
                                     <tr>
                                         <th width="3%">#</th>
                                         <th width="18%">Account Name</th>
-                                        <th width="16%">NIDA Number</th>
-                                        <th width="10%">Payment Channel</th>
+                                        <th width="15%">NIDA Number</th>
+                                        <th width="8%">Payment Channel</th>
                                         <th width="10%">Bank Name/MNO</th>
                                         <th width="12%">Account Number</th>
                                         <th width="12%">Phone<br /><small>(Connected to Bank)</small></th>
                                         <th width="8%">Consent Status</th>
-                                        <th style="width: 80px; !important">Actions</th>
+                                        <th style="width: 90px; !important">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -160,7 +185,8 @@
                                     @foreach ($debit_orders as $values)
                                         <tr>
                                             <td>{{ $serial }}</td>
-                                            <td>{{ strtoupper($values->customerAccount->account_name ?? '') }}</td>
+                                            <td>{{ $values->customerAccount->account_name ?? $values->customerAccount->phone }}
+                                            </td>
                                             <td><small>{{ $values->customerAccount->customer->id_number ?? 'NIL' }}</small>
                                             </td>
                                             <td>{{ $values->customerAccount->accountType->name ?? '' }}</td>
@@ -172,28 +198,38 @@
 
                                             <td>
                                                 @if ($values->approved == 0)
-                                                    <span class="badge bg-danger">Pending</span>
+                                                    <span class="badge badge-pill badge-soft-danger">Pending</span>
                                                 @elseif($values->approved == 1)
-                                                    <span class="badge bg-success">Approved</span>
+                                                    <span class="badge badge-pill badge-soft-success">Approved</span>
                                                 @elseif($values->approved == 99)
-                                                    <span class="badge bg-danger">Rejected</span>
+                                                    <span class="badge badge-pill badge-soft-danger">Rejected</span>
                                                 @endif
                                             </td>
 
                                             <td>
-                                                <a href="{{ route('payment-mandate.details', $values->customer_account_uuid) }}"
-                                                    title="View" class="btn btn-xss">
+                                                <a href="{{ route('payment-mandate.show', $values->id) }}" title="View"
+                                                    class="btn btn-xss">
                                                     <i class="bx bx-folder-open text-primary font-size-14"></i>
                                                 </a>
 
-                                                <a href="{{ route('payment-mandate.edit', $values->customer_account_uuid) }}"
-                                                    title="Edit" class="btn btn-xss">
-                                                    <i class="bx bx-edit text-secondary font-size-14"></i>
-                                                </a>
+                                                @if ($values->status == 'saved')
+                                                    <a href="{{ route('payment-mandate.preview', [$values->customerAccount->id, $values->id]) }}"
+                                                        title="Confirm Application" class="btn btn-xss">
+                                                        <i class='bx bxs-check-square font-size-14'></i>
+                                                    </a>
+                                                @endif
 
-                                                <a href="#" title="Delete" class="btn btn-xss delete">
-                                                    <i class="bx bx-trash text-danger font-size-14"></i>
-                                                </a>
+                                                @if ($values->approved == 0)
+                                                    <a href="{{ route('payment-mandate.edit', $values->id) }}"
+                                                        title="Edit" class="btn btn-xss">
+                                                        <i class="bx bx-edit text-secondary font-size-14"></i>
+                                                    </a>
+
+                                                    <a href="{{ route('payment-mandate.delete', $values->id) }}"
+                                                        title="Delete" class="btn btn-xss delete">
+                                                        <i class="bx bx-trash text-danger font-size-14"></i>
+                                                    </a>
+                                                @endif
                                             </td>
                                         </tr>
                                         @php $serial++; @endphp
@@ -211,7 +247,6 @@
     <!-- end row -->
 @endsection
 @section('script')
-
     <script type="text/javascript">
         $(document).ready(function() {
             //on select account category

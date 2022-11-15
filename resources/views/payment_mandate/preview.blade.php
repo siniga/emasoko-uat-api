@@ -31,18 +31,25 @@
                                     disabled="disabled">2</a>
                                 <span>Customer Deduction Details</span>
                             </div>
+
+                            <div class="stepwizard-step">
+                                <a href="#step-3" type="button" class="btn btn-secondary btn-circle"
+                                    disabled="disabled">3</a>
+                                <span>Confirmation</span>
+                            </div>
                         </div>
                     </div>
                     <!--./form wizard -->
 
                     <form action="#" id="Loan-Form" enctype="multipart/form-data" autocomplete="off">
-                        <input type="hidden" name="uuid" value="{{ $customer_account->uuid ?? null }}">
+                        <input type="hidden" name="id" value="{{ $customer_account->id ?? null }}">
+                        <input type="hidden" name="do_id" value="{{ $debit_order->id ?? null }}">
 
                         <!-- Customer Information -->
                         <section>
                             <div class="row mt-4">
                                 <div class="col-lg-12">
-                                    <h5 class="text-capitalize">Deduction Channel</h5>
+                                    <h5 class="text-capitalize">Summary of Payment Mandate</h5>
                                     <hr />
                                 </div>
                                 <!--./col -->
@@ -53,32 +60,42 @@
                                 <div class="col-lg-12">
                                     <table class="table table-stripped table-bordered">
                                         <tr>
-                                            <th width=25%>Payment Channel</th>
-                                            <td width=25%>
+                                            <th colspan="2" class="font-weight-600">
+                                                Deduction Channel
+                                            </th>
+                                        </tr>
+
+                                        <tr>
+                                            <td width=25%>Payment Channel</td>
+                                            <td width=75%>
                                                 <span>{{ $customer_account->accountType->name ?? '' }}</span>
                                             </td>
+                                        </tr>
 
-                                            <th>Bank/MNO Name</th>
+                                        <tr>
+                                            <td>Bank/MNO Name</td>
                                             <td>
                                                 <span>{{ $customer_account->account->name ?? '' }}</span>
                                             </td>
                                         </tr>
 
                                         <tr>
-                                            <th width=25%>Name of Account Holder</th>
-                                            <td width=25%>
+                                            <td>Name of Account Holder</td>
+                                            <td>
                                                 <span>{{ $customer_account->account_name ?? '' }}</span>
                                             </td>
+                                        </tr>
 
-                                            <th>Account Number</th>
+                                        <tr>
+                                            <td>Account Number</td>
                                             <td>
                                                 <span>{{ $customer_account->account_number ?? '' }}</span>
                                             </td>
                                         </tr>
 
                                         <tr>
-                                            <th>Phone <small>(Connected to Bank)</small></th>
-                                            <td colspan="4">
+                                            <td>Phone <small>(Connected to Bank)</small></td>
+                                            <td>
                                                 <span>{{ $customer_account->phone ?? '' }}</span>
                                             </td>
                                         </tr>
@@ -88,63 +105,89 @@
                             </div>
                             <!--./row -->
 
-                            <div class="row mt-4">
-                                <div class="col-lg-12">
-                                    <h5 class="text-capitalize">Customer Deduction Details</h5>
-                                    <hr />
-                                </div>
-                                <!--./col -->
-                            </div>
-                            <!--./row -->
-
                             <div class="row">
                                 <div class="col-lg-12">
-                                    @if ($customer_account->debitOrders)
-                                        <table class="table table-bordered" id="dynamicTable">
-                                            <tr>
-                                                <th width="3%">#</th>
-                                                <th width="12%">Loan Amount</th>
-                                                <th width="10%">Debit Type</th>
-                                                <th width="10%">Installment Amount</th>
-                                                <th width="10%">Peridiocity</th>
-                                                <th width="10%">Number of Deduction</th>
-                                                <th width="12%">Deduction <br />Start Date</th>
-                                                <th width="12%">Deduction <br />End Date</th>
-                                                <th width="15%">Evidence of Aggrement</th>
-                                            </tr>
+                                    <table class="table table-bordered">
+                                        <tr>
+                                            <th colspan="2" class="font-weight-600">
+                                                Customer Deduction Information
+                                            </th>
+                                        </tr>
 
-                                            @foreach ($customer_account->debitOrders as $val)
-                                                <tr>
-                                                    <td>{{ $loop->iteration }}</td>
-                                                    <td>{{ number_format($val->total_amount) ?? '' }}</td>
-                                                    <td>{{ $val->debit_type ?? '' }}</td>
-                                                    <td>
-                                                        @if ($val->debit_type == 'FIXED')
-                                                            {{ number_format($val->installment_amount) ?? '' }}
-                                                        @elseif($val->debit_type == 'DYNAMIC')
-                                                            Min:
-                                                            {{ number_format($val->min_installment_amount) ?? '' }}<br />
-                                                            Max: {{ number_format($val->max_installment_amount) ?? '' }}
-                                                        @endif
-                                                    </td>
-                                                    <td>{{ $val->periodicity }}</td>
-                                                    <td>{{ $val->installment_number ?? '' }}</td>
-                                                    <td>{{ date('d-m-Y', strtotime($val->start_date)) }}</td>
-                                                    <td>{{ date('d-m-Y', strtotime($val->end_date)) }}</td>
-                                                    <td>
-                                                        @if ($val->evidence_of_aggrement != null)
-                                                            <a download=""
-                                                                href="{{ asset('assets/uploads/docs' . $val->evidence_of_aggrement) }}">
-                                                                {{ $val->evidence_of_aggrement }}
-                                                            </a>
-                                                        @else
-                                                            NIL
-                                                        @endif
-                                                    </td>
-                                                </tr>
-                                            @endforeach
-                                        </table>
-                                    @endif
+                                        <tr>
+                                            <td width=25%>Loan Amount</td>
+                                            <td width=75%>
+                                                <span>{{ number_format($debit_order->total_amount) ?? '' }}</span>
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <td>Debit Type</td>
+                                            <td>
+                                                <span>{{ $debit_order->debit_type ?? '' }}</span>
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <td>Installment Amount</td>
+                                            <td>
+                                                <span>
+                                                    @if ($debit_order->debit_type == 'FIXED')
+                                                        {{ number_format($debit_order->installment_amount) ?? '' }}
+                                                    @elseif($debit_order->debit_type == 'DYNAMIC')
+                                                        Min:
+                                                        {{ number_format($debit_order->min_installment_amount) ?? '' }}<br />
+                                                        Max:
+                                                        {{ number_format($debit_order->max_installment_amount) ?? '' }}
+                                                    @endif
+                                                </span>
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <td>Peridiocity</td>
+                                            <td>
+                                                <span>{{ $debit_order->periodicity }}</span>
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <td>Number of Deduction</td>
+                                            <td>
+                                                <span>{{ $debit_order->installment_number ?? '' }}</span>
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <td>Deduction Start Date</td>
+                                            <td>
+                                                <span>{{ date('d-m-Y', strtotime($debit_order->start_date)) }}</span>
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <td>Deduction End Date</td>
+                                            <td>
+                                                <span>{{ date('d-m-Y', strtotime($debit_order->end_date)) }}</span>
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <td>Evidence of Aggrement</td>
+                                            <td>
+                                                <span>
+                                                    @if ($debit_order->evidence_of_aggrement != null)
+                                                        <a download=""
+                                                            href="{{ asset('assets/uploads/docs/' . $debit_order->evidence_of_aggrement) }}">
+                                                            {{ $debit_order->evidence_of_aggrement }}
+                                                        </a>
+                                                    @else
+                                                        NIL
+                                                    @endif
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </table>
                                 </div>
                                 <!--./col -->
                             </div>
@@ -154,12 +197,12 @@
                             <div class="row mt-2" id="btn-section" style="display: block;">
                                 <div class="col-md-12">
                                     <div class="mb-3 text-sm-end d-none d-sm-block">
-                                        <a href="{{ route('payment-mandate.cancel-registration', $customer_account->uuid) }}"
+                                        <a href="{{ url('payment-mandate/cancel/' . $customer_account->id . '/' . $debit_order->id) }}"
                                             class="btn btn-danger text-medium">
                                             Cancel
                                         </a>
 
-                                        <a href="{{ route('payment-mandate.create-account', $customer_account->uuid) }}"
+                                        <a href="{{ url('payment-mandate/create-account/' . $customer_account->id . '/' . $debit_order->id) }}"
                                             class="btn btn-info text-medium">
                                             Edit
                                         </a>
@@ -225,6 +268,30 @@
 @section('script')
     <script type="text/javascript">
         $(document).ready(function() {
+            //type of debit
+            $('#debit_type').on('change', function(e) {
+                debitType = $(this).val();
+
+                //debit type
+                if (debitType === 'FIXED') {
+                    $('#standard_deduction').css('display', '');
+                    $('#max_min_deduction').css('display', 'none');
+                } else if (debitType === 'DYNAMIC') {
+                    $('#max_min_deduction').css('display', '');
+                    $('#standard_deduction').css('display', 'none');
+                }
+            });
+
+            //deduction start and end date
+            $('#deduction_end_date').on('change', function(e) {
+                deductionEndDate = $(this).val();
+
+                if (deductionEndDate === 'specific_date')
+                    $('#end_date').css('display', '');
+                else
+                    $('#end_date').css('display', 'none');
+            });
+
             //validate form and submit
             $("#Loan-Form").validate({
                 submitHandler: function(form, e) {
@@ -248,7 +315,7 @@
                     //post data 
                     $.ajax({
                         type: "POST",
-                        url: "{{ route('payment-mandate.confirm-registration') }}",
+                        url: "{{ route('payment-mandate.confirm') }}",
                         data: data,
                         processData: false,
                         contentType: false,
@@ -290,7 +357,7 @@
                 e.preventDefault();
 
                 //redirect to show
-                location.reload();
+                //location.reload();
             });
 
             //button => yes
@@ -305,32 +372,8 @@
             $('#btn-no').on('click', function(e) {
                 e.preventDefault();
 
-                //reload page
-                location.reload();
-            });
-
-            //type of debit
-            $('#debit_type').on('change', function(e) {
-                debitType = $(this).val();
-
-                //debit type
-                if (debitType === 'FIXED') {
-                    $('#standard_deduction').css('display', '');
-                    $('#max_min_deduction').css('display', 'none');
-                } else if (debitType === 'DYNAMIC') {
-                    $('#max_min_deduction').css('display', '');
-                    $('#standard_deduction').css('display', 'none');
-                }
-            });
-
-            //deduction start and end date
-            $('#deduction_end_date').on('change', function(e) {
-                deductionEndDate = $(this).val();
-
-                if (deductionEndDate === 'specific_date')
-                    $('#end_date').css('display', '');
-                else
-                    $('#end_date').css('display', 'none');
+                //redirect to show
+                window.location.href = "/payment-mandate/lists"
             });
         });
     </script>

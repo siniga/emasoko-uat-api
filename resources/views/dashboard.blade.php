@@ -277,21 +277,21 @@
                                             @foreach ($pending_debit_orders as $values)
                                                 <tr>
                                                     <td>{{ $serial }}</td>
-                                                    <td>{{ strtoupper($values->customerAccount->account_name ?? '') }}
+                                                    <td>{{ $values->customerAccount->account_name ?? $values->customerAccount->phone }}
                                                     </td>
-                                                    <td><small>{{ $values->customerAccount->id_number ?? 'NIL' }}</small>
+                                                    <td><small>{{ $values->customerAccount->customer->id_number ?? 'NIL' }}</small>
                                                     </td>
                                                     <td>{{ $values->customerAccount->accountType->name ?? '' }}</td>
                                                     <td>{{ $values->customerAccount->account->name ?? '' }}</td>
                                                     <td>
-                                                        {{ $values->customerAccount->account_number ?? '' }}
+                                                        {{ $values->customerAccount->account_number ?? $values->customerAccount->phone }}
                                                     </td>
-                                                    <td>{{ $values->customerAccount->phone ?? '' }}</td>
+                                                    <td>{{ $values->customerAccount->phone ?? $values->customerAccount->phone }}</td>
 
                                                     <td>
-                                                        <a href="{{ route('payment-mandate.details', $values->customer_account_uuid) }}"
-                                                            title="View">
-                                                            <i class="bx bx-folder-open bx-border text-primary font-size-18"></i>
+                                                        <a href="{{ route('payment-mandate.show', $values->id) }}"
+                                                            title="View" class="btn btn-xss">
+                                                            <i class="bx bx-folder-open font-size-14"></i>
                                                         </a>
                                                     </td>
                                                 </tr>
@@ -328,16 +328,16 @@
                                             @foreach ($approved_debit_orders as $values)
                                                 <tr>
                                                     <td>{{ $serial }}</td>
-                                                    <td>{{ strtoupper($values->customerAccount->account_name ?? '') }}
+                                                    <td>{{ $values->customerAccount->account_name ?? $values->customerAccount->phone }}
                                                     </td>
-                                                    <td><small>{{ $values->customerAccount->id_number ?? 'NIL' }}</small>
+                                                    <td><small>{{ $values->customerAccount->customer->id_number ?? 'NIL' }}</small>
                                                     </td>
                                                     <td>{{ $values->customerAccount->accountType->name ?? '' }}</td>
                                                     <td>{{ $values->customerAccount->account->name ?? '' }}</td>
                                                     <td>
-                                                        {{ $values->customerAccount->account_number ?? '' }}
+                                                        {{ $values->customerAccount->account_number ?? $values->customerAccount->phone }}
                                                     </td>
-                                                    <td>{{ $values->customerAccount->phone ?? '' }}</td>
+                                                    <td>{{ $values->customerAccount->phone ?? $values->customerAccount->phone }}</td>
 
                                                     <td>
                                                         @if ($values->approved == 0)
@@ -385,16 +385,17 @@
                                             @foreach ($rejected_debit_orders as $values)
                                                 <tr>
                                                     <td>{{ $serial }}</td>
-                                                    <td>{{ strtoupper($values->customerAccount->account_name ?? '') }}
+                                                    <td>
+                                                        {{ $values->customerAccount->account_name ?? $values->customerAccount->phone }}
                                                     </td>
-                                                    <td><small>{{ $values->customerAccount->id_number ?? 'NIL' }}</small>
+                                                    <td><small>{{ $values->customerAccount->customer->id_number ?? 'NIL' }}</small>
                                                     </td>
                                                     <td>{{ $values->customerAccount->accountType->name ?? '' }}</td>
                                                     <td>{{ $values->customerAccount->account->name ?? '' }}</td>
                                                     <td>
-                                                        {{ $values->customerAccount->account_number ?? '' }}
+                                                        {{ $values->customerAccount->account_number ?? $values->customerAccount->phone }}
                                                     </td>
-                                                    <td>{{ $values->customerAccount->phone ?? '' }}</td>
+                                                    <td>{{ $values->customerAccount->phone ?? $values->customerAccount->phone }}</td>
 
                                                     <td>
                                                         @if ($values->approved == 0)

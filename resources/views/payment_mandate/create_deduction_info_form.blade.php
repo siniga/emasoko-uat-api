@@ -40,7 +40,8 @@
                     </div>
 
                     <form action="#" id="Loan-Form" enctype="multipart/form-data" autocomplete="off">
-                        <input type="hidden" name="uuid" value="{{ $customer_account->uuid ?? null }}">
+                        <input type="hidden" name="id" value="{{ $customer_account->id ?? null }}">
+                        <input type="hidden" name="do_id" value="{{ $debit_order->id ?? null }}">
 
                         <!-- Customer Information -->
                         <section>
@@ -176,7 +177,7 @@
                             <div class="row">
                                 <div class="col-md-12">
                                     <div class="mb-3 text-sm-end d-none d-sm-block">
-                                        <a href="{{ route('payment-mandate.create-account', $customer_account->uuid) }}"
+                                        <a href="{{ url('payment-mandate/create-account/' . $customer_account->id . '/' . ($debit_order ? $debit_order->id : '')) }}"
                                             class="btn btn-info text-medium">Previous</a>
 
                                         <button type="submit" id="btnSubmit" class="btn btn-primary">
@@ -317,7 +318,7 @@
                     //post data 
                     $.ajax({
                         type: "POST",
-                        url: "{{ route('payment-mandate.store-deduction-details') }}",
+                        url: "{{ route('payment-mandate.store-deduction-info') }}",
                         data: data,
                         processData: false,
                         contentType: false,
@@ -336,13 +337,14 @@
                             $.notify(response.success_msg, 'success');
 
                             setTimeout(function() {
-                                //uuid
-                                uuid = response.uuid
+                                //customer account id
+                                id = response.id
+
+                                //debit order id
+                                do_id = response.do_id
 
                                 //redirect to show
-                                window.location.href =
-                                    "/payment-mandate/preview/" +
-                                    uuid
+                                window.location.href = "/payment-mandate/preview/" + id + "/" + do_id
                             }, 1000);
                         },
                         error: function(response) {
@@ -354,13 +356,6 @@
 
                             //show error msg
                             $("#error-messages").css('display', '');
-
-                            // $('#installmentAmountError').text(response.responseJSON.errors
-                            //     .installment_amount);
-                            // $('#minInstallmentAmountError').text(response.responseJSON
-                            //     .errors.min_installment_amount);
-                            // $('#maxInstallmentAmountError').text(response.responseJSON
-                            //     .errors.max_installment_amount);
 
                             //write error message
                             $.each(response.responseJSON.errors, function(key, item) {

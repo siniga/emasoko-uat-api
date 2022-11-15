@@ -19,13 +19,9 @@ class CustomerAccount extends Model
         //customers
         $customer_accounts = static::orderBy('customer_accounts.created_at', 'DESC');
 
-        if (Auth::user()->hasRole('company_approver')) {
-            $partner_user = PartnerUser::where(['user_id' => $user_id])->first();
-
-            if ($partner_user) {
-                $customer_accounts = $customer_accounts->where('customer_accounts.created_by', '=', $partner_user->partner_id);
-            }
-        }
+        // if (Auth::user()->hasRole('company_approver')) {
+        //     $customer_accounts = $customer_accounts->where('customer_accounts.created_by', '=', $user_id);
+        // }
 
         return $customer_accounts;
     }
