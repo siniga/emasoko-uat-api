@@ -4,7 +4,7 @@
 -- https://tableplus.com/
 --
 -- Database: emakato_db
--- Generation Time: 2022-11-15 03:18:07.9400
+-- Generation Time: 2022-11-21 09:47:23.2140
 -- -------------------------------------------------------------
 
 
@@ -509,6 +509,177 @@ CREATE TABLE `users` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `users_email_unique` (`email`)
 ) ENGINE=InnoDB AUTO_INCREMENT=30 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO `account_types` (`id`, `name`, `description`, `created_at`, `updated_at`) VALUES
+(1, 'BANK', 'bank', '2021-11-02 11:02:01', '2021-11-02 11:02:01'),
+(2, 'MNO', 'mno', '2021-11-02 11:02:01', '2021-11-02 11:02:01');
+
+INSERT INTO `accounts` (`id`, `account_type_id`, `name`, `description`, `mask`, `active`, `created_at`, `updated_at`) VALUES
+(1, 1, 'NMB Bank', 'NMB Bank', '99999999999', 1, '2022-02-24 15:36:38', '2022-10-31 09:26:30'),
+(2, 2, 'Vodacom', 'vodacom', NULL, 1, '2022-02-24 15:36:38', '2022-10-31 09:26:26'),
+(3, 1, 'Stanbic Bank', 'Stanbic Bank', NULL, 1, '2022-03-29 15:58:16', '2022-10-31 09:26:21'),
+(4, 1, 'Test', 'test channel', NULL, 1, '2022-10-31 09:20:05', '2022-10-31 09:20:05');
+
+INSERT INTO `acquisition` (`id`, `name`, `description`, `created_at`, `updated_at`) VALUES
+(1, 'WEB', 'Acquired from web portal', '2021-10-14 00:00:00', '2021-10-14 00:00:00'),
+(2, 'USSD', 'Acquired from USSD', '2021-10-13 00:00:00', '2021-10-06 00:00:00'),
+(3, 'MOBILE APP', 'Acquired from MOBILE APP', '2021-10-13 00:00:00', '2021-10-06 00:00:00');
+
+INSERT INTO `countries` (`id`, `code`, `name`, `initial`, `created_at`, `updated_at`) VALUES
+(1, '+255', 'TANZANIA', 'TZ', '2021-11-06 12:12:54', '2022-04-01 17:33:41');
+
+INSERT INTO `document_categories` (`id`, `name`, `key`, `required`) VALUES
+(1, 'Business Licence', 'Business_Licence', 1),
+(2, 'Certificate of incorporation', 'Certificate_of_incorporation', 1),
+(3, 'TIN Certificate', 'TIN_Certificate', 1),
+(4, 'BRELA report for shareholders', 'BRELA_report_for_shareholders', 0),
+(5, 'Audited financial statement', 'Audited_financial_statement', 0),
+(6, 'Introduction letter introducing director as a custodian of the account.', 'Introduction_letter', 0),
+(7, 'Annual return', 'Annual_return', 0);
+
+INSERT INTO `gender` (`id`, `name`, `created_at`, `updated_at`) VALUES
+(1, 'Male', '2021-10-14 00:00:00', '2021-10-26 01:12:57'),
+(2, 'Female', '2021-10-14 00:00:00', '2021-10-26 01:12:57');
+
+INSERT INTO `id_types` (`id`, `name`, `description`, `created_at`, `updated_at`) VALUES
+(1, 'NIDA', 'National Identity Card Number', '2021-10-14 00:00:00', '2021-10-14 00:00:00'),
+(2, 'DRIVING LICENCE', 'Driving licence card', '2021-10-14 00:00:00', '2021-10-14 00:00:00');
+
+INSERT INTO `jobs` (`id`, `queue`, `payload`, `attempts`, `reserved_at`, `available_at`, `created_at`) VALUES
+(7, 'default', '{\"uuid\":\"ca54cf51-c85b-4d69-b231-32b66316267a\",\"displayName\":\"App\\\\Jobs\\\\SendSMSJob\",\"job\":\"Illuminate\\\\Queue\\\\CallQueuedHandler@call\",\"maxTries\":null,\"maxExceptions\":null,\"failOnTimeout\":false,\"backoff\":null,\"timeout\":null,\"retryUntil\":null,\"data\":{\"commandName\":\"App\\\\Jobs\\\\SendSMSJob\",\"command\":\"O:19:\\\"App\\\\Jobs\\\\SendSMSJob\\\":11:{s:7:\\\"\\u0000*\\u0000data\\\";a:4:{s:8:\\\"schedule\\\";N;s:10:\\\"message_id\\\";s:11:\\\"C1Z2V5P9H8T\\\";s:6:\\\"sender\\\";s:7:\\\"TAARIFA\\\";s:7:\\\"message\\\";s:71:\\\"eMakato imeweka makato yako, utatumiwa ujumbe wa kuhakiki taarifa zako.\\\";}s:3:\\\"job\\\";N;s:10:\\\"connection\\\";N;s:5:\\\"queue\\\";N;s:15:\\\"chainConnection\\\";N;s:10:\\\"chainQueue\\\";N;s:19:\\\"chainCatchCallbacks\\\";N;s:5:\\\"delay\\\";N;s:11:\\\"afterCommit\\\";N;s:10:\\\"middleware\\\";a:0:{}s:7:\\\"chained\\\";a:0:{}}\"}}', 0, NULL, 1668465910, 1668465910),
+(8, 'default', '{\"uuid\":\"fcd7df01-a106-4dff-8b96-e4b85b145bb7\",\"displayName\":\"App\\\\Jobs\\\\SendSMSJob\",\"job\":\"Illuminate\\\\Queue\\\\CallQueuedHandler@call\",\"maxTries\":null,\"maxExceptions\":null,\"failOnTimeout\":false,\"backoff\":null,\"timeout\":null,\"retryUntil\":null,\"data\":{\"commandName\":\"App\\\\Jobs\\\\SendSMSJob\",\"command\":\"O:19:\\\"App\\\\Jobs\\\\SendSMSJob\\\":11:{s:7:\\\"\\u0000*\\u0000data\\\";a:4:{s:8:\\\"schedule\\\";N;s:10:\\\"message_id\\\";s:11:\\\"AF7WYMMFYUT\\\";s:6:\\\"sender\\\";s:7:\\\"TAARIFA\\\";s:7:\\\"message\\\";s:71:\\\"eMakato imeweka makato yako, utatumiwa ujumbe wa kuhakiki taarifa zako.\\\";}s:3:\\\"job\\\";N;s:10:\\\"connection\\\";N;s:5:\\\"queue\\\";N;s:15:\\\"chainConnection\\\";N;s:10:\\\"chainQueue\\\";N;s:19:\\\"chainCatchCallbacks\\\";N;s:5:\\\"delay\\\";N;s:11:\\\"afterCommit\\\";N;s:10:\\\"middleware\\\";a:0:{}s:7:\\\"chained\\\";a:0:{}}\"}}', 0, NULL, 1668465919, 1668465919),
+(9, 'default', '{\"uuid\":\"79fca2e6-caeb-43c1-9813-4d653744625e\",\"displayName\":\"App\\\\Jobs\\\\SendSMSJob\",\"job\":\"Illuminate\\\\Queue\\\\CallQueuedHandler@call\",\"maxTries\":null,\"maxExceptions\":null,\"failOnTimeout\":false,\"backoff\":null,\"timeout\":null,\"retryUntil\":null,\"data\":{\"commandName\":\"App\\\\Jobs\\\\SendSMSJob\",\"command\":\"O:19:\\\"App\\\\Jobs\\\\SendSMSJob\\\":11:{s:7:\\\"\\u0000*\\u0000data\\\";a:4:{s:8:\\\"schedule\\\";N;s:10:\\\"message_id\\\";s:11:\\\"CRXQ87PM9EH\\\";s:6:\\\"sender\\\";s:7:\\\"TAARIFA\\\";s:7:\\\"message\\\";s:71:\\\"eMakato imeweka makato yako, utatumiwa ujumbe wa kuhakiki taarifa zako.\\\";}s:3:\\\"job\\\";N;s:10:\\\"connection\\\";N;s:5:\\\"queue\\\";N;s:15:\\\"chainConnection\\\";N;s:10:\\\"chainQueue\\\";N;s:19:\\\"chainCatchCallbacks\\\";N;s:5:\\\"delay\\\";N;s:11:\\\"afterCommit\\\";N;s:10:\\\"middleware\\\";a:0:{}s:7:\\\"chained\\\";a:0:{}}\"}}', 0, NULL, 1668465924, 1668465924),
+(10, 'default', '{\"uuid\":\"9aeb9b81-2ea2-4ceb-b8dd-47cb17cbb7d2\",\"displayName\":\"App\\\\Jobs\\\\SendSMSJob\",\"job\":\"Illuminate\\\\Queue\\\\CallQueuedHandler@call\",\"maxTries\":null,\"maxExceptions\":null,\"failOnTimeout\":false,\"backoff\":null,\"timeout\":null,\"retryUntil\":null,\"data\":{\"commandName\":\"App\\\\Jobs\\\\SendSMSJob\",\"command\":\"O:19:\\\"App\\\\Jobs\\\\SendSMSJob\\\":11:{s:7:\\\"\\u0000*\\u0000data\\\";a:4:{s:8:\\\"schedule\\\";N;s:10:\\\"message_id\\\";s:11:\\\"7QADTT96N34\\\";s:6:\\\"sender\\\";s:7:\\\"TAARIFA\\\";s:7:\\\"message\\\";s:71:\\\"eMakato imeweka makato yako, utatumiwa ujumbe wa kuhakiki taarifa zako.\\\";}s:3:\\\"job\\\";N;s:10:\\\"connection\\\";N;s:5:\\\"queue\\\";N;s:15:\\\"chainConnection\\\";N;s:10:\\\"chainQueue\\\";N;s:19:\\\"chainCatchCallbacks\\\";N;s:5:\\\"delay\\\";N;s:11:\\\"afterCommit\\\";N;s:10:\\\"middleware\\\";a:0:{}s:7:\\\"chained\\\";a:0:{}}\"}}', 0, NULL, 1668465999, 1668465999),
+(11, 'default', '{\"uuid\":\"443ac643-9310-473d-bda1-b1031d182664\",\"displayName\":\"App\\\\Jobs\\\\SendSMSJob\",\"job\":\"Illuminate\\\\Queue\\\\CallQueuedHandler@call\",\"maxTries\":null,\"maxExceptions\":null,\"failOnTimeout\":false,\"backoff\":null,\"timeout\":null,\"retryUntil\":null,\"data\":{\"commandName\":\"App\\\\Jobs\\\\SendSMSJob\",\"command\":\"O:19:\\\"App\\\\Jobs\\\\SendSMSJob\\\":11:{s:7:\\\"\\u0000*\\u0000data\\\";a:4:{s:8:\\\"schedule\\\";N;s:10:\\\"message_id\\\";s:11:\\\"UJXRNYAXDY1\\\";s:6:\\\"sender\\\";s:7:\\\"TAARIFA\\\";s:7:\\\"message\\\";s:71:\\\"eMakato imeweka makato yako, utatumiwa ujumbe wa kuhakiki taarifa zako.\\\";}s:3:\\\"job\\\";N;s:10:\\\"connection\\\";N;s:5:\\\"queue\\\";N;s:15:\\\"chainConnection\\\";N;s:10:\\\"chainQueue\\\";N;s:19:\\\"chainCatchCallbacks\\\";N;s:5:\\\"delay\\\";N;s:11:\\\"afterCommit\\\";N;s:10:\\\"middleware\\\";a:0:{}s:7:\\\"chained\\\";a:0:{}}\"}}', 0, NULL, 1668466021, 1668466021),
+(12, 'default', '{\"uuid\":\"5ad0088e-7056-4bbb-95c3-50df67398aa8\",\"displayName\":\"App\\\\Jobs\\\\SendSMSJob\",\"job\":\"Illuminate\\\\Queue\\\\CallQueuedHandler@call\",\"maxTries\":null,\"maxExceptions\":null,\"failOnTimeout\":false,\"backoff\":null,\"timeout\":null,\"retryUntil\":null,\"data\":{\"commandName\":\"App\\\\Jobs\\\\SendSMSJob\",\"command\":\"O:19:\\\"App\\\\Jobs\\\\SendSMSJob\\\":11:{s:7:\\\"\\u0000*\\u0000data\\\";a:4:{s:8:\\\"schedule\\\";N;s:10:\\\"message_id\\\";s:11:\\\"P4RS7LWTNR1\\\";s:6:\\\"sender\\\";s:7:\\\"TAARIFA\\\";s:7:\\\"message\\\";s:71:\\\"eMakato imeweka makato yako, utatumiwa ujumbe wa kuhakiki taarifa zako.\\\";}s:3:\\\"job\\\";N;s:10:\\\"connection\\\";N;s:5:\\\"queue\\\";N;s:15:\\\"chainConnection\\\";N;s:10:\\\"chainQueue\\\";N;s:19:\\\"chainCatchCallbacks\\\";N;s:5:\\\"delay\\\";N;s:11:\\\"afterCommit\\\";N;s:10:\\\"middleware\\\";a:0:{}s:7:\\\"chained\\\";a:0:{}}\"}}', 0, NULL, 1668466059, 1668466059),
+(13, 'default', '{\"uuid\":\"978d19a7-d0df-4b88-8de8-79b9a0575e57\",\"displayName\":\"App\\\\Jobs\\\\SendSMSJob\",\"job\":\"Illuminate\\\\Queue\\\\CallQueuedHandler@call\",\"maxTries\":null,\"maxExceptions\":null,\"failOnTimeout\":false,\"backoff\":null,\"timeout\":null,\"retryUntil\":null,\"data\":{\"commandName\":\"App\\\\Jobs\\\\SendSMSJob\",\"command\":\"O:19:\\\"App\\\\Jobs\\\\SendSMSJob\\\":11:{s:7:\\\"\\u0000*\\u0000data\\\";a:4:{s:8:\\\"schedule\\\";N;s:10:\\\"message_id\\\";s:11:\\\"UCD783H2CMP\\\";s:6:\\\"sender\\\";s:7:\\\"TAARIFA\\\";s:7:\\\"message\\\";s:71:\\\"eMakato imeweka makato yako, utatumiwa ujumbe wa kuhakiki taarifa zako.\\\";}s:3:\\\"job\\\";N;s:10:\\\"connection\\\";N;s:5:\\\"queue\\\";N;s:15:\\\"chainConnection\\\";N;s:10:\\\"chainQueue\\\";N;s:19:\\\"chainCatchCallbacks\\\";N;s:5:\\\"delay\\\";N;s:11:\\\"afterCommit\\\";N;s:10:\\\"middleware\\\";a:0:{}s:7:\\\"chained\\\";a:0:{}}\"}}', 0, NULL, 1668468177, 1668468177);
+
+INSERT INTO `loan_purposes` (`id`, `name`) VALUES
+(1, 'Emergencies'),
+(2, 'Debt consolidation'),
+(3, 'Home improvements or repairs'),
+(4, 'Child-related costs'),
+(5, 'Major life milestones');
+
+INSERT INTO `marital_status` (`id`, `name`, `created_at`, `updated_at`) VALUES
+(1, 'Married', '2021-10-14 16:33:06', '2021-10-26 01:12:57'),
+(2, 'Single', '2021-10-14 16:33:06', '2021-10-26 01:12:57'),
+(3, 'Divorce', '2021-10-14 16:33:20', '2021-10-26 01:12:57');
+
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
+(1, '2014_10_12_000000_create_users_table', 1),
+(2, '2014_10_12_100000_create_password_resets_table', 1),
+(3, '2019_08_19_000000_create_failed_jobs_table', 1),
+(4, '2019_12_14_000001_create_personal_access_tokens_table', 1),
+(5, '2022_02_12_073539_create_roles_table', 2),
+(6, '2022_02_12_073554_create_role_user_table', 2),
+(7, '2022_02_12_075306_create_perm_classes_table', 3),
+(8, '2022_02_12_075318_create_perm_methods_table', 4),
+(9, '2022_02_12_075333_create_perm_roles_table', 4),
+(10, '2022_02_12_075341_create_perm_users_table', 4);
+
+INSERT INTO `occupations` (`id`, `name`, `description`, `created_at`, `updated_at`) VALUES
+(1, 'Accountant', 'Accountant', '2021-10-14 00:00:00', '2021-10-14 00:00:00'),
+(2, 'Architect', 'Architect', '2021-10-14 00:00:00', '2021-10-14 00:00:00'),
+(3, 'Engineer', 'Engineer', '2021-10-14 00:00:00', '2021-10-14 00:00:00'),
+(4, ' Medical Practitioner', ' Medical Practitioner', '2021-10-14 00:00:00', '2021-10-14 00:00:00');
+
+INSERT INTO `partner_accounts` (`id`, `partner_id`, `account_type_id`, `partner_uuid`, `account_id`, `account_name`, `account_number`, `status`, `remarks`, `created_at`, `updated_at`) VALUES
+(2, 2, 1, 'a244e5c2-da3a-493e-a7d9-7aa07a252d50', 1, 'Multics Systems', '01188466644', 0, NULL, '2022-10-27 08:17:50', '2022-10-27 08:17:50');
+
+INSERT INTO `partner_approvals` (`id`, `partner_id`, `key`, `label`, `status`, `remarks`) VALUES
+(5, 2, 'Company_Information', 'Company Information', 'approved', NULL),
+(6, 2, 'Company_Documents', 'Company Documents', 'approved', NULL),
+(7, 2, 'Company_Collection_Accounts', 'Company Collection Accounts', 'approved', NULL),
+(8, 2, 'Company_Authorized_Representative', 'Company Authorized Representative', 'approved', NULL);
+
+INSERT INTO `partner_categories` (`id`, `name`, `description`, `created_at`, `updated_at`) VALUES
+(1, 'MICROFINANCE', 'Shop owned by Vodacom', '2021-10-25 23:31:18', '2021-11-04 16:46:59'),
+(2, 'SHOPS', 'Other Shop which are not owned by MNO', '2021-10-25 23:36:03', '2021-11-04 16:47:09'),
+(3, 'INSURER', 'Insurance Companies which issues IPF', '2021-10-25 23:37:50', '2021-11-04 16:47:29');
+
+INSERT INTO `partner_documents` (`id`, `partner_id`, `partner_uuid`, `key`, `name`, `attachment`) VALUES
+(4, 2, 'a244e5c2-da3a-493e-a7d9-7aa07a252d50', 'Business_Licence', 'Business Licence', 'invoice_INV-C-2022-992801.pdf'),
+(5, 2, 'a244e5c2-da3a-493e-a7d9-7aa07a252d50', 'Certificate_of_incorporation', 'Certificate of incorporation', 'invoice_INV-C-2022-992801.pdf'),
+(6, 2, 'a244e5c2-da3a-493e-a7d9-7aa07a252d50', 'TIN_Certificate', 'TIN Certificate', 'invoice_INV-C-2022-992801.pdf');
+
+INSERT INTO `partner_staff` (`id`, `partner_id`, `partner_uuid`, `name`, `NIDA_number`, `email`, `phone`, `title`, `created_at`, `updated_at`) VALUES
+(2, 2, 'a244e5c2-da3a-493e-a7d9-7aa07a252d50', 'Nickas Ngolongolo', '88376356-53553-55353-55', 'ngolongolo@multics.co.tz', '255717705746', 'CEO', '2022-10-27 11:18:26', '2022-10-27 11:18:26');
+
+INSERT INTO `partner_users` (`id`, `user_id`, `partner_id`, `partner_uuid`, `authorize`, `created_at`, `updated_at`) VALUES
+(2, 29, 2, 'a244e5c2-da3a-493e-a7d9-7aa07a252d50', 1, '2022-10-27 08:18:36', '2022-10-27 08:18:36');
+
+INSERT INTO `partners` (`id`, `uuid`, `partner_category_id`, `business_name`, `year_of_incorporation`, `tin_number`, `number_of_staff`, `region_id`, `phone`, `email`, `website`, `postal_address`, `physical_address`, `complete`, `status`, `next_step`, `otp_token`, `created_by`, `updated_by`, `created_at`, `updated_at`) VALUES
+(2, 'a244e5c2-da3a-493e-a7d9-7aa07a252d50', 1, 'Multics Systems', '2020', '983-477-388', 100, '2', '+255717705746', 'ngolongolo@multics.co.tz', NULL, NULL, 'Mikocheni, Dar es Salaam', 1, 3, 'company-info-overview/a244e5c2-da3a-493e-a7d9-7aa07a252d50', NULL, NULL, NULL, '2022-10-27 08:16:46', '2022-10-27 11:31:35');
+
+INSERT INTO `payment_histories` (`id`, `debit_order_id`, `expected_amount`, `paid_amount`, `payment_reference`, `created_at`, `updated_at`) VALUES
+(9, 25, 7168, 15000, 'laf89-093240', '2021-10-21 17:49:35', '2021-10-26 01:12:57'),
+(10, 25, 6542, 6400, 'laf89-093240y', '2021-10-21 17:51:19', '2021-10-26 01:12:57');
+
+INSERT INTO `payments` (`id`, `amount`, `reference`, `msisdn`, `status`, `transid`, `insight_reference`, `remarks`, `created_at`, `updated_at`) VALUES
+(18, 27000, 'LAF-29209', '255744423289', 'SUCCESS', 'LAF-29209', 'LAF-96380', NULL, '2021-11-11 09:19:35', '2021-11-11 09:19:35'),
+(21, 190001, 'LAF-45228', '255653190260', 'SUCCESS', 'LAF-45228', 'LAF-63157', NULL, '2021-11-11 10:36:55', '2021-11-11 10:36:55');
+
+INSERT INTO `regions` (`id`, `name`, `created_at`, `updated_at`) VALUES
+(1, 'ARUSHA', '2021-05-04 07:19:07', '2021-10-26 04:12:57'),
+(2, 'DAR ES SALAAM', '2021-05-04 07:19:07', '2021-10-26 04:12:57'),
+(3, 'DODOMA', '2021-05-04 07:19:07', '2021-10-26 04:12:57'),
+(4, 'GEITA', '2021-05-04 07:19:07', '2021-10-26 04:12:57'),
+(5, 'IRINGA', '2021-05-04 07:19:07', '2021-10-26 04:12:57'),
+(6, 'KAGERA', '2021-05-04 07:19:07', '2021-10-26 04:12:57'),
+(7, 'KATAVI', '2021-05-04 07:19:07', '2021-10-26 04:12:57'),
+(8, 'KIGOMA', '2021-05-04 07:19:07', '2021-10-26 04:12:57'),
+(9, 'KILIMANJARO', '2021-05-04 07:19:07', '2021-10-26 04:12:57'),
+(10, 'LINDI', '2021-05-04 07:19:07', '2021-10-26 04:12:57'),
+(11, 'MANYARA', '2021-05-04 07:19:07', '2021-10-26 04:12:57'),
+(12, 'MARA', '2021-05-04 07:19:07', '2021-10-26 04:12:57'),
+(13, 'MBEYA', '2021-05-04 07:19:07', '2021-10-26 04:12:57'),
+(14, 'MOROGORO', '2021-05-04 07:19:07', '2021-10-26 04:12:57'),
+(15, 'MTWARA', '2021-05-04 07:19:07', '2021-10-26 04:12:57'),
+(16, 'MWANZA', '2021-05-04 07:19:07', '2021-10-26 04:12:57'),
+(17, 'NJOMBE', '2021-05-04 07:19:07', '2021-10-26 04:12:57'),
+(18, 'PWANI', '2021-05-04 07:19:07', '2021-10-26 04:12:57'),
+(19, 'RUKWA', '2021-05-04 07:19:07', '2021-10-26 04:12:57'),
+(20, 'RUVUMA', '2021-05-04 07:19:07', '2021-10-26 04:12:57'),
+(21, 'SHINYANGA', '2021-05-04 07:19:07', '2021-10-26 04:12:57'),
+(22, 'SIMIYU', '2021-05-04 07:19:07', '2021-10-26 04:12:57'),
+(23, 'SINGIDA', '2021-05-04 07:19:07', '2021-10-26 04:12:57'),
+(24, 'SONGWE', '2021-05-04 07:19:07', '2021-10-26 04:12:57'),
+(25, 'TABORA', '2021-05-04 07:19:07', '2021-10-26 04:12:57'),
+(26, 'TANGA', '2021-05-04 07:19:07', '2021-10-26 04:12:57'),
+(27, 'KASKAZINI PEMBA', '2021-05-04 07:19:07', '2021-10-26 04:12:57'),
+(28, 'KASKAZINI UNGUJA', '2021-05-04 07:19:07', '2021-10-26 04:12:57'),
+(29, 'KUSINI PEMBA', '2021-05-04 07:19:07', '2021-10-26 04:12:57'),
+(30, 'KUSINI UNGUJA', '2021-05-04 07:19:07', '2021-10-26 04:12:57'),
+(31, 'MJINIMAGHARIBI', '2021-05-04 07:19:07', '2021-10-26 04:12:57');
+
+INSERT INTO `role_user` (`id`, `user_id`, `role_id`) VALUES
+(30, 1, 1),
+(31, 29, 2);
+
+INSERT INTO `roles` (`id`, `name`, `description`) VALUES
+(1, 'admin', 'Administrator'),
+(2, 'company_approver', 'Company Approver'),
+(4, 'test', 'Test'),
+(5, 'Group_2', 'Describe my group');
+
+INSERT INTO `sectors` (`id`, `name`, `description`, `created_at`, `updated_at`) VALUES
+(1, 'GOVERNMENT', 'Government employees', '2021-10-14 16:28:21', '2021-10-26 01:12:57'),
+(2, 'PRIVATE', 'SME', '2021-10-14 16:28:21', '2021-11-04 14:12:05');
+
+INSERT INTO `sms_logs` (`id`, `message`, `message_id`, `gateway_id`, `gateway_response`, `gateway_code`, `gateway_message`, `sender`, `phone`, `sms_count`, `status`, `schedule`, `schedule_at`, `created_at`, `created_by`, `updated_at`) VALUES
+(22, 'Payment mandate registration complete, waiting for consent from customer!. <br /><br />Do you want to create new payment mandate?', 'Y29DH1J3E3J', NULL, '{\"code\": 120, \"message\": \"Invalid api_key and/or secret_id\"}', '120', 'Invalid api_key and/or secret_id', 'TAARIFA', '255746898988', 1, 'REJECTED', 0, NULL, '2022-11-14 14:09:14', 29, '2022-11-14 14:09:18'),
+(23, 'Payment mandate registration complete, waiting for consent from customer!. <br /><br />Do you want to create new payment mandate?', 'C1Z2V5P9H8T', NULL, NULL, NULL, NULL, 'TAARIFA', '255717705746', 1, 'PENDING', 0, NULL, '2022-11-14 22:45:10', 29, '2022-11-14 22:45:10'),
+(24, 'Payment mandate registration complete, waiting for consent from customer!. <br /><br />Do you want to create new payment mandate?', 'AF7WYMMFYUT', NULL, NULL, NULL, NULL, 'TAARIFA', '255717705746', 1, 'PENDING', 0, NULL, '2022-11-14 22:45:19', 29, '2022-11-14 22:45:19'),
+(25, 'Payment mandate registration complete, waiting for consent from customer!. <br /><br />Do you want to create new payment mandate?', 'CRXQ87PM9EH', NULL, NULL, NULL, NULL, 'TAARIFA', '255717705746', 1, 'PENDING', 0, NULL, '2022-11-14 22:45:24', 29, '2022-11-14 22:45:24'),
+(26, 'Payment mandate registration complete, waiting for consent from customer!. <br /><br />Do you want to create new payment mandate?', '7QADTT96N34', NULL, NULL, NULL, NULL, 'TAARIFA', '255717705746', 1, 'PENDING', 0, NULL, '2022-11-14 22:46:39', 29, '2022-11-14 22:46:39'),
+(27, 'Payment mandate registration complete, waiting for consent from customer!. <br /><br />Do you want to create new payment mandate?', 'UJXRNYAXDY1', NULL, NULL, NULL, NULL, 'TAARIFA', '255717705746', 1, 'PENDING', 0, NULL, '2022-11-14 22:47:01', 29, '2022-11-14 22:47:01'),
+(28, 'Payment mandate registration complete, waiting for consent from customer!. <br /><br />Do you want to create new payment mandate?', 'P4RS7LWTNR1', NULL, NULL, NULL, NULL, 'TAARIFA', '255717705746', 1, 'PENDING', 0, NULL, '2022-11-14 22:47:39', 29, '2022-11-14 22:47:39'),
+(29, 'Payment mandate registration complete, waiting for consent from customer!. <br /><br />Do you want to create new payment mandate?', 'UCD783H2CMP', NULL, NULL, NULL, NULL, 'TAARIFA', '255753437856', 1, 'PENDING', 0, NULL, '2022-11-14 23:22:57', 29, '2022-11-14 23:22:57');
+
+INSERT INTO `users` (`id`, `name`, `email`, `phone`, `NIDA_number`, `email_verified_at`, `password`, `remember_token`, `verify_token`, `active`, `created_at`, `updated_at`) VALUES
+(1, 'Admin Solocodes', 'admin@solocodes.co.tz', '0753437856', NULL, NULL, '$2y$10$0b/tjmMN.FnQhhmwRh2WkuW5FzSMrIPqOXbd1CPw/rcLQcV7z/mL2', NULL, NULL, 1, NULL, '2022-10-31 08:33:02'),
+(29, 'Multics Systems', 'ngolongolo@multics.co.tz', '0767000300', NULL, NULL, '$2y$10$A1/XIri2ZmsJgsdNoW1kdezuWCD63sNzwr8vNBhTMSIFkUWqUWu4a', NULL, 'yyCXuzzbt9lyvX7OP6ndcvDFUuWN0YeKmeFdETLPEqkLz4ppwauqlLlGG3QqWGbk', 1, '2022-10-26 13:48:16', '2022-10-31 08:23:39');
 
 
 
