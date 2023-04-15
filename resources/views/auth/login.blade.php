@@ -108,23 +108,10 @@
                                     </div>
 
                                     <div class="mt-4 text-center">
-                                        @if (Route::has('password.request'))
-                                            <a href="{{ route('password.request') }}" class="text-muted"><i
+                                        @if (Route::has('forget.password.get'))
+                                            <a href="#" class="text-muted"><i
                                                     class="mdi mdi-lock me-1"></i> Forgot your password?</a>
                                         @endif
-                                    </div>
-
-                                    <div class="mt-4 text-center">
-                                        <p>Don't have an account ? <a href="{{ url('register') }}"
-                                                class="fw-medium text-primary">
-                                                Register Now </a>
-                                        </p>
-
-                                        <p>Want to know status of application?
-                                            <a href="{{ route('company.track-registration') }}"
-                                                class="fw-medium text-primary">
-                                                Track Application </a>
-                                        </p>
                                     </div>
                                 </form>
                             </div>

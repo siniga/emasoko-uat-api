@@ -46,7 +46,7 @@ use Illuminate\Support\Facades\Route;
 
 
 Route::get('/', [FrontPageController::class, 'index']);
-Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
+Route::get('auth/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 Route::get('index', [DashboardController::class, 'index'])->name('index');
 
