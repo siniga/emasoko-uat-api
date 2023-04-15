@@ -37,7 +37,7 @@
                         <div class="text-sm-end d-none d-sm-block">
                             <a href="#" title="Company Assessment" data-bs-toggle="modal"
                                 data-bs-target=".bs-example-modal-lg" class="btn btn-outline-primary text-medium btn-sm"
-                                company-id="{{ $company->id }}">
+                                company-id="{{ $company->id }}" id="btn-assessment">
                                 <i class="fa fa-check"></i> Company Assessment
                             </a>&nbsp;
 
@@ -300,6 +300,26 @@
     <script type="text/javascript">
         $(document).ready(function() {
             //company information assessment without click
+            $('#btn-assessment').on("click", function(e) {
+                e.preventDefault();
+
+                //company-id
+                var companyId = $(this).attr('company-id');
+
+                //ajax request
+                var jqXHR = $.ajax({
+                    type: "GET",
+                    url: "/companies/" + companyId + "/assessment/?page=companyInformation",
+                }).done(function(data) {
+                    //modal contents
+                    $('#modal-contents').html(data);
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+                    alert('Failed to update progress');
+                    if (console && console.log) {
+                        console.log("Loading Ajax: " + textStatus + ", " + errorThrown);
+                    }
+                });
+            });
 
 
             //company information assessment

@@ -14,6 +14,14 @@
     <!-- App favicon -->
     <link rel="shortcut icon" href="{{ URL::asset('assets/images/favicon.ico') }}">
     @include('layouts.head-css')
+
+    <!--./Alpine JS -->
+    <script defer src="https://unpkg.com/alpinejs@3.10.5/dist/cdn.min.js"></script>
+
+    <!-- htmx -->
+    <script src="https://unpkg.com/htmx.org@1.8.5"
+        integrity="sha384-7aHh9lqPYGYZ7sTHvzP1t3BAfLhYSTy9ArHdP3Xsr9/3TlGurYgcPBoFmXX2TX/w" crossorigin="anonymous">
+    </script>
 </head>
 
 @section('body')

@@ -15,7 +15,8 @@ class CompanyAssessment
     {
     }
 
-    function process($company_id)
+    //process company assessment
+    function process_assessment($company_id)
     {
         //check pending, rejected or approved
         $pending_approvals = PartnerApproval::where(['partner_id' => $company_id])
@@ -60,7 +61,8 @@ class CompanyAssessment
                 }
             }
 
-            //todo: register ALL authorized users
+            //TODO: register ALL authorized users
+
 
             //send email to company email
             //construct message

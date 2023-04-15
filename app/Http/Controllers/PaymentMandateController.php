@@ -237,7 +237,6 @@ class PaymentMandateController extends Controller
         );
 
         if ($validator->fails()) {
-            //return response
             return response()->json([
                 'success' => false,
                 'errors' => $validator->errors()

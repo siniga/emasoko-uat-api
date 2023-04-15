@@ -68,6 +68,7 @@
 
                             {{ Form::open(['url' => route('company.store-company'), 'class' => 'form-horizontal needs-validation', 'enctype' => 'multipart/form-data', 'novalidate']) }}
                             @method('POST')
+
                             {{ Form::token() }}
 
                             <input type="hidden" name="partner_id" value="{{ $company->id ?? null }}">

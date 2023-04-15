@@ -62,7 +62,7 @@
         <input type="hidden" name="key" value="Company_Information">
 
         <div class="mb-2">
-            <label for="businessname">Assessment Verdict <span class="text-danger">*</span></label><br />
+            <label for="businessname">Assessment Criteria <span class="text-danger">*</span></label><br />
             {{ Form::radio('assessment_criteria', 'approved', old('assessment_criteria', $company->partnerApprovals[0]->status == 'approved' ? 'checked' : '')) }}
             <label> Approve</label>&nbsp;&nbsp;
 

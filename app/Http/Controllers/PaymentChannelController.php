@@ -153,8 +153,19 @@ class PaymentChannelController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function delete($id)
     {
-        //
+        $title = 'Delete Payment Channel';
+        //has_allowed('roles', 'edit');
+
+        //account
+        $account = Account::findOrFail($id);
+
+        //delete account
+        if ($del = $account->delete()) {
+            return Redirect::route('payment-channels.index')->with('success', 'Payment channel deleted.');
+        }else{
+            return Redirect::route('payment-channels.index')->with('danger', 'Failed to delete payment channel.');
+        }
     }
 }

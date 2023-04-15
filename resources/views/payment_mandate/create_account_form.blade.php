@@ -369,6 +369,9 @@
                             //show error msg
                             $("#error-messages").css('display', '');
 
+                            console.log("errors");
+                            console.log(response.responseJSON);
+
                             $.each(response.responseJSON.errors, function(key, item) {
                                 $("#error-messages").append(
                                     '<span>' + item +

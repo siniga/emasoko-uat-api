@@ -40,24 +40,19 @@
                     <li class="nav-item">
                         <a class="nav-link" href="#about">About eMakato</a>
                     </li>
+
                     <li class="nav-item">
-                        <a class="nav-link" href="#features">Features</a>
+                        <a class="nav-link" href="#our-solution">Our Solution</a>
                     </li>
+
                     <li class="nav-item">
-                        <a class="nav-link" href="#roadmap">How it works</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#team">Our Team</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#faqs">FAQs</a>
+                        <a class="nav-link" href="#contacts">Contacts</a>
                     </li>
 
                 </ul>
 
                 <div class="my-2 ms-lg-2">
-                    <a href="{{ url('register') }}" class="btn btn-outline-success w-xs">Sign up</a>
-                    <a href="{{ url('login') }}" class="btn btn-outline-danger w-xs">Sign in</a>
+                    <a href="#" class="btn btn-outline-success w-xs">Request for Information</a>
                 </div>
             </div>
         </div>
@@ -68,56 +63,27 @@
         <div class="bg-overlay bg-primary"></div>
         <div class="container">
             <div class="row align-items-center">
-                <div class="col-lg-5">
+                <div class="col-lg-6">
                     <div class="text-white-50">
-                        <h1 class="text-white fw-semibold mb-3 hero-title">eMakato Deduction Solution</h1>
-                        <p class="font-size-16 text-white">
-                            We enable MFI’s and Saccos to set debit instruction directly to the customer bank or mobile
-                            account upon receiving consent.
+                        <h1 class="text-white fw-semibold mb-3 hero-title">
+                            Aggregate, manage and monitor your <span
+                                class="font-weight-600 text-warning px-1">debit</span> <span
+                                class="font-weight-600 text-success px-1">mandate.</span>
+                        </h1>
+                        <p class="font-size-18 text-white">
+                            Enabling a seamless debit mandate ecosystem.
                         </p>
 
                         <div class="d-flex flex-wrap gap-2 mt-4">
-                            <a href="{{ url('login') }}" class="btn btn-success">Get Started</a>
-                            <a href="#about" class="btn btn-light">How it work</a>
+                            <a href="#" class="btn btn-success">Request for Information</a>
+                            <a href="#roadmap" class="btn btn-light">How it works</a>
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-5 col-md-8 col-sm-10 ms-lg-auto">
-                    <div class="card overflow-hidden mb-0 mt-5 mt-lg-0">
-                        <div class="card-header text-center">
-                            <h5 class="mb-0">ICO Countdown time</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="text-center">
 
-                                <h5>Time left to Ico :</h5>
-                                <div class="mt-4">
-                                    <div data-countdown="2021/12/31" class="counter-number ico-countdown"></div>
-                                </div>
-
-                                <div class="mt-4">
-                                    <button type="button" class="btn btn-success w-md">Get Token</button>
-                                </div>
-
-                                <div class="mt-5">
-                                    <h4 class="fw-semibold">1 ETH = 2235 SKT</h4>
-                                    <div class="clearfix mt-4">
-                                        <h5 class="float-end font-size-14">5234.43</h5>
-                                    </div>
-                                    <div class="progress p-1 progress-xl softcap-progress">
-                                        <div class="progress-bar bg-info" role="progressbar" style="width: 15%"
-                                            aria-valuenow="15" aria-valuemin="0" aria-valuemax="100">
-                                            <div class="progress-label">15 %</div>
-                                        </div>
-                                        <div class="progress-bar progress-bar-striped progress-bar-animated"
-                                            role="progressbar" style="width: 30%" aria-valuenow="30" aria-valuemin="0"
-                                            aria-valuemax="100">
-                                            <div class="progress-label">30 %</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                <div class="col-lg-6 col-md-8 col-sm-10 ms-lg-auto">
+                    <div class="card overflow-hidden">
+                        <img src="{{ URL::asset('/assets/images/image1.png') }}" height="360" width="100%" />
                     </div>
                 </div>
             </div>
@@ -127,208 +93,64 @@
     </section>
     <!-- hero section end -->
 
-    <!-- currency price section start -->
-    <section class="section bg-white p-0">
-        <div class="container">
-            <div class="currency-price">
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="card border">
-                            <div class="card-body">
-                                <div class="d-flex">
-                                    <div class="flex-shrink-0 me-3">
-                                        <div class="avatar-xs">
-                                            <span
-                                                class="avatar-title rounded-circle bg-success text-white font-size-18">
-                                                <i class="mdi mdi-bank"></i>
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <p class="text-muted font-size-16">Number of MFI</p>
-                                        <h5>0</h5>
-                                        <p class="text-muted text-truncate mb-0">0 ( 0 % )
-                                            <i class="mdi mdi-arrow-up ms-1 text-success"></i>
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-4">
-                        <div class="card border">
-                            <div class="card-body">
-                                <div class="d-flex">
-                                    <div class="flex-shrink-0 me-3">
-                                        <div class="avatar-xs">
-                                            <span
-                                                class="avatar-title rounded-circle bg-primary text-white font-size-22">
-                                                <i class="mdi mdi-bank-transfer"></i>
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <p class="text-muted font-size-16">Payment Mandate</p>
-                                        <h5>0</h5>
-                                        <p class="text-muted text-truncate mb-0"> 0 ( 0 % )
-                                            <i class="mdi mdi-arrow-up ms-1 text-success"></i>
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-4">
-                        <div class="card border">
-                            <div class="card-body">
-                                <div class="d-flex">
-                                    <div class="flex-shrink-0 me-3">
-                                        <div class="avatar-xs">
-                                            <span class="avatar-title rounded-circle bg-info text-white font-size-18">
-                                                <i class="mdi mdi-cellphone-information"></i>
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <p class="text-muted font-size-16">Transactions</p>
-                                        <h5>0</h5>
-                                        <p class="text-muted text-truncate mb-0">0
-                                            <i class="mdi mdi-arrow-up ms-1 text-success"></i>
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- end row -->
-            </div>
-        </div>
-        <!-- end container -->
-    </section>
-    <!-- currency price section end -->
-
     <!-- about section start -->
-    <section class="section pt-4 bg-white" id="about">
+    <section class="section pt-4 bg-light-grey" id="about">
         <div class="container">
             <div class="row">
                 <div class="col-lg-12">
                     <div class="text-center mb-5">
-                        <div class="small-title">About us</div>
-                        <h4>What is eMakato?</h4>
+                        <div class="font-size-24 font-weight-600 pb-2">About eMakato</div>
+                        <h4 class="font-size-18 text-muted">What is eMakato?</h4>
                     </div>
                 </div>
             </div>
+
             <div class="row align-items-center">
-                <div class="col-lg-5">
+                <div class="col-lg-6">
+                    <div class="text-muted mb-4">
+                        <p class="mb-2 font-size-16">
+                            Powerful tool for service providers to automate their debit mandate process, interfacing
+                            with
+                            their customers to promote a seamless debit mandate experience.
+                        </p>
+
+                        <p class="mb-2 font-size-16">
+                            Let your customers pay you in a more convenient and flexible manner.
+                        </p>
+                    </div>
 
                     <div class="">
-                        <h4 class="text-primary font-size-24">The Solution.</h4>
-                        <p class="mb-4 text-muted font-size-14">
-                            <b>A platform</b> that comprises of mobile application, web portal and USSD application to
-                            <b>enable MFI’s and Saccos</b> to set <b>debit instruction directly</b> to the
-                            <b>customer bank</b> or <b>mobile account</b> upon receiving consent.
+                        <h4 class="font-size-16">Our Solution</h4>
+                        <p class="mb-2 font-size-14 text-muted ">
+                            <i class="mdi mdi-checkbox-marked-circle text-primary"></i>
+                            Let your customers pay "small small".
                         </p>
 
-                        <h4 class="text-primary font-size-24">Potential Impact</h4>
-                        <p class="text-muted font-size-14">
-                            Collection Efficiency Maximization for MFI, Saccos and some trading companies. The potential
-                            impact for the first phase is as illustrated below
+                        <p class="mb-2 font-size-14 text-muted ">
+                            <i class="mdi mdi-checkbox-marked-circle text-primary"></i>
+                            Automate payments without manual interventions.
                         </p>
 
-                        <div class="row mt-4">
-                            <div class="col-lg-4 col-4">
-                                <div class="mt-4">
-                                    <h4>10K+</h4>
-                                    <p>Number of Business Accounts</p>
-                                </div>
-                            </div>
+                        <p class="mb-2 font-size-14 text-muted ">
+                            <i class="mdi mdi-checkbox-marked-circle text-primary"></i>
+                            Track status of Direct Debit mandate activations.
+                        </p>
 
-                            <div class="col-lg-4 col-4">
-                                <div class="mt-4">
-                                    <h4>2M+</h4>
-                                    <p>Consumers</p>
-                                </div>
-                            </div>
-
-                            <div class="col-lg-4 col-4">
-                                <div class="mt-4">
-                                    <h4>4M+</h4>
-                                    <p>Transactions per month</p>
-                                </div>
-                            </div>
-                        </div>
-                        <!--./row -->
+                        <p class="mb-2 font-size-14 text-muted ">
+                            <i class="mdi mdi-checkbox-marked-circle text-primary"></i>
+                            Enjoy real-time online access to reports of transactions.
+                        </p>
                     </div>
                 </div>
 
                 <div class="col-lg-6 ms-auto">
                     <div class="mt-4 mt-lg-0">
-                        <div class="row">
-                            <div class="col-sm-6">
-                                <div class="card border bg-light-blue">
-                                    <div class="card-body">
-                                        <div class="mb-2 text-center">
-                                            <i class="mdi mdi-numeric-1-circle h1 fw-semibold text-white"></i>
-                                        </div>
-                                        <h5 class="text-white mb-3">Benefits for Subscribers</h5>
-
-                                        <p class="text-white mb-2">
-                                            <i class="mdi mdi-circle-medium"></i> Easy to use web service and fully
-                                            electronic processes
-                                        </p>
-
-                                        <p class="text-white mb-2">
-                                            &nbsp;&nbsp;<i class="mdi mdi-chevron-right"></i> less hassle
-                                        </p>
-
-                                        <p class="text-white mb-2">
-                                            <i class="mdi mdi-circle-medium"></i> Less credit losses
-                                        </p>
-
-                                        <p class="text-white mb-0">
-                                            &nbsp;&nbsp;<i class="mdi mdi-chevron-right"></i> better profitability
-                                            (est. effect on net profit 2-20%)
-                                        </p>
-
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-sm-6">
-                                <div class="card border mt-lg-5 bg-secondary">
-                                    <div class="card-body">
-                                        <div class="mb-2 text-center">
-                                            <i class="mdi mdi-numeric-2-circle h1 fw-semibold text-white"></i>
-                                        </div>
-
-                                        <h5 class="text-white mb-3">Benefits for market</h5>
-
-                                        <p class="text-white mb-2">
-                                            <i class="mdi mdi-circle-medium"></i> Better transparency
-                                        </p>
-
-                                        <p class="text-white mb-2">
-                                            <i class="mdi mdi-circle-medium"></i> Better predictability
-                                        </p>
-
-                                        <p class="text-white mb-2">
-                                            <i class="mdi mdi-circle-medium"></i> Increased trust
-                                        </p>
-
-                                        <p class="text-white mb-2">
-                                            <i class="mdi mdi-circle-medium"></i> Reduced costs
-                                        </p>
-
-                                        <p class="text-white mb-2">
-                                            <i class="mdi mdi-circle-medium"></i> Enhanced money circulation
-                                        </p>
-
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <video width="100%" height="320" autoplay loop muted preload="auto"
+                            poster="https://cdn.twikey.net/img/v2/animatedimages/digitalmandate.jpg">
+                            <source src="https://cdn.twikey.net/img/v2/animatedimages/digitalmandate.mp4"
+                                type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
                     </div>
                 </div>
             </div>
@@ -338,815 +160,162 @@
     </section>
     <!-- about section end -->
 
-    <!-- Features start -->
-    <section class="section" id="features">
-        <div class="container">
-            <div class="row align-items-center pt-4">
-                <div class="col-md-6 col-sm-8">
-                    <div>
-                        <img src="{{ URL::asset('/assets/images/crypto/features-img/img-1.png') }}" alt=""
-                            class="img-fluid mx-auto d-block">
-                    </div>
-                </div>
-                <div class="col-md-5 ms-auto">
-                    <div class="mt-4 mt-md-auto">
-                        <div class="d-flex align-items-center mb-4">
-                            <div class="features-number fw-semibold display-4 me-3">01</div>
-                            <h4 class="mb-0 font-size-24">CASE Summary</h4>
-                        </div>
-
-                        <div class="d-flex justify-content-between mb-4">
-                            <div class="text-muted font-weight-600 font-size-16">Number of MFI</div>
-                            <div class="font-size-14 font-weight-600 text-primary">550 registered under TAMFI</div>
-                        </div>
-
-                        <div class="d-flex justify-content-between mb-4">
-                            <div class="text-muted font-weight-600 font-size-16">Number of Saccos</div>
-                            <div class="font-size-14 font-weight-600 text-primary">4,000 registered under TCDC</div>
-                        </div>
-
-                        <div class="d-flex justify-content-between mb-4">
-                            <div class="text-muted font-weight-600 font-size-16">Organization</div>
-                            <div></div>
-                        </div>
-
-                        <div class="d-flex justify-content-between">
-                            <div class="text-muted font-weight-600 font-size-16">Partner network</div>
-                            <div class="font-size-14">
-                                <b class="font-weight-600 text-primary">TAMFI</b> and <b
-                                    class="font-weight-600 text-primary">TCDC</b> onboard
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-            </div>
-            <!-- end row -->
-
-            <div class="row align-items-center mt-5 pt-md-5">
-                <div class="col-md-5">
-                    <div class="mt-4 mt-md-0">
-                        <div class="d-flex align-items-center mb-4">
-                            <div class="features-number fw-semibold display-4 me-3">02</div>
-                            <h4 class="mb-0 font-size-24">Commercial Models</h4>
-                        </div>
-                        <p class="font-size-16">
-                            Subscribers may opt to pay for the service by choosing to pay for every mandate uploaded or
-                            for every successful debit
-                        </p>
-
-                        <div class="text-muted mt-4">
-
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6  col-sm-8 ms-md-auto">
-                    <div class="mt-4 me-md-0">
-                        <img src="{{ URL::asset('/assets/images/crypto/features-img/img-2.png') }}" alt=""
-                            class="img-fluid mx-auto d-block">
-                    </div>
-                </div>
-
-            </div>
-            <!-- end row -->
-        </div>
-        <!-- end container -->
-    </section>
-    <!-- Features end -->
 
     <!-- Roadmap start -->
-    <section class="section bg-white" id="roadmap">
+    <section class="section pt-4 bg-white" id="our-solution">
         <div class="container">
             <div class="row">
                 <div class="col-lg-12">
                     <div class="text-center mb-5">
-                        <div class="small-title">Our Roadmap</div>
-                        <h4>How eMakato works</h4>
+                        <div class="font-size-24 font-weight-600 pb-2">Our Solution</div>
+                        <h4 class="font-size-18 text-muted">The <span class="font-weight-600 text-dark">Service</span>
+                            that helps <span class="font-weight-600 text-dark">Growth </span> of your <span
+                                class="font-weight-600 text-dark"> Business.</span></h4>
                     </div>
                 </div>
             </div>
             <!-- end row -->
 
-            <div class="row mt-4">
-                <div class="col-lg-12">
-                    <div class="hori-timeline" dir="ltr">
-                        <div class="owl-carousel owl-theme events navs-carousel" id="timeline-carousel">
-                            <div class="item event-list">
-                                <div>
-                                    <div class="event-date">
-                                        <div class="text-primary mb-1">Step 1</div>
-                                        <h5 class="mb-4">Registering</h5>
-                                    </div>
-                                    <div class="event-down-icon">
-                                        <i class="bx bx-down-arrow-circle h1 text-primary down-arrow-icon"></i>
-                                    </div>
+            <div class="row">
+                <div class="col-lg-12 col-sm-12">
+                    <!-- Nav tabs -->
+                    <ul class="nav solutions-tabs nav-justified mb-4" role="tablist">
+                        <li class="nav-item waves-effect waves-light">
+                            <a class="nav-link active" data-bs-toggle="tab" href="#providers-1" role="tab">
+                                <span class="d-block d-sm-none"><i class="fas fa-home"></i></span>
+                                <span class="d-none d-sm-block font-size-20 font-weight-800">
+                                    Service Providers???
+                                </span>
+                            </a>
+                        </li>
 
-                                    {{-- <div class="mt-3 px-3">
-                                        <p class="text-muted">It will be as simple as occidental in fact it will be
-                                            Cambridge</p>
-                                    </div> --}}
-                                </div>
-                            </div>
+                        <li class="nav-item waves-effect waves-light">
+                            <a class="nav-link" data-bs-toggle="tab" href="#providers-2" role="tab">
+                                <span class="d-block d-sm-none"><i class="far fa-envelope"></i></span>
+                                <span class="d-none d-sm-block font-size-20 font-weight-800">
+                                    Service Providers
+                                </span>
+                            </a>
+                        </li>
 
-                            <div class="item event-list">
-                                <div>
-                                    <div class="event-date">
-                                        <div class="text-primary mb-1">Step 2</div>
-                                        <h5 class="mb-4">Deduction uploading</h5>
-                                    </div>
-                                    <div class="event-down-icon">
-                                        <i class="bx bx-down-arrow-circle h1 text-primary down-arrow-icon"></i>
-                                    </div>
-                                </div>
-                            </div>
+                        <li class="nav-item waves-effect waves-light">
+                            <a class="nav-link" data-bs-toggle="tab" href="#institutions-1" role="tab">
+                                <span class="d-block d-sm-none"><i class="far fa-envelope"></i></span>
+                                <span class="d-none d-sm-block font-size-20 font-weight-800">
+                                    Financial Institutions
+                                </span>
+                            </a>
+                        </li>
+                    </ul>
 
-                            <div class="item event-list active">
-                                <div>
-                                    <div class="event-date">
-                                        <div class="text-primary mb-1">Step 3</div>
-                                        <h5 class="mb-4">Notifications</h5>
-                                    </div>
-                                    <div class="event-down-icon">
-                                        <i class="bx bx-down-arrow-circle h1 text-primary down-arrow-icon"></i>
-                                    </div>
-                                </div>
-                            </div>
+                    <!-- Tab panes -->
+                    <div class="tab-content px-3 text-muted">
+                        <div class="tab-pane active" id="providers-1" role="tabpanel">
+                            <div class="row">
+                                <div class="col-md-4 col-12">
+                                    <div class="flex flex-col align-items-center justify-content-center">
+                                        <h4 class="font-size-16 text-primary">
+                                            Automate debit mandate workflow
+                                        </h4>
 
-                            <div class="item event-list">
-                                <div>
-                                    <div class="event-date">
-                                        <div class="text-primary mb-1">Step 4</div>
-                                        <h5 class="mb-4">Notice of accept Or Reject</h5>
-                                    </div>
-                                    <div class="event-down-icon">
-                                        <i class="bx bx-down-arrow-circle h1 text-primary down-arrow-icon"></i>
+                                        <p class="font-size-14 text-muted text-justify">
+                                            eMakato goal is to reduce processing time, processing cost, make your staff
+                                            less frustrated as well as as your client happy as being notified to consent
+                                            at every stage of debit mandate.
+                                        </p>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div class="item event-list">
-                                <div>
-                                    <div class="event-date">
-                                        <div class="text-primary mb-1">Step 5</div>
-                                        <h5 class="mb-4">Deduction Notices</h5>
-                                    </div>
-                                    <div class="event-down-icon">
-                                        <i class="bx bx-down-arrow-circle h1 text-primary down-arrow-icon"></i>
-                                    </div>
+                                <div class="col-md-8 col-12">
+                                    <img src="{{ URL::asset('/assets/images/image1.png') }}" height="90%"
+                                        width="90%" />
                                 </div>
                             </div>
+                        </div>
 
-                            <div class="item event-list">
-                                <div>
-                                    <div class="event-date">
-                                        <div class="text-primary mb-1">Step 6</div>
-                                        <h5 class="mb-4">Deductions</h5>
-                                    </div>
-                                    <div class="event-down-icon">
-                                        <i class="bx bx-down-arrow-circle h1 text-primary down-arrow-icon"></i>
+                        <div class="tab-pane" id="providers-2" role="tabpanel">
+                            <div class="row">
+                                <div class="col-md-4 col-12">
+                                    <div class="flex flex-col align-items-center justify-content-center">
+                                        <h4 class="font-size-16 text-primary">
+                                            Automate debit mandate workflow
+                                        </h4>
+
+                                        <p class="font-size-14 text-muted text-justify">
+                                            eMakato goal is to reduce processing time, processing cost, make your staff
+                                            less frustrated as well as as your client happy as being notified to consent
+                                            at every stage of debit mandate.
+                                        </p>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div class="item event-list">
-                                <div>
-                                    <div class="event-date">
-                                        <div class="text-primary mb-1">Step 7</div>
-                                        <h5 class="mb-4">Dispute Handling</h5>
-                                    </div>
-                                    <div class="event-down-icon">
-                                        <i class="bx bx-down-arrow-circle h1 text-primary down-arrow-icon"></i>
-                                    </div>
+                                <div class="col-md-8 col-12">
+                                    <img src="{{ URL::asset('/assets/images/image1.png') }}" height="90%"
+                                        width="90%" />
                                 </div>
                             </div>
+                        </div>
 
-                            <div class="item event-list">
-                                <div>
-                                    <div class="event-date">
-                                        <div class="text-primary mb-1">Step 8</div>
-                                        <h5 class="mb-4"> Recovery Completion</h5>
-                                    </div>
-                                    <div class="event-down-icon">
-                                        <i class="bx bx-down-arrow-circle h1 text-primary down-arrow-icon"></i>
+                        <div class="tab-pane" id="institutions-1" role="tabpanel">
+                            <div class="row">
+                                <div class="col-md-4 col-12">
+                                    <div class="flex flex-col align-items-center justify-content-center">
+                                        <h4 class="font-size-16 text-primary">
+                                            Automate debit mandate workflow
+                                        </h4>
+
+                                        <p class="font-size-14 text-muted text-justify">
+                                            eMakato goal is to reduce processing time, processing cost, make your staff
+                                            less frustrated as well as as your client happy as being notified to consent
+                                            at every stage of debit mandate.
+                                        </p>
                                     </div>
                                 </div>
-                            </div>
 
+                                <div class="col-md-8 col-12">
+                                    <img src="{{ URL::asset('/assets/images/image1.png') }}" height="90%"
+                                        width="90%" />
+                                </div>
+                            </div>
                         </div>
                     </div>
-
                 </div>
             </div>
-            <!-- end row -->
         </div>
         <!-- end container -->
     </section>
     <!-- Roadmap end -->
 
-    <!-- Team start -->
-    <section class="section" id="team">
+
+    <!-- about section start -->
+    <section class="section bg-light-grey-1" id="partners">
         <div class="container">
             <div class="row">
                 <div class="col-lg-12">
-                    <div class="text-center mb-5">
-                        <div class="small-title">Team</div>
-                        <h4>Meet our team</h4>
+                    <div class="text-center">
+                        <div class="font-size-24 font-weight-600 pb-2">Our Partners</div>
+                        <h4 class="font-size-18 text-muted">Trusted by Some of Africa's Most Exciting Businesses</h4>
                     </div>
                 </div>
             </div>
-            <!-- end row -->
-
-            <div class="col-lg-12">
-                <div class="owl-carousel owl-theme events navs-carousel" id="team-carousel" dir="ltr">
-                    <div class="item">
-                        <div class="card text-center team-box">
-                            <div class="card-body">
-                                <div>
-                                    <img src="{{ URL::asset('/assets/images/users/user.png') }}" alt=""
-                                        class="rounded">
-                                </div>
-
-                                <div class="mt-3">
-                                    <h5>Lorem Ipsum</h5>
-                                    <P class="text-muted mb-0">Director</P>
-                                </div>
-                            </div>
-                            <div class="card-footer bg-transparent border-top">
-                                <div class="d-flex mb-0 team-social-links" id="tooltip-container">
-                                    <div class="flex-fill">
-                                        <a href="#" data-bs-toggle="tooltip"
-                                            data-bs-container="#tooltip-container" title="Facebook">
-                                            <i class="mdi mdi-facebook"></i>
-                                        </a>
-                                    </div>
-                                    <div class="flex-fill">
-                                        <a href="#" data-bs-toggle="tooltip"
-                                            data-bs-container="#tooltip-container" title="Linkedin">
-                                            <i class="mdi mdi-linkedin"></i>
-                                        </a>
-                                    </div>
-                                    <div class="flex-fill">
-                                        <a href="#" data-bs-toggle="tooltip"
-                                            data-bs-container="#tooltip-container" title="Google">
-                                            <i class="mdi mdi-google"></i>
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="item">
-                        <div class="card text-center team-box">
-                            <div class="card-body">
-                                <div>
-                                    <img src="{{ URL::asset('/assets/images/users/user.png') }}" alt=""
-                                        class="rounded">
-                                </div>
-
-                                <div class="mt-3">
-                                    <h5>Lorem Ipsum</h5>
-                                    <P class="text-muted mb-0">Director - Business Development</P>
-                                </div>
-                            </div>
-                            <div class="card-footer bg-transparent border-top">
-                                <div class="d-flex mb-0 team-social-links" id="tooltip-container2">
-                                    <div class="flex-fill">
-                                        <a href="#" data-bs-toggle="tooltip"
-                                            data-bs-container="#tooltip-container2" title="Facebook">
-                                            <i class="mdi mdi-facebook"></i>
-                                        </a>
-                                    </div>
-                                    <div class="flex-fill">
-                                        <a href="#" data-bs-toggle="tooltip"
-                                            data-bs-container="#tooltip-container2" title="Linkedin">
-                                            <i class="mdi mdi-linkedin"></i>
-                                        </a>
-                                    </div>
-                                    <div class="flex-fill">
-                                        <a href="#" data-bs-toggle="tooltip"
-                                            data-bs-container="#tooltip-container2" title="Google">
-                                            <i class="mdi mdi-google"></i>
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="item">
-                        <div class="card text-center team-box">
-                            <div class="card-body">
-                                <div>
-                                    <img src="{{ URL::asset('/assets/images/users/user.png') }}" alt=""
-                                        class="rounded">
-                                </div>
-                                <div class="mt-3">
-                                    <h5>Lorem Ipsum</h5>
-                                    <P class="text-muted mb-0">Software Developer</P>
-                                </div>
-                            </div>
-                            <div class="card-footer bg-transparent border-top">
-                                <div class="d-flex mb-0 team-social-links" id="tooltip-container3">
-                                    <div class="flex-fill">
-                                        <a href="#" data-bs-toggle="tooltip"
-                                            data-bs-container="#tooltip-container3" title="Facebook">
-                                            <i class="mdi mdi-facebook"></i>
-                                        </a>
-                                    </div>
-                                    <div class="flex-fill">
-                                        <a href="#" data-bs-toggle="tooltip"
-                                            data-bs-container="#tooltip-container3" title="Linkedin">
-                                            <i class="mdi mdi-linkedin"></i>
-                                        </a>
-                                    </div>
-                                    <div class="flex-fill">
-                                        <a href="#" data-bs-toggle="tooltip"
-                                            data-bs-container="#tooltip-container3" title="Google">
-                                            <i class="mdi mdi-google"></i>
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="item">
-                        <div class="card text-center team-box">
-                            <div class="card-body">
-                                <div>
-                                    <img src="{{ URL::asset('/assets/images/users/user.png') }}" alt=""
-                                        class="rounded">
-                                </div>
-
-                                <div class="mt-3">
-                                    <h5>Lorem Ipsum</h5>
-                                    <P class="text-muted mb-0">App Developer</P>
-                                </div>
-                            </div>
-                            <div class="card-footer bg-transparent border-top">
-                                <div class="d-flex mb-0 team-social-links" id="tooltip-container4">
-                                    <div class="flex-fill">
-                                        <a href="#" data-bs-toggle="tooltip"
-                                            data-bs-container="#tooltip-container4" title="Facebook">
-                                            <i class="mdi mdi-facebook"></i>
-                                        </a>
-                                    </div>
-                                    <div class="flex-fill">
-                                        <a href="#" data-bs-toggle="tooltip"
-                                            data-bs-container="#tooltip-container4" title="Linkedin">
-                                            <i class="mdi mdi-linkedin"></i>
-                                        </a>
-                                    </div>
-                                    <div class="flex-fill">
-                                        <a href="#" data-bs-toggle="tooltip"
-                                            data-bs-container="#tooltip-container4" title="Google">
-                                            <i class="mdi mdi-google"></i>
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-            <!-- end row -->
-        </div>
-        <!-- end container -->
-    </section>
-    <!-- Team end -->
-
-    <!-- Blog start -->
-    <section class="section bg-white" id="news">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="text-center mb-5">
-                        <div class="small-title">Hear from us</div>
-                        <h4>Success Stories</h4>
-                    </div>
-                </div>
-            </div>
-            <!-- end row -->
-
-            <div class="row">
-                <div class="col-xl-4 col-sm-6">
-                    <div class="blog-box mb-4 mb-xl-0">
-                        <div class="position-relative">
-                            <img src="assets/images/crypto/blog/img-1.jpg" alt=""
-                                class="rounded img-fluid mx-auto d-block">
-                            <div class="badge bg-success blog-badge font-size-11">Cryptocurrency</div>
-                        </div>
-
-                        <div class="mt-4 text-muted">
-                            <p class="mb-2"><i class="bx bx-calendar me-1"></i> 04 Mar, 2020</p>
-                            <h5 class="mb-3">Donec pede justo, fringilla vele</h5>
-                            <p>If several languages coalesce, the grammar of the resulting language</p>
-
-                            <div>
-                                <a href="javascript: void(0);">Read more</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-xl-4 col-sm-6">
-                    <div class="blog-box mb-4 mb-xl-0">
-
-                        <div class="position-relative">
-                            <img src="assets/images/crypto/blog/img-2.jpg" alt=""
-                                class="rounded img-fluid mx-auto d-block">
-                            <div class="badge bg-success blog-badge font-size-11">Cryptocurrency</div>
-                        </div>
-
-                        <div class="mt-4 text-muted">
-                            <p class="mb-2"><i class="bx bx-calendar me-1"></i> 12 Feb, 2020</p>
-                            <h5 class="mb-3">Aenean ut eros et nisl</h5>
-                            <p>Everyone realizes why a new common language would be desirable</p>
-
-                            <div>
-                                <a href="javascript: void(0);">Read more</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-xl-4 col-sm-6">
-                    <div class="blog-box mb-4 mb-xl-0">
-                        <div class="position-relative">
-                            <img src="assets/images/crypto/blog/img-3.jpg" alt=""
-                                class="rounded img-fluid mx-auto d-block">
-                            <div class="badge bg-success blog-badge font-size-11">Cryptocurrency</div>
-                        </div>
-
-                        <div class="mt-4 text-muted">
-                            <p class="mb-2"><i class="bx bx-calendar me-1"></i> 06 Jan, 2020</p>
-                            <h5 class="mb-3">In turpis, pellentesque posuere</h5>
-                            <p>To an English person, it will seem like simplified English, as a skeptical Cambridge</p>
-
-                            <div>
-                                <a href="javascript: void(0);">Read more</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- end row -->
-        </div>
-        <!-- end container -->
-    </section>
-    <!-- Blog end -->
-
-    <!-- Faqs start -->
-    <section class="section" id="faqs">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="text-center mb-5">
-                        <div class="small-title">FAQs</div>
-                        <h4>Frequently Asked Questions</h4>
-                    </div>
-                </div>
-            </div>
-            <!-- end row -->
 
             <div class="row">
                 <div class="col-lg-12">
-                    <div class="vertical-nav">
-                        <div class="row">
-                            <div class="col-lg-2 col-sm-4">
-                                <div class="nav flex-column nav-pills" role="tablist">
-                                    <a class="nav-link active" id="v-pills-gen-ques-tab" data-bs-toggle="pill"
-                                        href="#v-pills-gen-ques" role="tab">
-                                        <i class="bx bx-help-circle nav-icon d-block mb-2"></i>
-                                        <p class="fw-bold mb-0">General Questions</p>
-                                    </a>
-                                    <a class="nav-link" id="v-pills-token-sale-tab" data-bs-toggle="pill"
-                                        href="#v-pills-token-sale" role="tab">
-                                        <i class="bx bx-receipt nav-icon d-block mb-2"></i>
-                                        <p class="fw-bold mb-0">How to Join eMakato</p>
-                                    </a>
-                                    <a class="nav-link" id="v-pills-roadmap-tab" data-bs-toggle="pill"
-                                        href="#v-pills-roadmap" role="tab">
-                                        <i class="bx bx-timer d-block nav-icon mb-2"></i>
-                                        <p class="fw-bold mb-0">Roadmap</p>
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="col-lg-10 col-sm-8">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <div class="tab-content">
-                                            <div class="tab-pane fade show active" id="v-pills-gen-ques"
-                                                role="tabpanel">
-                                                <h4 class="card-title mb-4">General Questions</h4>
-
-                                                <div>
-                                                    <div id="gen-ques-accordion" class="accordion custom-accordion">
-                                                        <div class="mb-3">
-                                                            <a href="#general-collapseOne" class="accordion-list"
-                                                                data-bs-toggle="collapse" aria-expanded="true"
-                                                                aria-controls="general-collapseOne">
-
-                                                                <div>What is Lorem Ipsum ?</div>
-                                                                <i class="mdi mdi-minus accor-plus-icon"></i>
-
-                                                            </a>
-
-                                                            <div id="general-collapseOne" class="collapse show"
-                                                                data-bs-parent="#gen-ques-accordion">
-                                                                <div class="card-body">
-                                                                    <p class="mb-0">Everyone realizes why a new
-                                                                        common
-                                                                        language would be desirable: one could refuse to
-                                                                        pay expensive translators. To achieve this, it
-                                                                        would be necessary to have uniform grammar,
-                                                                        pronunciation and more common words.</p>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="mb-3">
-                                                            <a href="#general-collapseTwo"
-                                                                class="accordion-list collapsed"
-                                                                data-bs-toggle="collapse" aria-expanded="false"
-                                                                aria-controls="general-collapseTwo">
-                                                                <div>Why do we use it ?</div>
-                                                                <i class="mdi mdi-minus accor-plus-icon"></i>
-                                                            </a>
-                                                            <div id="general-collapseTwo" class="collapse"
-                                                                data-bs-parent="#gen-ques-accordion">
-                                                                <div class="card-body">
-                                                                    <p class="mb-0">If several languages coalesce,
-                                                                        the
-                                                                        grammar of the resulting language is more simple
-                                                                        and regular than that of the individual
-                                                                        languages. The new common language will be more
-                                                                        simple and regular than the existing European
-                                                                        languages.</p>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="mb-3">
-                                                            <a href="#general-collapseThree"
-                                                                class="accordion-list collapsed"
-                                                                data-bs-toggle="collapse" aria-expanded="false"
-                                                                aria-controls="general-collapseThree">
-                                                                <div>Where does it come from ?</div>
-                                                                <i class="mdi mdi-minus accor-plus-icon"></i>
-                                                            </a>
-                                                            <div id="general-collapseThree" class="collapse"
-                                                                data-bs-parent="#gen-ques-accordion">
-                                                                <div class="card-body">
-                                                                    <p class="mb-0">It will be as simple as
-                                                                        Occidental;
-                                                                        in fact, it will be Occidental. To an English
-                                                                        person, it will seem like simplified English, as
-                                                                        a skeptical Cambridge friend of mine told me
-                                                                        what Occidental.</p>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-                                                        <div>
-                                                            <a href="#general-collapseFour"
-                                                                class="accordion-list collapsed"
-                                                                data-bs-toggle="collapse" aria-expanded="false"
-                                                                aria-controls="general-collapseFour">
-                                                                <div>Where can I get some ?</div>
-                                                                <i class="mdi mdi-minus accor-plus-icon"></i>
-                                                            </a>
-                                                            <div id="general-collapseFour" class="collapse"
-                                                                data-bs-parent="#gen-ques-accordion">
-                                                                <div class="card-body">
-                                                                    <p class="mb-0">To an English person, it will
-                                                                        seem
-                                                                        like simplified English, as a skeptical
-                                                                        Cambridge friend of mine told me what Occidental
-                                                                        is. The European languages are members of the
-                                                                        same family. Their separate existence is a myth.
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div class="tab-pane fade" id="v-pills-token-sale" role="tabpanel">
-                                                <h4 class="card-title mb-4">Token sale</h4>
-
-                                                <div>
-                                                    <div id="token-accordion" class="accordion custom-accordion">
-                                                        <div class="mb-3">
-                                                            <a href="#token-collapseOne"
-                                                                class="accordion-list collapsed"
-                                                                data-bs-toggle="collapse" aria-expanded="false"
-                                                                aria-controls="token-collapseOne">
-                                                                <div>Why do we use it ?</div>
-                                                                <i class="mdi mdi-minus accor-plus-icon"></i>
-                                                            </a>
-                                                            <div id="token-collapseOne" class="collapse"
-                                                                data-bs-parent="#token-accordion">
-                                                                <div class="card-body">
-                                                                    <p class="mb-0">If several languages coalesce,
-                                                                        the
-                                                                        grammar of the resulting language is more simple
-                                                                        and regular than that of the individual
-                                                                        languages. The new common language will be more
-                                                                        simple and regular than the existing European
-                                                                        languages.</p>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="mb-3">
-                                                            <a href="#token-collapseTwo" class="accordion-list"
-                                                                data-bs-toggle="collapse" aria-expanded="true"
-                                                                aria-controls="token-collapseTwo">
-
-                                                                <div>What is Lorem Ipsum ?</div>
-                                                                <i class="mdi mdi-minus accor-plus-icon"></i>
-
-                                                            </a>
-
-                                                            <div id="token-collapseTwo" class="collapse show"
-                                                                data-bs-parent="#token-accordion">
-                                                                <div class="card-body">
-                                                                    <p class="mb-0">Everyone realizes why a new
-                                                                        common
-                                                                        language would be desirable: one could refuse to
-                                                                        pay expensive translators. To achieve this, it
-                                                                        would be necessary to have uniform grammar,
-                                                                        pronunciation and more common words.</p>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="mb-3">
-                                                            <a href="#token-collapseThree"
-                                                                class="accordion-list collapsed"
-                                                                data-bs-toggle="collapse" aria-expanded="false"
-                                                                aria-controls="token-collapseThree">
-                                                                <div>Where can I get some ?</div>
-                                                                <i class="mdi mdi-minus accor-plus-icon"></i>
-                                                            </a>
-                                                            <div id="token-collapseThree" class="collapse"
-                                                                data-bs-parent="#token-accordion">
-                                                                <div class="card-body">
-                                                                    <p class="mb-0">To an English person, it will
-                                                                        seem
-                                                                        like simplified English, as a skeptical
-                                                                        Cambridge friend of mine told me what Occidental
-                                                                        is. The European languages are members of the
-                                                                        same family. Their separate existence is a myth.
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-                                                        <div>
-                                                            <a href="#token-collapseFour"
-                                                                class="accordion-list collapsed"
-                                                                data-bs-toggle="collapse" aria-expanded="false"
-                                                                aria-controls="token-collapseFour">
-                                                                <div>Where does it come from ?</div>
-                                                                <i class="mdi mdi-minus accor-plus-icon"></i>
-                                                            </a>
-                                                            <div id="token-collapseFour" class="collapse"
-                                                                data-bs-parent="#token-accordion">
-                                                                <div class="card-body">
-                                                                    <p class="mb-0">It will be as simple as
-                                                                        Occidental;
-                                                                        in fact, it will be Occidental. To an English
-                                                                        person, it will seem like simplified English, as
-                                                                        a skeptical Cambridge friend of mine told me
-                                                                        what Occidental.</p>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div class="tab-pane fade" id="v-pills-roadmap" role="tabpanel">
-                                                <h4 class="card-title mb-4">Roadmap</h4>
-
-                                                <div>
-                                                    <div id="roadmap-accordion" class="accordion custom-accordion">
-
-                                                        <div class="mb-3">
-                                                            <a href="#roadmap-collapseOne" class="accordion-list"
-                                                                data-bs-toggle="collapse" aria-expanded="true"
-                                                                aria-controls="roadmap-collapseOne">
-
-
-
-                                                                <div>Where can I get some ?</div>
-                                                                <i class="mdi mdi-minus accor-plus-icon"></i>
-
-                                                            </a>
-
-                                                            <div id="roadmap-collapseOne" class="collapse show"
-                                                                data-bs-parent="#roadmap-accordion">
-                                                                <div class="card-body">
-                                                                    <p class="mb-0">Everyone realizes why a new
-                                                                        common
-                                                                        language would be desirable: one could refuse to
-                                                                        pay expensive translators. To achieve this, it
-                                                                        would be necessary to have uniform grammar,
-                                                                        pronunciation and more common words.</p>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="mb-3">
-                                                            <a href="#roadmap-collapseTwo"
-                                                                class="accordion-list collapsed"
-                                                                data-bs-toggle="collapse" aria-expanded="false"
-                                                                aria-controls="roadmap-collapseTwo">
-                                                                <div>What is Lorem Ipsum ?</div>
-                                                                <i class="mdi mdi-minus accor-plus-icon"></i>
-                                                            </a>
-                                                            <div id="roadmap-collapseTwo" class="collapse"
-                                                                data-bs-parent="#roadmap-accordion">
-                                                                <div class="card-body">
-                                                                    <p class="mb-0">If several languages coalesce,
-                                                                        the
-                                                                        grammar of the resulting language is more simple
-                                                                        and regular than that of the individual
-                                                                        languages. The new common language will be more
-                                                                        simple and regular than the existing European
-                                                                        languages.</p>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-
-
-                                                        <div class="mb-3">
-                                                            <a href="#roadmap-collapseThree"
-                                                                class="accordion-list collapsed"
-                                                                data-bs-toggle="collapse" aria-expanded="false"
-                                                                aria-controls="roadmap-collapseThree">
-                                                                <div>Why do we use it ?</div>
-                                                                <i class="mdi mdi-minus accor-plus-icon"></i>
-                                                            </a>
-                                                            <div id="roadmap-collapseThree" class="collapse"
-                                                                data-bs-parent="#roadmap-accordion">
-                                                                <div class="card-body">
-                                                                    <p class="mb-0">To an English person, it will
-                                                                        seem
-                                                                        like simplified English, as a skeptical
-                                                                        Cambridge friend of mine told me what Occidental
-                                                                        is. The European languages are members of the
-                                                                        same family. Their separate existence is a myth.
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-                                                        <div>
-                                                            <a href="#roadmap-collapseFour"
-                                                                class="accordion-list collapsed"
-                                                                data-bs-toggle="collapse" aria-expanded="false"
-                                                                aria-controls="roadmap-collapseFour">
-                                                                <div>Where does it come from ?</div>
-                                                                <i class="mdi mdi-minus accor-plus-icon"></i>
-                                                            </a>
-                                                            <div id="roadmap-collapseFour" class="collapse"
-                                                                data-bs-parent="#roadmap-accordion">
-                                                                <div class="card-body">
-                                                                    <p class="mb-0">It will be as simple as
-                                                                        Occidental;
-                                                                        in fact, it will be Occidental. To an English
-                                                                        person, it will seem like simplified English, as
-                                                                        a skeptical Cambridge friend of mine told me
-                                                                        what Occidental.</p>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                        </div>
-                                    </div>
-                                </div>
+                    <div class="owl-carousel owl-theme clients-carousel" id="clients-carousel" dir="ltr">
+                        <div class="item">
+                            <div class="client-images">
+                                <img src="assets/images/clients/nmb_logo.jpeg" alt="partner-img"
+                                    class="mx-auto d-block">
                             </div>
                         </div>
+
                     </div>
-                    <!-- end vertical nav -->
                 </div>
             </div>
             <!-- end row -->
+
         </div>
-        <!-- end container -->
     </section>
-    <!-- Faqs end -->
 
     <!-- Footer start -->
     <footer class="landing-footer">
@@ -1155,7 +324,21 @@
                 <div class="col-lg-3 col-sm-6">
                     <div class="mb-4 mb-lg-0">
                         <h5 class="mb-3 footer-list-title">eMakato</h5>
+                        <p class="font-size-12 text-white">
+                            15th Floor, Victoria Noble Centre
+                        </p>
 
+                        <p class="font-size-12 text-white">Dar es Salaam, Tanzania</p>
+
+                        <p class="font-size-12 text-white">Tel: <a class="font-size-12 text-white" href="tel:+255717705746"
+                                    target="_blank" rel="noopener noreferrer">+255 717 705 746</a>
+                        </p>
+                        <p> </p>
+
+                        <p class="font-size-12 text-white">
+                            Write to us through our email address: <a class="font-size-12 text-white"
+                                href="mailto:info@solocodes.io">info@solocodes.io</a>
+                            </p>
                     </div>
                 </div>
 
@@ -1163,8 +346,7 @@
                     <div class="mb-4 mb-lg-0">
                         <h5 class="mb-3 footer-list-title">Company</h5>
                         <ul class="list-unstyled footer-list-menu">
-                            <li><a href="javascript: void(0);">About Us</a></li>
-                            <li><a href="javascript: void(0);">Features</a></li>
+                            <li><a href="javascript: void(0);">About eMakato</a></li>
                             <li><a href="javascript: void(0);">Privacy Policy</a></li>
                             <li><a href="javascript: void(0);">Terms & Conditions</a></li>
                             <li><a href="javascript: void(0);">FAQs</a></li>
@@ -1174,10 +356,9 @@
 
                 <div class="col-lg-3 col-sm-6">
                     <div class="mb-4 mb-lg-0">
-                        <h5 class="mb-3 footer-list-title">Platforms</h5>
+                        <h5 class="mb-3 footer-list-title">Features</h5>
                         <ul class="list-unstyled footer-list-menu">
                             <li><a href="#">eMakato</a></li>
-                            <li><a href="#">eMazao</a></li>
                         </ul>
                     </div>
                 </div>
@@ -1186,9 +367,9 @@
                     <div class="mb-4 mb-lg-0">
                         <h5 class="mb-3 footer-list-title">Resources</h5>
                         <ul class="list-unstyled footer-list-menu">
-                            <li><a href="javascript: void(0);">Case Studies</a></li>
+                            <li><a href="javascript: void(0);">Developers</a></li>
                             <li><a href="javascript: void(0);">Roadmap</a></li>
-                            <li><a href="javascript: void(0);">Blog</a></li>
+                            <li><a href="javascript: void(0);">Support</a></li>
                         </ul>
                     </div>
                 </div>
@@ -1201,14 +382,15 @@
                 <div class="col-lg-6">
                     <div class="mb-2">
                         <span class="font-size-24 text-white">eMakato</span>
-                        {{-- <img src="assets/images/logo-light.png" alt="" height="20"> --}}
                     </div>
 
                     <p class="mb-0 text-white">
-                        Copyright
+                        © Copyright
                         <script>
                             document.write(new Date().getFullYear())
-                        </script> © eMakato. All rights reserved.
+                        </script>.
+
+                        A product of <a href="#" class="text-muted">Solocodes</a>. All rights reserved.
                     </p>
                 </div>
 
@@ -1228,7 +410,8 @@
                                 <a href="#" target="_blank"><i class="mdi mdi-youtube text-white"></i></a>
                             </li>
                             <li>
-                                <a href="#" target="_blank"><i class="mdi mdi-linkedin text-white" data-path="4"></i></a>
+                                <a href="#" target="_blank"><i class="mdi mdi-linkedin text-white"
+                                        data-path="4"></i></a>
                             </li>
                         </ul>
                     </div>

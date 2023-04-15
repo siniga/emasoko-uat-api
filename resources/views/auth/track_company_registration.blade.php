@@ -94,7 +94,7 @@
 
                                 <div class="mt-3 d-grid">
                                     <button class="btn btn-primary waves-effect waves-light" type="submit">
-                                        Track
+                                        Submit
                                     </button>
                                 </div>
 

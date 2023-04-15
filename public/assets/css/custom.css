@@ -96,6 +96,11 @@ Background Color
   background-color: #f2f5f7 !important;
 }
 
+.bg-light-grey-1 {
+  background-color: #fafafa !important;
+}
+
+
 .bg-dark-blue {
   background-color: #0D47A1 !important;
 }
@@ -258,6 +263,26 @@ table.table>:not(:last-child)>:last-child>* {
 #dt tr:hover, .tr_active {
   background-color: aliceblue !important;
 } */
+
+
+
+/*=============================================
+offcanvas
+============================================*/
+.solutions-tabs .nav-link {
+  text-align: center;
+  background-color: #fff;
+}
+
+.solutions-tabs .nav-link{
+  color: #757575;
+}
+
+.solutions-tabs .nav-link.active {
+  color: #1565C0;
+  /* border-bottom: 3px solid #1565C0; */
+}
+
 
 
 /*=============================================

@@ -425,7 +425,6 @@ class RegisterController extends Controller
         //company
         $company = Partner::where(['uuid' => $uuid])->firstOrFail();
 
-
         //redirect
         return Redirect::route('company.register')->withErrors('Company registration cancelled');
     }

@@ -427,7 +427,7 @@ class CompanyController extends Controller
 
         //call company assessment 
         $company_assessment = new CompanyAssessment();
-        $boolean = $company_assessment->process($company->id);
+        $boolean = $company_assessment->process_assessment($company->id);
 
         if ($boolean == true) {
             $message = 'Company assessment completed and approval email sent to company authorized representative!';

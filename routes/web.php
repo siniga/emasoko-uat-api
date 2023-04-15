@@ -121,8 +121,10 @@ Route::resources([
     'users' => UserController::class,
     'companies' => CompanyController::class,
     'customer-accounts' => CustomerAccountController::class,
-    //'customers' => CustomerController::class
 ]);
+
+//payment channel
+Route::get('payment-channels/{id}/delete', [PaymentChannelController::class, 'delete'])->name('payment-channels.delete');
 
 //companies
 Route::get('companies/{id}/assessment', [CompanyController::class, 'companyAssessment'])->name('companies.assessment');

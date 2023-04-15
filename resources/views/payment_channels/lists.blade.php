@@ -74,8 +74,8 @@
                                                     <i class='bx bx-edit font-size-14'></i>
                                                 </a>
 
-                                                <a href="#"
-                                                    title="Delete" class="btn btn-xss">
+                                                <a href="{{ route('payment-channels.delete', $values->id) }}"
+                                                    title="Delete" class="btn btn-xss delete">
                                                     <i class="bx bx-trash text-danger font-size-14"></i>
                                                 </a>
                                             </td>
