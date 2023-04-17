@@ -17,22 +17,20 @@
     <div class="row">
         <div class="col-md-3">
             <a href="{{ route('payment-mandate.lists') }}">
-                <div class="card mini-stats-wid">
+                <div class="card border-left-info shadow h-96 py-2">
                     <div class="card-body">
-                        <div class="d-flex">
-                            <div class="flex-grow-1">
-                                <p class="text-muted fw-medium">Payment Mandate</p>
-                                <h4 class="mb-4">{{ $total[0]->count }}</h4>
-
-                                <h6>Value: {{ number_format($total[0]->total_amount) }}</h6>
-                            </div>
-
-                            <div class="flex-shrink-0 align-self-center">
-                                <div class="mini-stat-icon avatar-sm rounded-circle">
-                                    <span class="avatar-title bg-primary">
-                                        <i class="bx bx-copy-alt font-size-24"></i>
-                                    </span>
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xss font-weight-600 text-grey-600 mb-1">
+                                    Payment Mandate
                                 </div>
+
+                                <div class="h5 mb-0 font-weight-700 text-gray-800">
+                                    {{ number_format($total[0]->total_amount) }}
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <i class='bx bx-copy-alt fa-3x text-primary'></i>
                             </div>
                         </div>
                     </div>
@@ -41,25 +39,22 @@
         </div>
         <!--./col -->
 
-
         <div class="col-md-3">
             <a href="{{ route('payment-mandate.lists', 'pending') }}">
-                <div class="card mini-stats-wid">
+                <div class="card border-left-info shadow h-96 py-2">
                     <div class="card-body">
-                        <div class="d-flex">
-                            <div class="flex-grow-1">
-                                <p class="text-muted fw-medium">Pending Mandate</p>
-                                <h4 class="mb-4">{{ $pending[0]->count }}</h4>
-
-                                <h6>Value: {{ number_format($pending[0]->total_amount) }}</h6>
-                            </div>
-
-                            <div class="flex-shrink-0 align-self-center">
-                                <div class="mini-stat-icon avatar-sm rounded-circle">
-                                    <span class="avatar-title bg-warning">
-                                        <i class="bx bx-copy-alt font-size-24"></i>
-                                    </span>
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xss font-weight-600 text-grey-600 mb-1">
+                                    Pending Mandate
                                 </div>
+
+                                <div class="h5 mb-0 font-weight-700 text-gray-800">
+                                    {{ number_format($pending[0]->total_amount) }}
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <i class='bx bx-copy-alt fa-3x text-warning'></i>
                             </div>
                         </div>
                     </div>
@@ -70,22 +65,20 @@
 
         <div class="col-md-3">
             <a href="{{ route('payment-mandate.lists', 'rejected') }}">
-                <div class="card mini-stats-wid">
+                <div class="card border-left-info shadow h-96 py-2">
                     <div class="card-body">
-                        <div class="d-flex">
-                            <div class="flex-grow-1">
-                                <p class="text-muted fw-medium">Rejected Mandate</p>
-                                <h4 class="mb-4">{{ $rejected[0]->count }}</h4>
-
-                                <h6>Value: {{ number_format($rejected[0]->total_amount) }}</h6>
-                            </div>
-
-                            <div class="flex-shrink-0 align-self-center">
-                                <div class="mini-stat-icon avatar-sm rounded-circle">
-                                    <span class="avatar-title bg-danger">
-                                        <i class="bx bx-copy-alt font-size-24"></i>
-                                    </span>
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xss font-weight-600 text-grey-600 mb-1">
+                                    Rejected Mandate
                                 </div>
+
+                                <div class="h5 mb-0 font-weight-700 text-gray-800">
+                                    {{ number_format($rejected[0]->total_amount) }}
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <i class='bx bx-copy-alt fa-3x text-danger'></i>
                             </div>
                         </div>
                     </div>
@@ -96,22 +89,20 @@
 
         <div class="col-md-3">
             <a href="{{ route('payment-mandate.lists', 'approved') }}">
-                <div class="card mini-stats-wid">
+                <div class="card border-left-info shadow h-96 py-2">
                     <div class="card-body">
-                        <div class="d-flex">
-                            <div class="flex-grow-1">
-                                <p class="text-muted fw-medium">Approved Mandate</p>
-                                <h4 class="mb-4">{{ $approved[0]->count }}</h4>
-
-                                <h6>Value: {{ number_format($approved[0]->total_amount) }}</h6>
-                            </div>
-
-                            <div class="flex-shrink-0 align-self-center">
-                                <div class="mini-stat-icon avatar-sm rounded-circle">
-                                    <span class="avatar-title bg-success">
-                                        <i class="bx bx-copy-alt font-size-24"></i>
-                                    </span>
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xss font-weight-600 text-grey-600 mb-1">
+                                    Approved Mandate
                                 </div>
+
+                                <div class="h5 mb-0 font-weight-700 text-gray-800">
+                                    {{ number_format($approved[0]->total_amount) }}
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <i class='bx bx-copy-alt fa-3x text-success'></i>
                             </div>
                         </div>
                     </div>
@@ -211,7 +202,7 @@
 
                     <div class="row">
                         <div class="col-lg-12">
-                            <div id="bar-chart" class="apex-charts" dir="ltr"></div>
+                            <div id="consent-channel-chart" dir="ltr"></div>
                         </div>
                     </div>
                 </div>
@@ -432,7 +423,7 @@
 
 @section('script')
     <!-- apexcharts -->
-    <script src="{{ URL::asset('/assets/libs/apexcharts/apexcharts.min.js') }}"></script>
+    {{-- <script src="{{ URL::asset('/assets/libs/apexcharts/apexcharts.min.js') }}"></script> --}}
 
     <!-- Saas dashboard init -->
     <script src="{{ URL::asset('/assets/js/charts/dashboard.js') }}"></script>

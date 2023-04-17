@@ -2,7 +2,7 @@
     <div class="navbar-header">
         <div class="d-flex">
             <!-- LOGO -->
-            <div class="navbar-brand-box bg-dark-blue">
+            <div class="navbar-brand-box bg-primary">
                 <a href="index" class="logo logo-dark">
                     <span class="logo-sm font-size-20">
                         e

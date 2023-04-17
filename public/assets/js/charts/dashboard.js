@@ -1,188 +1,84 @@
-//pending and approval total
-$.getJSON('api/dashboard/consent-percentage', (data) => {
-    if (data.error == false) {
-        //charts
-        var options = {
-            series: [data.approved, data.pending],
-            chart: {
-                type: "donut",
-                height: 260,
-            },
-            labels: ["Approved", "Pending"],
-            colors: ["#388E3C", "#f1b44c"],
-            legend: {
-                show: !1
-            },
-            plotOptions: {
-                pie: {
-                    donut: {
-                        size: "70%"
-                    }
-                }
-            }
-        };
-        //render chart
-        var chart = new ApexCharts(document.querySelector("#pending-approve-chart"), options);
-        chart.render()
-    }
-});
-
-
-
-//pending and approved mandate
-$.getJSON('api/dashboard/consent-value', (data) => {
-    if (data.error == false) {
-        var arrApproved = [];
-        var arrPending = [];
-
-        for (k = 0; k < data.data_array.length; k++) {
-            arrPending.push(data.data_array[k].pending);
-            arrApproved.push(data.data_array[k].approved);
-        }
-
-        var options = {
-            series: [{
-                name: "Pending",
-                data: arrPending
-            },
-            {
-                name: "Approved",
-                data: arrApproved
-            }],
-            chart: {
-                height: 320,
-                type: "line",
-                toolbar: "false",
-                dropShadow: {
-                    enabled: !0,
-                    color: "#000",
-                    top: 18,
-                    left: 7,
-                    blur: 8,
-                    opacity: .2
-                }
-            },
-            dataLabels: {
-                enabled: !1
-            },
-            colors: ["#f1b44c", "#388E3C"],
-            stroke: {
-                curve: "smooth",
-                width: 3
-            }
-        },
-            chart = new ApexCharts(document.querySelector("#line-chart"), options);
-        chart.render();
-    }
-});
-
-//pending and approved by payment channel
-$.getJSON('api/dashboard/consent-per-channel', (data) => {
-    if (data.error == false) {
-
-        var arrChannels = [];
-        var arrApproved = [];
-        var arrPending = [];
-
-        for (k = 0; k < data.data_array.length; k++) {
-            arrChannels.push(data.data_array[k].name);
-            arrPending.push(data.data_array[k].pending);
-            arrApproved.push(data.data_array[k].approved);
-        }
-
-        //charts
-        var options = {
-            series: [{
-                name: "Pending",
-                data: arrPending
-            }, {
-                name: "Approved",
-                data: arrApproved
-            }],
-            chart: {
-                type: 'bar',
-                height: 320,
-            },
-            plotOptions: {
-                bar: {
-                    borderRadius: 4,
-                    horizontal: true,
-                    dataLabels: {
-                        position: 'bottom'
-                    },
-                }
-            },
-            dataLabels: {
-                enabled: false
-            },
-            xaxis: {
-                categories: arrChannels,
-            },
-            labels: ["Pending", "Approved"],
-            colors: ["#f1b44c", "#388E3C"],
-        };
-
-        var chart = new ApexCharts(document.querySelector("#bar-chart"), options);
-        chart.render();
-    }
-});
-
-//on CLICK 
-$('#select-month').on('change', function (e) {
-    e.preventDefault;
-
-    //variables
-    var monthName = $(this).val();
-
-    $.getJSON('api/dashboard/consent-per-channel', { month: monthName }, (data) => {
-        if (data.error == false) {
-
-            var arrChannels = [];
-            var arrApproved = [];
-            var arrPending = [];
-
-            for (k = 0; k < data.data_array.length; k++) {
-                arrChannels.push(data.data_array[k].name);
-                arrPending.push(data.data_array[k].pending);
-                arrApproved.push(data.data_array[k].approved);
-            }
-
-            //charts
-            var options = {
-                series: [{
-                    name: "Pending",
-                    data: arrPending
-                }, {
-                    name: "Approved",
-                    data: arrApproved
-                }],
-                chart: {
-                    type: 'bar',
-                    height: 320,
-                },
-                plotOptions: {
-                    bar: {
-                        borderRadius: 4,
-                        horizontal: true,
-                        dataLabels: {
-                            position: 'bottom'
-                        },
-                    }
-                },
-                dataLabels: {
-                    enabled: false
-                },
-                xaxis: {
-                    categories: arrChannels,
-                },
-                labels: ["Pending", "Approved"],
-                colors: ["#f1b44c", "#388E3C"],
-            };
-
-            var chart = new ApexCharts(document.querySelector("#bar-chart"), options);
-            chart.render();
+$(function () {
+    Highcharts.setOptions({
+        lang: {
+            thousandsSep: ','
         }
     });
 
-});
 
+    //pending and approved by payment channel
+    $.getJSON('api/dashboard/consent-per-channel', (data) => {
+        if (data.error == false) {
+            var arr_channels = []
+            var arr_pending = []
+            var arr_approved = []
+
+            for (k = 0; k < data.chart.length; k++) {
+                arr_channels.push(data.chart[k].name);
+                arr_pending.push(data.chart[k].pending);
+                arr_approved.push(data.chart[k].approved);
+            }
+
+            $('#consent-channel-chart').highcharts({
+                chart: {
+                    type: 'column',
+                    backgroundColor: '#FFF'
+                },
+                title: {
+                    text: null
+                },
+                xAxis: {
+                    categories: arr_channels,
+                    crosshair: true,
+                    title: {
+                        text: "Payment Channels"
+                    }
+                },
+                yAxis: {
+                    allowDecimals: false,
+                    title: {
+                        text: "No. of Payment Mandate"
+                    }
+                },
+                tooltip: {
+                    headerFormat: '<span style="font-size:12px; font-weight:600;">{point.key}</span><table>',
+                    pointFormat: '<tr><td style="padding:0">{series.name}: </td>' +
+                        '<td style="padding:0"><b>{point.y:,.0f}</b></td></tr>',
+                    footerFormat: '</table>',
+                    shared: true,
+                    useHTML: true
+                },
+                plotOptions: {
+                    column: {
+                        // stacking: 'normal',
+                        pointPadding: 0.1,
+                        borderWidth: 0,
+                        dataLabels: {
+                            enabled: false,
+                            style: {
+                                fontWeight: 'bold'
+                            }
+                        }
+                    }
+                },
+                series: [{
+                    name: 'Pending',
+                    color: '#F9A825',
+                    data: arr_pending
+                }, {
+                    name: 'Approved',
+                    color: '#33691E',
+                    data: arr_approved
+                }
+                ],
+                credits: {
+                    enabled: false
+                }
+            });
+        }
+    });
+
+
+
+
+});

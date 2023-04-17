@@ -17,7 +17,8 @@ class DashboardChartController extends Controller
         $percent_data = '';
 
         //debit order
-        $debit_orders = DebitOrder::where_cond();
+        // $debit_orders = DebitOrder::where_cond();
+        $debit_orders = DebitOrder::all();
 
         //pending debit orders
         $pending_debit_orders = $debit_orders->where(['approved' => 0])->count();
@@ -72,14 +73,15 @@ class DashboardChartController extends Controller
         ];
 
         //response
-        echo json_encode(['error' => FALSE, 'data_array' => $data_array], 200);
+        echo json_encode(['error' => FALSE, 'chart' => $data_array], 200);
     }
 
     //consent per channel
     function getConsentPerChannel()
     {
         //debit order
-        $debit_orders = DebitOrder::where_cond();
+        // $debit_orders = DebitOrder::where_cond();
+        $debit_orders = DebitOrder::all();
 
         //acounts
         $accounts = Account::all();
@@ -124,6 +126,6 @@ class DashboardChartController extends Controller
         }
 
         //response
-        echo json_encode(['error' => FALSE, 'data_array' => $data_array], 200);
+        echo json_encode(['error' => FALSE, 'chart' => $data_array], 200);
     }
 }
