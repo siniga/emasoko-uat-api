@@ -44,8 +44,11 @@ use Illuminate\Support\Facades\Route;
 // Route::get('index/{locale}', [App\Http\Controllers\HomeController::class, 'lang']);
 
 
+Route::get('/', [FrontPageController::class, 'index'])->name('front-page');
+Route::get('request-for-information', [FrontPageController::class, 'request_for_information'])->name("request-for-information");
+Route::post('process-information', [FrontPageController::class, 'process_information'])->name("process-information");
 
-Route::get('/', [FrontPageController::class, 'index']);
+
 Route::get('auth/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 Route::get('index', [DashboardController::class, 'index'])->name('index');
@@ -108,6 +111,9 @@ Route::get('companies/{id}/delete', [CompanyController::class, 'destroy'])->name
 Route::get('companies/export-xls', [CompanyController::class, 'export_xls'])->name('companies.export-xls');
 Route::get('companies/export-pdf', [CompanyController::class, 'export_pdf'])->name('companies.export-pdf');
 
+Route::get('companies/create-info', [CompanyController::class, 'create_info'])->name('companies.create-info');
+Route::post('companies/store-info', [CompanyController::class, 'store-info'])->name('companies.store-info');
+
 //customer accounts
 Route::any('customer-accounts/lists', [CustomerAccountController::class, 'lists'])->name('customer-accounts.lists');
 Route::get('customer-accounts/{id}/delete', [CustomerAccountController::class, 'destroy'])->name('customer-accounts.delete');
@@ -127,6 +133,7 @@ Route::resources([
 Route::get('payment-channels/{id}/delete', [PaymentChannelController::class, 'delete'])->name('payment-channels.delete');
 
 //companies
+
 Route::get('companies/{id}/assessment', [CompanyController::class, 'companyAssessment'])->name('companies.assessment');
 Route::post('companies/store-assessment', [CompanyController::class, 'store_assessment'])->name('companies.store-assessment');
 Route::post('companies/confirm-assessment', [CompanyController::class, 'confirm_assessment'])->name('companies.confirm-assessment');

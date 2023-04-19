@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\Validator;
 use Stidges\CountryFlags\CountryFlag;
 use Maatwebsite\Excel\Facades\Excel;
 use PDF;
+use Illuminate\Support\Str;
 
 class CompanyController extends Controller
 {
@@ -177,6 +178,7 @@ class CompanyController extends Controller
         return $pdf->download(date('YmdHis') . '-Companies.pdf');
     }
 
+
     /**
      * Show the form for creating a new resource.
      *
@@ -184,8 +186,81 @@ class CompanyController extends Controller
      */
     public function create()
     {
+
         //render view
         return view('companies.create');
+    }
+
+
+    //company information
+    public function create_info()
+    {
+        $title = 'Company Registration';
+
+        //company information
+        $company = [];
+
+        //populate data
+        $categories = PartnerCategory::all();
+        $flag = new CountryFlag;
+        $countries = Country::all();
+        $regions = Region::orderBy('name', 'ASC')->get();
+
+        $arr_countries = [];
+        foreach ($countries as $val) {
+            $arr_countries[$val->code] = $flag->get(strtoupper($val->initial)) . ' ' . $val->code;
+        }
+
+        //render view
+        return view('companies.create', compact('title', 'categories', 'arr_countries', 'regions', 'company'));
+    }
+
+    //store company details
+    function store_info(Request $request)
+    {
+        //validation 
+        $validator = Validator::make($request->all(), [
+            'tin_number' => 'required|unique:partners,tin_number',
+            'business_name' => 'required',
+            'partner_category_id' => 'required',
+            'year_of_incorporation' => 'required|numeric',
+            'number_of_staff' => 'required|numeric',
+            'country_code' => 'required',
+            'company_phone' => 'required',
+            'company_email' => 'required|email|unique:partners,email',
+            'region_id' => 'required',
+            'physical_address' => 'required',
+        ]);
+
+        //capture if uuid is not null
+        if ($request->input('partner_uuid') != null)
+            $uuid = $request->input('partner_uuid');
+        else
+            $uuid = Str::uuid();
+
+        //phone 
+        $phone = $request->input('country_code') . cast_phone($request->input('company_phone'));
+
+        //save company details
+        $partner = Partner::firstOrNew([
+            'uuid' => $uuid,
+            'tin_number' => $request->input('tin_number')
+        ]);
+        $partner->partner_category_id = ucwords($request->input('category_id'));
+        $partner->business_name = ucwords($request->input('business_name'));
+        $partner->year_of_incorporation = ucwords($request->input('year_of_incorporation'));
+        $partner->number_of_staff = $request->input('number_of_staff');
+        $partner->region_id = $request->input('region_id');
+        $partner->phone = $phone;
+        $partner->email = $request->input('company_email');
+        $partner->postal_address = $request->input('postal_address');
+        $partner->physical_address = $request->input('physical_address');
+        $partner->website = $request->input('company_website');
+        $partner->next_step = 'company-documents/' . $uuid;
+        $partner->save();
+
+        //redirect
+        return Redirect::route('company.register-documents', $uuid)->with('success', "Company information saved!");
     }
 
     /**

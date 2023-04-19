@@ -146,9 +146,9 @@
 
                         <div class="col-md-6">
                             <div class="text-sm-end d-none d-sm-block">
-                                <div class="btn btn-primary btn-sm" href="{{ route('companies.index') }}">
+                                <a class="btn btn-primary btn-sm" href="{{ route('companies.create-info') }}">
                                     <i class="fas fa-plus"></i> Register
-                                </div>
+                                </a>
 
                                 <a class="btn btn-outline-success btn-sm"
                                     href="{{ route('companies.export-xls', ['start_at' => $post_data['start_at'], 'end_at' => $post_data['end_at'], 'category_id' => $post_data['category_id'], 'region_id' => $post_data['region_id'], 'status' => $post_data['status'], 'keyword' => $post_data['keyword']]) }}">

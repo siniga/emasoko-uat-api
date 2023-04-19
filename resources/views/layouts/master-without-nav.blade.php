@@ -17,8 +17,7 @@
     <script defer src="https://unpkg.com/alpinejs@3.10.5/dist/cdn.min.js"></script>
 </head>
 
-<body data-bs-spy="scroll">
-
+<body class="auth-body-bg">
     @yield('content')
 
     @include('layouts.vendor-scripts')

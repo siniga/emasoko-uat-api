@@ -52,7 +52,7 @@
                 </ul>
 
                 <div class="my-2 ms-lg-2">
-                    <a href="#" class="btn btn-outline-success w-xs">Request for Information</a>
+                    <a href="{{ route('request-for-information') }}" class="btn btn-outline-success w-xs">Request for Information</a>
                 </div>
             </div>
         </div>

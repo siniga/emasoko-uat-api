@@ -3842,7 +3842,7 @@ div.dataTables_wrapper div.dataTables_filter input {
 }
 
 .auth-full-bg {
-    background-color: rgba(85, 110, 230, .25);
+    background-color: #1565C0;
     display: -webkit-box;
     display: -ms-flexbox;
     display: flex
@@ -3863,7 +3863,7 @@ div.dataTables_wrapper div.dataTables_filter input {
 }
 
 .auth-full-bg .bg-overlay {
-    background: url(../images/bg-auth-overlay.png);
+    /* background-image: url(../images/microfinance-1.jpeg); */
     background-size: cover;
     background-repeat: no-repeat;
     background-position: 50%
