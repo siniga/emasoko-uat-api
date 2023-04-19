@@ -10,36 +10,22 @@
             <div class="row g-0">
 
                 <div class="col-xl-8">
-                    <div class="auth-full-bg p-4">
+                    <div class="auth-full-bg hero-section bg-ico-hero p-4">
                         <div class="w-120">
-                            {{-- <div class="bg-overlay"></div> --}}
+                            <div class="bg-overlay bg-primary"></div>
                             <div class="d-flex h-100 flex-column">
-
-                                <div class="mt-auto">
-                                    <div class="row justify-content-center">
+                                <div class="my-auto">
+                                    <div class="row justify-content-start">
                                         <div class="col-lg-9">
-                                            <div class="text-center">
-
-                                                <h4 class="mb-3 text-white">
-                                                    Reach out to us about your payment mandate.
-                                                </h4>
-
-                                                <div dir="ltr">
-                                                    <div class="owl-carousel owl-theme auth-review-carousel"
-                                                        id="auth-review-carousel">
-                                                        <div class="item">
-                                                            <div class="py-3">
-                                                                <p class="font-size-16 mb-4 text-white">" Fantastic theme
-                                                                    with a ton of
-                                                                    options. If you just want the HTML to integrate with
-                                                                    your project, then this is the package. You can find the
-                                                                    files in the 'dist' folder...no need to install git and
-                                                                    all the other stuff the documentation talks about. "</p>
-                                                            </div>
-
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                            <div class="text-left">
+                                                <h1 class="text-white fw-semibold mb-3 hero-title">
+                                                    Aggregate, manage and monitor your <span
+                                                        class="font-weight-600 text-warning px-1">debit</span> <span
+                                                        class="font-weight-600 text-success px-1">mandate.</span>
+                                                </h1>
+                                                <p class="font-size-18 text-white">
+                                                    Enabling a seamless debit mandate ecosystem.
+                                                </p>
                                             </div>
                                         </div>
                                     </div>
@@ -63,8 +49,8 @@
                                 </div>
                                 <div class="">
                                     <div>
-                                        <h5 class="text-muted font-size-16">
-                                            Please write your inquiries and will reach out.
+                                        <h5 class="text-muted font-size-14">
+                                            Reach out to us about your payment mandate.
                                         </h5>
                                     </div>
 
@@ -123,7 +109,7 @@
                                                     <div class="col-lg-12">
                                                         <div class="mb-3">
                                                             <label>Message <span class="text-danger">*</span></label>
-                                                            <textarea name="message" x-model="formData.message" placeholder="Write message ..." class="form-control" required></textarea>
+                                                            <textarea name="message" x-model="formData.message" placeholder="Write message ..." class="form-control" rows="3" required></textarea>
                                                             <div class="invalid-feedback">
                                                                 Message required
                                                             </div>
@@ -153,10 +139,9 @@
                                         © Copyright
                                         <script>
                                             document.write(new Date().getFullYear())
-                                        </script>.
+                                        </script>All rights reserved.
 
-                                        A product of <a href="#" class="text-muted">Solocodes</a>. All rights
-                                        reserved.
+                                       <br /> A product of <a href="#" class="text-muted">Solocodes</a>.
                                     </p>
                                 </div>
                             </div>

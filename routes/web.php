@@ -48,7 +48,6 @@ Route::get('/', [FrontPageController::class, 'index'])->name('front-page');
 Route::get('request-for-information', [FrontPageController::class, 'request_for_information'])->name("request-for-information");
 Route::post('process-information', [FrontPageController::class, 'process_information'])->name("process-information");
 
-
 Route::get('auth/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 Route::get('index', [DashboardController::class, 'index'])->name('index');

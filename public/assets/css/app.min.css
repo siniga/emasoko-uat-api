@@ -431,7 +431,7 @@ body[data-layout=horizontal] .footer {
 #sidebar-menu ul li a {
     display: block;
     padding: .625rem 1.5rem;
-    color: #545a6d;
+    color: #212121 !important;
     position: relative;
     font-size: 13px;
     -webkit-transition: all .4s;
@@ -445,13 +445,13 @@ body[data-layout=horizontal] .footer {
     font-size: 1.25rem;
     line-height: 1.40625rem;
     vertical-align: middle;
-    color: #7f8387;
+    color: #212121;
     -webkit-transition: all .4s;
     transition: all .4s
 }
 
 #sidebar-menu ul li a:hover, #sidebar-menu ul li a:hover i {
-    color: #383c40
+    color: #1565C0 !important;
 }
 
 #sidebar-menu ul li .badge {
@@ -651,7 +651,7 @@ body[data-layout=horizontal] .footer {
 }
 
 .vertical-collpsed .vertical-menu #sidebar-menu>ul ul li.active a {
-    color: #f8f9fa
+    color: #1565C0;
 }
 
 body[data-sidebar=dark] .vertical-menu {
@@ -659,19 +659,19 @@ body[data-sidebar=dark] .vertical-menu {
 }
 
 body[data-sidebar=dark] #sidebar-menu ul li a {
-    color: #a6b0cf
+    color: #212121
 }
 
 body[data-sidebar=dark] #sidebar-menu ul li a i {
-    color: #6a7187
+    color: #212121
 }
 
 body[data-sidebar=dark] #sidebar-menu ul li a:hover, body[data-sidebar=dark] #sidebar-menu ul li a:hover i {
-    color: #fff
+    color: #1565C0;
 }
 
 body[data-sidebar=dark] #sidebar-menu ul li ul.sub-menu li a {
-    color: #79829c
+    color: #424242;
 }
 
 body[data-sidebar=dark] #sidebar-menu ul li ul.sub-menu li a:hover {
@@ -696,7 +696,7 @@ body[data-sidebar=dark].vertical-collpsed .vertical-menu #sidebar-menu>ul>li:hov
 }
 
 body[data-sidebar=dark].vertical-collpsed .vertical-menu #sidebar-menu>ul>li:hover>ul a:hover {
-    color: #fff
+    color: #1565C0
 }
 
 body[data-sidebar=dark].vertical-collpsed .vertical-menu #sidebar-menu>ul ul {
@@ -704,7 +704,7 @@ body[data-sidebar=dark].vertical-collpsed .vertical-menu #sidebar-menu>ul ul {
 }
 
 body[data-sidebar=dark] .mm-active, body[data-sidebar=dark] .mm-active .active, body[data-sidebar=dark] .mm-active .active i, body[data-sidebar=dark] .mm-active>a, body[data-sidebar=dark] .mm-active>a i, body[data-sidebar=dark] .mm-active>i, body[data-sidebar=dark].vertical-collpsed .vertical-menu #sidebar-menu ul li.mm-active .active, body[data-sidebar=dark].vertical-collpsed .vertical-menu #sidebar-menu ul li.mm-active .active i {
-    color: #fff !important
+    color: #1565C0;
 }
 
 body[data-sidebar=dark] .menu-title {
@@ -3834,7 +3834,7 @@ div.dataTables_wrapper div.dataTables_filter input {
 }
 
 .auth-body-bg {
-    background-color: #fff
+    background-color: #FAFAFA;
 }
 
 .auth-pass-inputgroup input[type=input]+.btn .mdi-eye-outline:before {
@@ -4643,8 +4643,8 @@ div.dataTables_wrapper div.dataTables_filter input {
 }
 
 .hero-section {
-    padding-top: 220px;
-    padding-bottom: 190px
+    padding-top: 160px;
+    padding-bottom: 120px
 }
 
 .hero-section.bg-ico-hero {

@@ -119,10 +119,13 @@
                     </div>
                     <div class="mt-2 text-center">
                         <div>
-                            <p>
+                            <p class="mb-0">
+                                © Copyright
                                 <script>
                                     document.write(new Date().getFullYear())
-                                </script> eMakato. All rights reserved.
+                                </script>All rights reserved.
+
+                               <br /> A product of <a href="#" class="text-muted">Solocodes</a>.
                             </p>
                         </div>
                     </div>

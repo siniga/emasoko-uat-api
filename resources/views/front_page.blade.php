@@ -52,7 +52,8 @@
                 </ul>
 
                 <div class="my-2 ms-lg-2">
-                    <a href="{{ route('request-for-information') }}" class="btn btn-outline-success w-xs">Request for Information</a>
+                    <a href="{{ route('request-for-information') }}" class="btn btn-outline-success w-xs">Request for
+                        Information</a>
                 </div>
             </div>
         </div>
@@ -75,8 +76,9 @@
                         </p>
 
                         <div class="d-flex flex-wrap gap-2 mt-4">
-                            <a href="#" class="btn btn-success">Request for Information</a>
-                            <a href="#roadmap" class="btn btn-light">How it works</a>
+                            <a href="{{ route('request-for-information') }}" class="btn btn-success">Request for
+                                Information</a>
+                            <a href="#our-solution" class="btn btn-light">How it works</a>
                         </div>
                     </div>
                 </div>
@@ -330,15 +332,16 @@
 
                         <p class="font-size-12 text-white">Dar es Salaam, Tanzania</p>
 
-                        <p class="font-size-12 text-white">Tel: <a class="font-size-12 text-white" href="tel:+255717705746"
-                                    target="_blank" rel="noopener noreferrer">+255 717 705 746</a>
+                        <p class="font-size-12 text-white">Tel: <a class="font-size-12 text-white"
+                                href="tel:+255717705746" target="_blank" rel="noopener noreferrer">+255 717 705
+                                746</a>
                         </p>
                         <p> </p>
 
                         <p class="font-size-12 text-white">
                             Write to us through our email address: <a class="font-size-12 text-white"
                                 href="mailto:info@solocodes.io">info@solocodes.io</a>
-                            </p>
+                        </p>
                     </div>
                 </div>
 
@@ -378,19 +381,15 @@
 
             <hr class="footer-border my-2">
 
-            <div class="row">
+            <div class="row my-2">
                 <div class="col-lg-6">
-                    <div class="mb-2">
-                        <span class="font-size-24 text-white">eMakato</span>
-                    </div>
-
                     <p class="mb-0 text-white">
                         © Copyright
                         <script>
                             document.write(new Date().getFullYear())
-                        </script>.
+                        </script> All rights reserved.
 
-                        A product of <a href="#" class="text-muted">Solocodes</a>. All rights reserved.
+                        <br />A product of <a href="#" class="text-muted">Solocodes</a>.
                     </p>
                 </div>
 

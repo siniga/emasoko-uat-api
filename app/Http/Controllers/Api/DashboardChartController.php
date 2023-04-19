@@ -7,31 +7,28 @@ use App\Models\Account;
 use App\Models\DebitOrder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class DashboardChartController extends Controller
 {
     //aggregate consent percentage
     function getPercentageConsent()
     {
-        $data_array = [];
-        $percent_data = '';
-
         //debit order
-        // $debit_orders = DebitOrder::where_cond();
-        $debit_orders = DebitOrder::all();
+        $debit_orders = DebitOrder::where_cond();
 
-        //pending debit orders
-        $pending_debit_orders = $debit_orders->where(['approved' => 0])->count();
+        //pending
+        $pending = $debit_orders->where(['approved' => 0])->count();
 
-        //approved debit orders
-        $approved_debit_orders = $debit_orders->where(['approved' => 1])->count();
+        //approved
+        $approved = $debit_orders->where(['approved' => 1])->count();
 
         //aggregate
-        $aggregate = $pending_debit_orders + $approved_debit_orders;
+        $aggregate = $pending + $approved;
 
         //percentage
-        $percent_approved = ($approved_debit_orders / $aggregate) * 100;
-        $percent_pending = ($pending_debit_orders / $aggregate) * 100;
+        $percent_approved = ($approved / $aggregate) * 100;
+        $percent_pending = ($pending / $aggregate) * 100;
 
         //response
         echo json_encode(['error' => FALSE, 'approved' => $percent_approved, 'pending' => $percent_pending], 200);
@@ -40,37 +37,42 @@ class DashboardChartController extends Controller
     //consent value
     function getConsentValue()
     {
-        //query per channel
-        $debit_orders = DebitOrder::select('debit_orders.approved', DB::raw('COUNT(debit_orders.id) as count_approved'))
-            ->where(function ($query) {
-                $query->where('debit_orders.approved', '=', 1)
-                    ->orWhere('debit_orders.approved', '=', 0);
-            })
-            ->groupBy('debit_orders.approved')
-            ->orderBy('debit_orders.approved', 'DESC');
+        //declare variable
+        $data_array = [];
 
-        if (isset($_GET['month']) && $_GET['month'] != null) {
-            $debit_orders = $debit_orders->whereMonth('created_at', $_GET['month'])
-                ->whereYear('created_at', date('Y'));
+        for ($i = 0; $i <= 11; $i++) {
+            $year_month = date("Y-m", strtotime(date('Y-m-01') . " -$i months"));
+            $month = date('m', strtotime($year_month));
+            $year = date('Y', strtotime($year_month));
+
+            //query
+            $debit_orders = DebitOrder::select('debit_orders.approved', DB::raw('SUM(debit_orders.total_amount) as total_amount'))
+                ->where(function ($query) {
+                    $query->where('debit_orders.approved', '=', 1)
+                        ->orWhere('debit_orders.approved', '=', 0);
+                })->groupBy('debit_orders.approved')
+                ->orderBy('debit_orders.approved', 'DESC');
+
+            $debit_orders = $debit_orders->whereMonth('created_at', $month)->whereYear('created_at', $year)->get();
+
+            //pending
+            $pending = 0;
+            if (isset($debit_orders[0]->total_amount) && $debit_orders[0]->total_amount != null)
+                $pending = $debit_orders[0]->total_amount;
+
+            //approve 
+            $approved = 0;
+            if (isset($debit_orders[1]->total_amount) && $debit_orders[1]->total_amount != null)
+                $approved = $debit_orders[1]->total_amount;
+
+            //create data array
+            $data_array[] = [
+                // "month" => date("F", mktime(0, 0, 0, $month, 10)) . ',' . $year,
+                "month" => date("M", mktime(0, 0, 0, $month, 10)),
+                "pending" =>  (int) $pending,
+                "approved" => (int) $approved
+            ];
         }
-
-        $debit_orders = $debit_orders->get();
-
-        //pending
-        $pending = 0;
-        if (isset($debit_orders[0]->count_approved) && $debit_orders[0]->count_approved != null)
-            $pending = $debit_orders[0]->count_approved;
-
-        //approve 
-        $approved = 0;
-        if (isset($debit_orders[1]->count_approved) && $debit_orders[1]->count_approved != null)
-            $approved = $debit_orders[1]->count_approved;
-
-        //create data array
-        $data_array[] = [
-            "pending" =>  (int) $pending,
-            "approved" => (int) $approved
-        ];
 
         //response
         echo json_encode(['error' => FALSE, 'chart' => $data_array], 200);
@@ -80,8 +82,7 @@ class DashboardChartController extends Controller
     function getConsentPerChannel()
     {
         //debit order
-        // $debit_orders = DebitOrder::where_cond();
-        $debit_orders = DebitOrder::all();
+        $debit_orders = DebitOrder::where_cond();
 
         //acounts
         $accounts = Account::all();
@@ -101,8 +102,8 @@ class DashboardChartController extends Controller
                 ->orderBy('debit_orders.approved', 'DESC');
 
             if (isset($_GET['month']) && $_GET['month'] != null) {
-                $debit_orders = $debit_orders->whereMonth('created_at', $_GET['month'])
-                    ->whereYear('created_at', date('Y'));
+                $debit_orders = $debit_orders->whereMonth('debit_orders.created_at', $_GET['month'])
+                    ->whereYear('debit_orders.created_at', date('Y'));
             }
 
             $debit_orders = $debit_orders->get();

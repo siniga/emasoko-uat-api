@@ -68,12 +68,128 @@ h1, h2, h3, h4, h5, h6 {
   color: #2e2d2d !important;
 }
 
+.text-warning {
+  color: #FF6F00 !important;
+}
+
+.text-danger {
+  color: #C62828 !important;
+}
+
+.text-success {
+  color: #388E3C !important;
+}
+
 .text-dark-blue {
   color: #022859 !important;
 }
 
 .text-light-blue {
   color: #1976D2 !important;
+}
+
+/*===============================================|
+Sidebar
+================================================*/
+body[data-topbar=dark] #page-topbar {
+  background-color: #FFFFFF;
+}
+
+body[data-topbar=dark] .navbar-header .dropdown .show.header-item {
+  background-color: #FFFFFF;
+}
+
+body[data-topbar=dark] .navbar-header .waves-effect .waves-ripple {
+  background: #FFFFFF;;
+}
+
+body[data-topbar=dark] .header-item, body[data-topbar=dark] .header-item:hover {
+  color: #212121;
+}
+
+body[data-topbar=dark] .header-profile-user {
+  background-color: hsla(0, 0%, 100%, .25)
+}
+
+body[data-topbar=dark] .noti-icon i {
+  color: #e9ecef
+}
+
+body[data-topbar=dark] .logo-dark {
+  display: none
+}
+
+body[data-topbar=dark] .logo-light {
+  display: block
+}
+
+body[data-topbar=dark] .app-search .form-control {
+  background-color: rgba(243, 243, 249, .07);
+  color: #fff
+}
+
+body[data-topbar=dark] .app-search input.form-control::-webkit-input-placeholder, body[data-topbar=dark] .app-search span {
+  color: hsla(0, 0%, 100%, .5)
+}
+
+/*===============================================|
+Sidebar
+================================================*/
+body[data-sidebar=dark] .vertical-menu {
+  background: #FFFFFF;
+}
+
+body[data-sidebar=dark] #sidebar-menu ul li a {
+  color: #212121
+}
+
+body[data-sidebar=dark] #sidebar-menu ul li a i {
+  color: #212121
+}
+
+body[data-sidebar=dark] #sidebar-menu ul li a:hover, body[data-sidebar=dark] #sidebar-menu ul li a:hover i {
+  color: #1565C0;
+}
+
+body[data-sidebar=dark] #sidebar-menu ul li ul.sub-menu li a {
+  color: #424242;
+}
+
+body[data-sidebar=dark] #sidebar-menu ul li ul.sub-menu li a:hover {
+  color: #fff
+}
+
+body[data-sidebar=dark].vertical-collpsed {
+  min-height: 1760px
+}
+
+body[data-sidebar=dark].vertical-collpsed .vertical-menu #sidebar-menu>ul>li:hover>a {
+  background: #2e3548;
+  color: #fff
+}
+
+body[data-sidebar=dark].vertical-collpsed .vertical-menu #sidebar-menu>ul>li:hover>a i {
+  color: #fff
+}
+
+body[data-sidebar=dark].vertical-collpsed .vertical-menu #sidebar-menu>ul>li:hover>ul a {
+  color: #79829c
+}
+
+body[data-sidebar=dark].vertical-collpsed .vertical-menu #sidebar-menu>ul>li:hover>ul a:hover {
+  color: #1565C0
+}
+
+body[data-sidebar=dark].vertical-collpsed .vertical-menu #sidebar-menu>ul ul {
+  background-color: #2a3042
+}
+
+body[data-sidebar=dark] .mm-active, body[data-sidebar=dark] .mm-active .active, body[data-sidebar=dark] .mm-active .active i, body[data-sidebar=dark] .mm-active>a, body[data-sidebar=dark] .mm-active>a i, body[data-sidebar=dark] .mm-active>i, body[data-sidebar=dark].vertical-collpsed .vertical-menu #sidebar-menu ul li.mm-active .active, body[data-sidebar=dark].vertical-collpsed .vertical-menu #sidebar-menu ul li.mm-active .active i {
+  color: #1565C0 !important
+}
+
+body[data-sidebar=dark] .menu-title {
+  color: #6a7187
 }
 
 

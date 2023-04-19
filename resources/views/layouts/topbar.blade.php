@@ -2,7 +2,7 @@
     <div class="navbar-header">
         <div class="d-flex">
             <!-- LOGO -->
-            <div class="navbar-brand-box bg-primary">
+            <div class="navbar-brand-box bg-light-grey-1">
                 <a href="index" class="logo logo-dark">
                     <span class="logo-sm font-size-20">
                         e
@@ -14,12 +14,12 @@
                     </span>
                 </a>
 
-                <a href="index" class="logo logo-light">
-                    <span class="logo-sm font-size-20 text-white">
+                <a href="index" class="logo logo-dark">
+                    <span class="logo-sm font-size-20">
                         e
                         {{-- <img src="{{ URL::asset('/assets/images/logo-light.svg') }}" alt="" height="22"> --}}
                     </span>
-                    <span class="logo-lg font-size-20 text-white">
+                    <span class="logo-lg font-size-20">
                         eMakato
                         {{-- <img src="{{ URL::asset('/assets/images/logo-light.png') }}" alt="" height="19"> --}}
                     </span>

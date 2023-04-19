@@ -21,7 +21,6 @@
 </head>
 
 @section('body')
-
     <body data-topbar="dark" data-layout="horizontal">
     @show
 

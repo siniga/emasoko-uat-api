@@ -118,25 +118,11 @@
             <div class="card">
                 <div class="card-body">
                     <div class="clearfix">
-                        <div class="float-end">
-                            <div class="input-group input-group-sm">
-                                <select class="form-select form-select-sm" id="select-month">
-                                    @foreach (range(1, 12) as $v)
-                                        @php
-                                            $month_name = date('F', mktime(0, 0, 0, $v, 10)); // convert number to month
-                                        @endphp
-                                        <option value="{{ $v }}">{{ $month_name }}</option>
-                                    @endforeach
-                                </select>
-                                <label class="input-group-text">Month</label>
-                            </div>
-                        </div>
-                        <h4 class="card-title mb-4">Payment Mandate</h4>
+                        <h4 class="card-title mb-4">Payment Mandate Values</h4>
                     </div>
-
                     <div class="row">
                         <div class="col-lg-12">
-                            <div id="line-chart" class="apex-charts" dir="ltr"></div>
+                            <div id="consent-value-chart" dir="ltr"></div>
                         </div>
                     </div>
                 </div>
@@ -149,23 +135,24 @@
                 <div class="card-body">
                     <h4 class="card-title mb-4">Payment Mandate Rates</h4>
                     <div>
-                        <div id="pending-approve-chart" class="apex-charts"></div>
+                        <div id="consent-rate-chart" class="apex-charts"></div>
                     </div>
 
                     <div class="text-center text-muted">
                         <div class="row">
                             <div class="offset-2 col-4">
-                                <div class="mt-4">
-                                    <p class="mb-2 text-truncate">
-                                        <i class="mdi mdi-circle text-warning me-1"></i> Pending
+                                <div class="my-4">
+                                    <p class="mb-1 text-truncate">
+                                        <i class="mdi mdi-circle text-warning my-1"></i> Pending
                                     </p>
                                     <h5>{{ $pending[0]->count }}</h5>
                                 </div>
                             </div>
 
                             <div class="col-4">
-                                <div class="mt-4">
-                                    <p class="mb-2 text-truncate"><i class="mdi mdi-circle text-success me-1"></i> Approved
+                                <div class="my-4">
+                                    <p class="mb-1 text-truncate">
+                                        <i class="mdi mdi-circle text-success my-1"></i> Approved
                                     </p>
                                     <h5>{{ $approved[0]->count }}</h5>
                                 </div>
@@ -423,7 +410,7 @@
 
 @section('script')
     <!-- apexcharts -->
-    {{-- <script src="{{ URL::asset('/assets/libs/apexcharts/apexcharts.min.js') }}"></script> --}}
+    <script src="{{ URL::asset('/assets/libs/apexcharts/apexcharts.min.js') }}"></script>
 
     <!-- Saas dashboard init -->
     <script src="{{ URL::asset('/assets/js/charts/dashboard.js') }}"></script>
