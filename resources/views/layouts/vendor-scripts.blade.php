@@ -26,9 +26,6 @@
 <!-- Required datatable js -->
 <script src="{{ URL::asset('assets/libs/datatables/datatables.min.js') }}"></script>
 
-<!-- Datatable init js -->
-<script src="assets/js/pages/datatables.init.js"></script>
-
 <!-- Sweet Alerts js -->
 <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
 
@@ -53,7 +50,9 @@
 <!-- App js -->
 <script src="{{ URL::asset('assets/js/app.min.js') }}"></script>
 <script src="{{ URL::asset('assets/js/custom.js') }}"></script>
-{{-- <script src="{{ URL::asset('assets/js/highcharts.js') }}"></script> --}}
+
+<!--./Alpine JS -->
+<script defer src="https://unpkg.com/alpinejs@3.10.5/dist/cdn.min.js"></script>
 
 @yield('script')
 
