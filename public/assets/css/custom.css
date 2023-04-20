@@ -140,23 +140,23 @@ body[data-sidebar=dark] .vertical-menu {
 }
 
 body[data-sidebar=dark] #sidebar-menu ul li a {
-  color: #212121
+  color: #616161 !important;
 }
 
 body[data-sidebar=dark] #sidebar-menu ul li a i {
-  color: #212121
+  color: #616161 !important;
 }
 
 body[data-sidebar=dark] #sidebar-menu ul li a:hover, body[data-sidebar=dark] #sidebar-menu ul li a:hover i {
-  color: #1565C0;
+  color: #1565C0 !important;
 }
 
 body[data-sidebar=dark] #sidebar-menu ul li ul.sub-menu li a {
-  color: #424242;
+  color: #616161;
 }
 
 body[data-sidebar=dark] #sidebar-menu ul li ul.sub-menu li a:hover {
-  color: #fff
+  color: #1565C0 !important;
 }
 
 body[data-sidebar=dark].vertical-collpsed {
@@ -164,8 +164,8 @@ body[data-sidebar=dark].vertical-collpsed {
 }
 
 body[data-sidebar=dark].vertical-collpsed .vertical-menu #sidebar-menu>ul>li:hover>a {
-  background: #2e3548;
-  color: #fff
+  background: #ffffff;
+  color: #1565C0 !important;
 }
 
 body[data-sidebar=dark].vertical-collpsed .vertical-menu #sidebar-menu>ul>li:hover>a i {
@@ -173,15 +173,20 @@ body[data-sidebar=dark].vertical-collpsed .vertical-menu #sidebar-menu>ul>li:hov
 }
 
 body[data-sidebar=dark].vertical-collpsed .vertical-menu #sidebar-menu>ul>li:hover>ul a {
-  color: #79829c
+  color: #1565C0 !important;
 }
 
 body[data-sidebar=dark].vertical-collpsed .vertical-menu #sidebar-menu>ul>li:hover>ul a:hover {
-  color: #1565C0
+  color: #1565C0 !important;
 }
 
 body[data-sidebar=dark].vertical-collpsed .vertical-menu #sidebar-menu>ul ul {
-  background-color: #2a3042
+  background-color: #fff;
+}
+
+body[data-sidebar=dark].vertical-menu #sidebar-menu>ul>li:active>a {
+  background: #ffffff;
+  color: #1565C0 !important;
 }
 
 body[data-sidebar=dark] .mm-active, body[data-sidebar=dark] .mm-active .active, body[data-sidebar=dark] .mm-active .active i, body[data-sidebar=dark] .mm-active>a, body[data-sidebar=dark] .mm-active>a i, body[data-sidebar=dark] .mm-active>i, body[data-sidebar=dark].vertical-collpsed .vertical-menu #sidebar-menu ul li.mm-active .active, body[data-sidebar=dark].vertical-collpsed .vertical-menu #sidebar-menu ul li.mm-active .active i {
@@ -472,7 +477,9 @@ Loader-spinner button
 
 /*================FORM WIZARD ===============*/
 .stepwizard-step {
-  margin-top: 10px;
+  /* margin: 10px;*/
+  padding: 8px 4px; 
+  background-color: #E3F2FD;
   width: 20%;
 }
 
@@ -512,13 +519,14 @@ Loader-spinner button
 }
 
 .stepwizard-step a.btn-circle {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border: 1px solid #1565C0;
   border-radius: 50%;
   text-align: center;
   padding: 10px;
-  font-size: 14px;
+  font-size: 12px;
+  color: #757575;
   font-weight: 600;
   line-height: 1;
 }
@@ -529,7 +537,6 @@ Loader-spinner button
 
 .stepwizard-step span {
   font-size: 12px;
-  color: #757575;
   font-weight: 600;
 }
 

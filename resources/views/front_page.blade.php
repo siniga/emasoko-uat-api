@@ -85,7 +85,7 @@
 
                 <div class="col-lg-6 col-md-8 col-sm-10 ms-lg-auto">
                     <div class="card overflow-hidden">
-                        <img src="{{ URL::asset('/assets/images/image1.png') }}" height="360" width="100%" />
+                        <img src="{{ URL::asset('/assets/images/image2.png') }}"  width="100%" />
                     </div>
                 </div>
             </div>
@@ -186,7 +186,7 @@
                             <a class="nav-link active" data-bs-toggle="tab" href="#providers-1" role="tab">
                                 <span class="d-block d-sm-none"><i class="fas fa-home"></i></span>
                                 <span class="d-none d-sm-block font-size-20 font-weight-800">
-                                    Service Providers???
+                                    Customers
                                 </span>
                             </a>
                         </li>
@@ -217,7 +217,7 @@
                                 <div class="col-md-4 col-12">
                                     <div class="flex flex-col align-items-center justify-content-center">
                                         <h4 class="font-size-16 text-primary">
-                                            Automate debit mandate workflow
+                                            Debit Mandate Transparency
                                         </h4>
 
                                         <p class="font-size-14 text-muted text-justify">
@@ -229,8 +229,8 @@
                                 </div>
 
                                 <div class="col-md-8 col-12">
-                                    <img src="{{ URL::asset('/assets/images/image1.png') }}" height="90%"
-                                        width="90%" />
+                                    <img src="{{ URL::asset('/assets/images/image2.png') }}"
+                                        width="100%" />
                                 </div>
                             </div>
                         </div>
@@ -252,8 +252,8 @@
                                 </div>
 
                                 <div class="col-md-8 col-12">
-                                    <img src="{{ URL::asset('/assets/images/image1.png') }}" height="90%"
-                                        width="90%" />
+                                    <img src="{{ URL::asset('/assets/images/image2.png') }}"
+                                        width="100%" />
                                 </div>
                             </div>
                         </div>
@@ -263,7 +263,7 @@
                                 <div class="col-md-4 col-12">
                                     <div class="flex flex-col align-items-center justify-content-center">
                                         <h4 class="font-size-16 text-primary">
-                                            Automate debit mandate workflow
+                                            Controlling all your debit mandate.
                                         </h4>
 
                                         <p class="font-size-14 text-muted text-justify">
@@ -275,8 +275,8 @@
                                 </div>
 
                                 <div class="col-md-8 col-12">
-                                    <img src="{{ URL::asset('/assets/images/image1.png') }}" height="90%"
-                                        width="90%" />
+                                    <img src="{{ URL::asset('/assets/images/image2.png') }}"
+                                        width="100%" />
                                 </div>
                             </div>
                         </div>
@@ -306,7 +306,7 @@
                     <div class="owl-carousel owl-theme clients-carousel" id="clients-carousel" dir="ltr">
                         <div class="item">
                             <div class="client-images">
-                                <img src="assets/images/clients/nmb_logo.jpeg" alt="partner-img"
+                                <img src="{{ URL::asset('/assets/images/clients/nmb_logo.jpeg') }}" alt="partner-img"
                                     class="mx-auto d-block">
                             </div>
                         </div>
