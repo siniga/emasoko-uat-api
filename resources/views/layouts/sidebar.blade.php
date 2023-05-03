@@ -19,7 +19,7 @@
                     <li>
                         <a href="{{ route('companies.index') }}" class="waves-effect">
                             <i class="bx bx-building"></i>
-                            <span key="t-layouts">Companies</span>
+                            <span key="t-layouts">Service Providers</span>
 
                             @php
                                 $notify = get_company_notification();

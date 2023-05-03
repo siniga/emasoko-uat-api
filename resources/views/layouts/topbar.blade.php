@@ -2,26 +2,22 @@
     <div class="navbar-header">
         <div class="d-flex">
             <!-- LOGO -->
-            <div class="navbar-brand-box bg-light-grey-1">
-                <a href="index" class="logo logo-dark">
-                    <span class="logo-sm font-size-20">
-                        e
-                        {{-- <img src="{{ URL::asset('/assets/images/logo.svg') }}" alt="" height="22"> --}}
+            <div class="navbar-brand-box bg-white">
+                <a href="#" class="logo logo-dark">
+                    <span class="logo-sm">
+                        <img src="{{ URL::asset('assets/images/emakato_logo_white.png') }}" alt="" height="22">
                     </span>
-                    <span class="logo-lg font-size-20">
-                        eMakato
-                        {{-- <img src="{{ URL::asset('/assets/images/logo-dark.png') }}" alt="" height="17"> --}}
+                    <span class="logo-lg">
+                        <img src="{{ URL::asset('assets/images/emakato_logo_white.png') }}" alt="" height="17">
                     </span>
                 </a>
 
-                <a href="index" class="logo logo-dark">
-                    <span class="logo-sm font-size-20">
-                        e
-                        {{-- <img src="{{ URL::asset('/assets/images/logo-light.svg') }}" alt="" height="22"> --}}
+                <a href="#" class="logo logo-light">
+                    <span class="logo-sm">
+                        <img src="{{ URL::asset('assets/images/emakato_logo_colored.png') }}" alt="" height="12">
                     </span>
-                    <span class="logo-lg font-size-20">
-                        eMakato
-                        {{-- <img src="{{ URL::asset('/assets/images/logo-light.png') }}" alt="" height="19"> --}}
+                    <span class="logo-lg">
+                        <img src="{{ URL::asset('assets/images/emakato_logo_colored.png') }}" alt="" height="32">
                     </span>
                 </a>
             </div>

@@ -68,11 +68,11 @@
                     <div class="text-white-50">
                         <h1 class="text-white fw-semibold mb-3 hero-title">
                             Aggregate, manage and monitor your <span
-                                class="font-weight-600 text-warning px-1">debit</span> <span
-                                class="font-weight-600 text-success px-1">mandate.</span>
+                                class="font-weight-600 text-warning px-1">payment</span> <span
+                                class="font-weight-600 text-success px-1">collections.</span>
                         </h1>
                         <p class="font-size-18 text-white">
-                            Enabling a seamless debit mandate ecosystem.
+                            Enabling a seamless payment collections experience.
                         </p>
 
                         <div class="d-flex flex-wrap gap-2 mt-4">
@@ -83,9 +83,9 @@
                     </div>
                 </div>
 
-                <div class="col-lg-6 col-md-8 col-sm-10 ms-lg-auto">
+                <div class="col-lg-6 col-md-8 col-sm-10 ms-lg-auto py-2">
                     <div class="card overflow-hidden">
-                        <img src="{{ URL::asset('/assets/images/image2.png') }}"  width="100%" />
+                        <img src="{{ URL::asset('/assets/images/image2.png') }}" width="100%" />
                     </div>
                 </div>
             </div>
@@ -102,7 +102,7 @@
                 <div class="col-lg-12">
                     <div class="text-center mb-5">
                         <div class="font-size-24 font-weight-600 pb-2">About eMakato</div>
-                        <h4 class="font-size-18 text-muted">What is eMakato?</h4>
+                        <h4 class="font-size-18 text-muted">A solution Designed and Developed by industry Practitioners.</h4>
                     </div>
                 </div>
             </div>
@@ -111,13 +111,14 @@
                 <div class="col-lg-6">
                     <div class="text-muted mb-4">
                         <p class="mb-2 font-size-16">
-                            Powerful tool for service providers to automate their debit mandate process, interfacing
-                            with
-                            their customers to promote a seamless debit mandate experience.
+                            A powerful tool for service providers and financial institutions to automate their debit
+                            mandate process, interfacing with their customers to promote a seamless debit mandate
+                            experience.
                         </p>
 
                         <p class="mb-2 font-size-16">
-                            Let your customers pay you in a more convenient and flexible manner.
+                            e-Makato is designed to make the entire process of debit mandates effortless, efficient, and
+                            secure, ensuring a seamless experience for both the institutions and their customers.
                         </p>
                     </div>
 
@@ -125,29 +126,39 @@
                         <h4 class="font-size-16">Our Solution</h4>
                         <p class="mb-2 font-size-14 text-muted ">
                             <i class="mdi mdi-checkbox-marked-circle text-primary"></i>
-                            Let your customers pay "small small".
-                        </p>
-
-                        <p class="mb-2 font-size-14 text-muted ">
-                            <i class="mdi mdi-checkbox-marked-circle text-primary"></i>
                             Automate payments without manual interventions.
                         </p>
 
                         <p class="mb-2 font-size-14 text-muted ">
                             <i class="mdi mdi-checkbox-marked-circle text-primary"></i>
-                            Track status of Direct Debit mandate activations.
+                            Track the status of Direct Debit mandate activations.
                         </p>
 
                         <p class="mb-2 font-size-14 text-muted ">
                             <i class="mdi mdi-checkbox-marked-circle text-primary"></i>
                             Enjoy real-time online access to reports of transactions.
                         </p>
+
+                        <p class="mb-2 font-size-14 text-muted ">
+                            <i class="mdi mdi-checkbox-marked-circle text-primary"></i>
+                            Increase security and save processing costs.
+                        </p>
+
+                        <p class="mb-2 font-size-14 text-muted ">
+                            <i class="mdi mdi-checkbox-marked-circle text-primary"></i>
+                            Reduce errors and processing time.
+                        </p>
+
+                        <p class="mb-2 font-size-14 text-muted ">
+                            <i class="mdi mdi-checkbox-marked-circle text-primary"></i>
+                            Enhance customer satisfaction by letting them pay in a more convenient and flexible manner.
+                        </p>
                     </div>
                 </div>
 
                 <div class="col-lg-6 ms-auto">
                     <div class="mt-4 mt-lg-0">
-                        <video width="100%" height="320" autoplay loop muted preload="auto"
+                        <video width="100%" height="360" autoplay loop muted preload="auto"
                             poster="https://cdn.twikey.net/img/v2/animatedimages/digitalmandate.jpg">
                             <source src="https://cdn.twikey.net/img/v2/animatedimages/digitalmandate.mp4"
                                 type="video/mp4">
@@ -170,9 +181,10 @@
                 <div class="col-lg-12">
                     <div class="text-center mb-5">
                         <div class="font-size-24 font-weight-600 pb-2">Our Solution</div>
-                        <h4 class="font-size-18 text-muted">The <span class="font-weight-600 text-dark">Service</span>
-                            that helps <span class="font-weight-600 text-dark">Growth </span> of your <span
-                                class="font-weight-600 text-dark"> Business.</span></h4>
+                        <h4 class="font-size-18 text-muted">Experience <span
+                                class="font-weight-600 text-dark">hassle-free payment collections</span>
+                            with us.
+                        </h4>
                     </div>
                 </div>
             </div>
@@ -184,27 +196,33 @@
                     <ul class="nav solutions-tabs nav-justified mb-4" role="tablist">
                         <li class="nav-item waves-effect waves-light">
                             <a class="nav-link active" data-bs-toggle="tab" href="#providers-1" role="tab">
-                                <span class="d-block d-sm-none"><i class="fas fa-home"></i></span>
-                                <span class="d-none d-sm-block font-size-20 font-weight-800">
+                                <span class="d-block d-sm-none font-size-14 font-weight-600">
                                     Customers
+                                </span>
+                                <span class="d-none d-sm-block font-size-20 font-weight-800">
+                                    <i class='bx bx-chevrons-down'></i> Customers
                                 </span>
                             </a>
                         </li>
 
                         <li class="nav-item waves-effect waves-light">
                             <a class="nav-link" data-bs-toggle="tab" href="#providers-2" role="tab">
-                                <span class="d-block d-sm-none"><i class="far fa-envelope"></i></span>
-                                <span class="d-none d-sm-block font-size-20 font-weight-800">
+                                <span class="d-block d-sm-none font-size-14 font-weight-600">
                                     Service Providers
+                                </span>
+                                <span class="d-none d-sm-block font-size-20 font-weight-800">
+                                    <i class='bx bx-chevrons-down'></i> Service Providers
                                 </span>
                             </a>
                         </li>
 
                         <li class="nav-item waves-effect waves-light">
                             <a class="nav-link" data-bs-toggle="tab" href="#institutions-1" role="tab">
-                                <span class="d-block d-sm-none"><i class="far fa-envelope"></i></span>
-                                <span class="d-none d-sm-block font-size-20 font-weight-800">
+                                <span class="d-block d-sm-none font-size-14 font-weight-600">
                                     Financial Institutions
+                                </span>
+                                <span class="d-none d-sm-block font-size-20 font-weight-800">
+                                    <i class='bx bx-chevrons-down'></i> Financial Institutions
                                 </span>
                             </a>
                         </li>
@@ -214,69 +232,104 @@
                     <div class="tab-content px-3 text-muted">
                         <div class="tab-pane active" id="providers-1" role="tabpanel">
                             <div class="row">
-                                <div class="col-md-4 col-12">
+                                <div class="col-md-5 col-12">
                                     <div class="flex flex-col align-items-center justify-content-center">
-                                        <h4 class="font-size-16 text-primary">
+                                        <h4 class="font-size-16 text-primary text-italic">
                                             Debit Mandate Transparency
                                         </h4>
 
                                         <p class="font-size-14 text-muted text-justify">
-                                            eMakato goal is to reduce processing time, processing cost, make your staff
-                                            less frustrated as well as as your client happy as being notified to consent
-                                            at every stage of debit mandate.
+                                            We make payments convenient and the process transparent. Customers are
+                                            informed about the details of your debit mandate before agreeing to it.
+                                        </p>
+                                        <p class="font-size-14 text-muted text-justify">
+                                            This includes the amount of money that will be debited, the frequency of
+                                            debits, and the date of each debit.
+                                        </p>
+
+                                        <p class="font-size-14 text-muted text-justify">
+                                            We also provide clear contact information, a cancellation policy, and other
+                                            relevant terms and conditions. We give customers the power to activate their
+                                            debit mandate through consent.
                                         </p>
                                     </div>
                                 </div>
 
-                                <div class="col-md-8 col-12">
-                                    <img src="{{ URL::asset('/assets/images/image2.png') }}"
-                                        width="100%" />
+                                <div class="col-md-7 col-12">
+                                    <img src="{{ URL::asset('/assets/images/image2.png') }}" width="100%" />
                                 </div>
                             </div>
                         </div>
 
                         <div class="tab-pane" id="providers-2" role="tabpanel">
                             <div class="row">
-                                <div class="col-md-4 col-12">
+                                <div class="col-md-5 col-12">
                                     <div class="flex flex-col align-items-center justify-content-center">
-                                        <h4 class="font-size-16 text-primary">
-                                            Automate debit mandate workflow
+                                        <h4 class="font-size-16 text-primary text-italic">
+                                            Automate Debit Mandate Workflow
                                         </h4>
 
                                         <p class="font-size-14 text-muted text-justify">
-                                            eMakato goal is to reduce processing time, processing cost, make your staff
-                                            less frustrated as well as as your client happy as being notified to consent
-                                            at every stage of debit mandate.
+                                            We help service providers automate the entire process of debit mandates,
+                                            from creating mandates, to storing them securely and processing them
+                                            seamlessly.</p>
+
+                                        <p class="font-size-14 text-muted text-justify">
+                                            The goal is to reduce processing time and cost and make staff
+                                            less frustrated by eliminating manual debit mandate activation and
+                                            management.</p>
+                                        <p class="font-size-14 text-muted text-justify">
+                                            We make mandate management a breeze for service providers while
+                                            increasing customer satisfaction through consented debits and a stress-free
+                                            experience.
                                         </p>
                                     </div>
                                 </div>
 
-                                <div class="col-md-8 col-12">
-                                    <img src="{{ URL::asset('/assets/images/image2.png') }}"
-                                        width="100%" />
+                                <div class="col-md-7 col-12">
+                                    <img src="{{ URL::asset('/assets/images/image2.png') }}" width="100%" />
                                 </div>
                             </div>
                         </div>
 
                         <div class="tab-pane" id="institutions-1" role="tabpanel">
                             <div class="row">
-                                <div class="col-md-4 col-12">
+                                <div class="col-md-5 col-12">
                                     <div class="flex flex-col align-items-center justify-content-center">
                                         <h4 class="font-size-16 text-primary">
-                                            Controlling all your debit mandate.
+                                            Streamline and Control All your Mandate
                                         </h4>
 
                                         <p class="font-size-14 text-muted text-justify">
-                                            eMakato goal is to reduce processing time, processing cost, make your staff
-                                            less frustrated as well as as your client happy as being notified to consent
-                                            at every stage of debit mandate.
+                                            Our product is designed to automate the debit mandate process, making it
+                                            faster, more efficient, and more accurate than ever before.
+                                        </p>
+
+                                        <p class="font-size-14 text-muted text-justify">With e-Makato,
+                                            financial institutions can easily manage mandates for direct debit payments,
+                                            including setting up new mandates, amending existing ones, and canceling
+                                            mandates when necessary.</p>
+
+                                        <p class="font-size-14 text-muted text-justify"> Say goodbye to the hassle of
+                                            manually processing mandates and hello to a streamlined process that saves
+                                            you time, effort, and
+                                            resources.</p>
+
+                                        <p class="font-size-14 text-muted text-justify">
+                                            With our solution, financial institutions reduce the time and
+                                            effort required to manage debit mandates while reducing the risk of errors
+                                            and fraud.</p>
+                                            
+                                        <p class="font-size-14 text-muted text-justify"> We also provide instant access
+                                            to reports of transactions and
+                                            customers' credit scores. Our innovation is easy to integrate, increases
+                                            security, saves costs, and enhances customer experience.
                                         </p>
                                     </div>
                                 </div>
 
-                                <div class="col-md-8 col-12">
-                                    <img src="{{ URL::asset('/assets/images/image2.png') }}"
-                                        width="100%" />
+                                <div class="col-md-7 col-12">
+                                    <img src="{{ URL::asset('/assets/images/image2.png') }}" width="100%" />
                                 </div>
                             </div>
                         </div>

@@ -44,49 +44,22 @@ use Illuminate\Support\Facades\Route;
 // Route::get('index/{locale}', [App\Http\Controllers\HomeController::class, 'lang']);
 
 
-Route::get('/', [FrontPageController::class, 'index'])->name('front-page');
-Route::get('request-for-information', [FrontPageController::class, 'request_for_information'])->name("request-for-information");
-Route::post('process-information', [FrontPageController::class, 'process_information'])->name("process-information");
-
+Route::get('/', [LoginController::class, 'showLoginForm'])->name('login');
 Route::get('auth/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 Route::get('index', [DashboardController::class, 'index'])->name('index');
 
-//registration of seller
-Route::get('register/{uuid?}', [RegisterController::class, 'registrationForm'])->name('company.register');
-Route::post('store-company-details', [RegisterController::class, 'storeCompanyDetails'])->name('company.store-company');
+// //track company registration
+// Route::get('track-company-registration', [RegisterController::class, 'trackCompanyRegistrationForm'])->name('company.track-registration');
+// Route::post('track-company-registration', [RegisterController::class, 'trackCompanyRegistration'])->name('company.track-registration');
 
-//company documents
-Route::get('company-documents/{uuid}', [RegisterController::class, 'companyDocumentsForm'])->name('company.register-documents');
-Route::post('store-company-documents', [RegisterController::class, 'storeCompanyDocuments'])->name('company.store-documents');
+// //verify company registration
+// Route::get('verify-company-registration/{uuid}', [RegisterController::class, 'verifyCompanyRegistrationForm'])->name('company.verify-registration');
+// Route::post('verify-company-registration/{uuid}', [RegisterController::class, 'verifyCompanyRegistration'])->name('company.verify-registration');
 
-//company accounts
-Route::get('company-accounts/{uuid}', [RegisterController::class, 'companyAccountForm'])->name('company.register-accounts');
-Route::post('store-company-accounts', [RegisterController::class, 'storeCompanyAccounts'])->name('company.store-accounts');
+// //success verification
+// Route::get('verify-company-registration-success', [RegisterController::class, 'verifyCompanyRegistrationSuccess'])->name('company.verify-registration-success');
 
-//company staff
-Route::get('company-staff/{uuid}', [RegisterController::class, 'companyStaffForm'])->name('company.register-staff');
-Route::post('store-company-staff', [RegisterController::class, 'storeCompanyStaff'])->name('company.store-staff');
-
-//company authorized person
-Route::get('company-authorized-person/{uuid}', [RegisterController::class, 'companyAuthorizedPersonForm'])->name('company.register-authorized-person');
-Route::post('store-company-authorized-person', [RegisterController::class, 'storeCompanyAuthorizedPerson'])->name('company.store-authorized-person');
-
-//company details overview
-Route::get('company-info-overview/{uuid}', [RegisterController::class, 'companyInfoOverview'])->name('company.info-overview');
-Route::get('cancel-company-registration/{uuid}', [RegisterController::class, 'cancelCompanyRegistration'])->name('company.cancel-registration');
-Route::post('confirm-company-registration', [RegisterController::class, 'confirmCompanyRegistration'])->name('company.confirm-registration');
-
-//track company registration
-Route::get('track-company-registration', [RegisterController::class, 'trackCompanyRegistrationForm'])->name('company.track-registration');
-Route::post('track-company-registration', [RegisterController::class, 'trackCompanyRegistration'])->name('company.track-registration');
-
-//verify company registration
-Route::get('verify-company-registration/{uuid}', [RegisterController::class, 'verifyCompanyRegistrationForm'])->name('company.verify-registration');
-Route::post('verify-company-registration/{uuid}', [RegisterController::class, 'verifyCompanyRegistration'])->name('company.verify-registration');
-
-//success verification
-Route::get('verify-company-registration-success', [RegisterController::class, 'verifyCompanyRegistrationSuccess'])->name('company.verify-registration-success');
 
 //account types
 Route::get('account-types/{id}', [AccountController::class, 'account_types'])->name('account-types');
@@ -110,8 +83,30 @@ Route::get('companies/{id}/delete', [CompanyController::class, 'destroy'])->name
 Route::get('companies/export-xls', [CompanyController::class, 'export_xls'])->name('companies.export-xls');
 Route::get('companies/export-pdf', [CompanyController::class, 'export_pdf'])->name('companies.export-pdf');
 
-Route::get('companies/create-info', [CompanyController::class, 'create_info'])->name('companies.create-info');
-Route::post('companies/store-info', [CompanyController::class, 'store-info'])->name('companies.store-info');
+//initi registration
+Route::get('companies/register/{uuid?}', [CompanyController::class, 'registrationForm'])->name('companies.registration');
+Route::post('companies/store-detail', [CompanyController::class, 'storeCompanyDetail'])->name('companies.store-detail');
+
+//company documents
+Route::get('companies/documents/{uuid}', [CompanyController::class, 'companyDocumentsForm'])->name('companies.register-documents');
+Route::post('companies/store-documents', [CompanyController::class, 'storeCompanyDocuments'])->name('companies.store-documents');
+
+//company accounts
+Route::get('companies/accounts/{uuid}', [CompanyController::class, 'companyAccountForm'])->name('companies.register-accounts');
+Route::post('companies/store-accounts', [CompanyController::class, 'storeCompanyAccounts'])->name('companies.store-accounts');
+
+//company staff
+Route::get('companies/staff/{uuid}', [CompanyController::class, 'companyStaffForm'])->name('companies.register-staff');
+Route::post('companies/store-staff', [CompanyController::class, 'storeCompanyStaff'])->name('companies.store-staff');
+
+//company authorized person
+Route::get('companies/authorized-person/{uuid}', [CompanyController::class, 'companyAuthorizedPersonForm'])->name('companies.register-authorized-person');
+Route::post('companies/store-authorized-person', [CompanyController::class, 'storeCompanyAuthorizedPerson'])->name('companies.store-authorized-person');
+
+//company details overview
+Route::get('companies/preview/{uuid}', [CompanyController::class, 'companyPreview'])->name('companies.preview');
+Route::get('companies/cancel-registration/{uuid}', [CompanyController::class, 'cancelRegistration'])->name('companies.cancel-registration');
+Route::post('companies/confirm-registration', [CompanyController::class, 'confirmRegistration'])->name('companies.confirm-registration');
 
 //customer accounts
 Route::any('customer-accounts/lists', [CustomerAccountController::class, 'lists'])->name('customer-accounts.lists');

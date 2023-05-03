@@ -109,7 +109,8 @@
                                                     <div class="col-lg-12">
                                                         <div class="mb-3">
                                                             <label>Message <span class="text-danger">*</span></label>
-                                                            <textarea name="message" x-model="formData.message" placeholder="Write message ..." class="form-control" rows="3" required></textarea>
+                                                            <textarea name="message" x-model="formData.message" placeholder="Write message ..." class="form-control" rows="3"
+                                                                required></textarea>
                                                             <div class="invalid-feedback">
                                                                 Message required
                                                             </div>
@@ -141,7 +142,7 @@
                                             document.write(new Date().getFullYear())
                                         </script>All rights reserved.
 
-                                       <br /> A product of <a href="#" class="text-muted">Solocodes</a>.
+                                        <br /> A product of <a href="#" class="text-muted">Solocodes</a>.
                                     </p>
                                 </div>
                             </div>

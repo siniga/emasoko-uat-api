@@ -8,7 +8,7 @@
     <meta content="e-Makato" name="description" />
     <meta content="Solocodes" name="author" />
     <!-- App favicon -->
-    <link rel="shortcut icon" href="{{ URL::asset('assets/images/favicon.ico') }}">
+    <link rel="shortcut icon" href="{{ URL::asset('assets/images/favicon.png') }}">
     @include('layouts.head-css')
 
     <!--./Alpine JS -->

@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Classes\CompanyAssessment;
 use App\Exports\CompanyExport;
 use App\Jobs\SendEmailJob;
+use App\Models\Account;
+use App\Models\AccountType;
 use App\Models\Country;
 use App\Models\DocumentCategory;
 use App\Models\Partner;
@@ -17,13 +19,15 @@ use App\Models\PartnerUser;
 use App\Models\Region;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Validator;
 use Stidges\CountryFlags\CountryFlag;
 use Maatwebsite\Excel\Facades\Excel;
-use PDF;
 use Illuminate\Support\Str;
+use PDF;
 
 class CompanyController extends Controller
 {
@@ -39,7 +43,7 @@ class CompanyController extends Controller
      */
     public function index(Request $request)
     {
-        $title = 'Subscribers';
+        $title = 'Service Providers';
         //has_allowed('roles', 'lists');
 
         //companies
@@ -192,17 +196,31 @@ class CompanyController extends Controller
     }
 
 
-    //company information
-    public function create_info()
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function store(Request $request)
+    {
+        //
+    }
+
+    //company registration
+    function registrationForm($uuid = null)
     {
         $title = 'Company Registration';
 
-        //company information
+        $flag = new CountryFlag;
+
+        //if uuid =! null
         $company = [];
+        if ($uuid != null)
+            $company = Partner::where(['uuid' => $uuid])->firstOrFail();
 
         //populate data
         $categories = PartnerCategory::all();
-        $flag = new CountryFlag;
         $countries = Country::all();
         $regions = Region::orderBy('name', 'ASC')->get();
 
@@ -212,11 +230,11 @@ class CompanyController extends Controller
         }
 
         //render view
-        return view('companies.create', compact('title', 'categories', 'arr_countries', 'regions', 'company'));
+        return view('companies.create.information', compact('title', 'categories', 'arr_countries', 'regions', 'company'));
     }
 
     //store company details
-    function store_info(Request $request)
+    function storeCompanyDetail(Request $request)
     {
         //validation 
         $validator = Validator::make($request->all(), [
@@ -259,20 +277,326 @@ class CompanyController extends Controller
         $partner->next_step = 'company-documents/' . $uuid;
         $partner->save();
 
-        //redirect
-        return Redirect::route('company.register-documents', $uuid)->with('success', "Company information saved!");
+        //registration
+        return Redirect::route('companies.register-documents', $uuid)->with('success', "Company documents saved!");
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
+    //company documents
+    function companyDocumentsForm($uuid)
     {
-        //
+        $title = 'Company Registration';
+
+        //company
+        $company = Partner::where(['uuid' => $uuid])->firstOrFail();
+
+        //document categories
+        $categories = DocumentCategory::all();
+
+        //assigned documents
+        $arr_documents = [];
+
+        if ($company->partnerDocuments->isNotEmpty()) {
+            foreach ($company->partnerDocuments as $val) {
+                array_push($arr_documents, $val->key);
+            }
+        }
+
+        //render view
+        return view('companies.create.documents', compact('title', 'company', 'categories', 'arr_documents'));
     }
+
+    //store company details
+    function storeCompanyDocuments(Request $request)
+    {
+        //validation 
+
+        //post data
+        $id = $request->input('partner_id');
+        $uuid = $request->input('partner_uuid');
+
+        //partner
+        $partner = Partner::findOrFail($id);
+        $partner->next_step = 'company-accounts/' . $uuid;
+        $partner->save();
+
+        //document categories
+        $categories = DocumentCategory::all();
+
+        foreach ($categories as $val) {
+            //business licennce
+            if ($request->hasFile($val->key)) {
+                $path = $request->file($val->key);
+                $docsName = $path->getClientOriginalName();
+
+                $path->move('assets/uploads/docs', $docsName);
+
+                //partner documents
+                $partner_document = PartnerDocument::firstOrNew([
+                    'partner_id' => $id,
+                    'partner_uuid' => $uuid,
+                    'key' => $val->key,
+                    'name' => $val->name
+                ]);
+                $partner_document->attachment = $docsName;
+                $partner_document->save();
+            }
+        }
+
+        //redirect
+        return Redirect::route('companies.register-accounts', $uuid)->with('success', "Company documents saved!");
+    }
+
+    //company Account
+    function companyAccountForm($uuid)
+    {
+        $title = 'Company Registration';
+
+        //company
+        $company = Partner::where(['uuid' => $uuid])->firstOrFail();
+
+        //populate data
+        $account_types = AccountType::all();
+        $accounts = Account::all();
+
+        //render view
+        return view('companies.create.accounts', compact('title', 'company', 'account_types', 'accounts'));
+    }
+
+    //store company accounts
+    function storeCompanyAccounts(Request $request)
+    {
+        //validation 
+
+        //post data
+        $id = $request->input('partner_id');
+        $uuid = $request->input('partner_uuid');
+
+        //partner
+        $partner = Partner::findOrFail($id);
+        $partner->next_step = 'company-staff/' . $uuid;
+        $partner->save();
+
+        //partner account
+        if ($request->input('account_id') != '' && $request->input('account_name') != '' && $request->input('account_number') != '') {
+            for ($i = 0; $i < sizeof($request->input('account_id')); $i++) {
+                if ($request->input('account_id')[$i] != '' && $request->input('account_name')[$i] != '' && $request->input('account_name')[$i] != '') {
+                    $partner_account = PartnerAccount::firstOrNew([
+                        'partner_id' => $id,
+                        'partner_uuid' => $uuid,
+                        'account_type_id' => $request->input('account_type_id')[$i],
+                        'account_id' => $request->input('account_id')[$i],
+                        'account_name' => $request->input('account_name')[$i],
+                        'account_number' => $request->input('account_number')[$i]
+                    ]);
+                    $partner_account->save();
+                }
+            }
+        }
+
+        //redirect
+        return Redirect::route('companies.register-staff', $uuid)->with('success', "Company collection account(s) saved!");
+    }
+
+
+    //company staff
+    function companyStaffForm($uuid)
+    {
+        $title = 'Company Registration';
+
+        //company
+        $company = Partner::where(['uuid' => $uuid])->firstOrFail();
+        $countries = Country::all();
+
+        //render view
+        return view('companies.create.staff', compact('title', 'company', 'countries'));
+    }
+
+
+    //store company staff
+    function storeCompanyStaff(Request $request)
+    {
+        //validation 
+
+        //post data
+        $id = $request->input('partner_id');
+        $uuid = $request->input('partner_uuid');
+
+        //partner
+        $partner = Partner::findOrFail($id);
+        $partner->next_step = 'company-authorized-person/' . $uuid;
+        $partner->save();
+
+        //partner staff
+        if ($request->input('staff_name') != '' && $request->input('nida_number') != '' && $request->input('staff_phone') != '' && $request->input('staff_title') != '') {
+            for ($i = 0; $i < sizeof($request->input('staff_name')); $i++) {
+                if ($request->input('staff_name')[$i] != '' && $request->input('nida_number')[$i] != '' && $request->input('staff_phone')[$i] != '' && $request->input('staff_title')[$i] != '') {
+                    $partner_staff = PartnerStaff::firstOrNew([
+                        'partner_id' => $id,
+                        'partner_uuid' => $uuid,
+                        'NIDA_number' => $request->input('nida_number')[$i],
+                        'name' => $request->input('staff_name')[$i],
+                        'phone' => $request->input('staff_phone')[$i],
+                        'email' => $request->input('staff_email')[$i],
+                        'title' => $request->input('staff_title')[$i],
+
+                    ]);
+                    $partner_staff->save();
+                }
+            }
+        }
+
+        //redirect
+        return Redirect::route('companies.register-authorized-person', $uuid)->with('success', "Company authorized personnel(s) saved!");
+    }
+
+
+    //authorized person
+    function companyAuthorizedPersonForm($uuid)
+    {
+        $title = 'Company Registration';
+
+        //company
+        $company = Partner::where(['uuid' => $uuid])->firstOrFail();
+
+        //render view
+        return view('companies.create.authorized_person', compact('title', 'company'));
+    }
+
+    //store company authorized person
+    function storeCompanyAuthorizedPerson(Request $request)
+    {
+        //validation 
+
+        //post data
+        $id = $request->input('partner_id');
+        $uuid = $request->input('partner_uuid');
+
+        //partner
+        $partner = Partner::findOrFail($id);
+        $partner->next_step = 'company-info-overview/' . $uuid;
+        $partner->save();
+
+        //token and password
+        $token = Str::random(64);
+        $password = $request->input('password');
+
+        //create user to store data
+        $user = User::firstOrNew(['email' => $request->input('email')]);
+        $user->name = $request->input('name');
+        $user->verify_token = $token;
+        $user->password = Hash::make($password);
+        $user->save();
+
+        //insert role
+        $user->roles()->attach(2);
+
+        //partner user
+        $partner_user = PartnerUser::firstOrNew([
+            'user_id' => $user->id,
+            'partner_id' => $id,
+            'partner_uuid' => $uuid
+        ]);
+        $partner_user->authorize = 1;
+        $partner_user->save();
+
+        //redirect
+        return Redirect::route('companies.preview', $uuid)->with('success', "Company authorized credentials saved!");
+    }
+
+    //company info overview
+    function companyPreview($uuid)
+    {
+        $title = 'Company Registration';
+
+        //company
+        $company = Partner::where(['uuid' => $uuid])->firstOrFail();
+
+        //render view
+        return view('companies.create.preview', compact('title', 'company'));
+    }
+
+    //confirm application
+    function confirmRegistration(Request $request)
+    {
+        //validation 
+
+        //post data
+        $id = $request->input('partner_id');
+        $uuid = $request->input('partner_uuid');
+
+        $complete = 0;
+        $status = 0;
+        $action = "";
+        if (isset($_POST['save'])) {
+            $status = 0;
+            $complete = 0;
+            $action = 'save';
+        } else if (isset($_POST['submit'])) {
+            $status = 1;
+            $complete = 1;
+            $action = 'submit';
+
+            //store company aapprovals
+            $arr_assessment_criteria = [
+                'Company_Information' => 'Company Information',
+                'Company_Documents' => 'Company Documents',
+                'Company_Collection_Accounts' => 'Company Collection Accounts',
+                'Company_Authorized_Representative' => 'Company Authorized Representative',
+            ];
+
+            foreach ($arr_assessment_criteria as $key => $label) {
+                $partner_approval = PartnerApproval::firstOrNew([
+                    'partner_id' => $id,
+                    'key' => $key,
+                    'label' => $label
+                ]);
+                $partner_approval->save();
+            }
+        }
+
+        //partner
+        $partner = Partner::findOrFail($id);
+        $partner->next_step = 'company-info-overview/' . $uuid;
+        $partner->complete = $complete;
+        $partner->status = $status;
+        $partner->save();
+
+        //redirect
+        if ($action == 'save')
+            return Redirect::route('companies.preview', $uuid)->with('success', 'Service provider information saved');
+        elseif ($action == 'submit')
+            return Redirect::route('companies.preview', $uuid)->with('success', 'Service provider registration complete');
+    }
+
+    //cancel registration
+    function cancelRegistration($uuid)
+    {
+        //company
+        $company = Partner::where(['uuid' => $uuid])->firstOrFail();
+
+        if ($del = $company->delete()) {
+            //delete partner accounts
+            PartnerAccount::where(['partner_id' => $company->id])->delete();
+
+            //delete partner approvals
+            PartnerApproval::where(['partner_id' => $company->id])->delete();
+
+            //delete partner docs
+            PartnerDocument::where(['partner_id' => $company->id])->delete();
+
+            //delete partner staff
+            PartnerStaff::where(['partner_id' => $company->id])->delete();
+
+            //delete partner users
+            PartnerUser::where(['partner_id' => $company->id])->delete();
+
+            //redirect
+            return Redirect::route('companies.index')->with('success', 'Company registration canceled');
+        } else {
+            return Redirect::route('companies.index')->with('danger', 'Failed to cancel company registration');
+        }
+    }
+
 
     /**
      * Display the specified resource.

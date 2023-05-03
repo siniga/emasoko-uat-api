@@ -1,7 +1,7 @@
 @extends('layouts.master')
 
 @section('title')
-    Companies
+    Service Providers
 @endsection
 
 @section('content')
@@ -10,7 +10,7 @@
             Dashboard
         @endslot
         @slot('title')
-            Companies
+            Service Providers
         @endslot
     @endcomponent
 
@@ -146,7 +146,7 @@
 
                         <div class="col-md-6">
                             <div class="text-sm-end d-none d-sm-block">
-                                <a class="btn btn-primary btn-sm" href="{{ route('companies.create-info') }}">
+                                <a class="btn btn-primary btn-sm" href="{{ route('companies.registration') }}">
                                     <i class="fas fa-plus"></i> Register
                                 </a>
 
