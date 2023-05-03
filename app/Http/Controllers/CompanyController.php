@@ -765,15 +765,15 @@ class CompanyController extends Controller
         $company = Partner::findOrFail($id);
 
         if ($page == 'companyInformation')
-            $view = 'companies.information_assessment';
+            $view = 'companies.assessment.information';
         else if ($page == 'companyDocuments')
-            $view = 'companies.documents_assessment';
+            $view = 'companies.assessment.documents';
         else if ($page == 'collectionAccount')
-            $view = 'companies.collection_account_assessment';
+            $view = 'companies.assessment.collection_account';
         else if ($page == 'authorizedRespesentative')
-            $view = 'companies.authorized_representative_assessment';
+            $view = 'companies.assessment.authorized_representative';
         else if ($page == 'ConfirmAssessment')
-            $view = 'companies.confirm_assessment';
+            $view = 'companies.assessment.confirm';
 
         //render view
         return view($view, compact('title', 'company'));

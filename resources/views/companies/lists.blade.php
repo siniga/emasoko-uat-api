@@ -202,12 +202,12 @@
                                             <td>
                                                 <a href="{{ route('companies.show', $company->id) }}" title="View"
                                                     class="btn btn-xss">
-                                                    <i class="bx bx-folder-open font-size-14"></i>
+                                                    <i class="bx bx-folder-open text-secondary font-size-14"></i>
                                                 </a>
 
                                                 <a href="{{ route('companies.edit', $company->id) }}" title="Edit"
                                                     class="btn btn-xss">
-                                                    <i class="bx bx-edit text-secondary font-size-14"></i>
+                                                    <i class="bx bx-edit  font-size-14"></i>
                                                 </a>
 
                                                 <a href="{{ route('companies.delete', $company->id) }}" title="Delete"
