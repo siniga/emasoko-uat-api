@@ -23,13 +23,13 @@
                         <div class="stepwizard-row setup-panel">
                             <div class="stepwizard-step">
                                 <a href="#step-1" type="button" class="btn btn-secondary btn-circle" disabled="disabled">1</a>
-                                <span>Deduction Channel</span>
+                                <span class="text-primary">Deduction Channel</span>
                             </div>
 
                             <div class="stepwizard-step">
                                 <a href="#step-2" type="button" class="btn btn-default btn-circle"
                                     disabled="disabled">2</a>
-                                <span>Customer Deduction Details</span>
+                                <span class="text-primary">Customer Deduction Details</span>
                             </div>
                         </div>
                     </div>

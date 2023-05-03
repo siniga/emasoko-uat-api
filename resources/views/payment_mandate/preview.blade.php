@@ -22,20 +22,20 @@
                     <div class="stepwizard mb-4">
                         <div class="stepwizard-row setup-panel">
                             <div class="stepwizard-step">
-                                <a href="#step-1" type="button" class="btn btn-success btn-circle" disabled="disabled">1</a>
-                                <span>Deduction Channel</span>
+                                <a href="#step-1" type="button" class="btn btn-success btn-circle text-white" disabled="disabled">1</a>
+                                <span class="text-success">Deduction Channel</span>
                             </div>
 
                             <div class="stepwizard-step">
-                                <a href="#step-2" type="button" class="btn btn-success btn-circle"
+                                <a href="#step-2" type="button" class="btn btn-success btn-circle text-white"
                                     disabled="disabled">2</a>
-                                <span>Customer Deduction Details</span>
+                                <span class="text-success">Customer Deduction Details</span>
                             </div>
 
                             <div class="stepwizard-step">
-                                <a href="#step-3" type="button" class="btn btn-secondary btn-circle"
+                                <a href="#step-3" type="button" class="btn btn-success btn-circle text-white"
                                     disabled="disabled">3</a>
-                                <span>Confirmation</span>
+                                <span class="text-success">Confirmation</span>
                             </div>
                         </div>
                     </div>

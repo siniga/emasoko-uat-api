@@ -24,7 +24,7 @@ use Illuminate\Support\Facades\Route;
 Route::post('contacts', [CompanyController::class, 'contacts']);
 
 //setup
-Route::get('categories', [CompanyController::class, 'categories']);
+Route::post('categories', [CompanyController::class, 'categories']);
 Route::get('document_categories', [CompanyController::class, 'document_categories']);
 Route::get('countries', [CompanyController::class, 'countries']);
 Route::get('regions', [CompanyController::class, 'regions']);
