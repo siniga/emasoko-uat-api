@@ -445,9 +445,12 @@ class PaymentMandateController extends Controller
         $mandate->status = 'submitted';
         $mandate->save();
 
+        //customer details
+        $customer_name = $mandate->customerAccount->account_name;
+
         //sending sms to customer
         $messageId = $this->messaging->generateMessageId();
-        $message = "eMakato imeweka makato yako, utatumiwa ujumbe wa kuhakiki taarifa zako.";
+        $message = "Habari {$customer_name}, eMakato imeweka makato yako, utatumiwa ujumbe wa kuhakiki taarifa zako.";
 
         $sms_log = SmsLog::firstOrNew([
             'message_id' => $messageId,
@@ -467,7 +470,7 @@ class PaymentMandateController extends Controller
         dispatch(new SendSMSJob($data));
 
         //response
-        $success_message = 'Debit mandate confirmed';
+        $success_message = "Debit mandate confirmed";
 
         //response
         return response()->json(['success' => false, 'success_msg' => $success_message], 200);
@@ -487,7 +490,7 @@ class PaymentMandateController extends Controller
         $mandate->save();
 
         //response
-        $success_message = "";
+        $success_message = "Debit mandate saved";
 
         //response
         return response()->json(['success' => false, 'success_msg' => $success_message], 200);

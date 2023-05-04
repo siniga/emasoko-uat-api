@@ -25,7 +25,8 @@ class Messaging
     //action to send notification
     function sendSMS($arr_data)
     {
-        $response = Http::get($this->API_BASE_URL ,[
+        $response = Http::get($this->API_BASE_URL ,
+        [
 			'api_id' => $this->API_ID,
 			'api_password' => $this->API_PASSWORD,
 			'sms_type'     =>'P',

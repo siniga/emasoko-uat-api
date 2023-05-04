@@ -50,7 +50,7 @@ class SendSMSJob implements ShouldQueue
 
         //iterate looping
         for ($i = 1; $i <= ceil($looping); $i++) {
-            $recipients = SmsLog::select('id', 'phone', 'schedule_at')->where(['message_id' => $messageId, 'status' => 'PENDING'])->take($limit)->get();
+            $recipients = SmsLog::select('id', 'phone', 'schedule_at', 'message')->where(['message_id' => $messageId, 'status' => 'PENDING'])->take($limit)->get();
 
             foreach ($recipients as $val) {
                 $arr_data = [
@@ -60,10 +60,20 @@ class SendSMSJob implements ShouldQueue
 
                 //post data
                 $response = $messaging->sendSMS($arr_data);
-                $result = json_decode($response);
+
+                //sms logs
+                $sms_log = SmsLog::findOrFail($val->id);
+
+                if ($response['status'] == 'F')
+                    $sms_log->status = "REJECTED";
+                elseif ($response['status'] == 'S')
+                    $sms_log->status = "SENT";
+
+                //update sms log status    
+                $sms_log->save();
 
                 Log::debug("SMS response");
-                Log::debug($result);
+                Log::debug($response);
             }
         }
     }
