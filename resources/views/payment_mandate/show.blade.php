@@ -5,14 +5,22 @@
 @endsection
 
 @section('content')
-    @component('components.breadcrumb')
-        @slot('li_1')
-            Dashboard
-        @endslot
-        @slot('title')
-            Summary of Payment Mandate
-        @endslot
-    @endcomponent
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0 font-size-18">Summary of Payment Mandate</h4>
+
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('payment-mandate.lists') }}">Payment Mandates</a></li>
+                    <li class="breadcrumb-item active">Summary</li>
+                </ol>
+            </div>
+
+        </div>
+    </div>
+</div>
 
     <div class="row">
         <div class="col-lg-12">
@@ -29,18 +37,9 @@
                     @endif
 
                     <div class="d-flex justify-content-between mb-2">
-                        <div>
-
-                        </div>
+                        <div></div>
 
                         <div class="text-sm-end d-none d-sm-block">
-                            @if ($debit_order->status == 'saved')
-                                <a href="{{ route('payment-mandate.preview', [$debit_order->customer_account_id, $debit_order->id]) }}"
-                                    title="Confirm Application" class="btn btn-outline-success text-medium btn-sm">
-                                    <i class='bx bxs-check-square font-size-12'></i> Confirm Application
-                                </a>
-                            @endif
-
                             {{-- <a href="#" title="Send Remainder" class="btn btn-outline-primary text-medium btn-sm">
                                 <i class="bx bxs-chat font-size-12"></i> Send Remainder
                             </a> --}}
@@ -63,50 +62,42 @@
                         <div class="col-lg-12">
                             <table class="table table-stripped table-bordered">
                                 <tr>
-                                    <th colspan="2" class="font-weight-600">
+                                    <td colspan="4" class="font-weight-600">
                                         Deduction Channel
-                                    </th>
-                                </tr>
-
-                                <tr>
-                                    <td width=25%>Payment Channel</td>
-                                    <td width=75%>
-                                        <span>{{ $debit_order->customerAccount->accountType->name ?? '' }}</span>
                                     </td>
                                 </tr>
 
                                 <tr>
+                                    <th width=25%>Payment Channel</th>
+                                    <td width=25%>
+                                        <span>{{ $debit_order->customerAccount->accountType->name ?? '' }}</span>
+                                    </td>
 
-                                    <td>Bank/MNO Name</td>
+                                    <th>Bank/MNO Name</th>
                                     <td>
                                         <span>{{ $debit_order->customerAccount->account->name ?? '' }}</span>
                                     </td>
                                 </tr>
 
                                 <tr>
-                                    <td>Name of Account Holder</td>
+                                    <th>Name of Account Holder</th>
                                     <td>
                                         <span>{{ $debit_order->customerAccount->account_name ?? '' }}</span>
                                     </td>
-                                </tr>
 
-                                <tr>
-
-                                    <td>Account Number</td>
+                                    <th>Account Number</th>
                                     <td>
                                         <span>{{ $debit_order->customerAccount->account_number ?? '' }}</span>
                                     </td>
                                 </tr>
 
                                 <tr>
-                                    <td>Phone <small>(Connected to Bank)</small></td>
+                                    <th>Phone (Connected to Bank)</th>
                                     <td>
                                         <span>{{ $debit_order->customerAccount->phone ?? '' }}</span>
                                     </td>
-                                </tr>
 
-                                <tr>
-                                    <td>Status</td>
+                                    <th>Status</th>
                                     <td>
                                         <span>
                                             @if ($debit_order->customerAccount->status == 'partial')
@@ -122,43 +113,39 @@
 
                                 @if ($debit_order->customerAccount->remarks)
                                     <tr>
-                                        <td>Remarks</td>
-                                        <td>
+                                        <th>Remarks</th>
+                                        <td colspan="3">
                                             <span>{{ $debit_order->customerAccount->remarks ?? '' }}</span>
                                         </td>
                                     </tr>
                                 @endif
                             </table>
                         </div>
-                        <!--./col -->
                     </div>
-                    <!--./row -->
 
                     <div class="row">
                         <div class="col-lg-12">
                             <table class="table table-bordered">
                                 <tr>
-                                    <th colspan="2" class="font-weight-600">
+                                    <td colspan="4" class="font-weight-600">
                                         Customer Deduction Information
-                                    </th>
-                                </tr>
-
-                                <tr>
-                                    <td width=25%>Loan Amount</td>
-                                    <td width=75%>
-                                        <span>{{ number_format($debit_order->total_amount) ?? '' }}</span>
                                     </td>
                                 </tr>
 
                                 <tr>
-                                    <td>Debit Type</td>
+                                    <th width=25%>Loan Amount</th>
+                                    <td width=25%>
+                                        <span>{{ number_format($debit_order->total_amount) ?? '' }}</span>
+                                    </td>
+                                
+                                    <th>Debit Type</th>
                                     <td>
                                         <span>{{ $debit_order->debit_type ?? '' }}</span>
                                     </td>
                                 </tr>
 
                                 <tr>
-                                    <td>Installment Amount</td>
+                                    <th>Installment Amount</th>
                                     <td>
                                         <span>
                                             @if ($debit_order->debit_type == 'FIXED')
@@ -171,38 +158,20 @@
                                             @endif
                                         </span>
                                     </td>
-                                </tr>
 
-                                <tr>
-                                    <td>Peridiocity</td>
+                                    <th>Peridiocity</th>
                                     <td>
                                         <span>{{ $debit_order->periodicity }}</span>
                                     </td>
                                 </tr>
 
                                 <tr>
-                                    <td>Number of Deduction</td>
+                                    <th>Number of Deduction</th>
                                     <td>
                                         <span>{{ $debit_order->installment_number ?? '' }}</span>
                                     </td>
-                                </tr>
 
-                                <tr>
-                                    <td>Deduction Start Date</td>
-                                    <td>
-                                        <span>{{ date('d-m-Y', strtotime($debit_order->start_date)) }}</span>
-                                    </td>
-                                </tr>
-
-                                <tr>
-                                    <td>Deduction End Date</td>
-                                    <td>
-                                        <span>{{ date('d-m-Y', strtotime($debit_order->end_date)) }}</span>
-                                    </td>
-                                </tr>
-
-                                <tr>
-                                    <td>Evidence of Aggrement</td>
+                                    <th>Evidence of Aggrement</th>
                                     <td>
                                         <span>
                                             @if ($debit_order->evidence_of_aggrement != null)
@@ -216,10 +185,22 @@
                                         </span>
                                     </td>
                                 </tr>
-
                                 <tr>
-                                    <td>Consent Status</td>
+                                    <th>Deduction Start Date</th>
                                     <td>
+                                        <span>{{ date('d-m-Y', strtotime($debit_order->start_date)) }}</span>
+                                    </td>
+                                
+                                    <th>Deduction End Date</th>
+                                    <td>
+                                        <span>{{ date('d-m-Y', strtotime($debit_order->end_date)) }}</span>
+                                    </td>
+                                </tr>
+
+                                
+                                <tr>
+                                    <th>Consent Status</th>
+                                    <td colspan="3">
                                         @if ($debit_order->approved == 0)
                                             <span class="badge badge-pill badge-soft-danger">Pending</span>
                                         @elseif($debit_order->approved == 1)
@@ -242,10 +223,10 @@
         <!--./col -->
     </div>
     <!-- end row -->
-
-    <div id="offcanvas-wrp"></div>
-    <!--./offcanvas -->
 @endsection
+
+{{-- <div id="offcanvas-wrp"></div> --}}
+<!--./offcanvas -->
 
 @section('script')
     <script type="text/javascript">

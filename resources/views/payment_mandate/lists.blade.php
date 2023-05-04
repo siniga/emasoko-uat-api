@@ -153,6 +153,15 @@
 
                                 <div class="col-md-6">
                                     <div class="text-sm-end d-none d-sm-block">
+                                        <a class="btn btn-primary btn-sm"
+                                            href="{{ route('payment-mandate.create-account') }}">
+                                            <i class="fas fa-plus"></i> Create New
+                                        </a>
+
+                                        {{-- <a class="btn btn-secondary btn-sm" href="{{ route('companies.registration') }}">
+                                            <i class="fas fa-upload"></i> Import
+                                        </a> --}}
+
                                         <a title="Export" class="btn btn-outline-success btn-sm"
                                             href="{{ route('payment-mandate.export-xls', ['start_at' => $start_at, 'end_at' => $end_at, 'account_type_id' => $account_type_id, 'account_id' => $account_id, 'status' => $status, 'keyword' => $keyword]) }}">
                                             <i class="bx bx-export"></i> Export XLS
@@ -207,27 +216,27 @@
                                             </td>
 
                                             <td>
-                                                <a href="{{ route('payment-mandate.show', $values->id) }}" title="View"
-                                                    class="btn btn-xss">
-                                                    <i class="bx bx-folder-open text-primary font-size-14"></i>
-                                                </a>
-
                                                 @if ($values->status == 'saved')
                                                     <a href="{{ route('payment-mandate.preview', [$values->customerAccount->id, $values->id]) }}"
                                                         title="Confirm Application" class="btn btn-xss">
-                                                        <i class='bx bxs-check-square font-size-14'></i>
+                                                        <i class='bx bxs-check-square bx-xs text-success'></i>
                                                     </a>
                                                 @endif
+
+                                                <a href="{{ route('payment-mandate.show', $values->id) }}" title="View"
+                                                    class="btn btn-xss">
+                                                    <i class="bx bxs-folder-open text-primary"></i>
+                                                </a>
 
                                                 @if ($values->approved == 0)
                                                     <a href="{{ route('payment-mandate.edit', $values->id) }}"
                                                         title="Edit" class="btn btn-xss">
-                                                        <i class="bx bx-edit text-secondary font-size-14"></i>
+                                                        <i class="bx bx-edit text-secondary"></i>
                                                     </a>
 
                                                     <a href="{{ route('payment-mandate.delete', $values->id) }}"
                                                         title="Delete" class="btn btn-xss delete">
-                                                        <i class="bx bx-trash text-danger font-size-14"></i>
+                                                        <i class="bx bx-trash text-danger"></i>
                                                     </a>
                                                 @endif
                                             </td>

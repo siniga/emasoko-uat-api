@@ -156,7 +156,7 @@ Route::post('payment-mandate/saving', [PaymentMandateController::class, 'saving'
 Route::get('payment-mandate/{id}/show', [PaymentMandateController::class, 'show'])->name('payment-mandate.show');
 Route::get('payment-mandate/{id}/edit', [PaymentMandateController::class, 'edit'])->name('payment-mandate.edit');
 Route::put('payment-mandate/{id}/update', [PaymentMandateController::class, 'update'])->name('payment-mandate.update');
-Route::post('payment-mandate/{id}/delete', [PaymentMandateController::class, 'destroy'])->name('payment-mandate.delete');
+Route::get('payment-mandate/{id}/delete', [PaymentMandateController::class, 'destroy'])->name('payment-mandate.delete');
 
 Route::get('payment-mandate/send-remainder/{id}', [PaymentMandateController::class, 'sendRemainder'])->name('payment-mandate.send-remainder');
 

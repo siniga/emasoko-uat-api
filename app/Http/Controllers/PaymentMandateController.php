@@ -649,6 +649,8 @@ class PaymentMandateController extends Controller
         //delete debit order
         $debit_order->delete();
 
+        
+
         //redirect
         return Redirect::route('payment-mandate.lists')->with('danger', 'Payment mandate deleted!');
     }

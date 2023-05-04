@@ -53,14 +53,8 @@
                         <input type="hidden" name="mandate_id" x-model="formData.mandate_id">
 
                         <section>
-                            <!--./row -->
-                            <div class="row mt-4">
-                                <div class="col-lg-12">
-                                    <h5 class="text-capitalize">Summary of Payment Mandate</h5>
-                                    <hr />
-                                </div>
-                            </div>
-
+                            <div id="message_wrp"></div>
+                            
                             <!--./row -->
                             <div class="row">
                                 <div class="col-lg-12">
@@ -208,7 +202,7 @@
                                 </div>
                             </template>
 
-                            <div id="message_wrp"></div>
+                            
                         </section>
                     </form>
                 </div>
