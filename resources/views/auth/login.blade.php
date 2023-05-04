@@ -9,37 +9,25 @@
         <div class="container">
             <div class="row justify-content-center">
                 <div class="col-md-8 col-lg-6 col-xl-5">
+
                     <div class="card overflow-hidden">
-                        <div class="bg-primary bg-soft">
+                        <div class="bg-white">
                             <div class="row">
                                 <div class="col-12">
-                                    <div class="text-primary p-4">
-                                        <h5 class="text-primary">Login to your eMakato account!</h5>
-                                        <p>Please provide your credentials.</p>
+                                    <div class="text-center py-2">
+                                        <img src="{{ URL::asset('assets/images/emakato_logo_colored.png') }}" alt="" height="48">
+                                    </div>
+
+                                    
+                                    <div class="text-center">
+                                        <h5 class="text-gray-800 font-size-18">Login to your eMakato account!</h5>
+                                        <p class="text-muted font-size-14">Please provide your credentials.</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="card-body pt-0">
-                            <div class="auth-logo">
-                                <a href="{{ url('') }}" class="auth-logo-light">
-                                    <div class="avatar-md profile-user-wid mb-4">
-                                        <span class="avatar-title rounded-circle bg-light">
-                                            <img src="{{ URL::asset('/assets/images/logo-light.svg') }}" alt=""
-                                                class="rounded-circle" height="34">
-                                        </span>
-                                    </div>
-                                </a>
 
-                                <a href="{{ url('') }}" class="auth-logo-dark">
-                                    <div class="avatar-md profile-user-wid mb-4">
-                                        <span class="avatar-title rounded-circle bg-light">
-                                            <img src="{{ URL::asset('/assets/images/logo.svg') }}" alt=""
-                                                class="rounded-circle" height="34">
-                                        </span>
-                                    </div>
-                                </a>
-                            </div>
+                        <div class="card-body pt-0">
 
                             <div class="p-2">
                                 @if (session()->get('success'))
