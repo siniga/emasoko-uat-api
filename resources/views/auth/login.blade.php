@@ -14,7 +14,7 @@
                         <div class="bg-white">
                             <div class="row">
                                 <div class="col-12">
-                                    <div class="text-center py-2">
+                                    <div class="text-center py-2 mb-4">
                                         <img src="{{ URL::asset('assets/images/emakato_logo_colored.png') }}" alt="" height="48">
                                     </div>
 
