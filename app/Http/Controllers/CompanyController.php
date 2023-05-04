@@ -277,7 +277,7 @@ class CompanyController extends Controller
         $partner->next_step = 'company-documents/' . $uuid;
         $partner->save();
 
-        //registration
+        //redirect
         return Redirect::route('companies.register-documents', $uuid)->with('success', "Company documents saved!");
     }
 

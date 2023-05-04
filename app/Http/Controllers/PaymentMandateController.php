@@ -19,8 +19,12 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Classes\Messaging;
+use App\Http\Requests\CustomerAccountRequest;
+use App\Http\Requests\CustomerDeductionRequest;
 use App\Jobs\SendSMSJob;
+use App\Models\CustomerPartner;
 use App\Models\SmsLog;
+use Illuminate\Support\Facades\Session;
 use PDF;
 
 class PaymentMandateController extends Controller
@@ -186,163 +190,162 @@ class PaymentMandateController extends Controller
     }
 
 
-
     //payment details form
-    function create_account($id = null, $do_id = null)
+    function create_account($ca_id = null, $mandate_id = null)
     {
         $title = "Payment Mandate";
 
         //customer account
         $customer_account = [];
-        if ($id != null) {
-            $customer_account = CustomerAccount::where(['id' => $id])->first();
-        }
+        if ($ca_id != null)
+            $customer_account = CustomerAccount::where(['id' => $ca_id])->first();
 
         //payment mandate
         $debit_order = [];
-        if ($do_id != null) {
-            $debit_order = DebitOrder::where(['id' => $do_id])->first();
-        }
+        if ($mandate_id != null)
+            $debit_order = DebitOrder::where(['id' => $mandate_id])->first();
+
+        //service provider
+        $partner = PartnerUser::where(['user_id' => Auth::user()->id])->first();
 
         //populate data
         $account_types = AccountType::all();
         $accounts = Account::all();
 
         //render view
-        return view('payment_mandate.create_account_form', compact('title', 'customer_account', 'debit_order', 'account_types', 'accounts'));
+        return view('payment_mandate.create.account_form', compact('title', 'customer_account', 'debit_order', 'account_types', 'accounts', 'partner'));
     }
 
     //store payment details
-    function store_account(Request $request)
+    function store_account(CustomerAccountRequest $request)
     {
-        //validation 
-        $validator = Validator::make(
-            $request->all(),
-            [
-                'account_type_id' => 'required',
-                'account_id' => 'required',
-                'account_name' => 'required_if:account_type_id,1',
-                'account_number' => 'required_if:account_type_id,1',
-                'phone' => new PhoneNumber(),
-                'account_number_phone' => new PhoneNumber(),
-            ],
-            [
-                'account_type_id.required' => 'Payment channel required',
-                'account_id.required' => 'Bank/MNO name required',
-                'account_name.required_if' => 'Name of account holder required',
-                'account_number.required_if' => 'Account number required',
-                'phone.required_if' => 'Phone connected to bank required',
-                'account_number_phone.required_if' => 'MNO Phone required',
-            ]
-        );
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
-        }
+        // validated request
+        $validated = $request->validated();
 
         //customer account ID and debit order ID
-        $id = $request->input('id');
-        $debit_order_id = $request->input('do_id');
+        $ca_id = $request->input('customer_account_id');
+        $debit_order_id = $request->input('debit_order_id');
+        $partner_id = $request->input('partner_id');
 
         //unique phone
-        if ($request->input('account_type_id') == 1) {
-            $unique_phone = casting_phone($request->input('phone'));
+        if ($validated['account_type_id'] == 1) {
+            $unique_phone = casting_phone($validated['phone']);
         } else if ($request->input('account_type_id') == 2) {
-            $unique_phone =  casting_phone($request->input('account_number_phone'));
+            $unique_phone =  casting_phone($validated['account_number_phone']);
         }
 
-        //register customer
+        //TODO: validate phone number to MNO for matching details
+
+
+        //create or update customer
         $customer = Customer::firstOrNew([
             'phone' => $unique_phone,
         ]);
-        $customer->fullname = strtoupper($request->input('account_name'));
+        $customer->fullname = strtoupper($validated['account_name']);
         $customer->email = $request->input('email');
         $customer->id_number = $request->input('nida_number');
         $customer->address = $request->input('address');
         $customer->created_by = Auth::user()->id;
         $customer->save();
 
-        //save or update account details
+        //Link customer with service provider
+        $customer_partner = CustomerPartner::firstOrNew(
+            [
+                'customer_id' => $customer->id,
+                'partner_id' => $partner_id
+            ]
+        );
+        $customer_partner->created_by = Auth::user()->id;
+        $customer_partner->save();
+
+        //create or update customer account
         $customer_account = CustomerAccount::firstOrNew([
-            'account_type_id' => $request->input('account_type_id'),
-            'account_id' => $request->input('account_id'),
+            'account_type_id' => $validated['account_type_id'],
+            'account_id' => $validated['account_id'],
             'phone' => $unique_phone
         ]);
-        $customer_account->account_name = $request->input('account_name');
-        $customer_account->account_number = $request->input('account_number');
+        $customer_account->account_name = $validated['account_name'];
+        $customer_account->account_number = $validated['account_number'];
         $customer_account->customer_id = $customer->id;
         $customer_account->created_by = Auth::user()->id;
         $customer_account->save();
 
-        //response
-        return response()->json(["success" => true, "id" => $customer_account->id, "do_id" => $debit_order_id, "success_msg" => "Customer deduction channel saved successfully!"], 200);
+        //redirect with message
+        return Redirect::route('payment-mandate.create-deduction', [$customer_account->id, $debit_order_id])->with('success', "Customer deduction channel saved!");
     }
 
+
     //deduction information
-    function create_deduction_info($id, $do_id = null)
+    function create_deduction($ca_id, $mandate_id = null)
     {
         $title = "Payment Mandate";
 
         //customer account
-        $customer_account = CustomerAccount::findOrFail($id);
+        $customer_account = CustomerAccount::findOrFail($ca_id);
 
         //debit order
         $debit_order = [];
-        if ($do_id != null) {
-            $debit_order = DebitOrder::where(['id' => $do_id])->first();
-        }
+        if ($mandate_id != null)
+            $debit_order = DebitOrder::where(['id' => $mandate_id])->firstOrFail();
 
         //render view
-        return view('payment_mandate.create_deduction_info_form', compact('title', 'customer_account', 'debit_order'));
+        return view('payment_mandate.create.deduction_form', compact('title', 'customer_account', 'debit_order'));
     }
 
     //store deduction information
-    function store_deduction_info(Request $request)
+    function store_deduction(Request $request)
     {
+        //mandate post data
         $loan_amount = floatval(str_replace(',', '', $request->input('loan_amount')));
         $installment_amount = floatval(str_replace(',', '', $request->input('installment_amount')));
         $min_installment_amount = floatval(str_replace(',', '', $request->input('min_installment_amount')));
         $max_installment_amount = floatval(str_replace(',', '', $request->input('max_installment_amount')));
 
         //Validate your data
-        $validator = Validator::make($request->all(), [
-            'installment_amount' => [
-                'required_if:debit_type,==,FIXED'
-            ],
-            'min_installment_amount' => [
-                'required_if:debit_type,==,DYNAMIC'
-            ],
-            'max_installment_amount' => [
-                'required_if:debit_type,==,DYNAMIC',
-                function ($attribute, $value, $fail) use ($min_installment_amount, $max_installment_amount) {
-                    if ($min_installment_amount > $max_installment_amount) {
-                        return $fail('Maximum deduction should not be less than minimum deduction amount');
+        $this->validate(
+            $request,
+            [
+                'loan_amount' => 'required',
+                'debit_type' => 'required',
+                'periodicity' => 'required',
+                'number_of_installment' => 'required',
+                'start_date' => 'required',
+                'deduction_end' => 'required',
+                'installment_amount' => 'required_if:debit_type,==,FIXED',
+                'end_date' => 'required_if:deduction_end,==,specificDate',
+                'min_installment_amount' => 'required_if:debit_type,==,DYNAMIC',
+                'max_installment_amount' => [
+                    'required_if:debit_type,==,DYNAMIC',
+                    function ($attribute, $value, $fail) use ($min_installment_amount, $max_installment_amount) {
+                        if ($min_installment_amount > $max_installment_amount) {
+                            return $fail('Maximum deduction should not be less than minimum deduction amount');
+                        }
                     }
-                }
+                ],
+            ],
+            [
+                'loan_amount.required' => 'Loan amount required',
+                'debit_type.required' => 'Debit type required',
+                'installment_amount.required_if' => 'Installment amount required',
+                'min_installment_amount.required_if' => 'Minimum installment amount required',
+                'max_installment_amountrequired_if' => 'Maximum installment amount required',
+                'periodicity.required' => 'Periodicity required',
+                'number_of_installment.required' => 'Number of installment required',
+                'start_date.required' => 'Start date required',
+                'deduction_end.required' => 'Deduction end required',
+                'end_date.required_if' => 'End date required',
             ]
-
-        ]);
-
-        if ($validator->fails()) {
-            //return response
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 400);
-        }
+        );
 
         //customer account id
-        $id = $request->input('id');
-        $debit_order_id = $request->input('do_id');
+        $ca_id = $request->input('customer_account_id');
+        $debit_order_id = $request->input('debit_order_id');
 
         //customer account
-        $customer_account = CustomerAccount::findOrFail($id);
+        $customer_account = CustomerAccount::findOrFail($ca_id);
 
         //partner user
-        $p_user = PartnerUser::where(['user_id' => Auth::user()->id])->first();
+        $partner_user = PartnerUser::where(['user_id' => Auth::user()->id])->first();
 
         //create or update debit order
         if ($debit_order_id != null) {
@@ -353,31 +356,25 @@ class PaymentMandateController extends Controller
             } else {
                 $debit_order = DebitOrder::firstOrNew([
                     'customer_account_id' => $customer_account->id,
-                    'partner_id' => $p_user->partner_id,
+                    'partner_id' => $partner_user->partner_id,
                     'approved' => 0
                 ]);
             }
         } else {
             $debit_order = DebitOrder::firstOrNew([
                 'customer_account_id' => $customer_account->id,
-                'partner_id' => $p_user->partner_id,
+                'partner_id' => $partner_user->partner_id,
                 'approved' => 0
             ]);
         }
 
         $debit_order->uuid = Str::uuid();
-        $debit_order->total_amount = floatval(str_replace(",", "", $request->input('loan_amount')));
+        $debit_order->total_amount = $loan_amount;
         $debit_order->debit_type = $request->input('debit_type');
-
-        //check for installment amount
-        if ($request->input('debit_type') == 'FIXED') {
-            $debit_order->installment_amount = floatval(str_replace(",", "", $request->input('installment_amount')));
-        } else if ($request->input('debit_type') == 'DYNAMIC') {
-            $debit_order->max_installment_amount = floatval(str_replace(",", "", $request->input('max_installment_amount')));
-            $debit_order->min_installment_amount = floatval(str_replace(",", "", $request->input('min_installment_amount')));
-        }
-
-        $debit_order->periodicity = $request->input('peridiocity');
+        $debit_order->installment_amount = $installment_amount;
+        $debit_order->max_installment_amount = $min_installment_amount;
+        $debit_order->min_installment_amount = $max_installment_amount;
+        $debit_order->periodicity = $request->input('periodicity');
         $debit_order->installment_number = $request->input('number_of_installment');
         $debit_order->start_date = $request->input('start_date');
         $debit_order->deduction_end_date = $request->input('deduction_end');
@@ -388,7 +385,7 @@ class PaymentMandateController extends Controller
             $debit_order->end_date = date('Y-m-d', strtotime($request->input('start_date') . '+2 year'));
         } else if ($request->input('deduction_end') == 'specificDate') {
             //fixed end date
-            $debit_order->end_date = $request->input('end_date');
+            $debit_order->end_date = $$request->input('end_date');
         }
 
         //evidence_of_aggrement attached
@@ -401,35 +398,32 @@ class PaymentMandateController extends Controller
         }
         $debit_order->save();
 
-        //response
-        return response()->json(['success' => true, "id" => $customer_account->id, "do_id" => $debit_order->id,  "success_msg" => "Payment mandate successully saved!"], 200);
+        //redirect with message
+        return Redirect::route('payment-mandate.preview', [$customer_account->id, $debit_order->id])->with('success', "Customer deduction details saved!");
     }
 
     //customer preview
-    function preview($id, $do_id)
+    function preview($ca_id, $mandate_id)
     {
         $title = "Payment Mandate";
 
         //customer account
-        $customer_account = CustomerAccount::findOrFail($id);
+        $customer_account = CustomerAccount::findOrFail($ca_id);
 
         //debit order
-        $debit_order = DebitOrder::findOrFail($do_id);
+        $debit_order = DebitOrder::findOrFail($mandate_id);
 
         //render view
-        return view('payment_mandate.preview', compact('title', 'customer_account', 'debit_order'));
+        return view('payment_mandate.create.preview', compact('title', 'customer_account', 'debit_order'));
     }
 
     //cancel registration
-    function cancel($id, $do_id)
+    function cancel($mandate_id)
     {
         $title = 'Cancel payment mandate';
 
-        //customer account
-        $customer_account = CustomerAccount::findOrFail($id);
-
         //debit order
-        $debit_order = DebitOrder::findOrFail($do_id);
+        $debit_order = DebitOrder::findOrFail($mandate_id);
 
         //delete debit order
         $debit_order->delete();
@@ -442,65 +436,61 @@ class PaymentMandateController extends Controller
     function confirm(Request $request)
     {
         //post data
-        $id = $request->input('id');
-        $debit_order_id = $request->input('do_id');
-
-        //customer account
-        $customer_account = CustomerAccount::findOrFail($id);
+        $mandate_id = $request->input('mandate_id');
 
         //debit order
-        $debit_order = DebitOrder::findOrFail($debit_order_id);
+        $mandate = DebitOrder::findOrFail($mandate_id);
 
-        //change statatus
-        $status = 'saved';
-        if (isset($_POST['save'])) {
-            $status = 'saved';
-            $action = 'save';
-            $message = 'Payment mandate information saved!';
-        } else if (isset($_POST['submit'])) {
-            $status = 'submitted';
-            $action = 'submit';
-            $message = 'Payment mandate registration complete, waiting for consent from customer!. <br /><br />Do you want to create new payment mandate?';
+        //update status of debit mandate
+        $mandate->status = 'submitted';
+        $mandate->save();
 
-            //message id
-            $messageId = $this->messaging->generateMessageId();
+        //sending sms to customer
+        $messageId = $this->messaging->generateMessageId();
+        $message = "eMakato imeweka makato yako, utatumiwa ujumbe wa kuhakiki taarifa zako.";
 
-            //save to database
-            $sms_log = SmsLog::firstOrNew([
-                'message_id' => $messageId,
-                'phone' => $customer_account->phone,
-                'sender' => "TAARIFA"
-            ]);
-            $sms_log->message = $message;
-            $sms_log->sms_count = 1;
-            $sms_log->created_by = Auth::user()->id;
-            $sms_log->save();
+        $sms_log = SmsLog::firstOrNew([
+            'message_id' => $messageId,
+            'phone' => $mandate->customerAccount->phone,
+            'sender' => "LAINA"
+        ]);
+        $sms_log->message = $message;
+        $sms_log->sms_count = 1;
+        $sms_log->created_by = Auth::user()->id;
+        $sms_log->save();
 
-            //call background job for sending direct sms
-            $data = [
-                "schedule" => null,
-                "message_id" => $messageId,
-                "sender" => "TAARIFA",
-                "message" => "eMakato imeweka makato yako, utatumiwa ujumbe wa kuhakiki taarifa zako."
-            ];
-            dispatch(new SendSMSJob($data));
-
-            // //send sms
-            // $response = Http::post(
-            //     'https://portal.lainafinance.co.tz/api/send-sms',
-            //     [
-            //         'phone' => $customer_account->phone,
-            //         'msg' => "Laina Finance imeweka makato yako"
-            //     ]
-            // );
-        }
-
-        //update status of payment mandate
-        $debit_order->status = $status;
-        $debit_order->save();
+        //send sms in background
+        $data = [
+            "message_id" => $messageId,
+            "schedule" => null
+        ];
+        dispatch(new SendSMSJob($data));
 
         //response
-        return response()->json(['success' => true, 'action' => $action, 'success_msg' => $message], 200);
+        $success_message = 'Debit mandate confirmed';
+
+        //response
+        return response()->json(['success' => false, 'success_msg' => $success_message], 200);
+    }
+
+    //saving application
+    function saving(Request $request)
+    {
+        //post data
+        $mandate_id = $request->input('mandate_id');
+
+        //debit order
+        $mandate = DebitOrder::findOrFail($mandate_id);
+
+        //update status of debit mandate
+        $mandate->status = 'saved';
+        $mandate->save();
+
+        //response
+        $success_message = "";
+
+        //response
+        return response()->json(['success' => false, 'success_msg' => $success_message], 200);
     }
 
 

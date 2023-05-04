@@ -2,48 +2,39 @@
 
 namespace App\Classes;
 
+use Illuminate\Support\Facades\Http;
+
 class Messaging
 {
     private $API_BASE_URL;
     private $API_DELIVERY_URL;
-    private $API_KEY;
-    private $SECRET_KEY;
+    private $API_ID;
+    private $API_PASSWORD;
     private $M_CODE;
 
     public function __construct()
     {
-        $this->API_BASE_URL = 'https://apisms.beem.africa/v1/send';
-        $this->API_DELIVERY_URL = 'https://dlrapi.beem.africa/public/v1/delivery-reports';
+        $this->API_BASE_URL = 'https://api.sema.co.tz/api/SendSMS';
+        $this->API_DELIVERY_URL = '';
 
-        $this->API_KEY = env('API_KEY');
-        $this->SECRET_KEY = env('SECRET_KEY');
+        $this->API_ID = "API1136851327";
+        $this->API_PASSWORD = "eB8bPjW!sZa#g7";
         $this->M_CODE = "255";
     }
 
     //action to send notification
     function sendSMS($arr_data)
     {
-        $ch = curl_init($this->API_BASE_URL);
-        error_reporting(E_ALL);
-        ini_set('display_errors', 1);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-        curl_setopt_array($ch, array(
-            CURLOPT_POST => TRUE,
-            CURLOPT_RETURNTRANSFER => TRUE,
-            CURLOPT_HTTPHEADER => array(
-                'Authorization:Basic ' . base64_encode("$this->API_KEY:$this->SECRET_KEY"),
-                'Content-Type: application/json'
-            ),
-            CURLOPT_POSTFIELDS => json_encode($arr_data)
-        ));
+        $response = Http::get($this->API_BASE_URL ,[
+			'api_id' => $this->API_ID,
+			'api_password' => $this->API_PASSWORD,
+			'sms_type'     =>'P',
+			'encoding'     =>'T',
+			'sender_id'    =>'LAINA',
+			'phonenumber'  => $arr_data['phone'],
+			'textmessage'  => $arr_data['message']
+		 ]);
 
-        $response = curl_exec($ch);
-
-        if ($response === FALSE) {
-            echo $response;
-            die(curl_error($ch));
-        }
         //resurn repsonse
         return $response;
     }
@@ -51,36 +42,7 @@ class Messaging
     //activon to get delivery reports
     function deliveryReport($arr_data)
     {
-        // Setup cURL
-        $ch = curl_init();
-        error_reporting(E_ALL);
-        ini_set('display_errors', 1);
-
-        $URL = $this->API_DELIVERY_URL . '?' . http_build_query($arr_data);
-
-        curl_setopt($ch, CURLOPT_URL, $URL);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-        curl_setopt_array($ch, array(
-            CURLOPT_HTTPGET => true,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HTTPHEADER => array(
-                'Authorization:Basic ' . base64_encode("$this->API_KEY:$this->SECRET_KEY"),
-                'Content-Type: application/json',
-            ),
-        ));
-
-        // Send the request
-        $response = curl_exec($ch);
-
-        // Check for errors
-        if ($response === false) {
-            echo $response;
-
-            die(curl_error($ch));
-        }
-        //resurn repsonse
-        return $response;
+       
     }
 
     //generate message_id

@@ -139,17 +139,18 @@ Route::get('payment-mandate/export-xls', [PaymentMandateController::class, 'expo
 Route::get('payment-mandate/export-pdf', [PaymentMandateController::class, 'export_pdf'])->name('payment-mandate.export-pdf');
 
 //account info
-Route::get('payment-mandate/create-account/{id?}/{do_id?}', [PaymentMandateController::class, 'create_account'])->name('payment-mandate.create-account');
+Route::get('payment-mandate/create-account/{ca_id?}/{mandate_id?}', [PaymentMandateController::class, 'create_account'])->name('payment-mandate.create-account');
 Route::post('payment-mandate/store-account', [PaymentMandateController::class, 'store_account'])->name('payment-mandate.store-account');
 
 //deduction info
-Route::get('payment-mandate/create-deduction-info/{id}/{do_id?}', [PaymentMandateController::class, 'create_deduction_info'])->name('payment-mandate.create-deduction-info');
-Route::post('payment-mandate/store-deduction-info', [PaymentMandateController::class, 'store_deduction_info'])->name('payment-mandate.store-deduction-info');
+Route::get('payment-mandate/create-deduction/{ca_id}/{mandate_id?}', [PaymentMandateController::class, 'create_deduction'])->name('payment-mandate.create-deduction');
+Route::post('payment-mandate/store-deduction', [PaymentMandateController::class, 'store_deduction'])->name('payment-mandate.store-deduction');
 
 //preview
-Route::get('payment-mandate/preview/{id}/{do_id}', [PaymentMandateController::class, 'preview'])->name('payment-mandate.preview');
-Route::get('payment-mandate/cancel/{id}/{do_id}', [PaymentMandateController::class, 'cancel'])->name('payment-mandate.cancel');
+Route::get('payment-mandate/preview/{ca_id}/{mandate_id}', [PaymentMandateController::class, 'preview'])->name('payment-mandate.preview');
+Route::get('payment-mandate/{mandate_id}/cancel', [PaymentMandateController::class, 'cancel'])->name('payment-mandate.cancel');
 Route::post('payment-mandate/confirm', [PaymentMandateController::class, 'confirm'])->name('payment-mandate.confirm');
+Route::post('payment-mandate/saving', [PaymentMandateController::class, 'saving'])->name('payment-mandate.saving');
 
 //details
 Route::get('payment-mandate/{id}/show', [PaymentMandateController::class, 'show'])->name('payment-mandate.show');
