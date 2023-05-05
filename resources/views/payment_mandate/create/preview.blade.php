@@ -253,8 +253,10 @@
                             this.status = "submitted";
 
                             //show confirmation modal
-                            $('#confirmModal').modal('show');
+                            // $('#confirmModal').modal('show');
 
+                            //display message
+                            $('#message_wrp').html("<div class='alert alert-success rounded-sm'>Payment mandate successfully created, Waiting for consent from customer!</div>");
                         }).catch(() => {
                             this.formMessage = "Something went wrong.";
                         }).finally(() => {
