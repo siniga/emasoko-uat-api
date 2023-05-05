@@ -65,7 +65,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .text-secondary {
-  color: #1976D2 !important;
+  color: #2e2d2d !important;
 }
 
 .text-warning {
@@ -74,10 +74,6 @@ h1, h2, h3, h4, h5, h6 {
 
 .text-danger {
   color: #C62828 !important;
-}
-
-.text-danger-1 {
-  color: #F44336 !important;
 }
 
 .text-success {
@@ -209,20 +205,16 @@ Background Color
   background: #0D47A1 !important;
 }
 
-.bg-secondary {
-  background: #1976D2 !important;
-}
-
 .bg-success {
   background: #388E3C !important;
 }
 
-.bg-danger-1 {
-  background: #F44336 !important;
-}
-
 .bg-danger {
   background: #C62828 !important;
+}
+
+.bg-danger-1 {
+  background: #F44336 !important;
 }
 
 .bg-light-grey {
