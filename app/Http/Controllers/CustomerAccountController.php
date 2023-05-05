@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exports\CustomerAccountExport;
+use App\Http\Requests\CustomerAccountRequest;
 use App\Models\Account;
 use App\Models\AccountType;
 use App\Models\Customer;
@@ -178,50 +179,31 @@ class CustomerAccountController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(CustomerAccountRequest $request, $id)
     {
-        //validation
-        $this->validate(
-            $request,
-            [
-                'account_type_id' => 'required',
-                'account_id' => 'required',
-                'account_name' => 'required_if:account_type_id,1',
-                'account_number' => 'required_if:account_type_id,1',
-                'phone' => new PhoneNumber(),
-                'account_number_phone' => new PhoneNumber(),
-            ],
-            [
-                'account_type_id.required' => 'Payment channel required',
-                'account_id.required' => 'Bank/MNO name required',
-                'account_name.required_if' => 'Name of account holder required',
-                'account_number.required_if' => 'Account number required',
-                'phone.required_if' => 'Phone connected to bank required',
-                'account_number_phone.required_if' => 'MNO Phone required',
-            ]
-        );
+         // validated request
+         $validated = $request->validated();
 
-        //unique number 
-        if ($request->input('account_type_id') == 1) {
-            $unique_phone = casting_phone($request->input('phone'));
-        } else if ($request->input('account_type_id') == 2) {
-            $unique_phone =  casting_phone($request->input('account_number_phone'));
-        }
+        //unique phone
+        if ($validated['account_type_id'] == 1)
+            $unique_phone = casting_phone($validated['phone']);
+        else if ($request->input('account_type_id') == 2)
+            $unique_phone =  casting_phone($validated['account_number_phone']);
 
         //update customer account
         $customer_account = CustomerAccount::findOrFail($id);
-        $customer_account->account_type_id = $request->input('account_type_id');
-        $customer_account->account_id = $request->input('account_id');
+        $customer_account->account_type_id = $validated['account_type_id'];
+        $customer_account->account_id = $validated['account_id'];
         $customer_account->phone = $unique_phone;
-        $customer_account->account_name = $request->input('account_name');
-        $customer_account->account_number = $request->input('account_number');
+        $customer_account->account_name = $validated['account_name'];
+        $customer_account->account_number = $validated['account_number'];
         $customer_account->updated_by = Auth::user()->id;
         $customer_account->save();
 
         //update customer 
         $customer = Customer::findOrFail($customer_account->customer_id);
         $customer->phone = $unique_phone;
-        $customer->fullname = $request->input('account_name');
+        $customer->fullname = $validated['account_name'];
         $customer->email = $request->input('email');
         $customer->id_number = $request->input('nida_number');
         $customer->address = $request->input('address');

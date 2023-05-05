@@ -55,8 +55,7 @@
                         <div class="row ">
                             <div class="col-lg-4">
                                 <div class="mb-3">
-                                    <label for="basicpill-namecard-input">Payment Channel <span
-                                            class="text-danger">*</span></label>
+                                    <label>Payment Channel <span class="text-danger">*</span></label>
                                     @php
                                         $account_type_options = [];
                                         $options = [];
@@ -79,7 +78,7 @@
 
                             <div class="col-lg-4">
                                 <div class="mb-3">
-                                    <label class="bank_mno_name">Bank Name/MNO <span class="text-danger">*</span></label>
+                                    <label>Bank Name/MNO <span class="text-danger">*</span></label>
                                     @php $options = []; @endphp
                                     @foreach ($accounts as $val)
                                         @php
@@ -163,8 +162,9 @@
                             <div class="col-md-12">
                                 <div class="mb-3 text-sm-end d-none d-sm-block">
                                     <a href="{{ route('payment-mandate.lists') }}"
-                                        class="btn btn-danger text-medium">Cancel</a>
-
+                                        class="btn btn-danger text-medium">
+                                        Cancel
+                                    </a>
                                     <button type="submit" class="btn btn-primary">
                                         Next
                                     </button>

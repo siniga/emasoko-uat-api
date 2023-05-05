@@ -5,14 +5,22 @@
 @endsection
 
 @section('content')
-    @component('components.breadcrumb')
-        @slot('li_1')
-            Dashboard
-        @endslot
-        @slot('title')
-            Customer Account Information
-        @endslot
-    @endcomponent
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0 font-size-18">Customer Account Information</h4>
+
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('customer-accounts.lists') }}">Customer Accounts</a></li>
+                    <li class="breadcrumb-item active">Information</li>
+                </ol>
+            </div>
+
+        </div>
+    </div>
+</div>
 
     <div class="row">
         <div class="col-lg-12">
@@ -51,39 +59,39 @@
 
                     <table class="table table-stripped table-bordered">
                         <tr>
-                            <th colspan="2" class="font-weight-600">Customer Account Information</th>
-                        </tr>
-                        <tr>
-                            <td width=25%>Payment Channel</td>
-                            <td width=75%>
-                                <span>{{ $customer_account->accountType->name ?? '' }}</span>
+                            <td colspan="4" class="font-weight-600">
+                                Customer Account Information
                             </td>
                         </tr>
-
                         <tr>
-                            <td>Bank/MNO Name</td>
+                            <th width=25%>Payment Channel</th>
+                            <td width=25%>
+                                <span>{{ $customer_account->accountType->name ?? '' }}</span>
+                            </td>
+                        
+                            <th>Bank/MNO Name</th>
                             <td>
                                 <span>{{ $customer_account->account->name ?? '' }}</span>
                             </td>
                         </tr>
 
                         <tr>
-                            <td>Name of Account Holder</td>
+                            <th>Name of Account Holder</th>
                             <td>
                                 <span>{{ $customer_account->account_name ?? '' }}</span>
                             </td>
                         </tr>
 
                         <tr>
-                            <td>Account Number</td>
+                            <th>Account Number</th>
                             <td>
                                 <span>{{ $customer_account->account_number ?? $customer_account->phone }}</span>
                             </td>
                         </tr>
 
                         <tr>
-                            <td>Phone <small>(Connected to Bank)</small></td>
-                            <td colspan="4">
+                            <th>Phone (Connected to Bank)</th>
+                            <td colspan="3">
                                 <span>{{ $customer_account->phone ?? '' }}</span>
                             </td>
                         </tr>
@@ -95,7 +103,7 @@
                         </div>
 
                         <div class="text-sm-end">
-                            <a href="{{ route('payment-mandate.create-deduction-info', [$customer_account->id]) }}"
+                            <a href="{{ route('payment-mandate.create-deduction', [$customer_account->id]) }}"
                                 title="New Payment Mandate" class="btn btn-outline-primary text-medium btn-sm">
                                 <i class="bx bx-plus font-size-12"></i> Create Payment Mandate
                             </a>

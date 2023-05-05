@@ -228,11 +228,10 @@ class PaymentMandateController extends Controller
         $partner_id = $request->input('partner_id');
 
         //unique phone
-        if ($validated['account_type_id'] == 1) {
+        if ($validated['account_type_id'] == 1)
             $unique_phone = casting_phone($validated['phone']);
-        } else if ($request->input('account_type_id') == 2) {
+        else if ($request->input('account_type_id') == 2)
             $unique_phone =  casting_phone($validated['account_number_phone']);
-        }
 
         //TODO: validate phone number to MNO for matching details
 
@@ -649,7 +648,7 @@ class PaymentMandateController extends Controller
         //delete debit order
         $debit_order->delete();
 
-        
+
 
         //redirect
         return Redirect::route('payment-mandate.lists')->with('danger', 'Payment mandate deleted!');

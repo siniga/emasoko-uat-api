@@ -5,15 +5,21 @@
 @endsection
 
 @section('content')
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                <h4 class="mb-sm-0 font-size-18">Customer Accounts</h4>
 
-    @component('components.breadcrumb')
-        @slot('li_1')
-            Dashboard
-        @endslot
-        @slot('title')
-            Customer Accounts
-        @endslot
-    @endcomponent
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+                        <li class="breadcrumb-item active">Customer Accounts</li>
+                    </ol>
+                </div>
+
+            </div>
+        </div>
+    </div>
 
     <div class="row">
         <div class="col-lg-12">
@@ -214,19 +220,20 @@
                                             </td>
 
                                             <td>
-                                                <a href="{{ route('customer-accounts.show', $values->id) }}" title="View" class="btn btn-xss">
-                                                    <i class="bx bx-folder-open text-primary font-size-14"></i>
+                                                <a href="{{ route('customer-accounts.show', $values->id) }}" title="View"
+                                                    class="btn btn-xss">
+                                                    <i class="bx bxs-folder-open text-primary"></i>
                                                 </a>
 
                                                 @if ($values->status == 'partial' || $values->status == 'rejected')
                                                     <a href="{{ route('customer-accounts.edit', $values->id) }}"
                                                         title="Edit" class="btn btn-xss">
-                                                        <i class="bx bx-edit text-secondary font-size-14"></i>
+                                                        <i class="bx bx-edit text-secondary"></i>
                                                     </a>
 
                                                     <a href="{{ route('customer-accounts.delete', $values->id) }}"
                                                         title="Delete" class="btn btn-xss delete">
-                                                        <i class="bx bx-trash text-danger font-size-14"></i>
+                                                        <i class="bx bx-trash text-danger"></i>
                                                     </a>
                                                 @endif
                                             </td>

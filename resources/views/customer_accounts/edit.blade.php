@@ -5,14 +5,22 @@
 @endsection
 
 @section('content')
-    @component('components.breadcrumb')
-        @slot('li_1')
-            Dashboard
-        @endslot
-        @slot('title')
-            Edit Customer Account
-        @endslot
-    @endcomponent
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0 font-size-18">Edit Customer Accounts</h4>
+
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('customer-accounts.lists') }}">Customer Accounts</a></li>
+                    <li class="breadcrumb-item active">Edit</li>
+                </ol>
+            </div>
+
+        </div>
+    </div>
+</div>
 
     <div class="row">
         <div class="col-lg-12">
@@ -22,15 +30,14 @@
                     <!--./row -->
                     <div class="row">
                         <div class="col-lg-12">
-                            {{ Form::open(['url' => route('customer-accounts.update', $customer_account->id), 'class' => 'form-horizontal needs-validation', 'enctype' => 'multipart/form-data', 'novalidate']) }}
+                            {{ Form::open(['url' => route('customer-accounts.update', $customer_account->id), 'class' => 'form-horizontal', 'enctype' => 'multipart/form-data',]) }}
                             @method('PUT')
                             {{ Form::token() }}
 
                             <div class="row ">
                                 <div class="col-lg-4">
                                     <div class="mb-3">
-                                        <label for="basicpill-namecard-input">Payment Channel <span
-                                                class="text-danger">*</span></label>
+                                        <label>Payment Channel <span class="text-danger">*</span></label>
                                         @php
                                             $account_type_options = [];
                                             $options = [];
@@ -46,14 +53,14 @@
                                         @endphp
 
                                         {{ Form::select('account_type_id', $options, old('account_type_id', $customer_account->account_type_id ?? ''), ['class' => 'form-control account_type_id', 'id' => 'account_type_id']) }}
+                                        <div class="text-danger">{{ $errors->first('account_type_id') }}</div>
                                     </div>
                                 </div>
                                 <!--./col -->
 
                                 <div class="col-lg-4">
                                     <div class="mb-3">
-                                        <label class="bank_mno_name">Bank Name/MNO <span
-                                                class="text-danger">*</span></label>
+                                        <label>Bank Name/MNO <span class="text-danger">*</span></label>
                                         @php $options = []; @endphp
                                         @foreach ($accounts as $val)
                                             @php
@@ -65,6 +72,7 @@
                                         @endphp
 
                                         {{ Form::select('account_id', $options, old('account_id', $customer_account->account_id ?? ''), ['class' => 'form-control account_id', 'id' => 'account_id']) }}
+                                        <div class="text-danger">{{ $errors->first('account_id') }}</div>
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -73,6 +81,7 @@
                                     <div class="mb-3">
                                         <label>Name of Account Holder <span class="text-danger">*</span></label>
                                         {{ Form::text('account_name', old('account_name', $customer_account->account_name ?? ''), ['class="form-control"', 'placeholder="Enter name of account holder..."', 'id="account_name"']) }}
+                                        <div class="text-danger">{{ $errors->first('account_name') }}</div>
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -81,6 +90,7 @@
                                     <div class="mb-3">
                                         <label>Bank Account Number <span class="text-danger">*</span></label>
                                         {{ Form::text('account_number', old('account_number', $customer_account->account_number ?? ''), ['class="form-control"', 'placeholder="Enter account number..."']) }}
+                                        <div class="text-danger">{{ $errors->first('account_number') }}</div>
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -89,6 +99,7 @@
                                     <div class="mb-3">
                                         <label>MNO Phone <span class="text-danger">*</span></label>
                                         {{ Form::text('account_number_phone', old('account_number_phone', $customer_account ? reverse_casting_phone($customer_account->phone) : ''), ['class="form-control"', 'placeholder="Enter phone number..."']) }}
+                                        <div class="text-danger">{{ $errors->first('account_number_phone') }}</div>
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -97,6 +108,7 @@
                                     <div class="mb-3">
                                         <label>Phone <span class="text-danger">*</span></label>
                                         {{ Form::text('phone', old('phone', $customer_account ? reverse_casting_phone($customer_account->phone) : ''), ['class="form-control"', 'placeholder="Enter phone connected to the bank account..."']) }}
+                                        <div class="text-danger">{{ $errors->first('phone') }}</div>
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -131,9 +143,12 @@
                                 <div class="col-lg-12">
                                     <div class="mb-3 text-sm-end d-none d-sm-block">
                                         <a href="{{ url('customer-accounts.lists') }}"
-                                            class="btn btn-danger btn-xs text-medium">Cancel</a>
-                                        <button type="submit" id="btnSubmit" class="btn btn-primary">
-                                            Update <i class="loading-spinner fa fa-lg fa fa-spinner fa-spin"></i>
+                                            class="btn btn-danger btn-xs text-medium">
+                                            Cancel
+                                        </a>
+
+                                        <button type="submit" class="btn btn-primary">
+                                            Update
                                         </button>
                                     </div>
                                 </div>
@@ -143,7 +158,6 @@
                             {{ Form::close() }}
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
