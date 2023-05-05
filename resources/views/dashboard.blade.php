@@ -17,20 +17,20 @@
     <div class="row">
         <div class="col-md-3">
             <a href="{{ route('payment-mandate.lists') }}">
-                <div class="card border-left-info shadow h-96 py-2">
+                <div class="card border-left-info bg-primary shadow h-96 py-2">
                     <div class="card-body">
                         <div class="row no-gutters align-items-center">
                             <div class="col mr-2">
-                                <div class="text-xss font-weight-600 text-grey-600 mb-1">
+                                <div class="text-xss font-weight-600 text-white mb-1">
                                     Payment Mandate
                                 </div>
 
-                                <div class="h5 mb-0 font-weight-700 text-gray-800">
+                                <div class="h5 mb-0 font-weight-700 text-white">
                                     {{ number_format($total[0]->total_amount) }}
                                 </div>
                             </div>
                             <div class="col-auto">
-                                <i class='bx bx-copy-alt fa-3x text-primary'></i>
+                                <i class='bx bx-copy-alt fa-3x text-white'></i>
                             </div>
                         </div>
                     </div>
@@ -41,20 +41,20 @@
 
         <div class="col-md-3">
             <a href="{{ route('payment-mandate.lists', 'pending') }}">
-                <div class="card border-left-info shadow h-96 py-2">
+                <div class="card border-left-info bg-danger-1 shadow h-96 py-2">
                     <div class="card-body">
                         <div class="row no-gutters align-items-center">
                             <div class="col mr-2">
-                                <div class="text-xss font-weight-600 text-grey-600 mb-1">
+                                <div class="text-xss font-weight-600 text-white mb-1">
                                     Pending Mandate
                                 </div>
 
-                                <div class="h5 mb-0 font-weight-700 text-gray-800">
+                                <div class="h5 mb-0 font-weight-700 text-white">
                                     {{ number_format($pending[0]->total_amount) }}
                                 </div>
                             </div>
                             <div class="col-auto">
-                                <i class='bx bx-copy-alt fa-3x text-warning'></i>
+                                <i class='bx bx-copy-alt fa-3x text-white'></i>
                             </div>
                         </div>
                     </div>
@@ -65,20 +65,20 @@
 
         <div class="col-md-3">
             <a href="{{ route('payment-mandate.lists', 'rejected') }}">
-                <div class="card border-left-info shadow h-96 py-2">
+                <div class="card border-left-info bg-danger shadow h-96 py-2">
                     <div class="card-body">
                         <div class="row no-gutters align-items-center">
                             <div class="col mr-2">
-                                <div class="text-xss font-weight-600 text-grey-600 mb-1">
+                                <div class="text-xss font-weight-600 text-white mb-1">
                                     Rejected Mandate
                                 </div>
 
-                                <div class="h5 mb-0 font-weight-700 text-gray-800">
+                                <div class="h5 mb-0 font-weight-700 text-white">
                                     {{ number_format($rejected[0]->total_amount) }}
                                 </div>
                             </div>
                             <div class="col-auto">
-                                <i class='bx bx-copy-alt fa-3x text-danger'></i>
+                                <i class='bx bx-copy-alt fa-3x text-white'></i>
                             </div>
                         </div>
                     </div>
@@ -89,20 +89,20 @@
 
         <div class="col-md-3">
             <a href="{{ route('payment-mandate.lists', 'approved') }}">
-                <div class="card border-left-info shadow h-96 py-2">
+                <div class="card border-left-info bg-success shadow h-96 py-2">
                     <div class="card-body">
                         <div class="row no-gutters align-items-center">
                             <div class="col mr-2">
-                                <div class="text-xss font-weight-600 text-grey-600 mb-1">
+                                <div class="text-xss font-weight-600 text-white mb-1">
                                     Approved Mandate
                                 </div>
 
-                                <div class="h5 mb-0 font-weight-700 text-gray-800">
+                                <div class="h5 mb-0 font-weight-700 text-white">
                                     {{ number_format($approved[0]->total_amount) }}
                                 </div>
                             </div>
                             <div class="col-auto">
-                                <i class='bx bx-copy-alt fa-3x text-success'></i>
+                                <i class='bx bx-copy-alt fa-3x text-white'></i>
                             </div>
                         </div>
                     </div>
@@ -122,7 +122,7 @@
                     </div>
                     <div class="row">
                         <div class="col-lg-12">
-                            <div id="consent-value-chart" dir="ltr"></div>
+                            <div id="consent-value-chart"></div>
                         </div>
                     </div>
                 </div>
@@ -143,18 +143,18 @@
                             <div class="offset-2 col-4">
                                 <div class="my-4">
                                     <p class="mb-1 text-truncate">
-                                        <i class="mdi mdi-circle text-warning my-1"></i> Pending
+                                        <i class="mdi mdi-circle text-success my-1"></i> Approved
                                     </p>
-                                    <h5>{{ $pending[0]->count }}</h5>
+                                    <h5>{{ $approved[0]->count }}</h5>
                                 </div>
                             </div>
 
                             <div class="col-4">
                                 <div class="my-4">
                                     <p class="mb-1 text-truncate">
-                                        <i class="mdi mdi-circle text-success my-1"></i> Approved
+                                        <i class="mdi mdi-circle text-danger-1 my-1"></i> Pending
                                     </p>
-                                    <h5>{{ $approved[0]->count }}</h5>
+                                    <h5>{{ $pending[0]->count }}</h5>
                                 </div>
                             </div>
                         </div>
@@ -269,7 +269,7 @@
                                                     <td>
                                                         <a href="{{ route('payment-mandate.show', $values->id) }}"
                                                             title="View" class="btn btn-xss">
-                                                            <i class="bx bx-folder-open font-size-14"></i>
+                                                            <i class="bx bxs-folder-open"></i>
                                                         </a>
                                                     </td>
                                                 </tr>

@@ -89,6 +89,9 @@ class CompanyController extends Controller
                 });
             }
 
+            //number of companies
+            $number_of_companies = $companies->count();
+
             //companies
             $companies = $companies->get();
         } else {
@@ -100,8 +103,11 @@ class CompanyController extends Controller
             $status = null;
             $keyword = null;
 
+            //number of companies
+            $number_of_companies = $companies->count();
+
             //companies
-            $companies = $companies->get();
+            $companies = $companies->paginate(20);
         }
 
         //populate data
@@ -118,7 +124,7 @@ class CompanyController extends Controller
         ];
 
         //render view
-        return view('companies.lists', compact('title', 'companies', 'regions', 'categories', 'post_data'));
+        return view('companies.lists', compact('title', 'companies', 'number_of_companies' , 'regions', 'categories', 'post_data'));
     }
 
     //export xls

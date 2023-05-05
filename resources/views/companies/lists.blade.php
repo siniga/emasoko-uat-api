@@ -16,7 +16,7 @@
 
     <div class="row">
         <div class="col-lg-12">
-            
+
             <div class="card">
                 <div class="card-body">
                     <div class="row">
@@ -141,7 +141,8 @@
 
                     <div class="row mb-2">
                         <div class="col-md-6">
-                            <span class="font-weight-500">No. of companies: {{ number_format(count($companies)) }} </span>
+                            <span class="font-weight-500">No. of service providers:
+                                {{ number_format($number_of_companies) }} </span>
                         </div>
 
                         <div class="col-md-6">
@@ -202,17 +203,17 @@
                                             <td>
                                                 <a href="{{ route('companies.show', $company->id) }}" title="View"
                                                     class="btn btn-xss">
-                                                    <i class="bx bx-folder-open text-secondary font-size-14"></i>
+                                                    <i class="bx bxs-folder-open"></i>
                                                 </a>
 
                                                 <a href="{{ route('companies.edit', $company->id) }}" title="Edit"
                                                     class="btn btn-xss">
-                                                    <i class="bx bx-edit  font-size-14"></i>
+                                                    <i class="bx bx-edit text-secondary"></i>
                                                 </a>
 
                                                 <a href="{{ route('companies.delete', $company->id) }}" title="Delete"
                                                     class="btn btn-xss delete">
-                                                    <i class="bx bx-trash text-danger font-size-14"></i>
+                                                    <i class="bx bx-trash text-danger"></i>
                                                 </a>
                                             </td>
                                         </tr>
@@ -220,8 +221,15 @@
                                     @endforeach
                                 </tbody>
                             </table>
+
+                            <div class="d-flex justify-content-end">
+                                @if (method_exists($companies, 'links'))
+                                    {{ $companies->links() }}
+                                @endif
+                            </div>
+                            <!--./d-flex -->
                         @else
-                            <div class="alert alert-danger"> No any company registered</div>
+                            <div class="alert alert-danger"> No any service provider registered</div>
                         @endif
                     </div>
                 </div>

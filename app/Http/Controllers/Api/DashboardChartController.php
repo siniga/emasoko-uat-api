@@ -14,14 +14,11 @@ class DashboardChartController extends Controller
     //aggregate consent percentage
     function getPercentageConsent()
     {
-        //debit order
-        $debit_orders = DebitOrder::where_cond();
-
         //pending
-        $pending = $debit_orders->where(['approved' => 0])->count();
+        $pending = DebitOrder::where_cond()->where(['approved' => 0])->count();
 
         //approved
-        $approved = $debit_orders->where(['approved' => 1])->count();
+        $approved = DebitOrder::where_cond()->where(['approved' => 1])->count();
 
         //aggregate
         $aggregate = $pending + $approved;
@@ -55,15 +52,15 @@ class DashboardChartController extends Controller
 
             $debit_orders = $debit_orders->whereMonth('created_at', $month)->whereYear('created_at', $year)->get();
 
-            //pending
-            $pending = 0;
-            if (isset($debit_orders[0]->total_amount) && $debit_orders[0]->total_amount != null)
-                $pending = $debit_orders[0]->total_amount;
-
             //approve 
             $approved = 0;
+            if (isset($debit_orders[0]->total_amount) && $debit_orders[0]->total_amount != null)
+                $approved = $debit_orders[0]->total_amount;
+
+            //pending
+            $pending = 0;
             if (isset($debit_orders[1]->total_amount) && $debit_orders[1]->total_amount != null)
-                $approved = $debit_orders[1]->total_amount;
+                $pending = $debit_orders[1]->total_amount;
 
             //create data array
             $data_array[] = [

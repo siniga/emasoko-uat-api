@@ -12,14 +12,16 @@ $.getJSON('api/dashboard/consent-value', (data) => {
         }
 
         var options = {
-            series: [{
-                name: "Pending",
-                data: arr_pending
-            },
-            {
-                name: "Approved",
-                data: arr_approved
-            }],
+            series: [
+                {
+                    name: "Approved",
+                    data: arr_approved
+                },
+                {
+                    name: "Pending",
+                    data: arr_pending
+                },
+            ],
             chart: {
                 height: 320,
                 type: "line",
@@ -36,6 +38,13 @@ $.getJSON('api/dashboard/consent-value', (data) => {
             dataLabels: {
                 enabled: !1
             },
+            yaxis: {
+                labels: {
+                    formatter: function (value) {
+                        return value.toLocaleString();
+                    }
+                },
+            },
             xaxis: {
                 labels: {
                     show: true,
@@ -45,7 +54,7 @@ $.getJSON('api/dashboard/consent-value', (data) => {
                 crosshair: true,
                 categories: arr_month,
             },
-            colors: ["#FF6F00", "#388E3C"],
+            colors: ["#388E3C", "#F44336"],
             stroke: {
                 curve: "smooth",
                 width: 3
@@ -53,7 +62,7 @@ $.getJSON('api/dashboard/consent-value', (data) => {
         };
 
         //render chart  
-        var chart = new ApexCharts(document.querySelector("#consent-value-chart"), options);  
+        var chart = new ApexCharts(document.querySelector("#consent-value-chart"), options);
         chart.render();
     }
 });
@@ -70,7 +79,7 @@ $.getJSON('api/dashboard/consent-percentage', (data) => {
                 height: 260,
             },
             labels: ["Pending", "Approved"],
-            colors: ["#FF6F00", "#388E3C"],
+            colors: ["#F44336", "#388E3C"],
             legend: {
                 show: !1
             },
@@ -106,11 +115,11 @@ $.getJSON('api/dashboard/consent-per-channel', (data) => {
         //charts
         var options = {
             series: [{
-                name: "Pending",
-                data: arr_pending
-            }, {
                 name: "Approved",
                 data: arr_approved
+            }, {
+                name: "Pending",
+                data: arr_pending
             }],
             chart: {
                 type: 'bar',
@@ -131,8 +140,8 @@ $.getJSON('api/dashboard/consent-per-channel', (data) => {
             xaxis: {
                 categories: arr_channels,
             },
-            labels: ["Pending", "Approved"],
-            colors: ["#FF6F00", "#388E3C"],
+            labels: ["Approved", "Pending"],
+            colors: ["#388E3C", "#F44336"],
         };
 
         //render chart  
@@ -163,13 +172,15 @@ $('#select-month').on('change', function (e) {
 
             //charts
             var options = {
-                series: [{
-                    name: "Pending",
-                    data: arr_pending
-                }, {
-                    name: "Approved",
-                    data: arr_approved
-                }],
+                series: [
+                    {
+                        name: "Approved",
+                        data: arr_approved
+                    },
+                    {
+                        name: "Pending",
+                        data: arr_pending
+                    }],
                 chart: {
                     type: 'bar',
                     height: 320,
@@ -189,8 +200,8 @@ $('#select-month').on('change', function (e) {
                 xaxis: {
                     categories: arr_channels,
                 },
-                labels: ["Pending", "Approved"],
-                colors: ["#FF6F00", "#388E3C"],
+                labels: ["Approved", "Pending"],
+                colors: ["#388E3C", "#F44336"],
             };
 
             //render chart

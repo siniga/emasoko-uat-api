@@ -41,18 +41,6 @@
                         <div>
                             <h5 class="text-capitalize">Company Information</h5>
                         </div>
-
-                        <div class="text-sm-end d-none d-sm-block">
-                            <a href="#" title="Company Assessment" data-bs-toggle="modal"
-                                data-bs-target=".bs-example-modal-lg" class="btn btn-outline-primary text-medium btn-sm"
-                                company-id="{{ $company->id }}" id="btn-assessment">
-                                <i class="fa fa-check"></i> Company Assessment
-                            </a>&nbsp;
-
-                            @if ($company_info_approval->status == 'approved')
-                                <button class="btn btn-success btn-sm">Pass <i class="fa fa-check"></i></button>
-                            @endif
-                        </div>
                     </div>
 
                     <table class="table table-stripped table-bordered mb-4">
@@ -100,7 +88,6 @@
                             <td colspan="4">
                                 <span class="font-weight-600 font-size-12">Company Address</span>
                             </td>
-
                         </tr>
 
                         <tr>
@@ -123,12 +110,6 @@
                     <div class="d-flex justify-content-between mb-2">
                         <div>
                             <h5 class="text-capitalize">Company Documents</h5>
-                        </div>
-
-                        <div class="text-sm-end d-none d-sm-block">
-                            @if ($company_docs_approval->status == 'approved')
-                                <button class="btn btn-success btn-sm">Pass <i class="fa fa-check"></i></button>
-                            @endif
                         </div>
                     </div>
 
@@ -160,18 +141,12 @@
                             </tbody>
                         </table>
                     @else
-                        <div class="alert">No any document at the moment!</div>
+                        <div class="alert alert-danger">No any document at the moment!</div>
                     @endif
 
                     <div class="d-flex justify-content-between mb-2">
                         <div>
                             <h5 class="text-capitalize">Company Collection Accounts</h5>
-                        </div>
-
-                        <div class="text-sm-end d-none d-sm-block">
-                            @if ($company_accounts_approval->status == 'approved')
-                                <button class="btn btn-success btn-sm">Pass <i class="fa fa-check"></i></button>
-                            @endif
                         </div>
                     </div>
 
@@ -201,18 +176,12 @@
                             </tbody>
                         </table>
                     @else
-                        <div class="alert">No any collection account at the moment!</div>
+                        <div class="alert alert-danger">No any collection account at the moment!</div>
                     @endif
 
                     <div class="d-flex justify-content-between mb-2">
                         <div>
                             <h5 class="text-capitalize">Company Authorized Representative</h5>
-                        </div>
-
-                        <div class="text-sm-end d-none d-sm-block">
-                            @if ($company_staff_approval->status == 'approved')
-                                <button class="btn btn-success btn-sm">Pass <i class="fa fa-check"></i></button>
-                            @endif
                         </div>
                     </div>
 
@@ -244,7 +213,7 @@
                             </tbody>
                         </table>
                     @else
-                        <div class="alert">No any staff at the moment!</div>
+                        <div class="alert alert-danger">No any staff at the moment!</div>
                     @endif
                 </div>
                 <!--./card-body -->
@@ -254,187 +223,139 @@
         <!--./col -->
     </div>
     <!-- end row -->
-
-    <!--  Extra Large modal example -->
-    <div class="modal fade bs-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myExtraLargeModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="myExtraLargeModalLabel">Company Assessment</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div
-                        class="d-flex flex-column justify-content-start flex-md-row justify-content-md-between p-2 border-bottom">
-                        <div class="align-self-center">
-                            <button type="button" id="assess-company-information"
-                                class="btn @if ($company_info_approval->status == 'approved') btn-success @else btn-outline-dark @endif waves-effect text-medium btn-sm"
-                                company-id="{{ $company->id }}"> Company
-                                Information
-                            </button>
-
-                            <button type="button" id="company-documents"
-                                class="btn @if ($company_docs_approval->status == 'approved') btn-success @else btn-outline-dark @endif waves-effect text-medium btn-sm"
-                                company-id="{{ $company->id }}">Company Documents
-                            </button>
-
-                            <button type="button" id="collection-accounts"
-                                class="btn @if ($company_accounts_approval->status == 'approved') btn-success @else btn-outline-dark @endif waves-effect text-medium btn-sm"
-                                company-id="{{ $company->id }}">Collection Accounts
-                            </button>
-
-                            <button type="button" id="authorized-representative"
-                                class="btn @if ($company_staff_approval->status == 'approved') btn-success @else btn-outline-dark @endif waves-effect text-medium btn-sm"
-                                company-id="{{ $company->id }}">Authorized Representative
-                            </button>
-
-                            <button type="button" id="confirm-assessment"
-                                class="btn @if ($company->status == 3) btn-success @else btn-outline-dark @endif waves-effect text-medium btn-sm"
-                                company-id="{{ $company->id }}">Confirmation
-                            </button>
-                        </div>
-                    </div>
-                    <!--./buttons -->
-
-                    <div class="mt-2" id="modal-contents"></div>
-                </div>
-            </div><!-- /.modal-content -->
-        </div><!-- /.modal-dialog -->
-    </div><!-- /.modal -->
 @endsection
 
 @section('script')
     <script type="text/javascript">
         $(document).ready(function() {
             //company information assessment without click
-            $('#btn-assessment').on("click", function(e) {
-                e.preventDefault();
+            // $('#btn-assessment').on("click", function(e) {
+            //     e.preventDefault();
 
-                //company-id
-                var companyId = $(this).attr('company-id');
+            //     //company-id
+            //     var companyId = $(this).attr('company-id');
 
-                //ajax request
-                var jqXHR = $.ajax({
-                    type: "GET",
-                    url: "/companies/" + companyId + "/assessment/?page=companyInformation",
-                }).done(function(data) {
-                    //modal contents
-                    $('#modal-contents').html(data);
-                }).fail(function(jqXHR, textStatus, errorThrown) {
-                    alert('Failed to update progress');
-                    if (console && console.log) {
-                        console.log("Loading Ajax: " + textStatus + ", " + errorThrown);
-                    }
-                });
-            });
+            //     //ajax request
+            //     var jqXHR = $.ajax({
+            //         type: "GET",
+            //         url: "/companies/" + companyId + "/assessment/?page=companyInformation",
+            //     }).done(function(data) {
+            //         //modal contents
+            //         $('#modal-contents').html(data);
+            //     }).fail(function(jqXHR, textStatus, errorThrown) {
+            //         alert('Failed to update progress');
+            //         if (console && console.log) {
+            //             console.log("Loading Ajax: " + textStatus + ", " + errorThrown);
+            //         }
+            //     });
+            // });
 
 
             //company information assessment
-            $('#assess-company-information').on("click", function(e) {
-                e.preventDefault();
+            // $('#assess-company-information').on("click", function(e) {
+            //     e.preventDefault();
 
-                //company-id
-                var companyId = $(this).attr('company-id');
+            //     //company-id
+            //     var companyId = $(this).attr('company-id');
 
-                //ajax request
-                var jqXHR = $.ajax({
-                    type: "GET",
-                    url: "/companies/" + companyId + "/assessment/?page=companyInformation",
-                }).done(function(data) {
-                    //modal contents
-                    $('#modal-contents').html(data);
-                }).fail(function(jqXHR, textStatus, errorThrown) {
-                    alert('Failed to update progress');
-                    if (console && console.log) {
-                        console.log("Loading Ajax: " + textStatus + ", " + errorThrown);
-                    }
-                });
-            });
+            //     //ajax request
+            //     var jqXHR = $.ajax({
+            //         type: "GET",
+            //         url: "/companies/" + companyId + "/assessment/?page=companyInformation",
+            //     }).done(function(data) {
+            //         //modal contents
+            //         $('#modal-contents').html(data);
+            //     }).fail(function(jqXHR, textStatus, errorThrown) {
+            //         alert('Failed to update progress');
+            //         if (console && console.log) {
+            //             console.log("Loading Ajax: " + textStatus + ", " + errorThrown);
+            //         }
+            //     });
+            // });
 
             //company documents
-            $('#company-documents').on("click", function(e) {
-                e.preventDefault();
+            // $('#company-documents').on("click", function(e) {
+            //     e.preventDefault();
 
-                //company-id
-                var companyId = $(this).attr('company-id');
-                //ajax request
-                var jqXHR = $.ajax({
-                    type: "GET",
-                    url: "/companies/" + companyId + "/assessment/?page=companyDocuments",
-                }).done(function(data) {
-                    //model contents
-                    $('#modal-contents').html(data);
-                }).fail(function(jqXHR, textStatus, errorThrown) {
-                    alert('Failed to update progress');
-                    if (console && console.log) {
-                        console.log("Loading Ajax: " + textStatus + ", " + errorThrown);
-                    }
-                });
-            });
+            //     //company-id
+            //     var companyId = $(this).attr('company-id');
+            //     //ajax request
+            //     var jqXHR = $.ajax({
+            //         type: "GET",
+            //         url: "/companies/" + companyId + "/assessment/?page=companyDocuments",
+            //     }).done(function(data) {
+            //         //model contents
+            //         $('#modal-contents').html(data);
+            //     }).fail(function(jqXHR, textStatus, errorThrown) {
+            //         alert('Failed to update progress');
+            //         if (console && console.log) {
+            //             console.log("Loading Ajax: " + textStatus + ", " + errorThrown);
+            //         }
+            //     });
+            // });
 
             //collection accounts
-            $('#collection-accounts').on("click", function(e) {
-                e.preventDefault();
+            // $('#collection-accounts').on("click", function(e) {
+            //     e.preventDefault();
 
-                //company-id
-                var companyId = $(this).attr('company-id');
-                //ajax request
-                var jqXHR = $.ajax({
-                    type: "GET",
-                    url: "/companies/" + companyId + "/assessment/?page=collectionAccount",
-                }).done(function(data) {
-                    //modal contents
-                    $('#modal-contents').html(data);
-                }).fail(function(jqXHR, textStatus, errorThrown) {
-                    alert('Failed to update progress');
-                    if (console && console.log) {
-                        console.log("Loading Ajax: " + textStatus + ", " + errorThrown);
-                    }
-                });
-            });
+            //     //company-id
+            //     var companyId = $(this).attr('company-id');
+            //     //ajax request
+            //     var jqXHR = $.ajax({
+            //         type: "GET",
+            //         url: "/companies/" + companyId + "/assessment/?page=collectionAccount",
+            //     }).done(function(data) {
+            //         //modal contents
+            //         $('#modal-contents').html(data);
+            //     }).fail(function(jqXHR, textStatus, errorThrown) {
+            //         alert('Failed to update progress');
+            //         if (console && console.log) {
+            //             console.log("Loading Ajax: " + textStatus + ", " + errorThrown);
+            //         }
+            //     });
+            // });
 
             //authorized personnels
-            $('#authorized-representative').on("click", function(e) {
-                e.preventDefault();
+            // $('#authorized-representative').on("click", function(e) {
+            //     e.preventDefault();
 
-                //company-id
-                var companyId = $(this).attr('company-id');
-                //ajax request
-                var jqXHR = $.ajax({
-                    type: "GET",
-                    url: "/companies/" + companyId + "/assessment/?page=authorizedRespesentative",
-                }).done(function(data) {
-                    //modal contents
-                    $('#modal-contents').html(data);
-                }).fail(function(jqXHR, textStatus, errorThrown) {
-                    alert('Failed to update progress');
-                    if (console && console.log) {
-                        console.log("Loading Ajax: " + textStatus + ", " + errorThrown);
-                    }
-                });
-            });
+            //     //company-id
+            //     var companyId = $(this).attr('company-id');
+            //     //ajax request
+            //     var jqXHR = $.ajax({
+            //         type: "GET",
+            //         url: "/companies/" + companyId + "/assessment/?page=authorizedRespesentative",
+            //     }).done(function(data) {
+            //         //modal contents
+            //         $('#modal-contents').html(data);
+            //     }).fail(function(jqXHR, textStatus, errorThrown) {
+            //         alert('Failed to update progress');
+            //         if (console && console.log) {
+            //             console.log("Loading Ajax: " + textStatus + ", " + errorThrown);
+            //         }
+            //     });
+            // });
 
             //confirmation
-            $('#confirm-assessment').on("click", function(e) {
-                e.preventDefault();
+            // $('#confirm-assessment').on("click", function(e) {
+            //     e.preventDefault();
 
-                //company-id
-                var companyId = $(this).attr('company-id');
-                //ajax request
-                var jqXHR = $.ajax({
-                    type: "GET",
-                    url: "/companies/" + companyId + "/assessment/?page=ConfirmAssessment",
-                }).done(function(data) {
-                    //modal contents
-                    $('#modal-contents').html(data);
-                }).fail(function(jqXHR, textStatus, errorThrown) {
-                    alert('Failed to update progress');
-                    if (console && console.log) {
-                        console.log("Loading Ajax: " + textStatus + ", " + errorThrown);
-                    }
-                });
-            });
+            //     //company-id
+            //     var companyId = $(this).attr('company-id');
+            //     //ajax request
+            //     var jqXHR = $.ajax({
+            //         type: "GET",
+            //         url: "/companies/" + companyId + "/assessment/?page=ConfirmAssessment",
+            //     }).done(function(data) {
+            //         //modal contents
+            //         $('#modal-contents').html(data);
+            //     }).fail(function(jqXHR, textStatus, errorThrown) {
+            //         alert('Failed to update progress');
+            //         if (console && console.log) {
+            //             console.log("Loading Ajax: " + textStatus + ", " + errorThrown);
+            //         }
+            //     });
+            // });
         });
     </script>
 @endsection
