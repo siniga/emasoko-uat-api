@@ -54,13 +54,12 @@
 
                         <section>
                             <div id="message_wrp"></div>
-                            
-                            <!--./row -->
+                        
                             <div class="row">
                                 <div class="col-lg-12">
                                     <table class="table table-stripped table-bordered">
                                         <tr>
-                                            <td colspan="4" class="font-weight-600">
+                                            <td colspan="4" class="font-weight-600 text-uppercase">
                                                 Deduction Channel
                                             </td>
                                         </tr>
@@ -104,7 +103,7 @@
                                 <div class="col-lg-12">
                                     <table class="table table-bordered">
                                         <tr>
-                                            <td colspan="2" class="font-weight-600">
+                                            <td colspan="2" class="font-weight-600 text-uppercase">
                                                 Customer Deduction Information
                                             </td>
                                         </tr>
@@ -201,8 +200,6 @@
                                     </div>
                                 </div>
                             </template>
-
-                            
                         </section>
                     </form>
                 </div>

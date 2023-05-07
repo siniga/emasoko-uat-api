@@ -24,16 +24,16 @@ $.getJSON('api/dashboard/consent-value', (data) => {
             ],
             chart: {
                 height: 320,
-                type: "line",
+                type: "bar",
                 toolbar: "false",
-                dropShadow: {
-                    enabled: !0,
-                    color: "#000",
-                    top: 18,
-                    left: 7,
-                    blur: 8,
-                    opacity: .2
-                }
+                // dropShadow: {
+                //     enabled: !0,
+                //     color: "#000",
+                //     top: 18,
+                //     left: 7,
+                //     blur: 8,
+                //     opacity: .0
+                // }
             },
             dataLabels: {
                 enabled: !1
@@ -57,7 +57,7 @@ $.getJSON('api/dashboard/consent-value', (data) => {
             colors: ["#388E3C", "#F44336"],
             stroke: {
                 curve: "smooth",
-                width: 3
+                width: 1
             }
         };
 

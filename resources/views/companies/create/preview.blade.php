@@ -22,10 +22,10 @@
         </div>
     </div>
 
-    <div class="row">
+    <div class="row" x-data="initData()">
         <div class="col-lg-12">
             <div class="card">
-                <div class="card-body" x-data="initData()">
+                <div class="card-body">
                     <!--./form wizard -->
                     <div class="stepwizard mb-4">
                         <div class="stepwizard-row setup-panel">
@@ -61,265 +61,237 @@
                         </div>
                     </div>
 
-                    @if (session()->get('success'))
-                        <div class="alert alert-success">
-                            {{ session()->get('success') }}
-                        </div>
-                    @elseif(session()->get('danger'))
-                        <div class="alert alert-danger">
-                            {{ session()->get('danger') }}
-                        </div>
-                    @endif
 
-                    {{ Form::open(['url' => route('companies.confirm-registration'), 'class' => 'form-horizontal needs-validation', 'enctype' => 'multipart/form-data', 'novalidate']) }}
-                    @method('POST')
-                    {{ Form::token() }}
+                    <form @submit.prevent="">
+                        <input type="hidden" name="uuid" x-model="formData.uuid">
 
-                    <input type="hidden" name="partner_id" value="{{ $company->id }}">
-                    <input type="hidden" name="partner_uuid" value="{{ $company->uuid }}">
+                        <section>
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <table class="table table-stripped table-bordered">
+                                        <tr>
+                                            <td colspan="4" class="font-weight-600 text-uppercase">
+                                                Service Provider Information
+                                            </td>
+                                        </tr>
 
-                    <!-- Company Documents -->
-                    <section data-step="6">
-                        <div class="row">
-                            <div class="col-lg-12">
-                                <h5 class="text-capitalize">Company Information</h5>
+                                        <tr>
+                                            <th width=25%>Business Name</th>
+                                            <td width=25%>
+                                                <span>{{ $company->business_name }}</span>
+                                            </td>
+
+                                            <th>Business Category</th>
+                                            <td>
+                                                <span>{{ $company->partnerCategory->name ?? '' }}</span>
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <th>TIN Number</th>
+                                            <td>{{ $company->tin_number }}</td>
+
+                                            <th>Year of Incorporation</th>
+                                            <td>
+                                                {{ $company->year_of_incorporation }}
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <th>Number of Staff</th>
+                                            <td>{{ $company->number_of_staff }}</td>
+
+                                            <th>Contacts</th>
+                                            <td>
+                                                Email: {{ $company->email }}<br />
+                                                Phone: {{ $company->phone }}
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <th>Region</th>
+                                            <td>{{ $company->region->name ?? '' }}</td>
+
+                                            <th>Physical Address</th>
+                                            <td>
+                                                Email: {{ $company->address }}
+                                            </td>
+                                        </tr>
+
+                                    </table>
+                                </div>
                             </div>
-                            <!--./col -->
-                        </div>
-                        <!--./row -->
 
-                        <div class="row">
-                            <div class="col-lg-12">
-                                <table class="table table-stripped table-bordered">
-                                    <tr>
-                                        <th width=25%>Business Name</th>
-                                        <td width=25%>
-                                            <span>{{ $company->business_name }}</span>
-                                        </td>
-
-                                        <th>Business Category</th>
-                                        <td>
-                                            <span>{{ $company->partnerCategory->name ?? '' }}</span>
-                                        </td>
-                                    </tr>
-
-                                    <tr>
-                                        <th>TIN Number</th>
-                                        <td>{{ $company->tin_number }}</td>
-
-                                        <th>Year of Incorporation</th>
-                                        <td>
-                                            {{ $company->year_of_incorporation }}
-                                        </td>
-                                    </tr>
-
-                                    <tr>
-                                        <th>Number of Staff</th>
-                                        <td>{{ $company->number_of_staff }}</td>
-
-                                        <th>Contacts</th>
-                                        <td>
-                                            Email: {{ $company->email }}<br />
-                                            Phone: {{ $company->phone }}
-                                        </td>
-                                    </tr>
-
-                                    <tr>
-                                        <th>Region</th>
-                                        <td>{{ $company->region->name ?? '' }}</td>
-
-                                        <th>Physical Address</th>
-                                        <td>
-                                            Email: {{ $company->address }}
-                                        </td>
-                                    </tr>
-
-                                </table>
-                            </div>
-                            <!--./col -->
-                        </div>
-                        <!--./row-->
-
-                        <div class="row mt-3">
-                            <div class="col-lg-12">
-                                <h5 class="text-capitalize">Company Documents</h5>
-                            </div>
-                            <!--./col -->
-                        </div>
-                        <!--./row -->
-
-                        <div class="row">
-                            <div class="col-lg-12">
-                                @if ($company->partnerDocuments->isNotEmpty())
-                                    <table class="table table-nowrap align-middle table-bordered">
-                                        <thead>
-                                            <tr>
-                                                <th width="3%">#</th>
-                                                <th width="60%">Name</th>
-                                                <th width="30%">Attachment</th>
-                                            </tr>
-                                        </thead>
-
-                                        <tbody>
-                                            @foreach ($company->partnerDocuments as $val)
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    @if ($company->partnerDocuments->isNotEmpty())
+                                        <table class="table table-nowrap align-middle table-bordered">
+                                            <thead>
                                                 <tr>
-                                                    <td>{{ $loop->iteration }}</td>
-                                                    <td>{{ $val->name }}</td>
-                                                    <td>
-                                                        @if ($val->attachment != null)
-                                                            <a download=""
-                                                                href="{{ asset('assets/uploads/docs' . $val->attachment) }}">
-                                                                {{ $val->attachment }}
-                                                            </a>
-                                                        @endif
+                                                    <td colspan="3" class="font-weight-600 text-uppercase">
+                                                        Service Provider Documents
                                                     </td>
                                                 </tr>
-                                            @endforeach
-                                        </tbody>
-                                    </table>
-                                @else
-                                    <div class="alert">No any document at the moment!</div>
-                                @endif
-                            </div>
-                            <!--./col -->
-                        </div>
-                        <!--./row -->
 
-                        <div class="row mt-2">
-                            <div class="col-lg-12">
-                                <h5 class="text-capitalize">Company Collection Accounts</h5>
-                            </div>
-                            <!--./col -->
-                        </div>
-                        <!--./row -->
-
-                        <div class="row">
-                            <div class="col-lg-12">
-                                @if ($company->partnerAccounts->isNotEmpty())
-                                    <table class="table table-nowrap align-middle table-bordered">
-                                        <thead>
-                                            <tr>
-                                                <th width="3%">#</th>
-                                                <th width="20%">Account Type</th>
-                                                <th width="20%">Bank/Institutions</th>
-                                                <th width="25%">Account Name</th>
-                                                <th width="20%">Account Number</th>
-                                            </tr>
-                                        </thead>
-
-                                        <tbody>
-                                            @foreach ($company->partnerAccounts as $val)
                                                 <tr>
-                                                    <td>{{ $loop->iteration }}</td>
-                                                    <td>{{ $val->accountType->name ?? '' }}</td>
-                                                    <td>{{ $val->account->name ?? '' }}</td>
-                                                    <td>{{ $val->account_name ?? '' }}</td>
-                                                    <td>{{ $val->account_number ?? '' }}</td>
-
+                                                    <th width="3%">#</th>
+                                                    <th width="60%">Name</th>
+                                                    <th width="30%">Attachment</th>
                                                 </tr>
-                                            @endforeach
-                                        </tbody>
-                                    </table>
-                                @else
-                                    <div class="alert">No any account at the moment!</div>
-                                @endif
+                                            </thead>
+
+                                            <tbody>
+                                                @foreach ($company->partnerDocuments as $val)
+                                                    <tr>
+                                                        <td>{{ $loop->iteration }}</td>
+                                                        <td>{{ $val->name }}</td>
+                                                        <td>
+                                                            @if ($val->attachment != null)
+                                                                <a download=""
+                                                                    href="{{ asset('assets/uploads/docs' . $val->attachment) }}">
+                                                                    {{ $val->attachment }}
+                                                                </a>
+                                                            @endif
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    @else
+                                        <div class="alert alert-danger">No any document at the moment!</div>
+                                    @endif
+                                </div>
                             </div>
-                            <!--./col -->
-                        </div>
-                        <!--./row -->
 
-                        <div class="row mt-2">
-                            <div class="col-lg-12">
-                                <h5 class="text-capitalize">Authorized Representative</h5>
-                            </div>
-                            <!--./col -->
-                        </div>
-                        <!--./row -->
 
-                        <div class="row">
-                            <div class="col-lg-12">
-                                @if ($company->partnerStaff->isNotEmpty())
-                                    <table class="table table-nowrap align-middle table-bordered">
-                                        <thead>
-                                            <tr>
-                                                <th width="3%">#</th>
-                                                <th width="20%">Staff Name</th>
-                                                <th width="20%">NIDA Number</th>
-                                                <th width="25%">Email</th>
-                                                <th width="20%">Phone</th>
-                                                <th width="20%">Title</th>
-                                            </tr>
-                                        </thead>
-
-                                        <tbody>
-                                            @foreach ($company->partnerStaff as $val)
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    @if ($company->partnerAccounts->isNotEmpty())
+                                        <table class="table table-nowrap align-middle table-bordered">
+                                            <thead>
                                                 <tr>
-                                                    <td>{{ $loop->iteration }}</td>
-                                                    <td>{{ $val->name ?? '' }}</td>
-                                                    <td>{{ $val->NIDA_number ?? '' }}</td>
-                                                    <td>{{ $val->email ?? '' }}</td>
-                                                    <td>{{ $val->phone ?? '' }}</td>
-                                                    <td>{{ $val->title ?? '' }}</td>
-
+                                                    <td colspan="4" class="font-weight-600 text-uppercase">
+                                                        Service Provider Collection Accounts
+                                                    </td>
                                                 </tr>
-                                            @endforeach
-                                        </tbody>
+
+                                                <tr>
+                                                    <th width="3%">#</th>
+                                                    <th width="20%">Account Type</th>
+                                                    <th width="20%">Bank/Institutions</th>
+                                                    <th width="25%">Account Name</th>
+                                                    <th width="20%">Account Number</th>
+                                                </tr>
+                                            </thead>
+
+                                            <tbody>
+                                                @foreach ($company->partnerAccounts as $val)
+                                                    <tr>
+                                                        <td>{{ $loop->iteration }}</td>
+                                                        <td>{{ $val->accountType->name ?? '' }}</td>
+                                                        <td>{{ $val->account->name ?? '' }}</td>
+                                                        <td>{{ $val->account_name ?? '' }}</td>
+                                                        <td>{{ $val->account_number ?? '' }}</td>
+
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    @else
+                                        <div class="alert alert-danger">No any account at the moment!</div>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    @if ($company->partnerStaff->isNotEmpty())
+                                        <table class="table table-nowrap align-middle table-bordered">
+                                            <thead>
+                                                <tr>
+                                                    <td colspan="4" class="font-weight-600 text-uppercase">
+                                                        Authorized Representative
+                                                    </td>
+                                                </tr>
+
+                                                <tr>
+                                                    <th width="3%">#</th>
+                                                    <th width="20%">Staff Name</th>
+                                                    <th width="20%">NIDA Number</th>
+                                                    <th width="25%">Email</th>
+                                                    <th width="20%">Phone</th>
+                                                    <th width="20%">Title</th>
+                                                </tr>
+                                            </thead>
+
+                                            <tbody>
+                                                @foreach ($company->partnerStaff as $val)
+                                                    <tr>
+                                                        <td>{{ $loop->iteration }}</td>
+                                                        <td>{{ $val->name ?? '' }}</td>
+                                                        <td>{{ $val->NIDA_number ?? '' }}</td>
+                                                        <td>{{ $val->email ?? '' }}</td>
+                                                        <td>{{ $val->phone ?? '' }}</td>
+                                                        <td>{{ $val->title ?? '' }}</td>
+
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    @else
+                                        <div class="alert alert-danger">No any staff at the moment!</div>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <table class="table table-stripped table-bordered">
+                                        <tr>
+                                            <td colspan="4" class="font-weight-600 text-uppercase">
+                                                Service Provider Credentials
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <th width=25%>Company Name</th>
+                                            <td width=25%>
+                                                <span>{{ $company->partnerAuthorizeUser->user->name ?? '' }}</span>
+                                            </td>
+
+                                            <th>Email/Username</th>
+                                            <td>{{ $company->partnerAuthorizeUser->user->email ?? '' }}
+                                            </td>
+                                        </tr>
                                     </table>
-                                @else
-                                    <div class="alert">No any staff at the moment!</div>
-                                @endif
+                                </div>
                             </div>
-                            <!--./col -->
-                        </div>
-                        <!--./row -->
 
-                        <div class="row mt-2">
-                            <div class="col-lg-12">
-                                <h5 class="text-capitalize">Company Credentials</h5>
-                                <hr />
-                            </div>
-                            <!--./col -->
-                        </div>
-                        <!--./row -->
+                            <div id="message_wrp"></div>
 
-                        <div class="row">
-                            <div class="col-lg-12">
-                                <table class="table table-stripped table-bordered">
-                                    <tr>
-                                        <th width=25%>Company Name</th>
-                                        <td width=25%>
-                                            <span>{{ $company->partnerAuthorizeUser->user->name ?? '' }}</span>
-                                        </td>
+                            <template x-if="complete==0">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="mb-3 text-sm-end d-none d-sm-block">
+                                            <a href="{{ route('companies.cancel-registration', $company->uuid) }}"
+                                                class="btn btn-danger cancel text-medium">Cancel</a>
 
-                                        <th>Email/Username</th>
-                                        <td>{{ $company->partnerAuthorizeUser->user->email ?? '' }}
-                                        </td>
-                                    </tr>
-                                </table>
-                            </div>
-                            <!--./col -->
-                        </div>
-                        <!--./row-->
+                                            <a href="{{ route('companies.registration', $company->uuid) }}"
+                                                class="btn btn-info text-medium">Edit</a>
 
-                        @if ($company->complete == 0)
-                            <div class="row mt-2" id="btn-section" style="display: block;">
-                                <div class="col-md-12">
-                                    <div class="mb-3 text-sm-end d-none d-sm-block">
-                                        <a href="{{ route('companies.cancel-registration', $company->uuid) }}" class="btn btn-danger text-medium">Cancel</a>
+                                            <button type="submit" name="save" class="btn btn-secondary"
+                                                x-text="buttonSave" :disabled="saveLoading" x-on:click="savingForm();">
+                                            </button>
 
-                                        <a href="{{ route('companies.registration', $company->uuid) }}"
-                                            class="btn btn-info text-medium">Edit</a>
-
-                                        <button type="submit" name="save" class="btn btn-secondary">Save</button>
-                                        <button type="submit" name="submit" class="btn btn-success"> Submit</button>
+                                            <button type="submit" name="submit" class="btn btn-success"
+                                                x-text="buttonSubmit" :disabled="submitLoading"
+                                                x-on:click="submitForm();"></button>
+                                        </div>
                                     </div>
                                 </div>
-                                <!--./col -->
-                            </div>
-                            <!--./row -->
-                        @endif
-                    </section>
-                    {{ Form::close() }}
+                            </template>                            
+                        </section>
+                    </form>
                 </div>
             </div>
         </div>
@@ -328,5 +300,86 @@
 @endsection
 
 @section('script')
-    <script type="text/javascript"></script>
+    <script type="text/javascript">
+        //initiate data
+        function initData() {
+            return {
+                formData: {
+                    uuid: "{{ $company->uuid }}",
+                },
+                complete: "{{ $company->complete }}",
+                formMessage: "",
+
+                saveLoading: false,
+                buttonSave: "Save",
+
+                submitLoading: false,
+                buttonSubmit: "Submit",
+
+                //submit form
+                submitForm() {
+                    this.formMessage = "";
+                    this.submitLoading = false;
+                    this.buttonSubmit = "Submitting...";
+
+                    fetch("/companies/confirm-registration", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                Accept: "application/json",
+                                'X-CSRF-TOKEN': document.head.querySelector('meta[name=csrf-token]').content
+                            },
+                            body: JSON.stringify(this.formData),
+                        }).then(response => response.json())
+                        .then(responseJson => {
+                            console.log(responseJson);
+                            //change complete status
+                            this.complete = 1;
+
+                            //display message
+                            $('#message_wrp').html(
+                                "<div class='alert alert-success rounded-sm fw-semibold'>Service provider registered, Waiting for assessment and approval!</div>"
+                            );
+                        }).catch(() => {
+                            this.formMessage = "Something went wrong.";
+                        }).finally(() => {
+                            this.submitLoading = false;
+                            this.buttonSubmit = "Submit";
+                        });
+                },
+
+                //saving Form
+                savingForm() {
+                    this.formMessage = "";
+                    this.saveLoading = false;
+                    this.buttonSave = "Saving...";
+
+                    fetch("/companies/saving-registration", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                Accept: "application/json",
+                                'X-CSRF-TOKEN': document.head.querySelector('meta[name=csrf-token]').content
+                            },
+                            body: JSON.stringify(this.formData),
+                        }).then(response => response.json())
+                        .then(responseJson => {
+                            console.log(responseJson);
+                            //change complete status
+                            this.complete = 0;
+
+                            //display message
+                            $('#message_wrp').html(
+                                "<div class='alert alert-success rounded-sm fw-semibold'>Service provider information saved.</div>"
+                                );
+                        }).catch(() => {
+                            this.formMessage = "Something went wrong.";
+                        }).finally(() => {
+                            this.saveLoading = false;
+                            this.buttonSave = "Save";
+                        });
+                }
+            }
+        }
+    </script>
 @endsection

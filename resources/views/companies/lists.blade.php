@@ -5,18 +5,23 @@
 @endsection
 
 @section('content')
-    @component('components.breadcrumb')
-        @slot('li_1')
-            Dashboard
-        @endslot
-        @slot('title')
-            Service Providers
-        @endslot
-    @endcomponent
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                <h4 class="mb-sm-0 font-size-18">Service Provider</h4>
+
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+                        <li class="breadcrumb-item active">Service Providers</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="row">
         <div class="col-lg-12">
-
             <div class="card">
                 <div class="card-body">
                     <div class="row">
@@ -53,7 +58,7 @@
                                             $options = ['' => 'Category'] + $options;
                                         @endphp
 
-                                        {{ Form::select('category_id', $options, old('category_id', $post_data['category_id']), ['class' => 'form-control', 'id' => 'category_id']) }}
+                                        {{ Form::select('category_id', $options, old('category_id', $post_data['category_id']), ['class' => 'form-control select2', 'id' => 'category_id']) }}
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -87,7 +92,7 @@
                                             $options = ['' => 'Status'] + $options;
                                         @endphp
 
-                                        {{ Form::select('status', $options, old('status', $post_data['status']), ['class' => 'form-control']) }}
+                                        {{ Form::select('status', $options, old('status', $post_data['status']), ['class' => 'form-control select2']) }}
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -124,7 +129,6 @@
 
             <div class="card">
                 <div class="card-body">
-
                     <div class="row">
                         <div class="col-md-12">
                             @if (session()->get('success'))
@@ -170,12 +174,13 @@
                                 <thead>
                                     <tr>
                                         <th width="3%">#</th>
-                                        <th width="22%">Bussiness Name</th>
-                                        <th width="16%">Category</th>
-                                        <th width="12%">TIN Number</th>
-                                        <th width="10%">Year of Incorporation</th>
-                                        <th width="12%">Region</th>
-                                        <th width="8%">Status</th>
+                                        <th width="20%">Bussiness Name</th>
+                                        <th width="11%">Category</th>
+                                        <th width="11%">TIN Number</th>
+                                        <th width="8%">Year of Incorporation</th>
+                                        <th width="10%">Phone</th>
+                                        <th width="11%">Region</th>
+                                        <th width="10%">Status</th>
                                         <th style="width: 60px;">Actions</th>
                                     </tr>
                                 </thead>
@@ -188,23 +193,31 @@
                                             <td>{{ $company->partnerCategory->name ?? '' }}</td>
                                             <td>{{ $company->tin_number }}</td>
                                             <td>{{ $company->year_of_incorporation }}</td>
+                                            <td>{{ $company->phone }}</td>
                                             <td>{{ $company->region->name ?? '' }}</td>
                                             <td>
                                                 @if ($company->status == 0)
-                                                    <span class="badge bg-warning">Registration Process</span>
+                                                    <span class="badge bg-warning font-size-10 ">Registration Process</span>
                                                 @elseif ($company->status == 1)
-                                                    <span class="badge bg-info">Completed Registration</span>
+                                                    <span class="badge bg-info font-size-10">Completed Registration</span>
                                                 @elseif($company->status == 2)
-                                                    <span class="badge bg-info">Assessment Process</span>
+                                                    <span class="badge bg-info font-size-10">Assessment Process</span>
                                                 @elseif($company->status == 3)
-                                                    <span class="badge bg-success">Assessment Approved</span>
+                                                    <span class="badge bg-success-1 font-size-10">Approved</span>
                                                 @endif
                                             </td>
                                             <td>
-                                                <a href="{{ route('companies.show', $company->id) }}" title="View"
-                                                    class="btn btn-xss">
-                                                    <i class="bx bxs-folder-open"></i>
-                                                </a>
+                                                @if ($company->complete == 1)
+                                                    <a href="{{ route('companies.show', $company->id) }}" title="View"
+                                                        class="btn btn-xss">
+                                                        <i class="bx bxs-folder-open"></i>
+                                                    </a>
+                                                @elseif($company->complete == 0)
+                                                    <a href="{{ route('companies.preview', $company->uuid) }}"
+                                                        title="View" class="btn btn-xss">
+                                                        <i class='bx bxs-plus-square bx-xs'></i>
+                                                    </a>
+                                                @endif
 
                                                 <a href="{{ route('companies.edit', $company->id) }}" title="Edit"
                                                     class="btn btn-xss">
@@ -237,8 +250,7 @@
         </div>
     </div>
     <!-- end row -->
-
-
 @endsection
+
 @section('script')
 @endsection

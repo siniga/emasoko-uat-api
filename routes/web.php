@@ -106,6 +106,7 @@ Route::post('companies/store-authorized-person', [CompanyController::class, 'sto
 //company details overview
 Route::get('companies/preview/{uuid}', [CompanyController::class, 'companyPreview'])->name('companies.preview');
 Route::get('companies/cancel-registration/{uuid}', [CompanyController::class, 'cancelRegistration'])->name('companies.cancel-registration');
+Route::post('companies/saving-registration', [CompanyController::class, 'savingRegistration'])->name('companies.saving-registration');
 Route::post('companies/confirm-registration', [CompanyController::class, 'confirmRegistration'])->name('companies.confirm-registration');
 
 //customer accounts

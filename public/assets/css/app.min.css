@@ -431,7 +431,7 @@ body[data-layout=horizontal] .footer {
 #sidebar-menu ul li a {
     display: block;
     padding: .625rem 1.5rem;
-    color: #212121 !important;
+    color: #545a6d;
     position: relative;
     font-size: 13px;
     -webkit-transition: all .4s;
@@ -445,13 +445,13 @@ body[data-layout=horizontal] .footer {
     font-size: 1.25rem;
     line-height: 1.40625rem;
     vertical-align: middle;
-    color: #212121;
+    color: #7f8387;
     -webkit-transition: all .4s;
     transition: all .4s
 }
 
 #sidebar-menu ul li a:hover, #sidebar-menu ul li a:hover i {
-    color: #1565C0 !important;
+    color: #383c40
 }
 
 #sidebar-menu ul li .badge {
@@ -651,7 +651,7 @@ body[data-layout=horizontal] .footer {
 }
 
 .vertical-collpsed .vertical-menu #sidebar-menu>ul ul li.active a {
-    color: #1565C0;
+    color: #f8f9fa
 }
 
 body[data-sidebar=dark] .vertical-menu {
@@ -659,19 +659,19 @@ body[data-sidebar=dark] .vertical-menu {
 }
 
 body[data-sidebar=dark] #sidebar-menu ul li a {
-    color: #212121
+    color: #a6b0cf
 }
 
 body[data-sidebar=dark] #sidebar-menu ul li a i {
-    color: #212121
+    color: #6a7187
 }
 
 body[data-sidebar=dark] #sidebar-menu ul li a:hover, body[data-sidebar=dark] #sidebar-menu ul li a:hover i {
-    color: #1565C0;
+    color: #fff
 }
 
 body[data-sidebar=dark] #sidebar-menu ul li ul.sub-menu li a {
-    color: #424242;
+    color: #79829c
 }
 
 body[data-sidebar=dark] #sidebar-menu ul li ul.sub-menu li a:hover {
@@ -696,7 +696,7 @@ body[data-sidebar=dark].vertical-collpsed .vertical-menu #sidebar-menu>ul>li:hov
 }
 
 body[data-sidebar=dark].vertical-collpsed .vertical-menu #sidebar-menu>ul>li:hover>ul a:hover {
-    color: #1565C0
+    color: #fff
 }
 
 body[data-sidebar=dark].vertical-collpsed .vertical-menu #sidebar-menu>ul ul {
@@ -704,7 +704,7 @@ body[data-sidebar=dark].vertical-collpsed .vertical-menu #sidebar-menu>ul ul {
 }
 
 body[data-sidebar=dark] .mm-active, body[data-sidebar=dark] .mm-active .active, body[data-sidebar=dark] .mm-active .active i, body[data-sidebar=dark] .mm-active>a, body[data-sidebar=dark] .mm-active>a i, body[data-sidebar=dark] .mm-active>i, body[data-sidebar=dark].vertical-collpsed .vertical-menu #sidebar-menu ul li.mm-active .active, body[data-sidebar=dark].vertical-collpsed .vertical-menu #sidebar-menu ul li.mm-active .active i {
-    color: #1565C0;
+    color: #fff !important
 }
 
 body[data-sidebar=dark] .menu-title {
@@ -1842,7 +1842,7 @@ body[data-layout=horizontal][data-layout-size=boxed] .container-fluid, body[data
     position: absolute;
     width: 8px;
     height: 54px;
-    /* background-color: hsla(0, 0%, 100%, .1); */
+    background-color: hsla(0, 0%, 100%, .1);
     left: 16px;
     -webkit-transform: rotate(32deg);
     transform: rotate(32deg);
@@ -3834,7 +3834,7 @@ div.dataTables_wrapper div.dataTables_filter input {
 }
 
 .auth-body-bg {
-    background-color: #FAFAFA;
+    background-color: #fff
 }
 
 .auth-pass-inputgroup input[type=input]+.btn .mdi-eye-outline:before {
@@ -3842,7 +3842,7 @@ div.dataTables_wrapper div.dataTables_filter input {
 }
 
 .auth-full-bg {
-    background-color: #1565C0;
+    background-color: rgba(85, 110, 230, .25);
     display: -webkit-box;
     display: -ms-flexbox;
     display: flex
@@ -3863,7 +3863,7 @@ div.dataTables_wrapper div.dataTables_filter input {
 }
 
 .auth-full-bg .bg-overlay {
-    /* background-image: url(../images/microfinance-1.jpeg); */
+    background: url(../images/bg-auth-overlay.png);
     background-size: cover;
     background-repeat: no-repeat;
     background-position: 50%
@@ -4643,12 +4643,12 @@ div.dataTables_wrapper div.dataTables_filter input {
 }
 
 .hero-section {
-    padding-top: 160px;
-    padding-bottom: 120px
+    padding-top: 220px;
+    padding-bottom: 190px
 }
 
 .hero-section.bg-ico-hero {
-    background-image: url(../images/microfinance-1.jpeg);
+    background-image: url(../images/crypto/bg-ico-hero.jpg);
     background-size: cover;
     background-position: top
 }
@@ -4725,11 +4725,10 @@ div.dataTables_wrapper div.dataTables_filter input {
 }
 
 .client-images img {
-    max-height: 80px;
-    border-radius: 50%;
+    max-height: 34px;
     width: auto !important;
     margin: 12px auto;
-    opacity: 1;
+    opacity: .7;
     -webkit-transition: all .4s;
     transition: all .4s
 }
@@ -4750,7 +4749,7 @@ div.dataTables_wrapper div.dataTables_filter input {
 }
 
 .landing-footer {
-    padding: 48px 0 24px;
+    padding: 80px 0 40px;
     background-color: #2a3042;
     color: hsla(0, 0%, 100%, .5)
 }
@@ -4761,7 +4760,7 @@ div.dataTables_wrapper div.dataTables_filter input {
 
 .landing-footer .footer-list-menu li a {
     display: block;
-    color: #fff;
+    color: hsla(0, 0%, 100%, .5);
     margin-bottom: 14px;
     -webkit-transition: all .4s;
     transition: all .4s

@@ -2,8 +2,8 @@
     <div class="navbar-header">
         <div class="d-flex">
             <!-- LOGO -->
-            <div class="navbar-brand-box bg-white">
-                <a href="#" class="logo logo-dark">
+            <div class="navbar-brand-box">
+                <a href="#" class="logo logo-light">
                     <span class="logo-sm">
                         <img src="{{ URL::asset('assets/images/emakato_logo_white.png') }}" alt="" height="22">
                     </span>
@@ -12,7 +12,7 @@
                     </span>
                 </a>
 
-                <a href="#" class="logo logo-light">
+                <a href="#" class="logo logo-dark">
                     <span class="logo-sm">
                         <img src="{{ URL::asset('assets/images/emakato_logo_colored.png') }}" alt="" height="12">
                     </span>
@@ -36,7 +36,6 @@
     </div>
 
     <div class="d-flex">
-
         <div class="dropdown d-inline-block d-lg-none ms-2">
             <button type="button" class="btn header-item noti-icon waves-effect" id="page-header-search-dropdown"
                 data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">

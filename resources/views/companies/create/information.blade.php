@@ -72,9 +72,8 @@
                         </div><br />
                     @endif
 
-                    {{ Form::open(['url' => route('companies.store-detail'), 'class' => 'form-horizontal needs-validation', 'enctype' => 'multipart/form-data', 'novalidate']) }}
+                    {{ Form::open(['url' => route('companies.store-detail'), 'class' => 'form-horizontal', 'enctype' => 'multipart/form-data']) }}
                     @method('POST')
-
                     {{ Form::token() }}
 
                     <input type="hidden" name="partner_id" value="{{ $company->id ?? null }}">
@@ -91,18 +90,16 @@
                         <div class="row">
                             <div class="col-lg-6">
                                 <div class="mb-3">
-                                    <label for="businessname">Business Name <span class="text-danger">*</span>
+                                    <label>Business Name <span class="text-danger">*</span>
                                     </label>
-                                    {{ Form::text('business_name', old('business_name', $company->business_name ?? ''), ['class="form-control"', 'placeholder="Write business name..."', 'required']) }}
-                                    <div class="invalid-feedback">
-                                        Business name required
-                                    </div>
+                                    {{ Form::text('business_name', old('business_name', $company->business_name ?? ''), ['class="form-control"', 'placeholder="Write business name..."']) }}
+                                    <div class="text-danger">{{ $errors->first('business_name') }}</div>
                                 </div>
                             </div>
 
                             <div class="col-lg-3">
                                 <div class="mb-3">
-                                    <label for="email">Category <span class="text-danger">*</span></label>
+                                    <label>Category <span class="text-danger">*</span></label>
                                     @php $options = []; @endphp
                                     @foreach ($categories as $category)
                                         @php
@@ -113,20 +110,16 @@
                                         $options = ['' => 'Select'] + $options;
                                     @endphp
 
-                                    {{ Form::select('category_id', $options, old('category_id', $company->partner_category_id ?? ''), ['class' => 'form-control select2', 'id' => 'category_id', 'required']) }}
-                                    <div class="invalid-feedback">
-                                        Business category required
-                                    </div>
+                                    {{ Form::select('category_id', $options, old('category_id', $company->partner_category_id ?? ''), ['class' => 'form-control select2', 'id' => 'category_id']) }}
+                                    <div class="text-danger">{{ $errors->first('category_id') }}</div>
                                 </div>
                             </div>
 
                             <div class="col-lg-3">
                                 <div class="mb-3">
-                                    <label for="tinno">TIN Number <span class="text-danger">*</span></label>
-                                    {{ Form::text('tin_number', old('tin_number', $company->tin_number ?? ''), ['class="form-control input-mask"', 'data-inputmask' => "'mask': '999-999-999'", 'placeholder="Write tin number..."', 'required']) }}
-                                    <div class="invalid-feedback">
-                                        TIN number required
-                                    </div>
+                                    <label>TIN Number <span class="text-danger">*</span></label>
+                                    {{ Form::text('tin_number', old('tin_number', $company->tin_number ?? ''), ['class="form-control input-mask"', 'data-inputmask' => "'mask': '999-999-999'", 'placeholder="Write tin number..."']) }}
+                                    <div class="text-danger">{{ $errors->first('tin_number') }}</div>
                                 </div>
                             </div>
                         </div>
@@ -134,7 +127,7 @@
                         <div class="row mb-3">
                             <div class="col-lg-3">
                                 <div class="mb-3">
-                                    <label for="email">Year of Incorporation <span class="text-danger">*</span>
+                                    <label>Year of Incorporation <span class="text-danger">*</span>
                                     </label>
                                     @php
                                         $year_options = [];
@@ -146,44 +139,38 @@
                                     @endforeach
 
                                     @php $year_options = ['' => 'Select'] + $year_options; @endphp
-                                    {{ Form::select('year_of_incorporation', $year_options, old('year_of_incorporation', $company->year_of_incorporation ?? ''), ['class' => 'form-control select2', 'required' => '']) }}
-                                    <div class="invalid-feedback">
-                                        Year of incorporation required
-                                    </div>
+                                    {{ Form::select('year_of_incorporation', $year_options, old('year_of_incorporation', $company->year_of_incorporation ?? ''), ['class' => 'form-control select2']) }}
+                                    <div class="text-danger">{{ $errors->first('year_of_incorporation') }}</div>
                                 </div>
                             </div>
 
                             <div class="col-lg-3">
                                 <div class="mb-3">
-                                    <label for="email">Number of Staff <span class="text-danger">*</span>
+                                    <label>Number of Staff <span class="text-danger">*</span>
                                     </label>
-                                    {{ Form::number('number_of_staff', old('number_of_staff', $company->number_of_staff ?? ''), ['class="form-control"', 'placeholder="Write number of staff..."', 'min' => 1, 'required']) }}
-                                    <div class="invalid-feedback">
-                                        Number of staff required
-                                    </div>
+                                    {{ Form::number('number_of_staff', old('number_of_staff', $company->number_of_staff ?? ''), ['class="form-control"', 'placeholder="Write number of staff..."', 'min' => 1]) }}
+                                    <div class="text-danger">{{ $errors->first('number_of_staff') }}</div>
                                 </div>
                             </div>
 
                             <div class="col-lg-3">
                                 <div class="mb-3">
-                                    <label for="email">Company Email <span class="text-danger">*</span>
+                                    <label>Company Email <span class="text-danger">*</span>
                                     </label>
-                                    {{ Form::email('company_email', old('company_email', $company->email ?? ''), ['class="form-control"', 'placeholder="Write company email..."', 'required']) }}
-                                    <div class="invalid-feedback">
-                                        Company email required
-                                    </div>
+                                    {{ Form::email('company_email', old('company_email', $company->email ?? ''), ['class="form-control"', 'placeholder="Write company email..."']) }}
+                                    <div class="text-danger">{{ $errors->first('company_email') }}</div>
                                 </div>
                             </div>
 
                             <div class="col-lg-3">
                                 <div class="mb-3">
-                                    <label for="address">Website</label>
+                                    <label>Website</label>
                                     {{ Form::text('company_website', old('company_website', $company->website ?? ''), ['class="form-control"', 'placeholder="Write company website..."']) }}
                                 </div>
                             </div>
 
                             <div class="col-lg-6">
-                                <label for="email">Company Phone <span class="text-danger">*</span></label>
+                                <label>Company Phone <span class="text-danger">*</span></label>
                                 <div class="row">
                                     <div class="col-md-4">
                                         @php $options = []; @endphp
@@ -193,13 +180,12 @@
                                             @endphp
                                         @endforeach
                                         {{ Form::select('country_code', $options, old('country_code', substr($company->phone ?? '', 0, 3)), ['class' => 'form-control', 'id' => 'country_id']) }}
+                                        <div class="text-danger">{{ $errors->first('country_code') }}</div>
                                     </div>
 
                                     <div class="col-md-8">
-                                        {{ Form::number('company_phone', old('company_phone', substr($company->phone ?? '', 4)), ['class="form-control"', 'placeholder="Write phone..."', 'required']) }}
-                                        <div class="invalid-feedback">
-                                            Company phone required
-                                        </div>
+                                        {{ Form::number('company_phone', old('company_phone', substr($company->phone ?? '', 4)), ['class="form-control"', 'placeholder="Write phone..."']) }}
+                                        <div class="text-danger">{{ $errors->first('company_phone') }}</div>
                                     </div>
                                 </div>
                             </div>
@@ -214,7 +200,7 @@
                         <div class="row">
                             <div class="col-lg-3">
                                 <div class="mb-3">
-                                    <label for="email">Region <span class="text-danger">*</span></label>
+                                    <label>Region <span class="text-danger">*</span></label>
                                     @php $options = []; @endphp
                                     @foreach ($regions as $region)
                                         @php
@@ -225,27 +211,23 @@
                                         $options = ['' => 'Select'] + $options;
                                     @endphp
 
-                                    {{ Form::select('region_id', $options, old('region_id', $company->region_id ?? ''), ['class' => 'form-control select2', 'id' => 'region_id', 'required']) }}
-                                    <div class="invalid-feedback">
-                                        Region required
-                                    </div>
+                                    {{ Form::select('region_id', $options, old('region_id', $company->region_id ?? ''), ['class' => 'form-control select2', 'id' => 'region_id']) }}
+                                    <div class="text-danger">{{ $errors->first('region_id') }}</div>
                                 </div>
                             </div>
 
                             <div class="col-lg-3">
                                 <div class="mb-3">
-                                    <label for="location">Postal Address </label>
+                                    <label>Postal Address </label>
                                     {{ Form::text('postal_address', old('postal_address', $company->postal_address ?? ''), ['class="form-control"', 'placeholder="Company postal address..."']) }}
                                 </div>
                             </div>
 
                             <div class="col-lg-6">
                                 <div class="mb-3">
-                                    <label for="address">Physical Address <span class="text-danger">*</span></label>
-                                    {{ Form::textarea('physical_address', old('company_address', $company->physical_address ?? ''), ['class="form-control"', 'placeholder="Write company physical address..."', 'rows' => 1, 'required']) }}
-                                    <div class="invalid-feedback">
-                                        Physical address required
-                                    </div>
+                                    <label>Physical Address <span class="text-danger">*</span></label>
+                                    {{ Form::textarea('physical_address', old('company_address', $company->physical_address ?? ''), ['class="form-control"', 'placeholder="Write company physical address..."', 'rows' => 1]) }}
+                                    <div class="text-danger">{{ $errors->first('physical_address') }}</div>
                                 </div>
                             </div>
                         </div>

@@ -20,7 +20,7 @@ a {
 }
 
 a:hover, a:focus {
-  color: #1565C0;
+  color: #153567;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -61,7 +61,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .text-primary {
-  color: #0D47A1 !important;
+  color: #153567 !important;
 }
 
 .text-secondary {
@@ -81,120 +81,98 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .text-dark-blue {
-  color: #022859 !important;
+  color: #153567 !important;
 }
 
 .text-light-blue {
   color: #1976D2 !important;
 }
 
-/*===============================================|
-Sidebar
-================================================*/
-body[data-topbar=dark] #page-topbar {
-  background-color: #FFFFFF;
-}
-
-body[data-topbar=dark] .navbar-header .dropdown .show.header-item {
-  background-color: #FFFFFF;
-}
-
-body[data-topbar=dark] .navbar-header .waves-effect .waves-ripple {
-  background: #FFFFFF;;
-}
-
-body[data-topbar=dark] .header-item, body[data-topbar=dark] .header-item:hover {
-  color: #212121;
-}
-
-body[data-topbar=dark] .header-profile-user {
-  background-color: hsla(0, 0%, 100%, .25)
-}
-
-body[data-topbar=dark] .noti-icon i {
-  color: #e9ecef
-}
-
-body[data-topbar=dark] .logo-dark {
-  display: none
-}
-
-body[data-topbar=dark] .logo-light {
-  display: block
-}
-
-body[data-topbar=dark] .app-search .form-control {
-  background-color: rgba(243, 243, 249, .07);
-  color: #fff
-}
-
-body[data-topbar=dark] .app-search input.form-control::-webkit-input-placeholder, body[data-topbar=dark] .app-search span {
-  color: hsla(0, 0%, 100%, .5)
-}
 
 /*===============================================|
 Sidebar
 ================================================*/
-body[data-sidebar=dark] .vertical-menu {
-  background: #FFFFFF;
+#sidebar-menu {
+  margin: 0 8px;
+  padding: 10px 0 30px
 }
 
-body[data-sidebar=dark] #sidebar-menu ul li a {
-  color: #616161 !important;
+#sidebar-menu .mm-active>.has-arrow:after {
+  -webkit-transform: rotate(-180deg);
+  transform: rotate(-180deg)
 }
 
-body[data-sidebar=dark] #sidebar-menu ul li a i {
-  color: #616161 !important;
+#sidebar-menu .has-arrow:after {
+  content: "\f0140";
+  font-family: Material Design Icons;
+  display: block;
+  float: right;
+  -webkit-transition: -webkit-transform .2s;
+  transition: -webkit-transform .2s;
+  transition: transform .2s;
+  transition: transform .2s, -webkit-transform .2s;
+  font-size: 1rem
 }
 
-body[data-sidebar=dark] #sidebar-menu ul li a:hover, body[data-sidebar=dark] #sidebar-menu ul li a:hover i {
-  color: #1565C0 !important;
-}
-
-body[data-sidebar=dark] #sidebar-menu ul li ul.sub-menu li a {
+#sidebar-menu ul li a {
+  display: block;
+  padding: .425rem 1.5rem;
+  margin: 8px 0;
   color: #616161;
+  position: relative;
+  font-size: 14px;
+  -webkit-transition: all .4s;
+  transition: all .4s
 }
 
-body[data-sidebar=dark] #sidebar-menu ul li ul.sub-menu li a:hover {
-  color: #1565C0 !important;
+#sidebar-menu ul li a i {
+  display: inline-block;
+  min-width: 1.75rem;
+  padding-bottom: .125em;
+  font-size: 1.25rem;
+  line-height: 1.40625rem;
+  vertical-align: middle;
+  color: #545a6d;
+  -webkit-transition: all .4s;
+  transition: all .4s
 }
 
-body[data-sidebar=dark].vertical-collpsed {
-  min-height: 1760px
+#sidebar-menu ul li a:hover, #sidebar-menu ul li a:hover i {
+  color: #153567;
 }
 
-body[data-sidebar=dark].vertical-collpsed .vertical-menu #sidebar-menu>ul>li:hover>a {
-  background: #ffffff;
-  color: #1565C0 !important;
+#sidebar-menu ul li .badge {
+  margin-top: 4px
 }
 
-body[data-sidebar=dark].vertical-collpsed .vertical-menu #sidebar-menu>ul>li:hover>a i {
-  color: #fff
+#sidebar-menu ul li ul.sub-menu {
+  padding: 0
 }
 
-body[data-sidebar=dark].vertical-collpsed .vertical-menu #sidebar-menu>ul>li:hover>ul a {
-  color: #1565C0 !important;
+#sidebar-menu ul li ul.sub-menu li a {
+  padding: .4rem 1.5rem .4rem 3.5rem;
+  font-size: 13px;
+  color: #545a6d
 }
 
-body[data-sidebar=dark].vertical-collpsed .vertical-menu #sidebar-menu>ul>li:hover>ul a:hover {
-  color: #1565C0 !important;
+#sidebar-menu ul li ul.sub-menu li a:hover {
+  color: #383c40
 }
 
-body[data-sidebar=dark].vertical-collpsed .vertical-menu #sidebar-menu>ul ul {
-  background-color: #fff;
+#sidebar-menu ul li ul.sub-menu li ul.sub-menu {
+  padding: 0
 }
 
-body[data-sidebar=dark].vertical-menu #sidebar-menu>ul>li:active>a {
-  background: #ffffff;
-  color: #1565C0 !important;
+#sidebar-menu ul li ul.sub-menu li ul.sub-menu li a {
+  padding: .4rem 1.5rem .4rem 4.5rem;
+  font-size: 13px
 }
 
-body[data-sidebar=dark] .mm-active, body[data-sidebar=dark] .mm-active .active, body[data-sidebar=dark] .mm-active .active i, body[data-sidebar=dark] .mm-active>a, body[data-sidebar=dark] .mm-active>a i, body[data-sidebar=dark] .mm-active>i, body[data-sidebar=dark].vertical-collpsed .vertical-menu #sidebar-menu ul li.mm-active .active, body[data-sidebar=dark].vertical-collpsed .vertical-menu #sidebar-menu ul li.mm-active .active i {
-  color: #1565C0 !important
-}
 
-body[data-sidebar=dark] .menu-title {
-  color: #6a7187
+.mm-active .active, .mm-active .active i, .mm-active>a, .mm-active>a i, .mm-active>i {
+  background-color: #153567;
+  color: #FFFFFF !important;
+  border-radius: 20px;
 }
 
 
@@ -202,11 +180,15 @@ body[data-sidebar=dark] .menu-title {
 Background Color
 ================================================*/
 .bg-primary {
-  background: #0D47A1 !important;
+  background: #153567 !important;
 }
 
 .bg-success {
   background: #388E3C !important;
+}
+
+.bg-success-1 {
+  background: #66BB6A !important;
 }
 
 .bg-danger {
@@ -392,7 +374,7 @@ table.table>:not(:last-child)>:last-child>* {
 
 
 /*=============================================
-offcanvas
+Tabs
 ============================================*/
 .solutions-tabs .nav-link {
   text-align: center;
@@ -414,15 +396,15 @@ offcanvas
 offcanvas
 ============================================*/
 #offcanvas-wrp {
-  width: 56vw;
+  width: 48vw;
   height: 100%;
   margin-top: 60px;
-  padding: 20px 10px 48px 10px;
-  background-color: #Fff;
+  padding: 20px 10px;
+  border-left: 1px solid #EEEEEE;
+  background-color: #FAFAFA;
   position: fixed;
   top: 0;
   right: 0;
-  border: 1px solid #dcdcdc;
   z-index: 3;
   overflow-y: scroll;
 }

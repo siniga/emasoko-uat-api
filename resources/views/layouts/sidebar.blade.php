@@ -17,7 +17,7 @@
 
                 @if (Auth::user()->hasRole('admin'))
                     <li>
-                        <a href="{{ route('companies.index') }}" class="waves-effect">
+                        <a href="{{ route('companies.lists') }}" class="waves-effect">
                             <i class="bx bx-building"></i>
                             <span key="t-layouts">Service Providers</span>
 

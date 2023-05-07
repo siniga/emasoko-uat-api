@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Classes\CompanyAssessment;
 use App\Exports\CompanyExport;
+use App\Http\Requests\CompanyDetailRequest;
 use App\Jobs\SendEmailJob;
 use App\Models\Account;
 use App\Models\AccountType;
@@ -21,7 +22,6 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Validator;
 use Stidges\CountryFlags\CountryFlag;
@@ -47,7 +47,7 @@ class CompanyController extends Controller
         //has_allowed('roles', 'lists');
 
         //companies
-        $companies = Partner::where('complete', '=', 1);
+        $companies = Partner::orderBy('created_at', 'desc');
 
         if (isset($_POST['filter'])) {
             //passing variables
@@ -124,7 +124,7 @@ class CompanyController extends Controller
         ];
 
         //render view
-        return view('companies.lists', compact('title', 'companies', 'number_of_companies' , 'regions', 'categories', 'post_data'));
+        return view('companies.lists', compact('title', 'companies', 'number_of_companies', 'regions', 'categories', 'post_data'));
     }
 
     //export xls
@@ -240,21 +240,10 @@ class CompanyController extends Controller
     }
 
     //store company details
-    function storeCompanyDetail(Request $request)
+    function storeCompanyDetail(CompanyDetailRequest $request)
     {
-        //validation 
-        $validator = Validator::make($request->all(), [
-            'tin_number' => 'required|unique:partners,tin_number',
-            'business_name' => 'required',
-            'partner_category_id' => 'required',
-            'year_of_incorporation' => 'required|numeric',
-            'number_of_staff' => 'required|numeric',
-            'country_code' => 'required',
-            'company_phone' => 'required',
-            'company_email' => 'required|email|unique:partners,email',
-            'region_id' => 'required',
-            'physical_address' => 'required',
-        ]);
+        // validated request
+        $validated = $request->validated();
 
         //capture if uuid is not null
         if ($request->input('partner_uuid') != null)
@@ -263,20 +252,20 @@ class CompanyController extends Controller
             $uuid = Str::uuid();
 
         //phone 
-        $phone = $request->input('country_code') . cast_phone($request->input('company_phone'));
+        $phone = $validated['country_code'] . cast_phone($validated['company_phone']);
 
         //save company details
         $partner = Partner::firstOrNew([
             'uuid' => $uuid,
-            'tin_number' => $request->input('tin_number')
+            'tin_number' => $validated['tin_number']
         ]);
-        $partner->partner_category_id = ucwords($request->input('category_id'));
-        $partner->business_name = ucwords($request->input('business_name'));
-        $partner->year_of_incorporation = ucwords($request->input('year_of_incorporation'));
-        $partner->number_of_staff = $request->input('number_of_staff');
-        $partner->region_id = $request->input('region_id');
+        $partner->partner_category_id = ucwords($validated['category_id']);
+        $partner->business_name = ucwords($validated['business_name']);
+        $partner->year_of_incorporation = $validated['year_of_incorporation'];
+        $partner->number_of_staff = $validated['number_of_staff'];
+        $partner->region_id = $validated['region_id'];
         $partner->phone = $phone;
-        $partner->email = $request->input('company_email');
+        $partner->email = $validated['company_email'];
         $partner->postal_address = $request->input('postal_address');
         $partner->physical_address = $request->input('physical_address');
         $partner->website = $request->input('company_website');
@@ -284,7 +273,7 @@ class CompanyController extends Controller
         $partner->save();
 
         //redirect
-        return Redirect::route('companies.register-documents', $uuid)->with('success', "Company documents saved!");
+        return Redirect::route('companies.register-documents', $uuid)->with('success', "Service provider information saved!");
     }
 
     //company documents
@@ -349,7 +338,7 @@ class CompanyController extends Controller
         }
 
         //redirect
-        return Redirect::route('companies.register-accounts', $uuid)->with('success', "Company documents saved!");
+        return Redirect::route('companies.register-accounts', $uuid)->with('success', "Service Provider documents saved!");
     }
 
     //company Account
@@ -371,8 +360,6 @@ class CompanyController extends Controller
     //store company accounts
     function storeCompanyAccounts(Request $request)
     {
-        //validation 
-
         //post data
         $id = $request->input('partner_id');
         $uuid = $request->input('partner_uuid');
@@ -400,7 +387,7 @@ class CompanyController extends Controller
         }
 
         //redirect
-        return Redirect::route('companies.register-staff', $uuid)->with('success', "Company collection account(s) saved!");
+        return Redirect::route('companies.register-staff', $uuid)->with('success', "Service Provider collection account(s) saved!");
     }
 
 
@@ -452,7 +439,7 @@ class CompanyController extends Controller
         }
 
         //redirect
-        return Redirect::route('companies.register-authorized-person', $uuid)->with('success', "Company authorized personnel(s) saved!");
+        return Redirect::route('companies.register-authorized-person', $uuid)->with('success', "Service Provider authorized personnel(s) saved!");
     }
 
 
@@ -471,8 +458,6 @@ class CompanyController extends Controller
     //store company authorized person
     function storeCompanyAuthorizedPerson(Request $request)
     {
-        //validation 
-
         //post data
         $id = $request->input('partner_id');
         $uuid = $request->input('partner_uuid');
@@ -506,7 +491,7 @@ class CompanyController extends Controller
         $partner_user->save();
 
         //redirect
-        return Redirect::route('companies.preview', $uuid)->with('success', "Company authorized credentials saved!");
+        return Redirect::route('companies.preview', $uuid)->with('success', "Service Provider authorized credentials created!");
     }
 
     //company info overview
@@ -521,57 +506,85 @@ class CompanyController extends Controller
         return view('companies.create.preview', compact('title', 'company'));
     }
 
-    //confirm application
+    //confirm  application
     function confirmRegistration(Request $request)
     {
-        //validation 
-
         //post data
-        $id = $request->input('partner_id');
-        $uuid = $request->input('partner_uuid');
-
-        $complete = 0;
-        $status = 0;
-        $action = "";
-        if (isset($_POST['save'])) {
-            $status = 0;
-            $complete = 0;
-            $action = 'save';
-        } else if (isset($_POST['submit'])) {
-            $status = 1;
-            $complete = 1;
-            $action = 'submit';
-
-            //store company aapprovals
-            $arr_assessment_criteria = [
-                'Company_Information' => 'Company Information',
-                'Company_Documents' => 'Company Documents',
-                'Company_Collection_Accounts' => 'Company Collection Accounts',
-                'Company_Authorized_Representative' => 'Company Authorized Representative',
-            ];
-
-            foreach ($arr_assessment_criteria as $key => $label) {
-                $partner_approval = PartnerApproval::firstOrNew([
-                    'partner_id' => $id,
-                    'key' => $key,
-                    'label' => $label
-                ]);
-                $partner_approval->save();
-            }
-        }
+        $uuid = $request->input('uuid');
 
         //partner
-        $partner = Partner::findOrFail($id);
+        $partner = Partner::where(['uuid' => $uuid])->firstOrFail();
+
+        //update status of partner
         $partner->next_step = 'company-info-overview/' . $uuid;
-        $partner->complete = $complete;
-        $partner->status = $status;
+        $partner->status = 1;
+        $partner->complete = 1;
         $partner->save();
 
-        //redirect
-        if ($action == 'save')
-            return Redirect::route('companies.preview', $uuid)->with('success', 'Service provider information saved');
-        elseif ($action == 'submit')
-            return Redirect::route('companies.preview', $uuid)->with('success', 'Service provider registration complete');
+        //store company aapprovals
+        $arr_assessment_criteria = [
+            'Company_Information' => 'Company Information',
+            'Company_Documents' => 'Company Documents',
+            'Company_Collection_Accounts' => 'Company Collection Accounts',
+            'Company_Authorized_Representative' => 'Company Authorized Representative',
+        ];
+
+        foreach ($arr_assessment_criteria as $key => $label) {
+            $partner_approval = PartnerApproval::firstOrNew([
+                'partner_id' => $partner->id,
+                'key' => $key,
+                'label' => $label
+            ]);
+            $partner_approval->save();
+        }
+
+        //construct message
+        $message = "<p>There is new service provider registered and required a assessment and approval process of the service provider.</p>";
+        $message .= "<p>Below are the information of service provider:</p>";
+        $message .= "<p>Business Name: <span class='fw-semibold'>{$partner->business_name}</span></p>";
+        $message .= "<p>Category: <span class='fw-semibold'>{$partner->partnerCategory->name}</span></p>";
+        $message .= "<p>TIN Number: <span class='fw-semibold'>{$partner->tin_number}</span></p>";
+        $message .= "<p>Year of Incorporation: <span class='fw-semibold'>{$partner->year_of_incorporation}</span></p>";
+        $message .= "<p>Email: <span class='fw-semibold'>{$partner->email}</span></p>";
+        $message .= "<p>Phone: <span class='fw-semibold'>{$partner->phone}</span></p>";
+
+        //query for users
+        $users = User::whereHas('roles', function ($q) {
+            $q->where('name', 'admin');
+        })->get();
+
+        if ($users->isNotEmpty()) {
+            foreach ($users as $user) {
+                //send email in background
+                $data = [
+                    "email" => $user->email,
+                    "name" => $user->name,
+                    "subject" => "Service Provider Registration",
+                    "body" => $message
+                ];
+                dispatch(new SendEmailJob($data));
+            }
+        }
+        //response
+        return response()->json(['success' => false, 'success_msg' => 'Service provider successful registered'], 200);
+    }
+
+    //saving application
+    function savingRegistration(Request $request)
+    {
+        //post data
+        $uuid = $request->input('uuid');
+
+        //partner
+        $partner = Partner::where(['uuid' => $uuid])->firstOrFail();
+
+        //update status of partner
+        $partner->status = 0;
+        $partner->complete = 0;
+        $partner->save();
+        
+        //response
+        return response()->json(['success' => false, 'success_msg' => 'Service Provider information saved!'], 200);
     }
 
     //cancel registration

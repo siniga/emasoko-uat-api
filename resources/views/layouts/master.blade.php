@@ -20,7 +20,7 @@
 </head>
 
 @section('body')
-    <body data-sidebar="dark">
+<body data-topbar="light">
     @show
     <!-- Begin page -->
     <div id="layout-wrapper">
@@ -29,7 +29,7 @@
         <!-- ============================================================== -->
         <!-- Start right Content here -->
         <!-- ============================================================== -->
-        <div class="main-content bg-light-grey">
+        <div class="main-content">
             <div class="page-content">
                 <div class="container-fluid">
                     @yield('content')
