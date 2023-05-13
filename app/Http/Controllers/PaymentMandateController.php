@@ -116,7 +116,7 @@ class PaymentMandateController extends Controller
             $keyword = null;
 
             //debit orders
-            $debit_orders = $debit_orders->get();
+            $debit_orders = $debit_orders->paginate(5);
         }
 
         //populate data

@@ -34,9 +34,10 @@
                             <div></div>
 
                             <div class="text-sm-end d-none d-sm-block">
-                                <button title="Assessment Process" class="btn btn-outline-primary text-medium btn-sm"
-                                    x-on:click="sidebarOpen = true">
-                                    <i class="fa fa-check"></i> Service Provider Assessment
+                                <button title="Assessment Process" class="btn btn-primary btn-sm"
+                                    x-on:click="sidebarOpen = true, fetchData('{{ $company->uuid }}'), fetchAssessment('{{ $company->uuid }}', 'Company_Information');"
+                                    x-transition>
+                                    <i class="fa fa-check"></i> Assessment
                                 </button>
                             </div>
                         </div>
@@ -76,15 +77,21 @@
 
                                 <th>Status</th>
                                 <td colspan="3" id="company-status">
-                                    @if ($company->status == 0)
+                                    <template x-if="status==0">
                                         <span class="badge bg-warning">Registration Process</span>
-                                    @elseif ($company->status == 1)
+                                    </template>
+
+                                    <template x-if="status==1">
                                         <span class="badge bg-info">Completed Registration</span>
-                                    @elseif($company->status == 2)
+                                    </template>
+
+                                    <template x-if="status==2">
                                         <span class="badge bg-info">Assessment Process</span>
-                                    @elseif($company->status == 3)
+                                    </template>
+
+                                    <template x-if="status==3">
                                         <span class="badge bg-success">Assessment Approved</span>
-                                    @endif
+                                    </template>
                                 </td>
                             </tr>
 
@@ -135,7 +142,7 @@
                                             <td>
                                                 @if ($val->attachment != null)
                                                     <a download=""
-                                                        href="{{ asset('assets/uploads/docs' . $val->attachment) }}">
+                                                        href="{{ asset('assets/uploads/docs/' . $val->attachment) }}">
                                                         {{ $val->attachment }}
                                                     </a>
                                                 @endif
@@ -225,7 +232,9 @@
         </div>
 
         <!--offcanvas wrp -->
-        <div id="offcanvas-wrp" class="" x-show="sidebarOpen"></div>
+        <div id="offcanvas-wrp" x-show="sidebarOpen" x-transition>
+            <div id="detail-div"></div>
+        </div>
     </div>
 @endsection
 
@@ -235,9 +244,133 @@
         function initData() {
             return {
                 sidebarOpen: false,
+                eModal: "Company_Information",
+                status: "{{ $company->status }}",
+                stages: [],
 
-                manageInformation(id){},
-                manageInformation(id){},
+                formData: {
+                    'uuid': "{{ $company->uuid }}",
+                    'stage': "",
+                    "criteria": "",
+                    'remarks': "",
+                },
+                formLoading: false,
+                formMessage: "",
+                buttonSubmit: "Submit",
+                buttonConfirm: "Confirm",
+                confirm_btn: false,
+
+                //fetch url info
+                fetchData(uuid) {
+                    fetch("/companies/assessment/" + uuid)
+                        .then(response => response.text())
+                        .then(data => {
+                            $('#detail-div').html(data)
+                        });
+                },
+
+                //show assessment verdict
+                fetchAssessment(uuid, stage) {
+                    fetch("/companies/assessment-approval/?uuid=" + uuid + "&stage=" + stage)
+                        .then(response => response.json())
+                        .then(response => {
+                            console.log(response);
+
+                            //change status of the assessment    
+                            this.eModal = response.data.stage;
+                            this.formData.stage = response.data.stage;
+                            this.formData.criteria = response.data.criteria;
+                            this.formData.remarks = response.data.remarks;
+
+                        });
+                },
+
+                //show assessment verdict
+                confirmation(uuid) {
+                    this.eModal = "Confirm_Assessment";
+                    this.formData.stage = "Confirm_Assessment";
+
+                    fetch("/companies/assessment-stages/?uuid=" + uuid)
+                        .then(response => response.json())
+                        .then(response => {
+                            console.log(response);
+                            this.stages = response.data
+                        });
+                },
+
+                //store information assessment
+                submitInformationForm() {
+                    this.formMessage = "";
+                    this.formLoading = false;
+                    this.buttonSubmit = "Submitting...";
+
+                    fetch("/companies/store-assessment", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                Accept: "application/json",
+                                'X-CSRF-TOKEN': document.head.querySelector('meta[name=csrf-token]').content
+                            },
+                            body: JSON.stringify(this.formData),
+                        }).then(response => response.json())
+                        .then(responseJson => {
+                            console.log(responseJson.criteria);
+
+                            //display message
+                            if (responseJson.criteria == 'approved') {
+                                $('.message_wrp').html(
+                                    "<div class='alert alert-success rounded-sm'>Service Provider Information approved.</div>"
+                                );
+                            } else if (responseJson.criteria == 'rejected') {
+                                $('.message_wrp').html(
+                                    "<div class='alert alert-danger rounded-sm'>Service Provider Information rejected.</div>"
+                                );
+                            }
+                        }).catch(() => {
+                            //display message
+                            $('.message_wrp').html(
+                                "<div class='alert alert-danger rounded-sm'>Something went wrong.</div>"
+                            );
+
+                        }).finally(() => {
+                            this.formLoading = false;
+                            this.buttonSubmit = "Submit";
+                        });
+                },
+
+                //confirm assessment
+                confirmationForm() {
+                    this.formMessage = "";
+                    this.formLoading = false;
+                    this.buttonConfirm = "Confirming...";
+
+                    fetch("/companies/confirm-assessment", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                Accept: "application/json",
+                                'X-CSRF-TOKEN': document.head.querySelector('meta[name=csrf-token]').content
+                            },
+                            body: JSON.stringify(this.formData),
+                        }).then(response => response.json())
+                        .then(responseJson => {
+                            console.log(responseJson);
+                            this.status = responseJson.status
+
+                            $('.message_wrp').html(
+                                "<div class='alert alert-success rounded-sm'>Service Provider assessment complete.</div>"
+                            );
+                        }).catch(() => {
+                            //display message
+                            $('.message_wrp').html(
+                                "<div class='alert alert-danger rounded-sm'>Something went wrong.</div>"
+                            );
+
+                        }).finally(() => {
+                            this.formLoading = false;
+                            this.buttonConfirm = "Confirm";
+                        });
+                },
             }
         }
     </script>

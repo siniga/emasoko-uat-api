@@ -79,9 +79,12 @@ Route::post('reset-password', [ForgotPasswordController::class, 'submitResetPass
 
 //companies
 Route::any('companies/lists', [CompanyController::class, 'index'])->name('companies.lists');
-Route::get('companies/{id}/delete', [CompanyController::class, 'destroy'])->name('companies.delete');
-Route::get('companies/export-xls', [CompanyController::class, 'export_xls'])->name('companies.export-xls');
-Route::get('companies/export-pdf', [CompanyController::class, 'export_pdf'])->name('companies.export-pdf');
+Route::get('companies/details/{uuid}', [CompanyController::class, 'show'])->name('companies.details');
+Route::get('companies/edit/{uuid}', [CompanyController::class, 'edit'])->name('companies.edit');
+Route::post('companies/update', [CompanyController::class, 'update'])->name('companies.update');
+Route::get('companies/delete/{uuid}', [CompanyController::class, 'destroy'])->name('companies.delete');
+Route::get('companies/export-xls', [CompanyController::class, 'exportXLS'])->name('companies.export-xls');
+Route::get('companies/export-pdf', [CompanyController::class, 'exportPDF'])->name('companies.export-pdf');
 
 //initi registration
 Route::get('companies/register/{uuid?}', [CompanyController::class, 'registrationForm'])->name('companies.registration');
@@ -109,6 +112,13 @@ Route::get('companies/cancel-registration/{uuid}', [CompanyController::class, 'c
 Route::post('companies/saving-registration', [CompanyController::class, 'savingRegistration'])->name('companies.saving-registration');
 Route::post('companies/confirm-registration', [CompanyController::class, 'confirmRegistration'])->name('companies.confirm-registration');
 
+Route::get('companies/assessment/{uuid}', [CompanyController::class, 'companyAssessment'])->name('companies.assessment');
+Route::get('companies/assessment-stages/', [CompanyController::class, 'companyAssessmentStages'])->name('companies.assessment-stages');
+Route::get('companies/assessment-approval/', [CompanyController::class, 'companyAssessmentApproval'])->name('companies.assessment-approval');
+Route::post('companies/store-assessment', [CompanyController::class, 'storeAssessment'])->name('companies.store-assessment');
+Route::post('companies/confirm-assessment', [CompanyController::class, 'confirmAssessment'])->name('companies.confirm-assessment');
+
+
 //customer accounts
 Route::any('customer-accounts/lists', [CustomerAccountController::class, 'lists'])->name('customer-accounts.lists');
 Route::get('customer-accounts/{id}/delete', [CustomerAccountController::class, 'destroy'])->name('customer-accounts.delete');
@@ -120,19 +130,12 @@ Route::resources([
     'payment-channels' => PaymentChannelController::class,
     'roles' => RoleController::class,
     'users' => UserController::class,
-    'companies' => CompanyController::class,
+    // 'companies' => CompanyController::class,
     'customer-accounts' => CustomerAccountController::class,
 ]);
 
 //payment channel
 Route::get('payment-channels/{id}/delete', [PaymentChannelController::class, 'delete'])->name('payment-channels.delete');
-
-//companies
-
-Route::get('companies/{id}/assessment', [CompanyController::class, 'companyAssessment'])->name('companies.assessment');
-Route::post('companies/store-assessment', [CompanyController::class, 'store_assessment'])->name('companies.store-assessment');
-Route::post('companies/confirm-assessment', [CompanyController::class, 'confirm_assessment'])->name('companies.confirm-assessment');
-
 
 //payment mandate
 Route::any('payment-mandate/lists/{consent?}', [PaymentMandateController::class, 'lists'])->name('payment-mandate.lists');
@@ -175,6 +178,6 @@ Route::post('roles/{id}/store-perms', [RoleController::class, 'store_perms'])->n
 
 
 //charts
-Route::get('api/dashboard/consent-value', [DashboardChartController::class, 'getConsentValue']);
-Route::get('api/dashboard/consent-percentage', [DashboardChartController::class, 'getPercentageConsent']);
+Route::get('api/dashboard/mandate-values', [DashboardChartController::class, 'mandate_values']);
+Route::get('api/dashboard/mandate-percentages', [DashboardChartController::class, 'mandate_percentages']);
 Route::get('api/dashboard/consent-per-channel', [DashboardChartController::class, 'getConsentPerChannel']);

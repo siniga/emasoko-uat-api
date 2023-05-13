@@ -1,7 +1,7 @@
 @extends('layouts.master')
 
 @section('title')
-   Register Service Provider
+    Register Service Provider
 @endsection
 
 @section('content')
@@ -25,7 +25,7 @@
     <div class="row">
         <div class="col-lg-12">
             <div class="card">
-                <div class="card-body" x-data="initData()">
+                <div class="card-body">
                     <!--./form wizard -->
                     <div class="stepwizard mb-4">
                         <div class="stepwizard-row setup-panel">
@@ -61,189 +61,178 @@
                         </div>
                     </div>
 
+                    <!--form message => success or danger -->
+                    <div class="form-message"></div>
 
-                    @if (session()->get('success'))
-                        <div class="alert alert-success">
-                            {{ session()->get('success') }}
-                        </div><br />
-                    @elseif(session()->get('danger'))
-                        <div class="alert alert-danger">
-                            {{ session()->get('danger') }}
-                        </div><br />
-                    @endif
+                    <form action="#" id="companyForm" enctype="multipart/form-data" autocomplete="off">
+                        <input type="hidden" name="partner_id" value="{{ $company->id ?? null }}">
+                        <input type="hidden" name="partner_uuid" value="{{ $company->uuid ?? null }}">
 
-                    {{ Form::open(['url' => route('companies.store-detail'), 'class' => 'form-horizontal', 'enctype' => 'multipart/form-data']) }}
-                    @method('POST')
-                    {{ Form::token() }}
-
-                    <input type="hidden" name="partner_id" value="{{ $company->id ?? null }}">
-                    <input type="hidden" name="partner_uuid" value="{{ $company->uuid ?? null }}">
-
-                    <!-- Company Details -->
-                    <section data-step="0">
-                        <div class="row">
-                            <div class="col-lg-12">
-                                <h5 class="text-capitalize">Company Information</h5>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-lg-6">
-                                <div class="mb-3">
-                                    <label>Business Name <span class="text-danger">*</span>
-                                    </label>
-                                    {{ Form::text('business_name', old('business_name', $company->business_name ?? ''), ['class="form-control"', 'placeholder="Write business name..."']) }}
-                                    <div class="text-danger">{{ $errors->first('business_name') }}</div>
+                        <!-- Company Details -->
+                        <section data-step="0">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <h5 class="text-capitalize">Company Information</h5>
                                 </div>
                             </div>
 
-                            <div class="col-lg-3">
-                                <div class="mb-3">
-                                    <label>Category <span class="text-danger">*</span></label>
-                                    @php $options = []; @endphp
-                                    @foreach ($categories as $category)
-                                        @php
-                                            $options[$category->id] = $category->name;
-                                        @endphp
-                                    @endforeach
-                                    @php
-                                        $options = ['' => 'Select'] + $options;
-                                    @endphp
-
-                                    {{ Form::select('category_id', $options, old('category_id', $company->partner_category_id ?? ''), ['class' => 'form-control select2', 'id' => 'category_id']) }}
-                                    <div class="text-danger">{{ $errors->first('category_id') }}</div>
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <div class="mb-3">
+                                        <label>Business Name <span class="text-danger">*</span></label>
+                                        {{ Form::text('business_name', old('business_name', $company->business_name ?? ''), ['class="form-control"', 'placeholder="Write business name..."']) }}
+                                        <span class="formError"></span>
+                                    </div>
                                 </div>
-                            </div>
 
-                            <div class="col-lg-3">
-                                <div class="mb-3">
-                                    <label>TIN Number <span class="text-danger">*</span></label>
-                                    {{ Form::text('tin_number', old('tin_number', $company->tin_number ?? ''), ['class="form-control input-mask"', 'data-inputmask' => "'mask': '999-999-999'", 'placeholder="Write tin number..."']) }}
-                                    <div class="text-danger">{{ $errors->first('tin_number') }}</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row mb-3">
-                            <div class="col-lg-3">
-                                <div class="mb-3">
-                                    <label>Year of Incorporation <span class="text-danger">*</span>
-                                    </label>
-                                    @php
-                                        $year_options = [];
-                                        $current_year = date('Y');
-                                    @endphp
-
-                                    @foreach (range($current_year, $current_year - 20) as $v)
-                                        @php $year_options[$v] = $v; @endphp
-                                    @endforeach
-
-                                    @php $year_options = ['' => 'Select'] + $year_options; @endphp
-                                    {{ Form::select('year_of_incorporation', $year_options, old('year_of_incorporation', $company->year_of_incorporation ?? ''), ['class' => 'form-control select2']) }}
-                                    <div class="text-danger">{{ $errors->first('year_of_incorporation') }}</div>
-                                </div>
-                            </div>
-
-                            <div class="col-lg-3">
-                                <div class="mb-3">
-                                    <label>Number of Staff <span class="text-danger">*</span>
-                                    </label>
-                                    {{ Form::number('number_of_staff', old('number_of_staff', $company->number_of_staff ?? ''), ['class="form-control"', 'placeholder="Write number of staff..."', 'min' => 1]) }}
-                                    <div class="text-danger">{{ $errors->first('number_of_staff') }}</div>
-                                </div>
-                            </div>
-
-                            <div class="col-lg-3">
-                                <div class="mb-3">
-                                    <label>Company Email <span class="text-danger">*</span>
-                                    </label>
-                                    {{ Form::email('company_email', old('company_email', $company->email ?? ''), ['class="form-control"', 'placeholder="Write company email..."']) }}
-                                    <div class="text-danger">{{ $errors->first('company_email') }}</div>
-                                </div>
-                            </div>
-
-                            <div class="col-lg-3">
-                                <div class="mb-3">
-                                    <label>Website</label>
-                                    {{ Form::text('company_website', old('company_website', $company->website ?? ''), ['class="form-control"', 'placeholder="Write company website..."']) }}
-                                </div>
-                            </div>
-
-                            <div class="col-lg-6">
-                                <label>Company Phone <span class="text-danger">*</span></label>
-                                <div class="row">
-                                    <div class="col-md-4">
+                                <div class="col-lg-3">
+                                    <div class="mb-3">
+                                        <label>Category <span class="text-danger">*</span></label>
                                         @php $options = []; @endphp
-                                        @foreach ($arr_countries as $key => $country)
+                                        @foreach ($categories as $category)
                                             @php
-                                                $options[$key] = $country;
+                                                $options[$category->id] = $category->name;
                                             @endphp
                                         @endforeach
-                                        {{ Form::select('country_code', $options, old('country_code', substr($company->phone ?? '', 0, 3)), ['class' => 'form-control', 'id' => 'country_id']) }}
-                                        <div class="text-danger">{{ $errors->first('country_code') }}</div>
-                                    </div>
-
-                                    <div class="col-md-8">
-                                        {{ Form::number('company_phone', old('company_phone', substr($company->phone ?? '', 4)), ['class="form-control"', 'placeholder="Write phone..."']) }}
-                                        <div class="text-danger">{{ $errors->first('company_phone') }}</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row mt-4">
-                            <div class="col-lg-12">
-                                <h5 class="text-capitalize">Company Location</h5>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-lg-3">
-                                <div class="mb-3">
-                                    <label>Region <span class="text-danger">*</span></label>
-                                    @php $options = []; @endphp
-                                    @foreach ($regions as $region)
                                         @php
-                                            $options[$region->id] = $region->name;
+                                            $options = ['' => 'Select'] + $options;
                                         @endphp
-                                    @endforeach
-                                    @php
-                                        $options = ['' => 'Select'] + $options;
-                                    @endphp
 
-                                    {{ Form::select('region_id', $options, old('region_id', $company->region_id ?? ''), ['class' => 'form-control select2', 'id' => 'region_id']) }}
-                                    <div class="text-danger">{{ $errors->first('region_id') }}</div>
+                                        {{ Form::select('category_id', $options, old('category_id', $company->partner_category_id ?? ''), ['class' => 'form-control', 'id' => 'category_id']) }}
+                                        <span class="formError"></span>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-3">
+                                    <div class="mb-3">
+                                        <label>TIN Number <span class="text-danger">*</span></label>
+                                        {{ Form::text('tin_number', old('tin_number', $company->tin_number ?? ''), ['class="form-control input-mask"', 'data-inputmask' => "'mask': '999-999-999'", 'placeholder="Write tin number..."']) }}
+                                        <span class="formError" id="tinNumberError"></span>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div class="col-lg-3">
-                                <div class="mb-3">
-                                    <label>Postal Address </label>
-                                    {{ Form::text('postal_address', old('postal_address', $company->postal_address ?? ''), ['class="form-control"', 'placeholder="Company postal address..."']) }}
+                            <div class="row mb-3">
+                                <div class="col-lg-3">
+                                    <div class="mb-3">
+                                        <label>Year of Incorporation <span class="text-danger">*</span>
+                                        </label>
+                                        @php
+                                            $year_options = [];
+                                            $current_year = date('Y');
+                                        @endphp
+
+                                        @foreach (range($current_year, $current_year - 20) as $v)
+                                            @php $year_options[$v] = $v; @endphp
+                                        @endforeach
+
+                                        @php $year_options = ['' => 'Select'] + $year_options; @endphp
+                                        {{ Form::select('year_of_incorporation', $year_options, old('year_of_incorporation', $company->year_of_incorporation ?? ''), ['class' => 'form-control']) }}
+                                        <span class="formError"></span>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-3">
+                                    <div class="mb-3">
+                                        <label>Number of Staff <span class="text-danger">*</span>
+                                        </label>
+                                        {{ Form::number('number_of_staff', old('number_of_staff', $company->number_of_staff ?? ''), ['class="form-control"', 'placeholder="Write number of staff..."', 'min' => 1]) }}
+                                        <span class="formError"></span>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-3">
+                                    <div class="mb-3">
+                                        <label>Company Email <span class="text-danger">*</span>
+                                        </label>
+                                        {{ Form::email('company_email', old('company_email', $company->email ?? ''), ['class="form-control"', 'placeholder="Write company email..."']) }}
+                                        <span class="formError" id="companyEmailError"></span>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-3">
+                                    <div class="mb-3">
+                                        <label>Website</label>
+                                        {{ Form::text('company_website', old('company_website', $company->website ?? ''), ['class="form-control"', 'placeholder="Write company website..."']) }}
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6">
+                                    <label>Company Phone <span class="text-danger">*</span></label>
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            @php $options = []; @endphp
+                                            @foreach ($arr_countries as $key => $country)
+                                                @php
+                                                    $options[$key] = $country;
+                                                @endphp
+                                            @endforeach
+                                            {{ Form::select('country_code', $options, old('country_code', substr($company->phone ?? '', 0, 3)), ['class' => 'form-control', 'id' => 'country_id']) }}
+                                            <span class="formError"></span>
+                                        </div>
+
+                                        <div class="col-md-8">
+                                            {{ Form::number('company_phone', old('company_phone', substr($company->phone ?? '', 4)), ['class="form-control"', 'placeholder="Write phone..."']) }}
+                                            <span class="formError"></span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div class="col-lg-6">
-                                <div class="mb-3">
-                                    <label>Physical Address <span class="text-danger">*</span></label>
-                                    {{ Form::textarea('physical_address', old('company_address', $company->physical_address ?? ''), ['class="form-control"', 'placeholder="Write company physical address..."', 'rows' => 1]) }}
-                                    <div class="text-danger">{{ $errors->first('physical_address') }}</div>
+                            <div class="row mt-4">
+                                <div class="col-lg-12">
+                                    <h5 class="text-capitalize">Company Location</h5>
                                 </div>
                             </div>
-                        </div>
 
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div class="mb-3 text-sm-end d-none d-sm-block">
-                                    <a href="{{ route('companies.lists') }}" class="btn btn-danger btn-xs text-medium">
-                                        Cancel
-                                    </a>
-                                    <button type="submit" class="btn btn-primary">Next</button>
+                            <div class="row">
+                                <div class="col-lg-3">
+                                    <div class="mb-3">
+                                        <label>Region <span class="text-danger">*</span></label>
+                                        @php $options = []; @endphp
+                                        @foreach ($regions as $region)
+                                            @php
+                                                $options[$region->id] = $region->name;
+                                            @endphp
+                                        @endforeach
+                                        @php
+                                            $options = ['' => 'Select'] + $options;
+                                        @endphp
+
+                                        {{ Form::select('region_id', $options, old('region_id', $company->region_id ?? ''), ['class' => 'form-control select2', 'id' => 'region_id']) }}
+                                        <span class="formError"></span>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-3">
+                                    <div class="mb-3">
+                                        <label>Postal Address </label>
+                                        {{ Form::text('postal_address', old('postal_address', $company->postal_address ?? ''), ['class="form-control"', 'placeholder="Company postal address..."']) }}
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6">
+                                    <div class="mb-3">
+                                        <label>Physical Address <span class="text-danger">*</span></label>
+                                        {{ Form::textarea('physical_address', old('company_address', $company->physical_address ?? ''), ['class="form-control"', 'placeholder="Write company physical address..."', 'rows' => 1]) }}
+                                        <span class="formError"></span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </section>
-                    {{ Form::close() }}
+
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="mb-3 text-sm-end d-none d-sm-block">
+                                        <a href="{{ route('companies.lists') }}"
+                                            class="btn btn-danger btn-xs text-medium">
+                                            Cancel
+                                        </a>
+                                        <button type="submit" id="submitButton" class="btn btn-primary">Next</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </form>
                 </div>
             </div>
         </div>
@@ -252,5 +241,121 @@
 @endsection
 
 @section('script')
-    <script type="text/javascript"></script>
+    <!--jquery validation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            //declare form message 
+            $('.form-message').html("");
+
+            //validate form
+            $("#companyForm").validate({
+                errorClass: "formError",
+                errorElement: "span",
+                rules: {
+                    business_name: "required",
+                    category_id: "required",
+                    tin_number: "required",
+                    year_of_incorporation: "required",
+                    number_of_staff: "required",
+                    company_email: {
+                        required: true,
+                        email: true,
+                    },
+                    country_code: "required",
+                    company_phone: "required",
+                    region_id: "required",
+                    physical_address: "required",
+                },
+                messages: {
+                    business_name: {
+                        required: "Business name required"
+                    },
+                    category_id: {
+                        required: "Business category required"
+                    },
+                    tin_number: {
+                        required: "TIN Number required"
+                    },
+                    year_of_incorporation: {
+                        required: "Year of incorporation required"
+                    },
+                    number_of_staff: {
+                        required: "Number of staff required"
+                    },
+                    company_email: {
+                        required: "Company email required",
+                        email: "Invalid email",
+                    },
+                    country_code: {
+                        required: "Required"
+                    },
+                    company_phone: {
+                        required: "Phone required"
+                    },
+                    region_id: {
+                        required: "Region required"
+                    },
+                    physical_address: {
+                        required: "Physical address required"
+                    }
+                },
+
+                //submit form
+                submitHandler: function(form, e) {
+                    e.preventDefault();
+
+                    //change submit button text
+                    $('#submitButton').text('Submitting...');
+
+                    //form data
+                    const formData = new FormData(form);
+                    const jsonData = Object.fromEntries(formData);
+
+                    //post data => URL
+                    fetch("/companies/store-detail", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                Accept: "application/json",
+                                'X-CSRF-TOKEN': document.head.querySelector('meta[name=csrf-token]')
+                                    .content
+                            },
+                            body: JSON.stringify(jsonData),
+                        }).then(response => response.json())
+                        .then(responseJson => {
+                            //change submit button text
+                            $('#submitButton').text('Next');
+
+                            //display message
+                            $('.form-message').html(
+                                "<div class='alert alert-success py-2.5 px-2'>Service provider information saved</div>"
+                            );
+
+                            //set timer
+                            setTimeout(function() {
+                                window.location.href = "/companies/documents/" +
+                                    responseJson.uuid;
+                            }, 300);
+
+                        }).catch(() => {
+                            //change submit button text
+                            $('#submitButton').text('Next');
+
+                            //write error message
+                            $('#tinNumberError').text(response.responseJSON.errors
+                                .tin_number);
+                            $('#companyEmailError').text(response.responseJSON.errors
+                                .company_email);
+
+                        }).finally(() => {
+                            //console
+                            console.log("Step pass");
+                        });
+                    return false;
+                }
+            });
+        });
+    </script>
 @endsection

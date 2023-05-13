@@ -63,6 +63,7 @@
 
 
                     <form @submit.prevent="">
+                        <input type="hidden" name="id" x-model="formData.id">
                         <input type="hidden" name="uuid" x-model="formData.uuid">
 
                         <section>
@@ -148,7 +149,7 @@
                                                         <td>
                                                             @if ($val->attachment != null)
                                                                 <a download=""
-                                                                    href="{{ asset('assets/uploads/docs' . $val->attachment) }}">
+                                                                    href="{{ asset('assets/uploads/docs/' . $val->attachment) }}">
                                                                     {{ $val->attachment }}
                                                                 </a>
                                                             @endif
@@ -162,7 +163,6 @@
                                     @endif
                                 </div>
                             </div>
-
 
                             <div class="row">
                                 <div class="col-lg-12">
@@ -305,6 +305,7 @@
         function initData() {
             return {
                 formData: {
+                    id: "{{ $company->id }}",
                     uuid: "{{ $company->uuid }}",
                 },
                 complete: "{{ $company->complete }}",
@@ -338,7 +339,7 @@
 
                             //display message
                             $('#message_wrp').html(
-                                "<div class='alert alert-success rounded-sm fw-semibold'>Service provider registered, Waiting for assessment and approval!</div>"
+                                "<div class='alert alert-success rounded-sm'>Service provider registered, Waiting for assessment and approval process.</div>"
                             );
                         }).catch(() => {
                             this.formMessage = "Something went wrong.";
@@ -370,7 +371,7 @@
 
                             //display message
                             $('#message_wrp').html(
-                                "<div class='alert alert-success rounded-sm fw-semibold'>Service provider information saved.</div>"
+                                "<div class='alert alert-success rounded-sm'>Service provider information saved.</div>"
                                 );
                         }).catch(() => {
                             this.formMessage = "Something went wrong.";

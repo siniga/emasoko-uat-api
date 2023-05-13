@@ -89,7 +89,7 @@
 
         <div class="col-md-3">
             <a href="{{ route('payment-mandate.lists', 'approved') }}">
-                <div class="card border-left-info bg-success shadow h-96 py-2">
+                <div class="card border-left-info bg-success-1 shadow h-96 py-2">
                     <div class="card-body">
                         <div class="row no-gutters align-items-center">
                             <div class="col mr-2">
@@ -140,21 +140,19 @@
 
                     <div class="text-center text-muted">
                         <div class="row">
-                            <div class="offset-2 col-4">
-                                <div class="my-4">
-                                    <p class="mb-1 text-truncate">
-                                        <i class="mdi mdi-circle text-success my-1"></i> Approved
+                            <div class="col-6">
+                                <div class="mt-2">
+                                    <p class="">
+                                        <i class="mdi mdi-circle text-success-1 my-1"></i> Approved : {{ $approved[0]->count }}
                                     </p>
-                                    <h5>{{ $approved[0]->count }}</h5>
                                 </div>
                             </div>
 
-                            <div class="col-4">
-                                <div class="my-4">
-                                    <p class="mb-1 text-truncate">
-                                        <i class="mdi mdi-circle text-danger-1 my-1"></i> Pending
+                            <div class="col-6">
+                                <div class="mt-2">
+                                    <p class="">
+                                        <i class="mdi mdi-circle text-danger my-1"></i> Pending : {{ $pending[0]->count }}
                                     </p>
-                                    <h5>{{ $pending[0]->count }}</h5>
                                 </div>
                             </div>
                         </div>

@@ -174,9 +174,9 @@
                                 <thead>
                                     <tr>
                                         <th width="3%">#</th>
-                                        <th width="20%">Bussiness Name</th>
-                                        <th width="11%">Category</th>
-                                        <th width="11%">TIN Number</th>
+                                        <th width="16%">Bussiness Name</th>
+                                        <th width="12%">Category</th>
+                                        <th width="10%">TIN Number</th>
                                         <th width="8%">Year of Incorporation</th>
                                         <th width="10%">Phone</th>
                                         <th width="11%">Region</th>
@@ -208,7 +208,7 @@
                                             </td>
                                             <td>
                                                 @if ($company->complete == 1)
-                                                    <a href="{{ route('companies.show', $company->id) }}" title="View"
+                                                    <a href="{{ route('companies.details', $company->uuid) }}" title="View"
                                                         class="btn btn-xss">
                                                         <i class="bx bxs-folder-open"></i>
                                                     </a>
@@ -219,12 +219,12 @@
                                                     </a>
                                                 @endif
 
-                                                <a href="{{ route('companies.edit', $company->id) }}" title="Edit"
+                                                <a href="{{ route('companies.edit', $company->uuid) }}" title="Edit"
                                                     class="btn btn-xss">
                                                     <i class="bx bx-edit text-secondary"></i>
                                                 </a>
 
-                                                <a href="{{ route('companies.delete', $company->id) }}" title="Delete"
+                                                <a href="{{ route('companies.delete', $company->uuid) }}" title="Delete"
                                                     class="btn btn-xss delete">
                                                     <i class="bx bx-trash text-danger"></i>
                                                 </a>

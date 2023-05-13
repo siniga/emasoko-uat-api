@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Classes\CompanyAssessment;
 use App\Exports\CompanyExport;
+use App\Http\Requests\CompanyAccountRequest;
 use App\Http\Requests\CompanyDetailRequest;
 use App\Jobs\SendEmailJob;
 use App\Models\Account;
@@ -19,8 +20,8 @@ use App\Models\PartnerStaff;
 use App\Models\PartnerUser;
 use App\Models\Region;
 use App\Models\User;
+use App\Services\CompanyService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Validator;
@@ -31,7 +32,7 @@ use PDF;
 
 class CompanyController extends Controller
 {
-    public function __construct()
+    public function __construct(protected CompanyService $companyService)
     {
         $this->middleware('auth');
     }
@@ -128,13 +129,13 @@ class CompanyController extends Controller
     }
 
     //export xls
-    function export_xls(Request $request)
+    function exportXLS(Request $request)
     {
         return Excel::download(new CompanyExport($request->start_at, $request->end_at, $request->category_id, $request->region_id, $request->status, $request->keyword), date('YmdHis') . '-Companies.xlsx');
     }
 
     //export pdf
-    function export_pdf(Request $request)
+    function exportPDF(Request $request)
     {
         //get data
         $start_at = $request->start_at;
@@ -251,29 +252,11 @@ class CompanyController extends Controller
         else
             $uuid = Str::uuid();
 
-        //phone 
-        $phone = $validated['country_code'] . cast_phone($validated['company_phone']);
+        //create or update service provider    
+        $partner = $this->companyService->createInformation((object) $request->all(), $uuid);
 
-        //save company details
-        $partner = Partner::firstOrNew([
-            'uuid' => $uuid,
-            'tin_number' => $validated['tin_number']
-        ]);
-        $partner->partner_category_id = ucwords($validated['category_id']);
-        $partner->business_name = ucwords($validated['business_name']);
-        $partner->year_of_incorporation = $validated['year_of_incorporation'];
-        $partner->number_of_staff = $validated['number_of_staff'];
-        $partner->region_id = $validated['region_id'];
-        $partner->phone = $phone;
-        $partner->email = $validated['company_email'];
-        $partner->postal_address = $request->input('postal_address');
-        $partner->physical_address = $request->input('physical_address');
-        $partner->website = $request->input('company_website');
-        $partner->next_step = 'company-documents/' . $uuid;
-        $partner->save();
-
-        //redirect
-        return Redirect::route('companies.register-documents', $uuid)->with('success', "Service provider information saved!");
+        //response
+        return response()->json(['success' => true, 'uuid' => $uuid, 'message' => 'Service provider information saved!'], 200);
     }
 
     //company documents
@@ -303,22 +286,17 @@ class CompanyController extends Controller
     //store company details
     function storeCompanyDocuments(Request $request)
     {
-        //validation 
-
         //post data
         $id = $request->input('partner_id');
         $uuid = $request->input('partner_uuid');
 
-        //partner
-        $partner = Partner::findOrFail($id);
-        $partner->next_step = 'company-accounts/' . $uuid;
-        $partner->save();
+        //next stage
+        $partner = $this->companyService->updateNextStep($id, 'companies/accounts/' . $uuid);
 
-        //document categories
+        //categories
         $categories = DocumentCategory::all();
 
         foreach ($categories as $val) {
-            //business licennce
             if ($request->hasFile($val->key)) {
                 $path = $request->file($val->key);
                 $docsName = $path->getClientOriginalName();
@@ -327,8 +305,8 @@ class CompanyController extends Controller
 
                 //partner documents
                 $partner_document = PartnerDocument::firstOrNew([
-                    'partner_id' => $id,
-                    'partner_uuid' => $uuid,
+                    'partner_id' => $partner->id,
+                    'partner_uuid' => $partner->uuid,
                     'key' => $val->key,
                     'name' => $val->name
                 ]);
@@ -337,8 +315,8 @@ class CompanyController extends Controller
             }
         }
 
-        //redirect
-        return Redirect::route('companies.register-accounts', $uuid)->with('success', "Service Provider documents saved!");
+        //response
+        return response()->json(['success' => true, 'uuid' => $uuid, 'message' => 'Service provider documents uploaded'], 200);
     }
 
     //company Account
@@ -358,36 +336,23 @@ class CompanyController extends Controller
     }
 
     //store company accounts
-    function storeCompanyAccounts(Request $request)
+    function storeCompanyAccounts(CompanyAccountRequest $request)
     {
+        // validated request
+        $validated = $request->validated();
+
         //post data
         $id = $request->input('partner_id');
         $uuid = $request->input('partner_uuid');
 
-        //partner
-        $partner = Partner::findOrFail($id);
-        $partner->next_step = 'company-staff/' . $uuid;
-        $partner->save();
+        //next stage
+        $partner = $this->companyService->updateNextStep($id, 'companies/staff/' . $uuid);
 
         //partner account
-        if ($request->input('account_id') != '' && $request->input('account_name') != '' && $request->input('account_number') != '') {
-            for ($i = 0; $i < sizeof($request->input('account_id')); $i++) {
-                if ($request->input('account_id')[$i] != '' && $request->input('account_name')[$i] != '' && $request->input('account_name')[$i] != '') {
-                    $partner_account = PartnerAccount::firstOrNew([
-                        'partner_id' => $id,
-                        'partner_uuid' => $uuid,
-                        'account_type_id' => $request->input('account_type_id')[$i],
-                        'account_id' => $request->input('account_id')[$i],
-                        'account_name' => $request->input('account_name')[$i],
-                        'account_number' => $request->input('account_number')[$i]
-                    ]);
-                    $partner_account->save();
-                }
-            }
-        }
+        $this->companyService->createCollectionAccount($request->all(), $partner);
 
-        //redirect
-        return Redirect::route('companies.register-staff', $uuid)->with('success', "Service Provider collection account(s) saved!");
+        //response
+        return response()->json(['success' => true, 'uuid' => $uuid, 'message' => 'Service Provider collection account(s) saved'], 200);
     }
 
 
@@ -408,38 +373,18 @@ class CompanyController extends Controller
     //store company staff
     function storeCompanyStaff(Request $request)
     {
-        //validation 
-
         //post data
         $id = $request->input('partner_id');
         $uuid = $request->input('partner_uuid');
 
-        //partner
-        $partner = Partner::findOrFail($id);
-        $partner->next_step = 'company-authorized-person/' . $uuid;
-        $partner->save();
+        //next stage
+        $partner = $this->companyService->updateNextStep($id, 'companies/authorized-person/' . $uuid);
 
         //partner staff
-        if ($request->input('staff_name') != '' && $request->input('nida_number') != '' && $request->input('staff_phone') != '' && $request->input('staff_title') != '') {
-            for ($i = 0; $i < sizeof($request->input('staff_name')); $i++) {
-                if ($request->input('staff_name')[$i] != '' && $request->input('nida_number')[$i] != '' && $request->input('staff_phone')[$i] != '' && $request->input('staff_title')[$i] != '') {
-                    $partner_staff = PartnerStaff::firstOrNew([
-                        'partner_id' => $id,
-                        'partner_uuid' => $uuid,
-                        'NIDA_number' => $request->input('nida_number')[$i],
-                        'name' => $request->input('staff_name')[$i],
-                        'phone' => $request->input('staff_phone')[$i],
-                        'email' => $request->input('staff_email')[$i],
-                        'title' => $request->input('staff_title')[$i],
+        $this->companyService->createStaff($request->all(), $partner);
 
-                    ]);
-                    $partner_staff->save();
-                }
-            }
-        }
-
-        //redirect
-        return Redirect::route('companies.register-authorized-person', $uuid)->with('success', "Service Provider authorized personnel(s) saved!");
+        //response
+        return response()->json(['success' => true, 'uuid' => $uuid, 'message' => 'Service Provider staff saved'], 200);
     }
 
 
@@ -462,36 +407,14 @@ class CompanyController extends Controller
         $id = $request->input('partner_id');
         $uuid = $request->input('partner_uuid');
 
-        //partner
-        $partner = Partner::findOrFail($id);
-        $partner->next_step = 'company-info-overview/' . $uuid;
-        $partner->save();
+        //next stage
+        $partner = $this->companyService->updateNextStep($id, 'companies/preview/' . $uuid);
 
-        //token and password
-        $token = Str::random(64);
-        $password = $request->input('password');
+        //create user
+        $this->companyService->createCredential((object) $request->all(), $partner);
 
-        //create user to store data
-        $user = User::firstOrNew(['email' => $request->input('email')]);
-        $user->name = $request->input('name');
-        $user->verify_token = $token;
-        $user->password = Hash::make($password);
-        $user->save();
-
-        //insert role
-        $user->roles()->attach(2);
-
-        //partner user
-        $partner_user = PartnerUser::firstOrNew([
-            'user_id' => $user->id,
-            'partner_id' => $id,
-            'partner_uuid' => $uuid
-        ]);
-        $partner_user->authorize = 1;
-        $partner_user->save();
-
-        //redirect
-        return Redirect::route('companies.preview', $uuid)->with('success', "Service Provider authorized credentials created!");
+        //response
+        return response()->json(['success' => true, 'uuid' => $uuid, 'message' => 'Service Provider credentials saved'], 200);
     }
 
     //company info overview
@@ -516,55 +439,17 @@ class CompanyController extends Controller
         $partner = Partner::where(['uuid' => $uuid])->firstOrFail();
 
         //update status of partner
-        $partner->next_step = 'company-info-overview/' . $uuid;
+        $partner->next_step = 'companies/preview/' . $uuid;
         $partner->status = 1;
         $partner->complete = 1;
         $partner->save();
 
-        //store company aapprovals
-        $arr_assessment_criteria = [
-            'Company_Information' => 'Company Information',
-            'Company_Documents' => 'Company Documents',
-            'Company_Collection_Accounts' => 'Company Collection Accounts',
-            'Company_Authorized_Representative' => 'Company Authorized Representative',
-        ];
+        //create assessment stages
+        $this->companyService->createAssessmentStages($partner);
 
-        foreach ($arr_assessment_criteria as $key => $label) {
-            $partner_approval = PartnerApproval::firstOrNew([
-                'partner_id' => $partner->id,
-                'key' => $key,
-                'label' => $label
-            ]);
-            $partner_approval->save();
-        }
+        //send assessment alert
+        $this->companyService->sendAssessmentAlert($partner);
 
-        //construct message
-        $message = "<p>There is new service provider registered and required a assessment and approval process of the service provider.</p>";
-        $message .= "<p>Below are the information of service provider:</p>";
-        $message .= "<p>Business Name: <span class='fw-semibold'>{$partner->business_name}</span></p>";
-        $message .= "<p>Category: <span class='fw-semibold'>{$partner->partnerCategory->name}</span></p>";
-        $message .= "<p>TIN Number: <span class='fw-semibold'>{$partner->tin_number}</span></p>";
-        $message .= "<p>Year of Incorporation: <span class='fw-semibold'>{$partner->year_of_incorporation}</span></p>";
-        $message .= "<p>Email: <span class='fw-semibold'>{$partner->email}</span></p>";
-        $message .= "<p>Phone: <span class='fw-semibold'>{$partner->phone}</span></p>";
-
-        //query for users
-        $users = User::whereHas('roles', function ($q) {
-            $q->where('name', 'admin');
-        })->get();
-
-        if ($users->isNotEmpty()) {
-            foreach ($users as $user) {
-                //send email in background
-                $data = [
-                    "email" => $user->email,
-                    "name" => $user->name,
-                    "subject" => "Service Provider Registration",
-                    "body" => $message
-                ];
-                dispatch(new SendEmailJob($data));
-            }
-        }
         //response
         return response()->json(['success' => false, 'success_msg' => 'Service provider successful registered'], 200);
     }
@@ -582,7 +467,7 @@ class CompanyController extends Controller
         $partner->status = 0;
         $partner->complete = 0;
         $partner->save();
-        
+
         //response
         return response()->json(['success' => false, 'success_msg' => 'Service Provider information saved!'], 200);
     }
@@ -610,9 +495,9 @@ class CompanyController extends Controller
             PartnerUser::where(['partner_id' => $company->id])->delete();
 
             //redirect
-            return Redirect::route('companies.index')->with('success', 'Company registration canceled');
+            return Redirect::route('companies.index')->with('success', 'Service Provider registration canceled');
         } else {
-            return Redirect::route('companies.index')->with('danger', 'Failed to cancel company registration');
+            return Redirect::route('companies.index')->with('danger', 'Failed to cancel service provider registration');
         }
     }
 
@@ -623,12 +508,12 @@ class CompanyController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show($uuid)
     {
-        $title = 'Company Information';
+        $title = 'Service Provider Information';
 
-        //company
-        $company = Partner::findOrFail($id);
+        //service provider
+        $company = Partner::where(['uuid' => $uuid])->firstOrFail();
 
         //company information  approval
         $company_info_approval = PartnerApproval::where(['partner_id' => $company->id, 'key' => 'Company_Information'])->first();
@@ -652,16 +537,15 @@ class CompanyController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+    public function edit($uuid)
     {
-        $title = 'Edit Company';
+        $title = 'Edit Service Provider';
 
-        $flag = new CountryFlag;
-
-        //company
-        $company = Partner::findOrFail($id);
+        //service provider
+        $company = Partner::where(['uuid' => $uuid])->firstOrFail();
 
         //populate data
+        $flag = new CountryFlag;
         $categories = PartnerCategory::all();
         $countries = Country::all();
         $regions = Region::orderBy('name', 'ASC')->get();
@@ -697,42 +581,17 @@ class CompanyController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(CompanyDetailRequest $request)
     {
-        //validation 
-        $validator = Validator::make($request->all(), [
-            'tin_number' => 'required',
-            'business_name' => 'required',
-            'partner_category_id' => 'required',
-            'year_of_incorporation' => 'required|numeric',
-            'number_of_staff' => 'required|numeric',
-            'country_code' => 'required',
-            'company_phone' => 'required',
-            'company_email' => 'required|email',
-            'region_id' => 'required',
-            'physical_address' => 'required',
-        ]);
+        // validated request
+        $validated = $request->validated();
+        $uuid = $request->input('partner_uuid');
 
-        //phone 
-        $phone = $request->input('country_code') . cast_phone($request->input('company_phone'));
+        //create or update service provider    
+        $partner = $this->companyService->createInformation((object) $request->all(), $uuid);
 
-        //company
-        $partner = Partner::findOrFail($id);
-        $partner->tin_number = $request->input('tin_number');
-        $partner->partner_category_id = ucwords($request->input('category_id'));
-        $partner->business_name = ucwords($request->input('business_name'));
-        $partner->year_of_incorporation = ucwords($request->input('year_of_incorporation'));
-        $partner->number_of_staff = $request->input('number_of_staff');
-        $partner->region_id = $request->input('region_id');
-        $partner->phone = $phone;
-        $partner->email = $request->input('company_email');
-        $partner->postal_address = $request->input('postal_address');
-        $partner->physical_address = $request->input('physical_address');
-        $partner->website = $request->input('company_website');
-        $partner->save();
-
-        //redirect
-        return Redirect::route('companies.index')->with('success', 'Company information updated');
+        //response
+        return response()->json(['success' => true, 'uuid' => $uuid, 'message' => 'Service provider information updated'], 200);
     }
 
     /**
@@ -741,13 +600,13 @@ class CompanyController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    function destroy($id)
+    function destroy($uuid)
     {
         //'Delete Company';
         // has_allowed('cars', 'delete');
 
-        //company
-        $company = Partner::findOrFail($id);
+        //service provider
+        $company = Partner::where(['uuid' => $uuid])->firstOrFail();
 
         if ($del = $company->delete()) {
             //delete partner accounts
@@ -766,94 +625,99 @@ class CompanyController extends Controller
             PartnerUser::where(['partner_id' => $company->id])->delete();
 
             //redirect
-            return Redirect::route('companies.index')->with('success', 'Company information deleted');
+            return Redirect::route('companies.lists')->with('success', 'Service provider deleted');
         } else {
-            return Redirect::route('companies.index')->with('danger', 'Failed to delete company');
+            return Redirect::route('companies.lists')->with('danger', 'Failed to delete service provider');
         }
     }
 
     //company assessment
-    function companyAssessment(Request $request, $id)
+    function companyAssessment($uuid)
     {
         $title = "Company Assessment";
 
-        //page
-        $page = $request->get('page');
-
-        //company
-        $company = Partner::findOrFail($id);
-
-        if ($page == 'companyInformation')
-            $view = 'companies.assessment.information';
-        else if ($page == 'companyDocuments')
-            $view = 'companies.assessment.documents';
-        else if ($page == 'collectionAccount')
-            $view = 'companies.assessment.collection_account';
-        else if ($page == 'authorizedRespesentative')
-            $view = 'companies.assessment.authorized_representative';
-        else if ($page == 'ConfirmAssessment')
-            $view = 'companies.assessment.confirm';
+        //service provider
+        $company = Partner::where(['uuid' => $uuid])->firstOrFail();
 
         //render view
-        return view($view, compact('title', 'company'));
+        return view('companies.assessments', compact('title', 'company'));
     }
 
-    //company assessment
-    function store_assessment(Request $request)
+    //get assessment approval
+    function companyAssessmentStages(Request $request)
     {
-        //validation
+        $uuid = $request->input('uuid');
 
+        //service provider
+        $company = Partner::where(['uuid' => $uuid])->firstOrFail();
+
+        //partner approval
+        $approval = PartnerApproval::where(['partner_id' => $company->id])->orderBy('sequence', 'asc')->get();
+
+        //response
+        return response()->json(['error' => false, 'data' => $approval], 200);
+    }
+
+    //get assessment approval
+    function companyAssessmentApproval(Request $request)
+    {
+        $uuid = $request->input('uuid');
+        $stage = $request->input('stage');
+
+        //service provider
+        $company = Partner::where(['uuid' => $uuid])->firstOrFail();
+
+        //partner approval
+        $approval = PartnerApproval::where(['partner_id' => $company->id, 'key' => $stage])->first();
+
+        //assign data
+        $data = [
+            'uuid' => $uuid,
+            'stage' => $stage,
+            'criteria' => $approval->status,
+            'remarks' => $approval->remarks
+        ];
+
+        //response
+        return response()->json(['error' => false, 'data' => $data], 200);
+    }
+
+    //store company assessment
+    function storeAssessment(Request $request)
+    {
         //requests
-        $company_id = $request->input('company_id');
-        $key = $request->input('key');
+        $uuid = $request->input('uuid');
+        $stage = $request->input('stage');
+        $criteria = $request->input('criteria');
 
-        //company
-        $company = Partner::findOrFail($company_id);
+        //service provider
+        $company = Partner::where(['uuid' => $uuid])->firstOrFail();
         $company->status = 2;
         $company->save();
 
         //update partner approval
-        $partner_approval = PartnerApproval::where(['partner_id' => $company->id, 'key' => $key])->first();
-        $partner_approval->status = $request->input('assessment_criteria');
+        $partner_approval = PartnerApproval::where(['partner_id' => $company->id, 'key' => $stage])->first();
+        $partner_approval->status = $criteria;
         $partner_approval->remarks = $request->input('remarks');
         $partner_approval->save();
 
-        //check for key
-        if ($key == 'Company_Information')
-            $message = 'Company information assessment saved';
-        else if ($key == 'Company_Documents')
-            $message = 'Company documents assessment saved';
-        else if ($key == 'Company_Collection_Accounts')
-            $message = 'Company collection accounts assessment saved';
-        else if ($key == 'Company_Authorized_Representative')
-            $message = 'Company authorized representative assessment saved';
-
         //response
-        return response()->json(['error' => false, 'success_msg' => $message], 200);
+        return response()->json(['error' => false, 'uuid' => $uuid, 'criteria' => $criteria], 200);
     }
 
     //verify company
-    function confirm_assessment(Request $request)
+    function confirmAssessment(Request $request)
     {
-        //validation
-
         //requests
-        $company_id = $request->input('company_id');
+        $uuid = $request->input('uuid');
 
-        //company
-        $company = Partner::findOrFail($company_id);
+        //service provider
+        $partner = Partner::where(['uuid' => $uuid])->firstOrFail();
 
-        //call company assessment 
-        $company_assessment = new CompanyAssessment();
-        $boolean = $company_assessment->process_assessment($company->id);
-
-        if ($boolean == true) {
-            $message = 'Company assessment completed and approval email sent to company authorized representative!';
-        } else if ($boolean == false) {
-            $message = 'Company assessment confirmed but still there are pending or rejected criteria!';
-        }
+        //process assessment
+        $status = $this->companyService->processAssessment($partner);
 
         //response
-        return response()->json(['error' => false, 'success_msg' => $message], 200);
+        return response()->json(['error' => false, "status" => $status, "message" => 'Assessment completed!'], 200);
     }
 }

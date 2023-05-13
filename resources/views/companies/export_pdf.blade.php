@@ -51,7 +51,8 @@
     <div class="invoice-box">
         <div class="title" align="center">
             {{-- <img src="<?= base_url('assets/img/logo_icon.png') ?>" width="75"/> --}}
-            <h2>eMakato Deduction Solution</h2>
+            <h1>eMakato</h1>
+            <h3></h3>
             <h4>Companies Report</h4>
         </div>
 
@@ -59,30 +60,33 @@
         <table width="100%">
             <tr style="background-color: #ECEFF1;">
                 <th width="2%">#</th>
-                <th width="14%">Bussiness Name</th>
-                <th width="10%">TIN Number</th>
-                <th width="8%">Category</th>
-                <th width="8%">Year of Incorporation</th>
-                <th width="8%">No. of staff</th>
-                <th width="14%">Company Contact</th>
+                <th width="15%">Bussiness Name</th>
+                <th width="10%">Category</th>
+                <th width="5%">Year</th>
+                <th width="12%">Email</th>
+                <th width="10%">Phone</th>
                 <th width="10%">Region</th>
-                <th width="10%">Physical Address</th>
-                <th width="10%">Created Date</th>
+                <th width="12%">Physical Address</th>
+                <th width="6%">No. Staff</th>
+                <th width="10%">Reg. Date</th>
             </tr>
 
             @php $serial = 1; @endphp
             @foreach ($companies as $company)
-                <td>{{ $serial }}</td>
-                <td>{{ $company->business_name }}</td>
-                <td>{{ $company->tin_number }}</td>
-                <td>{{ $company->partnerCategory->name ?? '' }}</td>
-                <td>{{ $company->year_of_incorporation }}</td>
-                <td>{{ $company->number_of_staff ?? '' }}</td>
-                <td>{{ $company->email ?? '' }}<br />
-                {{ $company->phone ?? '' }}</td>
-                <td>{{ $company->region->name ?? '' }}</td>
-                <td>{{ $company->physical_address ?? '' }}</td>
-                <td>{{ $company->created_at }}</td>
+                <tr>
+                    <td>{{ $serial }}</td>
+                    <td>{{ $company->business_name }}
+                        <br />{{ $company->tin_number }}
+                    </td>
+                    <td>{{ $company->partnerCategory->name ?? '' }}</td>
+                    <td>{{ $company->year_of_incorporation }}</td>
+                    <td>{{ $company->email ?? '' }}</td>
+                    <td>{{ $company->phone ?? '' }}</td>
+                    <td>{{ $company->region->name ?? '' }}</td>
+                    <td>{{ $company->physical_address ?? '' }}</td>
+                    <td>{{ $company->number_of_staff ?? '' }}</td>
+                    <td>{{ $company->created_at }}</td>
+                </tr>
                 @php $serial++; @endphp
             @endforeach
         </table>

@@ -25,7 +25,7 @@
     <div class="row">
         <div class="col-lg-12">
             <div class="card">
-                <div class="card-body" x-data="initData()">
+                <div class="card-body">
                     <!--./form wizard -->
                     <div class="stepwizard mb-4">
                         <div class="stepwizard-row setup-panel">
@@ -61,95 +61,85 @@
                         </div>
                     </div>
 
+                    <!--form message => success or danger -->
+                    <div class="form-message"></div>
 
-                    @if (session()->get('success'))
-                        <div class="alert alert-success">
-                            {{ session()->get('success') }}
-                        </div><br />
-                    @elseif(session()->get('danger'))
-                        <div class="alert alert-danger">
-                            {{ session()->get('danger') }}
-                        </div><br />
-                    @endif
+                    <form action="#" id="companyForm" enctype="multipart/form-data" autocomplete="off">
+                        <input type="hidden" name="partner_id" value="{{ $company->id }}">
+                        <input type="hidden" name="partner_uuid" value="{{ $company->uuid }}">
 
-                    {{ Form::open(['url' => route('companies.store-documents'), 'class' => 'form-horizontal needs-validation', 'enctype' => 'multipart/form-data', 'novalidate']) }}
-                    @method('POST')
-                    {{ Form::token() }}
-
-                    <input type="hidden" name="partner_id" value="{{ $company->id }}">
-                    <input type="hidden" name="partner_uuid" value="{{ $company->uuid }}">
-
-                    <!-- Company Documents -->
-                    <section data-step="2">
-                        <div class="row">
-                            <div class="col-lg-12">
-                                <h5 class="text-capitalize">Company Documents</h5>
+                        <!-- Company Documents -->
+                        <section data-step="2">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <h5 class="text-capitalize">Company Documents</h5>
+                                </div>
+                                <!--./col -->
                             </div>
-                            <!--./col -->
-                        </div>
-                        <!--./row -->
+                            <!--./row -->
 
-                        <div class="row">
-                            <div class="col-lg-12">
-                                <div class="mb-3">
-                                    <div class="table-responsive">
-                                        <table class="table table-nowrap align-middle table-bordered">
-                                            <thead>
-                                                <tr>
-                                                    <th width="70%">Attachments</th>
-                                                    <th width="20%">Action</th>
-                                                </tr>
-                                            </thead>
-
-                                            <tbody>
-                                                @foreach ($categories as $val)
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="mb-3">
+                                        <div class="table-responsive">
+                                            <table class="table table-nowrap align-middle table-bordered">
+                                                <thead>
                                                     <tr>
-                                                        <td>
-                                                            {{ $val->name }}
-                                                            @if ($val->required == 1)
-                                                                <span class="text-danger">*</span>
-                                                            @endif
-                                                        </td>
-                                                        <td>
-                                                            @if (in_array($val->key, $arr_documents))
-                                                                <a href="{{ asset('assets/uploads/docs') }}">{{ $val->key }}</a>
-                                                                
-                                                                <input type="file" name="{{ $val->key }}" id="formFile"
-                                                                class="form-control" accept="application/pdf" />
-                                                            @else    
-                                                            <input type="file" name="{{ $val->key }}" id="formFile"
-                                                                class="form-control" accept="application/pdf"
-                                                                @if ($val->required == 1) required @endif />
-                                                            @endif
-
-                                                            <div class="invalid-feedback">
-                                                                This file required
-                                                            </div>
-                                                        </td>
+                                                        <th width="70%">Attachments</th>
+                                                        <th width="20%">Action</th>
                                                     </tr>
-                                                @endforeach
-                                            </tbody>
-                                        </table>
+                                                </thead>
+
+                                                <tbody>
+                                                    @foreach ($categories as $val)
+                                                        <tr>
+                                                            <td>
+                                                                {{ $val->name }}
+                                                                @if ($val->required == 1)
+                                                                    <span class="text-danger">*</span>
+                                                                @endif
+                                                            </td>
+                                                            <td>
+                                                                @if (in_array($val->key, $arr_documents))
+                                                                    <a
+                                                                        href="{{ asset('assets/uploads/docs/' . $val->name) }}">{{ $val->key }}
+                                                                    </a>
+
+                                                                    <input type="file" name="{{ $val->key }}"
+                                                                        id="formFile" class="form-control"
+                                                                        accept="application/pdf" />
+                                                                @else
+                                                                    <input type="file" name="{{ $val->key }}"
+                                                                        id="formFile" class="form-control"
+                                                                        accept="application/pdf"
+                                                                        @if ($val->required == 1) required @endif />
+                                                                @endif
+                                                                <span class="formError"></span>
+                                                            </td>
+                                                        </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <!--./table-responsive -->
                                     </div>
-                                    <!--./table-responsive -->
+                                </div>
+                                <!--./col -->
+                            </div>
+                            <!--./row -->
+
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="mb-3 text-sm-end d-none d-sm-block">
+                                        <a href="{{ route('companies.registration', $company->uuid) }}"
+                                            class="btn btn-info text-medium">Previous</a>
+
+                                        <button type="submit" id="submitButton" class="btn btn-primary">Next</button>
+                                    </div>
                                 </div>
                             </div>
-                            <!--./col -->
-                        </div>
-                        <!--./row -->
-
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div class="mb-3 text-sm-end d-none d-sm-block">
-                                    <a href="{{ route('companies.registration', $company->uuid) }}"
-                                        class="btn btn-info text-medium">Previous</a>
-
-                                    <button type="submit" class="btn btn-primary">Next</button>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-                    {{ Form::close() }}
+                        </section>
+                    </form>
                 </div>
             </div>
         </div>
@@ -158,5 +148,83 @@
 @endsection
 
 @section('script')
-    <script type="text/javascript"></script>
+    <!--jquery validation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            //declare form message 
+            $('.form-message').html("");
+
+            //validate form
+            $("#companyForm").validate({
+                // errorClass: "formError",
+                // errorElement: "span",
+                // rules: {
+                //     Business_Licence: {
+                //         required: true
+                //     },
+                //     Certificate_of_incorporation: {
+                //         required: true
+                //     },
+                //     TIN_Certificate: {
+                //         required: true
+                //     }
+                // },
+                // messages: {
+                //     Business_Licence: {
+                //         required: "Business Licence required"
+                //     },
+                //     Certificate_of_incorporation: {
+                //         required: "Certificate of incorporation required"
+                //     },
+                //     TIN_Certificate: {
+                //         required: "TIN certificate required"
+                //     }
+                // },
+                submitHandler: function(form, e) {
+                    e.preventDefault();
+
+                    //change submit button text
+                    $('#submitButton').text('Submitting...');
+
+                    //form data
+                    const formData = new FormData(form);
+
+                    //append token
+                    formData.append("_token", "{{ csrf_token() }}");
+
+                    //post data 
+                    $.ajax({
+                        type: "POST",
+                        url: "/companies/store-documents",
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        cache: false,
+                        timeout: 800000,
+                        success: function(response) {
+                            //change submit button text
+                            $('#submitButton').text('Next');
+
+                            //display message
+                            $('.form-message').html(
+                                "<div class='alert alert-success py-2.5 px-2'>Service Provider documents uploaded</div>"
+                            );
+
+                            //set timer
+                            setTimeout(function() {
+                                window.location.href = "/companies/accounts/" + response.uuid;
+                            }, 300);
+                        },
+                        error: function(e) {
+                            $('#submitButton').text('Next');
+                        }
+                    });
+
+                    return false;
+                }
+            });
+        });
+    </script>
 @endsection

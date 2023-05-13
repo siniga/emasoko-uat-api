@@ -15,22 +15,28 @@
                     </a>
                 </li>
 
-                @if (Auth::user()->hasRole('admin'))
-                    <li>
-                        <a href="{{ route('companies.lists') }}" class="waves-effect">
-                            <i class="bx bx-building"></i>
-                            <span key="t-layouts">Service Providers</span>
+                @php
+                    if (Request::segment(1) == 'companies') {
+                        $sp_class = 'mm-active';
+                    } else {
+                        $sp_class = '';
+                    }
+                @endphp
 
-                            @php
-                                $notify = get_company_notification();
-                            @endphp
+                <li class="{{ $sp_class }}">
+                    <a href="{{ route('companies.lists') }}" class="waves-effect">
+                        <i class="bx bx-building"></i>
+                        <span key="t-layouts">Service Providers</span>
 
-                            @if ($notify != null)
-                                <span class="badge bg-danger">{{ $notify }}</span>
-                            @endif
-                        </a>
-                    </li>
-                @endif
+                        @php
+                            $no_of_notification = get_company_notification();
+                        @endphp
+
+                        @if ($no_of_notification != null)
+                            <span class="badge bg-danger">{{ $no_of_notification }}</span>
+                        @endif
+                    </a>
+                </li>
 
                 <li>
                     <a href="{{ route('customer-accounts.lists') }}" class="waves-effect">
@@ -39,14 +45,12 @@
                     </a>
                 </li>
 
-                @if (!Auth::user()->hasRole('admin'))
-                    <li>
-                        <a href="{{ route('payment-mandate.create-account') }}" class="waves-effect">
-                            <i class="bx bx-user-plus"></i>
-                            <span key="t-layouts">Create Payment Mandate</span>
-                        </a>
-                    </li>
-                @endif
+                <li>
+                    <a href="{{ route('payment-mandate.create-account') }}" class="waves-effect">
+                        <i class="bx bx-user-plus"></i>
+                        <span key="t-layouts">Create Payment Mandate</span>
+                    </a>
+                </li>
 
                 <li>
                     <a href="{{ route('payment-mandate.lists') }}" class="waves-effect">
@@ -55,17 +59,16 @@
                     </a>
                 </li>
 
-                @if (Auth::user()->hasRole('admin'))
-                    <li class="menu-title" key="t-apps">Setup</li>
+                <li class="menu-title" key="t-apps">Setup</li>
 
-                    <li>
-                        <a href="{{ route('payment-channels.index') }}" class="waves-effect">
-                            <i class="bx bx-copy"></i>
-                            <span key="t-chat">Payment Channel</span>
-                        </a>
-                    </li>
+                <li>
+                    <a href="{{ route('payment-channels.index') }}" class="waves-effect">
+                        <i class="bx bx-copy"></i>
+                        <span key="t-chat">Payment Channel</span>
+                    </a>
+                </li>
 
-                    {{-- <li>
+                {{-- <li>
                         <a href="#" class="waves-effect">
                             <i class="bx bx-user-plus text-white"></i>
                             <span key="t-chat">Debit</span>
@@ -73,22 +76,21 @@
                     </li> --}}
 
 
-                    <li class="menu-title" key="t-apps">Authentication</li>
+                <li class="menu-title" key="t-apps">Authentication</li>
 
-                    <li>
-                        <a href="{{ route('users.index') }}" class="waves-effect">
-                            <i class="bx bx-user-plus"></i>
-                            <span key="t-chat">Users</span>
-                        </a>
-                    </li>
+                <li>
+                    <a href="{{ route('users.index') }}" class="waves-effect">
+                        <i class="bx bx-user-plus"></i>
+                        <span key="t-chat">Users</span>
+                    </a>
+                </li>
 
-                    <li>
-                        <a href="{{ route('roles.index') }}" class="waves-effect">
-                            <i class="bx bx-user-pin"></i>
-                            <span key="t-chat">Roles</span>
-                        </a>
-                    </li>
-                @endif
+                <li>
+                    <a href="{{ route('roles.index') }}" class="waves-effect">
+                        <i class="bx bx-user-pin"></i>
+                        <span key="t-chat">Roles</span>
+                    </a>
+                </li>
             </ul>
         </div>
         <!-- Sidebar -->

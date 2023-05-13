@@ -61,10 +61,8 @@
             </div>
         @endif
     </form>
-
-
 </div>
-<!--./flex -->
+
 
 <script type="text/javascript">
     $(document).ready(function() {

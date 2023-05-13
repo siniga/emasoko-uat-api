@@ -9,10 +9,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
+use function GuzzleHttp\Promise\rejection_for;
+
 class DashboardChartController extends Controller
 {
     //aggregate consent percentage
-    function getPercentageConsent()
+    function mandate_percentages()
     {
         //pending
         $pending = DebitOrder::where_cond()->where(['approved' => 0])->count();
@@ -31,8 +33,8 @@ class DashboardChartController extends Controller
         echo json_encode(['error' => FALSE, 'approved' => $percent_approved, 'pending' => $percent_pending], 200);
     }
 
-    //consent value
-    function getConsentValue()
+    //mandate values
+    function mandate_values()
     {
         //declare variable
         $data_array = [];
@@ -46,7 +48,8 @@ class DashboardChartController extends Controller
             $debit_orders = DebitOrder::select('debit_orders.approved', DB::raw('SUM(debit_orders.total_amount) as total_amount'))
                 ->where(function ($query) {
                     $query->where('debit_orders.approved', '=', 1)
-                        ->orWhere('debit_orders.approved', '=', 0);
+                        ->orWhere('debit_orders.approved', '=', 0)
+                        ->orWhere('debit_orders.approved', '=', 99);
                 })->groupBy('debit_orders.approved')
                 ->orderBy('debit_orders.approved', 'DESC');
 
@@ -62,10 +65,19 @@ class DashboardChartController extends Controller
             if (isset($debit_orders[1]->total_amount) && $debit_orders[1]->total_amount != null)
                 $pending = $debit_orders[1]->total_amount;
 
+            //rejected
+            $rejected = 0;
+            if (isset($debit_orders[2]->total_amount) && $debit_orders[2]->total_amount != null)
+                $rejected = $debit_orders[2]->total_amount;
+
+            ///aggregate mandate
+            $aggregate = $approved + $pending + $rejected;
+
             //create data array
             $data_array[] = [
                 // "month" => date("F", mktime(0, 0, 0, $month, 10)) . ',' . $year,
                 "month" => date("M", mktime(0, 0, 0, $month, 10)),
+                "total" => (int) $aggregate,
                 "pending" =>  (int) $pending,
                 "approved" => (int) $approved
             ];

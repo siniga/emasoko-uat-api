@@ -54,6 +54,8 @@
 <!--./Alpine JS -->
 <script defer src="https://unpkg.com/alpinejs@3.10.5/dist/cdn.min.js"></script>
 
+{{-- <script src="https://cdn.jsdelivr.net/gh/mattkingshott/iodine/dist/iodine.min.js" defer></script> --}}
+
 @yield('script')
 
 @yield('script-bottom')

@@ -1,18 +1,24 @@
 //pending and approved mandate value
-$.getJSON('api/dashboard/consent-value', (data) => {
+$.getJSON('api/dashboard/mandate-values', (data) => {
     if (data.error == false) {
         var arr_month = [];
+        var arr_total = [];
         var arr_approved = [];
         var arr_pending = [];
 
         for (k = 0; k < data.chart.length; k++) {
             arr_month.push(data.chart[k].month);
+            arr_total.push(data.chart[k].total);
             arr_pending.push(data.chart[k].pending);
             arr_approved.push(data.chart[k].approved);
         }
 
         var options = {
             series: [
+                {
+                    name: "All",
+                    data: arr_total
+                },
                 {
                     name: "Approved",
                     data: arr_approved
@@ -22,21 +28,44 @@ $.getJSON('api/dashboard/consent-value', (data) => {
                     data: arr_pending
                 },
             ],
+            // chart: {
+            //     height: 320,
+            //     type: "line",
+            //     toolbar: "false",
+            //     dropShadow: {
+            //         enabled: !0,
+            //         color: "#000",
+            //         top: 18,
+            //         left: 7,
+            //         blur: 8,
+            //         opacity: .8
+            //     }
+            // },
             chart: {
-                height: 320,
-                type: "bar",
-                toolbar: "false",
-                // dropShadow: {
-                //     enabled: !0,
-                //     color: "#000",
-                //     top: 18,
-                //     left: 7,
-                //     blur: 8,
-                //     opacity: .0
-                // }
+                type: 'bar',
+                height: 350,
+            },
+            plotOptions: {
+                bar: {
+                    borderRadius: 4,
+                    horizontal: false,
+                    columnWidth: '75%',
+                    endingShape: 'rounded',
+                    dataLabels: {
+                        position: 'bottom'
+                    },
+                }
             },
             dataLabels: {
                 enabled: !1
+            },
+            stroke: {
+                show: true,
+                width: 2,
+                colors: ['transparent']
+            },
+            fill: {
+                opacity: 1
             },
             yaxis: {
                 labels: {
@@ -54,11 +83,11 @@ $.getJSON('api/dashboard/consent-value', (data) => {
                 crosshair: true,
                 categories: arr_month,
             },
-            colors: ["#388E3C", "#F44336"],
-            stroke: {
-                curve: "smooth",
-                width: 1
-            }
+            colors: ["#1565C0", "#66BB6A", "#F44336"],
+            // stroke: {
+            //     curve: "smooth",
+            //     width: 3
+            // }
         };
 
         //render chart  
@@ -69,17 +98,17 @@ $.getJSON('api/dashboard/consent-value', (data) => {
 
 
 //pending and approved mandate percentage
-$.getJSON('api/dashboard/consent-percentage', (data) => {
+$.getJSON('api/dashboard/mandate-percentages', (data) => {
     if (data.error == false) {
         //charts
         var options = {
             series: [data.pending, data.approved],
             chart: {
                 type: "donut",
-                height: 260,
+                height: 340,
             },
             labels: ["Pending", "Approved"],
-            colors: ["#F44336", "#388E3C"],
+            colors: ["#F44336", "#66BB6A"],
             legend: {
                 show: !1
             },
@@ -141,7 +170,7 @@ $.getJSON('api/dashboard/consent-per-channel', (data) => {
                 categories: arr_channels,
             },
             labels: ["Approved", "Pending"],
-            colors: ["#388E3C", "#F44336"],
+            colors: ["#66BB6A", "#F44336"],
         };
 
         //render chart  
@@ -201,7 +230,7 @@ $('#select-month').on('change', function (e) {
                     categories: arr_channels,
                 },
                 labels: ["Approved", "Pending"],
-                colors: ["#388E3C", "#F44336"],
+                colors: ["#66BB6A", "#F44336"],
             };
 
             //render chart

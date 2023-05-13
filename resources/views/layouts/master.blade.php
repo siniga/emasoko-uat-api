@@ -29,7 +29,7 @@
         <!-- ============================================================== -->
         <!-- Start right Content here -->
         <!-- ============================================================== -->
-        <div class="main-content">
+        <div class="main-content bg-light-grey">
             <div class="page-content">
                 <div class="container-fluid">
                     @yield('content')

@@ -16,7 +16,7 @@ class CompanyAssessment
     }
 
     //process company assessment
-    function process_assessment($company_id)
+    function processAssessment($company_id)
     {
         //check pending, rejected or approved
         $pending_approvals = PartnerApproval::where(['partner_id' => $company_id])
