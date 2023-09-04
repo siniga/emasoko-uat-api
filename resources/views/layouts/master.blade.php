@@ -6,7 +6,7 @@
     <title> @yield('title') | eMakato</title>
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta content="e-Makato" name="description" />
     <meta content="Laina Finance" name="author" />
@@ -17,10 +17,18 @@
     <!-- App favicon -->
     <link rel="shortcut icon" href="{{ URL::asset('assets/images/favicon.png') }}">
     @include('layouts.head-css')
+
+    <!-- DEFINITIONS -->
+    <style>
+        [x-cloak] {
+            display: none;
+        }
+    </style>
 </head>
 
 @section('body')
-<body data-topbar="light">
+
+    <body data-topbar="light">
     @show
     <!-- Begin page -->
     <div id="layout-wrapper">

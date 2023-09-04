@@ -289,7 +289,7 @@
                                         </div>
                                     </div>
                                 </div>
-                            </template>                            
+                            </template>
                         </section>
                     </form>
                 </div>
@@ -372,7 +372,12 @@
                             //display message
                             $('#message_wrp').html(
                                 "<div class='alert alert-success rounded-sm'>Service provider information saved.</div>"
-                                );
+                            );
+
+                            //set timer
+                            setTimeout(function() {
+                                window.location.href = "/companies/staff/" + response.uuid;
+                            }, 1000);
                         }).catch(() => {
                             this.formMessage = "Something went wrong.";
                         }).finally(() => {

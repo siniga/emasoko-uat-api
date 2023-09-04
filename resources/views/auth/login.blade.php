@@ -10,8 +10,8 @@
             <div class="row justify-content-center">
                 <div class="col-md-8 col-lg-6 col-xl-5">
 
-                    <div class="card overflow-hidden">
-                        <div class="bg-white">
+                    <div class="card bg-white border overflow-hidden">
+                        <div class="my-2">
                             <div class="row">
                                 <div class="col-12">
                                     <div class="text-center py-2 mb-4">

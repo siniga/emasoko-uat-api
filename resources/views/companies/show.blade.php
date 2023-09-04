@@ -36,7 +36,7 @@
                             <div class="text-sm-end d-none d-sm-block">
                                 <button title="Assessment Process" class="btn btn-primary btn-sm"
                                     x-on:click="sidebarOpen = true, fetchData('{{ $company->uuid }}'), fetchAssessment('{{ $company->uuid }}', 'Company_Information');"
-                                    x-transition>
+                                    x-transition x-cloak>
                                     <i class="fa fa-check"></i> Assessment
                                 </button>
                             </div>

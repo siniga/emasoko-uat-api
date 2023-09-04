@@ -48,7 +48,7 @@
                 <li>
                     <a href="{{ route('payment-mandate.create-account') }}" class="waves-effect">
                         <i class="bx bx-user-plus"></i>
-                        <span key="t-layouts">Create Payment Mandate</span>
+                        <span key="t-layouts">Create Mandate</span>
                     </a>
                 </li>
 
