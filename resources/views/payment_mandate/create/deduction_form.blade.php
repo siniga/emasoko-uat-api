@@ -66,27 +66,29 @@
 
                     <!-- Customer Information -->
                     <section>
-                        <div class="row">
-                            <div class="col-lg-6 col-md-6">
-                                <div class="mb-3">
-                                    <label>Service Provider <span class="text-danger">*</span></label>
-                                    @php
-                                        $options = [];
-                                    @endphp
-                                    @foreach ($providers as $val)
+                        @if (Auth::user()->hasRole(['admin']))
+                            <div class="row">
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="mb-3">
+                                        <label>Service Provider <span class="text-danger">*</span></label>
                                         @php
-                                            $options[$val->id] = $val->business_name;
+                                            $options = [];
                                         @endphp
-                                    @endforeach
-                                    @php
-                                        $options = ['' => 'Select'] + $options;
-                                    @endphp
+                                        @foreach ($providers as $val)
+                                            @php
+                                                $options[$val->id] = $val->business_name;
+                                            @endphp
+                                        @endforeach
+                                        @php
+                                            $options = ['' => 'Select'] + $options;
+                                        @endphp
 
-                                    {{ Form::select('provider_id', $options, old('provider_id', $debit_order->partner_id ?? '' ), ['class' => 'form-control select2', 'id' => 'provider_id']) }}
-                                    <span class="text-danger">{{ $errors->first('provider_id') }}</span>
+                                        {{ Form::select('provider_id', $options, old('provider_id', $debit_order->partner_id ?? '' ), ['class' => 'form-control select2', 'id' => 'provider_id']) }}
+                                        <span class="text-danger">{{ $errors->first('provider_id') }}</span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        @endif
 
                         <div class="row ">
                             <div class="col-lg-3">
