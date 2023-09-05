@@ -51,45 +51,45 @@
                 </td>
             </tr>
             <tr>
-                <td width=25%>Business Name</td>
-                <td width=25%>
+                <th width=20%>Business Name</td>
+                <td width=30%>
                     <span>{{ $company->business_name }}</span>
                 </td>
 
-                <td>Business Category</td>
+                <th>Business Category</th>
                 <td>
                     <span>{{ $company->partnerCategory->name ?? '' }}</span>
                 </td>
             </tr>
 
             <tr>
-                <td>TIN Number</td>
+                <th>TIN Number</th>
                 <td>{{ $company->tin_number }}</td>
 
-                <td>Year of Incorporation</td>
+                <th>Year of Incorporation</th>
                 <td>
                     {{ $company->year_of_incorporation }}
                 </td>
             </tr>
 
             <tr>
-                <td>Number of Staff</td>
+                <th>Number of Staff</th>
                 <td colspan="3">{{ $company->number_of_staff }}</td>
             </tr>
 
             <tr>
-                <td>Email</td>
+                <th>Email</th>
                 <td>{{ $company->email ?? '' }}</td>
 
-                <td>Phone</td>
+                <th>Phone</th>
                 <td>{{ $company->phone }}</td>
             </tr>
 
             <tr>
-                <td>Postal Address</td>
+                <th>Postal Address</th>
                 <td>{{ $company->postal_address ?? '' }}</td>
 
-                <td>Physical Address</td>
+                <th>Physical Address</th>
                 <td>{{ $company->physical_address }}</td>
             </tr>
         </table>
@@ -148,9 +148,9 @@
             <table class="table align-middle table-bordered mb-4">
                 <thead>
                     <tr>
-                        <td width="3%">#</td>
-                        <td width="40%">Name</td>
-                        <td width="40%">Attachment</td>
+                        <th width="3%">#</th>
+                        <th width="40%">Name</th>
+                        <th width="40%">Attachment</th>
                     </tr>
                 </thead>
 
@@ -228,11 +228,11 @@
             <table class="table table-bordered mb-4">
                 <thead>
                     <tr>
-                        <td width="3%">#</th>
-                        <td width="20%">Account Type</td>
-                        <td width="20%">Bank/MNO Name</td>
-                        <td width="25%">Account Name</td>
-                        <td width="20%">Account Number</td>
+                        <th width="3%">#</th>
+                        <th width="20%">Account Type</th>
+                        <th width="20%">Bank/MNO Name</th>
+                        <th width="25%">Account Name</th>
+                        <th width="20%">Account Number</th>
                     </tr>
                 </thead>
 
@@ -307,11 +307,11 @@
             <table class="table table-bordered">
                 <thead>
                     <tr>
-                        <td width="3%">#</td>
-                        <td width="30%">Staff</td>
-                        <td width="25%">Email</td>
-                        <td width="20%">Phone</td>
-                        <td width="20%">Title</td>
+                        <th width="3%">#</th>
+                        <th width="35%">Staff</th>
+                        <th width="25%">Email</th>
+                        <th width="20%">Phone</th>
+                        <th width="16%">Title</th>
                     </tr>
                 </thead>
 
@@ -387,9 +387,9 @@
         <table class="table table-nowrap align-middle table-bordered mb-2">
             <thead>
                 <tr>
-                    <td width="3%">#</th>
-                    <td width="60%">Assessment Criteria</th>
-                    <td width="30%">Status</th>
+                    <th width="3%">#</th>
+                    <th width="60%">Assessment Criteria</th>
+                    <th width="30%">Status</th>
                 </tr>
             </thead>
 

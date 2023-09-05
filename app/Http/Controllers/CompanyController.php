@@ -2,11 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Classes\CompanyAssessment;
 use App\Exports\CompanyExport;
 use App\Http\Requests\CompanyAccountRequest;
 use App\Http\Requests\CompanyDetailRequest;
-use App\Jobs\SendEmailJob;
 use App\Models\Account;
 use App\Models\AccountType;
 use App\Models\Country;
@@ -30,6 +28,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Str;
 use PDF;
 
+
 class CompanyController extends Controller
 {
     public function __construct(protected CompanyService $companyService)
@@ -51,44 +50,12 @@ class CompanyController extends Controller
         $companies = Partner::orderBy('created_at', 'desc');
 
         if (isset($_POST['filter'])) {
-            //passing variables
-            $start_at = $request->input('start_at');
-            $end_at = $request->input('end_at');
-            $category_id = $request->input('category_id');
-            $region_id = $request->input('region_id');
-            $status = $request->input('status');
-            $keyword = $request->input('keyword');
+            //all request
+            $requests = $request->all();
 
-            //start data and end date
-            if ($start_at != null && $end_at != null) {
-                $start_at = date('Y-m-d', strtotime($start_at));
-                $end_at = date('Y-m-d', strtotime($end_at));
-
-                $companies = $companies->whereBetween('created_at', [$start_at, $end_at]);
-            }
-
-            //category
-            if ($category_id != null) {
-                $companies = $companies->where('partner_category_id', $category_id);
-            }
-
-            //region
-            if ($region_id != null) {
-                $companies = $companies->where('region_id', $region_id);
-            }
-
-            //status
-            if ($status != null) {
-                $companies = $companies->where('status', $status);
-            }
-
-            //keyword
-            if ($keyword != null) {
-                $companies = $companies->where(function ($query) use ($keyword) {
-                    $query->orWhere('business_name', 'LIKE', "%$keyword%")
-                        ->orWhere('tin_number', 'LIKE', "%$keyword%");
-                });
-            }
+            $companies = $companies->when($requests, function ($query) use ($requests) {
+                $query->withFilters($requests);
+            });
 
             //number of companies
             $number_of_companies = $companies->count();
@@ -96,19 +63,11 @@ class CompanyController extends Controller
             //companies
             $companies = $companies->get();
         } else {
-            //passing variables
-            $start_at = null;
-            $end_at = null;
-            $category_id = null;
-            $region_id = null;
-            $status = null;
-            $keyword = null;
-
             //number of companies
             $number_of_companies = $companies->count();
 
             //companies
-            $companies = $companies->paginate(20);
+            $companies = $companies->paginate(50);
         }
 
         //populate data
@@ -116,12 +75,12 @@ class CompanyController extends Controller
         $regions = Region::orderBy('name', 'ASC')->get();
 
         $post_data = [
-            'start_at' => $start_at,
-            'end_at' => $end_at,
-            'category_id' => $category_id,
-            'region_id' => $region_id,
-            'status' => $status,
-            'keyword' => $keyword
+            'start_at' => $request->start_at ?? null,
+            'end_at' => $request->end_at ?? null,
+            'category_id' => $request->category_id ?? null,
+            'region_id' => $request->region_id ?? null,
+            'status' => $request->status ?? null,
+            'keyword' => $request->keyword ?? null
         ];
 
         //render view
@@ -131,53 +90,21 @@ class CompanyController extends Controller
     //export xls
     function exportXLS(Request $request)
     {
-        return Excel::download(new CompanyExport($request->start_at, $request->end_at, $request->category_id, $request->region_id, $request->status, $request->keyword), date('YmdHis') . '-Companies.xlsx');
+        return Excel::download(new CompanyExport($request->all()), date('YmdHis') . '-Companies.xlsx');
     }
 
     //export pdf
     function exportPDF(Request $request)
     {
-        //get data
-        $start_at = $request->start_at;
-        $end_at = $request->end_at;
-        $category_id = $request->category_id;
-        $region_id = $request->region_id;
-        $status = $request->status;
-        $keyword = $request->keyword;
+        //all request
+        $requests = $request->all();
 
         //companies
         $companies = Partner::where('complete', '=', 1);
 
-        //start data and end date
-        if ($start_at != null && $end_at != null) {
-            $start_at = date('Y-m-d', strtotime($start_at));
-            $end_at = date('Y-m-d', strtotime($end_at));
-
-            $companies = $companies->whereBetween('created_at', [$start_at, $end_at]);
-        }
-
-        //category
-        if ($category_id != null) {
-            $companies = $companies->where('partner_category_id', $category_id);
-        }
-
-        //region
-        if ($region_id != null) {
-            $companies = $companies->where('region_id', $region_id);
-        }
-
-        //status
-        if ($status != null) {
-            $companies = $companies->where('status', $status);
-        }
-
-        //keyword
-        if ($keyword != null) {
-            $companies = $companies->where(function ($query) use ($keyword) {
-                $query->orWhere('business_name', 'LIKE', "%$keyword%")
-                    ->orWhere('tin_number', 'LIKE', "%$keyword%");
-            });
-        }
+        $companies = $companies->when($requests, function ($query) use ($requests) {
+            $query->withFilters($requests);
+        });
 
         //companies
         $companies = $companies->get();
@@ -451,7 +378,7 @@ class CompanyController extends Controller
         $this->companyService->sendAssessmentAlert($partner);
 
         //response
-        return response()->json(['success' => false, 'success_msg' => 'Service provider successful registered'], 200);
+        return response()->json(['success' => false, 'success_msg' => 'Service provider successful registered', 'uuid' => $uuid], 200);
     }
 
     //saving application
@@ -469,7 +396,7 @@ class CompanyController extends Controller
         $partner->save();
 
         //response
-        return response()->json(['success' => false, 'success_msg' => 'Service Provider information saved!'], 200);
+        return response()->json(['success' => false, 'success_msg' => 'Service Provider information saved!', 'uuid' => $uuid], 200);
     }
 
     //cancel registration

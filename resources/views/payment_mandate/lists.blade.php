@@ -27,19 +27,34 @@
                             <div class="row">
                                 <div class="col-lg-2">
                                     <div class="mb-3">
-                                        {{ Form::date('start_at', old('start_at', $start_at), ['placeholder="Start Date..."', 'class="form-control"']) }}
+                                        {{ Form::date('start_at', old('start_at', $post_data['start_at']), ['placeholder="Start Date..."', 'class="form-control"']) }}
                                     </div>
                                 </div>
                                 <!--./col -->
 
                                 <div class="col-lg-2">
                                     <div class="mb-3">
-                                        {{ Form::date('end_at', old('end_at', $end_at), ['placeholder="End Date..."', 'class="form-control"']) }}
+                                        {{ Form::date('end_at', old('end_at', $post_data['end_at']), ['placeholder="End Date..."', 'class="form-control"']) }}
                                     </div>
                                 </div>
                                 <!--./col -->
 
                                 <div class="col-lg-2">
+                                    <div class="mb-3">
+                                        @php
+                                            $options = [
+                                                'PENDING' => 'Pending',
+                                                'APPROVED' => 'Approved',
+                                                'REJECTED' => 'Rejected',
+                                            ];
+                                            $options = ['' => '-- Consent Status --'] + $options;
+                                        @endphp
+
+                                        {{ Form::select('status', $options, old('status', $post_data['status']), ['class' => 'form-control']) }}
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-3">
                                     <div class="mb-3">
                                         @php
                                             $account_type_options = [];
@@ -52,10 +67,10 @@
                                         @endforeach
                                         @php
                                             $account_type_options = $options;
-                                            $options = ['' => 'Payment channel'] + $options;
+                                            $options = ['' => '-- Payment Channel --'] + $options;
                                         @endphp
 
-                                        {{ Form::select('account_type_id', $options, old('account_type_id', $account_type_id), ['class' => 'form-control account_type_id', 'id' => 'account_type_id']) }}
+                                        {{ Form::select('account_type_id', $options, old('account_type_id', $post_data['account_type_id']), ['class' => 'form-control account_type_id', 'id' => 'account_type_id']) }}
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -69,36 +84,20 @@
                                             @endphp
                                         @endforeach
                                         @php
-                                            $options = ['' => 'Bank/MNO name'] + $options;
+                                            $options = ['' => '-- Bank/MNO name --'] + $options;
                                         @endphp
 
-                                        {{ Form::select('account_id', $options, old('account_id', $account_id), ['class' => 'form-control account_id', 'id' => 'account_id']) }}
+                                        {{ Form::select('account_id', $options, old('account_id', $post_data['account_id']), ['class' => 'form-control account_id', 'id' => 'account_id']) }}
                                     </div>
                                 </div>
-                                <!--./col -->
-
-                                <div class="col-lg-3">
-                                    <div class="mb-3">
-                                        @php
-                                            $options = [
-                                                0 => 'Pending',
-                                                1 => 'Approved',
-                                                99 => 'Rejected',
-                                            ];
-                                            $options = ['' => 'Consent status'] + $options;
-                                        @endphp
-
-                                        {{ Form::select('status', $options, old('status', $status), ['class' => 'form-control']) }}
-                                    </div>
-                                </div>
-                                <!--./col -->
+                               
                             </div>
                             <!--./row -->
 
                             <div class="row">
                                 <div class="col-lg-6">
                                     <div class="mb-3">
-                                        {{ Form::text('keyword', old('keyword', $keyword), ['class="form-control"', 'placeholder="Search by name of account holder or number..."']) }}
+                                        {{ Form::text('keyword', old('keyword', $post_data['keyword']), ['class="form-control"', 'placeholder="Search by name of account holder or number..."']) }}
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -163,12 +162,12 @@
                                         </a> --}}
 
                                         <a title="Export" class="btn btn-outline-success btn-sm"
-                                            href="{{ route('payment-mandate.export-xls', ['start_at' => $start_at, 'end_at' => $end_at, 'account_type_id' => $account_type_id, 'account_id' => $account_id, 'status' => $status, 'keyword' => $keyword]) }}">
+                                            href="{{ route('payment-mandate.export-xls', ['start_at' => $post_data['start_at'], 'end_at' => $post_data['end_at'], 'account_type_id' => $post_data['account_type_id'], 'account_id' => $post_data['account_id'], 'status' => $post_data['status'], 'keyword' => $post_data['keyword']]) }}">
                                             <i class="bx bx-export"></i> Export XLS
                                         </a>
 
                                         <a title="Export" class="btn btn-outline-danger btn-sm"
-                                            href="{{ route('payment-mandate.export-pdf', ['start_at' => $start_at, 'end_at' => $end_at, 'account_type_id' => $account_type_id, 'account_id' => $account_id, 'status' => $status, 'keyword' => $keyword]) }}">
+                                            href="{{ route('payment-mandate.export-pdf', ['start_at' => $post_data['start_at'], 'end_at' => $post_data['end_at'], 'account_type_id' => $post_data['account_type_id'], 'account_id' => $post_data['account_id'], 'status' => $post_data['status'], 'keyword' => $post_data['keyword']]) }}">
                                             <i class="fas fa-file-pdf"></i> Export PDF
                                         </a>
                                     </div>
@@ -206,35 +205,35 @@
                                             <td>{{ $values->customerAccount->phone ?? '' }}</td>
 
                                             <td>
-                                                @if ($values->approved == 0)
+                                                @if ($values->approved == "PENDING")
                                                     <span class="badge badge-pill badge-soft-danger">Pending</span>
-                                                @elseif($values->approved == 1)
+                                                @elseif($values->approved == "APPROVED")
                                                     <span class="badge badge-pill badge-soft-success">Approved</span>
-                                                @elseif($values->approved == 99)
+                                                @elseif($values->approved == "REJECTED")
                                                     <span class="badge badge-pill badge-soft-danger">Rejected</span>
                                                 @endif
                                             </td>
 
                                             <td>
                                                 @if ($values->status == 'saved')
-                                                    <a href="{{ route('payment-mandate.preview', [$values->customerAccount->id, $values->id]) }}"
-                                                        title="Confirm Application" class="btn btn-xss">
+                                                    <a href="{{ route('payment-mandate.preview', [$values->customerAccount->uuid, $values->uuid]) }}"
+                                                        title="Preview application" class="btn btn-xss">
                                                         <i class='bx bxs-check-square bx-xs text-success'></i>
                                                     </a>
                                                 @endif
 
-                                                <a href="{{ route('payment-mandate.show', $values->id) }}" title="View"
+                                                <a href="{{ route('payment-mandate.show', $values->uuid) }}" title="View"
                                                     class="btn btn-xss">
-                                                    <i class="bx bxs-folder-open text-primary"></i>
+                                                    <i class="bx bxs-folder-open"></i>
                                                 </a>
 
-                                                @if ($values->approved == 0)
-                                                    <a href="{{ route('payment-mandate.edit', $values->id) }}"
+                                                @if ($values->approved == "PENDING")
+                                                    <a href="{{ route('payment-mandate.edit', $values->uuid) }}"
                                                         title="Edit" class="btn btn-xss">
                                                         <i class="bx bx-edit text-secondary"></i>
                                                     </a>
 
-                                                    <a href="{{ route('payment-mandate.delete', $values->id) }}"
+                                                    <a href="{{ route('payment-mandate.delete', $values->uuid) }}"
                                                         title="Delete" class="btn btn-xss delete">
                                                         <i class="bx bx-trash text-danger"></i>
                                                     </a>

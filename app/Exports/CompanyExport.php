@@ -14,56 +14,23 @@ use Maatwebsite\Excel\Concerns\FromArray;
 
 class CompanyExport implements FromQuery, WithHeadings, ShouldAutoSize, WithEvents, WithMapping
 {
-    protected $start_at, $end_at, $category_id, $region_id, $status, $keyword;
+    protected $data;
 
-    public function __construct($start_at, $end_at, $category_id, $region_id, $status, $keyword)
+    public function __construct($data)
     {
-        $this->start_at = $start_at;
-        $this->end_at = $end_at;
-        $this->category_id = $category_id;
-        $this->region_id = $region_id;
-        $this->status = $status;
-        $this->keyword = $keyword;
+        $this->data = $data;
     }
 
     public function query()
     {
+        $requests = $this->data;
+
         //companies
         $companies = Partner::query();
 
-        //start data and end date
-        if ($this->start_at != null && $this->end_at != null) {
-            $start_at = date('Y-m-d', strtotime($this->start_at));
-            $end_at = date('Y-m-d', strtotime($this->end_at));
-
-            $companies = $companies->whereBetween('created_at', [$start_at, $end_at]);
-        }
-
-        //category
-        if ($this->category_id != null) {
-            $companies = $companies->where('partner_category_id', $this->category_id);
-        }
-
-        //region
-        if ($this->region_id != null) {
-            $companies = $companies->where('region_id', $this->region_id);
-        }
-
-        //status
-        if ($this->status != null)
-            $companies = $companies->where('status', $this->status);
-
-        //keyword
-        if ($this->keyword != null) {
-            $keyword = $this->keyword;
-
-            //query
-            $companies = $companies->where(function ($query) use ($keyword) {
-                $query->orWhere('business_name', 'LIKE', "%$keyword%")
-                    ->orWhere('tin_number', 'LIKE', "%$keyword%");
-            });
-        }
-
+        $companies = $companies->when($requests, function ($query) use ($requests) {
+            $query->withFilters($requests);
+        });
 
         //return
         return $companies;

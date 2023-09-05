@@ -1,5 +1,11 @@
 @extends('layouts.master')
 
+<style>
+    .table th{
+        background-color: #E1F5FE !important;
+    }   
+</style>
+
 @section('title')
     Customer Account Information
 @endsection
@@ -103,9 +109,9 @@
                         </div>
 
                         <div class="text-sm-end">
-                            <a href="{{ route('payment-mandate.create-deduction', [$customer_account->id]) }}"
+                            <a href="{{ route('payment-mandate.create-deduction', [$customer_account->uuid]) }}"
                                 title="New Payment Mandate" class="btn btn-outline-primary text-medium btn-sm">
-                                <i class="bx bx-plus font-size-12"></i> Create Payment Mandate
+                                <i class="bx bx-plus font-size-12"></i> Create Mandate
                             </a>
                         </div>
                     </div>

@@ -47,7 +47,7 @@ class CustomerAccountRequest extends FormRequest
             'account_name.required_if' => 'Name of account holder required',
             'account_number.required_if' => 'Account number required',
             'phone.required_if' => 'Phone connected to bank required',
-            'account_number_phone.required_if' => 'MNO Phone required',
+            'account_number_phone.required_if' => 'Phone required',
         ];
     }
 }

@@ -342,7 +342,13 @@
                                 "<div class='alert alert-success rounded-sm'>Service provider registered, Waiting for assessment and approval process.</div>"
                             );
                         }).catch(() => {
-                            this.formMessage = "Something went wrong.";
+                            //change submit button text
+                            $('#submitButton').text('Update');
+
+                            //write error message
+                            $('.form-message').html(
+                                "<div class='alert alert-danger py-2.5 px-2'>Failed to update service provider information</div>"
+                            );
                         }).finally(() => {
                             this.submitLoading = false;
                             this.buttonSubmit = "Submit";
@@ -376,7 +382,7 @@
 
                             //set timer
                             setTimeout(function() {
-                                window.location.href = "/companies/staff/" + response.uuid;
+                                window.location.href = "/companies/details/" + response.uuid;
                             }, 1000);
                         }).catch(() => {
                             this.formMessage = "Something went wrong.";

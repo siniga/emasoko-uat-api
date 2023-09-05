@@ -55,10 +55,10 @@
                                             @endphp
                                         @endforeach
                                         @php
-                                            $options = ['' => 'Category'] + $options;
+                                            $options = ['' => '-- Select Category --'] + $options;
                                         @endphp
 
-                                        {{ Form::select('category_id', $options, old('category_id', $post_data['category_id']), ['class' => 'form-control select2', 'id' => 'category_id']) }}
+                                        {{ Form::select('category_id', $options, old('category_id', $post_data['category_id']), ['class' => 'form-control', 'id' => 'category_id']) }}
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -72,10 +72,10 @@
                                             @endphp
                                         @endforeach
                                         @php
-                                            $options = ['' => 'Region'] + $options;
+                                            $options = ['' => '-- Select Region --'] + $options;
                                         @endphp
 
-                                        {{ Form::select('region_id', $options, old('region_id', $post_data['region_id']), ['class' => 'form-control select2', 'id' => 'region_id']) }}
+                                        {{ Form::select('region_id', $options, old('region_id', $post_data['region_id']), ['class' => 'form-control', 'id' => 'region_id']) }}
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -89,10 +89,10 @@
                                                 2 => 'Assessment Process',
                                                 3 => 'Approved',
                                             ];
-                                            $options = ['' => 'Status'] + $options;
+                                            $options = ['' => '-- Select Status --'] + $options;
                                         @endphp
 
-                                        {{ Form::select('status', $options, old('status', $post_data['status']), ['class' => 'form-control select2']) }}
+                                        {{ Form::select('status', $options, old('status', $post_data['status']), ['class' => 'form-control']) }}
                                     </div>
                                 </div>
                                 <!--./col -->

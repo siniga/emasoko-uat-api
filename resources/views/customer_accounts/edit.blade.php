@@ -142,7 +142,7 @@
                             <div class="row">
                                 <div class="col-lg-12">
                                     <div class="mb-3 text-sm-end d-none d-sm-block">
-                                        <a href="{{ url('customer-accounts.lists') }}"
+                                        <a href="{{ route('customer-accounts.lists') }}"
                                             class="btn btn-danger btn-xs text-medium">
                                             Cancel
                                         </a>

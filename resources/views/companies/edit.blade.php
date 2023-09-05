@@ -299,6 +299,11 @@
                                 "<div class='alert alert-success py-2.5 px-2'>Service provider information updated</div>"
                             );
 
+                            //set timer
+                            setTimeout(function() {
+                                window.location.href = "/companies/details/" + responseJson.uuid;
+                            }, 2000);
+
                         }).catch(() => {
                             //change submit button text
                             $('#submitButton').text('Update');

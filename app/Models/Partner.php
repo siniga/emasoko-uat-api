@@ -49,4 +49,40 @@ class Partner extends Model
     {
         return $this->belongsTo(Region::class, 'region_id');
     }
+
+    public function scopeWithFilters($query, $request)
+    {
+        $start_date        = $request['start_at'] ?? null;
+        $end_date          = $request['end_at'] ?? null;
+        $status            = $request['status'] ?? null;
+        $category_id       = $request['category_id'] ?? null;
+        $region_id         = $request['region_id'] ?? null;
+        $keyword           = $request['keyword'] ?? null;
+
+        return $query->when($start_date, function ($query) use ($start_date, $end_date) {
+            if ($start_date != null || $end_date != null) {
+                if ($start_date != null && $end_date != null)
+                    $query->whereBetween('created_at', [$start_date, $end_date]);
+
+                else if ($start_date != null)
+                    $query->where('created_at', '>=', $start_date);
+
+                else if ($end_date != null)
+                    $query->where('created_at', '<=', $end_date);
+            }
+        })
+            ->when($status, function ($query) use ($status) {
+                $query->where('status', $status);
+            })
+            ->when($category_id, function ($query) use ($category_id) {
+                $query->where('partner_category_id', $category_id);
+            })
+            ->when($region_id, function ($query) use ($region_id) {
+                $query->where('region_id', $region_id);
+            })
+            ->when($keyword, function ($query) use ($keyword) {
+                $query->orWhere('business_name', 'LIKE', "%$keyword%")
+                    ->orWhere('tin_number', 'LIKE', "%$keyword%");
+            });
+    }
 }

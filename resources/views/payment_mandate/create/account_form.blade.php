@@ -45,14 +45,14 @@
 
                     {{ Form::open(['url' => route('payment-mandate.store-account'), 'method' => 'POST', 'class' => 'form-horizontal']) }}
                     {{ Form::token() }}
-
                     <input type="hidden" name="customer_account_id" value="{{ $customer_account->id ?? null }}">
-                    <input type="hidden" name="debit_order_id" value="{{ $debit_order->id ?? null }}">
-                    <input type="hidden" name="partner_id" value="{{ $partner->id ?? null }}">
+                    <input type="hidden" name="customer_account_uuid" value="{{ $customer_account->uuid ?? null }}">
+                    <input type="hidden" name="debit_order_id" value="{{ $debit_order->id ?? null }}">  
+                    <input type="hidden" name="debit_order_uuid" value="{{ $debit_order->uuid ?? null }}">  
 
                     <!-- Customer Information -->
                     <section>
-                        <div class="row ">
+                        <div class="row ">                        
                             <div class="col-lg-4">
                                 <div class="mb-3">
                                     <label>Payment Channel <span class="text-danger">*</span></label>
@@ -71,7 +71,7 @@
                                     @endphp
 
                                     {{ Form::select('account_type_id', $options, old('account_type_id', $customer_account->account_type_id ?? ''), ['class' => 'form-control account_type_id', 'id' => 'account_type_id']) }}
-                                    <div class="text-danger">{{ $errors->first('account_type_id') }}</div>
+                                    <span class="text-danger">{{ $errors->first('account_type_id') }}</span>
                                 </div>
                             </div>
                             <!--./col -->
@@ -90,7 +90,7 @@
                                     @endphp
 
                                     {{ Form::select('account_id', $options, old('account_id', $customer_account->account_id ?? ''), ['class' => 'form-control account_id', 'id' => 'account_id']) }}
-                                    <div class="text-danger">{{ $errors->first('account_id') }}</div>
+                                    <span class="text-danger">{{ $errors->first('account_id') }}</span>
                                 </div>
                             </div>
                             <!--./col -->
@@ -99,7 +99,7 @@
                                 <div class="mb-3">
                                     <label>Name of Account Holder <span class="text-danger">*</span></label>
                                     {{ Form::text('account_name', old('account_name', $customer_account->account_name ?? ''), ['class="form-control"', 'placeholder="Enter name of account holder..."', 'id="account_name"']) }}
-                                    <div class="text-danger">{{ $errors->first('account_name') }}</div>
+                                    <span class="text-danger">{{ $errors->first('account_name') }}</span>
                                 </div>
                             </div>
                             <!--./col -->
@@ -108,7 +108,7 @@
                                 <div class="mb-3">
                                     <label>Bank Account Number <span class="text-danger">*</span></label>
                                     {{ Form::text('account_number', old('account_number', $customer_account->account_number ?? ''), ['class="form-control"', 'placeholder="Enter account number..."']) }}
-                                    <div class="text-danger">{{ $errors->first('account_number') }}</div>
+                                    <span class="text-danger">{{ $errors->first('account_number') }}</span>
                                 </div>
                             </div>
                             <!--./col -->
@@ -117,7 +117,7 @@
                                 <div class="mb-3">
                                     <label>MNO Phone <span class="text-danger">*</span></label>
                                     {{ Form::text('account_number_phone', old('account_number_phone', $customer_account ? reverse_casting_phone($customer_account->phone) : ''), ['class="form-control"', 'placeholder="Enter phone number..."']) }}
-                                    <div class="text-danger">{{ $errors->first('account_number_phone') }}</div>
+                                    <span class="text-danger">{{ $errors->first('account_number_phone') }}</span>
                                 </div>
                             </div>
                             <!--./col -->
@@ -126,7 +126,7 @@
                                 <div class="mb-3">
                                     <label>Phone <span class="text-danger">*</span></label>
                                     {{ Form::text('phone', old('phone', $customer_account ? reverse_casting_phone($customer_account->phone) : ''), ['class="form-control"', 'placeholder="Enter phone connected to the bank account..."']) }}
-                                    <div class="text-danger">{{ $errors->first('phone') }}</div>
+                                    <span class="text-danger">{{ $errors->first('phone') }}</span>
                                 </div>
                             </div>
                             <!--./col -->
@@ -162,7 +162,7 @@
                             <div class="col-md-12">
                                 <div class="mb-3 text-sm-end d-none d-sm-block">
                                     <a href="{{ route('payment-mandate.lists') }}"
-                                        class="btn btn-danger text-medium">
+                                        class="btn btn-outline-danger text-medium">
                                         Cancel
                                     </a>
                                     <button type="submit" class="btn btn-primary">

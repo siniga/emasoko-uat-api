@@ -58,17 +58,42 @@
                     @method('POST')
                     {{ Form::token() }}
 
+                    <input type="hidden" name="partner_id" value="{{ $provider->id ?? null }}">
                     <input type="hidden" name="customer_account_id" value="{{ $customer_account->id ?? null }}">
+                    <input type="hidden" name="customer_account_uuid" value="{{ $customer_account->uuid ?? null }}">
                     <input type="hidden" name="debit_order_id" value="{{ $debit_order->id ?? null }}">
+                    <input type="hidden" name="debit_order_uuid" value="{{ $debit_order->uuid ?? null }}">
 
                     <!-- Customer Information -->
                     <section>
+                        <div class="row">
+                            <div class="col-lg-6 col-md-6">
+                                <div class="mb-3">
+                                    <label>Service Provider <span class="text-danger">*</span></label>
+                                    @php
+                                        $options = [];
+                                    @endphp
+                                    @foreach ($providers as $val)
+                                        @php
+                                            $options[$val->id] = $val->business_name;
+                                        @endphp
+                                    @endforeach
+                                    @php
+                                        $options = ['' => 'Select'] + $options;
+                                    @endphp
+
+                                    {{ Form::select('provider_id', $options, old('provider_id', $debit_order->partner_id ?? '' ), ['class' => 'form-control select2', 'id' => 'provider_id']) }}
+                                    <span class="text-danger">{{ $errors->first('provider_id') }}</span>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="row ">
                             <div class="col-lg-3">
                                 <div class="mb-3">
                                     <label>Loan Amount <span class="text-danger">*</span></label>
                                     {{ Form::text('loan_amount', old('loan_amount', $debit_order ? number_format($debit_order->total_amount) : ''), ['class="form-control number-separator"', 'placeholder="Write total loan amount..."']) }}
-                                    <div class="text-danger">{{ $errors->first('loan_amount') }}</div>
+                                    <span class="text-danger">{{ $errors->first('loan_amount') }}</span>
                                 </div>
                             </div>
                             <!--./col -->
@@ -85,7 +110,7 @@
                                     @endphp
 
                                     {{ Form::select('debit_type', $options, old('debit_type', $debit_order->debit_type ?? ''), ['class' => 'form-control', 'id' => 'debit_type']) }}
-                                    <div class="text-danger">{{ $errors->first('debit_type') }}</div>
+                                    <span class="text-danger">{{ $errors->first('debit_type') }}</span>
                                 </div>
                             </div>
                             <!--./col -->
@@ -94,7 +119,7 @@
                                 <div class="mb-3">
                                     <label>Deduction Amount <span class="text-danger">*</span></label>
                                     {{ Form::text('installment_amount', old('installment_amount', $debit_order ? number_format($debit_order->installment_amount) : ''), ['class="form-control number-separator"', 'placeholder="Write deduction amount..."']) }}
-                                    <div class="text-danger">{{ $errors->first('installment_amount') }}</div>
+                                    <span class="text-danger">{{ $errors->first('installment_amount') }}</span>
                                 </div>
                             </div>
                             <!--./col -->
@@ -106,7 +131,7 @@
                                         <div class="col-lg-6">
                                             <div class="form-group">
                                                 {{ Form::text('min_installment_amount', old('min_installment_amount', $debit_order ? number_format($debit_order->min_installment_amount) : ''), ['class="form-control number-separator"', 'placeholder="Minimum deduction amount..."', 'id="min_installment_amount"']) }}
-                                                <div class="text-danger">{{ $errors->first('min_installment_amount') }}</div>
+                                                <span class="text-danger">{{ $errors->first('min_installment_amount') }}</span>
                                             </div>
                                         </div>
                                         <!--./col -->
@@ -114,7 +139,7 @@
                                         <div class="col-lg-6">
                                             <div class="form-group">
                                                 {{ Form::text('max_installment_amount', old('max_installment_amount', $debit_order ? number_format($debit_order->max_installment_amount) : ''), ['class="form-control number-separator"', 'placeholder="Maximum deduction amount..."', 'id="max_installment_amount"']) }}
-                                                <div class="text-danger">{{ $errors->first('max_installment_amount') }}</div>
+                                                <span class="text-danger">{{ $errors->first('max_installment_amount') }}</span>
                                             </div>
                                         </div>
                                         <!--./col -->
@@ -137,7 +162,7 @@
                                     @endphp
 
                                     {{ Form::select('periodicity', $options, old('periodicity', $debit_order->periodicity ?? ''), ['class' => 'form-control']) }}
-                                    <div class="text-danger">{{ $errors->first('periodicity') }}</div>
+                                    <span class="text-danger">{{ $errors->first('periodicity') }}</span>
                                 </div>
                             </div>
                             <!--./col -->
@@ -146,7 +171,7 @@
                                 <div class="mb-3">
                                     <label>Number of deduction <span class="text-danger">*</span></label>
                                     {{ Form::number('number_of_installment', old('number_of_installment', $debit_order->installment_number ?? ''), ['class="form-control"', 'placeholder="Write number installment..."', 'min' => 1]) }}
-                                    <div class="text-danger">{{ $errors->first('number_of_installment') }}</div>
+                                    <span class="text-danger">{{ $errors->first('number_of_installment') }}</span>
                                 </div>
                             </div>
                             <!--./col -->
@@ -155,7 +180,7 @@
                                 <div class="mb-3">
                                     <label>Deduction Start Date <span class="text-danger">*</span></label>
                                     {{ Form::date('start_date', old('start_date', $debit_order->start_date ?? ''), ['class="form-control"', 'min' => date('Y-m-d')]) }}
-                                    <div class="text-danger">{{ $errors->first('start_date') }}</div>
+                                    <span class="text-danger">{{ $errors->first('start_date') }}</span>
                                 </div>
                             </div>
                             <!--./col -->
@@ -172,7 +197,7 @@
                                     @endphp
 
                                     {{ Form::select('deduction_end', $options, old('deduction_end', $debit_order->deduction_end_date ?? ''), ['class' => 'form-control', 'id' => 'deduction_end']) }}
-                                    <div class="text-danger">{{ $errors->first('deduction_end') }}</div>
+                                    <span class="text-danger">{{ $errors->first('deduction_end') }}</span>
                                 </div>
                             </div>
                             <!--./col -->
@@ -181,7 +206,7 @@
                                 <div class="mb-3">
                                     <label>End Date <span class="text-danger">*</span></label>
                                     {{ Form::date('end_date', old('end_date', $debit_order->end_date ?? ''), ['class="form-control"', 'id="end_date"']) }}
-                                    <div class="text-danger">{{ $errors->first('end_date') }}</div>
+                                    <span class="text-danger">{{ $errors->first('end_date') }}</span>
                                 </div>
                             </div>
                             <!--./col -->
@@ -200,8 +225,8 @@
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="mb-3 text-sm-end d-none d-sm-block">
-                                    <a href="{{ url('payment-mandate/create-account/' . $customer_account->id . '/' . ($debit_order ? $debit_order->id : '')) }}"
-                                        class="btn btn-info text-medium">Previous</a>
+                                    <a href="{{ route('payment-mandate.create-account',[$customer_account->uuid, ($debit_order ? $debit_order->uuid : '')]) }}"
+                                        class="btn btn-outline-danger text-medium">Previous</a>
 
                                     <button type="submit" class="btn btn-primary">Next</button>
                                 </div>

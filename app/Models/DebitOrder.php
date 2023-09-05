@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class DebitOrder extends Model
 {
@@ -17,7 +18,7 @@ class DebitOrder extends Model
         $user_id = Auth::user()->id; //user id
 
         //customers
-        $debit_orders = static::orderBy('debit_orders.id', 'DESC');
+        $debit_orders = static::orderBy('debit_orders.created_at', 'DESC');
 
         // if (Auth::user()->hasRole('company_approver')) {
         //     $partner_user = PartnerUser::where(['user_id' => $user_id])->first();
@@ -38,5 +39,42 @@ class DebitOrder extends Model
     function loanPurpose()
     {
         return $this->belongsTo(LoanPurpose::class, 'loan_purpose_id');
+    }
+
+    public function scopeWithFilters($query, $request)
+    {
+        $start_date        = $request['start_at'] ?? null;
+        $end_date          = $request['end_at'] ?? null;
+        $account_type_id   = $request['account_type_id'] ?? null;
+        $account_id        = $request['account_id'] ?? null;
+        $status            = $request['status'] ?? null;
+        $keyword           = $request['keyword'] ?? null;
+
+
+        return $query->when($start_date, function ($query) use ($start_date, $end_date) {
+            if ($start_date != null || $end_date != null) {
+                if ($start_date != null && $end_date != null)
+                    $query->whereBetween('debit_orders.created_at', [$start_date, $end_date]);
+
+                else if ($start_date != null)
+                    $query->where('debit_orders.created_at', '>=', $start_date);
+
+                else if ($end_date != null)
+                    $query->where('debit_orders.created_at', '<=', $end_date);
+            }
+        })
+            ->when($status, function ($query) use ($status) {
+                $query->where('debit_orders.approved', $status);
+            });
+            // ->when($account_type_id, function ($query) use ($account_type_id) {
+            //     $query->where('customer_accounts.account_type_id', $account_type_id);
+            // });
+            // ->when($account_id, function ($query) use ($account_id) {
+            //     $query->where('customer_accounts.account_id', $account_id);
+            // })
+            // ->when($keyword, function ($query) use ($keyword) {
+            //     $query->orWhere('customer_accounts.account_name', 'LIKE', "%$keyword%")
+            //         ->orWhere('customer_accounts.account_number', 'LIKE', "%$keyword%");
+            // });
     }
 }

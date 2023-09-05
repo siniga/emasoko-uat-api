@@ -58,7 +58,7 @@
                                         @endforeach
                                         @php
                                             $account_type_options = $options;
-                                            $options = ['' => 'Payment Channel'] + $options;
+                                            $options = ['' => '-- Payment Channel --'] + $options;
                                         @endphp
 
                                         {{ Form::select('account_type_id', $options, old('account_type_id', $data['account_type_id']), ['class' => 'form-control account_type_id', 'id' => 'account_type_id']) }}
@@ -75,7 +75,7 @@
                                             @endphp
                                         @endforeach
                                         @php
-                                            $options = ['' => 'Bank/MNO name'] + $options;
+                                            $options = ['' => '-- Bank/MNO name --'] + $options;
                                         @endphp
 
                                         {{ Form::select('account_id', $options, old('account_id', $data['account_id']), ['class' => 'form-control account_id', 'id' => 'account_id']) }}
@@ -91,7 +91,7 @@
                                                 'approved' => 'Approved',
                                                 'rejected' => 'Rejected',
                                             ];
-                                            $options = ['' => 'Account Status'] + $options;
+                                            $options = ['' => '-- Account Status --'] + $options;
                                         @endphp
 
                                         {{ Form::select('status', $options, old('status', $data['status']), ['class' => 'form-control']) }}
@@ -222,7 +222,7 @@
                                             <td>
                                                 <a href="{{ route('customer-accounts.show', $values->id) }}" title="View"
                                                     class="btn btn-xss">
-                                                    <i class="bx bxs-folder-open text-primary"></i>
+                                                    <i class="bx bxs-folder-open"></i>
                                                 </a>
 
                                                 @if ($values->status == 'partial' || $values->status == 'rejected')

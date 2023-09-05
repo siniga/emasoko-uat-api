@@ -1,5 +1,11 @@
 @extends('layouts.master')
 
+<style>
+    .table th{
+        background-color: #E1F5FE !important;
+    }   
+</style>
+
 @section('title')
     Summary of Payment Mandate
 @endsection
@@ -181,12 +187,12 @@
                                 <div class="row">
                                     <div class="col-md-12">
                                         <div class="mb-3 text-sm-end d-none d-sm-block">
-                                            <a href="{{ route('payment-mandate.cancel', $debit_order->id) }}"
+                                            <a href="{{ route('payment-mandate.cancel', $debit_order->uuid) }}"
                                                 class="btn btn-danger text-medium">
                                                 Cancel
                                             </a>
 
-                                            <a href="{{ route('payment-mandate.create-account', [$customer_account->id, $debit_order->id]) }}"
+                                            <a href="{{ route('payment-mandate.create-account', [$customer_account->uuid, $debit_order->uuid]) }}"
                                                 class="btn btn-info text-medium">Edit</a>
 
                                             <button type="submit" name="save" class="btn btn-secondary"
@@ -253,7 +259,7 @@
                             // $('#confirmModal').modal('show');
 
                             //display message
-                            $('#message_wrp').html("<div class='alert alert-success rounded-sm'>Payment mandate successfully created, Waiting for consent from customer!</div>");
+                            $('#message_wrp').html("<div class='alert alert-success rounded-sm'>Payment mandate successfully created, Waiting for consent from customer</div>");
                         }).catch(() => {
                             this.formMessage = "Something went wrong.";
                         }).finally(() => {

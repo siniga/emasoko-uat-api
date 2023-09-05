@@ -15,16 +15,8 @@
                     </a>
                 </li>
 
-                @php
-                    if (Request::segment(1) == 'companies') {
-                        $sp_class = 'mm-active';
-                    } else {
-                        $sp_class = '';
-                    }
-                @endphp
-
-                <li class="{{ $sp_class }}">
-                    <a href="{{ route('companies.lists') }}" class="waves-effect">
+                <li class="{{ Route::is('companies.lists') ? "mm-active":""}}">
+                    <a href="{{ route('companies.lists') }}" class="waves-effect ">
                         <i class="bx bx-building"></i>
                         <span key="t-layouts">Service Providers</span>
 
@@ -38,21 +30,21 @@
                     </a>
                 </li>
 
-                <li>
+                <li class="{{ Route::is('customer-accounts.lists') ? "mm-active":""}}">
                     <a href="{{ route('customer-accounts.lists') }}" class="waves-effect">
                         <i class='bx bxs-user-badge'></i>
                         <span key="t-layouts">Customer Accounts</span>
                     </a>
                 </li>
 
-                <li>
+                <li class="{{ Route::is('payment-mandate.create-account') ? "mm-active":""}}">
                     <a href="{{ route('payment-mandate.create-account') }}" class="waves-effect">
                         <i class="bx bx-user-plus"></i>
                         <span key="t-layouts">Create Mandate</span>
                     </a>
                 </li>
 
-                <li>
+                <li class="{{ Route::is('payment-mandate.lists') ? "mm-active":""}}">
                     <a href="{{ route('payment-mandate.lists') }}" class="waves-effect">
                         <i class="bx bxs-wallet-alt"></i>
                         <span key="t-layouts">Payment Mandate</span>
@@ -61,7 +53,7 @@
 
                 <li class="menu-title" key="t-apps">Setup</li>
 
-                <li>
+                <li class="{{ Route::is('payment-channels.index') ? "mm-active":""}}">
                     <a href="{{ route('payment-channels.index') }}" class="waves-effect">
                         <i class="bx bx-copy"></i>
                         <span key="t-chat">Payment Channel</span>
@@ -78,14 +70,14 @@
 
                 <li class="menu-title" key="t-apps">Authentication</li>
 
-                <li>
+                <li class="{{ Route::is('users.index') ? "mm-active":""}}">
                     <a href="{{ route('users.index') }}" class="waves-effect">
                         <i class="bx bx-user-plus"></i>
                         <span key="t-chat">Users</span>
                     </a>
                 </li>
 
-                <li>
+                <li class="{{ Route::is('roles.index') ? "mm-active":""}}">
                     <a href="{{ route('roles.index') }}" class="waves-effect">
                         <i class="bx bx-user-pin"></i>
                         <span key="t-chat">Roles</span>
