@@ -265,7 +265,7 @@
                                                     <td>{{ $values->customerAccount->phone ?? $values->customerAccount->phone }}</td>
 
                                                     <td>
-                                                        <a href="{{ route('payment-mandate.show', $values->id) }}"
+                                                        <a href="{{ route('payment-mandate.show', $values->uuid) }}"
                                                             title="View" class="btn btn-xss">
                                                             <i class="bx bxs-folder-open"></i>
                                                         </a>
@@ -316,13 +316,13 @@
                                                     <td>{{ $values->customerAccount->phone ?? $values->customerAccount->phone }}</td>
 
                                                     <td>
-                                                        @if ($values->approved == 0)
+                                                        @if ($values->approved == "PENDING")
                                                             <span
                                                                 class="badge badge-pill badge-soft-warning">Pending</span>
-                                                        @elseif($values->approved == 1)
+                                                        @elseif($values->approved == "APPROVED")
                                                             <span
                                                                 class="badge badge-pill badge-soft-success">Approved</span>
-                                                        @elseif($values->approved == 99)
+                                                        @elseif($values->approved == "REJECTED")
                                                             <span
                                                                 class="badge badge-pill badge-soft-danger">Rejected</span>
                                                         @endif
@@ -374,13 +374,13 @@
                                                     <td>{{ $values->customerAccount->phone ?? $values->customerAccount->phone }}</td>
 
                                                     <td>
-                                                        @if ($values->approved == 0)
+                                                        @if ($values->approved == "PENDING")
                                                             <span
                                                                 class="badge badge-pill badge-soft-warning">Pending</span>
-                                                        @elseif($values->approved == 1)
+                                                        @elseif($values->approved == "APPROVED")
                                                             <span
                                                                 class="badge badge-pill badge-soft-success">Approved</span>
-                                                        @elseif($values->approved == 99)
+                                                        @elseif($values->approved == "REJECTED")
                                                             <span
                                                                 class="badge badge-pill badge-soft-danger">Rejected</span>
                                                         @endif
