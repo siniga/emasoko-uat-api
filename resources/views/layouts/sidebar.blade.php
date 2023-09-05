@@ -15,27 +15,30 @@
                     </a>
                 </li>
 
-                <li class="{{ Route::is('companies.lists') ? "mm-active":""}}">
-                    <a href="{{ route('companies.lists') }}" class="waves-effect ">
-                        <i class="bx bx-building"></i>
-                        <span key="t-layouts">Service Providers</span>
+                @if (Auth::user()->hasRole(['admin']))
+                    <li class="{{ Route::is('companies.lists') ? "mm-active":""}}">
+                        <a href="{{ route('companies.lists') }}" class="waves-effect ">
+                            <i class="bx bx-building"></i>
+                            <span key="t-layouts">Service Providers</span>
 
-                        @php
-                            $no_of_notification = get_company_notification();
-                        @endphp
+                            @php
+                                $no_of_notification = get_company_notification();
+                            @endphp
 
-                        @if ($no_of_notification != null)
-                            <span class="badge bg-danger">{{ $no_of_notification }}</span>
-                        @endif
-                    </a>
-                </li>
+                            @if ($no_of_notification != null)
+                                <span class="badge bg-danger">{{ $no_of_notification }}</span>
+                            @endif
+                        </a>
+                    </li>
+           
 
-                <li class="{{ Route::is('customer-accounts.lists') ? "mm-active":""}}">
-                    <a href="{{ route('customer-accounts.lists') }}" class="waves-effect">
-                        <i class='bx bxs-user-badge'></i>
-                        <span key="t-layouts">Customer Accounts</span>
-                    </a>
-                </li>
+                    <li class="{{ Route::is('customer-accounts.lists') ? "mm-active":""}}">
+                        <a href="{{ route('customer-accounts.lists') }}" class="waves-effect">
+                            <i class='bx bxs-user-badge'></i>
+                            <span key="t-layouts">Customer Accounts</span>
+                        </a>
+                    </li>
+                @endif
 
                 <li class="{{ Route::is('payment-mandate.create-account') ? "mm-active":""}}">
                     <a href="{{ route('payment-mandate.create-account') }}" class="waves-effect">
@@ -51,14 +54,16 @@
                     </a>
                 </li>
 
-                <li class="menu-title" key="t-apps">Setup</li>
+                @if (Auth::user()->hasRole(['admin']))
+                    <li class="menu-title" key="t-apps">Setup</li>
 
-                <li class="{{ Route::is('payment-channels.index') ? "mm-active":""}}">
-                    <a href="{{ route('payment-channels.index') }}" class="waves-effect">
-                        <i class="bx bx-copy"></i>
-                        <span key="t-chat">Payment Channel</span>
-                    </a>
-                </li>
+                    <li class="{{ Route::is('payment-channels.index') ? "mm-active":""}}">
+                        <a href="{{ route('payment-channels.index') }}" class="waves-effect">
+                            <i class="bx bx-copy"></i>
+                            <span key="t-chat">Payment Channel</span>
+                        </a>
+                    </li>
+                @endif
 
                 {{-- <li>
                         <a href="#" class="waves-effect">
@@ -68,21 +73,23 @@
                     </li> --}}
 
 
-                <li class="menu-title" key="t-apps">Authentication</li>
+                @if (Auth::user()->hasRole(['admin']))
+                    <li class="menu-title" key="t-apps">Authentication</li>
 
-                <li class="{{ Route::is('users.index') ? "mm-active":""}}">
-                    <a href="{{ route('users.index') }}" class="waves-effect">
-                        <i class="bx bx-user-plus"></i>
-                        <span key="t-chat">Users</span>
-                    </a>
-                </li>
+                    <li class="{{ Route::is('users.index') ? "mm-active":""}}">
+                        <a href="{{ route('users.index') }}" class="waves-effect">
+                            <i class="bx bx-user-plus"></i>
+                            <span key="t-chat">Users</span>
+                        </a>
+                    </li>
 
-                <li class="{{ Route::is('roles.index') ? "mm-active":""}}">
-                    <a href="{{ route('roles.index') }}" class="waves-effect">
-                        <i class="bx bx-user-pin"></i>
-                        <span key="t-chat">Roles</span>
-                    </a>
-                </li>
+                    <li class="{{ Route::is('roles.index') ? "mm-active":""}}">
+                        <a href="{{ route('roles.index') }}" class="waves-effect">
+                            <i class="bx bx-user-pin"></i>
+                            <span key="t-chat">Roles</span>
+                        </a>
+                    </li>
+                @endif
             </ul>
         </div>
         <!-- Sidebar -->
