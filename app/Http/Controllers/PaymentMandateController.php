@@ -330,14 +330,14 @@ class PaymentMandateController extends Controller
                 $debit_order = DebitOrder::firstOrNew([
                     'customer_account_id' => $customer_account->id,
                     'partner_id' => $partner_id,
-                    'approved' => 0
+                    'approved' => "PENDING"
                 ]);
             }
         } else {
             $debit_order = DebitOrder::firstOrNew([
                 'customer_account_id' => $customer_account->id,
                 'partner_id' => $partner_id,
-                'approved' => 0
+                'approved' => "PENDING"
             ]);
         }
 
@@ -503,7 +503,7 @@ class PaymentMandateController extends Controller
         $title = "Payment Mandate";
 
         //debit order
-        $debit_order = DebitOrder::findOrFail($id);
+        $debit_order = DebitOrder::where(['uuid' => $id])->first();
 
         //populate data
         $account_types = AccountType::all();
@@ -627,12 +627,10 @@ class PaymentMandateController extends Controller
         $title = 'Delete payment mandate';
 
         //debit order
-        $debit_order = DebitOrder::findOrFail($id);
+        $debit_order = DebitOrder::where(['uuid' => $id])->first();
 
         //delete debit order
         $debit_order->delete();
-
-
 
         //redirect
         return Redirect::route('payment-mandate.lists')->with('danger', 'Payment mandate deleted!');
