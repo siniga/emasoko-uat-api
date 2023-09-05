@@ -58,7 +58,7 @@
                     @method('POST')
                     {{ Form::token() }}
 
-                    <input type="hidden" name="partner_id" value="{{ $provider->id ?? null }}">
+                    <input type="hidden" name="partner_id" value="{{ $provider->partner->id ?? null }}">
                     <input type="hidden" name="customer_account_id" value="{{ $customer_account->id ?? null }}">
                     <input type="hidden" name="customer_account_uuid" value="{{ $customer_account->uuid ?? null }}">
                     <input type="hidden" name="debit_order_id" value="{{ $debit_order->id ?? null }}">

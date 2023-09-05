@@ -248,11 +248,6 @@ class PaymentMandateController extends Controller
 
         //populate data
         $provider = PartnerUser::where(['user_id' => Auth::user()->id])->first();
-
-        echo "<pre/>";
-        print_r($provider);
-        exit();
-
         $providers = Partner::all();
 
         //render view
