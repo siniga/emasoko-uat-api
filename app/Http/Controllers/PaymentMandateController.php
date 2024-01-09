@@ -288,7 +288,7 @@ class PaymentMandateController extends Controller
             ],
             [
                 'provider_id.required_if' => 'Service provider required',
-                'loan_amount.required' => 'Loan amount required',
+                'loan_amount.required' => 'Total amount required',
                 'debit_type.required' => 'Debit type required',
                 'installment_amount.required_if' => 'Installment amount required',
                 'min_installment_amount.required_if' => 'Minimum installment amount required',

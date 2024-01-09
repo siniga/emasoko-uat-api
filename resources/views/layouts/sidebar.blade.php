@@ -65,13 +65,6 @@
                     </li>
                 @endif
 
-                {{-- <li>
-                        <a href="#" class="waves-effect">
-                            <i class="bx bx-user-plus text-white"></i>
-                            <span key="t-chat">Debit</span>
-                        </a>
-                    </li> --}}
-
 
                 @if (Auth::user()->hasRole(['admin']))
                     <li class="menu-title" key="t-apps">Authentication</li>

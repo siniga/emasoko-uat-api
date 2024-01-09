@@ -17,10 +17,10 @@ class DashboardChartController extends Controller
     function mandate_percentages()
     {
         //pending
-        $pending = DebitOrder::where_cond()->where(['approved' => 0])->count();
+        $pending = DebitOrder::where_cond()->where(['approved' => "PENDING"])->count();
 
         //approved
-        $approved = DebitOrder::where_cond()->where(['approved' => 1])->count();
+        $approved = DebitOrder::where_cond()->where(['approved' => "APPROVED"])->count();
 
         //aggregate
         $aggregate = $pending + $approved;
@@ -47,9 +47,9 @@ class DashboardChartController extends Controller
             //query
             $debit_orders = DebitOrder::select('debit_orders.approved', DB::raw('SUM(debit_orders.total_amount) as total_amount'))
                 ->where(function ($query) {
-                    $query->where('debit_orders.approved', '=', 1)
-                        ->orWhere('debit_orders.approved', '=', 0)
-                        ->orWhere('debit_orders.approved', '=', 99);
+                    $query->where('debit_orders.approved', '=', "APPROVED")
+                        ->orWhere('debit_orders.approved', '=', "PENDING")
+                        ->orWhere('debit_orders.approved', '=', "REJECTED");
                 })->groupBy('debit_orders.approved')
                 ->orderBy('debit_orders.approved', 'DESC');
 
@@ -104,8 +104,8 @@ class DashboardChartController extends Controller
                 ->join('customer_accounts', 'customer_accounts.id', '=', 'debit_orders.customer_account_id')
                 ->where('customer_accounts.account_id', '=', $val->id)
                 ->where(function ($query) {
-                    $query->where('debit_orders.approved', '=', 1)
-                        ->orWhere('debit_orders.approved', '=', 0);
+                    $query->where('debit_orders.approved', '=', "APPROVED")
+                        ->orWhere('debit_orders.approved', '=', "PENDING");
                 })
                 ->groupBy('debit_orders.approved')
                 ->orderBy('debit_orders.approved', 'DESC');

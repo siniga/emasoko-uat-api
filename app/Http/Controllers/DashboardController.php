@@ -28,24 +28,24 @@ class DashboardController extends Controller
 
         //pending debit orders
         $pending = DebitOrder::where_cond()->select(DB::raw('SUM(total_amount) as total_amount'), DB::raw('COUNT(id) as count'))
-            ->where(['approved' => 0])->get();
+            ->where(['approved' => "PENDING"])->get();
 
         //approved debit orders
         $approved = DebitOrder::where_cond()->select(DB::raw('SUM(total_amount) as total_amount'), DB::raw('COUNT(id) as count'))
-            ->where(['approved' => 1])->get();
+            ->where(['approved' => "APPROVED"])->get();
 
         //rejected debit orders
         $rejected = DebitOrder::where_cond()->select(DB::raw('SUM(total_amount) as total_amount'), DB::raw('COUNT(id) as count'))
-            ->where(['approved' => 99])->get();
+            ->where(['approved' => "REJECTED"])->get();
 
         //pending debit orders
-        $pending_debit_orders = DebitOrder::where_cond()->where(['approved' => 0])->take(10)->get();
+        $pending_debit_orders = DebitOrder::where_cond()->where(['approved' => "PENDING"])->take(10)->get();
 
         //approved debit orders
-        $approved_debit_orders = DebitOrder::where_cond()->where(['approved' => 1])->take(10)->get();
+        $approved_debit_orders = DebitOrder::where_cond()->where(['approved' => "APPROVED"])->take(10)->get();
 
         //rejected debit orders
-        $rejected_debit_orders = DebitOrder::where_cond()->where(['approved' => 99])->take(10)->get();
+        $rejected_debit_orders = DebitOrder::where_cond()->where(['approved' => "REJECTED"])->take(10)->get();
 
         //render view
         return view('dashboard', compact('title', 'total', 'pending', 'approved', 'rejected', 'pending_debit_orders', 'approved_debit_orders', 'rejected_debit_orders'));

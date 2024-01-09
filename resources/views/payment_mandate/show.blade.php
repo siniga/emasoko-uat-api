@@ -155,7 +155,7 @@
                                 </tr>
 
                                 <tr>
-                                    <th>Loan Amount</th>
+                                    <th>Total Amount</th>
                                     <td>{{ number_format($debit_order->total_amount) ?? '' }}</td>
 
                                     <th>Debit Type</th>
@@ -165,32 +165,11 @@
                                 </tr>
 
                                 <tr>
-                                    <th>Interest Rate</th>
-                                    <td></td>
-
                                     <th>Peridiocity</th>
                                     <td>
                                         <span class="font-weight-600">{{ $debit_order->periodicity }}</span>
                                     </td>
-                                </tr>
-
-                                <tr>
-                                    <th>Expected Interest</th>
-                                    <td></td>
-                                    <th>Expected Principal</th>
-                                    <td>
-
-                                    </td>
-                                </tr>
-
-                                <tr>
-                                    <th>Paid Interest</th>
-                                    <td>0</td>
-                                    <th>Paid Principal</th>
-                                    <td>0</td>
-                                </tr>
-
-                                <tr>
+                               
                                     <th>Installment Amount</th>
                                     <td>
                                         <span>
@@ -204,12 +183,10 @@
                                             @endif
                                         </span>
                                     </td>
-                                    <th>Last Paid Amount</th>
-                                    <td>0</td>
                                 </tr>
 
                                 <tr>
-                                    <th>Number of Deduction</th>
+                                    <th>Maximum Number of Deduction</th>
                                     <td>
                                         <span>{{ $debit_order->installment_number ?? '' }}</span>
                                     </td>

@@ -93,8 +93,8 @@
                         <div class="row ">
                             <div class="col-lg-3">
                                 <div class="mb-3">
-                                    <label>Loan Amount <span class="text-danger">*</span></label>
-                                    {{ Form::text('loan_amount', old('loan_amount', $debit_order ? number_format($debit_order->total_amount) : ''), ['class="form-control number-separator"', 'placeholder="Write total loan amount..."']) }}
+                                    <label>Total Amount <span class="text-danger">*</span></label>
+                                    {{ Form::text('loan_amount', old('loan_amount', $debit_order ? number_format($debit_order->total_amount) : ''), ['class="form-control number-separator"', 'placeholder="Write total total amount..."']) }}
                                     <span class="text-danger">{{ $errors->first('loan_amount') }}</span>
                                 </div>
                             </div>
@@ -171,7 +171,7 @@
 
                             <div class="col-lg-3">
                                 <div class="mb-3">
-                                    <label>Number of deduction <span class="text-danger">*</span></label>
+                                    <label>Maximum No. of deduction <span class="text-danger">*</span></label>
                                     {{ Form::number('number_of_installment', old('number_of_installment', $debit_order->installment_number ?? ''), ['class="form-control"', 'placeholder="Write number installment..."', 'min' => 1]) }}
                                     <span class="text-danger">{{ $errors->first('number_of_installment') }}</span>
                                 </div>

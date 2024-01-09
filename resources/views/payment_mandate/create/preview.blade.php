@@ -115,7 +115,7 @@
                                         </tr>
 
                                         <tr>
-                                            <th width=25%>Loan Amount</th>
+                                            <th width=25%>Total Amount</th>
                                             <td width=25%>
                                                 <span>{{ number_format($debit_order->total_amount) ?? '' }}</span>
                                             </td>
@@ -148,7 +148,7 @@
                                         </tr>
 
                                         <tr>
-                                            <th>Number of Deduction</th>
+                                            <th>Maximum Number of Deduction</th>
                                             <td>
                                                 <span>{{ $debit_order->installment_number ?? '' }}</span>
                                             </td>
