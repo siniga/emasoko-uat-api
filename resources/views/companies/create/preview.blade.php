@@ -1,5 +1,11 @@
 @extends('layouts.master')
 
+<style>
+    .table th{
+        background-color: #E1F5FE !important;
+    }   
+</style>
+
 @section('title')
     Register Service Provider
 @endsection
