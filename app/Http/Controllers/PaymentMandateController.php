@@ -51,7 +51,9 @@ class PaymentMandateController extends Controller
 
         //debit
         $debit_orders = DebitOrder::where_cond();
-
+        if ($consent) {
+            $debit_orders->where(['approved' => $consent]);
+        }
         if (isset($_POST['filter'])) {
             //all request
             $requests = $request->all();
@@ -228,12 +230,11 @@ class PaymentMandateController extends Controller
         $customer_account->created_by = Auth::user()->id;
         $customer_account->save();
 
+
         //redirect with message
         return Redirect::route('payment-mandate.create-deduction', [$customer_account_uuid, $debit_order_uuid])->with('success', "Customer deduction channel saved");
     }
 
-
-    //deduction information
     function create_deduction($ca_id, $do_id = null)
     {
         $title = "Payment Mandate";
@@ -342,7 +343,11 @@ class PaymentMandateController extends Controller
         }
 
         $debit_order->uuid = $do_uuid;
+        
         $debit_order->total_amount = $loan_amount;
+        if ($debit_order->created_by == null) {
+            $debit_order->created_by = auth()->id();
+        }
         $debit_order->debit_type = $request->input('debit_type');
         $debit_order->installment_amount = $installment_amount;
         $debit_order->max_installment_amount = $min_installment_amount;
@@ -576,6 +581,9 @@ class PaymentMandateController extends Controller
         $debit_order->start_date = $request->input('start_date');
         $debit_order->deduction_end_date = $request->input('deduction_end');
 
+        if ($debit_order->created_by == null) {
+            $debit_order->created_by = auth()->id();
+        }
         //calculate end date
         if ($request->input('deduction_end') === 'totalLoanCovered') {
             //calculate end date from start date

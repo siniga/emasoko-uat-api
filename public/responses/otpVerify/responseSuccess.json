@@ -1,0 +1,13 @@
+{
+    "user":"EMakato",
+    "correlationId": "b30d3134-5624-4391-9f49-1b7a776d692e",
+    "targetService": "OTPVerify",
+    "status": "Success",
+    "data": {
+        "caseReference":"CO202402070803000001",
+        "processName":"MandateApproval",
+        "response": [
+            {"responseCode":"210","responseDescription":"OTP Valid"}
+        ]
+    }
+}

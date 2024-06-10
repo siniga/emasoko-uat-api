@@ -137,7 +137,6 @@
                     <div>
                         <div id="consent-rate-chart" class="apex-charts"></div>
                     </div>
-
                     <div class="text-center text-muted">
                         <div class="row">
                             <div class="col-6">

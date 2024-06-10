@@ -1,0 +1,20 @@
+{
+    "user":"EMakato",
+    "correlationId": "b30d3134-5624-4391-9f49-1b7a776d692e",
+    "targetService": "CollectionCreate",
+    "status": "Create",
+    "data": {
+        "collectionReference":"12144",
+        "corporateReference": "CO202402070803000001",
+        "selectedPostingDate": null,
+        "createdBy": "Steven.Gerald",
+        "verifiedBy": "Victor.Mpendazoe",
+        "createdDate": "2024-02-08 12:00:00",
+        "verifyDate": "2024-02-08 13:00:00",
+        "file":{
+            "fileName":"Payment_Collection3",
+            "fileType":"CSV",
+            "fileData":"U0VSSUFMIE5vLjtCQU5LIENPREU7QlJBTkNIIE5BTUU7RU1QTE9ZRUUgTlVNQkVSO0NVU1RPTUVSIE5BTUU7QUNDT1VOVCBOTzsgQU1PVU5UIAoxOzE2O05NQjt4eXo7VGVzdCBUZXN0OzMwMTAyNDAwMDg1OzIwCjE7MTY7Tk1CO3h5ejtUZXN0IFRlc3Q7MzAxMDI0MDAwODU7MjAK"
+        }
+    }
+}

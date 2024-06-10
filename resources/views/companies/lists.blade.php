@@ -106,8 +106,22 @@
                                     </div>
                                 </div>
                                 <!--./col -->
+                                <div class="col-lg-3">
+                                    <div class="mb-3">
+                                        @php
+                                            $options = [
+                                                0 => 'All',
+                                                // 1 => 'Approved',
+                                                2 => 'With Rejected Accounts',
+                                            ];
+                                            $options = ['' => '-- Select Account Status --'] + $options;
+                                        @endphp
 
-                                <div class="col-lg-6">
+                                        {{ Form::select('account_status', $options, old('account_status', request()->account_status), ['class' => 'form-control']) }}
+                                    </div>
+                                </div>
+                                <!--./col -->
+                                <div class="col-lg-3">
                                     <div class="mb-3">
                                         <div class="text-sm-end d-none d-sm-block">
                                             <button type="submit" name="filter" class="btn btn-secondary">
@@ -208,8 +222,8 @@
                                             </td>
                                             <td>
                                                 @if ($company->complete == 1)
-                                                    <a href="{{ route('companies.details', $company->uuid) }}" title="View"
-                                                        class="btn btn-xss">
+                                                    <a href="{{ route('companies.details', $company->uuid) }}"
+                                                        title="View" class="btn btn-xss">
                                                         <i class="bx bxs-folder-open"></i>
                                                     </a>
                                                 @elseif($company->complete == 0)

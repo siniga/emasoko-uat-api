@@ -2,13 +2,28 @@
 
 namespace App\Models;
 
+use App\Models\Traits\DocumentNumberTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Partner extends Model
 {
-    use HasFactory;
+    use HasFactory, DocumentNumberTrait;
     protected $guarded = [];
+
+    public static function boot()
+    {
+        parent::boot();
+        static::creating(function ($model) {
+            $model->reference = Partner::document_number("reference", "CO", 6, true, false);
+            $acronym = "";
+            $words = preg_split("/[\s,_-]+/", $model->business_name);
+            foreach ($words as $w) {
+                $acronym .= mb_substr($w, 0, 1);
+            }
+            $model->short_code = $acronym;
+        });
+    }
 
     function partnerAuthorizeUser()
     {
@@ -50,6 +65,16 @@ class Partner extends Model
         return $this->belongsTo(Region::class, 'region_id');
     }
 
+    function verifiedBy()
+    {
+        return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    function createdBy()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
     public function scopeWithFilters($query, $request)
     {
         $start_date        = $request['start_at'] ?? null;
@@ -58,17 +83,16 @@ class Partner extends Model
         $category_id       = $request['category_id'] ?? null;
         $region_id         = $request['region_id'] ?? null;
         $keyword           = $request['keyword'] ?? null;
-
         return $query->when($start_date, function ($query) use ($start_date, $end_date) {
             if ($start_date != null || $end_date != null) {
                 if ($start_date != null && $end_date != null)
-                    $query->whereBetween('created_at', [$start_date, $end_date]);
+                    $query->whereBetween("created_at", [$start_date, $end_date]);
 
                 else if ($start_date != null)
-                    $query->where('created_at', '>=', $start_date);
+                    $query->where("created_at", '>=', $start_date);
 
                 else if ($end_date != null)
-                    $query->where('created_at', '<=', $end_date);
+                    $query->where("created_at", '<=', $end_date);
             }
         })
             ->when($status, function ($query) use ($status) {
@@ -83,6 +107,16 @@ class Partner extends Model
             ->when($keyword, function ($query) use ($keyword) {
                 $query->orWhere('business_name', 'LIKE', "%$keyword%")
                     ->orWhere('tin_number', 'LIKE', "%$keyword%");
+            })
+            ->when(request()->account_status, function ($query) {
+                $query->whereHas('partnerAccounts', function ($query) {
+                    if (request()->account_status == 1) {
+                        $query->whereNotNull("verified_at");
+                    }
+                    if (request()->account_status == 2) {
+                        $query->whereNotNull("rejected_at");
+                    }
+                });
             });
     }
 }

@@ -1,9 +1,9 @@
 @extends('layouts.master')
 
 <style>
-    .table th{
+    .table th {
         background-color: #E1F5FE !important;
-    }   
+    }
 </style>
 
 @section('title')
@@ -176,17 +176,17 @@
                                         <table class="table table-nowrap align-middle table-bordered">
                                             <thead>
                                                 <tr>
-                                                    <td colspan="4" class="font-weight-600 text-uppercase">
+                                                    <td colspan="6" class="font-weight-600 text-uppercase">
                                                         Service Provider Collection Accounts
                                                     </td>
                                                 </tr>
-
                                                 <tr>
                                                     <th width="3%">#</th>
                                                     <th width="20%">Account Type</th>
                                                     <th width="20%">Bank/Institutions</th>
                                                     <th width="25%">Account Name</th>
                                                     <th width="20%">Account Number</th>
+                                                    <th></th>
                                                 </tr>
                                             </thead>
 
@@ -198,7 +198,15 @@
                                                         <td>{{ $val->account->name ?? '' }}</td>
                                                         <td>{{ $val->account_name ?? '' }}</td>
                                                         <td>{{ $val->account_number ?? '' }}</td>
-
+                                                        <td>
+                                                            @if ($val->send_verification == 1)
+                                                                <i class="text-warning">Wait Verification</i>
+                                                            @elseif ($val->response_sms && $val->verified_at)
+                                                                <i class="text-success">{{ $val->response_sms ?? '' }}</i>
+                                                            @elseif ($val->response_sms && $val->rejected_at)
+                                                                <i class="text-danger">{{ $val->response_sms ?? '' }}</i>
+                                                            @endif
+                                                        </td>
                                                     </tr>
                                                 @endforeach
                                             </tbody>
@@ -239,7 +247,6 @@
                                                         <td>{{ $val->email ?? '' }}</td>
                                                         <td>{{ $val->phone ?? '' }}</td>
                                                         <td>{{ $val->title ?? '' }}</td>
-
                                                     </tr>
                                                 @endforeach
                                             </tbody>

@@ -19,4 +19,14 @@ class PartnerAccount extends Model
     {
         return $this->belongsTo(Account::class, 'account_id');
     }
+
+    function partner()
+    {
+        return $this->belongsTo(Partner::class, 'partner_id');
+    }
+
+    public function currency()
+    {
+        return $this->belongsTo(Currency::class, "currency_id");
+    }
 }

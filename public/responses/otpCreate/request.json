@@ -1,0 +1,12 @@
+{
+    "user":"EMakato",
+    "correlationId": "b30d3134-5624-4391-9f49-1b7a776d692e",
+    "targetService": "OTPCreate",
+    "status": "Create",
+    "data": {
+        "caseReference":"121451",
+        "accountNumber":"60802400073",
+        "processName":"EMakato Mandate Registration",
+        "makerName":"Steven.Gerald"
+    }
+}

@@ -1,0 +1,16 @@
+{
+    "user":"EMakato",
+    "correlationId": "b30d3134-5624-4391-9f49-1b7a776d692e",
+    "targetService": "MandateStatus",
+    "status": "Fail",
+    "data": {
+        "mandateReferenceNumber":"CO202402070803000001",
+        "response": [
+            {"responseCode":"245","responseDescription":"Case Failed"},
+            {"responseCode":"401","responseDescription":"Authentication Failed"},
+            {"responseCode":"403","responseDescription":"Unautherized user"},
+            {"responseCode":"404","responseDescription":"Case not found"},
+            {"responseCode":"500","responseDescription":"Internal Server Error"}
+        ]
+    }
+}

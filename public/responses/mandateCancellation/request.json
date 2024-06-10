@@ -1,0 +1,15 @@
+{
+    "user":"EMakato",
+    "correlationId": "b30d3134-5624-4391-9f49-1b7a776d692e",
+    "targetService": "MandateCancellation",
+    "status": "Create",
+    "data": {
+        "mandateReferenceNumber":"12144",
+        "corporateReference": "CO202402070803000001",
+        "cancelReason": "test",
+        "createdBy": "Steven.Gerald",
+        "verifiedBy": "Victor.Mpendazoe",
+        "createdDate": "2024-02-08 12:00:00",
+        "verifyDate": "2024-02-08 13:00:00"
+    }
+}

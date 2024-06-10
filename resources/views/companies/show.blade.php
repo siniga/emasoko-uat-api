@@ -1,9 +1,9 @@
 @extends('layouts.master')
 
 <style>
-    .table th{
+    .table th {
         background-color: #E1F5FE !important;
-    }   
+    }
 </style>
 
 @section('title')
@@ -38,8 +38,11 @@
 
                         <div class="d-flex justify-content-between mb-2">
                             <div></div>
-
+                            
                             <div class="text-sm-end d-none d-sm-block">
+                                <a href="{{ route('companies.registration', $company->uuid) }}" title="View" class="btn btn-warning btn-sm">
+                                    <i class='fa fa-pen'></i> Edit
+                                </a>
                                 <button title="Assessment Process" class="btn btn-primary btn-sm"
                                     x-on:click="sidebarOpen = true, fetchData('{{ $company->uuid }}'), fetchAssessment('{{ $company->uuid }}', 'Company_Information');"
                                     x-transition x-cloak>

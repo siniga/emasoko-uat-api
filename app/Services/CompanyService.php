@@ -30,6 +30,9 @@ class CompanyService
 
         //create or update partner information
         $partner = Partner::firstOrNew(['uuid' => $uuid]);
+        if ($partner->created_by == null) {
+            $partner->created_by = auth()->id();
+        }
         $partner->partner_category_id = $data->category_id;
         $partner->business_name = ucwords($data->business_name);
         $partner->tin_number = $data->tin_number;
@@ -64,7 +67,7 @@ class CompanyService
         if ($data['account_id']) {
             for ($i = 0; $i < sizeof($data['account_id']); $i++) {
                 if ($data['account_id'][$i] != '' && $data['account_name'][$i] != '' && $data['account_name'][$i] != '') {
-                    $partner_account = PartnerAccount::firstOrNew([
+                    $partner_account = PartnerAccount::firstOrCreate([
                         'partner_id' => $partner['id'],
                         'partner_uuid' => $partner['uuid'],
                         'account_type_id' => $data['account_type_id'][$i],
@@ -72,7 +75,10 @@ class CompanyService
                         'account_name' => $data['account_name'][$i],
                         'account_number' => $data['account_number'][$i]
                     ]);
-                    $partner_account->save();
+                    if ($partner_account->wasRecentlyCreated) {
+                        $partner_account->send_verification = 1;
+                        $partner_account->save();
+                    }
                 }
             }
         }
@@ -92,7 +98,6 @@ class CompanyService
                         'phone' => $data['staff_phone'][$i],
                         'email' => $data['staff_email'][$i],
                         'title' => $data['staff_title'][$i],
-
                     ]);
                     $partner_staff->save();
                 }
@@ -108,7 +113,7 @@ class CompanyService
         $password = $data->password;
 
         //create user to store data
-        $user = User::firstOrNew(['email' => $data->email, 'TIN_Number' => $data->tin_number]);
+        $user = User::firstOrNew(['email' => $data->email, 'TIN_number' => $data->tin_number]);
         $user->name = $data->name;
         $user->verify_token = $token;
         $user->password = Hash::make($password);
@@ -264,7 +269,6 @@ class CompanyService
 
             //return statement
             return 3;
-
         }
     }
 }

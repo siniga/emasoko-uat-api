@@ -68,3 +68,46 @@ if (!function_exists('get_company_notification')) {
         }
     }
 }
+
+
+if (!function_exists('pdf_to_base64')) {
+    function pdf_to_base64($path)
+    {
+        $pdfFilePath = $path;
+        if (file_exists($pdfFilePath)) {
+            $pdfFileContents = file_get_contents($pdfFilePath);
+            $base64EncodedPdf = base64_encode($pdfFileContents);
+            return  $base64EncodedPdf;
+        }
+        return false;
+    }
+}
+
+if (!function_exists('content_to_base64')) {
+    function content_to_base64($contents)
+    {
+        return base64_encode($contents);
+    }
+}
+
+if (!function_exists('base64_to_content')) {
+    function base64_to_content($base64)
+    {
+        return base64_decode($base64);
+    }
+}
+
+if (!function_exists('base64_to_csv_to_array')) {
+    function base64_csv_to_array($base64, $delimiter = ",", $newLine = "\n")
+    {
+        $csv_data = base64_to_content($base64);
+        $lines = explode($newLine, trim($csv_data));
+        $headers = array_map('trim', str_getcsv(array_shift($lines), $delimiter));
+        $data = [];
+        foreach ($lines as $line) {
+            $row = array_map('trim', str_getcsv($line, $delimiter));
+            $data[] = array_combine($headers, $row);
+        }
+        return $data;
+    }
+}

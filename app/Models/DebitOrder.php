@@ -31,6 +31,16 @@ class DebitOrder extends Model
         return $debit_orders;
     }
 
+    public function scopeCancelled($query)
+    {
+        return $query->where('status', 'cancelled');
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('status', '=', 'active');
+    }
+
     function customerAccount()
     {
         return $this->belongsTo(CustomerAccount::class, 'customer_account_id');
@@ -39,6 +49,34 @@ class DebitOrder extends Model
     function loanPurpose()
     {
         return $this->belongsTo(LoanPurpose::class, 'loan_purpose_id');
+    }
+
+    public function partner()
+    {
+        return $this->belongsTo(Partner::class, "partner_id");
+    }
+
+    public function userCreated()
+    {
+        return $this->belongsTo(User::class, "created_by", "id");
+    }
+
+    public function cancellationStarted()
+    {
+        return $this->belongsTo(User::class, "cancellationStartedBy", "id");
+    }
+
+    public function cancellationApproved()
+    {
+        return $this->belongsTo(User::class, "cancellationApprovedBy", "id");
+    }
+
+    public function getPartnerAccountAttribute()
+    {
+        return PartnerAccount::toBase()
+            ->where("partner_id", $this->partner->id)
+            ->where('account_id', $this->customerAccount->account_id)
+            ->first();
     }
 
     public function scopeWithFilters($query, $request)
@@ -65,16 +103,20 @@ class DebitOrder extends Model
         })
             ->when($status, function ($query) use ($status) {
                 $query->where('debit_orders.approved', $status);
+            })
+            ->when($keyword, function ($query) use ($keyword) {
+                $query->join("partners", "partners.id", "=", "debit_orders.partner_id");
+                $query->where('partners.business_name', 'LIKE', "%$keyword%");
             });
-            // ->when($account_type_id, function ($query) use ($account_type_id) {
-            //     $query->where('customer_accounts.account_type_id', $account_type_id);
-            // });
-            // ->when($account_id, function ($query) use ($account_id) {
-            //     $query->where('customer_accounts.account_id', $account_id);
-            // })
-            // ->when($keyword, function ($query) use ($keyword) {
-            //     $query->orWhere('customer_accounts.account_name', 'LIKE', "%$keyword%")
-            //         ->orWhere('customer_accounts.account_number', 'LIKE', "%$keyword%");
-            // });
+        // ->when($account_type_id, function ($query) use ($account_type_id) {
+        //     $query->where('customer_accounts.account_type_id', $account_type_id);
+        // });
+        // ->when($account_id, function ($query) use ($account_id) {
+        //     $query->where('customer_accounts.account_id', $account_id);
+        // })
+        // ->when($keyword, function ($query) use ($keyword) {
+        //     $query->orWhere('customer_accounts.account_name', 'LIKE', "%$keyword%")
+        //         ->orWhere('customer_accounts.account_number', 'LIKE', "%$keyword%");
+        // });
     }
 }

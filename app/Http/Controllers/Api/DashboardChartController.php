@@ -17,15 +17,16 @@ class DashboardChartController extends Controller
     function mandate_percentages()
     {
         //pending
-        $pending = DebitOrder::where_cond()->where(['approved' => "PENDING"])->count();
+        $pending = DebitOrder::where_cond()->toBase()->where(['approved' => "PENDING"])->count();
 
         //approved
-        $approved = DebitOrder::where_cond()->where(['approved' => "APPROVED"])->count();
+        $approved = DebitOrder::where_cond()->toBase()->where(['approved' => "APPROVED"])->count();
 
         //aggregate
         $aggregate = $pending + $approved;
 
         //percentage
+        $aggregate = $aggregate ? $aggregate : 1;
         $percent_approved = ($approved / $aggregate) * 100;
         $percent_pending = ($pending / $aggregate) * 100;
 
@@ -51,7 +52,7 @@ class DashboardChartController extends Controller
                         ->orWhere('debit_orders.approved', '=', "PENDING")
                         ->orWhere('debit_orders.approved', '=', "REJECTED");
                 })->groupBy('debit_orders.approved')
-                ->orderBy('debit_orders.approved', 'DESC');
+                ->orderBy('debit_orders.approved', 'DESC')->toBase();
 
             $debit_orders = $debit_orders->whereMonth('created_at', $month)->whereYear('created_at', $year)->get();
 
@@ -78,7 +79,7 @@ class DashboardChartController extends Controller
                 // "month" => date("F", mktime(0, 0, 0, $month, 10)) . ',' . $year,
                 "month" => date("M", mktime(0, 0, 0, $month, 10)),
                 "total" => (int) $aggregate,
-                "pending" =>  (int) $pending,
+                "pending" => (int) $pending,
                 "approved" => (int) $approved
             ];
         }
@@ -94,7 +95,7 @@ class DashboardChartController extends Controller
         $debit_orders = DebitOrder::where_cond();
 
         //acounts
-        $accounts = Account::all();
+        $accounts = Account::toBase()->get();
 
         //declare array
         $data_array = [];

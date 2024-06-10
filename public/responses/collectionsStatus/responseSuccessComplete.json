@@ -1,0 +1,17 @@
+{
+    "user":"EMakato",
+    "correlationId": "b30d3134-5624-4391-9f49-1b7a776d692e",
+    "targetService": "CollectionStatus",
+    "status": "Success",
+    "data": {
+        "collectionReference":"CO202402070803000001",
+        "response": [
+            {"responseCode":"230","responseDescription":"Batch Completed"}
+        ],
+        "file": {
+            "fileName": "Collections001",
+            "fileType":"csv",
+            "fileData":"U0VSSUFMIE5vLjtCQU5LIENPREU7QlJBTkNIIE5BTUU7RU1QTE9ZRUUgTlVNQkVSO0NVU1RPTUVSIE5BTUU7QUNDT1VOVCBOTzsgQU1PVU5UIDtTdGF0dXMNCjI7MTY7Tk1CO3h5ejtUZXN0IFRlc3Q7MzAxMDI0MDAwODU7MjA7U1VDQ0VTUw0KMTsxNjtOTUI7eHl6O1Rlc3QgVGVzdDszMDEwMjQwMDA4NTsyMDtGQUlM"
+        }
+    }
+}

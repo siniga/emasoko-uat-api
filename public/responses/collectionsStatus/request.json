@@ -1,0 +1,9 @@
+{
+    "user":"EMakato",
+    "correlationId": "b30d3134-5624-4391-9f49-1b7a776d692e",
+    "targetService": "CollectionStatus",
+    "status": "Check",
+    "data": {
+        "collectionReference":"CO202402070803000001"
+    }
+}

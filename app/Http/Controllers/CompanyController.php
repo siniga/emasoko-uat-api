@@ -20,6 +20,7 @@ use App\Models\Region;
 use App\Models\User;
 use App\Services\CompanyService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Validator;
@@ -65,14 +66,13 @@ class CompanyController extends Controller
         } else {
             //number of companies
             $number_of_companies = $companies->count();
-
             //companies
             $companies = $companies->paginate(50);
         }
 
         //populate data
-        $categories = PartnerCategory::all();
-        $regions = Region::orderBy('name', 'ASC')->get();
+        $categories = PartnerCategory::toBase()->get();
+        $regions = Region::orderBy('name', 'ASC')->toBase()->get();
 
         $post_data = [
             'start_at' => $request->start_at ?? null,
@@ -173,6 +173,7 @@ class CompanyController extends Controller
         // validated request
         $validated = $request->validated();
 
+        DB::beginTransaction();
         //capture if uuid is not null
         if ($request->input('partner_uuid') != null)
             $uuid = $request->input('partner_uuid');
@@ -181,7 +182,7 @@ class CompanyController extends Controller
 
         //create or update service provider    
         $partner = $this->companyService->createInformation((object) $request->all(), $uuid);
-
+        DB::commit();
         //response
         return response()->json(['success' => true, 'uuid' => $uuid, 'message' => 'Service provider information saved!'], 200);
     }
@@ -369,6 +370,7 @@ class CompanyController extends Controller
         $partner->next_step = 'companies/preview/' . $uuid;
         $partner->status = 1;
         $partner->complete = 1;
+        $partner->updated_by = auth()->id();
         $partner->save();
 
         //create assessment stages
@@ -643,7 +645,8 @@ class CompanyController extends Controller
 
         //process assessment
         $status = $this->companyService->processAssessment($partner);
-
+        $partner->updated_by = auth()->id();
+        $partner->save();
         //response
         return response()->json(['error' => false, "status" => $status, "message" => 'Assessment completed!'], 200);
     }
