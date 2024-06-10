@@ -73,7 +73,9 @@ class CompanyService
                         'account_type_id' => $data['account_type_id'][$i],
                         'account_id' => $data['account_id'][$i],
                         'account_name' => $data['account_name'][$i],
-                        'account_number' => $data['account_number'][$i]
+                        'account_number' => $data['account_number'][$i],
+                        'sort_code' => $data['sort_code'][$i],
+                        'currency_id' => $data['currency_id'][$i],
                     ]);
                     if ($partner_account->wasRecentlyCreated) {
                         $partner_account->send_verification = 1;

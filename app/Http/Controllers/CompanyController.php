@@ -8,6 +8,7 @@ use App\Http\Requests\CompanyDetailRequest;
 use App\Models\Account;
 use App\Models\AccountType;
 use App\Models\Country;
+use App\Models\Currency;
 use App\Models\DocumentCategory;
 use App\Models\Partner;
 use App\Models\PartnerAccount;
@@ -256,11 +257,12 @@ class CompanyController extends Controller
         $company = Partner::where(['uuid' => $uuid])->firstOrFail();
 
         //populate data
-        $account_types = AccountType::all();
-        $accounts = Account::all();
+        $account_types = AccountType::toBase()->get();
+        $accounts = Account::toBase()->get();
+        $currencies = Currency::toBase()->get();
 
         //render view
-        return view('companies.create.accounts', compact('title', 'company', 'account_types', 'accounts'));
+        return view('companies.create.accounts', compact('title', 'company', 'account_types', 'accounts', 'currencies'));
     }
 
     //store company accounts

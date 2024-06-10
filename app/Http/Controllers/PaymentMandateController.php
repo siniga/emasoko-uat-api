@@ -25,6 +25,7 @@ use App\Jobs\SendSMSJob;
 use App\Models\CustomerPartner;
 use App\Models\Partner;
 use App\Models\SmsLog;
+use App\Services\MnoBankServices;
 use Illuminate\Support\Facades\Session;
 use PDF;
 
@@ -343,7 +344,7 @@ class PaymentMandateController extends Controller
         }
 
         $debit_order->uuid = $do_uuid;
-        
+
         $debit_order->total_amount = $loan_amount;
         if ($debit_order->created_by == null) {
             $debit_order->created_by = auth()->id();
@@ -386,6 +387,12 @@ class PaymentMandateController extends Controller
         $customer_partner->created_by = Auth::user()->id;
         $customer_partner->save();
 
+        // $mno = new MnoBankServices($customer_account->account);
+        // $response = $mno->mandateRegistration($request, $debit_order);
+        // if (!$response->status) {
+        //     // return Redirect::back()->with('error', $response->message);
+        // }
+        // dd($response);
         //redirect with message
         return Redirect::route('payment-mandate.preview', [$do_uuid])->with('success', "Customer deduction information saved");
     }

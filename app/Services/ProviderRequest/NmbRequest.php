@@ -4,14 +4,11 @@ namespace App\Services\ProviderRequest;
 
 use App\Models\CollectionBatch;
 use App\Models\CollectionDebitOrder;
-use App\Models\CustomerAccount;
 use App\Models\DebitOrder;
-use App\Models\Partner;
 use App\Models\PartnerAccount;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\DB;
 
 class NmbRequest extends BankMnoProcedure
 {
@@ -43,6 +40,7 @@ class NmbRequest extends BankMnoProcedure
     {
         return str_replace(" ", ".", trim(ucwords($user->name ?? null)));
     }
+
     ## corporateRegistration
     public function corporateRegistration(Request $request, PartnerAccount $partnerAccount)
     {
@@ -99,8 +97,6 @@ class NmbRequest extends BankMnoProcedure
             'data' => []
         ], Response::HTTP_BAD_REQUEST)->getData();
     }
-
-
     public function corporateRegistrationStatus(Request $request, PartnerAccount $partnerAccount)
     {
         $partner =  $partnerAccount->partner;
@@ -220,7 +216,6 @@ class NmbRequest extends BankMnoProcedure
             'data' => []
         ], Response::HTTP_BAD_REQUEST)->getData();
     }
-
     public function mandateRegistrationStatus(Request $request, DebitOrder $debitOrder)
     {
         $myRequest = new Request();
@@ -245,7 +240,6 @@ class NmbRequest extends BankMnoProcedure
             'data' => []
         ], Response::HTTP_BAD_REQUEST)->getData();
     }
-
     public function mandateOTPRegeneration(Request $request, DebitOrder $debitOrder)
     {
         $customerAccount = $debitOrder->customerAccount;
@@ -272,7 +266,6 @@ class NmbRequest extends BankMnoProcedure
             'data' => []
         ], Response::HTTP_BAD_REQUEST)->getData();
     }
-
     public function mandateStatusAndValidation(Request $request, DebitOrder $debitOrder)
     {
         $myRequest = new Request();
@@ -300,6 +293,7 @@ class NmbRequest extends BankMnoProcedure
         ], Response::HTTP_BAD_REQUEST)->getData();
     }
 
+    ## mandateCancellation
     public function mandateCancellation(Request $request, DebitOrder $debitOrder)
     {
         $partner = $debitOrder->partner;
@@ -331,7 +325,6 @@ class NmbRequest extends BankMnoProcedure
             'data' => []
         ], Response::HTTP_BAD_REQUEST)->getData();
     }
-
     public function mandateCancellationStatus(Request $request, DebitOrder $debitOrder)
     {
         $myRequest = new Request();
@@ -356,7 +349,6 @@ class NmbRequest extends BankMnoProcedure
             'data' => []
         ], Response::HTTP_BAD_REQUEST)->getData();
     }
-
     public function mandateOTPCancellationRegeneration(Request $request, DebitOrder $debitOrder)
     {
         $customerAccount = $debitOrder->customerAccount;
@@ -384,7 +376,6 @@ class NmbRequest extends BankMnoProcedure
             'data' => []
         ], Response::HTTP_BAD_REQUEST)->getData();
     }
-
     public function mandateCancellationStatusAndValidation(Request $request, DebitOrder $debitOrder)
     {
         $myRequest = new Request();
@@ -410,6 +401,7 @@ class NmbRequest extends BankMnoProcedure
         ], Response::HTTP_BAD_REQUEST)->getData();
     }
 
+    ## collectionFileReceptionAndValidation
     public function collectionFileReceptionAndValidation(Request $request, CollectionBatch $batch)
     {
         $myRequest = new Request();

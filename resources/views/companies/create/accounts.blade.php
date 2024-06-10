@@ -78,7 +78,7 @@
 
                             @if ($company->partnerAccounts->isNotEmpty())
                                 @foreach ($company->partnerAccounts as $data)
-                                    <div class="row">
+                                    <div class="row field-input">
                                         <div class="col-lg-4">
                                             <div class="mb-3">
                                                 <label>Account Type <span class="text-danger">*</span></label>
@@ -114,7 +114,7 @@
                                                 @php
                                                     $account_options = $options;
                                                     $options = ['' => 'Select'] + $options;
-                                                    
+
                                                 @endphp
 
                                                 {{ Form::select('account_id[]', $options, old('account_id[]', $data->account_id), ['class' => 'form-control account_id', 'id' => 'account_id']) }}
@@ -138,7 +138,35 @@
                                             </div>
                                         </div>
 
-                                        <div class="col-lg-8">
+                                        <div class="col-lg-2">
+                                            <div class="mb-3">
+                                                <label class="currency_id">Currency <span
+                                                        class="text-danger">*</span></label>
+                                                @php $options = []; @endphp
+                                                @foreach ($currencies as $val)
+                                                    @php
+                                                        $options[$val->id] = $val->name;
+                                                    @endphp
+                                                @endforeach
+                                                @php
+                                                    $currency_options = $options;
+                                                    $options = ['' => 'Select'] + $options;
+                                                @endphp
+
+                                                {{ Form::select('currency_id[]', $options, old('currency_id[]'), ['class' => 'form-control currency_id', 'id' => 'currency_id']) }}
+                                                <span class="formError"></span>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-lg-2">
+                                            <div class="mb-3">
+                                                <label for="basicpill-namecard-input">Short Code <span
+                                                        class="text-danger">*</span></label>
+                                                {{ Form::text('sort_code[]', old('sort_code[]'), ['class="form-control"', 'placeholder="Write short code..."']) }}
+                                                <span class="formError"></span>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-4">
                                             <div class="mt-4 pt-2 text-sm-end d-none d-sm-block">
                                                 <button type="button" name="add" id="add_button"
                                                     class="btn btn-info btn-sm text-medium">
@@ -149,7 +177,7 @@
                                     </div>
                                 @endforeach
                             @else
-                                <div class="row">
+                                <div class="row field-input">
                                     <div class="col-lg-4">
                                         <div class="mb-3">
                                             <label for="basicpill-namecard-input">Account Type <span
@@ -195,7 +223,7 @@
 
                                     <div class="col-lg-4">
                                         <div class="mb-3">
-                                            <label for="basicpill-namecard-input">Account Name <span
+                                            <label for="basicpill-namecard-input">Account Name<span
                                                     class="text-danger">*</span></label>
                                             {{ Form::text('account_name[]', old('account_name[]'), ['class="form-control"', 'placeholder="Write account name..."']) }}
                                             <span class="formError"></span>
@@ -211,7 +239,35 @@
                                         </div>
                                     </div>
 
-                                    <div class="col-lg-8">
+                                    <div class="col-lg-2">
+                                        <div class="mb-3">
+                                            <label class="currency_id">Currency <span class="text-danger">*</span></label>
+                                            @php $options = []; @endphp
+                                            @foreach ($currencies as $val)
+                                                @php
+                                                    $options[$val->id] = $val->name;
+                                                @endphp
+                                            @endforeach
+                                            @php
+                                                $currency_options = $options;
+                                                $options = ['' => 'Select'] + $options;
+                                            @endphp
+
+                                            {{ Form::select('currency_id[]', $options, old('currency_id[]'), ['class' => 'form-control currency_id', 'id' => 'currency_id']) }}
+                                            <span class="formError"></span>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-lg-2">
+                                        <div class="mb-3">
+                                            <label for="basicpill-namecard-input">Short Code <span
+                                                    class="text-danger">*</span></label>
+                                            {{ Form::text('sort_code[]', old('sort_code[]'), ['class="form-control"', 'placeholder="Write short code..."']) }}
+                                            <span class="formError"></span>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-lg-4">
                                         <div class="mt-4 pt-2 text-sm-end d-none d-sm-block">
                                             <button type="button" name="add" id="add_button"
                                                 class="btn btn-info btn-sm text-medium">
@@ -248,125 +304,117 @@
 
     <script type="text/javascript">
         $(document).ready(function() {
-            //on select account category
-            $('.account_type_id').on('change', function(e) {
+            // On change of account type
+            $(document).on('change', '.account_type_id', function(e) {
                 e.preventDefault();
-                accountTypeId = $(this).val();
+                var accountTypeId = $(this).val();
+                var fieldInputContainer = $(this).closest('.field-input');
 
-                //change bank or mno name
-                if (accountTypeId == 1)
-                    $('.bank_mno_name').html('Bank Name <span class="text-danger">*</span>');
-                else if (accountTypeId == 2)
-                    $('.bank_mno_name').html('MNO Name <span class="text-danger">*</span>');
+                // Change bank or MNO name
+                if (accountTypeId == 1) {
+                    fieldInputContainer.find('.bank_mno_name').html(
+                        'Bank Name <span class="text-danger">*</span>');
+                } else if (accountTypeId == 2) {
+                    fieldInputContainer.find('.bank_mno_name').html(
+                        'MNO Name <span class="text-danger">*</span>');
+                }
 
-                //query for data
+                // Query for data
                 $.ajax({
                     url: '/account-types/' + accountTypeId,
                     type: "get",
                     success: function(data) {
-                        $('.account_id').html(data);
+                        fieldInputContainer.find('.account_id').html(data);
                     }
                 });
             });
 
-            //data
-            var account_types = {!! json_encode($account_type_options) !!}
-            var accounts = {!! json_encode($account_options) !!}
+            // Data initialization
+            var account_types = {!! json_encode($account_type_options) !!};
+            var accounts = {!! json_encode($account_options) !!};
+            var currencies = {!! json_encode($currency_options) !!};
 
-            //add more accounts
-            // $(document).ready(function() {
-            let maxField = 5; //Input fields increment limitation
-            let wrapper = $('.field_wrapper'); //Input field wrapper
-            let fieldHTML =
-                '<div class="row row-div">' +
-                '<div class="col-lg-4">' +
-                '<div class="mb-3">' +
-                '<label>Account Type <span class="text-danger">*</span></label>';
-            fieldHTML += '<select name="account_type_id[]" class="form-control account_type_id">';
-            fieldHTML += "<option value=''>Select</option>";
-            $.each(account_types, function(key, value) {
-                fieldHTML += "<option value='" + key + "'>" + value + "</option>";
-            });
-            fieldHTML += '</select>';
-            fieldHTML += '<span class="formError"></span>';
-            fieldHTML += '</div></div>';
+            // Add more accounts
+            let maxField = 5; // Input fields increment limitation
+            let wrapper = $('.field_wrapper'); // Input field wrapper
+            let fieldHTML = `
+            <div class="row field-input row-div">
+                <div class="col-lg-4">
+                    <div class="mb-3">
+                        <label>Account Type <span class="text-danger">*</span></label>
+                        <select name="account_type_id[]" class="form-control account_type_id">
+                            <option value=''>Select</option>
+                            ${Object.keys(account_types).map(key => `<option value='${key}'>${account_types[key]}</option>`).join('')}
+                        </select>
+                        <span class="formError"></span>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="mb-3">
+                        <label class="bank_mno_name">Bank Name <span class="text-danger">*</span></label>
+                        <select name="account_id[]" class="form-control account_id">
+                            <option value=''>Select</option>
+                            ${Object.keys(accounts).map(key => `<option value='${key}'>${accounts[key]}</option>`).join('')}
+                        </select>
+                        <span class="formError"></span>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="mb-3">
+                        <label>Account Name <span class="text-danger">*</span></label>
+                        <input type="text" name="account_name[]" placeholder="Write account name..." class="form-control">
+                        <span class="formError"></span>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="mb-3">
+                        <label>Account Number <span class="text-danger">*</span></label>
+                        <input type="text" name="account_number[]" placeholder="Write account number..." class="form-control">
+                        <span class="formError"></span>
+                    </div>
+                </div>
+                <div class="col-lg-2">
+                    <div class="mb-3">
+                        <label class="currency_id">Currency <span class="text-danger">*</span></label>
+                        <select name="currency_id[]" class="form-control currency_id">
+                            <option value=''>Select</option>
+                            ${Object.keys(currencies).map(key => `<option value='${key}'>${currencies[key]}</option>`).join('')}
+                        </select>
+                        <span class="formError"></span>
+                    </div>
+                </div>
+                <div class="col-lg-2">
+                    <div class="mb-3">
+                        <label>Short Code <span class="text-danger">*</span></label>
+                        <input type="text" name="sort_code[]" placeholder="Write short code..." class="form-control">
+                        <span class="formError"></span>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="mt-4 pt-2 text-sm-end d-none d-sm-block">
+                        Do you want to delete this account? <input type="checkbox" class="remove_button" />
+                    </div>
+                </div>
+            </div>`;
 
-            fieldHTML += '<div class="col-lg-4 col-md-4">' +
-                '<div class="mb-3">' +
-                '<label class="bank_mno_name">Bank Name <span class="text-danger">*</span></label>';
-            fieldHTML += '<select name="account_id[]" class="form-control account_id">';
-            fieldHTML += "<option value=''>Select</option>";
-            $.each(accounts, function(key, value) {
-                fieldHTML += "<option value='" + key + "'>" + value + "</option>";
-            });
-            fieldHTML += '</select>';
-            fieldHTML += '<span class="formError"></span>';
-            fieldHTML += '</div></div>';
-
-            fieldHTML += '<div class="col-lg-4 col-md-4">' +
-                '<div class="mb-3">' +
-                '<label>Account Name <span class="text-danger">*</span></label>' +
-                '<input type="text" id="account_name" name="account_name[]" placeholder="Write account name..." class="form-control">';
-            fieldHTML += '<span class="formError"></span>';
-            fieldHTML += '</div></div>';
-
-            fieldHTML += '<div class="col-lg-4 col-md-4">' +
-                '<div class="mb-3">' +
-                '<label>Account Number <span class="text-danger">*</span></label>' +
-                '<input type="text" id="account_number" name="account_number[]" placeholder="Write account number..." class="form-control">';
-            fieldHTML += '<span class="formError"></span>';
-            fieldHTML += '</div></div>';
-
-            fieldHTML += '<div class="col-lg-8 col-md-8">' +
-                '<div class="mt-4 pt-2 text-sm-end d-none d-sm-block">' +
-                'Do you want to delete this account? <input type="checkbox" id="remove_button" />' +
-                '</div></div>';
-
-            fieldHTML += '</div>';
-
-            let x = 1; //Initial field counter is 1
-            //Once add button is clicked
+            let x = 1; // Initial field counter is 1
+            // Once add button is clicked
             $('#add_button').click(function() {
-                //Check maximum number of input fields
+                // Check maximum number of input fields
                 if (x < maxField) {
-                    x++; //Increment field counter
-                    $(wrapper).append(fieldHTML); //Add field html
+                    x++; // Increment field counter
+                    $(wrapper).append(fieldHTML); // Add field html
                 }
             });
 
-            //Once remove button is clicked
-            $(wrapper).on('click', '#remove_button', function(e) {
+            // Once remove button is clicked
+            $(wrapper).on('click', '.remove_button', function(e) {
                 e.preventDefault();
                 $(this).closest('.row-div').remove();
-                x--; //Decrement field counter
-            });
-            // });
-
-            //wrapper on select account type
-            $(wrapper).on('change', '.account_type_id', function(e) {
-                e.preventDefault();
-                accountTypeId = $(this).val();
-
-                //change bank or mno name
-                if (accountTypeId == 1)
-                    $('.field_wrapper .bank_mno_name').html('Bank Name <span class="text-danger">*</span>');
-                else if (accountTypeId == 2)
-                    $('.field_wrapper .bank_mno_name').html('MNO Name <span class="text-danger">*</span>');
-
-                //query for data
-                $.ajax({
-                    url: '/account-types/' + accountTypeId,
-                    type: "get",
-                    success: function(data) {
-                        $('.field_wrapper .account_id').html(data);
-                    }
-                });
+                x--; // Decrement field counter
             });
 
-            //declare form message 
-            $('.form-message').html("");
-
-            //validate form
+            // Validate form
             $("#companyForm").validate({
                 errorClass: "formError",
                 errorElement: "span",
@@ -375,28 +423,27 @@
                     "account_id[]": "required",
                     "account_name[]": "required",
                     "account_number[]": "required",
+                    "currency_id[]": "required",
+                    "sort_code[]": "required",
                 },
                 messages: {
                     "account_type_id[]": "Account type required",
                     "account_id[]": "Bank/MNO name required",
                     "account_name[]": "Account name required",
                     "account_number[]": "Account number required",
+                    "currency_id[]": "Currency required",
+                    "sort_code[]": "Short Code required",
                 },
-
-                //submit form
+                // Submit form
                 submitHandler: function(form, e) {
                     e.preventDefault();
-
-                    //change submit button text
+                    // Change submit button text
                     $('#submitButton').text('Submitting...');
-                    
-                    //form data
+                    // Form data
                     const formData = new FormData(form);
-
-                    //append token
+                    // Append token
                     formData.append("_token", "{{ csrf_token() }}");
-
-                    //post data 
+                    // Post data
                     $.ajax({
                         type: "POST",
                         url: "/companies/store-accounts",
@@ -406,28 +453,25 @@
                         cache: false,
                         timeout: 800000,
                         success: function(response) {
-                            //change submit button text
+                            // Change submit button text
                             $('#submitButton').text('Next');
-
-                            //display message
+                            // Display message
                             $('.form-message').html(
                                 "<div class='alert alert-success py-2.5 px-2'>Service Provider collection account(s) saved</div>"
                             );
-
-                            //set timer
+                            // Set timer
                             setTimeout(function() {
-                                window.location.href = "/companies/staff/" + response.uuid;
+                                window.location.href = "/companies/staff/" +
+                                    response.uuid;
                             }, 300);
                         },
                         error: function(e) {
                             $('#submitButton').text('Next');
                         }
                     });
-
                     return false;
                 }
             });
-
         });
     </script>
 @endsection
