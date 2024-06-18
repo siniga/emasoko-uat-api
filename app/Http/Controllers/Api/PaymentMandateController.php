@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\CustomerAccount;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class PaymentMandateController extends Controller
 {
@@ -269,15 +271,63 @@ class PaymentMandateController extends Controller
     //payment
     function payment()
     {
+        //create authentication token
 
-        //response
-        $response = [
-            'error' => false,
-            'message' => 'Payment success',
+        //create data
+        $data = [
+            "caseReference" => "0003",
+            "accountNumber" => "20910020198",
+            "processName" => "Test JWT Tokens Code",
+            "makerName" => "ETest"
         ];
 
+        //create payload
+        $payload = [
+            "user" => "EMakato",
+            'correlationId' => "b30d3134-5624-4391-9f49-1b7a776d692e",
+            "targetService" => "OTPCreate",
+            'status' => "Create",
+            "data" => $data
+        ];
 
-        //return response
-        return response()->json($response, 200);
+        //API URL
+        $API_URL = "http://nmb-ts-dds-v006:8080/Services/Sybrin.Authentication.Gateway/SybrinAuthenticationGateway";
+
+        //headers
+        $headers = [
+            'Content-Type' => 'application/json',
+            'Authorization' => 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MTgyNjIyOTAsIm5iZiI6MTcxODI2MjI5MC wiZXhwIjoxNzE4MjYyNTkwLCJpc3MiOiJFTWFrYXRvIiwiYXVkIjoiRU1ha2F0byJ9.F0YxGKpcjR4izC0 u3nxx_CuqE1405pJE8-TMplVBn24'
+        ];
+
+        //push payload => NMB Direct Debits
+        $response = Http::withHeaders($headers)->post($API_URL, $payload);
+
+        if ($response->status() == 200) {
+            $data = $response->json();
+
+            //send response to eMakato
+            return response()->json([
+                'status' => "Success",
+                "caseReference" => "121451",
+                'response' => [
+                    'responseCode' => 240,
+                    'responseDescription' => "OTP Succesfully Generated"
+                ]
+            ], 201);
+        } else {
+            $data = $response->json();
+            Log::debug("Error code =>" . $response->status());
+            Log::debug($data);
+
+            //send response to eMakato
+            return response()->json([
+                'status' => "Fail",
+                "caseReference" => "121451",
+                'response' => [
+                    'responseCode' => 500,
+                    'responseDescription' => "Internal Server Error"
+                ]
+            ], 500);
+        }
     }
 }

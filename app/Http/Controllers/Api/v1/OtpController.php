@@ -1,12 +1,13 @@
 <?php
 
-namespace App\Http\Controllers\Api\v1;
+namespace App\Http\Controllers\Api\V1;
 
-use App\Classes\Authentication;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+
+use App\Classes\Authentication;
 
 class OtpController extends Controller
 {
@@ -20,7 +21,7 @@ class OtpController extends Controller
     public function create(Request $request)
     {
         //validation 
-        echo "hello";
+        return response()->json(['error' => false, 'message' => "hello"]);
         exit();
 
         //create authentication token
