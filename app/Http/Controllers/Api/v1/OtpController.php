@@ -14,12 +14,14 @@ class OtpController extends Controller
 
     function __construct()
     {
-        $this->auth = new Authentication();
+        //$this->auth = new Authentication();
     }
 
     public function create(Request $request)
     {
         //validation 
+        echo "hello";
+        exit();
 
         //create authentication token
 
