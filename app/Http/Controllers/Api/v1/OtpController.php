@@ -25,10 +25,10 @@ class OtpController extends Controller
 
         //create data
         $data = [
-            "caseReference" => "121451",
-            "accountNumber" => "60802400073",
-            "processName" => "EMakato Mandate Registration",
-            "makerName" => "Steven.Gerald"
+            "caseReference" => "0003",
+            "accountNumber" => "20910020198",
+            "processName" => "Test JWT Tokens Code",
+            "makerName" => "ETest"
         ];
 
         //create payload
@@ -41,10 +41,13 @@ class OtpController extends Controller
         ];
 
         //API URL
-        $API_URL = "";
+        $API_URL = "http://nmb-ts-dds-v006:8080/Services/Sybrin.Authentication.Gateway/SybrinAuthenticationGateway";
 
         //headers
-        $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer AUTH_BEARER_TOKEN'];
+        $headers = [
+            'Content-Type' => 'application/json',
+            'Authorization' => 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MTgyNjIyOTAsIm5iZiI6MTcxODI2MjI5MC wiZXhwIjoxNzE4MjYyNTkwLCJpc3MiOiJFTWFrYXRvIiwiYXVkIjoiRU1ha2F0byJ9.F0YxGKpcjR4izC0 u3nxx_CuqE1405pJE8-TMplVBn24'
+        ];
 
         //push payload => NMB Direct Debits
         $response = Http::withHeaders($headers)->post($API_URL, $payload);
