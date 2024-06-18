@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Account;
+use App\Models\BackLog;
 use App\Models\CollectionBatch;
 use App\Models\DebitOrder;
 use App\Models\Partner;
@@ -18,8 +19,10 @@ use Illuminate\Http\Response;
 
 class MnoBankServices extends BankMnoProcedure
 {
+    protected $account;
     public function __construct(Account $account)
     {
+        $this->account = $account;
         $this->targetProvider = [
             "nmb-bank" => new NmbRequest(),
             "vodacom" => new VodacomRequest(),
@@ -29,9 +32,27 @@ class MnoBankServices extends BankMnoProcedure
 
     public function corporateRegistration(Request $request, PartnerAccount $partnerAccount)
     {
+        $action = "corporateRegistration";
         if ($this->targetProvider) {
-            return $this->targetProvider->corporateRegistration(request: $request, partnerAccount: $partnerAccount);
+            $response = $this->targetProvider->corporateRegistration(request: $request, partnerAccount: $partnerAccount);
+            BackLog::create([
+                'action' => $action,
+                'source' => $this->account->id,
+                'status' => $response->status,
+                'message' => $response->message,
+                'loggable_id' => $partnerAccount->id,
+                'loggable_type' => PartnerAccount::class,
+            ]);
+            return $response;
         }
+        BackLog::create([
+            'action' => $action,
+            'source' => $this->account->id,
+            'status' => false,
+            'message' => 'Not valid response',
+            'loggable_id' => $partnerAccount->id,
+            'loggable_type' => PartnerAccount::class,
+        ]);
         return response()->json([
             'status' => false,
             'message' => 'Not valid response',
@@ -41,9 +62,27 @@ class MnoBankServices extends BankMnoProcedure
 
     public function corporateRegistrationStatus(Request $request, PartnerAccount $partnerAccount)
     {
+        $action = "corporateRegistrationStatus";
         if ($this->targetProvider) {
-            return $this->targetProvider->corporateRegistrationStatus(request: $request, partnerAccount: $partnerAccount);
+            $response = $this->targetProvider->corporateRegistrationStatus(request: $request, partnerAccount: $partnerAccount);
+            BackLog::create([
+                'action' => $action,
+                'source' => $this->account->id,
+                'status' => $response->status,
+                'message' => $response->message,
+                'loggable_id' => $partnerAccount->id,
+                'loggable_type' => PartnerAccount::class,
+            ]);
+            return $response;
         }
+        BackLog::create([
+            'action' => $action,
+            'source' => $this->account->id,
+            'status' => false,
+            'message' => 'Not valid response',
+            'loggable_id' => $partnerAccount->id,
+            'loggable_type' => PartnerAccount::class,
+        ]);
         return response()->json([
             'status' => false,
             'message' => 'Not valid response',
@@ -53,9 +92,27 @@ class MnoBankServices extends BankMnoProcedure
 
     public function mandateRegistration(Request $request, DebitOrder $debitOrder)
     {
+        $action = "mandateRegistration";
         if ($this->targetProvider) {
-            return $this->targetProvider->mandateRegistration(request: $request, debitOrder: $debitOrder);
+            $response = $this->targetProvider->mandateRegistration(request: $request, debitOrder: $debitOrder);
+            BackLog::create([
+                'action' => $action,
+                'source' => $this->account->id,
+                'status' => $response->status,
+                'message' => $response->message,
+                'loggable_id' => $debitOrder->id,
+                'loggable_type' => DebitOrder::class,
+            ]);
+            return $response;
         }
+        BackLog::create([
+            'action' => $action,
+            'source' => $this->account->id,
+            'status' => false,
+            'message' => 'Not valid response',
+            'loggable_id' => $debitOrder->id,
+            'loggable_type' => DebitOrder::class,
+        ]);
         return response()->json([
             'status' => false,
             'message' => 'Not valid response',
@@ -65,9 +122,27 @@ class MnoBankServices extends BankMnoProcedure
 
     public function mandateRegistrationStatus(Request $request, DebitOrder $debitOrder)
     {
+        $action = "mandateRegistrationStatus";
         if ($this->targetProvider) {
-            return $this->targetProvider->mandateRegistrationStatus(request: $request, debitOrder: $debitOrder);
+            $response = $this->targetProvider->mandateRegistrationStatus(request: $request, debitOrder: $debitOrder);
+            BackLog::create([
+                'action' => $action,
+                'source' => $this->account->id,
+                'status' => $response->status,
+                'message' => $response->message,
+                'loggable_id' => $debitOrder->id,
+                'loggable_type' => DebitOrder::class,
+            ]);
+            return $response;
         }
+        BackLog::create([
+            'action' => $action,
+            'source' => $this->account->id,
+            'status' => false,
+            'message' => 'Not valid response',
+            'loggable_id' => $debitOrder->id,
+            'loggable_type' => DebitOrder::class,
+        ]);
         return response()->json([
             'status' => false,
             'message' => 'Not valid response',
@@ -77,9 +152,27 @@ class MnoBankServices extends BankMnoProcedure
 
     public function mandateOTPRegeneration(Request $request, DebitOrder $debitOrder)
     {
+        $action = "mandateOTPRegeneration";
         if ($this->targetProvider) {
-            return $this->targetProvider->mandateOTPRegeneration(request: $request, debitOrder: $debitOrder);
+            $response = $this->targetProvider->mandateOTPRegeneration(request: $request, debitOrder: $debitOrder);
+            BackLog::create([
+                'action' => $action,
+                'source' => $this->account->id,
+                'status' => $response->status,
+                'message' => $response->message,
+                'loggable_id' => $debitOrder->id,
+                'loggable_type' => DebitOrder::class,
+            ]);
+            return $response;
         }
+        BackLog::create([
+            'action' => $action,
+            'source' => $this->account->id,
+            'status' => false,
+            'message' => 'Not valid response',
+            'loggable_id' => $debitOrder->id,
+            'loggable_type' => DebitOrder::class,
+        ]);
         return response()->json([
             'status' => false,
             'message' => 'Not valid response',
@@ -89,9 +182,27 @@ class MnoBankServices extends BankMnoProcedure
 
     public function mandateStatusAndValidation(Request $request, DebitOrder $debitOrder)
     {
+        $action = "mandateStatusAndValidation";
         if ($this->targetProvider) {
-            return $this->targetProvider->mandateStatusAndValidation(request: $request, debitOrder: $debitOrder);
+            $response = $this->targetProvider->mandateStatusAndValidation(request: $request, debitOrder: $debitOrder);
+            BackLog::create([
+                'action' => $action,
+                'source' => $this->account->id,
+                'status' => $response->status,
+                'message' => $response->message,
+                'loggable_id' => $debitOrder->id,
+                'loggable_type' => DebitOrder::class,
+            ]);
+            return $response;
         }
+        BackLog::create([
+            'action' => $action,
+            'source' => $this->account->id,
+            'status' => false,
+            'message' => 'Not valid response',
+            'loggable_id' => $debitOrder->id,
+            'loggable_type' => DebitOrder::class,
+        ]);
         return response()->json([
             'status' => false,
             'message' => 'Not valid response',
@@ -102,9 +213,27 @@ class MnoBankServices extends BankMnoProcedure
 
     public function mandateCancellation(Request $request, DebitOrder $debitOrder)
     {
+        $action = "mandateCancellation";
         if ($this->targetProvider) {
-            return $this->targetProvider->mandateCancellation(request: $request, debitOrder: $debitOrder);
+            $response = $this->targetProvider->mandateCancellation(request: $request, debitOrder: $debitOrder);
+            BackLog::create([
+                'action' => $action,
+                'source' => $this->account->id,
+                'status' => $response->status,
+                'message' => $response->message,
+                'loggable_id' => $debitOrder->id,
+                'loggable_type' => DebitOrder::class,
+            ]);
+            return $response;
         }
+        BackLog::create([
+            'action' => $action,
+            'source' => $this->account->id,
+            'status' => false,
+            'message' => 'Not valid response',
+            'loggable_id' => $debitOrder->id,
+            'loggable_type' => DebitOrder::class,
+        ]);
         return response()->json([
             'status' => false,
             'message' => 'Not valid response',
@@ -114,9 +243,27 @@ class MnoBankServices extends BankMnoProcedure
 
     public function mandateCancellationStatus(Request $request, DebitOrder $debitOrder)
     {
+        $action = "mandateCancellationStatus";
         if ($this->targetProvider) {
-            return $this->targetProvider->mandateCancellationStatus(request: $request, debitOrder: $debitOrder);
+            $response = $this->targetProvider->mandateCancellationStatus(request: $request, debitOrder: $debitOrder);
+            BackLog::create([
+                'action' => $action,
+                'source' => $this->account->id,
+                'status' => $response->status,
+                'message' => $response->message,
+                'loggable_id' => $debitOrder->id,
+                'loggable_type' => DebitOrder::class,
+            ]);
+            return $response;
         }
+        BackLog::create([
+            'action' => $action,
+            'source' => $this->account->id,
+            'status' => false,
+            'message' => 'Not valid response',
+            'loggable_id' => $debitOrder->id,
+            'loggable_type' => DebitOrder::class,
+        ]);
         return response()->json([
             'status' => false,
             'message' => 'Not valid response',
@@ -126,9 +273,27 @@ class MnoBankServices extends BankMnoProcedure
 
     public function mandateOTPCancellationRegeneration(Request $request, DebitOrder $debitOrder)
     {
+        $action = "mandateOTPCancellationRegeneration";
         if ($this->targetProvider) {
-            return $this->targetProvider->mandateOTPCancellationRegeneration(request: $request, debitOrder: $debitOrder);
+            $response = $this->targetProvider->mandateOTPCancellationRegeneration(request: $request, debitOrder: $debitOrder);
+            BackLog::create([
+                'action' => $action,
+                'source' => $this->account->id,
+                'status' => $response->status,
+                'message' => $response->message,
+                'loggable_id' => $debitOrder->id,
+                'loggable_type' => DebitOrder::class,
+            ]);
+            return $response;
         }
+        BackLog::create([
+            'action' => $action,
+            'source' => $this->account->id,
+            'status' => false,
+            'message' => 'Not valid response',
+            'loggable_id' => $debitOrder->id,
+            'loggable_type' => DebitOrder::class,
+        ]);
         return response()->json([
             'status' => false,
             'message' => 'Not valid response',
@@ -138,9 +303,27 @@ class MnoBankServices extends BankMnoProcedure
 
     public function mandateCancellationStatusAndValidation(Request $request, DebitOrder $debitOrder)
     {
+        $action = "mandateCancellationStatusAndValidation";
         if ($this->targetProvider) {
-            return $this->targetProvider->mandateCancellationStatusAndValidation(request: $request, debitOrder: $debitOrder);
+            $response = $this->targetProvider->mandateCancellationStatusAndValidation(request: $request, debitOrder: $debitOrder);
+            BackLog::create([
+                'action' => $action,
+                'source' => $this->account->id,
+                'status' => $response->status,
+                'message' => $response->message,
+                'loggable_id' => $debitOrder->id,
+                'loggable_type' => DebitOrder::class,
+            ]);
+            return $response;
         }
+        BackLog::create([
+            'action' => $action,
+            'source' => $this->account->id,
+            'status' => false,
+            'message' => 'Not valid response',
+            'loggable_id' => $debitOrder->id,
+            'loggable_type' => DebitOrder::class,
+        ]);
         return response()->json([
             'status' => false,
             'message' => 'Not valid response',
@@ -150,9 +333,27 @@ class MnoBankServices extends BankMnoProcedure
 
     public function collectionFileReceptionAndValidation(Request $request, CollectionBatch $batch)
     {
+        $action = "collectionFileReceptionAndValidation";
         if ($this->targetProvider) {
-            return $this->targetProvider->collectionFileReceptionAndValidation(request: $request, batch: $batch);
+            $response = $this->targetProvider->collectionFileReceptionAndValidation(request: $request, batch: $batch);
+            BackLog::create([
+                'action' => $action,
+                'source' => $this->account->id,
+                'status' => $response->status,
+                'message' => $response->message,
+                'loggable_id' => $batch->id,
+                'loggable_type' => CollectionBatch::class,
+            ]);
+            return $response;
         }
+        BackLog::create([
+            'action' => $action,
+            'source' => $this->account->id,
+            'status' => false,
+            'message' => 'Not valid response',
+            'loggable_id' => $batch->id,
+            'loggable_type' => CollectionBatch::class,
+        ]);
         return response()->json([
             'status' => false,
             'message' => 'Not valid response',
@@ -162,9 +363,27 @@ class MnoBankServices extends BankMnoProcedure
 
     public function collectionStatus(Request $request, CollectionBatch $batch)
     {
+        $action = "collectionStatus";
         if ($this->targetProvider) {
-            return $this->targetProvider->collectionStatus(request: $request, batch: $batch);
+            $response = $this->targetProvider->collectionStatus(request: $request, batch: $batch);
+            BackLog::create([
+                'action' => $action,
+                'source' => $this->account->id,
+                'status' => $response->status,
+                'message' => $response->message,
+                'loggable_id' => $batch->id,
+                'loggable_type' => CollectionBatch::class,
+            ]);
+            return $response;
         }
+        BackLog::create([
+            'action' => $action,
+            'source' => $this->account->id,
+            'status' => false,
+            'message' => 'Not valid response',
+            'loggable_id' => $batch->id,
+            'loggable_type' => CollectionBatch::class,
+        ]);
         return response()->json([
             'status' => false,
             'message' => 'Not valid response',

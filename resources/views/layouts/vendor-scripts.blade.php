@@ -59,3 +59,4 @@
 @yield('script')
 
 @yield('script-bottom')
+@stack('push-script')

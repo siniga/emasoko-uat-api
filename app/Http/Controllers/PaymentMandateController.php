@@ -155,7 +155,7 @@ class PaymentMandateController extends Controller
         $debit_orders = $debit_orders->get();
 
         //pdf
-        $pdf = PDF::loadView('payment_mandate.export_pdf', compact('debit_orders'))->setPaper('a4', 'landscape');
+        $pdf = PDF::loadView('payment_mandate.export_pdf', compact('ddestination_account_idebit_orders'))->setPaper('a4', 'landscape');
 
         // download PDF file with download method
         return $pdf->download(date('YmdHis') . '-Paymentmandate.pdf');
@@ -358,26 +358,25 @@ class PaymentMandateController extends Controller
         $debit_order->start_date = $request->input('start_date');
         $debit_order->deduction_end_date = $request->input('deduction_end');
 
-        //calculate end date
+        // calculate end date
         if ($request->input('deduction_end') === 'totalLoanCovered') {
-            //calculate end date from start date
+            // calculate end date from start date
             $debit_order->end_date = date('Y-m-d', strtotime($request->input('start_date') . '+2 year'));
         } else if ($request->input('deduction_end') == 'specificDate') {
-            //fixed end date
+            // fixed end date
             $debit_order->end_date = $$request->input('end_date');
         }
 
-        //evidence_of_aggrement attached
+        // evidence_of_aggrement attached
         if ($request->hasFile('evidence_of_aggrement')) {
             $path = $request->file('evidence_of_aggrement');
             $docsName = $path->getClientOriginalName();
-
             $path->move('assets/uploads/docs', $docsName);
             $debit_order->evidence_of_aggrement = $docsName;
         }
         $debit_order->save();
 
-        //Link customer with service provider
+        // Link customer with service provider
         $customer_partner = CustomerPartner::firstOrNew(
             [
                 'customer_id' => $customer_account->customer->id,
@@ -387,13 +386,16 @@ class PaymentMandateController extends Controller
         $customer_partner->created_by = Auth::user()->id;
         $customer_partner->save();
 
-        // $mno = new MnoBankServices($customer_account->account);
-        // $response = $mno->mandateRegistration($request, $debit_order);
-        // if (!$response->status) {
-        //     // return Redirect::back()->with('error', $response->message);
-        // }
-        // dd($response);
-        //redirect with message
+        $mno = new MnoBankServices($customer_account->account);
+        $response = $mno->mandateRegistration($request, $debit_order);
+        if (!$response->status) {
+            $debit_order->approved = "REJECTED";
+            $debit_order->save();
+            return Redirect::back()->with('danger', $response->message);
+        }
+        $debit_order->approved = "PENDING";
+        $debit_order->save();
+        // redirect with message
         return Redirect::route('payment-mandate.preview', [$do_uuid])->with('success', "Customer deduction information saved");
     }
 
@@ -402,22 +404,22 @@ class PaymentMandateController extends Controller
     {
         $title = "Payment Mandate";
 
-        //debit order
-        $debit_order = DebitOrder::where(['uuid' => $do_id])->first();
+        // debit order
+        $debit_order = DebitOrder::where(['uuid' => $do_id])->firstOrFail();
 
-        //customer account
-        $customer_account = $debit_order->customerAccount;
+        // customer account
+        $customer_account = $debit_order->customerAccount ?? null;
 
-        //render view
+        // render view
         return view('payment_mandate.create.preview', compact('title', 'customer_account', 'debit_order'));
     }
 
-    //cancel registration
+    // cancel registration
     function cancel($do_id)
     {
         $title = 'Cancel payment mandate';
 
-        //debit order
+        // debit order
         $debit_order = DebitOrder::where(['uuid' => $do_id])->first();
 
         //delete debit order
@@ -491,6 +493,19 @@ class PaymentMandateController extends Controller
         return response()->json(['success' => false, 'success_msg' => $success_message], 200);
     }
 
+    // verify_otp
+    function verify_otp(Request $request)
+    {
+        // post data
+        $debitOrder = DebitOrder::where("uuid", $request->reference)->first();
+        $mno = new MnoBankServices($debitOrder->customerAccount->account ?? null);
+        $verified = $mno->mandateStatusAndValidation($request, $debitOrder);
+        if ($verified->status) {
+            $debitOrder->status = "verified";
+            $debitOrder->save();
+        }
+        return $verified;
+    }
 
     //customer details
     function show($id)

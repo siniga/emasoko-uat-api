@@ -1,9 +1,9 @@
 @extends('layouts.master')
 
 <style>
-    .table th{
+    .table th {
         background-color: #E1F5FE !important;
-    }   
+    }
 </style>
 
 @section('title')
@@ -57,10 +57,9 @@
 
                     <form @submit.prevent="">
                         <input type="hidden" name="mandate_id" x-model="formData.mandate_id">
-
                         <section>
-                            <div id="message_wrp"></div>
-                        
+                            <div id="message_wrp" class="m-1 p-2"></div>
+
                             <div class="row">
                                 <div class="col-lg-12">
                                     <table class="table table-stripped table-bordered">
@@ -183,7 +182,13 @@
                                 </div>
                             </div>
 
-                            <template x-if="status=='saved'">
+                            <template x-if="status=='saved' || status=='verified'">
+                                <div class="row">
+                                    <x-otp-verification-input :reference="$debit_order->uuid" action="MandateApproval"
+                                        :url="route('payment-mandate.verify_otp')" />
+                                </div>
+                            </template>
+                            <template x-if="status=='verified'">
                                 <div class="row">
                                     <div class="col-md-12">
                                         <div class="mb-3 text-sm-end d-none d-sm-block">
@@ -191,17 +196,16 @@
                                                 class="btn btn-danger text-medium">
                                                 Cancel
                                             </a>
-
                                             <a href="{{ route('payment-mandate.create-account', [$customer_account->uuid, $debit_order->uuid]) }}"
-                                                class="btn btn-info text-medium">Edit</a>
-
+                                                class="btn btn-info text-medium">
+                                                Edit
+                                            </a>
                                             <button type="submit" name="save" class="btn btn-secondary"
                                                 x-text="buttonSave" :disabled="saveLoading" x-on:click="savingForm();">
                                             </button>
-
                                             <button type="submit" name="submit" class="btn btn-success"
-                                                x-text="buttonSubmit" :disabled="submitLoading"
-                                                x-on:click="submitForm();"></button>
+                                                x-text="buttonSubmit" :disabled="submitLoading" x-on:click="submitForm();">
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -259,7 +263,9 @@
                             // $('#confirmModal').modal('show');
 
                             //display message
-                            $('#message_wrp').html("<div class='alert alert-success rounded-sm'>Payment mandate successfully created, Waiting for consent from customer</div>");
+                            $('#message_wrp').html(
+                                "<div class='alert alert-success rounded-sm'>Payment mandate successfully created, Waiting for consent from customer</div>"
+                            );
                         }).catch(() => {
                             this.formMessage = "Something went wrong.";
                         }).finally(() => {
@@ -285,11 +291,12 @@
                         }).then(response => response.json())
                         .then(responseJson => {
                             console.log(responseJson);
-                            //change status
+                            // change status
                             this.status = "saved";
 
-                            //display message
-                            $('#message_wrp').html("<div class='alert alert-success rounded-sm'>Debit Mandate saved.</div>");
+                            // display message
+                            $('#message_wrp').html(
+                                "<div class='alert alert-success rounded-sm'>Debit Mandate saved.</div>");
                         }).catch(() => {
                             this.formMessage = "Something went wrong.";
                         }).finally(() => {

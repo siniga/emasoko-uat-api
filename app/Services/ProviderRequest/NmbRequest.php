@@ -16,21 +16,21 @@ class NmbRequest extends BankMnoProcedure
     public function __construct()
     {
         parent::__construct();
-        $this->corporateRegistrationUrl = asset('responses/corporateRegistration/responseSuccess.json');
-        $this->corporateRegistrationStatusUrl = asset('responses/corporateStatus/responseSuccess.json');
+        $this->corporateRegistrationUrl = 'http://127.0.0.1:8001/responses/corporateRegistration/responseSuccess.json';
+        $this->corporateRegistrationStatusUrl = 'http://127.0.0.1:8001/responses/corporateStatus/responseSuccess.json';
 
-        $this->mandateRegistrationUrl = asset('responses/mandateRegistration/responseSuccess.json');
-        $this->mandateRegistrationStatusUrl = asset('responses/mandateStatus/responseSuccess.json');
-        $this->mandateOTPRegenerationUrl = asset('responses/otpCreate/responseSuccess.json');
-        $this->mandateStatusAndValidationUrl = asset('responses/otpVerify/responseSuccess.json');
+        $this->mandateRegistrationUrl = 'http://127.0.0.1:8001/responses/mandateRegistration/responseSuccess.json';
+        $this->mandateRegistrationStatusUrl = 'http://127.0.0.1:8001/responses/mandateStatus/responseSuccess.json';
+        $this->mandateOTPRegenerationUrl = 'http://127.0.0.1:8001/responses/otpCreate/responseSuccess.json';
+        $this->mandateStatusAndValidationUrl = 'http://127.0.0.1:8001/responses/otpVerify/responseSuccess.json';
 
-        $this->mandateCancellationUrl = asset('responses/mandateCancellation/responseSuccess.json');
-        $this->mandateOTPCancellationRegenerationUrl = asset('responses/otpCreate/responseSuccess.json');
-        $this->mandateCancellationStatusUrl = asset('responses/mandateStatus/responseSuccess.json'); // NOT EXISTS
-        $this->mandateCancellationStatusAndValidationUrl = asset('responses/otpVerify/responseSuccess.json');
+        $this->mandateCancellationUrl = 'http://127.0.0.1:8001/responses/mandateCancellation/responseSuccess.json';
+        $this->mandateOTPCancellationRegenerationUrl = 'http://127.0.0.1:8001/responses/otpCreate/responseSuccess.json';
+        $this->mandateCancellationStatusUrl = 'http://127.0.0.1:8001/responses/mandateStatus/responseSuccess.json'; // NOT EXISTS
+        $this->mandateCancellationStatusAndValidationUrl = 'http://127.0.0.1:8001/responses/otpVerify/responseSuccess.json';
 
-        $this->collectionFileReceptionAndValidationUrl = asset('responses/collectionsCreate/responseSuccess.json');
-        $this->collectionStatusUrl = asset('responses/collectionsStatus/responseSuccessComplete.json');
+        $this->collectionFileReceptionAndValidationUrl = 'http://127.0.0.1:8001/responses/collectionsCreate/responseSuccess.json';
+        $this->collectionStatusUrl = 'http://127.0.0.1:8001/responses/collectionsStatus/responseSuccessComplete.json';
 
         // $this->mandateAccountingResponseUrl = asset('response');
         // $this->mandateCheckerBypassUrl = asset('responses/ok.json');
@@ -182,7 +182,7 @@ class NmbRequest extends BankMnoProcedure
             "corporateReference" => $partner->reference,
             "creditAccountNumber" => $partnerAccount->account_number,
             "creditAccountName" => $partnerAccount->account_name,
-            "creditAccountShortName" => $partner->short_code,
+            "creditAccountShortName" => $partner->short_code, // thisi
             "beneficiaryBank" => "NMB",
             "accountStatus" => "Account Is Valid",
             "creditAccountAddressLine1" => $partner->region->name ?? null,
@@ -226,7 +226,7 @@ class NmbRequest extends BankMnoProcedure
         $response = $response->getData();
         $data = $response->data->data;
         if ($data->response[0]->responseCode == "240") {
-            $debitOrder->status = "active";
+            $debitOrder->status = "APPROVED";
             $debitOrder->save();
             return response()->json([
                 'status' => true,
@@ -271,19 +271,21 @@ class NmbRequest extends BankMnoProcedure
         $myRequest = new Request();
         $myRequest->merge([
             "caseReference" => $debitOrder->uuid,
-            "processName" => "MandateApproval",
-            "otpPin" => $request->otp,
+            "processName" => $request->processName,
+            "otpPin" => $request->otpPin,
         ]);
         $response = $this->sendRequest($this->mandateStatusAndValidationUrl, $myRequest->all(), 'POST');
         $response = $response->getData();
         $data = $response->data->data;
-        if ($data->response[0]->responseCode == "240") {
-            $debitOrder->status = "active";
+        if ($data->response[0]->responseCode == "210") {
+            $debitOrder->status = "verified";
             $debitOrder->save();
             return response()->json([
                 'status' => true,
                 'message' => $data->response[0]->responseDescription,
-                'data' => []
+                'data' => [
+                    'debit_order' => $debitOrder
+                ]
             ], Response::HTTP_BAD_REQUEST)->getData();
         }
         return response()->json([
@@ -382,7 +384,7 @@ class NmbRequest extends BankMnoProcedure
         $myRequest->merge([
             "caseReference" => $debitOrder->uuid,
             "processName" => "MandateCancellation", // Process Name
-            "otpPin" => $request->otp,
+            "otpPin" => $request->otpPin,
         ]);
         $response = $this->sendRequest($this->mandateStatusAndValidationUrl, $myRequest->all(), 'POST');
         $response = $response->getData();
