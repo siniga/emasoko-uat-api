@@ -21,24 +21,24 @@ use Illuminate\Support\Facades\Route;
 //     return $request->user();
 // });
 
-// //contacts 
-// Route::post('contacts', [CompanyController::class, 'contacts']);
+//contacts 
+Route::post('contacts', [CompanyController::class, 'contacts']);
 
-// //setup
-// Route::post('categories', [CompanyController::class, 'categories']);
-// Route::get('document_categories', [CompanyController::class, 'document_categories']);
-// Route::get('countries', [CompanyController::class, 'countries']);
-// Route::get('regions', [CompanyController::class, 'regions']);
+//setup
+Route::post('categories', [CompanyController::class, 'categories']);
+Route::get('document_categories', [CompanyController::class, 'document_categories']);
+Route::get('countries', [CompanyController::class, 'countries']);
+Route::get('regions', [CompanyController::class, 'regions']);
 
 // //company
 // //Route::post('companies/information', [CompanyController::class, 'storeCompanyDetails']);
 
 
-// //external API
-// Route::post('customer', [PaymentMandateController::class, 'customer']);
-// Route::post('customerInfo', [PaymentMandateController::class, 'customerInfo']);
-// Route::post('customerUpdateTerms', [PaymentMandateController::class, 'updateCustomerTerms']);
-// Route::post('customerPayment', [PaymentMandateController::class, 'payment']);
+//external API
+Route::post('customer', [PaymentMandateController::class, 'customer']);
+Route::post('customerInfo', [PaymentMandateController::class, 'customerInfo']);
+Route::post('customerUpdateTerms', [PaymentMandateController::class, 'updateCustomerTerms']);
+Route::post('customerPayment', [PaymentMandateController::class, 'payment']);
 
 //Corporate APIs
 Route::post('corporate/registration', [CorporateController::class, 'registration']);
