@@ -3,6 +3,8 @@
 use App\Http\Controllers\Api\PaymentMandateController;
 use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\CorporateController;
+use App\Http\Controllers\Api\MandateController;
+use App\Http\Controllers\Api\OtpController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -44,14 +46,14 @@ Route::post('customerPayment', [PaymentMandateController::class, 'payment']);
 Route::post('corporate/registration', [CorporateController::class, 'registration']);
 Route::post('corporate/status', [CorporateController::class, 'status']);
 
-// //Mandate APIs
-// Route::post('mandate/create', [MandateController::class, 'create']);
-// Route::post('mandate/status', [MandateController::class, 'status']);
-// Route::post('mandate/cancellation', [MandateController::class, 'cancellation']);
+//Mandate APIs
+Route::post('mandate/create', [MandateController::class, 'create']);
+Route::post('mandate/status', [MandateController::class, 'status']);
+Route::post('mandate/cancellation', [MandateController::class, 'cancellation']);
 
 //OTP APIs
-// Route::post('otp/create', [OtpController::class, 'create']);
-// Route::post('otp/verify', [OtpController::class, 'verify']);
+Route::post('otp/create', [OtpController::class, 'create']);
+Route::post('otp/verify', [OtpController::class, 'verify']);
 
 //Collections APIs
 // Route::post('collection/create', [CollectionController::class, 'create']);

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api\V1;
+namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -9,36 +9,43 @@ use Illuminate\Support\Facades\Log;
 
 use App\Classes\Authentication;
 
-class OtpController extends Controller
+class CollectionController extends Controller
 {
     private $auth;
 
     function __construct()
     {
-        //$this->auth = new Authentication();
+        $this->auth = new Authentication();
     }
 
     public function create(Request $request)
     {
         //validation 
-        return response()->json(['error' => false, 'message' => "hello"]);
-        exit();
 
         //create authentication token
+        $BEARER_TOKEN = $this->auth->create_token();
 
         //create data
         $data = [
-            "caseReference" => "0003",
-            "accountNumber" => "20910020198",
-            "processName" => "Test JWT Tokens Code",
-            "makerName" => "ETest"
+            "collectionReference" => "12144",
+            "corporateReference" => "CO202402070803000001",
+            "selectedPostingDate" => null,
+            "createdBy" => "Steven.Gerald",
+            "verifiedBy" => "Victor.Mpendazoe",
+            "createdDate" => "2024-02-08 12:00:00",
+            "verifyDate" => "2024-02-08 13:00:00",
+            "file" => [
+                "fileName" => "Payment_Collection3",
+                "fileType" => "CSV",
+                "fileData" => ""
+            ]
         ];
 
         //create payload
         $payload = [
             "user" => "EMakato",
             'correlationId' => "b30d3134-5624-4391-9f49-1b7a776d692e",
-            "targetService" => "OTPCreate",
+            'targetService' => "CollectionCreate",
             'status' => "Create",
             "data" => $data
         ];
@@ -47,10 +54,7 @@ class OtpController extends Controller
         $API_URL = "https://onlinebankinguatuat.nmbbank.co.tz:8443/Services/Sybrin.Authentication.Gateway/SybrinAuthenticationGateway";
 
         //headers
-        $headers = [
-            'Content-Type' => 'application/json',
-            'Authorization' => 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MTgyNjIyOTAsIm5iZiI6MTcxODI2MjI5MC wiZXhwIjoxNzE4MjYyNTkwLCJpc3MiOiJFTWFrYXRvIiwiYXVkIjoiRU1ha2F0byJ9.F0YxGKpcjR4izC0 u3nxx_CuqE1405pJE8-TMplVBn24'
-        ];
+        $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer '.$BEARER_TOKEN];
 
         //push payload => NMB Direct Debits
         $response = Http::withHeaders($headers)->post($API_URL, $payload);
@@ -61,10 +65,10 @@ class OtpController extends Controller
             //send response to eMakato
             return response()->json([
                 'status' => "Success",
-                "caseReference" => "121451",
+                "corporateReference" => "CO202402070803000001",
                 'response' => [
-                    'responseCode' => 240,
-                    'responseDescription' => "OTP Succesfully Generated"
+                    'responseCode' => 201,
+                    'responseDescription' => "Collection registration Complete"
                 ]
             ], 201);
         } else {
@@ -75,7 +79,7 @@ class OtpController extends Controller
             //send response to eMakato
             return response()->json([
                 'status' => "Fail",
-                "caseReference" => "121451",
+                'corporateReference' => "CO202402070803000001",
                 'response' => [
                     'responseCode' => 500,
                     'responseDescription' => "Internal Server Error"
@@ -84,22 +88,21 @@ class OtpController extends Controller
         }
     }
 
-    public function verify(Request $request)
+    public function status(Request $request)
     {
         //validation 
 
         //create authentication token
+        $BEARER_TOKEN = $this->auth->create_token();
 
         //create payload
         $payload = [
             "user" => "EMakato",
             "correlationId" => "b30d3134-5624-4391-9f49-1b7a776d692e",
-            "targetService" => "OTPVerify",
-            "status" => "Verify",
+            "targetService" => "CollectionStatus",
+            "status" =>  "Check",
             "data" => [
-                "caseReference" => "CO202402070803000001",
-                "processName" => "MandateApproval",
-                "otpPin" => "A5R4"
+                "collectionReference" => "CO202402070803000001"
             ]
         ];
 
@@ -107,7 +110,7 @@ class OtpController extends Controller
         $API_URL = "https://onlinebankinguatuat.nmbbank.co.tz:8443/Services/Sybrin.Authentication.Gateway/SybrinAuthenticationGateway";
 
         //headers
-        $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer AUTH_BEARER_TOKEN'];
+        $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer '.$BEARER_TOKEN];
 
         //push payload => NMB Direct Debits
         $response = Http::withHeaders($headers)->post($API_URL, $payload);
@@ -120,10 +123,10 @@ class OtpController extends Controller
             //send response to eMakato
             return response()->json([
                 'status' => "Success",
-                "caseReference" => "CO202402070803000001",
+                "collectionReference" => "CO202402070803000001",
                 'response' => [
-                    'responseCode' => 210,
-                    'responseDescription' => "OTP Valid"
+                    'responseCode' => 230,
+                    'responseDescription' => "Batch Completed"
                 ]
             ], 201);
         } else {
@@ -134,7 +137,7 @@ class OtpController extends Controller
             //send response to eMakato
             return response()->json([
                 'status' => "Fail",
-                "caseReference" => "CO202402070803000001",
+                "collectionReference" => "CO202402070803000001",
                 'response' => [
                     'responseCode' => 500,
                     'responseDescription' => "Internal Server Error"

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api\V1;
+namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Log;
 
 use App\Classes\Authentication;
 
-class CollectionController extends Controller
+class OtpController extends Controller
 {
     private $auth;
 
@@ -23,29 +23,23 @@ class CollectionController extends Controller
         //validation 
 
         //create authentication token
-        $BEARER_TOKEN = $this->auth->create_token();
+        $AUTH_BEARER_TOKEN = $this->auth->create_token();
+        Log::debug("== My TOKEN ==");
+        Log::debug($AUTH_BEARER_TOKEN);
 
         //create data
         $data = [
-            "collectionReference" => "12144",
-            "corporateReference" => "CO202402070803000001",
-            "selectedPostingDate" => null,
-            "createdBy" => "Steven.Gerald",
-            "verifiedBy" => "Victor.Mpendazoe",
-            "createdDate" => "2024-02-08 12:00:00",
-            "verifyDate" => "2024-02-08 13:00:00",
-            "file" => [
-                "fileName" => "Payment_Collection3",
-                "fileType" => "CSV",
-                "fileData" => ""
-            ]
+            "caseReference" => "0003",
+            "accountNumber" => "20910020198",
+            "processName" => "Test JWT Tokens Code",
+            "makerName" => "ETest"
         ];
 
         //create payload
         $payload = [
             "user" => "EMakato",
             'correlationId' => "b30d3134-5624-4391-9f49-1b7a776d692e",
-            'targetService' => "CollectionCreate",
+            "targetService" => "OTPCreate",
             'status' => "Create",
             "data" => $data
         ];
@@ -54,7 +48,10 @@ class CollectionController extends Controller
         $API_URL = "https://onlinebankinguatuat.nmbbank.co.tz:8443/Services/Sybrin.Authentication.Gateway/SybrinAuthenticationGateway";
 
         //headers
-        $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer '.$BEARER_TOKEN];
+        $headers = [
+            'Content-Type' => 'application/json',
+            'Authorization' => 'Bearer '.$AUTH_BEARER_TOKEN
+        ];
 
         //push payload => NMB Direct Debits
         $response = Http::withHeaders($headers)->post($API_URL, $payload);
@@ -65,10 +62,10 @@ class CollectionController extends Controller
             //send response to eMakato
             return response()->json([
                 'status' => "Success",
-                "corporateReference" => "CO202402070803000001",
+                "caseReference" => "121451",
                 'response' => [
-                    'responseCode' => 201,
-                    'responseDescription' => "Collection registration Complete"
+                    'responseCode' => 240,
+                    'responseDescription' => "OTP Succesfully Generated"
                 ]
             ], 201);
         } else {
@@ -79,7 +76,7 @@ class CollectionController extends Controller
             //send response to eMakato
             return response()->json([
                 'status' => "Fail",
-                'corporateReference' => "CO202402070803000001",
+                "caseReference" => "121451",
                 'response' => [
                     'responseCode' => 500,
                     'responseDescription' => "Internal Server Error"
@@ -88,21 +85,25 @@ class CollectionController extends Controller
         }
     }
 
-    public function status(Request $request)
+    public function verify(Request $request)
     {
         //validation 
 
         //create authentication token
-        $BEARER_TOKEN = $this->auth->create_token();
+        $AUTH_BEARER_TOKEN = $this->auth->create_token();
+        Log::debug("== My TOKEN ==");
+        Log::debug($AUTH_BEARER_TOKEN);
 
         //create payload
         $payload = [
             "user" => "EMakato",
             "correlationId" => "b30d3134-5624-4391-9f49-1b7a776d692e",
-            "targetService" => "CollectionStatus",
-            "status" =>  "Check",
+            "targetService" => "OTPVerify",
+            "status" => "Verify",
             "data" => [
-                "collectionReference" => "CO202402070803000001"
+                "caseReference" => "CO202402070803000001",
+                "processName" => "MandateApproval",
+                "otpPin" => "A5R4"
             ]
         ];
 
@@ -110,7 +111,7 @@ class CollectionController extends Controller
         $API_URL = "https://onlinebankinguatuat.nmbbank.co.tz:8443/Services/Sybrin.Authentication.Gateway/SybrinAuthenticationGateway";
 
         //headers
-        $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer '.$BEARER_TOKEN];
+        $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer '.$AUTH_BEARER_TOKEN];
 
         //push payload => NMB Direct Debits
         $response = Http::withHeaders($headers)->post($API_URL, $payload);
@@ -123,10 +124,10 @@ class CollectionController extends Controller
             //send response to eMakato
             return response()->json([
                 'status' => "Success",
-                "collectionReference" => "CO202402070803000001",
+                "caseReference" => "CO202402070803000001",
                 'response' => [
-                    'responseCode' => 230,
-                    'responseDescription' => "Batch Completed"
+                    'responseCode' => 210,
+                    'responseDescription' => "OTP Valid"
                 ]
             ], 201);
         } else {
@@ -137,7 +138,7 @@ class CollectionController extends Controller
             //send response to eMakato
             return response()->json([
                 'status' => "Fail",
-                "collectionReference" => "CO202402070803000001",
+                "caseReference" => "CO202402070803000001",
                 'response' => [
                     'responseCode' => 500,
                     'responseDescription' => "Internal Server Error"

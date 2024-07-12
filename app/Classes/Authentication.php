@@ -23,7 +23,7 @@ class Authentication
         // Log::debug($response);
 
 
-        $token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MjA3NzU5NjcsIm5iZiI6MTcyMDc3NTk2NywiZXhwIjoxNzIwNzc2MjY3LCJpc3MiOiJFTWFrYXRvIiwiYXVkIjoiRU1ha2F0byJ9.gbjndpiNHqXAYatCwltVwlefaZXlgvmzAvMNZjq_NJM';
+        $token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MjA3ODEzNzEsIm5iZiI6MTcyMDc4MTM3MSwiZXhwIjoxNzIwNzgxNjcxLCJpc3MiOiJFTWFrYXRvIiwiYXVkIjoiRU1ha2F0byJ9.mtisOALjUWpKC1yvMPJN0w2SzQcXLdhjbpihRdSmOpM';
 
         return $token;
     }
