@@ -2,7 +2,7 @@
 
 use App\Http\Controllers\Api\PaymentMandateController;
 use App\Http\Controllers\Api\CompanyController;
-use App\Http\Controllers\Api\V1\CorporateController;
+use App\Http\Controllers\Api\CorporateController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
