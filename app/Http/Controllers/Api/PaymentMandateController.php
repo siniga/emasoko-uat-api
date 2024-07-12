@@ -273,6 +273,7 @@ class PaymentMandateController extends Controller
     {
         //create authentication token
 
+
         //create data
         $data = [
             "caseReference" => "0003",
@@ -291,16 +292,19 @@ class PaymentMandateController extends Controller
         ];
 
         //API URL
-        $API_URL = "http://nmb-ts-dds-v006:8080/Services/Sybrin.Authentication.Gateway/SybrinAuthenticationGateway";
+        $API_URL = "https://onlinebankinguatuat.nmbbank.co.tz:8443/Services/Sybrin.Authentication.Gateway/SybrinAuthenticationGateway";
 
         //headers
         $headers = [
             'Content-Type' => 'application/json',
-            'Authorization' => 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MTgyNjIyOTAsIm5iZiI6MTcxODI2MjI5MC wiZXhwIjoxNzE4MjYyNTkwLCJpc3MiOiJFTWFrYXRvIiwiYXVkIjoiRU1ha2F0byJ9.F0YxGKpcjR4izC0 u3nxx_CuqE1405pJE8-TMplVBn24'
+            'Authorization' => 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MjA2ODQ2OTQsIm5iZiI6MTcyMDY4NDY5NCwiZXhwIjoxNzIwNjg0OTk0LCJpc3MiOiJFTWFrYXRvIiwiYXVkIjoiRU1ha2F0byJ9.EUnBihtIYJ85Mo9XI3KUNun-c61Rgbq86lGue3WBp1g'
         ];
 
         //push payload => NMB Direct Debits
         $response = Http::withHeaders($headers)->post($API_URL, $payload);
+
+        Log::debug("response ==");
+        Log::debug($response->status());
 
         if ($response->status() == 200) {
             $data = $response->json();
