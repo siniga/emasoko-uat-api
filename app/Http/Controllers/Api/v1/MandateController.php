@@ -68,7 +68,7 @@ class MandateController extends Controller
         ];
 
         //API URL
-        $API_URL = "";
+        $API_URL = "https://onlinebankinguatuat.nmbbank.co.tz:8443/Services/Sybrin.Authentication.Gateway/SybrinAuthenticationGateway";
 
         //headers
         $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer AUTH_BEARER_TOKEN'];
@@ -123,7 +123,7 @@ class MandateController extends Controller
         ];
 
         //API URL
-        $API_URL = "";
+        $API_URL = "https://onlinebankinguatuat.nmbbank.co.tz:8443/Services/Sybrin.Authentication.Gateway/SybrinAuthenticationGateway";
 
         //headers
         $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer AUTH_BEARER_TOKEN'];

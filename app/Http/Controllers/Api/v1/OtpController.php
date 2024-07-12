@@ -44,7 +44,7 @@ class OtpController extends Controller
         ];
 
         //API URL
-        $API_URL = "http://nmb-ts-dds-v006:8080/Services/Sybrin.Authentication.Gateway/SybrinAuthenticationGateway";
+        $API_URL = "https://onlinebankinguatuat.nmbbank.co.tz:8443/Services/Sybrin.Authentication.Gateway/SybrinAuthenticationGateway";
 
         //headers
         $headers = [
@@ -104,7 +104,7 @@ class OtpController extends Controller
         ];
 
         //API URL
-        $API_URL = "";
+        $API_URL = "https://onlinebankinguatuat.nmbbank.co.tz:8443/Services/Sybrin.Authentication.Gateway/SybrinAuthenticationGateway";
 
         //headers
         $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer AUTH_BEARER_TOKEN'];

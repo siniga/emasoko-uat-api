@@ -23,6 +23,7 @@ class CorporateController extends Controller
         //validation 
 
         //create authentication token
+        $AUTH_BEARER_TOKEN = $this->auth->create_token();
 
         //create data
         $data = [
@@ -69,10 +70,10 @@ class CorporateController extends Controller
         ];
 
         //API URL
-        $API_URL = "";
+        $API_URL = "https://onlinebankinguatuat.nmbbank.co.tz:8443/Services/Sybrin.Authentication.Gateway/SybrinAuthenticationGateway";
 
         //headers
-        $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer AUTH_BEARER_TOKEN'];
+        $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer '.$AUTH_BEARER_TOKEN];
 
         //push payload => NMB Direct Debits
         $response = Http::withHeaders($headers)->post($API_URL, $payload);
@@ -111,6 +112,7 @@ class CorporateController extends Controller
         //validation 
 
         //create authentication token
+        $AUTH_BEARER_TOKEN = $this->auth->create_token();
 
         //create payload
         $payload = [
@@ -124,10 +126,10 @@ class CorporateController extends Controller
         ];
 
         //API URL
-        $API_URL = "";
+        $API_URL = "https://onlinebankinguatuat.nmbbank.co.tz:8443/Services/Sybrin.Authentication.Gateway/SybrinAuthenticationGateway";
 
         //headers
-        $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer AUTH_BEARER_TOKEN'];
+        $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer '.$AUTH_BEARER_TOKEN];
 
         //push payload => NMB Direct Debits
         $response = Http::withHeaders($headers)->post($API_URL, $payload);
