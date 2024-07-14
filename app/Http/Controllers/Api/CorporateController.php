@@ -23,19 +23,19 @@ class CorporateController extends Controller
         //validation 
 
         //create authentication token
-        $AUTH_BEARER_TOKEN = $this->auth->create_token();
+        $AUTH_BEARER_TOKEN = $this->auth->generateToken();
         Log::debug("== My TOKEN ==");
         Log::debug($AUTH_BEARER_TOKEN);
 
         //create data
         $data = [
-            "CorporateReference" => "CO202402070803000001",
+            "CorporateReference" => "CO202402070803000002",
             "name" => "SYBRIN",
             "corporateShortCode" => "SYB",
             "clientCode" => "SY",
             "customerCode" => "000000822",
-            "accountName" => "SOPHIA SALASITA MWASENGA",
-            "primaryAccount" => "60802400064",
+            "accountName" => "RENFRID NGOLONGOLO",
+            "primaryAccount" => "60802400062",
             "branchSortCode" => "608",
             "currency" => "TZS",
             "accountStatus" => null,
@@ -65,7 +65,7 @@ class CorporateController extends Controller
         //create payload
         $payload = [
             "user" => "EMakato",
-            "correlationId" => "b30d3134-5624-4391-9f49-1b7a776d692e",
+            "correlationId" => "b30d3134-5624-4391-9f49-1b7a776d692u",
             "targetService" => "CorporateRegistration",
             "status" => "Create",
             "data" => $data
@@ -86,7 +86,7 @@ class CorporateController extends Controller
             //send response to eMakato
             return response()->json([
                 'status' => "Success",
-                'corporateReference' => "CO202402070803000001",
+                'corporateReference' => "CO202402070803000002",
                 'response' => [
                     'responseCode' => 201,
                     'responseDescription' => "Corporate Registration Complete"
@@ -114,7 +114,7 @@ class CorporateController extends Controller
         //validation 
 
         //create authentication token
-        $AUTH_BEARER_TOKEN = $this->auth->create_token();
+        $AUTH_BEARER_TOKEN = $this->auth->generateToken();
 
         //create payload
         $payload = [
