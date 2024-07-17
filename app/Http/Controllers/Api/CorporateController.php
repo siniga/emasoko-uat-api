@@ -23,7 +23,7 @@ class CorporateController extends Controller
         //validation 
 
         //create authentication token
-        $AUTH_BEARER_TOKEN = $this->auth->generateToken();
+        $AUTH_BEARER_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MjExOTM2OTMsIm5iZiI6MTcyMTE5MzY5MywiZXhwIjoxNzIxMTkzOTkzLCJpc3MiOiJFTWFrYXRvIiwiYXVkIjoiRU1ha2F0byJ9.b1G-VOm_BkaNCChTvWRTOAXvu27b2rZox0DVRFSzxVc";
         Log::debug("== My TOKEN ==");
         Log::debug($AUTH_BEARER_TOKEN);
 
@@ -114,7 +114,10 @@ class CorporateController extends Controller
         //validation 
 
         //create authentication token
-        $AUTH_BEARER_TOKEN = $this->auth->generateToken();
+        //$AUTH_BEARER_TOKEN = $this->auth->generateToken();
+        $AUTH_BEARER_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MjExOTM2OTMsIm5iZiI6MTcyMTE5MzY5MywiZXhwIjoxNzIxMTkzOTkzLCJpc3MiOiJFTWFrYXRvIiwiYXVkIjoiRU1ha2F0byJ9.b1G-VOm_BkaNCChTvWRTOAXvu27b2rZox0DVRFSzxVc";
+        Log::debug("== My TOKEN ==");
+        Log::debug($AUTH_BEARER_TOKEN);
 
         //create payload
         $payload = [
