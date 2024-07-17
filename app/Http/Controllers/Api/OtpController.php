@@ -62,7 +62,7 @@ class OtpController extends Controller
             //send response to eMakato
             return response()->json([
                 'status' => "Success",
-                "caseReference" => "CO202402070803000005",
+                "caseReference" => "0011432",
                 'response' => [
                     'responseCode' => 240,
                     'responseDescription' => "OTP Succesfully Generated"
@@ -76,7 +76,7 @@ class OtpController extends Controller
             //send response to eMakato
             return response()->json([
                 'status' => "Fail",
-                "caseReference" => "CO202402070803000005",
+                "caseReference" => "0011432",
                 'response' => [
                     'responseCode' => 500,
                     'responseDescription' => "Internal Server Error"

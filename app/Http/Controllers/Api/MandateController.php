@@ -33,14 +33,14 @@ class MandateController extends Controller
             "mandateStartDate" => "2024-07-28T22:00:00.000",
             "mandateEndDate" => "2024-08-02T22:00:00.000Z",
             "directDebitType" => "Variable",
-            "debitAccountHolderName" => "YYYY",
-            "debitAccountNumber" => "61702400937",
+            "debitAccountHolderName" => "RENFRID",
+            "debitAccountNumber" => $request->post('debitAccountNumber'),
             "debitAccountBankCode" => "016",
-            "debitAccountHolderAddress1" => "RENFRID",
+            "debitAccountHolderAddress1" => "MIKOCHENI",
             "debitAccountHolderAddress2" => "DAR ES SALAAM",
             "debitAccountHolderAddress3" => "UBUNGO",
             "corporateReference" => "CO202402070803000005",
-            "creditAccountNumber" => "50510034031",
+            "creditAccountNumber" => "60802400062",
             "creditAccountName" => "MyBiggieConglomerate",
             "creditAccountShortName" => "SYB",
             "beneficiaryBank" => "NMB",
@@ -64,7 +64,7 @@ class MandateController extends Controller
         //create payload
         $payload = [
             "user" => "EMakato",
-            "correlationId" => "b30d3134-5624-4391-9f49-1b7a776d6922",
+            "correlationId" => $request->post("correlationId"),
             "targetService" => "MandateRegistration",
             "status" => "Create",
             "data" => $data
@@ -78,6 +78,9 @@ class MandateController extends Controller
 
         //push payload => NMB Direct Debits
         $response = Http::withHeaders($headers)->post($API_URL, $payload);
+
+        Log::debug("Response");
+        Log::debug($response->json());
 
         if ($response->status() == 200) {
             $data = $response->json();
