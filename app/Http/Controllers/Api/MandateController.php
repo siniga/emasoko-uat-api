@@ -70,6 +70,9 @@ class MandateController extends Controller
             "data" => $data
         ];
 
+        Log::debug("payload");
+        Log::debug($payload);
+
         //API URL
         $API_URL = "https://onlinebankinguatuat.nmbbank.co.tz:8443/Services/Sybrin.Authentication.Gateway/SybrinAuthenticationGateway";
 
@@ -80,7 +83,8 @@ class MandateController extends Controller
         $response = Http::withHeaders($headers)->post($API_URL, $payload);
 
         Log::debug("Response");
-        Log::debug($response->json());
+        Log::debug($response->status());
+        Log::debug($response);
 
         if ($response->status() == 200) {
             $data = $response->json();
