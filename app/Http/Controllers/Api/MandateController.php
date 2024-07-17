@@ -24,7 +24,7 @@ class MandateController extends Controller
 
         //create authentication token
         //$AUTH_BEARER_TOKEN = $this->auth->generateToken();
-        $AUTH_BEARER_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MjExOTkzMTksIm5iZiI6MTcyMTE5OTMxOSwiZXhwIjoxNzIxMTk5NjE5LCJpc3MiOiJFTWFrYXRvIiwiYXVkIjoiRU1ha2F0byJ9.vnUGjhGYWPli5pdMTOtkia4qL46wJ_w1-b1AXcDomAw";
+        $AUTH_BEARER_TOKEN = $request->post('AUTH_TOKEN');
         Log::debug("== My TOKEN ==");
         Log::debug($AUTH_BEARER_TOKEN);
 
@@ -122,7 +122,7 @@ class MandateController extends Controller
         //validation 
 
         //create authentication token
-        $AUTH_BEARER_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MjExOTkzMTksIm5iZiI6MTcyMTE5OTMxOSwiZXhwIjoxNzIxMTk5NjE5LCJpc3MiOiJFTWFrYXRvIiwiYXVkIjoiRU1ha2F0byJ9.vnUGjhGYWPli5pdMTOtkia4qL46wJ_w1-b1AXcDomAw";
+        $AUTH_BEARER_TOKEN = $request->post('AUTH_TOKEN');
         Log::debug("== My TOKEN ==");
         Log::debug($AUTH_BEARER_TOKEN);
 
