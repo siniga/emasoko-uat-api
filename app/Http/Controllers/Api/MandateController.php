@@ -58,7 +58,8 @@ class MandateController extends Controller
             "file" => [
                 "fileName" => "Customer Slip",
                 "fileType" => "pdf",
-                "fileData" => pdf_to_base64(public_path('assets/uploads/docs/Ngao_Ya_Buku.pdf')),
+                "fileData" => ""
+                // "fileData" => pdf_to_base64(public_path('assets/uploads/docs/Ngao_Ya_Buku.pdf')),
             ]
         ];
 
