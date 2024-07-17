@@ -24,7 +24,7 @@ class MandateController extends Controller
 
         //create authentication token
         //$AUTH_BEARER_TOKEN = $this->auth->generateToken();
-        $AUTH_BEARER_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MjExOTc3NzksIm5iZiI6MTcyMTE5Nzc3OSwiZXhwIjoxNzIxMTk4MDc5LCJpc3MiOiJFTWFrYXRvIiwiYXVkIjoiRU1ha2F0byJ9.Tpe0l-9_lcl6igZPWDzHeKPmP7Nl3sQzY9hWIgH4L5k";
+        $AUTH_BEARER_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MjExOTkzMTksIm5iZiI6MTcyMTE5OTMxOSwiZXhwIjoxNzIxMTk5NjE5LCJpc3MiOiJFTWFrYXRvIiwiYXVkIjoiRU1ha2F0byJ9.vnUGjhGYWPli5pdMTOtkia4qL46wJ_w1-b1AXcDomAw";
         Log::debug("== My TOKEN ==");
         Log::debug($AUTH_BEARER_TOKEN);
 
@@ -58,7 +58,7 @@ class MandateController extends Controller
             "file" => [
                 "fileName" => "Customer Slip",
                 "fileType" => "pdf",
-                "fileData" => ""
+                "fileData" => pdf_to_base64(public_path('assets/uploads/docs/Ngao_Ya_Buku.pdf')),
             ]
         ];
 
@@ -121,7 +121,7 @@ class MandateController extends Controller
         //validation 
 
         //create authentication token
-        $AUTH_BEARER_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MjExOTc3NzksIm5iZiI6MTcyMTE5Nzc3OSwiZXhwIjoxNzIxMTk4MDc5LCJpc3MiOiJFTWFrYXRvIiwiYXVkIjoiRU1ha2F0byJ9.Tpe0l-9_lcl6igZPWDzHeKPmP7Nl3sQzY9hWIgH4L5k";
+        $AUTH_BEARER_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MjExOTkzMTksIm5iZiI6MTcyMTE5OTMxOSwiZXhwIjoxNzIxMTk5NjE5LCJpc3MiOiJFTWFrYXRvIiwiYXVkIjoiRU1ha2F0byJ9.vnUGjhGYWPli5pdMTOtkia4qL46wJ_w1-b1AXcDomAw";
         Log::debug("== My TOKEN ==");
         Log::debug($AUTH_BEARER_TOKEN);
 
