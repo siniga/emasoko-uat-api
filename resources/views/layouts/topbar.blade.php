@@ -97,7 +97,7 @@
                 </span>
 
                 <div class="dropdown-divider"></div>
-                <a class="dropdown-item text-danger" href="{{ route('logout') }}">Logout</a>
+                <a class="dropdown-item text-danger" href="{{ route('auth.logout') }}">Logout</a>
             </div>
         </div>        
     </div>

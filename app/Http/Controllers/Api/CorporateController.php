@@ -123,7 +123,7 @@ class CorporateController extends Controller
             "targetService" => "CorporateStatus",
             "status" =>  "Check",
             "data" => [
-                "corporateReference" => "CO202402070803000001"
+                "corporateReference" => "CO202402070803000002"
             ]
         ];
 

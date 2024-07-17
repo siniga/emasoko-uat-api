@@ -31,9 +31,6 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-//Auth::routes();
-// Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
-//Route::get('/', [App\Http\Controllers\HomeController::class, 'root'])->name('root');
 
 // //Update User Details
 // Route::post('/update-profile/{id}', [App\Http\Controllers\HomeController::class, 'updateProfile'])->name('updateProfile');
@@ -44,9 +41,13 @@ use Illuminate\Support\Facades\Route;
 
 
 Route::get('/', [LoginController::class, 'showLoginForm'])->name('login');
-Route::get('auth/login', [LoginController::class, 'showLoginForm'])->name('login');
+Route::post('auth/login', [LoginController::class, 'login'])->name('auth.login');
+Route::get('auth/logout', [LoginController::class, 'logout'])->name('auth.logout');
+// Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
+// Route::get('auth/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 Route::get('index', [DashboardController::class, 'index'])->name('index');
+
 
 // //track company registration
 // Route::get('track-company-registration', [RegisterController::class, 'trackCompanyRegistrationForm'])->name('company.track-registration');
@@ -65,11 +66,6 @@ Route::get('account-types/{id}', [AccountController::class, 'account_types'])->n
 
 //verify account
 Route::get('verify-account/{token}', [RegisterController::class, 'verify_account'])->name('verify.account.get');
-
-//login
-Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
-Route::post('login', [LoginController::class, 'login'])->name('login');
-Route::get('logout', [LoginController::class, 'logout'])->name('logout');
 
 Route::get('forget-password', [ForgotPasswordController::class, 'showForgetPasswordForm'])->name('forget.password.get');
 Route::post('forget-password', [ForgotPasswordController::class, 'submitForgetPasswordForm'])->name('forget.password.post');

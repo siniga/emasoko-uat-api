@@ -23,13 +23,13 @@ class MandateController extends Controller
         //validation 
 
         //create authentication token
-        $AUTH_BEARER_TOKEN = $this->auth->create_token();
+        $AUTH_BEARER_TOKEN = $this->auth->generateToken();
         Log::debug("== My TOKEN ==");
         Log::debug($AUTH_BEARER_TOKEN);
 
         //create data
         $data = [
-            "mandateReferenceNumber" => "121453",
+            "mandateReferenceNumber" => "12145",
             "mandateStartDate" => "2024-07-28T22:00:00.000",
             "mandateEndDate" => "2024-08-02T22:00:00.000Z",
             "directDebitType" => "Variable",
@@ -113,7 +113,7 @@ class MandateController extends Controller
         //validation 
 
         //create authentication token
-        $AUTH_BEARER_TOKEN = $this->auth->create_token();
+        $AUTH_BEARER_TOKEN = $this->auth->generateToken();
         Log::debug("== My TOKEN ==");
         Log::debug($AUTH_BEARER_TOKEN);
 
@@ -171,7 +171,7 @@ class MandateController extends Controller
         //validation 
 
         //create authentication token
-        $AUTH_BEARER_TOKEN = $this->auth->create_token();
+        $AUTH_BEARER_TOKEN = $this->auth->generateToken();
         Log::debug("== My TOKEN ==");
         Log::debug($AUTH_BEARER_TOKEN);
 

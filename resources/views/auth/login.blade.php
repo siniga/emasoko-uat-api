@@ -40,7 +40,7 @@
                                     </div><br />
                                 @endif
 
-                                <form class="form-horizontal needs-validation" method="POST" action="{{ route('login') }}" novalidate>
+                                <form class="form-horizontal needs-validation" method="POST" action="{{ route('auth.login') }}" novalidate>
                                     @csrf
                                     <div class="mb-3">
                                         <label for="username" class="form-label">Email</label>

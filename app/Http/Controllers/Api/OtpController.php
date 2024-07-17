@@ -23,22 +23,22 @@ class OtpController extends Controller
         //validation 
 
         //create authentication token
-        $AUTH_BEARER_TOKEN = $this->auth->create_token();
+        $AUTH_BEARER_TOKEN = $this->auth->generateToken();
         Log::debug("== My TOKEN ==");
         Log::debug($AUTH_BEARER_TOKEN);
 
         //create data
         $data = [
-            "caseReference" => "0003",
-            "accountNumber" => "20910020198",
-            "processName" => "Test JWT Tokens Code",
-            "makerName" => "ETest"
+            "caseReference" => "0011",
+            "accountNumber" => "61702400937",
+            "processName" => "Create OTP Token",
+            "makerName" => "Renfrid"
         ];
 
         //create payload
         $payload = [
             "user" => "EMakato",
-            'correlationId' => "b30d3134-5624-4391-9f49-1b7a776d692e",
+            'correlationId' => "b30d3134-5624-4391-9f49-1b7a776d69rew",
             "targetService" => "OTPCreate",
             'status' => "Create",
             "data" => $data
@@ -90,7 +90,7 @@ class OtpController extends Controller
         //validation 
 
         //create authentication token
-        $AUTH_BEARER_TOKEN = $this->auth->create_token();
+        $AUTH_BEARER_TOKEN = $this->auth->generateToken();
         Log::debug("== My TOKEN ==");
         Log::debug($AUTH_BEARER_TOKEN);
 
@@ -101,7 +101,7 @@ class OtpController extends Controller
             "targetService" => "OTPVerify",
             "status" => "Verify",
             "data" => [
-                "caseReference" => "CO202402070803000001",
+                "caseReference" => "CO202402070803000002",
                 "processName" => "MandateApproval",
                 "otpPin" => "A5R4"
             ]
