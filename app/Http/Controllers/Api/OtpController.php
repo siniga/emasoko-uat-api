@@ -29,7 +29,7 @@ class OtpController extends Controller
 
         //create data
         $data = [
-            "caseReference" => "0011",
+            "caseReference" => "001123",
             "accountNumber" => "61702400937",
             "processName" => "Create OTP Token",
             "makerName" => "Renfrid"
@@ -62,7 +62,7 @@ class OtpController extends Controller
             //send response to eMakato
             return response()->json([
                 'status' => "Success",
-                "caseReference" => "121451",
+                "caseReference" => "001123",
                 'response' => [
                     'responseCode' => 240,
                     'responseDescription' => "OTP Succesfully Generated"
@@ -76,7 +76,7 @@ class OtpController extends Controller
             //send response to eMakato
             return response()->json([
                 'status' => "Fail",
-                "caseReference" => "121451",
+                "caseReference" => "001123",
                 'response' => [
                     'responseCode' => 500,
                     'responseDescription' => "Internal Server Error"
