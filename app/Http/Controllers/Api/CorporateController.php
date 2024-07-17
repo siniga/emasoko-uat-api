@@ -23,7 +23,7 @@ class CorporateController extends Controller
         //validation 
 
         //create authentication token
-        $AUTH_BEARER_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MjExOTM2OTMsIm5iZiI6MTcyMTE5MzY5MywiZXhwIjoxNzIxMTkzOTkzLCJpc3MiOiJFTWFrYXRvIiwiYXVkIjoiRU1ha2F0byJ9.b1G-VOm_BkaNCChTvWRTOAXvu27b2rZox0DVRFSzxVc";
+        $AUTH_BEARER_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MjExOTQxNTcsIm5iZiI6MTcyMTE5NDE1NywiZXhwIjoxNzIxMTk0NDU3LCJpc3MiOiJFTWFrYXRvIiwiYXVkIjoiRU1ha2F0byJ9.O5k5JD9MQHx8QLU19r8b4la5lJ9rCg7f7VXX0TKxrM4";
         Log::debug("== My TOKEN ==");
         Log::debug($AUTH_BEARER_TOKEN);
 
@@ -122,7 +122,7 @@ class CorporateController extends Controller
 
         //create authentication token
         //$AUTH_BEARER_TOKEN = $this->auth->generateToken();
-        $AUTH_BEARER_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MjExOTM2OTMsIm5iZiI6MTcyMTE5MzY5MywiZXhwIjoxNzIxMTkzOTkzLCJpc3MiOiJFTWFrYXRvIiwiYXVkIjoiRU1ha2F0byJ9.b1G-VOm_BkaNCChTvWRTOAXvu27b2rZox0DVRFSzxVc";
+        $AUTH_BEARER_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MjExOTQxNTcsIm5iZiI6MTcyMTE5NDE1NywiZXhwIjoxNzIxMTk0NDU3LCJpc3MiOiJFTWFrYXRvIiwiYXVkIjoiRU1ha2F0byJ9.O5k5JD9MQHx8QLU19r8b4la5lJ9rCg7f7VXX0TKxrM4";
         Log::debug("== My TOKEN ==");
         Log::debug($AUTH_BEARER_TOKEN);
 
