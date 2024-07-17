@@ -24,7 +24,7 @@ class MandateController extends Controller
 
         //create authentication token
         //$AUTH_BEARER_TOKEN = $this->auth->generateToken();
-        $AUTH_BEARER_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MjExOTM2OTMsIm5iZiI6MTcyMTE5MzY5MywiZXhwIjoxNzIxMTkzOTkzLCJpc3MiOiJFTWFrYXRvIiwiYXVkIjoiRU1ha2F0byJ9.b1G-VOm_BkaNCChTvWRTOAXvu27b2rZox0DVRFSzxVc";
+        $AUTH_BEARER_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MjExOTc3NzksIm5iZiI6MTcyMTE5Nzc3OSwiZXhwIjoxNzIxMTk4MDc5LCJpc3MiOiJFTWFrYXRvIiwiYXVkIjoiRU1ha2F0byJ9.Tpe0l-9_lcl6igZPWDzHeKPmP7Nl3sQzY9hWIgH4L5k";
         Log::debug("== My TOKEN ==");
         Log::debug($AUTH_BEARER_TOKEN);
 
@@ -121,7 +121,7 @@ class MandateController extends Controller
         //validation 
 
         //create authentication token
-        $AUTH_BEARER_TOKEN = $this->auth->generateToken();
+        $AUTH_BEARER_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MjExOTc3NzksIm5iZiI6MTcyMTE5Nzc3OSwiZXhwIjoxNzIxMTk4MDc5LCJpc3MiOiJFTWFrYXRvIiwiYXVkIjoiRU1ha2F0byJ9.Tpe0l-9_lcl6igZPWDzHeKPmP7Nl3sQzY9hWIgH4L5k";
         Log::debug("== My TOKEN ==");
         Log::debug($AUTH_BEARER_TOKEN);
 
@@ -144,6 +144,10 @@ class MandateController extends Controller
 
         //push payload => NMB Direct Debits
         $response = Http::withHeaders($headers)->post($API_URL, $payload);
+
+        Log::debug("Response");
+        Log::debug($response->status());
+        Log::debug($response);
 
         if ($response->status() == 200) {
             $data = $response->json();
