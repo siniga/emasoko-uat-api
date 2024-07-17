@@ -103,7 +103,7 @@ class OtpController extends Controller
             "data" => [
                 "caseReference" => "CO202402070803000005",
                 "processName" => "MandateApproval",
-                "otpPin" => "A5R4"
+                "otpPin" => "A5999"
             ]
         ];
 
