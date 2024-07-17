@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\CollectionController;
 use App\Http\Controllers\Api\PaymentMandateController;
 use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\CorporateController;
@@ -56,7 +57,7 @@ Route::post('otp/create', [OtpController::class, 'create']);
 Route::post('otp/verify', [OtpController::class, 'verify']);
 
 //Collections APIs
-// Route::post('collection/create', [CollectionController::class, 'create']);
-// Route::post('collection/status', [CollectionController::class, 'status']);
+Route::post('collection/create', [CollectionController::class, 'create']);
+Route::post('collection/status', [CollectionController::class, 'status']);
 
 
