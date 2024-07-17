@@ -29,7 +29,7 @@ class CorporateController extends Controller
 
         //create data
         $data = [
-            "CorporateReference" => "CO202402070803000005",
+            "CorporateReference" => "CO202402070803000006",
             "name" => "SYBRIN",
             "corporateShortCode" => "SYB",
             "clientCode" => "SY",
@@ -65,7 +65,7 @@ class CorporateController extends Controller
         //create payload
         $payload = [
             "user" => "EMakato",
-            "correlationId" => "b30d3134-5624-4391-9f49-1b7a776d69ee",
+            "correlationId" => "b30d3134-5624-4391-9f49-1b7a776d69wt",
             "targetService" => "CorporateRegistration",
             "status" => "Create",
             "data" => $data
@@ -122,13 +122,16 @@ class CorporateController extends Controller
         //create payload
         $payload = [
             "user" => "EMakato",
-            "correlationId" => "b30d3134-5624-4391-9f49-1b7a776d696e",
+            "correlationId" => "b30d3134-5624-4391-9f49-1b7a776d69rrt",
             "targetService" => "CorporateStatus",
             "status" =>  "Check",
             "data" => [
-                "corporateReference" => "CO202402070803000005"
+                "corporateReference" => "CO202402070803000006"
             ]
         ];
+
+        Log::debug("payload");
+        Log::debug($payload);
 
         //API URL
         $API_URL = "https://onlinebankinguatuat.nmbbank.co.tz:8443/Services/Sybrin.Authentication.Gateway/SybrinAuthenticationGateway";
@@ -138,6 +141,10 @@ class CorporateController extends Controller
 
         //push payload => NMB Direct Debits
         $response = Http::withHeaders($headers)->post($API_URL, $payload);
+
+        Log::debug("Response");
+        Log::debug($response->status());
+        Log::debug($response);
 
         if ($response->status() == 200) {
             $data = $response->json();
