@@ -29,7 +29,7 @@ class CorporateController extends Controller
 
         //create data
         $data = [
-            "CorporateReference" => "CO202402070803000006",
+            "CorporateReference" => "CO202402070803000007",
             "name" => "SYBRIN",
             "corporateShortCode" => "SYB",
             "clientCode" => "SY",
@@ -71,6 +71,9 @@ class CorporateController extends Controller
             "data" => $data
         ];
 
+        Log::debug("payload");
+        Log::debug($payload);
+
         //API URL
         $API_URL = "https://onlinebankinguatuat.nmbbank.co.tz:8443/Services/Sybrin.Authentication.Gateway/SybrinAuthenticationGateway";
 
@@ -80,13 +83,17 @@ class CorporateController extends Controller
         //push payload => NMB Direct Debits
         $response = Http::withHeaders($headers)->post($API_URL, $payload);
 
+        Log::debug("Response");
+        Log::debug($response->status());
+        Log::debug($response);
+
         if ($response->status() == 200) {
             $data = $response->json();
 
             //send response to eMakato
             return response()->json([
                 'status' => "Success",
-                'corporateReference' => "CO202402070803000005",
+                'corporateReference' => "CO202402070803000007",
                 'response' => [
                     'responseCode' => 201,
                     'responseDescription' => "Corporate Registration Complete"
@@ -100,7 +107,7 @@ class CorporateController extends Controller
             //send response to eMakato
             return response()->json([
                 'status' => "Fail",
-                'corporateReference' => "CO202402070803000005",
+                'corporateReference' => "CO202402070803000007",
                 'response' => [
                     'responseCode' => 500,
                     'responseDescription' => "Internal Server Error"
@@ -126,7 +133,7 @@ class CorporateController extends Controller
             "targetService" => "CorporateStatus",
             "status" =>  "Check",
             "data" => [
-                "corporateReference" => "CO202402070803000006"
+                "corporateReference" => "CO202402070803000007"
             ]
         ];
 
@@ -152,7 +159,7 @@ class CorporateController extends Controller
             //send response to eMakato
             return response()->json([
                 'status' => "Success",
-                'corporateReference' => "CO202402070803000005",
+                'corporateReference' => "CO202402070803000007",
                 'response' => [
                     'responseCode' => 240,
                     'responseDescription' => "Case Complete"
@@ -166,7 +173,7 @@ class CorporateController extends Controller
             //send response to eMakato
             return response()->json([
                 'status' => "Fail",
-                'corporateReference' => "CO202402070803000005",
+                'corporateReference' => "CO202402070803000007",
                 'response' => [
                     'responseCode' => 500,
                     'responseDescription' => "Internal Server Error"
