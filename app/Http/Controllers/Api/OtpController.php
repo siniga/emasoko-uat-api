@@ -29,8 +29,8 @@ class OtpController extends Controller
 
         //create data
         $data = [
-            "caseReference" => "001122",
-            "accountNumber" => "61702400937",
+            "caseReference" => "0011432",
+            "accountNumber" => "62102402432",
             "processName" => "Test JWT Tokens Code",
             "makerName" => "ETest"
         ];
@@ -38,7 +38,7 @@ class OtpController extends Controller
         //create payload
         $payload = [
             "user" => "EMakato",
-            'correlationId' => "b30d3134-5624-4391-9f49-1b7a776d69ree",
+            'correlationId' => "b30d3134-5624-4391-9f49-1b7a776d69wkd",
             "targetService" => "OTPCreate",
             'status' => "Create",
             "data" => $data
