@@ -29,12 +29,12 @@ class CorporateController extends Controller
 
         //create data
         $data = [
-            "CorporateReference" => "CO202402070803000002",
+            "CorporateReference" => "CO202402070803000005",
             "name" => "SYBRIN",
             "corporateShortCode" => "SYB",
             "clientCode" => "SY",
-            "customerCode" => "000000822",
-            "accountName" => "RENFRID NGOLONGOLO",
+            "customerCode" => "000000833",
+            "accountName" => "SOLOCODES",
             "primaryAccount" => "60802400062",
             "branchSortCode" => "608",
             "currency" => "TZS",
@@ -48,7 +48,7 @@ class CorporateController extends Controller
             "secondaryEmail" => "test@sybrin.com",
             "suffix" => "Large",
             "deductionsActive" => "false",
-            "description" => "Coding company primary located in South Africa",
+            "description" => "Coding company primary located in Tanzania",
             "bookedBalance" => 369791.125,
             "creditLimit" => 0,
             "debitLimit" => 0,
@@ -65,7 +65,7 @@ class CorporateController extends Controller
         //create payload
         $payload = [
             "user" => "EMakato",
-            "correlationId" => "b30d3134-5624-4391-9f49-1b7a776d692u",
+            "correlationId" => "b30d3134-5624-4391-9f49-1b7a776d69ee",
             "targetService" => "CorporateRegistration",
             "status" => "Create",
             "data" => $data
@@ -86,7 +86,7 @@ class CorporateController extends Controller
             //send response to eMakato
             return response()->json([
                 'status' => "Success",
-                'corporateReference' => "CO202402070803000002",
+                'corporateReference' => "CO202402070803000005",
                 'response' => [
                     'responseCode' => 201,
                     'responseDescription' => "Corporate Registration Complete"
@@ -100,7 +100,7 @@ class CorporateController extends Controller
             //send response to eMakato
             return response()->json([
                 'status' => "Fail",
-                'corporateReference' => "CO202402070803000001",
+                'corporateReference' => "CO202402070803000005",
                 'response' => [
                     'responseCode' => 500,
                     'responseDescription' => "Internal Server Error"
@@ -119,11 +119,11 @@ class CorporateController extends Controller
         //create payload
         $payload = [
             "user" => "EMakato",
-            "correlationId" => "b30d3134-5624-4391-9f49-1b7a776d692e",
+            "correlationId" => "b30d3134-5624-4391-9f49-1b7a776d696e",
             "targetService" => "CorporateStatus",
             "status" =>  "Check",
             "data" => [
-                "corporateReference" => "CO202402070803000002"
+                "corporateReference" => "CO202402070803000005"
             ]
         ];
 
@@ -142,7 +142,7 @@ class CorporateController extends Controller
             //send response to eMakato
             return response()->json([
                 'status' => "Success",
-                'corporateReference' => "CO202402070803000001",
+                'corporateReference' => "CO202402070803000005",
                 'response' => [
                     'responseCode' => 240,
                     'responseDescription' => "Case Complete"
@@ -156,7 +156,7 @@ class CorporateController extends Controller
             //send response to eMakato
             return response()->json([
                 'status' => "Fail",
-                'corporateReference' => "CO202402070803000001",
+                'corporateReference' => "CO202402070803000005",
                 'response' => [
                     'responseCode' => 500,
                     'responseDescription' => "Internal Server Error"

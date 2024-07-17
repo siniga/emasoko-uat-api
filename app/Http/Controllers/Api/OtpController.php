@@ -38,7 +38,7 @@ class OtpController extends Controller
         //create payload
         $payload = [
             "user" => "EMakato",
-            'correlationId' => "b30d3134-5624-4391-9f49-1b7a776d69rew",
+            'correlationId' => "b30d3134-5624-4391-9f49-1b7a776d69ree",
             "targetService" => "OTPCreate",
             'status' => "Create",
             "data" => $data
@@ -62,7 +62,7 @@ class OtpController extends Controller
             //send response to eMakato
             return response()->json([
                 'status' => "Success",
-                "caseReference" => "001122",
+                "caseReference" => "CO202402070803000005",
                 'response' => [
                     'responseCode' => 240,
                     'responseDescription' => "OTP Succesfully Generated"
@@ -76,7 +76,7 @@ class OtpController extends Controller
             //send response to eMakato
             return response()->json([
                 'status' => "Fail",
-                "caseReference" => "001122",
+                "caseReference" => "CO202402070803000005",
                 'response' => [
                     'responseCode' => 500,
                     'responseDescription' => "Internal Server Error"
@@ -101,7 +101,7 @@ class OtpController extends Controller
             "targetService" => "OTPVerify",
             "status" => "Verify",
             "data" => [
-                "caseReference" => "CO202402070803000001",
+                "caseReference" => "CO202402070803000005",
                 "processName" => "MandateApproval",
                 "otpPin" => "A5R4"
             ]
@@ -124,7 +124,7 @@ class OtpController extends Controller
             //send response to eMakato
             return response()->json([
                 'status' => "Success",
-                "caseReference" => "CO202402070803000001",
+                "caseReference" => "CO202402070803000005",
                 'response' => [
                     'responseCode' => 210,
                     'responseDescription' => "OTP Valid"
@@ -138,7 +138,7 @@ class OtpController extends Controller
             //send response to eMakato
             return response()->json([
                 'status' => "Fail",
-                "caseReference" => "CO202402070803000001",
+                "caseReference" => "CO202402070803000005",
                 'response' => [
                     'responseCode' => 500,
                     'responseDescription' => "Internal Server Error"

@@ -29,17 +29,17 @@ class MandateController extends Controller
 
         //create data
         $data = [
-            "mandateReferenceNumber" => "12145",
+            "mandateReferenceNumber" => "CO202402070803000005",
             "mandateStartDate" => "2024-07-28T22:00:00.000",
             "mandateEndDate" => "2024-08-02T22:00:00.000Z",
             "directDebitType" => "Variable",
             "debitAccountHolderName" => "YYYY",
-            "debitAccountNumber" => "20910020198",
+            "debitAccountNumber" => "61702400937",
             "debitAccountBankCode" => "016",
-            "debitAccountHolderAddress1" => "IBILILO",
-            "debitAccountHolderAddress2" => "MBEYA",
-            "debitAccountHolderAddress3" => "IBILILO",
-            "corporateReference" => "CO202402070803000018",
+            "debitAccountHolderAddress1" => "RENFRID",
+            "debitAccountHolderAddress2" => "DAR ES SALAAM",
+            "debitAccountHolderAddress3" => "UBUNGO",
+            "corporateReference" => "CO202402070803000005",
             "creditAccountNumber" => "50510034031",
             "creditAccountName" => "MyBiggieConglomerate",
             "creditAccountShortName" => "SYB",
@@ -64,7 +64,7 @@ class MandateController extends Controller
         //create payload
         $payload = [
             "user" => "EMakato",
-            "correlationId" => "b30d3134-5624-4391-9f49-1b7a776d692e",
+            "correlationId" => "b30d3134-5624-4391-9f49-1b7a776d6922",
             "targetService" => "MandateRegistration",
             "status" => "Create",
             "data" => $data
@@ -85,7 +85,7 @@ class MandateController extends Controller
             //send response to eMakato
             return response()->json([
                 'status' => "Success",
-                'mandateReferenceNumber' => "CO202402070803000001",
+                'mandateReferenceNumber' => "CO202402070803000005",
                 'response' => [
                     'responseCode' => 201,
                     'responseDescription' => "Mandate Registration Complete"
@@ -99,7 +99,7 @@ class MandateController extends Controller
             //send response to eMakato
             return response()->json([
                 'status' => "Fail",
-                'mandateReferenceNumber' => "CO202402070803000001",
+                'mandateReferenceNumber' => "CO202402070803000005",
                 'response' => [
                     'responseCode' => 500,
                     'responseDescription' => "Internal Server Error"
@@ -120,11 +120,11 @@ class MandateController extends Controller
         //create payload
         $payload = [
             "user" => "EMakato",
-            "correlationId" => "b30d3134-5624-4391-9f49-1b7a776d692e",
+            "correlationId" => "b30d3134-5624-4391-9f49-1b7a776d69op",
             "targetService" => "MandateStatus",
             "status" =>  "Check",
             "data" => [
-                "mandateReferenceNumber" => "CO202402070803000001"
+                "mandateReferenceNumber" => "CO202402070803000005"
             ]
         ];
 
@@ -143,7 +143,7 @@ class MandateController extends Controller
             //send response to eMakato
             return response()->json([
                 'status' => "Success",
-                'mandateReferenceNumber' => "CO202402070803000001",
+                'mandateReferenceNumber' => "CO202402070803000005",
                 'response' => [
                     'responseCode' => 240,
                     'responseDescription' => "Case Complete"
@@ -157,7 +157,7 @@ class MandateController extends Controller
             //send response to eMakato
             return response()->json([
                 'status' => "Fail",
-                'mandateReferenceNumber' => "CO202402070803000001",
+                'mandateReferenceNumber' => "CO202402070803000005",
                 'response' => [
                     'responseCode' => 500,
                     'responseDescription' => "Internal Server Error"
