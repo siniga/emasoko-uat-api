@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Exports\CompanyExport;
 use App\Http\Requests\CompanyAccountRequest;
 use App\Http\Requests\CompanyDetailRequest;
+use App\Jobs\CorporateRegistrationJob;
 use App\Models\Account;
 use App\Models\AccountType;
 use App\Models\Country;
@@ -20,8 +21,10 @@ use App\Models\PartnerUser;
 use App\Models\Region;
 use App\Models\User;
 use App\Services\CompanyService;
+use App\Services\BankPayloadService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Validator;
@@ -33,7 +36,7 @@ use PDF;
 
 class CompanyController extends Controller
 {
-    public function __construct(protected CompanyService $companyService)
+    public function __construct(protected CompanyService $companyService, protected BankPayloadService $payloadService)
     {
         $this->middleware('auth');
     }
@@ -117,7 +120,6 @@ class CompanyController extends Controller
         return $pdf->download(date('YmdHis') . '-Companies.pdf');
     }
 
-
     /**
      * Show the form for creating a new resource.
      *
@@ -129,7 +131,6 @@ class CompanyController extends Controller
         //render view
         return view('companies.create');
     }
-
 
     /**
      * Store a newly created resource in storage.
@@ -285,7 +286,6 @@ class CompanyController extends Controller
         return response()->json(['success' => true, 'uuid' => $uuid, 'message' => 'Service Provider collection account(s) saved'], 200);
     }
 
-
     //company staff
     function companyStaffForm($uuid)
     {
@@ -298,7 +298,6 @@ class CompanyController extends Controller
         //render view
         return view('companies.create.staff', compact('title', 'company', 'countries'));
     }
-
 
     //store company staff
     function storeCompanyStaff(Request $request)
@@ -316,7 +315,6 @@ class CompanyController extends Controller
         //response
         return response()->json(['success' => true, 'uuid' => $uuid, 'message' => 'Service Provider staff saved'], 200);
     }
-
 
     //authorized person
     function companyAuthorizedPersonForm($uuid)
@@ -370,13 +368,13 @@ class CompanyController extends Controller
 
         //update status of partner
         $partner->next_step = 'companies/preview/' . $uuid;
-        $partner->status = 1;
+        $partner->status = 100;
         $partner->complete = 1;
         $partner->updated_by = auth()->id();
         $partner->save();
 
         //create assessment stages
-        $this->companyService->createAssessmentStages($partner);
+        //$this->companyService->createAssessmentStages($partner);
 
         //send assessment alert
         $this->companyService->sendAssessmentAlert($partner);
@@ -431,7 +429,6 @@ class CompanyController extends Controller
             return Redirect::route('companies.index')->with('danger', 'Failed to cancel service provider registration');
         }
     }
-
 
     /**
      * Display the specified resource.
@@ -640,16 +637,68 @@ class CompanyController extends Controller
     function confirmAssessment(Request $request)
     {
         //requests
-        $uuid = $request->input('uuid');
+        $uuid = $request->post('uuid');
+        $action = $request->post('action');
 
         //service provider
         $partner = Partner::where(['uuid' => $uuid])->firstOrFail();
 
         //process assessment
-        $status = $this->companyService->processAssessment($partner);
-        $partner->updated_by = auth()->id();
-        $partner->save();
+        $http_status_code = $this->companyService->processAssessment($partner, $action);
+
+        if ($http_status_code == 200) {
+            //partner accounts
+            foreach ($partner->partnerAccounts as $val) {
+                if ($val->account->id == 1 & $val->send_verification == 1) {
+                    $payload = $this->payloadService->corporateRegistrationPayload($partner, $val);
+
+                    //TODO: Create Request to NMB
+                    dispatch(new CorporateRegistrationJob($payload));
+                }
+            }
+
+            //response
+            return response()->json(['error' => false, "status" => $http_status_code, "message" => 'Corporate Registration approved.'], 200);
+        } else if ($http_status_code == 403) {
+            //Failed
+
+            return response()->json(['error' => true, "status" => $http_status_code, "message" => 'Corporate registration rejected.'], 200);
+        }
+    }
+
+    //query status
+    function fetchCorporateStatus(Request $request)
+    {
+        //requests
+        $uuid = $request->post('uuid');
+
+        //service provider
+        $partner = Partner::where(['uuid' => $uuid])->firstOrFail();
+
+        //create payload
+        $payload = [
+            "user" => "EMakato",
+            "correlationId" => Str::uuid()->toString(),
+            "targetService" => "CorporateStatus",
+            "status" =>  "Check",
+            "data" => [
+                "corporateReference" => $partner->reference
+            ]
+        ];
+
+        //create authentication token
+        $AUTH_BEARER_TOKEN = "";
+
+        //Create Headers
+        $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer ' . $AUTH_BEARER_TOKEN];
+
+        //API URL 
+        $API_URL = env('API_URL');
+
         //response
-        return response()->json(['error' => false, "status" => $status, "message" => 'Assessment completed!'], 200);
+        $response = Http::withHeaders($headers)->post($API_URL, $payload);
+
+        //logging response
+        Log::channel('apiLogs')->Info('CorporateStatus Response =>' . $response);
     }
 }

@@ -43,11 +43,15 @@
                                 <a href="{{ route('companies.registration', $company->uuid) }}" title="View" class="btn btn-warning btn-sm">
                                     <i class='fa fa-pen'></i> Edit
                                 </a>
-                                <button title="Assessment Process" class="btn btn-primary btn-sm"
+
+                                {{-- <template> --}}
+                                    <button x-html="btnApprove" title="Approve Registration" class="btn btn-success btn-sm" x-on:click="approveRegistration('{{ $company->uuid }}')"></button>
+                                {{-- </template> --}}
+                                {{-- <button title="Assessment Process" class="btn btn-primary btn-sm"
                                     x-on:click="sidebarOpen = true, fetchData('{{ $company->uuid }}'), fetchAssessment('{{ $company->uuid }}', 'Company_Information');"
                                     x-transition x-cloak>
-                                    <i class="fa fa-check"></i> Assessment
-                                </button>
+                                    <i class="fa fa-check"></i> Approve Registration
+                                </button> --}}
                             </div>
                         </div>
 
@@ -67,6 +71,16 @@
                                 <th>Business Category</th>
                                 <td>
                                     <span>{{ $company->partnerCategory->name ?? '' }}</span>
+                                </td>
+                            </tr>
+
+                             <tr>
+                                <th>Corporate Reference</th>
+                                <td>{{ $company->reference }}</td>
+
+                                <th>Corporate ShortCode</th>
+                                <td>
+                                    {{ $company->short_code }}
                                 </td>
                             </tr>
 
@@ -90,16 +104,16 @@
                                         <span class="badge bg-warning">Registration Process</span>
                                     </template>
 
-                                    <template x-if="status==1">
-                                        <span class="badge bg-info">Completed Registration</span>
+                                    <template x-if="status==100">
+                                        <span class="badge bg-info">Approval Process</span>
                                     </template>
 
-                                    <template x-if="status==2">
-                                        <span class="badge bg-info">Assessment Process</span>
+                                    <template x-if="status==403">
+                                        <span class="badge bg-danger">Rejected</span>
                                     </template>
 
-                                    <template x-if="status==3">
-                                        <span class="badge bg-success">Assessment Approved</span>
+                                    <template x-if="status==200">
+                                        <span class="badge bg-success">Approved</span>
                                     </template>
                                 </td>
                             </tr>
@@ -139,7 +153,8 @@
                                     <tr>
                                         <th width="3%">#</th>
                                         <th width="60%">Name</th>
-                                        <th width="30%">Attachment</th>
+                                        <th width="25%">Attachment</th>
+                                        <th width="5%"></th>
                                     </tr>
                                 </thead>
 
@@ -150,10 +165,12 @@
                                             <td>{{ $val->name }}</td>
                                             <td>
                                                 @if ($val->attachment != null)
-                                                    <a download=""
-                                                        href="{{ asset('assets/uploads/docs/' . $val->attachment) }}">
-                                                        {{ $val->attachment }}
-                                                    </a>
+                                                    {{ $val->attachment }}
+                                                @endif
+                                            </td>
+                                            <td class="text-center">
+                                                @if ($val->attachment != null)
+                                                    <a href="{{ asset('assets/uploads/docs/' . $val->attachment) }}" download><i class='bx bx-cloud-download bx-xs'></i></a>
                                                 @endif
                                             </td>
                                         </tr>
@@ -179,6 +196,7 @@
                                         <th width="20%">Bank/MNO</th>
                                         <th width="25%">Account Name</th>
                                         <th width="20%">Account Number</th>
+                                        <th></th>
                                     </tr>
                                 </thead>
 
@@ -190,7 +208,15 @@
                                             <td>{{ $val->account->name ?? '' }}</td>
                                             <td>{{ $val->account_name ?? '' }}</td>
                                             <td>{{ $val->account_number ?? '' }}</td>
-
+                                            <td>
+                                                @if ($val->send_verification == 1)
+                                                    <i class="text-warning">Wait Verification</i>
+                                                @elseif ($val->response_sms && $val->verified_at)
+                                                    <i class="text-success">{{ $val->response_sms ?? '' }}</i>
+                                                @elseif ($val->response_sms && $val->rejected_at)
+                                                    <i class="text-danger">{{ $val->response_sms ?? '' }}</i>
+                                                @endif
+                                            </td>
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -241,9 +267,9 @@
         </div>
 
         <!--offcanvas wrp -->
-        <div id="offcanvas-wrp" x-show="sidebarOpen" x-transition>
+        {{-- <div id="offcanvas-wrp" x-show="sidebarOpen" x-transition>
             <div id="detail-div"></div>
-        </div>
+        </div> --}}
     </div>
 @endsection
 
@@ -259,12 +285,12 @@
 
                 formData: {
                     'uuid': "{{ $company->uuid }}",
-                    'stage': "",
-                    "criteria": "",
+                    'action': "",
                     'remarks': "",
                 },
                 formLoading: false,
                 formMessage: "",
+                btnApprove: '<i class="fa fa-check"></i> Approve Registration',
                 buttonSubmit: "Submit",
                 buttonConfirm: "Confirm",
                 confirm_btn: false,
@@ -276,6 +302,46 @@
                         .then(data => {
                             $('#detail-div').html(data)
                         });
+                },
+
+                //approval company registration
+                approveRegistration(){
+                    this.formLoading = true;
+                    this.btnApprove = '<i class="fas fa-spinner fa-spin"></i> Approving Registration....';
+
+                    //format form 
+                    this.formData.action = "APPROVE";
+                    this.formData.remarks = "Company registration approved";
+
+                    fetch("/companies/confirm-assessment", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                Accept: "application/json",
+                                'X-CSRF-TOKEN': document.head.querySelector('meta[name=csrf-token]').content
+                            },
+                            body: JSON.stringify(this.formData),
+                        }).then(response => response.json())
+                        .then(responseJson => {
+                            console.log(responseJson);
+                            this.status = responseJson.status
+
+                            $('#message_wrp').html(
+                                "<div class='alert alert-success rounded-sm'>" + responseJson.message + "</div>"
+                            );
+                        }).catch(() => {
+                            //display message
+                            $('#message_wrp').html(
+                                "<div class='alert alert-danger rounded-sm'>Something went wrong.</div>"
+                            );
+
+                        }).finally(() => {
+                            this.formLoading = false;
+                            this.btnApprove = '<i class="fa fa-check"></i> Approve Registration';
+                        });
+
+
+
                 },
 
                 //show assessment verdict
@@ -291,93 +357,6 @@
                             this.formData.criteria = response.data.criteria;
                             this.formData.remarks = response.data.remarks;
 
-                        });
-                },
-
-                //show assessment verdict
-                confirmation(uuid) {
-                    this.eModal = "Confirm_Assessment";
-                    this.formData.stage = "Confirm_Assessment";
-
-                    fetch("/companies/assessment-stages/?uuid=" + uuid)
-                        .then(response => response.json())
-                        .then(response => {
-                            console.log(response);
-                            this.stages = response.data
-                        });
-                },
-
-                //store information assessment
-                submitInformationForm() {
-                    this.formMessage = "";
-                    this.formLoading = false;
-                    this.buttonSubmit = "Submitting...";
-
-                    fetch("/companies/store-assessment", {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                                Accept: "application/json",
-                                'X-CSRF-TOKEN': document.head.querySelector('meta[name=csrf-token]').content
-                            },
-                            body: JSON.stringify(this.formData),
-                        }).then(response => response.json())
-                        .then(responseJson => {
-                            console.log(responseJson.criteria);
-
-                            //display message
-                            if (responseJson.criteria == 'approved') {
-                                $('.message_wrp').html(
-                                    "<div class='alert alert-success rounded-sm'>Service Provider Information approved.</div>"
-                                );
-                            } else if (responseJson.criteria == 'rejected') {
-                                $('.message_wrp').html(
-                                    "<div class='alert alert-danger rounded-sm'>Service Provider Information rejected.</div>"
-                                );
-                            }
-                        }).catch(() => {
-                            //display message
-                            $('.message_wrp').html(
-                                "<div class='alert alert-danger rounded-sm'>Something went wrong.</div>"
-                            );
-
-                        }).finally(() => {
-                            this.formLoading = false;
-                            this.buttonSubmit = "Submit";
-                        });
-                },
-
-                //confirm assessment
-                confirmationForm() {
-                    this.formMessage = "";
-                    this.formLoading = false;
-                    this.buttonConfirm = "Confirming...";
-
-                    fetch("/companies/confirm-assessment", {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                                Accept: "application/json",
-                                'X-CSRF-TOKEN': document.head.querySelector('meta[name=csrf-token]').content
-                            },
-                            body: JSON.stringify(this.formData),
-                        }).then(response => response.json())
-                        .then(responseJson => {
-                            console.log(responseJson);
-                            this.status = responseJson.status
-
-                            $('.message_wrp').html(
-                                "<div class='alert alert-success rounded-sm'>Service Provider assessment complete.</div>"
-                            );
-                        }).catch(() => {
-                            //display message
-                            $('.message_wrp').html(
-                                "<div class='alert alert-danger rounded-sm'>Something went wrong.</div>"
-                            );
-
-                        }).finally(() => {
-                            this.formLoading = false;
-                            this.buttonConfirm = "Confirm";
                         });
                 },
             }

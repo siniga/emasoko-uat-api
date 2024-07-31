@@ -153,16 +153,16 @@
                                                     $options = ['' => 'Select'] + $options;
                                                 @endphp
 
-                                                {{ Form::select('currency_id[]', $options, old('currency_id[]'), ['class' => 'form-control currency_id', 'id' => 'currency_id']) }}
+                                                {{ Form::select('currency_id[]', $options, old('currency_id[]', $data->currency_id), ['class' => 'form-control currency_id', 'id' => 'currency_id']) }}
                                                 <span class="formError"></span>
                                             </div>
                                         </div>
 
                                         <div class="col-lg-2">
                                             <div class="mb-3">
-                                                <label for="basicpill-namecard-input">Short Code <span
+                                                <label for="basicpill-namecard-input">Branch Code <span
                                                         class="text-danger">*</span></label>
-                                                {{ Form::text('sort_code[]', old('sort_code[]'), ['class="form-control"', 'placeholder="Write short code..."']) }}
+                                                {{ Form::text('branch_code[]', old('branch_code[]', $data->branch_code), ['class="form-control"', 'placeholder="Write branch_code short code..."']) }}
                                                 <span class="formError"></span>
                                             </div>
                                         </div>
@@ -260,9 +260,9 @@
 
                                     <div class="col-lg-2">
                                         <div class="mb-3">
-                                            <label for="basicpill-namecard-input">Short Code <span
+                                            <label for="basicpill-namecard-input">Branch Code <span
                                                     class="text-danger">*</span></label>
-                                            {{ Form::text('sort_code[]', old('sort_code[]'), ['class="form-control"', 'placeholder="Write short code..."']) }}
+                                            {{ Form::text('branch_code[]', old('branch_code[]'), ['class="form-control"', 'placeholder="Write branch short code..."']) }}
                                             <span class="formError"></span>
                                         </div>
                                     </div>
@@ -385,8 +385,8 @@
                 </div>
                 <div class="col-lg-2">
                     <div class="mb-3">
-                        <label>Short Code <span class="text-danger">*</span></label>
-                        <input type="text" name="sort_code[]" placeholder="Write short code..." class="form-control">
+                        <label>Branch Short Code <span class="text-danger">*</span></label>
+                        <input type="text" name="branch_code[]" placeholder="Write branch short code..." class="form-control">
                         <span class="formError"></span>
                     </div>
                 </div>
@@ -424,7 +424,7 @@
                     "account_name[]": "required",
                     "account_number[]": "required",
                     "currency_id[]": "required",
-                    "sort_code[]": "required",
+                    "branch_code[]": "required",
                 },
                 messages: {
                     "account_type_id[]": "Account type required",
@@ -432,7 +432,7 @@
                     "account_name[]": "Account name required",
                     "account_number[]": "Account number required",
                     "currency_id[]": "Currency required",
-                    "sort_code[]": "Short Code required",
+                    "branch_code[]": "Branch Code required",
                 },
                 // Submit form
                 submitHandler: function(form, e) {

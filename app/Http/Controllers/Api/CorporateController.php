@@ -32,12 +32,14 @@ class CorporateController extends Controller
             "CorporateReference" => $request->post('CorporateReference'),
             "name" => "SYBRIN",
             "corporateShortCode" => "SYB",
+
             "clientCode" => "SY",
             "customerCode" => "000000833",
             "accountName" => "SOLOCODES",
             "primaryAccount" => $request->post('primaryAccount'),
             "branchSortCode" => "608",
             "currency" => "TZS",
+
             "accountStatus" => null,
             "address1" => "MBEYA",
             "address2" => "IBABA ILEJE MBEYA",
@@ -49,6 +51,7 @@ class CorporateController extends Controller
             "suffix" => "Large",
             "deductionsActive" => "false",
             "description" => "Coding company primary located in Tanzania",
+
             "bookedBalance" => 369791.125,
             "creditLimit" => 0,
             "debitLimit" => 0,
@@ -56,6 +59,7 @@ class CorporateController extends Controller
             "isOverallLimit" => true,
             "defaultAmount" => 500,
             "defaultPercentage" => 0,
+            
             "createdBy" => "Steven.Gerald",
             "verifiedBy" => "Victor.Mpendazoe",
             "createdDate" => "2024-02-08 12:00:00",

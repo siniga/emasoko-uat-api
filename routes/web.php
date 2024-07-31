@@ -112,6 +112,7 @@ Route::get('companies/assessment-stages', [CompanyController::class, 'companyAss
 Route::get('companies/assessment-approval', [CompanyController::class, 'companyAssessmentApproval'])->name('companies.assessment-approval');
 Route::post('companies/store-assessment', [CompanyController::class, 'storeAssessment'])->name('companies.store-assessment');
 Route::post('companies/confirm-assessment', [CompanyController::class, 'confirmAssessment'])->name('companies.confirm-assessment');
+Route::post('companies/fetch-corporate-status', [CompanyController::class, 'fetchCorporateStatus'])->name('companies.fetch-corporate-status');
 
 
 //customer accounts
