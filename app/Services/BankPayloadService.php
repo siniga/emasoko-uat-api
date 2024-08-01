@@ -1,9 +1,11 @@
 <?php
 
 namespace App\Services;
+
+use App\Models\DebitOrder;
 use App\Models\Partner;
 use App\Models\PartnerAccount;
-
+use Carbon\Carbon;
 
 class BankPayloadService
 {
@@ -60,10 +62,48 @@ class BankPayloadService
         return $payload;
     }
 
-    //create corporateStatus Payload
-    // public function corporateStatusPayload(Partner $partner, PartnerAccount $partnerAccount)
-    // {
+    //create mandate registration Payload
+    public function mandateRegistrationPayload(DebitOrder $debitOrder)
+    {
+        $customerAccount = $debitOrder->customerAccount;
+        $customer = $customerAccount->customer;
+        $partner = $debitOrder->partner;
+        $partnerAccount = $debitOrder->partnerAccount;
 
-    // }
+        //create payload
+        $payload = [
+            "mandateReferenceNumber" => $debitOrder->reference,
+            "mandateStartDate" => Carbon::parse($debitOrder->start_date)->format('Y-m-d H:i:s'),
+            "mandateEndDate" => Carbon::parse($debitOrder->end_date)->format('Y-m-d H:i:s'),
+            "directDebitType" => $debitOrder->debit_type,
+            "debitAccountHolderName" => $customerAccount->account_name,
+            "debitAccountNumber" => $customerAccount->account_number,
+            "debitAccountBankCode" => $partnerAccount->branch_code,
+            "debitAccountHolderAddress1" => $customer->address,
+            "debitAccountHolderAddress2" => null,
+            "debitAccountHolderAddress3" => null,
+            "corporateReference" => $partner->reference,
+            "creditAccountNumber" => $partnerAccount->account_number,
+            "creditAccountName" => $partnerAccount->account_name,
+            "creditAccountShortName" => $partner->short_code,
+            "beneficiaryBank" => "NMB",
+            "accountStatus" => "Account Is Valid",
+            "creditAccountAddressLine1" => $partner->region->name ?? null,
+            "creditAccountAddressLine2" => $partner->physical_address ?? null,
+            "amount" => $debitOrder->total_amount,
+            "maxAmount" => $debitOrder->max_installment_amount,
+            "minAmount" =>  $debitOrder->min_installment_amount,
+            "createdBy" => static::userNameFormat($debitOrder->userCreated),
+            "verifiedBy" => static::userNameFormat(auth()->user()),
+            "createdDate" => $debitOrder->created_at,
+            "verifyDate" => Carbon::now()->format('Y-m-d H:i:s'),
+            "file" => [
+                "fileName" => "Evidance Of Aggrement",
+                "fileType" => "pdf",
+                //"fileData" => pdf_to_base64(public_path('assets/uploads/docs/' . $debitOrder->evidence_of_aggrement))
+            ]
+        ];
 
+        return $payload;
+    }
 }

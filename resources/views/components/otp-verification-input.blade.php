@@ -2,9 +2,9 @@
     <form action="{{ $url }}" method="post" class="d-flex justify-content-end text-sm-end otp-verification-form">
         <div class="m-1">
             @csrf
-            <input type="hidden" name="reference" class="" value="{{ $reference }}">
+            <input type="hidden" name="uuid" class="" value="{{ $uuid }}">
             <input type="hidden" name="processName" value="{{ $action }}">
-            <input type="text" class="form-control w-100" name="otpPin" placeholder="Enter otp">
+            <input type="text" class="form-control w-100" name="otpPin" placeholder="Enter otp...">
         </div>
         <div class="m-1">
             <button type="submit" name="save" class="btn btn-secondary">Verify</button>

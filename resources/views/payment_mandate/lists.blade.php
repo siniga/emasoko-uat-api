@@ -216,7 +216,7 @@
 
                                             <td>
                                                 @if ($values->status == 'saved')
-                                                    <a href="{{ route('payment-mandate.preview', [$values->customerAccount->uuid, $values->uuid]) }}"
+                                                    <a href="{{ route('payment-mandate.preview', $values->uuid) }}"
                                                         title="Preview application" class="btn btn-xss">
                                                         <i class='bx bxs-check-square bx-xs text-success'></i>
                                                     </a>
