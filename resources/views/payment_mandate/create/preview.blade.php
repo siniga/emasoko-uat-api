@@ -185,7 +185,7 @@
                             <template x-if="status=='submitted'">
                                 <div class="row">
                                     <x-otp-verification-input :uuid="$debit_order->uuid" action="MandateApproval"
-                                        :url="route('payment-mandate.verify_otp')" />
+                                        :url="route('payment-mandate.verify-otp')" />
                                 </div>
                             </template>
 
@@ -228,17 +228,28 @@
         //initiate data
         function initData() {
             return {
+                uuid: "{{ $debit_order->uuid }}",
+                status: "{{ $debit_order->status }}",
+
                 formData: {
                     mandate_id: "{{ $debit_order->id }}",
+                    uuid: "{{ $debit_order->uuid }}",
                 },
-                status: "{{ $debit_order->status }}",
-                formMessage: "",
 
+                verifyForm: {
+                    uuid: "{{ $debit_order->uuid }}",
+                    otpPin: "",
+                },
+
+                formMessage: "",
                 saveLoading: false,
                 buttonSave: "Save",
 
                 submitLoading: false,
                 buttonSubmit: "Submit",
+
+                verifyLoading: false,
+                buttonVerify: "Verify",
 
                 //submit form
                 submitForm() {
@@ -304,7 +315,67 @@
                             this.saveLoading = false;
                             this.buttonSave = "Save";
                         });
-                }
+                },
+
+                //resend OTP
+                resendOtp() {
+                    //api for action
+                    fetch("/payment-mandate/resend-otp", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                Accept: "application/json",
+                                'X-CSRF-TOKEN': document.head.querySelector('meta[name=csrf-token]').content
+                            },
+                            body: JSON.stringify(this.formData),
+                        }).then(response => response.json())
+                        .then(responseJson => {
+                            console.log(responseJson);
+
+                            //display message
+                            $('#message_wrp').html(
+                                "<div class='alert alert-success rounded-sm'>OTP request initiated</div>"
+                            );
+                        }).catch(() => {
+                            this.formMessage = "Something went wrong.";
+                        }).finally(() => {
+
+                        });
+                },
+
+                //verify OTP
+                verifyOtp() {
+                    console.log("== verifying Otp ==")
+                    console.log(this.verifyForm)
+
+                    this.formMessage = "";
+                    this.verifyLoading = true;
+                    this.buttonVerify = "Verifying...";
+
+                    //api for action
+                    fetch("/payment-mandate/verify-otp", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                Accept: "application/json",
+                                'X-CSRF-TOKEN': document.head.querySelector('meta[name=csrf-token]').content
+                            },
+                            body: JSON.stringify(this.verifyForm),
+                        }).then(response => response.json())
+                        .then(responseJson => {
+                            console.log(responseJson);
+
+                            //display message
+                            $('#message_wrp').html(
+                                "<div class='alert alert-success rounded-sm'>OTP verification initiated</div>"
+                            );
+                        }).catch(() => {
+                            this.formMessage = "Something went wrong.";
+                        }).finally(() => {
+                            this.verifyLoading = false;
+                            this.buttonVerify = "Verify";
+                        });
+                },
             }
         }
     </script>

@@ -60,6 +60,6 @@ class CorporateRegistrationJob implements ShouldQueue
        $response = Http::withHeaders($headers)->post($API_URL, $payload);
 
         //logging response
-       Log::channel('apiLogs')->Info('CorporateRegistration Response =>' . $response);
+       Log::debug('CorporateRegistration Response =>' . $response);
     }
 }

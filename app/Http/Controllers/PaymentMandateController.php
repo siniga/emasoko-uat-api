@@ -26,7 +26,10 @@ use App\Jobs\SendSMSJob;
 use App\Models\CustomerPartner;
 use App\Models\Partner;
 use App\Models\SmsLog;
+use App\Services\BankApiService;
+use App\Services\BankApiServices;
 use App\Services\BankPayloadService;
+use App\Services\DeductionService;
 use App\Services\MnoBankServices;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Session;
@@ -35,7 +38,7 @@ use PDF;
 class PaymentMandateController extends Controller
 {
 
-    public function __construct(protected BankPayloadService $payloadService, protected Messaging $messaging)
+    public function __construct(protected DeductionService $deductionService, protected BankPayloadService $payloadService, protected Messaging $messaging, protected BankApiService $bankApi)
     {
         $this->middleware('auth');
     }
@@ -287,6 +290,7 @@ class PaymentMandateController extends Controller
                         }
                     }
                 ],
+                'evidence_of_aggrement' => 'required',
             ],
             [
                 'provider_id.required_if' => 'Service provider required',
@@ -300,6 +304,7 @@ class PaymentMandateController extends Controller
                 'start_date.required' => 'Start date required',
                 'deduction_end.required' => 'Deduction end required',
                 'end_date.required_if' => 'End date required',
+                'evidence_of_aggrement.required' => 'Evidence of aggrement is required',
             ]
         );
 
@@ -360,7 +365,7 @@ class PaymentMandateController extends Controller
 
         // calculate end date
         if ($request->input('deduction_end') === 'totalLoanCovered') {
-            // calculate end date from start date
+            // TODO: Create end date by check number of installment
             $debit_order->end_date = date('Y-m-d', strtotime($request->input('start_date') . '+2 year'));
         } else if ($request->input('deduction_end') == 'specificDate') {
             // fixed end date
@@ -386,14 +391,6 @@ class PaymentMandateController extends Controller
         );
         $customer_partner->created_by = Auth::user()->id;
         $customer_partner->save();
-
-        // $mno = new MnoBankServices($customer_account->account);
-        // $response = $mno->mandateRegistration($request, $debit_order);
-        // if (!$response->status) {
-        //     $debit_order->approved = "REJECTED";
-        //     $debit_order->save();
-        //     return Redirect::back()->with('danger', $response->message);
-        // }
 
         // redirect with message
         return Redirect::route('payment-mandate.preview', [$debit_uuid])->with('success', "Customer deduction information saved");
@@ -469,24 +466,47 @@ class PaymentMandateController extends Controller
         return response()->json(['success' => false, 'success_msg' => "Debit mandate saved"], 200);
     }
 
+    //resend otp
+    function resend_otp(Request $request)
+    {
+        //post data
+        $debit_order = DebitOrder::where("uuid", $request->uuid)->first();
+
+        //create payload
+        $payload = $this->payloadService->createOtpPayload($debit_order);
+
+        //service for sending requests
+        $response = $this->bankApi->resendOtpRequest($payload);
+
+        if ($response == 200) {
+            //response
+            return response()->json(['success' => true, 'success_msg' => "OTP request initiated"], 200);
+        } else {
+            return response()->json(['success' => false, 'error_msg' => "Failed to initiate OTP request."], 200);
+        }
+    }
+
     // verify_otp
     function verify_otp(Request $request)
     {
         // post data
-        $debitOrder = DebitOrder::where("uuid", $request->uuid)->first();
+        $debit_order = DebitOrder::where("uuid", $request->uuid)->first();
 
-        //TODO: OTP verification....
+        //create payload
+        $payload = $this->payloadService->verifyOtpPayload($debit_order, $request->otpPin);
 
+        //service for sending request to API
+        $response = $this->bankApi->verifyOtpRequest($payload);
 
+        if ($response == 200) {
+            //TODO: create deduction installments
+            $response = $this->deductionService->createInstallment($debit_order);
 
-
-        $mno = new MnoBankServices($debitOrder->customerAccount->account ?? null);
-        $verified = $mno->mandateStatusAndValidation($request, $debitOrder);
-        if ($verified->status) {
-            $debitOrder->status = "verified";
-            $debitOrder->save();
+            //response
+            return response()->json(['success' => true, 'success_msg' => "OTP verified"], 200);
+        } else {
+            return response()->json(['success' => false, 'error_msg' => "Failed to verify OTP."], 200);
         }
-        return $verified;
     }
 
     //customer details
@@ -647,7 +667,6 @@ class PaymentMandateController extends Controller
         //redirect
         return Redirect::route('payment-mandate.lists')->with('danger', 'Payment mandate deleted!');
     }
-
 
     //send remainder for payment mandate
     public function sendRemainder($id)

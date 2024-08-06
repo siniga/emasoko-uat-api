@@ -106,4 +106,33 @@ class BankPayloadService
 
         return $payload;
     }
+
+    //create otp payload
+    public function createOtpPayload(DebitOrder $debitOrder)
+    {
+        $customerAccount = $debitOrder->customerAccount;
+
+        $payload = [
+            "caseReference" => rand(100000, 199999), //TODO: recreate case reference
+            "accountNumber" => $customerAccount->account_number,
+            "processName" => "EMakato Mandate Registration",
+            "makerName" => static::userNameFormat(auth()->user())
+        ];
+
+        return $payload;
+    }
+
+    //verify otp payload
+    public function verifyOtpPayload(DebitOrder $debitOrder, $otpPin)
+    {
+        $customerAccount = $debitOrder->customerAccount;
+
+        $payload = [
+            "caseReference" => rand(100000, 199999), //TODO: recreate case reference
+            "processName" => "MandateApproval",
+            "otpPin" => $otpPin
+        ];
+
+        return $payload;
+    }
 }

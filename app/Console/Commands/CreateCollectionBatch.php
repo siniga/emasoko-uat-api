@@ -9,6 +9,7 @@ use App\Services\MnoBankServices;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class CreateCollectionBatch extends Command
 {
@@ -44,7 +45,7 @@ class CreateCollectionBatch extends Command
     public function handle()
     {
         $debits = DebitOrder::whereHas("partner", function ($query) {
-            return $query->where("business_name", "NHC");
+            return $query->where("business_name", "!=", null);
         })->where(function ($query) {
             return $query->where(function ($query) {
                 return $query->whereNull('next_debit_date')->whereBetween('start_date', [Carbon::now()->startOfDay(), Carbon::now()->endOfDay()]);
@@ -52,6 +53,12 @@ class CreateCollectionBatch extends Command
                 return $query->whereBetween('next_debit_date', [Carbon::now()->startOfDay(), Carbon::now()->endOfDay()]);
             });
         })->with('customerAccount')->get()->groupBy("partner_id");
+
+        Log::debug("debits");
+        Log::debug($debits);
+
+
+
         foreach ($debits as $pDebit => $partnerDebits) {
             $partnerDebits = $partnerDebits->groupBy("customerAccount.account_id");
             foreach ($partnerDebits as $debit => $dbts) {
@@ -80,14 +87,14 @@ class CreateCollectionBatch extends Command
                         }
                     }
                 }
-                $mnoBank = new MnoBankServices($info->customerAccount->account);
-                $res = $mnoBank->collectionFileReceptionAndValidation(request(), $batch);
+                //$mnoBank = new MnoBankServices($info->customerAccount->account);
+                //$res = $mnoBank->collectionFileReceptionAndValidation(request(), $batch);
                 echo "Batch Created\n";
-                if ($res->status) {
-                    sleep(20);
-                    echo "Check Status\n";
-                    $mnoBank->collectionStatus(request(), $batch);
-                }
+                // if ($res->status) {
+                //     sleep(20);
+                //     echo "Check Status\n";
+                //     $mnoBank->collectionStatus(request(), $batch);
+                // }
                 DB::commit();
             }
         }
