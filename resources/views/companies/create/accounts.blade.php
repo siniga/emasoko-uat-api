@@ -250,7 +250,7 @@
                                     <div class="col-lg-4">
                                         <div class="mb-3">
                                             <label>Corporate Limit <span class="text-danger">*</span></label>
-                                            {{ Form::text('corporate_limit[]', old('corporate_limit[]', $data->account_number), ['class="form-control number-separator"', 'placeholder="Write corporate limit..."']) }}
+                                            {{ Form::text('corporate_limit[]', old('corporate_limit[]'), ['class="form-control number-separator"', 'placeholder="Write corporate limit..."']) }}
                                             <span class="formError"></span>
                                         </div>
                                     </div>
