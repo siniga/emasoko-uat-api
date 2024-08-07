@@ -23,16 +23,17 @@ class CorporateController extends Controller
         //validation 
 
         //create authentication token
-        $AUTH_BEARER_TOKEN = $request->post('AUTH_TOKEN');
-        Log::debug("== My TOKEN ==");
-        Log::debug($AUTH_BEARER_TOKEN);
+        $AUTH_BEARER_TOKEN = $this->auth->generateToken();
+        
+        return $AUTH_BEARER_TOKEN;
+
+        exit();
 
         //create data
         $data = [
             "CorporateReference" => $request->post('CorporateReference'),
             "name" => "SYBRIN",
             "corporateShortCode" => "SYB",
-
             "clientCode" => "SY",
             "customerCode" => "000000833",
             "accountName" => "SOLOCODES",

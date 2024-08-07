@@ -2,66 +2,116 @@
 
 namespace App\Classes;
 
+use Exception;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class Authentication
 {
-    private $key;
+    private $username;
+    private $passPhrase;
 
     public function __construct()
     {
-        $this->key = "SuperSecretKey12345678901234567890";
+        $this->username = env("NMB_USERNAME");
+        $this->passPhrase = env("NMB_PASSPHRASE");
     }
 
-    public function generateToken(int $exp = 3600): string
+    public function generateToken()
     {
-        $header = base64_encode(json_encode(['alg' => 'HS256', 'typ' => 'JWT']));
+        $header = [
+            'alg' => 'HS256',
+            'typ' => 'JWT'
+        ];
+
         $issuedAt = time();
-        $expiresAt = $issuedAt + $exp;
+        $expiresAt = $issuedAt + 300;
 
         //create payload
         $payload = [
             'iat' =>  $issuedAt,
             'nbf' =>  $issuedAt,
             'exp' => $expiresAt,
-            'iss' => 'EMakato',
-            'aud' =>  'EMakato'
+            'iss' => $this->username,
+            'aud' =>  $this->username,
         ];
+        Log::debug("Payload:");
+        Log::debug($payload);
 
-        $payload = base64_encode(json_encode($payload));
+        $b64Header = $this->toBase64(json_encode($header));
+        $b64Payload =  $this->toBase64(json_encode($payload));
 
-        $signature = hash_hmac('sha256', "$header.$payload", $this->key, true);
-        $signature = base64_encode($signature);
+        //prep signature
+        $preSignature = $b64Header . '.' . $b64Payload;
+        $signature = $this->generateSignature($this->passPhrase, $preSignature);
 
-        return "$header.$payload.$signature";
+        $jwtToken = $b64Header . '.' . $b64Payload . '.' . $signature;
+        return $jwtToken;
     }
 
-    public function validateToken(string $token): bool
+    //to Base64
+    function toBase64($source)
     {
-        $token_parts = explode('.', $token);
-        if (count($token_parts) !== 3) {
-            return false;
-        }
+        // Encode in classical base64
+        $encoded_source = base64_encode($source);
 
-        $header = base64_decode($token_parts[0]);
-        $payload = base64_decode($token_parts[1]);
-        $signature = base64_decode($token_parts[2]);
+        // Remove padding equal characters
+        $encoded_source =  preg_replace('/=+$/', '', $encoded_source);
 
-        $header_data = json_decode($header);
-        if (!isset($header_data->alg) || $header_data->alg !== 'HS256') {
-            return false;
-        }
+        // Replace characters according to base64url specifications
+        $encoded_source = str_replace('+', '-', $encoded_source);
+        $encoded_source = str_replace('/', '-', $encoded_source);
 
-        $valid_signature = hash_hmac('sha256', "$header.$payload", $this->key, true);
-        $valid_signature = base64_encode($valid_signature);
-
-        return ($signature === $valid_signature);
+        return $encoded_source;
     }
 
-    public function decodeToken(string $token): object
+    //base64 url
+    function u8Base64url($source)
     {
-        $payload = base64_decode(explode('.', $token)[1]);
-        return json_decode($payload);
+        $encoded_source = $this->base64_encode_source($source);
+        Log::debug("Encoded Source (base64):");
+        Log::debug($encoded_source);
+
+        // Remove padding equal characters
+        $encoded_source =  preg_replace('/=+$/', '', $encoded_source);
+
+        // Replace characters according to base64url specifications
+        $encoded_source = str_replace('+', '-', $encoded_source);
+        $encoded_source = str_replace('/', '-', $encoded_source);
+
+        return $encoded_source;
+    }
+
+    //generate signature
+    function generateSignature($key, $message)
+    {
+        $base64_signature = '';
+
+        try {
+            $signature = hash_hmac('sha256', $message, $key, true);
+            Log::debug("Raw signature: {$signature}");
+
+            //base64 signature
+            $base64_signature = $this->u8Base64url($signature);
+            Log::debug("HMAC-SHA256 Signature (base64url): {$base64_signature}");
+        } catch (Exception $e) {
+            Log::debug("Message: " . $e->getMessage());
+        }
+        return $base64_signature;
+    }
+
+    // Assuming $source is a binary string
+    function base64_encode_source($source)
+    {
+        // Convert the binary string into an array of ASCII values
+        $characters = array_map('ord', str_split($source));
+
+        // Convert ASCII values to characters and combine them into a string
+        $char_string = implode(array_map('chr', $characters));
+
+        // Encode the string in Base64
+        $encoded_source = base64_encode($char_string);
+
+        return $encoded_source;
     }
 }
