@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 use App\Classes\Authentication;
+use Str;
 
 class OtpController extends Controller
 {
@@ -90,20 +91,20 @@ class OtpController extends Controller
         //validation 
 
         //create authentication token
-        $AUTH_BEARER_TOKEN = $this->auth->generateToken();
+        $AUTH_BEARER_TOKEN = $request->post('AUTH_TOKEN');
         Log::debug("== My TOKEN ==");
         Log::debug($AUTH_BEARER_TOKEN);
 
         //create payload
         $payload = [
             "user" => "EMakato",
-            "correlationId" => "b30d3134-5624-4391-9f49-1b7a776d692e",
+            "correlationId" => Str::uuid()->toString(),
             "targetService" => "OTPVerify",
             "status" => "Verify",
             "data" => [
-                "caseReference" => "CO202402070803000005",
-                "processName" => "MandateApproval",
-                "otpPin" => "A5999"
+                "caseReference" => "190720240006",
+                "processName" => "EMakato Mandate Registration",
+                "otpPin" => "NR4TPT"
             ]
         ];
 
@@ -116,34 +117,41 @@ class OtpController extends Controller
         //push payload => NMB Direct Debits
         $response = Http::withHeaders($headers)->post($API_URL, $payload);
 
-        if ($response->status() == 200) {
-            $data = $response->json();
+        Log::debug("Response");
+        Log::debug($response->status());
+        Log::debug($response);
 
-            //check status via response code = 230 or 239 to modify response
+        //send response to eMakato
+        return response()->json($response->json());
 
-            //send response to eMakato
-            return response()->json([
-                'status' => "Success",
-                "caseReference" => "CO202402070803000005",
-                'response' => [
-                    'responseCode' => 210,
-                    'responseDescription' => "OTP Valid"
-                ]
-            ], 201);
-        } else {
-            $data = $response->json();
-            Log::debug("Error code =>" . $response->status());
-            Log::debug($data);
+        // if ($response->status() == 200) {
+        //     $data = $response->json();
 
-            //send response to eMakato
-            return response()->json([
-                'status' => "Fail",
-                "caseReference" => "CO202402070803000005",
-                'response' => [
-                    'responseCode' => 500,
-                    'responseDescription' => "Internal Server Error"
-                ]
-            ], 500);
-        }
+        //     //check status via response code = 230 or 239 to modify response
+
+        //     //send response to eMakato
+        //     return response()->json([
+        //         'status' => "Success",
+        //         "caseReference" => "CO202402070803000005",
+        //         'response' => [
+        //             'responseCode' => 210,
+        //             'responseDescription' => "OTP Valid"
+        //         ]
+        //     ], 201);
+        // } else {
+        //     $data = $response->json();
+        //     Log::debug("Error code =>" . $response->status());
+        //     Log::debug($data);
+
+        //     //send response to eMakato
+        //     return response()->json([
+        //         'status' => "Fail",
+        //         "caseReference" => "CO202402070803000005",
+        //         'response' => [
+        //             'responseCode' => 500,
+        //             'responseDescription' => "Internal Server Error"
+        //         ]
+        //     ], 500);
+        // }
     }
 }
