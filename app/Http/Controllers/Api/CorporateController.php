@@ -23,10 +23,13 @@ class CorporateController extends Controller
         //validation 
 
         //create authentication token
-        $AUTH_BEARER_TOKEN = $request->post('AUTH_TOKEN');
-        //$AUTH_BEARER_TOKEN = $this->auth->generateToken();
+        $AUTH_BEARER_TOKEN = $this->auth->generateToken();
         Log::debug("== My TOKEN ==");
         Log::debug($AUTH_BEARER_TOKEN);
+
+        return $AUTH_BEARER_TOKEN;
+
+        exit();
 
         //create data
         $data = [
