@@ -24,10 +24,7 @@ class CorporateController extends Controller
 
         //create authentication token
         $AUTH_BEARER_TOKEN = $this->auth->generateToken();
-        
-        return $AUTH_BEARER_TOKEN;
-
-        exit();
+    
 
         //create data
         $data = [

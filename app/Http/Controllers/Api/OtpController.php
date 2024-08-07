@@ -24,8 +24,6 @@ class OtpController extends Controller
 
         //create authentication token
         $AUTH_BEARER_TOKEN = $this->auth->generateToken();
-        Log::debug("== My TOKEN ==");
-        Log::debug($AUTH_BEARER_TOKEN);
 
         //create data
         $data = [
