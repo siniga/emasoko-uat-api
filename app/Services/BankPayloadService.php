@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\CollectionBatch;
 use App\Models\DebitOrder;
 use App\Models\Partner;
 use App\Models\PartnerAccount;
@@ -131,6 +132,27 @@ class BankPayloadService
             "caseReference" => rand(100000, 199999), //TODO: recreate case reference
             "processName" => "MandateApproval",
             "otpPin" => $otpPin
+        ];
+
+        return $payload;
+    }
+
+    //create collection 
+    public function collectionPayload(CollectionBatch $batch, $csv)
+    {
+        $payload = [
+            "collectionReference" => $batch->collectionReference,
+            "corporateReference" => $batch->corporateReference,
+            "selectedPostingDate" => $batch->selectedPostingDate,
+            "createdBy" => static::userNameFormat($batch->createdUser),
+            "verifiedBy" => static::userNameFormat($batch->createdUser),
+            "createdDate" => $batch->createdDate,
+            "verifyDate" => $batch->verifyDate,
+            "file" => [
+                "fileName" => "Payment Collection $batch->id",
+                "fileType" => "CSV",
+                "fileData" => content_to_base64($csv)
+            ]
         ];
 
         return $payload;

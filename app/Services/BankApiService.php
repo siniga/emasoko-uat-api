@@ -79,4 +79,38 @@ class BankApiService
 
         return 200;
     }
+
+    //send collection deduction
+    public function collectionCreate($data)
+    {
+        //create authentication token
+        $AUTH_BEARER_TOKEN = "";
+
+        //Create Headers
+        $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer ' . $AUTH_BEARER_TOKEN];
+
+        //Create Payload
+        $payload = [
+            "user" => "EMakato",
+            "correlationId" => Str::uuid()->toString(),
+            "targetService" => "CollectionCreate",
+            "status" => "Create",
+            "data" => $data
+        ];
+
+        //Create Payload
+        Log::debug('Collection Create Request');
+        Log::debug($payload);
+
+        //API URL 
+        $API_URL = env('API_URL');
+
+        //response
+        // $response = Http::withHeaders($headers)->post($API_URL, $payload);
+
+        // //logging response
+        // Log::debug('OTPVerify Response =>' . $response);
+
+        return 200;
+    }
 }

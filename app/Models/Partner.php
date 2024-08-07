@@ -61,6 +61,11 @@ class Partner extends Model
         return $this->belongsTo(Region::class, 'region_id');
     }
 
+    function debitOrders()
+    {
+        return $this->hasMany(DebitOrder::class, 'partner_id');
+    }
+
     function verifiedBy()
     {
         return $this->belongsTo(User::class, 'updated_by');
