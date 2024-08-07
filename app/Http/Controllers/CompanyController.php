@@ -373,9 +373,6 @@ class CompanyController extends Controller
         $partner->updated_by = auth()->id();
         $partner->save();
 
-        //create assessment stages
-        //$this->companyService->createAssessmentStages($partner);
-
         //send assessment alert
         $this->companyService->sendAssessmentAlert($partner);
 

@@ -83,6 +83,7 @@ class CompanyService
                     if ($partner_account->wasRecentlyCreated) {
                         $partner_account->send_verification = 1;
                         $partner->customer_code = rand(100000000,100999999);
+                        $partner->corporate_limit = floatval(str_replace(',', '', $data['corporate_limit'][$i]));
                         $partner->branch_code = $data['branch_code'][$i];
                         $partner->currency_id = $data['currency_id'][$i];
                         $partner_account->save();
@@ -176,12 +177,12 @@ class CompanyService
         //construct message
         $message = "<p><span class='font-weight-600'>{$partner->business_name}</span> completed registration process. Now your are required to perform assessment and approval process.</p>";
         $message .= "<p>Below are the information of service provider:</p>";
-        $message .= "<p>Business Name: <span class='font-weight-500'>{$partner->business_name}</span></p>";
-        $message .= "<p>Category: <span class='font-weight-500'>{$partner->partnerCategory->name}</span></p>";
-        $message .= "<p>TIN Number: <span class='font-weight-500'>{$partner->tin_number}</span></p>";
-        $message .= "<p>Year of Incorporation: <span class='font-weight-500'>{$partner->year_of_incorporation}</span></p>";
-        $message .= "<p>Email: <span class='font-weight-500'>{$partner->email}</span></p>";
-        $message .= "<p>Phone: <span class='font-weight-500'>{$partner->phone}</span></p>";
+        $message .= "<p>Business Name: <span class='font-weight-500'>{$partner->business_name}</span><br />";
+        $message .= "Category: <span class='font-weight-500'>{$partner->partnerCategory->name}</span><br />";
+        $message .= "TIN Number: <span class='font-weight-500'>{$partner->tin_number}</span><br />";
+        $message .= "Year of Incorporation: <span class='font-weight-500'>{$partner->year_of_incorporation}</span><br />";
+        $message .= "Email: <span class='font-weight-500'>{$partner->email}</span><br />";
+        $message .= "Phone: <span class='font-weight-500'>{$partner->phone}</span></p>";
 
         //query for users
         $users = User::whereHas('roles', function ($q) {
