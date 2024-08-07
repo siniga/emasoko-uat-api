@@ -682,10 +682,10 @@ class CompanyController extends Controller
                 "corporateReference" => $partner->reference
             ]
         ];
-        Log::debug('CorporateStatus Request =>' . $payload);
+        Log::debug('CorporateStatus Request =>' . json_encode($payload));
 
         //create authentication token
-        $AUTH_BEARER_TOKEN = "";
+        $AUTH_BEARER_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MjMwMzcyMzgsIm5iZiI6MTcyMzAzNzIzOCwiZXhwIjoxNzIzMDM3NTM4LCJpc3MiOiJFTWFrYXRvIiwiYXVkIjoiRU1ha2F0byJ9.mJ3db7uKbei-JOU4iXK-Tns6C9wGeLXsw2YH3-oTWf0";
 
         //Create Headers
         $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer ' . $AUTH_BEARER_TOKEN];
