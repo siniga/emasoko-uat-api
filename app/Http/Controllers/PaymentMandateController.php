@@ -509,6 +509,29 @@ class PaymentMandateController extends Controller
         }
     }
 
+    //mandate cancellation
+    function cancel_mandate(Request $request)
+    {
+        // post data
+        $debit_order = DebitOrder::where("uuid", $request->uuid)->first();
+
+        //create payload
+        $payload = $this->payloadService->mandateCancellationPayload($debit_order);
+
+        //service for sending request to API
+        $response = $this->bankApi->mandateCancellationRequest($payload);
+
+        if ($response == 200) {
+            //TODO: create deduction installments
+            $response = $this->deductionService->createInstallment($debit_order);
+
+            //response
+            return response()->json(['success' => true, 'success_msg' => "Mandate cancellation initiated"], 200);
+        } else {
+            return response()->json(['success' => false, 'error_msg' => "Failed to initiate mandate cancellation."], 200);
+        }
+    }
+
     //customer details
     function show($id)
     {

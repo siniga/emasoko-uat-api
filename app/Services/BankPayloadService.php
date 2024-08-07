@@ -63,6 +63,16 @@ class BankPayloadService
         return $payload;
     }
 
+    //corporate status payload
+    public function corporateStatusPayload(Partner $partner)
+    {
+        $payload = [
+            "corporateReference" =>  $partner->reference
+        ];
+
+        return $payload;
+    }
+
     //create mandate registration Payload
     public function mandateRegistrationPayload(DebitOrder $debitOrder)
     {
@@ -99,10 +109,40 @@ class BankPayloadService
             "createdDate" => $debitOrder->created_at,
             "verifyDate" => Carbon::now()->format('Y-m-d H:i:s'),
             "file" => [
-                "fileName" => "Evidance Of Aggrement",
+                "fileName" => "Evidence Of Aggrement",
                 "fileType" => "pdf",
                 //"fileData" => pdf_to_base64(public_path('assets/uploads/docs/' . $debitOrder->evidence_of_aggrement))
             ]
+        ];
+
+        return $payload;
+    }
+
+    //mandate status Payload
+    public function mandateStatusPayload(DebitOrder $debitOrder)
+    {
+        //create payload
+        $payload = [
+            "mandateReferenceNumber" => $debitOrder->reference
+        ];
+
+        return $payload;
+    }
+
+    //create mandate cancellation Payload
+    public function mandateCancellationPayload(DebitOrder $debitOrder)
+    {
+        $partner = $debitOrder->partner;
+
+        //create payload
+        $payload = [
+            "mandateReferenceNumber" => $debitOrder->reference,
+            "corporateReference" => $partner->reference,
+            "cancelReason" => "test",
+            "createdBy" => static::userNameFormat($debitOrder->verifiedBy),
+            "verifiedBy" => static::userNameFormat($debitOrder->verifiedBy),
+            "createdDate" => $debitOrder->createdDate,
+            "verifyDate" => $debitOrder->verifyDate
         ];
 
         return $payload;
@@ -137,7 +177,7 @@ class BankPayloadService
         return $payload;
     }
 
-    //create collection 
+    //create collection  payload
     public function collectionPayload(CollectionBatch $batch, $csv)
     {
         $payload = [
@@ -153,6 +193,16 @@ class BankPayloadService
                 "fileType" => "CSV",
                 "fileData" => content_to_base64($csv)
             ]
+        ];
+
+        return $payload;
+    }
+
+    // create collection status payload
+    public function collectionStatusPayload(CollectionBatch $batch)
+    {
+        $payload = [
+            "collectionReference" => $batch->collectionReference
         ];
 
         return $payload;
