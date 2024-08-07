@@ -90,9 +90,9 @@ class BankPayloadService
             "debitAccountHolderName" => $customerAccount->account_name,
             "debitAccountNumber" => $customerAccount->account_number,
             "debitAccountBankCode" => $partnerAccount->branch_code,
-            "debitAccountHolderAddress1" => $customer->address,
-            "debitAccountHolderAddress2" => null,
-            "debitAccountHolderAddress3" => null,
+            "debitAccountHolderAddress1" => "IBILILO",
+            "debitAccountHolderAddress2" => "MBEYA",
+            "debitAccountHolderAddress3" => "IBILILO",
             "corporateReference" => $partner->reference,
             "creditAccountNumber" => $partnerAccount->account_number,
             "creditAccountName" => $partnerAccount->account_name,
@@ -111,7 +111,7 @@ class BankPayloadService
             "file" => [
                 "fileName" => "Evidence Of Aggrement",
                 "fileType" => "pdf",
-                //"fileData" => pdf_to_base64(public_path('assets/uploads/docs/' . $debitOrder->evidence_of_aggrement))
+                "fileData" => pdf_to_base64(public_path('assets/uploads/docs/' . $debitOrder->evidence_of_aggrement))
             ]
         ];
 
