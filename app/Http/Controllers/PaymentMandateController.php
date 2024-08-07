@@ -164,7 +164,6 @@ class PaymentMandateController extends Controller
         return $pdf->download(date('YmdHis') . '-Paymentmandate.pdf');
     }
 
-
     //payment details form
     function create_account($ca_id = null, $do_id = null)
     {

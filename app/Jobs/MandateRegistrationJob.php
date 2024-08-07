@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Classes\Authentication;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -22,10 +23,12 @@ class MandateRegistrationJob implements ShouldQueue
      * @return void
      */
     protected $data;
+    private $auth;
 
     public function __construct($data)
     {
         $this->data = $data;
+        $this->auth = new Authentication();
     }
 
     /**
@@ -36,7 +39,7 @@ class MandateRegistrationJob implements ShouldQueue
     public function handle()
     {
         //create authentication token
-        $AUTH_BEARER_TOKEN = "";
+        $AUTH_BEARER_TOKEN = $this->auth->generateToken();
 
         //Create Headers
         $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer '.$AUTH_BEARER_TOKEN];
@@ -51,7 +54,7 @@ class MandateRegistrationJob implements ShouldQueue
         ];
 
         //Create Payload
-        Log::debug('MandateRegistration Request');
+        Log::debug('== MandateRegistration Request == ');
         Log::debug($payload);
 
         //API URL 
