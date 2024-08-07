@@ -682,6 +682,7 @@ class CompanyController extends Controller
                 "corporateReference" => $partner->reference
             ]
         ];
+        Log::debug('CorporateStatus Request =>' . $payload);
 
         //create authentication token
         $AUTH_BEARER_TOKEN = "";
@@ -696,6 +697,6 @@ class CompanyController extends Controller
         $response = Http::withHeaders($headers)->post($API_URL, $payload);
 
         //logging response
-        Log::channel('apiLogs')->Info('CorporateStatus Response =>' . $response);
+        Log::debug('CorporateStatus Response =>' . $response);
     }
 }

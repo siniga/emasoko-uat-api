@@ -46,6 +46,7 @@
 
                                 {{-- <template> --}}
                                     <button x-html="btnApprove" title="Approve Registration" class="btn btn-success btn-sm" x-on:click="approveRegistration('{{ $company->uuid }}')"></button>
+                                    <button x-html="btnStatus" title="Get Status" class="btn btn-success btn-sm" x-on:click="fetchRegistrationStatus('{{ $company->uuid }}')"></button>
                                 {{-- </template> --}}
                                 {{-- <button title="Assessment Process" class="btn btn-primary btn-sm"
                                     x-on:click="sidebarOpen = true, fetchData('{{ $company->uuid }}'), fetchAssessment('{{ $company->uuid }}', 'Company_Information');"
@@ -295,6 +296,9 @@
                 buttonConfirm: "Confirm",
                 confirm_btn: false,
 
+                //status
+                btnStatus: '<i class="fa fa-check"></i> Get Status',
+
                 //fetch url info
                 fetchData(uuid) {
                     fetch("/companies/assessment/" + uuid)
@@ -339,9 +343,44 @@
                             this.formLoading = false;
                             this.btnApprove = '<i class="fa fa-check"></i> Approve Registration';
                         });
+                },
 
+                
+                //approval company registration
+                fetchRegistrationStatus(){
+                    this.formLoading = true;
+                    this.btnStatus = '<i class="fas fa-spinner fa-spin"></i> Get Registration status....';
 
+                    //format form 
+                    this.formData.action = "APPROVE";
+                    this.formData.remarks = "Company registration approved";
 
+                    fetch("/companies/fetch-corporate-status", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                Accept: "application/json",
+                                'X-CSRF-TOKEN': document.head.querySelector('meta[name=csrf-token]').content
+                            },
+                            body: JSON.stringify(this.formData),
+                        }).then(response => response.json())
+                        .then(responseJson => {
+                            console.log(responseJson);
+                            this.status = responseJson.status
+
+                            $('#message_wrp').html(
+                                "<div class='alert alert-success rounded-sm'>" + responseJson.message + "</div>"
+                            );
+                        }).catch(() => {
+                            //display message
+                            $('#message_wrp').html(
+                                "<div class='alert alert-danger rounded-sm'>Something went wrong.</div>"
+                            );
+
+                        }).finally(() => {
+                            this.formLoading = false;
+                            this.btnStatus = '<i class="fa fa-check"></i> Get Status';
+                        });
                 },
 
                 //show assessment verdict
