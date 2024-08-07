@@ -2,7 +2,6 @@
 
 namespace App\Jobs;
 
-use App\Classes\Authentication;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -28,7 +27,7 @@ class CorporateRegistrationJob implements ShouldQueue
     public function __construct($data)
     {
         $this->data = $data;
-        $this->auth = new Authentication();
+        //$this->auth = new Authentication();
     }
 
     /**
@@ -39,7 +38,11 @@ class CorporateRegistrationJob implements ShouldQueue
     public function handle()
     {
         //create authentication token
-        $AUTH_BEARER_TOKEN = $this->auth->generateToken();
+        //$AUTH_BEARER_TOKEN = $this->auth->generateToken();
+        $AUTH_BEARER_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MjMwMzU5MTYsIm5iZiI6MTcyMzAzNTkxNiwiZXhwIjoxNzIzMDM2MjE2LCJpc3MiOiJFTWFrYXRvIiwiYXVkIjoiRU1ha2F0byJ9.v6i8-zt7q6H-D5n5lB1uCL589m6sD_-MXjbpSJgdgPg";
+
+        Log::debug("== New Token ==");
+        Log::debug($AUTH_BEARER_TOKEN);
 
         //Create Headers
         $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer '.$AUTH_BEARER_TOKEN];

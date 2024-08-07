@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-
 use App\Classes\Authentication;
+use Str;
 
 class CorporateController extends Controller
 {
@@ -23,17 +23,20 @@ class CorporateController extends Controller
         //validation 
 
         //create authentication token
-        $AUTH_BEARER_TOKEN = $this->auth->generateToken();
-    
+        $AUTH_BEARER_TOKEN = $request->post('AUTH_TOKEN');
+        //$AUTH_BEARER_TOKEN = $this->auth->generateToken();
+        Log::debug("== My TOKEN ==");
+        Log::debug($AUTH_BEARER_TOKEN);
 
         //create data
         $data = [
-            "CorporateReference" => $request->post('CorporateReference'),
-            "name" => "SYBRIN",
-            "corporateShortCode" => "SYB",
-            "clientCode" => "SY",
-            "customerCode" => "000000833",
-            "accountName" => "SOLOCODES",
+            "corporateReference" => $request->post('CorporateReference'),
+            "name" => $request->post('name'),
+            "corporateShortCode" => $request->post('corporateShortCode'),
+            
+            "clientCode" => $request->post('clientCode'),
+            "customerCode" => $request->post('customerCode'),
+            "accountName" => $request->post("accountName"),
             "primaryAccount" => $request->post('primaryAccount'),
             "branchSortCode" => "608",
             "currency" => "TZS",
@@ -42,10 +45,10 @@ class CorporateController extends Controller
             "address1" => "MBEYA",
             "address2" => "IBABA ILEJE MBEYA",
             "address3" => "IBABA ILEJE MBEYA",
-            "phoneNumber" => "1234567890",
-            "email" => "Sybrin@Sybrin.com",
-            "secondaryMobile" => "1234567890",
-            "secondaryEmail" => "test@sybrin.com",
+            "phoneNumber" => $request->post('phoneNumber'),
+            "email" => $request->post('email'),
+            "secondaryMobile" => $request->post('phoneNumber'),
+            "secondaryEmail" => $request->post('email'),
             "suffix" => "Large",
             "deductionsActive" => "false",
             "description" => "Coding company primary located in Tanzania",
@@ -53,7 +56,7 @@ class CorporateController extends Controller
             "bookedBalance" => 369791.125,
             "creditLimit" => 0,
             "debitLimit" => 0,
-            "coporateLimit" => 500000000,
+            "corporateLimit" => 50000000,
             "isOverallLimit" => true,
             "defaultAmount" => 500,
             "defaultPercentage" => 0,
@@ -67,7 +70,7 @@ class CorporateController extends Controller
         //create payload
         $payload = [
             "user" => "EMakato",
-            "correlationId" => $request->post('correlationId'),
+            "correlationId" => Str::uuid()->toString(),
             "targetService" => "CorporateRegistration",
             "status" => "Create",
             "data" => $data
@@ -88,6 +91,9 @@ class CorporateController extends Controller
         Log::debug("Response JSON");
         Log::debug($response->status());
         Log::debug($response);
+
+        //send response to eMakato
+        return response()->json($response->json());
 
         // if ($response->status() == 200) {
         //     $data = $response->json();
@@ -131,7 +137,7 @@ class CorporateController extends Controller
         //create payload
         $payload = [
             "user" => "EMakato",
-            "correlationId" => $request->post('correlationId'),
+            "correlationId" => Str::uuid()->toString(),
             "targetService" => "CorporateStatus",
             "status" =>  "Check",
             "data" => [
@@ -154,6 +160,9 @@ class CorporateController extends Controller
         Log::debug("Response JSON");
         Log::debug($response->status());
         Log::debug($response);
+
+        //send response to eMakato
+        return response()->json($response->json());
 
         // if ($response->status() == 200) {
         //     $data = $response->json();
