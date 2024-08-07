@@ -79,7 +79,7 @@
                             @if ($company->partnerAccounts->isNotEmpty())
                                 @foreach ($company->partnerAccounts as $data)
                                     <div class="row field-input">
-                                        <div class="col-lg-4">
+                                        <div class="col-lg-2">
                                             <div class="mb-3">
                                                 <label>Account Type <span class="text-danger">*</span></label>
                                                 @php
@@ -101,7 +101,7 @@
                                             </div>
                                         </div>
 
-                                        <div class="col-lg-4">
+                                        <div class="col-lg-2">
                                             <div class="mb-3">
                                                 <label class="bank_mno_name">Bank Name <span
                                                         class="text-danger">*</span></label>
@@ -138,6 +138,14 @@
                                             </div>
                                         </div>
 
+                                        <div class="col-lg-4">
+                                            <div class="mb-3">
+                                                <label>Corporate Limit <span class="text-danger">*</span></label>
+                                                {{ Form::text('corporate_limit[]', old('corporate_limit[]', $data->corporate_limit), ['class="form-control number-separator"', 'placeholder="Write corporate limit..."']) }}
+                                                <span class="formError"></span>
+                                            </div>
+                                        </div>
+
                                         <div class="col-lg-2">
                                             <div class="mb-3">
                                                 <label class="currency_id">Currency <span
@@ -153,16 +161,16 @@
                                                     $options = ['' => 'Select'] + $options;
                                                 @endphp
 
-                                                {{ Form::select('currency_id[]', $options, old('currency_id[]'), ['class' => 'form-control currency_id', 'id' => 'currency_id']) }}
+                                                {{ Form::select('currency_id[]', $options, old('currency_id[]', $data->currency_id), ['class' => 'form-control currency_id', 'id' => 'currency_id']) }}
                                                 <span class="formError"></span>
                                             </div>
                                         </div>
 
                                         <div class="col-lg-2">
                                             <div class="mb-3">
-                                                <label for="basicpill-namecard-input">Short Code <span
+                                                <label for="basicpill-namecard-input">Branch Code <span
                                                         class="text-danger">*</span></label>
-                                                {{ Form::text('sort_code[]', old('sort_code[]'), ['class="form-control"', 'placeholder="Write short code..."']) }}
+                                                {{ Form::text('branch_code[]', old('branch_code[]', $data->branch_code), ['class="form-control"', 'placeholder="Write branch code..."']) }}
                                                 <span class="formError"></span>
                                             </div>
                                         </div>
@@ -178,7 +186,7 @@
                                 @endforeach
                             @else
                                 <div class="row field-input">
-                                    <div class="col-lg-4">
+                                    <div class="col-lg-2">
                                         <div class="mb-3">
                                             <label for="basicpill-namecard-input">Account Type <span
                                                     class="text-danger">*</span></label>
@@ -201,7 +209,7 @@
                                         </div>
                                     </div>
 
-                                    <div class="col-lg-4">
+                                    <div class="col-lg-2">
                                         <div class="mb-3">
                                             <label class="bank_mno_name">Bank Name <span
                                                     class="text-danger">*</span></label>
@@ -239,6 +247,14 @@
                                         </div>
                                     </div>
 
+                                    <div class="col-lg-4">
+                                        <div class="mb-3">
+                                            <label>Corporate Limit <span class="text-danger">*</span></label>
+                                            {{ Form::text('corporate_limit[]', old('corporate_limit[]', $data->account_number), ['class="form-control number-separator"', 'placeholder="Write corporate limit..."']) }}
+                                            <span class="formError"></span>
+                                        </div>
+                                    </div>
+
                                     <div class="col-lg-2">
                                         <div class="mb-3">
                                             <label class="currency_id">Currency <span class="text-danger">*</span></label>
@@ -260,9 +276,9 @@
 
                                     <div class="col-lg-2">
                                         <div class="mb-3">
-                                            <label for="basicpill-namecard-input">Short Code <span
+                                            <label for="basicpill-namecard-input">Branch Code <span
                                                     class="text-danger">*</span></label>
-                                            {{ Form::text('sort_code[]', old('sort_code[]'), ['class="form-control"', 'placeholder="Write short code..."']) }}
+                                            {{ Form::text('branch_code[]', old('branch_code[]'), ['class="form-control"', 'placeholder="Write branch code..."']) }}
                                             <span class="formError"></span>
                                         </div>
                                     </div>
@@ -339,7 +355,7 @@
             let wrapper = $('.field_wrapper'); // Input field wrapper
             let fieldHTML = `
             <div class="row field-input row-div">
-                <div class="col-lg-4">
+                <div class="col-lg-2">
                     <div class="mb-3">
                         <label>Account Type <span class="text-danger">*</span></label>
                         <select name="account_type_id[]" class="form-control account_type_id">
@@ -349,7 +365,8 @@
                         <span class="formError"></span>
                     </div>
                 </div>
-                <div class="col-lg-4">
+
+                <div class="col-lg-2">
                     <div class="mb-3">
                         <label class="bank_mno_name">Bank Name <span class="text-danger">*</span></label>
                         <select name="account_id[]" class="form-control account_id">
@@ -359,6 +376,7 @@
                         <span class="formError"></span>
                     </div>
                 </div>
+
                 <div class="col-lg-4">
                     <div class="mb-3">
                         <label>Account Name <span class="text-danger">*</span></label>
@@ -366,6 +384,7 @@
                         <span class="formError"></span>
                     </div>
                 </div>
+
                 <div class="col-lg-4">
                     <div class="mb-3">
                         <label>Account Number <span class="text-danger">*</span></label>
@@ -373,6 +392,15 @@
                         <span class="formError"></span>
                     </div>
                 </div>
+
+                <div class="col-lg-4">
+                    <div class="mb-3">
+                        <label>Corporate Limit <span class="text-danger">*</span></label>
+                        <input type="text" name="corporate_limit[]" placeholder="Write corporate limit..." class="form-control number-separator">
+                        <span class="formError"></span>
+                    </div>
+                </div>
+
                 <div class="col-lg-2">
                     <div class="mb-3">
                         <label class="currency_id">Currency <span class="text-danger">*</span></label>
@@ -385,8 +413,8 @@
                 </div>
                 <div class="col-lg-2">
                     <div class="mb-3">
-                        <label>Short Code <span class="text-danger">*</span></label>
-                        <input type="text" name="sort_code[]" placeholder="Write short code..." class="form-control">
+                        <label>Branch Code <span class="text-danger">*</span></label>
+                        <input type="text" name="branch_code[]" placeholder="Write branch code..." class="form-control">
                         <span class="formError"></span>
                     </div>
                 </div>
@@ -423,16 +451,18 @@
                     "account_id[]": "required",
                     "account_name[]": "required",
                     "account_number[]": "required",
+                    "corporate_limit[]": "required",
                     "currency_id[]": "required",
-                    "sort_code[]": "required",
+                    "branch_code[]": "required",
                 },
                 messages: {
                     "account_type_id[]": "Account type required",
                     "account_id[]": "Bank/MNO name required",
                     "account_name[]": "Account name required",
                     "account_number[]": "Account number required",
+                    "corporate_limit[]": "Corporate limit required",
                     "currency_id[]": "Currency required",
-                    "sort_code[]": "Short Code required",
+                    "branch_code[]": "Branch Code required",
                 },
                 // Submit form
                 submitHandler: function(form, e) {
@@ -457,7 +487,7 @@
                             $('#submitButton').text('Next');
                             // Display message
                             $('.form-message').html(
-                                "<div class='alert alert-success py-2.5 px-2'>Service Provider collection account(s) saved</div>"
+                                "<div class='alert alert-success py-2.5 px-2'>Service provider collection account(s) saved</div>"
                             );
                             // Set timer
                             setTimeout(function() {

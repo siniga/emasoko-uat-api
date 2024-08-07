@@ -16,7 +16,7 @@
                 </li>
 
                 @if (Auth::user()->hasRole(['admin']))
-                    <li class="{{ Route::is('companies.lists') ? "mm-active":""}}">
+                    <li class="{{ Route::has('companies') ? "mm-active":""}}">
                         <a href="{{ route('companies.lists') }}" class="waves-effect ">
                             <i class="bx bx-building"></i>
                             <span key="t-layouts">Service Providers</span>
@@ -32,7 +32,7 @@
                     </li>
            
 
-                    <li class="{{ Route::is('customer-accounts.lists') ? "mm-active":""}}">
+                    <li class="{{ Route::has('customer-accounts') ? "mm-active":""}}">
                         <a href="{{ route('customer-accounts.lists') }}" class="waves-effect">
                             <i class='bx bxs-user-badge'></i>
                             <span key="t-layouts">Customer Accounts</span>

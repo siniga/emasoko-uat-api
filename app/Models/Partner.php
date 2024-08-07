@@ -16,12 +16,8 @@ class Partner extends Model
         parent::boot();
         static::creating(function ($model) {
             $model->reference = Partner::document_number("reference", "CO", 6, true, false);
-            $acronym = "";
-            $words = preg_split("/[\s,_-]+/", $model->business_name);
-            foreach ($words as $w) {
-                $acronym .= mb_substr($w, 0, 1);
-            }
-            $model->short_code = $acronym;
+            $model->short_code = strtoupper(substr($model->business_name, 0, 3));
+            $model->client_code = strtoupper(substr($model->business_name, 0, 2));
         });
     }
 
@@ -63,6 +59,11 @@ class Partner extends Model
     function region()
     {
         return $this->belongsTo(Region::class, 'region_id');
+    }
+
+    function debitOrders()
+    {
+        return $this->hasMany(DebitOrder::class, 'partner_id');
     }
 
     function verifiedBy()

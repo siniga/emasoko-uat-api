@@ -86,8 +86,9 @@
                                             $options = [
                                                 0 => 'Registration Process',
                                                 1 => 'Completed Registration',
-                                                2 => 'Assessment Process',
-                                                3 => 'Approved',
+                                                100 => 'Approval Process',
+                                                200 => 'Approved',
+                                                403 => 'Rejected',
                                             ];
                                             $options = ['' => '-- Select Status --'] + $options;
                                         @endphp
@@ -212,12 +213,12 @@
                                             <td>
                                                 @if ($company->status == 0)
                                                     <span class="badge bg-warning font-size-10 ">Registration Process</span>
-                                                @elseif ($company->status == 1)
-                                                    <span class="badge bg-info font-size-10">Completed Registration</span>
-                                                @elseif($company->status == 2)
-                                                    <span class="badge bg-info font-size-10">Assessment Process</span>
-                                                @elseif($company->status == 3)
+                                                @elseif($company->status == 100)
+                                                    <span class="badge bg-info font-size-10">Approval Process</span>
+                                                @elseif($company->status == 200)
                                                     <span class="badge bg-success-1 font-size-10">Approved</span>
+                                                @elseif($company->status == 403)
+                                                    <span class="badge bg-danger font-size-10">Rejected</span>
                                                 @endif
                                             </td>
                                             <td>

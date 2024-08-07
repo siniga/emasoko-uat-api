@@ -21,23 +21,26 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Classes\Messaging;
 use App\Http\Requests\CustomerAccountRequest;
 use App\Http\Requests\CustomerDeductionRequest;
+use App\Jobs\MandateRegistrationJob;
 use App\Jobs\SendSMSJob;
 use App\Models\CustomerPartner;
 use App\Models\Partner;
 use App\Models\SmsLog;
+use App\Services\BankApiService;
+use App\Services\BankApiServices;
+use App\Services\BankPayloadService;
+use App\Services\DeductionService;
 use App\Services\MnoBankServices;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Session;
 use PDF;
 
 class PaymentMandateController extends Controller
 {
-    private $messaging;
-    public function __construct()
+
+    public function __construct(protected DeductionService $deductionService, protected BankPayloadService $payloadService, protected Messaging $messaging, protected BankApiService $bankApi)
     {
         $this->middleware('auth');
-
-        //messaging
-        $this->messaging = new Messaging();
     }
 
     /**
@@ -287,6 +290,7 @@ class PaymentMandateController extends Controller
                         }
                     }
                 ],
+                'evidence_of_aggrement' => 'required',
             ],
             [
                 'provider_id.required_if' => 'Service provider required',
@@ -300,6 +304,7 @@ class PaymentMandateController extends Controller
                 'start_date.required' => 'Start date required',
                 'deduction_end.required' => 'Deduction end required',
                 'end_date.required_if' => 'End date required',
+                'evidence_of_aggrement.required' => 'Evidence of aggrement is required',
             ]
         );
 
@@ -318,13 +323,13 @@ class PaymentMandateController extends Controller
 
         //debit order uuid
         if ($request->debit_order_uuid != null)
-            $do_uuid = $request->debit_order_uuid;
+            $debit_uuid = $request->debit_order_uuid;
         else
-            $do_uuid = Str::uuid();
+            $debit_uuid = Str::uuid();
 
         //create or update debit order
-        if ($do_uuid != null) {
-            $debit_order = DebitOrder::where(['uuid' => $do_uuid]);
+        if ($debit_uuid != null) {
+            $debit_order = DebitOrder::where(['uuid' => $debit_uuid]);
 
             if ($debit_order->count() > 0) {
                 $debit_order = $debit_order->first();
@@ -343,12 +348,12 @@ class PaymentMandateController extends Controller
             ]);
         }
 
-        $debit_order->uuid = $do_uuid;
-
+        $debit_order->uuid = $debit_uuid;
         $debit_order->total_amount = $loan_amount;
         if ($debit_order->created_by == null) {
             $debit_order->created_by = auth()->id();
         }
+        $debit_order->reference = Carbon::now()->format('Ymd') . rand(1000, 1999);
         $debit_order->debit_type = $request->input('debit_type');
         $debit_order->installment_amount = $installment_amount;
         $debit_order->max_installment_amount = $min_installment_amount;
@@ -360,7 +365,7 @@ class PaymentMandateController extends Controller
 
         // calculate end date
         if ($request->input('deduction_end') === 'totalLoanCovered') {
-            // calculate end date from start date
+            // TODO: Create end date by check number of installment
             $debit_order->end_date = date('Y-m-d', strtotime($request->input('start_date') . '+2 year'));
         } else if ($request->input('deduction_end') == 'specificDate') {
             // fixed end date
@@ -374,6 +379,7 @@ class PaymentMandateController extends Controller
             $path->move('assets/uploads/docs', $docsName);
             $debit_order->evidence_of_aggrement = $docsName;
         }
+        $debit_order->approved = "PENDING";
         $debit_order->save();
 
         // Link customer with service provider
@@ -386,26 +392,17 @@ class PaymentMandateController extends Controller
         $customer_partner->created_by = Auth::user()->id;
         $customer_partner->save();
 
-        $mno = new MnoBankServices($customer_account->account);
-        $response = $mno->mandateRegistration($request, $debit_order);
-        if (!$response->status) {
-            $debit_order->approved = "REJECTED";
-            $debit_order->save();
-            return Redirect::back()->with('danger', $response->message);
-        }
-        $debit_order->approved = "PENDING";
-        $debit_order->save();
         // redirect with message
-        return Redirect::route('payment-mandate.preview', [$do_uuid])->with('success', "Customer deduction information saved");
+        return Redirect::route('payment-mandate.preview', [$debit_uuid])->with('success', "Customer deduction information saved");
     }
 
     //customer preview
-    function preview($do_id)
+    function preview($debit_uuid)
     {
         $title = "Payment Mandate";
 
         // debit order
-        $debit_order = DebitOrder::where(['uuid' => $do_id])->firstOrFail();
+        $debit_order = DebitOrder::where(['uuid' => $debit_uuid])->firstOrFail();
 
         // customer account
         $customer_account = $debit_order->customerAccount ?? null;
@@ -415,12 +412,12 @@ class PaymentMandateController extends Controller
     }
 
     // cancel registration
-    function cancel($do_id)
+    function cancel($debit_uuid)
     {
         $title = 'Cancel payment mandate';
 
         // debit order
-        $debit_order = DebitOrder::where(['uuid' => $do_id])->first();
+        $debit_order = DebitOrder::where(['uuid' => $debit_uuid])->first();
 
         //delete debit order
         $debit_order->delete();
@@ -433,44 +430,23 @@ class PaymentMandateController extends Controller
     function confirm(Request $request)
     {
         //post data
-        $do_id = $request->input('mandate_id');
+        $debit_uuid = $request->input('mandate_id');
 
         //debit order
-        $debit_order = DebitOrder::findOrFail($do_id);
+        $debit_order = DebitOrder::findOrFail($debit_uuid);
 
         //update status of debit mandate
         $debit_order->status = 'submitted';
         $debit_order->save();
 
-        //customer details
-        $customer_name = $debit_order->customerAccount->account_name;
+        //create payload
+        $payload = $this->payloadService->mandateRegistrationPayload($debit_order);
 
-        //sending sms to customer
-        $messageId = $this->messaging->generateMessageId();
-        $message = "Habari {$customer_name}, eMakato imeweka makato yako, utatumiwa ujumbe wa kuhakiki taarifa zako.";
-
-        $sms_log = SmsLog::firstOrNew([
-            'message_id' => $messageId,
-            'phone' => $debit_order->customerAccount->phone,
-            'sender' => "LAINA"
-        ]);
-        $sms_log->message = $message;
-        $sms_log->sms_count = 1;
-        $sms_log->created_by = Auth::user()->id;
-        $sms_log->save();
-
-        //send sms in background
-        $data = [
-            "message_id" => $messageId,
-            "schedule" => null
-        ];
-        dispatch(new SendSMSJob($data));
+        //TODO: Create Request to NMB
+        dispatch(new MandateRegistrationJob($payload));
 
         //response
-        $success_message = "Debit mandate confirmed";
-
-        //response
-        return response()->json(['success' => false, 'success_msg' => $success_message], 200);
+        return response()->json(['success' => false, 'success_msg' => "Debit mandate processed"], 200);
     }
 
     //saving application
@@ -487,24 +463,73 @@ class PaymentMandateController extends Controller
         $mandate->save();
 
         //response
-        $success_message = "Debit mandate saved";
+        return response()->json(['success' => false, 'success_msg' => "Debit mandate saved"], 200);
+    }
 
-        //response
-        return response()->json(['success' => false, 'success_msg' => $success_message], 200);
+    //resend otp
+    function resend_otp(Request $request)
+    {
+        //post data
+        $debit_order = DebitOrder::where("uuid", $request->uuid)->first();
+
+        //create payload
+        $payload = $this->payloadService->createOtpPayload($debit_order);
+
+        //service for sending requests
+        $response = $this->bankApi->resendOtpRequest($payload);
+
+        if ($response == 200) {
+            //response
+            return response()->json(['success' => true, 'success_msg' => "OTP request initiated"], 200);
+        } else {
+            return response()->json(['success' => false, 'error_msg' => "Failed to initiate OTP request."], 200);
+        }
     }
 
     // verify_otp
     function verify_otp(Request $request)
     {
         // post data
-        $debitOrder = DebitOrder::where("uuid", $request->reference)->first();
-        $mno = new MnoBankServices($debitOrder->customerAccount->account ?? null);
-        $verified = $mno->mandateStatusAndValidation($request, $debitOrder);
-        if ($verified->status) {
-            $debitOrder->status = "verified";
-            $debitOrder->save();
+        $debit_order = DebitOrder::where("uuid", $request->uuid)->first();
+
+        //create payload
+        $payload = $this->payloadService->verifyOtpPayload($debit_order, $request->otpPin);
+
+        //service for sending request to API
+        $response = $this->bankApi->verifyOtpRequest($payload);
+
+        if ($response == 200) {
+            //TODO: create deduction installments
+            $response = $this->deductionService->createInstallment($debit_order);
+
+            //response
+            return response()->json(['success' => true, 'success_msg' => "OTP verified"], 200);
+        } else {
+            return response()->json(['success' => false, 'error_msg' => "Failed to verify OTP."], 200);
         }
-        return $verified;
+    }
+
+    //mandate cancellation
+    function cancel_mandate(Request $request)
+    {
+        // post data
+        $debit_order = DebitOrder::where("uuid", $request->uuid)->first();
+
+        //create payload
+        $payload = $this->payloadService->mandateCancellationPayload($debit_order);
+
+        //service for sending request to API
+        $response = $this->bankApi->mandateCancellationRequest($payload);
+
+        if ($response == 200) {
+            //TODO: create deduction installments
+            $response = $this->deductionService->createInstallment($debit_order);
+
+            //response
+            return response()->json(['success' => true, 'success_msg' => "Mandate cancellation initiated"], 200);
+        } else {
+            return response()->json(['success' => false, 'error_msg' => "Failed to initiate mandate cancellation."], 200);
+        }
     }
 
     //customer details
@@ -665,7 +690,6 @@ class PaymentMandateController extends Controller
         //redirect
         return Redirect::route('payment-mandate.lists')->with('danger', 'Payment mandate deleted!');
     }
-
 
     //send remainder for payment mandate
     public function sendRemainder($id)

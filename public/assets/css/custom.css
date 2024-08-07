@@ -302,13 +302,13 @@ table.table {
 }
 
 table.table th {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   text-align: left;
   color: #212121;
   padding: 10px !important;
-  background: #ECEFF1;
-  border: 1px solid #FFFFFF;
+  /* background: #ECEFF1;
+  border: 1px solid #FFFFFF; */
 }
 
 
@@ -321,12 +321,13 @@ table.table td {
   padding: 12px !important;
 }
 
-/*
+
 table.table td a {
   text-decoration: none !important;
   font-weight: normal !important;
 }
 
+/*
 table.table th a {
   text-align: right;
   text-decoration: none !important;

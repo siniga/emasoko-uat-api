@@ -3,12 +3,14 @@
 namespace App\Console\Commands;
 
 use App\Models\CollectionBatch;
-use App\Models\CollectionDebitOrder;
-use App\Models\DebitOrder;
-use App\Services\MnoBankServices;
+use App\Models\Installment;
+use App\Models\Partner;
+use App\Services\BankPayloadService;
+use App\Services\BankApiService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class CreateCollectionBatch extends Command
 {
@@ -43,22 +45,21 @@ class CreateCollectionBatch extends Command
      */
     public function handle()
     {
-        $debits = DebitOrder::whereHas("partner", function ($query) {
-            return $query->where("business_name", "NHC");
-        })->where(function ($query) {
-            return $query->where(function ($query) {
-                return $query->whereNull('next_debit_date')->whereBetween('start_date', [Carbon::now()->startOfDay(), Carbon::now()->endOfDay()]);
-            })->orWhere(function ($query) {
-                return $query->whereBetween('next_debit_date', [Carbon::now()->startOfDay(), Carbon::now()->endOfDay()]);
-            });
-        })->with('customerAccount')->get()->groupBy("partner_id");
-        foreach ($debits as $pDebit => $partnerDebits) {
-            $partnerDebits = $partnerDebits->groupBy("customerAccount.account_id");
-            foreach ($partnerDebits as $debit => $dbts) {
-                DB::beginTransaction();
-                $info = $dbts->first();
-                $partner = $info->partner;
+        //debit orders => status=OPEN
+        $partners = Partner::whereHas('debitOrders', function ($query) {
+            return $query->where('contract_status', '=', 'OPEN')
+                ->whereBetween('next_debit_date', [Carbon::now()->startOfDay(), Carbon::now()->endOfDay()]);
+        })->get();
+
+        foreach ($partners as $partner) {
+            //1. Select debit orders based of partner
+            $debit_orders = $partner->debitOrders->where('contract_status', '=', 'OPEN')
+                ->whereBetween('next_debit_date', [Carbon::now()->startOfDay(), Carbon::now()->endOfDay()]);
+
+            if ($debit_orders->count() > 0) {
+                //2. Create collection batch based on partner 
                 $batch = CollectionBatch::create([
+                    "collectionReference" => rand(10000, 99999),
                     "corporateReference" => $partner->reference,
                     "selectedPostingDate" => null,
                     "createdBy" => 1,
@@ -66,31 +67,31 @@ class CreateCollectionBatch extends Command
                     "createdDate" => Carbon::now(),
                     "verifyDate" => Carbon::now(),
                 ]);
+
                 if ($batch->wasRecentlyCreated) {
-                    foreach ($dbts as $dbt) {
-                        $collectionDebitOrder = CollectionDebitOrder::create([
-                            "collection_batch_id" => $batch->id,
-                            "debit_order_id" => $dbt->id,
-                            "status" => "pending",
-                        ]);
-                        if ($collectionDebitOrder->wasRecentlyCreated) {
-                            $periodicity = str_replace('ly', '', strtolower($dbt->periodicity));
-                            $dbt->next_debit_date = date('Y-m-d H:i:s', strtotime("+1 " . $periodicity, strtotime($dbt->next_debit_date ?? $dbt->start_date)));
-                            $dbt->save();
+                    //3. Create CSV file based installment
+                    $csv = "SERIAL No.;BANK CODE;BRANCH NAME;EMPLOYEE NUMBER;CUSTOMER NAME;ACCOUNT NO; AMOUNT\n";
+
+                    foreach ($debit_orders as $val) {
+                        $installments = Installment::where(['debit_order_id' => $val->id, 'status' => 'OPEN'])
+                            ->whereDate('payment_date', '<=', $val->next_debit_date)->get();
+
+                        foreach ($installments as $installment) {
+                            $csv .= "{$installment->id};16;NMB;{$val->customerAccount->account_number};{$val->customerAccount->account_name};{$val->customerAccount->account_number};{$installment->installment_amount}\n";
                         }
                     }
                 }
-                $mnoBank = new MnoBankServices($info->customerAccount->account);
-                $res = $mnoBank->collectionFileReceptionAndValidation(request(), $batch);
-                echo "Batch Created\n";
-                if ($res->status) {
-                    sleep(20);
-                    echo "Check Status\n";
-                    $mnoBank->collectionStatus(request(), $batch);
-                }
-                DB::commit();
+
+                //4. Create payload for collection 
+                $bankPayload = new BankPayloadService();
+                $payload = $bankPayload->collectionPayload($batch, $csv);
+
+                //5. Send payload to a server
+                $bankApi =  new BankApiService();
+                $response = $bankApi->collectionCreate($payload);
             }
         }
-        return 0;
+
+        return 200;
     }
 }

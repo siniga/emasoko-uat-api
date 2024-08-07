@@ -11,12 +11,12 @@ class OtpVerificationInput extends Component
      *
      * @return void
      */
-    public $reference;
+    public $uuid;
     public $action;
     public $url;
-    public function __construct($reference, $action, $url)
+    public function __construct($uuid, $action, $url)
     {
-        $this->reference = $reference;
+        $this->uuid = $uuid;
         $this->action = $action;
         $this->url = $url;
     }

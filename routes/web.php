@@ -112,6 +112,7 @@ Route::get('companies/assessment-stages', [CompanyController::class, 'companyAss
 Route::get('companies/assessment-approval', [CompanyController::class, 'companyAssessmentApproval'])->name('companies.assessment-approval');
 Route::post('companies/store-assessment', [CompanyController::class, 'storeAssessment'])->name('companies.store-assessment');
 Route::post('companies/confirm-assessment', [CompanyController::class, 'confirmAssessment'])->name('companies.confirm-assessment');
+Route::post('companies/fetch-corporate-status', [CompanyController::class, 'fetchCorporateStatus'])->name('companies.fetch-corporate-status');
 
 
 //customer accounts
@@ -150,7 +151,8 @@ Route::get('payment-mandate/preview/{do_uuid}', [PaymentMandateController::class
 Route::get('payment-mandate/cancel/{do_uuid}', [PaymentMandateController::class, 'cancel'])->name('payment-mandate.cancel');
 Route::post('payment-mandate/confirm', [PaymentMandateController::class, 'confirm'])->name('payment-mandate.confirm');
 Route::post('payment-mandate/saving', [PaymentMandateController::class, 'saving'])->name('payment-mandate.saving');
-Route::post('payment-mandate/verify/otp', [PaymentMandateController::class, 'verify_otp'])->name('payment-mandate.verify_otp');
+Route::post('payment-mandate/resend-otp', [PaymentMandateController::class, 'resend_otp'])->name('payment-mandate.resend-otp');
+Route::post('payment-mandate/verify-otp', [PaymentMandateController::class, 'verify_otp'])->name('payment-mandate.verify-otp');
 
 //details
 Route::get('payment-mandate/show/{do_uuid}', [PaymentMandateController::class, 'show'])->name('payment-mandate.show');

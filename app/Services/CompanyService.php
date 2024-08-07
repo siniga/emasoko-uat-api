@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Jobs\SendEmailJob;
+use App\Models\AppVariable;
 use App\Models\DocumentCategory;
 use App\Models\Partner;
 use App\Models\PartnerAccount;
@@ -12,9 +13,12 @@ use App\Models\PartnerStaff;
 use App\Models\PartnerUser;
 use App\Models\RoleUser;
 use App\Models\User;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+
+use Illuminate\Support\Facades\Auth;
 
 class CompanyService
 {
@@ -67,6 +71,7 @@ class CompanyService
         if ($data['account_id']) {
             for ($i = 0; $i < sizeof($data['account_id']); $i++) {
                 if ($data['account_id'][$i] != '' && $data['account_name'][$i] != '' && $data['account_name'][$i] != '') {
+                    //create new partner account
                     $partner_account = PartnerAccount::firstOrCreate([
                         'partner_id' => $partner['id'],
                         'partner_uuid' => $partner['uuid'],
@@ -74,11 +79,13 @@ class CompanyService
                         'account_id' => $data['account_id'][$i],
                         'account_name' => $data['account_name'][$i],
                         'account_number' => $data['account_number'][$i],
-                        'sort_code' => $data['sort_code'][$i],
-                        'currency_id' => $data['currency_id'][$i],
                     ]);
                     if ($partner_account->wasRecentlyCreated) {
                         $partner_account->send_verification = 1;
+                        $partner->customer_code = rand(100000000,100999999);
+                        $partner->corporate_limit = floatval(str_replace(',', '', $data['corporate_limit'][$i]));
+                        $partner->branch_code = $data['branch_code'][$i];
+                        $partner->currency_id = $data['currency_id'][$i];
                         $partner_account->save();
                     }
                 }
@@ -170,12 +177,12 @@ class CompanyService
         //construct message
         $message = "<p><span class='font-weight-600'>{$partner->business_name}</span> completed registration process. Now your are required to perform assessment and approval process.</p>";
         $message .= "<p>Below are the information of service provider:</p>";
-        $message .= "<p>Business Name: <span class='font-weight-500'>{$partner->business_name}</span></p>";
-        $message .= "<p>Category: <span class='font-weight-500'>{$partner->partnerCategory->name}</span></p>";
-        $message .= "<p>TIN Number: <span class='font-weight-500'>{$partner->tin_number}</span></p>";
-        $message .= "<p>Year of Incorporation: <span class='font-weight-500'>{$partner->year_of_incorporation}</span></p>";
-        $message .= "<p>Email: <span class='font-weight-500'>{$partner->email}</span></p>";
-        $message .= "<p>Phone: <span class='font-weight-500'>{$partner->phone}</span></p>";
+        $message .= "<p>Business Name: <span class='font-weight-500'>{$partner->business_name}</span><br />";
+        $message .= "Category: <span class='font-weight-500'>{$partner->partnerCategory->name}</span><br />";
+        $message .= "TIN Number: <span class='font-weight-500'>{$partner->tin_number}</span><br />";
+        $message .= "Year of Incorporation: <span class='font-weight-500'>{$partner->year_of_incorporation}</span><br />";
+        $message .= "Email: <span class='font-weight-500'>{$partner->email}</span><br />";
+        $message .= "Phone: <span class='font-weight-500'>{$partner->phone}</span></p>";
 
         //query for users
         $users = User::whereHas('roles', function ($q) {
@@ -188,7 +195,7 @@ class CompanyService
                 $data = [
                     "email" => $user->email,
                     "name" => $user->name,
-                    "subject" => "Service Provider Registration",
+                    "subject" => "Corporate Registration",
                     "body" => $message
                 ];
                 dispatch(new SendEmailJob($data));
@@ -197,18 +204,12 @@ class CompanyService
     }
 
     //process company assessment
-    function processAssessment(Partner $partner): int
+    function processAssessment(Partner $partner, $action)
     {
-        //check pending, rejected or approved
-        $pending_approvals = PartnerApproval::where(['partner_id' => $partner->id])
-            ->where(function ($query) {
-                $query->where('status', '=', 'pending')
-                    ->orWhere('status', '=', 'rejected');
-            });
-
-        if ($pending_approvals->count() > 0) {
+        if ($action == "REJECTED") {
             //update company registration status
-            $partner->status = 2;
+            $partner->status = 403; //forbiden
+            $partner->updated_by = auth()->id();
             $partner->save();
 
             //deactivate partner users
@@ -229,16 +230,17 @@ class CompanyService
             $data = [
                 "email" => $partner->email,
                 "name" => $partner->business_name,
-                "subject" => "eMakato Assessment Approval",
+                "subject" => "eMakato Corporate Registration",
                 "body" => $message
             ];
             dispatch(new SendEmailJob($data));
 
             //return statement
-            return 2;
-        } else {
+            return 403;
+        } else if($action == "APPROVE"){
             //update company registration status
-            $partner->status = 3;
+            $partner->status = 200; //OK
+            $partner->updated_by = auth()->id();
             $partner->save();
 
             if ($partner->partnerUsers->isNotEmpty()) {
@@ -251,26 +253,25 @@ class CompanyService
             }
 
             //default credentials
-            $user = User::where(['email' => $partner->email, 'tin_number' => $partner->tin_number])->first();
+            // $user = User::where(['email' => $partner->email, 'tin_number' => $partner->tin_number])->first();
 
-            //construct message
-            $message = "<p>Company information has been approved by eMakato.</p>";
-            $message .= "<p>You can now start using your eMakato platform. Login to your account by <a href=" . url('login') . ">CLICK HERE.</a></p>";
-            $message .= "<p>Below are the credentials for you to login to the platform :</p>";
-            $message .= "<p>Username/Email: <span class='font-weight-500'>{$user->email}</span></p>";
-            $message .= "<p>We will share password with you through phone. You can change default password after login to the platform.</p>";
+            // //construct message
+            // $message = "<p>Company information has been approved by eMakato.</p>";
+            // $message .= "<p>You can now start using your eMakato platform. Login to your account by <a href=" . url('login') . ">CLICK HERE.</a></p>";
+            // $message .= "<p>Below are the credentials for you to login to the platform :</p>";
+            // $message .= "<p>Username/Email: <span class='font-weight-500'>{$user->email}</span></p>";
+            // $message .= "<p>We will share password with you through phone. You can change default password after login to the platform.</p>";
 
-            //send email
-            $data = [
-                "email" => $partner->email,
-                "name" => $partner->business_name,
-                "subject" => "eMakato Assessment Approval",
-                "body" => $message
-            ];
-            dispatch(new SendEmailJob($data));
+            // //send email
+            // $data = [
+            //     "email" => $partner->email,
+            //     "name" => $partner->business_name,
+            //     "subject" => "eMakato Corporate Registration",
+            //     "body" => $message
+            // ];
+            // dispatch(new SendEmailJob($data));
 
-            //return statement
-            return 3;
+            return 200;
         }
     }
 }

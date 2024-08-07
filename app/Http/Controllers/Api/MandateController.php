@@ -23,8 +23,6 @@ class MandateController extends Controller
         //create authentication token
         //$AUTH_BEARER_TOKEN = $this->auth->generateToken();
         $AUTH_BEARER_TOKEN = $request->post('AUTH_TOKEN');
-        Log::debug("== My TOKEN ==");
-        Log::debug($AUTH_BEARER_TOKEN);
 
         //create data
         $data = [

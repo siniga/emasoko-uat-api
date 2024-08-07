@@ -327,6 +327,7 @@ class NmbRequest extends BankMnoProcedure
             'data' => []
         ], Response::HTTP_BAD_REQUEST)->getData();
     }
+
     public function mandateCancellationStatus(Request $request, DebitOrder $debitOrder)
     {
         $myRequest = new Request();
@@ -378,6 +379,7 @@ class NmbRequest extends BankMnoProcedure
             'data' => []
         ], Response::HTTP_BAD_REQUEST)->getData();
     }
+
     public function mandateCancellationStatusAndValidation(Request $request, DebitOrder $debitOrder)
     {
         $myRequest = new Request();
@@ -453,6 +455,7 @@ class NmbRequest extends BankMnoProcedure
             'data' => []
         ], Response::HTTP_BAD_REQUEST)->getData();
     }
+    
     public function collectionStatus(Request $request, CollectionBatch $batch)
     {
         $myRequest = new Request();
