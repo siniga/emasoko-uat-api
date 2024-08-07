@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Classes\Authentication;
 use App\Exports\CompanyExport;
 use App\Http\Requests\CompanyAccountRequest;
 use App\Http\Requests\CompanyDetailRequest;
@@ -36,7 +37,7 @@ use PDF;
 
 class CompanyController extends Controller
 {
-    public function __construct(protected CompanyService $companyService, protected BankPayloadService $payloadService)
+    public function __construct(protected CompanyService $companyService, protected BankPayloadService $payloadService, protected Authentication $auth)
     {
         $this->middleware('auth');
     }
@@ -685,7 +686,7 @@ class CompanyController extends Controller
         Log::debug('CorporateStatus Request =>' . json_encode($payload));
 
         //create authentication token
-        $AUTH_BEARER_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MjMwMzcyMzgsIm5iZiI6MTcyMzAzNzIzOCwiZXhwIjoxNzIzMDM3NTM4LCJpc3MiOiJFTWFrYXRvIiwiYXVkIjoiRU1ha2F0byJ9.mJ3db7uKbei-JOU4iXK-Tns6C9wGeLXsw2YH3-oTWf0";
+        $AUTH_BEARER_TOKEN = $this->auth->generateToken();
 
         //Create Headers
         $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer ' . $AUTH_BEARER_TOKEN];
