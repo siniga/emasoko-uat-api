@@ -352,7 +352,7 @@ class PaymentMandateController extends Controller
         if ($debit_order->created_by == null) {
             $debit_order->created_by = auth()->id();
         }
-        $debit_order->reference = Carbon::now()->format('Ymd') . rand(1000, 1999);
+        $debit_order->reference = Carbon::now()->format('dmY') . rand(1000, 1999);
         $debit_order->debit_type = $request->input('debit_type');
         $debit_order->installment_amount = $installment_amount;
         $debit_order->max_installment_amount = $min_installment_amount;
@@ -360,6 +360,7 @@ class PaymentMandateController extends Controller
         $debit_order->periodicity = $request->input('periodicity');
         $debit_order->installment_number = $request->input('number_of_installment');
         $debit_order->start_date = $request->input('start_date');
+        $debit_order->next_debit_date = $request->input('start_date');
         $debit_order->deduction_end_date = $request->input('deduction_end');
 
         // calculate end date
@@ -435,7 +436,7 @@ class PaymentMandateController extends Controller
         $debit_order = DebitOrder::findOrFail($debit_uuid);
 
         //update status of debit mandate
-        $debit_order->status = 'submitted';
+        $debit_order->status = 200;
         $debit_order->save();
 
         //create payload

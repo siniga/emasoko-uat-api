@@ -182,14 +182,14 @@
                                 </div>
                             </div>
 
-                            <template x-if="status=='submitted'">
+                            <template x-if="status=='200'">
                                 <div class="row">
                                     <x-otp-verification-input :uuid="$debit_order->uuid" action="MandateApproval"
                                         :url="route('payment-mandate.verify-otp')" />
                                 </div>
                             </template>
 
-                            <template x-if="status=='saved'">
+                            <template x-if="status=='100'">
                                 <div class="row">
                                     <div class="col-md-12">
                                         <div class="mb-3 text-sm-end d-none d-sm-block">
@@ -269,7 +269,7 @@
                         .then(responseJson => {
                             console.log(responseJson);
                             //change status
-                            this.status = "submitted";
+                            this.status = 200;
 
                             //show confirmation modal
                             // $('#confirmModal').modal('show');

@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Classes\Authentication;
+use App\Models\DebitOrder;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -61,9 +62,26 @@ class MandateRegistrationJob implements ShouldQueue
         $API_URL = env('API_URL');
 
         //response
-    //    $response = Http::withHeaders($headers)->post($API_URL, $payload);
+        $response = Http::withHeaders($headers)->post($API_URL, $payload);
 
-    //     //logging response
-    //    Log::channel('apiLogs')->Info('MandateRegistration Response =>' . $response);
+        //update debit response
+        $debit_order = DebitOrder::where('reference', '=', $payload['data']['mandateReferenceNumber'])->first();
+        $debit_order->http_response_json = $response;
+
+        //decode the response 
+        $response = json_decode($response, true);
+
+        //logging response
+        Log::debug('== MandateRegistration Response ==');
+        Log::debug($response);
+
+        if ($response['status'] == "Success") {
+            $debit_order->status = 201;
+            $debit_order->http_response_code = $response['data']['response'][0]['responseCode'];
+        } else if ($response['status'] == "Fail") {
+            $debit_order->status = 500;
+            $debit_order->http_response_code = $response['data']['response'][0]['responseCode'];
+        }
+        $debit_order->save();
     }
 }

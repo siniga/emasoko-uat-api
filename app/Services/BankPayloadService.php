@@ -81,18 +81,19 @@ class BankPayloadService
         $partner = $debitOrder->partner;
         $partnerAccount = $debitOrder->partnerAccount;
 
+
         //create payload
         $payload = [
             "mandateReferenceNumber" => $debitOrder->reference,
-            "mandateStartDate" => Carbon::parse($debitOrder->start_date)->format('Y-m-d H:i:s'),
-            "mandateEndDate" => Carbon::parse($debitOrder->end_date)->format('Y-m-d H:i:s'),
+            "mandateStartDate" => Carbon::parse($debitOrder->start_date)->format('Y-m-d\TH:i:s.v'),
+            "mandateEndDate" => Carbon::parse($debitOrder->end_date)->format('Y-m-d\TH:i:s.v'),
             "directDebitType" => $debitOrder->debit_type,
             "debitAccountHolderName" => $customerAccount->account_name,
             "debitAccountNumber" => $customerAccount->account_number,
             "debitAccountBankCode" => $partnerAccount->branch_code,
-            "debitAccountHolderAddress1" => "IBILILO",
-            "debitAccountHolderAddress2" => "MBEYA",
-            "debitAccountHolderAddress3" => "IBILILO",
+            "debitAccountHolderAddress1" => $customer->address,
+            "debitAccountHolderAddress2" => $customer->address,
+            "debitAccountHolderAddress3" => $customer->address,
             "corporateReference" => $partner->reference,
             "creditAccountNumber" => $partnerAccount->account_number,
             "creditAccountName" => $partnerAccount->account_name,
@@ -106,8 +107,8 @@ class BankPayloadService
             "minAmount" =>  $debitOrder->min_installment_amount,
             "createdBy" => static::userNameFormat($debitOrder->userCreated),
             "verifiedBy" => static::userNameFormat(auth()->user()),
-            "createdDate" => $debitOrder->created_at,
-            "verifyDate" => Carbon::now()->format('Y-m-d H:i:s'),
+            "createdDate" => Carbon::parse($debitOrder->created_at)->format('Y-m-d H:i:s'),
+            "verifyDate" => Carbon::parse($debitOrder->created_at)->format('Y-m-d H:i:s'),
             "file" => [
                 "fileName" => "Evidence Of Aggrement",
                 "fileType" => "pdf",
