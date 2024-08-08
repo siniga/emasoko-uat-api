@@ -271,9 +271,6 @@
                             //change status
                             this.status = 200;
 
-                            //show confirmation modal
-                            // $('#confirmModal').modal('show');
-
                             //display message
                             $('#message_wrp').html(
                                 "<div class='alert alert-success rounded-sm'>Payment mandate successfully created, Waiting for consent from customer</div>"
@@ -365,10 +362,20 @@
                         .then(responseJson => {
                             console.log(responseJson);
 
+                            console.log("jjjd");
+                            console.log(this.verifyForm.uuid);
+
                             //display message
                             $('#message_wrp').html(
                                 "<div class='alert alert-success rounded-sm'>OTP verification initiated</div>"
                             );
+
+                            //redirect to details page
+                            var redirectionURL = '/payment-mandate/show/' + this.verifyForm.uuid;
+
+                             setTimeout(function () {
+                                window.location.href = redirectionURL
+                            }, 3000);
                         }).catch(() => {
                             this.formMessage = "Something went wrong.";
                         }).finally(() => {

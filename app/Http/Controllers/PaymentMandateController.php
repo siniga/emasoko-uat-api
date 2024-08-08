@@ -20,6 +20,7 @@ use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Classes\Messaging;
 use App\Events\CreateOtp;
+use App\Events\MandateStatus;
 use App\Events\VerifyOtp;
 use App\Http\Requests\CustomerAccountRequest;
 use App\Http\Requests\CustomerDeductionRequest;
@@ -516,10 +517,37 @@ class PaymentMandateController extends Controller
         $payload = $this->payloadService->verifyOtpPayload($otp_request, $request->otpPin);
 
         //dispatch event
-        event(new VerifyOtp($payload, $debit_order->customerAccount->account_number));
+        event(new VerifyOtp($payload, $debit_order->customerAccount->account_number, $debit_order->reference));
 
         //response
         return response()->json(['success' => true, 'success_msg' => "OTP verification initiated"], 200);
+    }
+
+    //mandate status
+    function fetch_status(Request $request)
+    {
+        // post data
+        $debit_order = DebitOrder::where("uuid", $request->uuid)->first();
+
+        //create payload
+        $payload = [
+            "user" => "EMakato",
+            "correlationId" => Str::uuid()->toString(),
+            "targetService" => "MandateStatus",
+            "status" =>  "Check",
+            "data" => [
+                "mandateReferenceNumber" => $debit_order->reference
+            ]
+        ];
+
+        Log::debug('== MandateStatus Request ==');
+        Log::debug($payload);
+
+        //dispatch event
+        event(new MandateStatus($payload));
+
+        //response
+        return response()->json(['error' => false, "status" => 200, "message" => 'Mandate status initiated.'], 200);
     }
 
     //mandate cancellation
@@ -536,7 +564,7 @@ class PaymentMandateController extends Controller
 
         if ($response == 200) {
             //TODO: create deduction installments
-            $response = $this->deductionService->createInstallment($debit_order);
+            //$response = $this->deductionService->createInstallment($debit_order);
 
             //response
             return response()->json(['success' => true, 'success_msg' => "Mandate cancellation initiated"], 200);

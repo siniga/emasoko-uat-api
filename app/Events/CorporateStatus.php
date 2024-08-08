@@ -14,7 +14,6 @@ use Illuminate\Queue\SerializesModels;
 class CorporateStatus implements ShouldQueue
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
-
     public $payload;
 
     /**

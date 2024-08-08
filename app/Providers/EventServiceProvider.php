@@ -2,12 +2,16 @@
 
 namespace App\Providers;
 
+use App\Events\CancelMandate;
 use App\Events\CorporateStatus;
 use App\Events\CreateOtp;
+use App\Events\MandateStatus;
 use App\Events\VerifyOtp;
 use App\Listeners\FetchCorporateStatus;
+use App\Listeners\FetchMandateStatus;
 use App\Listeners\OtpVerificationRequest;
 use App\Listeners\SendCreatedOtp;
+use App\Listeners\SendMandateCancellation;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -35,6 +39,14 @@ class EventServiceProvider extends ServiceProvider
 
         VerifyOtp::class => [
             OtpVerificationRequest::class,
+        ],
+
+        MandateStatus::class => [
+            FetchMandateStatus::class,
+        ],
+
+        CancelMandate::class => [
+            SendMandateCancellation::class,
         ],
     ];
 
