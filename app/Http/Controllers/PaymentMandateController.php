@@ -19,11 +19,14 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Classes\Messaging;
+use App\Events\CreateOtp;
+use App\Events\VerifyOtp;
 use App\Http\Requests\CustomerAccountRequest;
 use App\Http\Requests\CustomerDeductionRequest;
 use App\Jobs\MandateRegistrationJob;
 use App\Jobs\SendSMSJob;
 use App\Models\CustomerPartner;
+use App\Models\OtpRequest;
 use App\Models\Partner;
 use App\Models\SmsLog;
 use App\Services\BankApiService;
@@ -382,15 +385,20 @@ class PaymentMandateController extends Controller
         $debit_order->approved = "PENDING";
         $debit_order->save();
 
-        // Link customer with service provider
-        $customer_partner = CustomerPartner::firstOrNew(
-            [
-                'customer_id' => $customer_account->customer->id,
-                'partner_id' => $partner_id
-            ]
-        );
-        $customer_partner->created_by = Auth::user()->id;
-        $customer_partner->save();
+        if ($debit_order->wasRecentlyCreated) {
+            //create deduction installments
+            $response = $this->deductionService->createInstallment($debit_order);
+
+            // Link customer with service provider
+            $customer_partner = CustomerPartner::firstOrNew(
+                [
+                    'customer_id' => $customer_account->customer->id,
+                    'partner_id' => $partner_id
+                ]
+            );
+            $customer_partner->created_by = Auth::user()->id;
+            $customer_partner->save();
+        }
 
         // redirect with message
         return Redirect::route('payment-mandate.preview', [$debit_uuid])->with('success', "Customer deduction information saved");
@@ -472,18 +480,22 @@ class PaymentMandateController extends Controller
         //post data
         $debit_order = DebitOrder::where("uuid", $request->uuid)->first();
 
+        //create otp request
+        $otp_request = new OtpRequest();
+        $otp_request->reference = rand(100000, 999999);
+        $otp_request->account_number = $debit_order->customerAccount->account_number;
+        $otp_request->action = 'create';
+        $otp_request->created_by = Auth::user()->id;
+        $otp_request->save();
+
         //create payload
-        $payload = $this->payloadService->createOtpPayload($debit_order);
+        $payload = $this->payloadService->createOtpPayload($otp_request);
 
-        //service for sending requests
-        $response = $this->bankApi->resendOtpRequest($payload);
+        //dispatch event
+        event(new CreateOtp($payload));
 
-        if ($response == 200) {
-            //response
-            return response()->json(['success' => true, 'success_msg' => "OTP request initiated"], 200);
-        } else {
-            return response()->json(['success' => false, 'error_msg' => "Failed to initiate OTP request."], 200);
-        }
+        //response
+        return response()->json(['success' => true, 'success_msg' => "OTP request initiated"], 200);
     }
 
     // verify_otp
@@ -492,21 +504,22 @@ class PaymentMandateController extends Controller
         // post data
         $debit_order = DebitOrder::where("uuid", $request->uuid)->first();
 
+        //create otp request
+        $otp_request = new OtpRequest();
+        $otp_request->reference = date('dmY') . rand(1000, 9999);
+        $otp_request->account_number = $debit_order->customerAccount->account_number;
+        $otp_request->action = 'verify';
+        $otp_request->created_by = Auth::user()->id;
+        $otp_request->save();
+
         //create payload
-        $payload = $this->payloadService->verifyOtpPayload($debit_order, $request->otpPin);
+        $payload = $this->payloadService->verifyOtpPayload($otp_request, $request->otpPin);
 
-        //service for sending request to API
-        $response = $this->bankApi->verifyOtpRequest($payload);
+        //dispatch event
+        event(new VerifyOtp($payload, $debit_order->customerAccount->account_number));
 
-        if ($response == 200) {
-            //TODO: create deduction installments
-            $response = $this->deductionService->createInstallment($debit_order);
-
-            //response
-            return response()->json(['success' => true, 'success_msg' => "OTP verified"], 200);
-        } else {
-            return response()->json(['success' => false, 'error_msg' => "Failed to verify OTP."], 200);
-        }
+        //response
+        return response()->json(['success' => true, 'success_msg' => "OTP verification initiated"], 200);
     }
 
     //mandate cancellation

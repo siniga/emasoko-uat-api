@@ -43,7 +43,7 @@ class MandateRegistrationJob implements ShouldQueue
         $AUTH_BEARER_TOKEN = $this->auth->generateToken();
 
         //Create Headers
-        $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer '.$AUTH_BEARER_TOKEN];
+        $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer ' . $AUTH_BEARER_TOKEN];
 
         //Create Payload
         $payload = [
@@ -81,6 +81,7 @@ class MandateRegistrationJob implements ShouldQueue
         } else if ($response['status'] == "Fail") {
             $debit_order->status = 500;
             $debit_order->http_response_code = $response['data']['response'][0]['responseCode'];
+            $debit_order->remarks = $response['data']['response'][0]['responseDescription'];
         }
         $debit_order->save();
     }

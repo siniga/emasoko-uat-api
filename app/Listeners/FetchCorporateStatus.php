@@ -12,13 +12,13 @@ use Illuminate\Support\Facades\Log;
 
 class FetchCorporateStatus
 {
+    private $auth;
+    
     /**
      * Create the event listener.
      *
      * @return void
      */
-
-    private $auth;
 
     public function __construct()
     {
