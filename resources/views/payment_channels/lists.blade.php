@@ -40,7 +40,7 @@
 
                     <div class="table-responsive">
                         @if (isset($accounts) && $accounts->isNotEmpty())
-                            <table id="datatable" class="table table-bordered mb-0">
+                            <table class="table table-bordered mb-0">
                                 <thead>
                                     <tr>
                                         <th width="3%">#</th>
@@ -63,9 +63,9 @@
                                             <td>{{ $values->created_at }}</td>
                                             <td>
                                                 @if ($values->active == 1)
-                                                    <label class="badge bg-success">Active</label>
+                                                    <span class="badge bg-success-1 font-size-10">Active</span>
                                                 @elseif ($values->active == 0)
-                                                    <label class="badge bg-danger">Inactive</label>
+                                                    <span class="badge bg-danger font-size-10">Inactive</span>
                                                 @endif
                                             </td>
                                             <td>

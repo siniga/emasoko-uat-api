@@ -92,6 +92,14 @@
                                         <span class="formError"></span>
                                     </div>
                                 </div>
+
+                                 <div class="col-lg-4">
+                                    <div class="mb-3">
+                                        <label for="email">Phone <span class="text-danger">*</span></label>
+                                        {{ Form::text('phone', old('phone', $company->phone), ['class="form-control"', 'placeholder="Write phone..."']) }}
+                                        <span class="formError"></span>
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="row">
@@ -155,6 +163,7 @@
                     'name': 'required',
                     'tin_number': 'required',
                     'email': 'required',
+                    'phone': 'required',
                     'password': 'required',
                     'confirm_password': 'required',
                     'confirm_password': {
@@ -166,6 +175,7 @@
                     "name": "Business name required",
                     "tin_number": "TIN number required",
                     "email": "Email required",
+                    "phone": "Phone required",
                     "password": "Password required",
                     "confirm_password": {
                         required: "Confirm password required",

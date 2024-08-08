@@ -80,12 +80,6 @@ class User extends Authenticatable
         return null !== $this->roles()->where('name', $role)->first();
     }
 
-    //media seller
-    public function mediaSeller()
-    {
-        return $this->hasOne(MediaSeller::class, 'user_id');
-    }
-
     //rules
     public static function rules(): array
     {

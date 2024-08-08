@@ -189,8 +189,8 @@
                                 <thead>
                                     <tr>
                                         <th width="3%">#</th>
-                                        <th width="16%">Bussiness Name</th>
-                                        <th width="12%">Category</th>
+                                        <th width="18%">Bussiness Name</th>
+                                        <th width="16%">Category</th>
                                         <th width="10%">TIN Number</th>
                                         <th width="8%">Year of Incorporation</th>
                                         <th width="10%">Phone</th>

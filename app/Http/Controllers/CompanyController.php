@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Classes\Authentication;
+use App\Events\CorporateStatus;
 use App\Exports\CompanyExport;
 use App\Http\Requests\CompanyAccountRequest;
 use App\Http\Requests\CompanyDetailRequest;
@@ -23,6 +24,7 @@ use App\Models\Region;
 use App\Models\User;
 use App\Services\CompanyService;
 use App\Services\BankPayloadService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -332,6 +334,15 @@ class CompanyController extends Controller
     //store company authorized person
     function storeCompanyAuthorizedPerson(Request $request)
     {
+        //validate the request data
+        $validator = Validator::make($request->all(), [
+            'email'  =>  'required|email|max:255|unique:users',
+        ]);
+
+        if ($validator->fails()) {
+            return new JsonResponse(['success' => false, 'message' => $validator->errors()], 422);
+        }
+
         //post data
         $id = $request->input('partner_id');
         $uuid = $request->input('partner_uuid');
@@ -683,21 +694,13 @@ class CompanyController extends Controller
                 "corporateReference" => $partner->reference
             ]
         ];
-        Log::debug('CorporateStatus Request =>' . json_encode($payload));
+        Log::debug('== CorporateStatus Request ==');
+        Log::debug($payload);
 
-        //create authentication token
-        $AUTH_BEARER_TOKEN = $this->auth->generateToken();
-
-        //Create Headers
-        $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer ' . $AUTH_BEARER_TOKEN];
-
-        //API URL 
-        $API_URL = env('API_URL');
+        //dispatch event
+        event(new CorporateStatus($payload));
 
         //response
-        $response = Http::withHeaders($headers)->post($API_URL, $payload);
-
-        //logging response
-        Log::debug('CorporateStatus Response =>' . $response);
+        return response()->json(['error' => false, "status" => 200, "message" => 'Corporate status initiated.'], 200);
     }
 }

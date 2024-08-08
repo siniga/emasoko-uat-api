@@ -44,15 +44,18 @@
                                     <i class='fa fa-pen'></i> Edit
                                 </a>
 
+                                <button title="Reject Registration" class="btn btn-danger btn-sm"
+                                    x-on:click="sidebarOpen = true"
+                                    x-transition x-cloak>
+                                    <i class="fa fa-times"></i> Reject Registration
+                                </button> 
+
                                 {{-- <template> --}}
                                     <button x-html="btnApprove" title="Approve Registration" class="btn btn-success btn-sm" x-on:click="approveRegistration('{{ $company->uuid }}')"></button>
                                     <button x-html="btnStatus" title="Get Status" class="btn btn-success btn-sm" x-on:click="fetchRegistrationStatus('{{ $company->uuid }}')"></button>
                                 {{-- </template> --}}
-                                {{-- <button title="Assessment Process" class="btn btn-primary btn-sm"
-                                    x-on:click="sidebarOpen = true, fetchData('{{ $company->uuid }}'), fetchAssessment('{{ $company->uuid }}', 'Company_Information');"
-                                    x-transition x-cloak>
-                                    <i class="fa fa-check"></i> Approve Registration
-                                </button> --}}
+
+                                
                             </div>
                         </div>
 
@@ -114,7 +117,23 @@
                                     </template>
 
                                     <template x-if="status==200">
-                                        <span class="badge bg-success">Approved</span>
+                                        <span class="badge bg-success-1">Approved eMakato</span>
+                                    </template>
+
+                                    <template x-if="status==201">
+                                        <span class="badge bg-success-1">Created NMB </span>
+                                    </template>
+
+                                    <template x-if="status==240">
+                                        <span class="badge bg-success-1">Case Complete NMB</span>
+                                    </template>
+
+                                    <template x-if="status==249">
+                                        <span class="badge bg-success-1">Case Processing NMB</span>
+                                    </template>
+
+                                    <template x-if="status==500">
+                                        <span class="badge bg-danger">Failed NMB</span>
                                     </template>
                                 </td>
                             </tr>
@@ -197,7 +216,7 @@
                                         <th width="20%">Bank/MNO</th>
                                         <th width="25%">Account Name</th>
                                         <th width="20%">Account Number</th>
-                                        <th></th>
+                                        {{-- <th></th> --}}
                                     </tr>
                                 </thead>
 
@@ -209,7 +228,7 @@
                                             <td>{{ $val->account->name ?? '' }}</td>
                                             <td>{{ $val->account_name ?? '' }}</td>
                                             <td>{{ $val->account_number ?? '' }}</td>
-                                            <td>
+                                            {{-- <td>
                                                 @if ($val->send_verification == 1)
                                                     <i class="text-warning">Wait Verification</i>
                                                 @elseif ($val->response_sms && $val->verified_at)
@@ -217,7 +236,7 @@
                                                 @elseif ($val->response_sms && $val->rejected_at)
                                                     <i class="text-danger">{{ $val->response_sms ?? '' }}</i>
                                                 @endif
-                                            </td>
+                                            </td> --}}
                                         </tr>
                                     @endforeach
                                 </tbody>

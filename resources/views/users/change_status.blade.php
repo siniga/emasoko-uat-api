@@ -15,7 +15,7 @@
     @endcomponent
 
     <div class="row">
-        <div class="col-lg-12">
+        <div class="col-lg-8 col-md-8 col-sm-8 col-12">
             <div class="card">
                 <div class="card-body">
                     @if (session()->get('success'))
@@ -28,7 +28,7 @@
                     {{ Form::token() }}
 
                     <div class="row">
-                        <div class="col-lg-3 col-12">
+                        <div class="col-lg-6 col-12">
                             <div class="mb-3">
                                 <label>Name <span class="red">*</span></label>
                                 {{ Form::text('name', old('name', $user->name), ['class="form-control"', 'placeholder="Write a full name..."', 'required']) }}
@@ -41,7 +41,7 @@
                         </div>
                         <!--./col-lg-4 -->
 
-                        <div class="col-lg-3 col-12">
+                        <div class="col-lg-6 col-12">
                             <div class="mb-3">
                                 <label>Email <span class="red">*</span></label>
                                 {{ Form::text('email', old('email', $user->email), ['class="form-control"', 'placeholder="Write a email address..."', 'required']) }}
@@ -54,7 +54,7 @@
                         </div>
                         <!--./col-lg-4 -->
 
-                        <div class="col-lg-3 col-12">
+                        <div class="col-lg-6 col-12">
                             <div class="mb-3">
                                 <label>Phone <span class="red">*</span></label>
                                 {{ Form::text('phone', old('phone', $user->phone), ['class="form-control"', 'placeholder="Write a phone..."', 'required']) }}
@@ -67,7 +67,7 @@
                         </div>
                         <!--./col-lg-4 -->
 
-                        <div class="col-lg-3 col-12">
+                        <div class="col-lg-6 col-12">
                             <div class="mb-3">
                                 <label>Status <span class="red">*</span></label>
                                 @php

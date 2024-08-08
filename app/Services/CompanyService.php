@@ -72,7 +72,7 @@ class CompanyService
             for ($i = 0; $i < sizeof($data['account_id']); $i++) {
                 if ($data['account_id'][$i] != '' && $data['account_name'][$i] != '' && $data['account_name'][$i] != '') {
                     //create new partner account
-                    $partner_account = PartnerAccount::firstOrCreate([
+                    $partner_account = PartnerAccount::firstOrNew([
                         'partner_id' => $partner['id'],
                         'partner_uuid' => $partner['uuid'],
                         'account_type_id' => $data['account_type_id'][$i],
@@ -80,14 +80,12 @@ class CompanyService
                         'account_name' => $data['account_name'][$i],
                         'account_number' => $data['account_number'][$i],
                     ]);
-                    if ($partner_account->wasRecentlyCreated) {
-                        $partner_account->send_verification = 1;
-                        $partner->customer_code = rand(100000000,100999999);
-                        $partner->corporate_limit = floatval(str_replace(',', '', $data['corporate_limit'][$i]));
-                        $partner->branch_code = $data['branch_code'][$i];
-                        $partner->currency_id = $data['currency_id'][$i];
-                        $partner_account->save();
-                    }
+                    $partner_account->send_verification = 1;
+                    $partner->customer_code = $this->getCustomerCode();
+                    $partner->corporate_limit = floatval(str_replace(',', '', $data['corporate_limit'][$i]));
+                    $partner->branch_code = $data['branch_code'][$i];
+                    $partner->currency_id = $data['currency_id'][$i];
+                    $partner_account->save();
                 }
             }
         }
@@ -124,6 +122,7 @@ class CompanyService
         //create user to store data
         $user = User::firstOrNew(['email' => $data->email, 'TIN_number' => $data->tin_number]);
         $user->name = $data->name;
+        $user->phone = $data->phone;
         $user->verify_token = $token;
         $user->password = Hash::make($password);
         $user->save();
@@ -237,7 +236,7 @@ class CompanyService
 
             //return statement
             return 403;
-        } else if($action == "APPROVE"){
+        } else if ($action == "APPROVE") {
             //update company registration status
             $partner->status = 200; //OK
             $partner->updated_by = auth()->id();
@@ -252,26 +251,26 @@ class CompanyService
                 }
             }
 
-            //default credentials
-            // $user = User::where(['email' => $partner->email, 'tin_number' => $partner->tin_number])->first();
-
-            // //construct message
-            // $message = "<p>Company information has been approved by eMakato.</p>";
-            // $message .= "<p>You can now start using your eMakato platform. Login to your account by <a href=" . url('login') . ">CLICK HERE.</a></p>";
-            // $message .= "<p>Below are the credentials for you to login to the platform :</p>";
-            // $message .= "<p>Username/Email: <span class='font-weight-500'>{$user->email}</span></p>";
-            // $message .= "<p>We will share password with you through phone. You can change default password after login to the platform.</p>";
-
-            // //send email
-            // $data = [
-            //     "email" => $partner->email,
-            //     "name" => $partner->business_name,
-            //     "subject" => "eMakato Corporate Registration",
-            //     "body" => $message
-            // ];
-            // dispatch(new SendEmailJob($data));
-
             return 200;
         }
+    }
+
+    //get Customer Code
+    function getCustomerCode()
+    {
+        //app variable
+        $app_variable = AppVariable::first();
+
+        static $number = $app_variable->cur_customer_code;
+
+        $number++;
+        $next_customer_code = str_pad($number, 9, '0', STR_PAD_LEFT);
+
+        //update app variable
+        $app_variable->cur_customer_code = $number;
+        $app_variable->next_customer_code = $next_customer_code;
+        $app_variable->save();
+
+        return $next_customer_code;
     }
 }

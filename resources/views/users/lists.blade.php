@@ -40,15 +40,15 @@
 
                     <div class="table-responsive">
                         @if (isset($users) && $users)
-                            <table id="datatable" class="table table-hover table-bordered">
+                            <table class="table table-hover table-bordered">
                                 <thead>
                                     <tr>
                                         <th width="3%">#</th>
                                         <th width="20%">Name</th>
                                         <th width="16%">Email</th>
                                         <th width="12%">Phone</th>
-                                        <th width="12%">Roles</th>
-                                        <th width="12%">Registered On</th>
+                                        <th width="13%">Roles</th>
+                                        <th width="16%">Registered On</th>
                                         <th width="8%">Status</th>
                                         <th style="width: 60px;">Actions</th>
                                     </tr>
@@ -71,9 +71,9 @@
                                             <td>{{ $values->created_at }}</td>
                                             <td>
                                                 @if ($values->active == 1)
-                                                    <label class="badge bg-success">Active</label>
+                                                    <span class="badge bg-success-1 font-10">Active</span>
                                                 @elseif ($values->active == 0)
-                                                    <label class="badge bg-danger">Inactive</label>
+                                                    <span class="badge bg-danger font-10">Inactive</span>
                                                 @endif
                                             </td>
                                             <td>
