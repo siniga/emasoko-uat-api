@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\AppVariable;
 use App\Models\DebitOrder;
 use App\Models\Partner;
 use App\Models\PartnerAccount;
@@ -108,5 +109,23 @@ class DeductionService
         }
 
         return 200;
+    }
+
+    //get collection reference
+    function getCollectionReference()
+    {
+        //app variable
+        $app_variable = AppVariable::first();
+
+        static $number = $app_variable->cur_collection_reference;
+
+        $number++;
+        $cur_collection_reference = $number;
+
+        //update app variable
+        $app_variable->cur_collection_reference = $cur_collection_reference;
+        $app_variable->save();
+
+        return $cur_collection_reference;
     }
 }

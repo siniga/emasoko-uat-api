@@ -5,11 +5,16 @@ namespace App\Services;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
+use App\Classes\Authentication;
+use App\Models\CollectionBatch;
 
 class BankApiService
 {
+    private $auth;
+
     public function __construct()
     {
+        $this->auth = new Authentication();
     }
 
     //corporate registration
@@ -21,7 +26,7 @@ class BankApiService
     public function corporateStatusRequest($data)
     {
         //create authentication token
-        $AUTH_BEARER_TOKEN = "";
+        $AUTH_BEARER_TOKEN = $this->auth->generateToken();
 
         //Create Headers
         $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer ' . $AUTH_BEARER_TOKEN];
@@ -225,7 +230,7 @@ class BankApiService
     public function collectionCreate($data)
     {
         //create authentication token
-        $AUTH_BEARER_TOKEN = "";
+        $AUTH_BEARER_TOKEN = $this->auth->generateToken();
 
         //Create Headers
         $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer ' . $AUTH_BEARER_TOKEN];
@@ -240,17 +245,32 @@ class BankApiService
         ];
 
         //Create Payload
-        Log::debug('Collection Create Request');
+        Log::debug('== CollectionCreate Request ==');
         Log::debug($payload);
 
         //API URL 
         $API_URL = env('API_URL');
 
         //response
-        // $response = Http::withHeaders($headers)->post($API_URL, $payload);
+        $response = Http::withHeaders($headers)->post($API_URL, $payload);
 
-        // //logging response
-        // Log::debug('OTPVerify Response =>' . $response);
+        //update collection batch 
+        $collection_batch = CollectionBatch::where('collectionReference', '=', $payload['data']['collectionReference'])->first();
+        $collection_batch->http_response_json = $response;
+
+        //decode the response 
+        $response = json_decode($response, true);
+
+        //logging response
+        Log::debug('== CollectionCreate Response ==');
+        Log::debug($response);
+
+        if ($response['status'] == "Success" || $response['status'] == "Fail") {
+            $collection_batch->status = $response['data']['response'][0]['responseCode'];
+            $collection_batch->http_response_code = $response['data']['response'][0]['responseCode'];
+            $collection_batch->remarks = $response['data']['response'][0]['responseDescription'];
+        }
+        $collection_batch->save();
 
         return 200;
     }

@@ -185,10 +185,10 @@ class BankPayloadService
             "selectedPostingDate" => $batch->selectedPostingDate,
             "createdBy" => static::userNameFormat($batch->createdUser),
             "verifiedBy" => static::userNameFormat($batch->createdUser),
-            "createdDate" => $batch->createdDate,
-            "verifyDate" => $batch->verifyDate,
+            "createdDate" => Carbon::parse($batch->createdDate)->format('Y-m-d H:i:s'),
+            "verifyDate" => Carbon::parse($batch->verifyDate)->format('Y-m-d H:i:s'),
             "file" => [
-                "fileName" => "Payment Collection $batch->id",
+                "fileName" => "Payment_Collection_$batch->id",
                 "fileType" => "CSV",
                 "fileData" => content_to_base64($csv)
             ]

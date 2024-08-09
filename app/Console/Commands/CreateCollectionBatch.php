@@ -7,6 +7,7 @@ use App\Models\Installment;
 use App\Models\Partner;
 use App\Services\BankPayloadService;
 use App\Services\BankApiService;
+use App\Services\DeductionService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -45,7 +46,12 @@ class CreateCollectionBatch extends Command
      */
     public function handle()
     {
-        //debit orders => status=OPEN
+        //initialize deduction service
+        $deductionService = new DeductionService();
+        $bankPayload = new BankPayloadService();
+        $bankApi =  new BankApiService();
+
+        //debit orders => status=OPEN and NEXT_DEBIT_DATE = today()
         $partners = Partner::whereHas('debitOrders', function ($query) {
             return $query->where('contract_status', '=', 'OPEN')
                 ->whereBetween('next_debit_date', [Carbon::now()->startOfDay(), Carbon::now()->endOfDay()]);
@@ -59,7 +65,7 @@ class CreateCollectionBatch extends Command
             if ($debit_orders->count() > 0) {
                 //2. Create collection batch based on partner 
                 $batch = CollectionBatch::create([
-                    "collectionReference" => rand(10000, 99999),
+                    "collectionReference" => $deductionService->getCollectionReference(),
                     "corporateReference" => $partner->reference,
                     "selectedPostingDate" => null,
                     "createdBy" => 1,
@@ -70,7 +76,7 @@ class CreateCollectionBatch extends Command
 
                 if ($batch->wasRecentlyCreated) {
                     //3. Create CSV file based installment
-                    $csv = "SERIAL No.;BANK CODE;BRANCH NAME;EMPLOYEE NUMBER;CUSTOMER NAME;ACCOUNT NO; AMOUNT\n";
+                    $csv = "SERIAL No.;BANK CODE;BRANCH NAME;EMPLOYEE NUMBER;CUSTOMER NAME;ACCOUNT NO;AMOUNT\n";
 
                     foreach ($debit_orders as $val) {
                         $installments = Installment::where(['debit_order_id' => $val->id, 'status' => 'OPEN'])
@@ -83,11 +89,9 @@ class CreateCollectionBatch extends Command
                 }
 
                 //4. Create payload for collection 
-                $bankPayload = new BankPayloadService();
                 $payload = $bankPayload->collectionPayload($batch, $csv);
 
                 //5. Send payload to a server
-                $bankApi =  new BankApiService();
                 $response = $bankApi->collectionCreate($payload);
             }
         }
