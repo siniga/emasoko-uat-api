@@ -189,8 +189,8 @@
                                 <thead>
                                     <tr>
                                         <th width="3%">#</th>
-                                        <th width="16%">Bussiness Name</th>
-                                        <th width="12%">Category</th>
+                                        <th width="18%">Bussiness Name</th>
+                                        <th width="16%">Category</th>
                                         <th width="10%">TIN Number</th>
                                         <th width="8%">Year of Incorporation</th>
                                         <th width="10%">Phone</th>
@@ -216,8 +216,11 @@
                                                 @elseif($company->status == 100)
                                                     <span class="badge bg-info font-size-10">Approval Process</span>
                                                 @elseif($company->status == 200)
+                                                    <span class="badge bg-success-1 font-size-10">Processing</span>
+                                                @elseif($company->status == 201)
                                                     <span class="badge bg-success-1 font-size-10">Approved</span>
-                                                @elseif($company->status == 403)
+                                                @elseif($company->status == '401' || $company->status == '403' || $company->status == '410' || $company->status == '450' || $company->status == '451' || $company->status == '500')    
+                                                @elseif($company->status == 999)
                                                     <span class="badge bg-danger font-size-10">Rejected</span>
                                                 @endif
                                             </td>
@@ -234,15 +237,17 @@
                                                     </a>
                                                 @endif
 
-                                                <a href="{{ route('companies.edit', $company->uuid) }}" title="Edit"
-                                                    class="btn btn-xss">
-                                                    <i class="bx bx-edit text-secondary"></i>
-                                                </a>
+                                                @if ($company->status == 100 || $company->status ==401 || $company->status == 403 || $company->status == 410 || $company->status == 450 || $company->status ==451)
+                                                    <a href="{{ route('companies.edit', $company->uuid) }}" title="Edit"
+                                                        class="btn btn-xss">
+                                                        <i class="bx bx-edit text-secondary"></i>
+                                                    </a>
 
-                                                <a href="{{ route('companies.delete', $company->uuid) }}" title="Delete"
-                                                    class="btn btn-xss delete">
-                                                    <i class="bx bx-trash text-danger"></i>
-                                                </a>
+                                                    <a href="{{ route('companies.delete', $company->uuid) }}" title="Delete"
+                                                        class="btn btn-xss delete">
+                                                        <i class="bx bx-trash text-danger"></i>
+                                                    </a>
+                                                @endif
                                             </td>
                                         </tr>
                                         @php $serial++; @endphp

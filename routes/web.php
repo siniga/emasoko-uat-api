@@ -14,6 +14,7 @@ use App\Http\Controllers\FrontPageController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PaymentChannelController;
 use App\Http\Controllers\PaymentMandateController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\UserController;
@@ -159,8 +160,12 @@ Route::get('payment-mandate/show/{do_uuid}', [PaymentMandateController::class, '
 Route::get('payment-mandate/edit/{do_uuid}', [PaymentMandateController::class, 'edit'])->name('payment-mandate.edit');
 Route::put('payment-mandate/{id}/update', [PaymentMandateController::class, 'update'])->name('payment-mandate.update');
 Route::get('payment-mandate/delete/{do_uuid}', [PaymentMandateController::class, 'destroy'])->name('payment-mandate.delete');
-
+Route::post('payment-mandate/fetch-status', [PaymentMandateController::class, 'fetch_status'])->name('payment-mandate.fetch-status');
+Route::post('payment-mandate/cancel-mandate', [PaymentMandateController::class, 'cancel_mandate'])->name('payment-mandate.cancel-mandate');
 Route::get('payment-mandate/send-remainder/{do_uuid}', [PaymentMandateController::class, 'sendRemainder'])->name('payment-mandate.send-remainder');
+
+//reports
+Route::any('reports/lists', [ReportController::class, 'lists'])->name('reports.lists');
 
 //tasks
 Route::get('tasks/lists', [TaskController::class, 'lists'])->name('tasks.lists');

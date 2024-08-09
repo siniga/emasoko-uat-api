@@ -182,14 +182,14 @@
                                 </div>
                             </div>
 
-                            <template x-if="status=='submitted'">
+                            <template x-if="status=='200'">
                                 <div class="row">
                                     <x-otp-verification-input :uuid="$debit_order->uuid" action="MandateApproval"
                                         :url="route('payment-mandate.verify-otp')" />
                                 </div>
                             </template>
 
-                            <template x-if="status=='saved'">
+                            <template x-if="status=='100'">
                                 <div class="row">
                                     <div class="col-md-12">
                                         <div class="mb-3 text-sm-end d-none d-sm-block">
@@ -269,10 +269,7 @@
                         .then(responseJson => {
                             console.log(responseJson);
                             //change status
-                            this.status = "submitted";
-
-                            //show confirmation modal
-                            // $('#confirmModal').modal('show');
+                            this.status = 200;
 
                             //display message
                             $('#message_wrp').html(
@@ -365,10 +362,20 @@
                         .then(responseJson => {
                             console.log(responseJson);
 
+                            console.log("jjjd");
+                            console.log(this.verifyForm.uuid);
+
                             //display message
                             $('#message_wrp').html(
                                 "<div class='alert alert-success rounded-sm'>OTP verification initiated</div>"
                             );
+
+                            //redirect to details page
+                            var redirectionURL = '/payment-mandate/show/' + this.verifyForm.uuid;
+
+                             setTimeout(function () {
+                                window.location.href = redirectionURL
+                            }, 3000);
                         }).catch(() => {
                             this.formMessage = "Something went wrong.";
                         }).finally(() => {

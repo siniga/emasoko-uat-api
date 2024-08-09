@@ -16,7 +16,7 @@ class PaymentMandateExport implements FromQuery, WithHeadings, ShouldAutoSize, W
 {
     protected $start_at, $end_at, $account_type_id, $account_id, $status, $keyword;
 
-    public function __construct($start_at, $end_at, $account_type_id, $account_id, $status, $keyword)
+    public function __construct($start_at, $end_at, $account_type_id, $account_id, $status = null, $keyword = null)
     {
         $this->start_at = $start_at;
         $this->end_at = $end_at;
@@ -84,14 +84,17 @@ class PaymentMandateExport implements FromQuery, WithHeadings, ShouldAutoSize, W
             'Account Number',
             'Phone (Connected to Bank)',
             'Consent Status',
-            'Total Loan Amount',
-            'Debit Type',
+            'Total Amount',
+            'Paid Amount',
+            'Outstanding Amount',
             'Deduction Amount',
+            'Debit Type',
             'Number of Installment',
-            'Frequency of Installment',
+            'Frequency of Installment', 
             'Deduction Start Date',
             'Deduction End Date',
-            'Created On'
+            'Contract Status',
+            'Created On',
         ];
     }
 
@@ -105,14 +108,17 @@ class PaymentMandateExport implements FromQuery, WithHeadings, ShouldAutoSize, W
             $debit_orders->customerAccount->account->name ?? '',
             $debit_orders->customerAccount->account_number ?? '',
             $debit_orders->customerAccount->phone ?? '',
-            $debit_orders->approved == 1 ? 'Approved' : 'Pending',
+            $debit_orders->approved == "APPROVED" ? 'Approved' : 'Pending',
             number_format($debit_orders->total_amount),
-            $debit_orders->debit_type,
+            number_format($debit_orders->paid_amount),
+            number_format($debit_orders->outstanding_amount),
             number_format($debit_orders->installment_amount),
+            $debit_orders->debit_type,
             $debit_orders->installment_number,
             $debit_orders->periodicity,
             $debit_orders->start_date,
             $debit_orders->end_date,
+            $debit_orders->contract_status,
             $debit_orders->created_at,
         ];
 
@@ -123,7 +129,7 @@ class PaymentMandateExport implements FromQuery, WithHeadings, ShouldAutoSize, W
     {
         return [
             AfterSheet::class    => function (AfterSheet $event) {
-                $cellRange = 'A1:O1'; // All headers
+                $cellRange = 'A1:R1'; // All headers
                 $event->sheet->getDelegate()->getStyle($cellRange)->getFont()->setSize(12);
                 $event->sheet->getDelegate()->getStyle($cellRange)->getFont()->setBold(true);
             },

@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Classes\Authentication;
+use App\Models\Partner;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -39,11 +40,11 @@ class CorporateRegistrationJob implements ShouldQueue
     public function handle()
     {
         //create authentication token
-        //$AUTH_BEARER_TOKEN = $this->auth->generateToken();
-        $AUTH_BEARER_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MjMwNTQ0ODEsIm5iZiI6MTcyMzA1NDQ4MSwiZXhwIjoxNzIzMDU0NzgxLCJpc3MiOiJFTWFrYXRvIiwiYXVkIjoiRU1ha2F0byJ9.zZfyp76f-ChCw3ux5roLIxtnahfR5DjqLVALZeyQM0I";
+        $AUTH_BEARER_TOKEN = $this->auth->generateToken();
+        Log::debug("Token : {$AUTH_BEARER_TOKEN}");
 
         //Create Headers
-        $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer '.$AUTH_BEARER_TOKEN];
+        $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer ' . $AUTH_BEARER_TOKEN];
 
         //Create Payload
         $payload = [
@@ -62,9 +63,26 @@ class CorporateRegistrationJob implements ShouldQueue
         $API_URL = env('API_URL');
 
         //response
-       $response = Http::withHeaders($headers)->post($API_URL, $payload);
+        $response = Http::withHeaders($headers)->post($API_URL, $payload);
+
+        //update the corporate
+        $partner = Partner::where('reference', '=', $payload['data']['corporateReference'])->first();
+        $partner->http_response_json = $response;
+
+        //decode the response 
+        $response = json_decode($response, true);
 
         //logging response
-       Log::debug('CorporateRegistration Response =>' . $response);
+        Log::debug('== CorporateRegistration Response ==');
+        Log::debug($response);
+
+        if ($response['status'] == "Success") {
+            $partner->status = 201;
+            $partner->http_response_code = $response['data']['response'][0]['responseCode'];
+        } else if ($response['status'] == "Fail") {
+            $partner->status = $response['data']['response'][0]['responseCode'];
+            $partner->http_response_code = $response['data']['response'][0]['responseCode'];
+        }
+        $partner->save();
     }
 }

@@ -15,7 +15,7 @@
     @endcomponent
 
     <div class="row">
-        <div class="col-lg-12">
+        <div class="col-lg-8 col-md-8 col-sm-8 col-12">
             <div class="card">
                 <div class="card-body">
                     @if (session()->get('success'))

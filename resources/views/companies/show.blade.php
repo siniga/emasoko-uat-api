@@ -38,21 +38,33 @@
 
                         <div class="d-flex justify-content-between mb-2">
                             <div></div>
-                            
-                            <div class="text-sm-end d-none d-sm-block">
-                                <a href="{{ route('companies.registration', $company->uuid) }}" title="View" class="btn btn-warning btn-sm">
-                                    <i class='fa fa-pen'></i> Edit
-                                </a>
 
-                                {{-- <template> --}}
-                                    <button x-html="btnApprove" title="Approve Registration" class="btn btn-success btn-sm" x-on:click="approveRegistration('{{ $company->uuid }}')"></button>
-                                    <button x-html="btnStatus" title="Get Status" class="btn btn-success btn-sm" x-on:click="fetchRegistrationStatus('{{ $company->uuid }}')"></button>
-                                {{-- </template> --}}
-                                {{-- <button title="Assessment Process" class="btn btn-primary btn-sm"
-                                    x-on:click="sidebarOpen = true, fetchData('{{ $company->uuid }}'), fetchAssessment('{{ $company->uuid }}', 'Company_Information');"
-                                    x-transition x-cloak>
-                                    <i class="fa fa-check"></i> Approve Registration
-                                </button> --}}
+                            <div class="text-sm-end d-none d-sm-block">
+                                <template x-if="status==100">
+                                    <a href="{{ route('companies.registration', $company->uuid) }}" title="View"
+                                        class="btn btn-warning btn-sm">
+                                        <i class='fa fa-pen'></i> Edit
+                                    </a>
+                                </template>
+
+                                <template x-if="status==0 || status==100">
+                                    <button title="Reject Registration" class="btn btn-danger btn-sm"
+                                        x-on:click="sidebarOpen = true" x-transition x-cloak>
+                                        <i class="fa fa-times"></i> Reject Registration
+                                    </button>
+                                </template>
+
+                                <template x-if="status==100 || status==200 || status ==401 || status == 403 || status == 410 || status == 450 || status ==451">
+                                    <button x-html="btnApprove" title="Approve Registration" class="btn btn-success btn-sm"
+                                        x-on:click="approveRegistration('{{ $company->uuid }}')"></button>
+                                </template>
+
+                                <template x-if="status ==201">
+                                    <button x-html="btnStatus" title="Get Status" class="btn btn-success btn-sm"
+                                        x-on:click="fetchRegistrationStatus('{{ $company->uuid }}')"></button>
+                                </template>
+
+
                             </div>
                         </div>
 
@@ -75,7 +87,7 @@
                                 </td>
                             </tr>
 
-                             <tr>
+                            <tr>
                                 <th>Corporate Reference</th>
                                 <td>{{ $company->reference }}</td>
 
@@ -109,12 +121,28 @@
                                         <span class="badge bg-info">Approval Process</span>
                                     </template>
 
-                                    <template x-if="status==403">
+                                    <template x-if="status==999">
                                         <span class="badge bg-danger">Rejected</span>
                                     </template>
 
                                     <template x-if="status==200">
-                                        <span class="badge bg-success">Approved</span>
+                                        <span class="badge bg-success-1">Approved eMakato & NMB Processing</span>
+                                    </template>
+
+                                    <template x-if="status==201">
+                                        <span class="badge bg-success-1">Created NMB</span>
+                                    </template>
+
+                                    <template x-if="status==240">
+                                        <span class="badge bg-success-1">Case Complete NMB</span>
+                                    </template>
+
+                                    <template x-if="status==249">
+                                        <span class="badge bg-success-1">Case Processing NMB</span>
+                                    </template>
+
+                                    <template x-if="status==500">
+                                        <span class="badge bg-danger">Failed NMB</span>
                                     </template>
                                 </td>
                             </tr>
@@ -171,7 +199,8 @@
                                             </td>
                                             <td class="text-center">
                                                 @if ($val->attachment != null)
-                                                    <a href="{{ asset('assets/uploads/docs/' . $val->attachment) }}" download><i class='bx bx-cloud-download bx-xs'></i></a>
+                                                    <a href="{{ asset('assets/uploads/docs/' . $val->attachment) }}"
+                                                        download><i class='bx bx-cloud-download bx-xs'></i></a>
                                                 @endif
                                             </td>
                                         </tr>
@@ -197,7 +226,7 @@
                                         <th width="20%">Bank/MNO</th>
                                         <th width="25%">Account Name</th>
                                         <th width="20%">Account Number</th>
-                                        <th></th>
+                                        {{-- <th></th> --}}
                                     </tr>
                                 </thead>
 
@@ -209,7 +238,7 @@
                                             <td>{{ $val->account->name ?? '' }}</td>
                                             <td>{{ $val->account_name ?? '' }}</td>
                                             <td>{{ $val->account_number ?? '' }}</td>
-                                            <td>
+                                            {{-- <td>
                                                 @if ($val->send_verification == 1)
                                                     <i class="text-warning">Wait Verification</i>
                                                 @elseif ($val->response_sms && $val->verified_at)
@@ -217,7 +246,7 @@
                                                 @elseif ($val->response_sms && $val->rejected_at)
                                                     <i class="text-danger">{{ $val->response_sms ?? '' }}</i>
                                                 @endif
-                                            </td>
+                                            </td> --}}
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -309,7 +338,7 @@
                 },
 
                 //approval company registration
-                approveRegistration(){
+                approveRegistration() {
                     this.formLoading = true;
                     this.btnApprove = '<i class="fas fa-spinner fa-spin"></i> Approving Registration....';
 
@@ -345,9 +374,9 @@
                         });
                 },
 
-                
+
                 //approval company registration
-                fetchRegistrationStatus(){
+                fetchRegistrationStatus() {
                     this.formLoading = true;
                     this.btnStatus = '<i class="fas fa-spinner fa-spin"></i> Get Registration status....';
 

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\CollectionBatch;
 use App\Models\DebitOrder;
+use App\Models\OtpRequest;
 use App\Models\Partner;
 use App\Models\PartnerAccount;
 use Carbon\Carbon;
@@ -81,18 +82,19 @@ class BankPayloadService
         $partner = $debitOrder->partner;
         $partnerAccount = $debitOrder->partnerAccount;
 
+
         //create payload
         $payload = [
             "mandateReferenceNumber" => $debitOrder->reference,
-            "mandateStartDate" => "2024-08-10T22:00:00.000",
-            "mandateEndDate" => "2024-09-10T22:00:00.000Z",
+            "mandateStartDate" => Carbon::parse($debitOrder->start_date)->format('Y-m-d\TH:i:s.v'),
+            "mandateEndDate" => Carbon::parse($debitOrder->end_date)->format('Y-m-d\TH:i:s.v'),
             "directDebitType" => $debitOrder->debit_type,
             "debitAccountHolderName" => $customerAccount->account_name,
             "debitAccountNumber" => $customerAccount->account_number,
             "debitAccountBankCode" => $partnerAccount->branch_code,
-            "debitAccountHolderAddress1" => "IBILILO",
-            "debitAccountHolderAddress2" => "MBEYA",
-            "debitAccountHolderAddress3" => "IBILILO",
+            "debitAccountHolderAddress1" => $customer->address,
+            "debitAccountHolderAddress2" => $customer->address,
+            "debitAccountHolderAddress3" => $customer->address,
             "corporateReference" => $partner->reference,
             "creditAccountNumber" => $partnerAccount->account_number,
             "creditAccountName" => $partnerAccount->account_name,
@@ -106,8 +108,8 @@ class BankPayloadService
             "minAmount" =>  $debitOrder->min_installment_amount,
             "createdBy" => static::userNameFormat($debitOrder->userCreated),
             "verifiedBy" => static::userNameFormat(auth()->user()),
-            "createdDate" => $debitOrder->created_at,
-            "verifyDate" => $debitOrder->created_at,
+            "createdDate" => Carbon::parse($debitOrder->created_at)->format('Y-m-d H:i:s'),
+            "verifyDate" => Carbon::parse($debitOrder->created_at)->format('Y-m-d H:i:s'),
             "file" => [
                 "fileName" => "Evidence Of Aggrement",
                 "fileType" => "pdf",
@@ -138,7 +140,7 @@ class BankPayloadService
         $payload = [
             "mandateReferenceNumber" => $debitOrder->reference,
             "corporateReference" => $partner->reference,
-            "cancelReason" => "test",
+            "cancelReason" => "Does not comply",
             "createdBy" => static::userNameFormat($debitOrder->verifiedBy),
             "verifiedBy" => static::userNameFormat($debitOrder->verifiedBy),
             "createdDate" => $debitOrder->createdDate,
@@ -149,27 +151,24 @@ class BankPayloadService
     }
 
     //create otp payload
-    public function createOtpPayload(DebitOrder $debitOrder)
+    public function createOtpPayload(OtpRequest $otpRequest)
     {
-        $customerAccount = $debitOrder->customerAccount;
 
         $payload = [
-            "caseReference" => rand(100000, 199999), //TODO: recreate case reference
-            "accountNumber" => $customerAccount->account_number,
+            "caseReference" => $otpRequest->reference,
+            "accountNumber" => $otpRequest->account_number,
             "processName" => "EMakato Mandate Registration",
-            "makerName" => static::userNameFormat(auth()->user())
+            "makerName" => static::userNameFormat($otpRequest->created_by)
         ];
 
         return $payload;
     }
 
     //verify otp payload
-    public function verifyOtpPayload(DebitOrder $debitOrder, $otpPin)
+    public function verifyOtpPayload(OtpRequest $otpRequest, $otpPin)
     {
-        $customerAccount = $debitOrder->customerAccount;
-
         $payload = [
-            "caseReference" => rand(100000, 199999), //TODO: recreate case reference
+            "caseReference" => $otpRequest->reference,
             "processName" => "MandateApproval",
             "otpPin" => $otpPin
         ];

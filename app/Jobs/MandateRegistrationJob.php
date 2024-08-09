@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Classes\Authentication;
+use App\Models\DebitOrder;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -38,11 +39,11 @@ class MandateRegistrationJob implements ShouldQueue
      */
     public function handle()
     {
-        //create authentication token
-        $AUTH_BEARER_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MjMwNTI2MDAsIm5iZiI6MTcyMzA1MjYwMCwiZXhwIjoxNzIzMDUyOTAwLCJpc3MiOiJFTWFrYXRvIiwiYXVkIjoiRU1ha2F0byJ9.JImhYkdU3cuNXcdaTtO5BAzbF6ohTIUQX9Z76j56e-I";
-
+         //create authentication token
+         $AUTH_BEARER_TOKEN = $this->auth->generateToken();
+         
         //Create Headers
-        $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer '.$AUTH_BEARER_TOKEN];
+        $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer ' . $AUTH_BEARER_TOKEN];
 
         //Create Payload
         $payload = [
@@ -63,7 +64,25 @@ class MandateRegistrationJob implements ShouldQueue
         //response
         $response = Http::withHeaders($headers)->post($API_URL, $payload);
 
+        //update debit response
+        $debit_order = DebitOrder::where('reference', '=', $payload['data']['mandateReferenceNumber'])->first();
+        $debit_order->http_response_json = $response;
+
+        //decode the response 
+        $response = json_decode($response, true);
+
         //logging response
-        Log::debug('MandateRegistration Response =>' . $response);
+        Log::debug('== MandateRegistration Response ==');
+        Log::debug($response);
+
+        if ($response['status'] == "Success") {
+            $debit_order->status = 201;
+            $debit_order->http_response_code = $response['data']['response'][0]['responseCode'];
+        } else if ($response['status'] == "Fail") {
+            $debit_order->status = 500;
+            $debit_order->http_response_code = $response['data']['response'][0]['responseCode'];
+            $debit_order->remarks = $response['data']['response'][0]['responseDescription'];
+        }
+        $debit_order->save();
     }
 }

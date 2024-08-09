@@ -40,7 +40,7 @@
 
                     <div class="table-responsive">
                         @if (isset($roles) && $roles)
-                            <table id="datatable" class="table table-bordered mb-0">
+                            <table class="table table-bordered mb-0">
                                 <thead>
                                     <tr>
                                         <th width="3%">#</th>

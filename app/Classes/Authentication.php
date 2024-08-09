@@ -35,8 +35,6 @@ class Authentication
             'iss' => $this->username,
             'aud' =>  $this->username,
         ];
-        Log::debug("Payload:");
-        Log::debug($payload);
 
         $b64Header = $this->toBase64(json_encode($header));
         $b64Payload =  $this->toBase64(json_encode($payload));
@@ -69,8 +67,6 @@ class Authentication
     function u8Base64url($source)
     {
         $encoded_source = $this->base64_encode_source($source);
-        Log::debug("Encoded Source (base64):");
-        Log::debug($encoded_source);
 
         // Remove padding equal characters
         $encoded_source =  preg_replace('/=+$/', '', $encoded_source);
@@ -89,11 +85,9 @@ class Authentication
 
         try {
             $signature = hash_hmac('sha256', $message, $key, true);
-            Log::debug("Raw signature: {$signature}");
 
             //base64 signature
             $base64_signature = $this->u8Base64url($signature);
-            Log::debug("HMAC-SHA256 Signature (base64url): {$base64_signature}");
         } catch (Exception $e) {
             Log::debug("Message: " . $e->getMessage());
         }

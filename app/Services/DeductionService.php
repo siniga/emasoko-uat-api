@@ -33,7 +33,7 @@ class DeductionService
         if ($periodicity == "MONTHLY")
             $number_of_days = '+30 day';
         else if ($periodicity == "WEEKLY")
-            $number_of_days = '+7 day';
+            $number_of_days = '+1 week';
         else if ($periodicity == "DAILY")
             $number_of_days = "+1 day";
 
@@ -42,7 +42,7 @@ class DeductionService
             $sum_installment_amount = 0;
             for ($i = 1; $i <= $number_of_installment; $i++) {
                 if ($last_installment_date == null) {
-                    $installment_date = date('Y-m-d', strtotime($start_date . $number_of_days));
+                    $installment_date = date('Y-m-d', strtotime($start_date));
 
                     //SUMMATION installment Amount
                     $sum_installment_amount += $debitOrder->installment_amount;
@@ -82,7 +82,7 @@ class DeductionService
         } else if ($debit_type == "DYNAMIC") {
             for ($i = 1; $i <= $number_of_installment; $i++) {
                 if ($last_installment_date == null) {
-                    $installment_date = date('Y-m-d', strtotime($start_date . $number_of_days));
+                    $installment_date = date('Y-m-d', strtotime($start_date));
 
                     //assign last installment date
                     $last_installment_date =  $installment_date;

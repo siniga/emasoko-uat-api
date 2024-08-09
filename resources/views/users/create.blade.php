@@ -15,7 +15,7 @@
     @endcomponent
 
     <div class="row">
-        <div class="col-lg-12">
+        <div class="col-lg-8 col-md-8 col-sm-8 col-12">
             <div class="card">
                 <div class="card-body">
                     @if (session()->get('success'))
@@ -41,7 +41,7 @@
                         </div>
                         <!--./col-lg-4 -->
 
-                        <div class="col-lg-3 col-12">
+                        <div class="col-lg-6 col-12">
                             <div class="mb-3">
                                 <label>Email <span class="red">*</span></label>
                                 {{ Form::email('email', old('email'), ['class="form-control"', 'placeholder="Write a email address..."',  'required']) }}
@@ -54,7 +54,7 @@
                         </div>
                         <!--./col-lg-4 -->
 
-                        <div class="col-lg-3 col-12">
+                        <div class="col-lg-6 col-12">
                             <div class="mb-3">
                                 <label>Phone <span class="red">*</span></label>
                                 {{ Form::text('phone', old('phone'), ['class="form-control"', 'placeholder="Write a phone..."',  'required']) }}

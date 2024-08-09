@@ -100,7 +100,7 @@ class OtpController extends Controller
             "targetService" => "OTPVerify",
             "status" => "Verify",
             "data" => [
-                "caseReference" => "190720240006",
+                "caseReference" => "19 07 2024 0006",
                 "processName" => "EMakato Mandate Registration",
                 "otpPin" => "NR4TPT"
             ]
