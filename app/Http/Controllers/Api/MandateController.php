@@ -26,12 +26,12 @@ class MandateController extends Controller
 
         //create data
         $data = [
-            "mandateReferenceNumber" => "070820241332",
-            "mandateStartDate" => "2024-08-10T22:00:00.000",
+            "mandateReferenceNumber" => "090820241384",
+            "mandateStartDate" => "2024-08-16T22:00:00.000",
             "mandateEndDate" => "2024-10-09T22:00:00.000Z",
             "directDebitType" => "Variable",
             "debitAccountHolderName" => "YYYY",
-            "debitAccountNumber" => '61702400937',
+            "debitAccountNumber" => '31202402439',
             "debitAccountBankCode" => "016",
             "debitAccountHolderAddress1" => "IBILILO",
             "debitAccountHolderAddress2" => "MBEYA",
@@ -131,7 +131,7 @@ class MandateController extends Controller
             "targetService" => "MandateStatus",
             "status" =>  "Check",
             "data" => [
-                "mandateReferenceNumber" => "190720240006"
+                "mandateReferenceNumber" => "090820241384"
             ]
         ];
 
@@ -147,6 +147,9 @@ class MandateController extends Controller
         Log::debug("Response");
         Log::debug($response->status());
         Log::debug($response);
+
+        //send response to eMakato
+        return response()->json($response->json());
 
         // if ($response->status() == 200) {
         //     $data = $response->json();
@@ -182,14 +185,14 @@ class MandateController extends Controller
         //validation 
 
         //create authentication token
-        $AUTH_BEARER_TOKEN = $this->auth->generateToken();
+        $AUTH_BEARER_TOKEN = $request->post('AUTH_TOKEN');
         Log::debug("== My TOKEN ==");
         Log::debug($AUTH_BEARER_TOKEN);
 
         //create data
         $data = [
-            "mandateReferenceNumber" => "12144",
-            "corporateReference" => "CO202402070803000001",
+            "mandateReferenceNumber" => "090820241384",
+            "corporateReference" => "CO202402070803000014",
             "cancelReason" => "test",
             "createdBy" => "Steven.Gerald",
             "verifiedBy" => "Victor.Mpendazoe",
@@ -200,7 +203,7 @@ class MandateController extends Controller
         //create payload
         $payload = [
             "user" => "EMakato",
-            "correlationId" => "b30d3134-5624-4391-9f49-1b7a776d692e",
+            "correlationId" => "b30d3134-5624-4391-9f49-1b7a776d69hryyd",
             "targetService" => "MandateCancellation",
             "status" => "Create",
             "data" => $data
@@ -215,32 +218,39 @@ class MandateController extends Controller
         //push payload => NMB Direct Debits
         $response = Http::withHeaders($headers)->post($API_URL, $payload);
 
-        if ($response->status() == 200) {
-            $data = $response->json();
+        Log::debug("Response");
+        Log::debug($response->status());
+        Log::debug($response);
 
-            //send response to eMakato
-            return response()->json([
-                'status' => "Success",
-                'mandateReferenceNumber' => "CO202402070803000001",
-                'response' => [
-                    'responseCode' => 201,
-                    'responseDescription' => "Mandate Cancellation Registration Complete"
-                ]
-            ], 201);
-        } else {
-            $data = $response->json();
-            Log::debug("Error code =>" . $response->status());
-            Log::debug($data);
+        //send response to eMakato
+        return response()->json($response->json());
 
-            //send response to eMakato
-            return response()->json([
-                'status' => "Fail",
-                'mandateReferenceNumber' => "CO202402070803000001",
-                'response' => [
-                    'responseCode' => 500,
-                    'responseDescription' => "Internal Server Error"
-                ]
-            ], 500);
-        }
+        // if ($response->status() == 200) {
+        //     $data = $response->json();
+
+        //     //send response to eMakato
+        //     return response()->json([
+        //         'status' => "Success",
+        //         'mandateReferenceNumber' => "CO202402070803000001",
+        //         'response' => [
+        //             'responseCode' => 201,
+        //             'responseDescription' => "Mandate Cancellation Registration Complete"
+        //         ]
+        //     ], 201);
+        // } else {
+        //     $data = $response->json();
+        //     Log::debug("Error code =>" . $response->status());
+        //     Log::debug($data);
+
+        //     //send response to eMakato
+        //     return response()->json([
+        //         'status' => "Fail",
+        //         'mandateReferenceNumber' => "CO202402070803000001",
+        //         'response' => [
+        //             'responseCode' => 500,
+        //             'responseDescription' => "Internal Server Error"
+        //         ]
+        //     ], 500);
+        // }
     }
 }

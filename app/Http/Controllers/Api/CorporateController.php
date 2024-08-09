@@ -23,47 +23,37 @@ class CorporateController extends Controller
         //validation 
 
         //create authentication token
-        $AUTH_BEARER_TOKEN = $this->auth->generateToken();
-        Log::debug("== My TOKEN ==");
-        Log::debug($AUTH_BEARER_TOKEN);
-
-        return $AUTH_BEARER_TOKEN;
-
-        exit();
+        $AUTH_BEARER_TOKEN = $request->post('AUTH_TOKEN');
 
         //create data
         $data = [
-            "corporateReference" => $request->post('CorporateReference'),
-            "name" => $request->post('name'),
-            "corporateShortCode" => $request->post('corporateShortCode'),
-            
-            "clientCode" => $request->post('clientCode'),
-            "customerCode" => $request->post('customerCode'),
-            "accountName" => $request->post("accountName"),
-            "primaryAccount" => $request->post('primaryAccount'),
+            "corporateReference" => "CO202409080803000041",
+            "name" => "SOLOCODES",
+            "corporateShortCode" => "SOL",
+            "clientCode" => "S0",
+            "customerCode" => "002430672",
+            "accountName" => "YYYY",
+            "primaryAccount" => "20110007951",
             "branchSortCode" => "608",
             "currency" => "TZS",
-
             "accountStatus" => null,
             "address1" => "MBEYA",
             "address2" => "IBABA ILEJE MBEYA",
             "address3" => "IBABA ILEJE MBEYA",
-            "phoneNumber" => $request->post('phoneNumber'),
-            "email" => $request->post('email'),
-            "secondaryMobile" => $request->post('phoneNumber'),
-            "secondaryEmail" => $request->post('email'),
+            "phoneNumber" => "123456789",
+            "email" => "info@solocodes.io",
+            "secondaryMobile" => "123456789",
+            "secondaryEmail" => "info@solocodes.io",
             "suffix" => "Large",
             "deductionsActive" => "false",
             "description" => "Coding company primary located in Tanzania",
-
             "bookedBalance" => 369791.125,
             "creditLimit" => 0,
             "debitLimit" => 0,
             "corporateLimit" => 50000000,
             "isOverallLimit" => true,
             "defaultAmount" => 500,
-            "defaultPercentage" => 0,
-            
+            "defaultPercentage" => 0,       
             "createdBy" => "Steven.Gerald",
             "verifiedBy" => "Victor.Mpendazoe",
             "createdDate" => "2024-02-08 12:00:00",
