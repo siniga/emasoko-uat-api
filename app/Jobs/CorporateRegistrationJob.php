@@ -39,7 +39,8 @@ class CorporateRegistrationJob implements ShouldQueue
     public function handle()
     {
         //create authentication token
-        $AUTH_BEARER_TOKEN = $this->auth->generateToken();
+        //$AUTH_BEARER_TOKEN = $this->auth->generateToken();
+        $AUTH_BEARER_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MjMwNTQ0ODEsIm5iZiI6MTcyMzA1NDQ4MSwiZXhwIjoxNzIzMDU0NzgxLCJpc3MiOiJFTWFrYXRvIiwiYXVkIjoiRU1ha2F0byJ9.zZfyp76f-ChCw3ux5roLIxtnahfR5DjqLVALZeyQM0I";
 
         //Create Headers
         $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer '.$AUTH_BEARER_TOKEN];

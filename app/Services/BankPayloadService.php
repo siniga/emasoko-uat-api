@@ -84,8 +84,8 @@ class BankPayloadService
         //create payload
         $payload = [
             "mandateReferenceNumber" => $debitOrder->reference,
-            "mandateStartDate" => Carbon::parse($debitOrder->start_date)->format('Y-m-d H:i:s'),
-            "mandateEndDate" => Carbon::parse($debitOrder->end_date)->format('Y-m-d H:i:s'),
+            "mandateStartDate" => "2024-08-10T22:00:00.000",
+            "mandateEndDate" => "2024-09-10T22:00:00.000Z",
             "directDebitType" => $debitOrder->debit_type,
             "debitAccountHolderName" => $customerAccount->account_name,
             "debitAccountNumber" => $customerAccount->account_number,
@@ -107,11 +107,11 @@ class BankPayloadService
             "createdBy" => static::userNameFormat($debitOrder->userCreated),
             "verifiedBy" => static::userNameFormat(auth()->user()),
             "createdDate" => $debitOrder->created_at,
-            "verifyDate" => Carbon::now()->format('Y-m-d H:i:s'),
+            "verifyDate" => $debitOrder->created_at,
             "file" => [
                 "fileName" => "Evidence Of Aggrement",
                 "fileType" => "pdf",
-                "fileData" => pdf_to_base64(public_path('assets/uploads/docs/' . $debitOrder->evidence_of_aggrement))
+                "fileData" => pdf_to_base64(public_path('assets/uploads/docs/Invoice_EUINTZ24_9765.pdf'))
             ]
         ];
 

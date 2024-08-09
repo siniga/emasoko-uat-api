@@ -26,9 +26,9 @@ class MandateController extends Controller
 
         //create data
         $data = [
-            "mandateReferenceNumber" => "070820241311",
-            "mandateStartDate" => "2024-07-28T22:00:00.000",
-            "mandateEndDate" => "2024-08-02T22:00:00.000Z",
+            "mandateReferenceNumber" => "070820241332",
+            "mandateStartDate" => "2024-08-10T22:00:00.000",
+            "mandateEndDate" => "2024-10-09T22:00:00.000Z",
             "directDebitType" => "Variable",
             "debitAccountHolderName" => "YYYY",
             "debitAccountNumber" => '61702400937',

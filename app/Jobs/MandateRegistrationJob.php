@@ -39,7 +39,7 @@ class MandateRegistrationJob implements ShouldQueue
     public function handle()
     {
         //create authentication token
-        $AUTH_BEARER_TOKEN = $this->auth->generateToken();
+        $AUTH_BEARER_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MjMwNTI2MDAsIm5iZiI6MTcyMzA1MjYwMCwiZXhwIjoxNzIzMDUyOTAwLCJpc3MiOiJFTWFrYXRvIiwiYXVkIjoiRU1ha2F0byJ9.JImhYkdU3cuNXcdaTtO5BAzbF6ohTIUQX9Z76j56e-I";
 
         //Create Headers
         $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer '.$AUTH_BEARER_TOKEN];
@@ -61,9 +61,9 @@ class MandateRegistrationJob implements ShouldQueue
         $API_URL = env('API_URL');
 
         //response
-    //    $response = Http::withHeaders($headers)->post($API_URL, $payload);
+        $response = Http::withHeaders($headers)->post($API_URL, $payload);
 
-    //     //logging response
-    //    Log::channel('apiLogs')->Info('MandateRegistration Response =>' . $response);
+        //logging response
+        Log::debug('MandateRegistration Response =>' . $response);
     }
 }

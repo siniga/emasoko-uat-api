@@ -435,7 +435,7 @@ class PaymentMandateController extends Controller
         $debit_order = DebitOrder::findOrFail($debit_uuid);
 
         //update status of debit mandate
-        $debit_order->status = 'submitted';
+        //$debit_order->status = 'submitted';
         $debit_order->save();
 
         //create payload
