@@ -75,11 +75,8 @@ class MandateRegistrationJob implements ShouldQueue
         Log::debug('== MandateRegistration Response ==');
         Log::debug($response);
 
-        if ($response['status'] == "Success") {
-            $debit_order->status = 201;
-            $debit_order->http_response_code = $response['data']['response'][0]['responseCode'];
-        } else if ($response['status'] == "Fail") {
-            $debit_order->status = 500;
+        if ($response['status'] == "Success" || $response['status'] == "Fail") {
+            $debit_order->status = $response['data']['response'][0]['responseCode'];
             $debit_order->http_response_code = $response['data']['response'][0]['responseCode'];
             $debit_order->remarks = $response['data']['response'][0]['responseDescription'];
         }

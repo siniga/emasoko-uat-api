@@ -76,12 +76,10 @@ class CorporateRegistrationJob implements ShouldQueue
         Log::debug('== CorporateRegistration Response ==');
         Log::debug($response);
 
-        if ($response['status'] == "Success") {
-            $partner->status = 201;
-            $partner->http_response_code = $response['data']['response'][0]['responseCode'];
-        } else if ($response['status'] == "Fail") {
+        if ($response['status'] == "Success" || $response['status'] == "Fail") {
             $partner->status = $response['data']['response'][0]['responseCode'];
             $partner->http_response_code = $response['data']['response'][0]['responseCode'];
+            $partner->remarks = $response['data']['response'][0]['responseDescription'];
         }
         $partner->save();
     }
