@@ -237,15 +237,17 @@
                                                     </a>
                                                 @endif
 
-                                                <a href="{{ route('companies.edit', $company->uuid) }}" title="Edit"
-                                                    class="btn btn-xss">
-                                                    <i class="bx bx-edit text-secondary"></i>
-                                                </a>
+                                                @if ($company->status == 100 || $company->status ==401 || $company->status == 403 || $company->status == 410 || $company->status == 450 || $company->status ==451)
+                                                    <a href="{{ route('companies.edit', $company->uuid) }}" title="Edit"
+                                                        class="btn btn-xss">
+                                                        <i class="bx bx-edit text-secondary"></i>
+                                                    </a>
 
-                                                <a href="{{ route('companies.delete', $company->uuid) }}" title="Delete"
-                                                    class="btn btn-xss delete">
-                                                    <i class="bx bx-trash text-danger"></i>
-                                                </a>
+                                                    <a href="{{ route('companies.delete', $company->uuid) }}" title="Delete"
+                                                        class="btn btn-xss delete">
+                                                        <i class="bx bx-trash text-danger"></i>
+                                                    </a>
+                                                @endif
                                             </td>
                                         </tr>
                                         @php $serial++; @endphp
