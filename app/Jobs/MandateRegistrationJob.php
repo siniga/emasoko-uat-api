@@ -39,9 +39,9 @@ class MandateRegistrationJob implements ShouldQueue
      */
     public function handle()
     {
-        //create authentication token
-        $AUTH_BEARER_TOKEN = $this->auth->generateToken();
-
+         //create authentication token
+         $AUTH_BEARER_TOKEN = $this->auth->generateToken();
+         
         //Create Headers
         $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer ' . $AUTH_BEARER_TOKEN];
 

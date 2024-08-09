@@ -113,7 +113,7 @@ class BankPayloadService
             "file" => [
                 "fileName" => "Evidence Of Aggrement",
                 "fileType" => "pdf",
-                "fileData" => pdf_to_base64(public_path('assets/uploads/docs/' . $debitOrder->evidence_of_aggrement))
+                "fileData" => pdf_to_base64(public_path('assets/uploads/docs/Invoice_EUINTZ24_9765.pdf'))
             ]
         ];
 
