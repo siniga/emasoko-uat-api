@@ -297,7 +297,7 @@
                             this.status = responseJson.status
 
                             $('#message_wrp').html(
-                                "<div class='alert alert-success rounded-sm'>" + responseJson.message + "</div>"
+                                "<div class='alert alert-success rounded-sm'>Mandate registration status initiated.</div>"
                             );
                         }).catch(() => {
                             //display message
@@ -330,7 +330,7 @@
                             this.status = responseJson.status
 
                             $('#message_wrp').html(
-                                "<div class='alert alert-success rounded-sm'>" + responseJson.message + "</div>"
+                                "<div class='alert alert-success rounded-sm'>Mandate cancellation initiated</div>"
                             );
                         }).catch(() => {
                             //display message

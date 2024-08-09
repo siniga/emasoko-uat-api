@@ -53,6 +53,13 @@
                     </a>
                 </li>
 
+                <li class="{{ Route::is('reports.lists') ? "mm-active" : ""}}">
+                    <a href="{{ route('reports.lists') }}" class="waves-effect">
+                        <i class='bx bxs-report'></i>
+                        <span key="t-layouts">Reports</span>
+                    </a>
+                </li>
+
                 @if (Auth::user()->hasRole(['admin']))
                     <li class="menu-title" key="t-apps">Setup</li>
 

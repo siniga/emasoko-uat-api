@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Classes\Messaging;
+use App\Events\CancelMandate;
 use App\Events\CreateOtp;
 use App\Events\MandateStatus;
 use App\Events\VerifyOtp;
@@ -353,6 +354,7 @@ class PaymentMandateController extends Controller
 
         $debit_order->uuid = $debit_uuid;
         $debit_order->total_amount = $loan_amount;
+        $debit_order->outstanding_amount = $loan_amount;
         if ($debit_order->created_by == null) {
             $debit_order->created_by = auth()->id();
         }
@@ -560,17 +562,9 @@ class PaymentMandateController extends Controller
         $payload = $this->payloadService->mandateCancellationPayload($debit_order);
 
         //service for sending request to API
-        $response = $this->bankApi->mandateCancellationRequest($payload);
+        event(new CancelMandate($payload));
 
-        if ($response == 200) {
-            //TODO: create deduction installments
-            //$response = $this->deductionService->createInstallment($debit_order);
-
-            //response
-            return response()->json(['success' => true, 'success_msg' => "Mandate cancellation initiated"], 200);
-        } else {
-            return response()->json(['success' => false, 'error_msg' => "Failed to initiate mandate cancellation."], 200);
-        }
+        return response()->json(['success' => true, 'success_msg' => "Mandate cancellation initiated"], 200);
     }
 
     //customer details
