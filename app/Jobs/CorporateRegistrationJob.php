@@ -80,7 +80,7 @@ class CorporateRegistrationJob implements ShouldQueue
             $partner->status = 201;
             $partner->http_response_code = $response['data']['response'][0]['responseCode'];
         } else if ($response['status'] == "Fail") {
-            $partner->status = 500;
+            $partner->status = $response['data']['response'][0]['responseCode'];
             $partner->http_response_code = $response['data']['response'][0]['responseCode'];
         }
         $partner->save();

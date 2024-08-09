@@ -207,7 +207,7 @@ class CompanyService
     {
         if ($action == "REJECTED") {
             //update company registration status
-            $partner->status = 403; //forbiden
+            $partner->status = 999;
             $partner->updated_by = auth()->id();
             $partner->save();
 

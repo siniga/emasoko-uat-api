@@ -216,8 +216,11 @@
                                                 @elseif($company->status == 100)
                                                     <span class="badge bg-info font-size-10">Approval Process</span>
                                                 @elseif($company->status == 200)
+                                                    <span class="badge bg-success-1 font-size-10">Processing</span>
+                                                @elseif($company->status == 201)
                                                     <span class="badge bg-success-1 font-size-10">Approved</span>
-                                                @elseif($company->status == 403)
+                                                @elseif($company->status == '401' || $company->status == '403' || $company->status == '410' || $company->status == '450' || $company->status == '451' || $company->status == '500')    
+                                                @elseif($company->status == 999)
                                                     <span class="badge bg-danger font-size-10">Rejected</span>
                                                 @endif
                                             </td>
