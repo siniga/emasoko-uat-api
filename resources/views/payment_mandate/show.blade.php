@@ -33,30 +33,37 @@
             <div class="col-lg-12">
                 <div class="card">
                     <div class="card-body">
-                        
+
                         <div id="message_wrp" class=""></div>
 
                         <div class="d-flex justify-content-between mb-2">
                             <div></div>
 
                             <div class="text-sm-end d-none d-sm-block">
-                                <button x-html="btnCancel" title="Mandate Cancellation" class="btn btn-danger btn-sm"
-                                    x-on:click="cancelMandate();"></button>
+                                <template
+                                    x-if="status==100 || status==200 || status ==401 || status == 403 || status == 410 || status == 450 || status ==451">
+                                    <button x-html="btnCancel" title="Mandate Cancellation" class="btn btn-danger btn-sm"
+                                        x-on:click="cancelMandate();"></button>
+                                </template>
 
-                                <button x-html="btnStatus" title="Get Mandate Status" class="btn btn-success btn-sm"
-                                    x-on:click="fetchMandateStatus();"></button>
+                                <template x-if="status==201">
+                                    <button x-html="btnStatus" title="Get Mandate Status" class="btn btn-success btn-sm"
+                                        x-on:click="fetchMandateStatus();"></button>
+                                </template>
 
-                                @if ($debit_order->approved == 0)
+                                <template x-if="status==100">
                                     <a href="{{ route('payment-mandate.edit', $debit_order->id) }}" title="Edit"
                                         class="btn btn-outline-secondary text-medium btn-sm">
                                         <i class="bx bx-edit font-size-12"></i> Edit
                                     </a>
+                                </template>
 
+                                <template x-if="status==100">
                                     <a href="{{ route('payment-mandate.delete', $debit_order->id) }}" title="Delete"
                                         class="btn btn-outline-danger text-medium btn-sm delete">
                                         <i class="bx bx-trash font-size-12"></i> Delete
                                     </a>
-                                @endif
+                                </template>
                             </div>
                         </div>
 
@@ -100,17 +107,7 @@
                                         </td>
 
                                         <th>Status</th>
-                                        <td>
-                                            <span>
-                                                @if ($debit_order->customerAccount->status == 'partial')
-                                                    <span class="badge bg-info">Partial Approved</span>
-                                                @elseif($debit_order->customerAccount->status == 'approved')
-                                                    <span class="badge bg-success">Approved</span>
-                                                @elseif($debit_order->customerAccount->status == 'rejected')
-                                                    <span class="badge bg-danger">Rejected</span>
-                                                @endif
-                                            </span>
-                                        </td>
+                                        <td></td>
                                     </tr>
 
                                     @if ($debit_order->customerAccount->remarks)
@@ -140,13 +137,33 @@
 
                                         <th width="25%">Consent Status</th>
                                         <td width="25%">
-                                            @if ($debit_order->approved == 'PENDING')
-                                                <span class="badge badge-pill badge-soft-danger">Pending</span>
-                                            @elseif($debit_order->approved == 'APPROVED')
-                                                <span class="badge badge-pill badge-soft-success">Approved</span>
-                                            @elseif($debit_order->approved == 'REJECTED')
-                                                <span class="badge badge-pill badge-soft-danger">Rejected</span>
-                                            @endif
+                                            <template x-if="status==100">
+                                                <span class="badge bg-info">Approval Process</span>
+                                            </template>
+
+                                            <template x-if="status==999">
+                                                <span class="badge bg-danger">Rejected</span>
+                                            </template>
+
+                                            <template x-if="status==200">
+                                                <span class="badge bg-success-1">Approved eMakato & NMB Processing</span>
+                                            </template>
+
+                                            <template x-if="status==201">
+                                                <span class="badge bg-success-1">Created NMB</span>
+                                            </template>
+
+                                            <template x-if="status==240">
+                                                <span class="badge bg-success-1">Case Complete NMB</span>
+                                            </template>
+
+                                            <template x-if="status==249">
+                                                <span class="badge bg-success-1">Case Processing NMB</span>
+                                            </template>
+
+                                            <template x-if="status==500">
+                                                <span class="badge bg-danger">Failed NMB</span>
+                                            </template>
                                         </td>
                                     </tr>
 
@@ -279,7 +296,7 @@
                 btnStatus: '<i class="fa fa-check"></i> Mandate Status',
 
                 //approval mandate status
-                fetchMandateStatus(){
+                fetchMandateStatus() {
                     this.formLoading = true;
                     this.btnStatus = '<i class="fas fa-spinner fa-spin"></i> Fetch Mandate status....';
 
@@ -312,7 +329,7 @@
                 },
 
                 //cancel mandate
-                cancelMandate(){
+                cancelMandate() {
                     this.formLoading = true;
                     this.btnCancel = '<i class="fas fa-spinner fa-spin"></i> Cancelling Mandate....';
 

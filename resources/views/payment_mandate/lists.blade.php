@@ -205,29 +205,33 @@
                                             <td>{{ $values->customerAccount->phone ?? '' }}</td>
 
                                             <td>
-                                                @if ($values->approved == "PENDING")
+                                                @if ($values->status == 100)
                                                     <span class="badge badge-pill badge-soft-danger">Pending</span>
-                                                @elseif($values->approved == "APPROVED")
+                                                @elseif($values->status == 200)
+                                                    <span class="badge badge-pill badge-soft-success">Processing</span>
+                                                @elseif($values->status == 201)
                                                     <span class="badge badge-pill badge-soft-success">Approved</span>
-                                                @elseif($values->approved == "REJECTED")
+                                                @elseif($values->status == 999)
                                                     <span class="badge badge-pill badge-soft-danger">Rejected</span>
                                                 @endif
                                             </td>
 
                                             <td>
-                                                @if ($values->status == 'saved')
+                                                @if ($values->status == 100)
                                                     <a href="{{ route('payment-mandate.preview', $values->uuid) }}"
                                                         title="Preview application" class="btn btn-xss">
                                                         <i class='bx bxs-check-square bx-xs text-success'></i>
                                                     </a>
                                                 @endif
 
-                                                <a href="{{ route('payment-mandate.show', $values->uuid) }}" title="View"
-                                                    class="btn btn-xss">
-                                                    <i class="bx bxs-folder-open"></i>
-                                                </a>
+                                                @if ($values->status != 100)
+                                                    <a href="{{ route('payment-mandate.show', $values->uuid) }}" title="View"
+                                                        class="btn btn-xss">
+                                                        <i class="bx bxs-folder-open"></i>
+                                                    </a>
+                                                @endif
 
-                                                @if ($values->approved == "PENDING")
+                                                @if ($values->status == 100)
                                                     <a href="{{ route('payment-mandate.edit', $values->uuid) }}"
                                                         title="Edit" class="btn btn-xss">
                                                         <i class="bx bx-edit text-secondary"></i>

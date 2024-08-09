@@ -54,7 +54,7 @@
                                     </button>
                                 </template>
 
-                                <template x-if="status==100 || status ==401 || status == 403 || status == 410 || status == 450 || status ==451">
+                                <template x-if="status==100 || status==200 || status ==401 || status == 403 || status == 410 || status == 450 || status ==451">
                                     <button x-html="btnApprove" title="Approve Registration" class="btn btn-success btn-sm"
                                         x-on:click="approveRegistration('{{ $company->uuid }}')"></button>
                                 </template>
