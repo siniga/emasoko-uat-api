@@ -30,15 +30,15 @@
                     <div class="stepwizard mb-4">
                         <div class="stepwizard-row setup-panel">
 
-                            <div class="stepwizard-step">
+                            <div class="stepwizard-step bg-success">
                                 <a href="#step-1" type="button" class="btn btn-success btn-circle text-white">1</a>
-                                <span class="text-success">Company Information</span>
+                                <span class="text-white">Company Information</span>
                             </div>
 
-                            <div class="stepwizard-step">
+                            <div class="stepwizard-step bg-primary">
                                 <a href="#step-2" type="button" class="btn btn-secondary btn-circle"
                                     disabled="disabled">2</a>
-                                <span class="text-primary">Company Documents</span>
+                                <span class="text-white">Company Documents</span>
                             </div>
 
                             <div class="stepwizard-step">
@@ -56,7 +56,7 @@
                             <div class="stepwizard-step">
                                 <a href="#step-5" type="button" class="btn btn-default btn-circle"
                                     disabled="disabled">5</a>
-                                <span>Credentials</span>
+                                <span>Company Preview</span>
                             </div>
                         </div>
                     </div>
@@ -86,7 +86,7 @@
                                                 <thead>
                                                     <tr>
                                                         <th width="70%">Attachments</th>
-                                                        <th width="20%">Action</th>
+                                                        <th width="20%">Note: Only PDF documents required</th>
                                                     </tr>
                                                 </thead>
 

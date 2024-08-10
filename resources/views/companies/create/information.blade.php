@@ -29,10 +29,9 @@
                     <!--./form wizard -->
                     <div class="stepwizard mb-4">
                         <div class="stepwizard-row setup-panel">
-
-                            <div class="stepwizard-step">
+                            <div class="stepwizard-step bg-primary">
                                 <a href="#step-1" type="button" class="btn btn-secondary btn-circle">1</a>
-                                <span class="text-primary">Company Information</span>
+                                <span class="text-white">Company Information</span>
                             </div>
 
                             <div class="stepwizard-step">
@@ -56,7 +55,7 @@
                             <div class="stepwizard-step">
                                 <a href="#step-5" type="button" class="btn btn-default btn-circle"
                                     disabled="disabled">5</a>
-                                <span>Credentials</span>
+                                <span>Company Preview</span>
                             </div>
                         </div>
                     </div>
@@ -134,7 +133,7 @@
 
                                 <div class="col-lg-3">
                                     <div class="mb-3">
-                                        <label>Number of Staff <span class="text-danger">*</span>
+                                        <label>Number of Staff
                                         </label>
                                         {{ Form::number('number_of_staff', old('number_of_staff', $company->number_of_staff ?? ''), ['class="form-control"', 'placeholder="Write number of staff..."', 'min' => 1]) }}
                                         <span class="formError"></span>
@@ -181,7 +180,7 @@
 
                             <div class="row mt-4">
                                 <div class="col-lg-12">
-                                    <h5 class="text-capitalize">Company Location</h5>
+                                    <h5 class="text-capitalize">Company Address</h5>
                                 </div>
                             </div>
 
@@ -224,7 +223,7 @@
                                 <div class="col-md-12">
                                     <div class="mb-3 text-sm-end d-none d-sm-block">
                                         <a href="{{ route('companies.lists') }}"
-                                            class="btn btn-danger btn-xs text-medium">
+                                            class="btn btn-outline-danger btn-xs text-medium">
                                             Cancel
                                         </a>
                                         <button type="submit" id="submitButton" class="btn btn-primary">Next</button>
@@ -258,7 +257,6 @@
                     category_id: "required",
                     tin_number: "required",
                     year_of_incorporation: "required",
-                    number_of_staff: "required",
                     company_email: {
                         required: true,
                         email: true,
@@ -280,9 +278,6 @@
                     },
                     year_of_incorporation: {
                         required: "Year of incorporation required"
-                    },
-                    number_of_staff: {
-                        required: "Number of staff required"
                     },
                     company_email: {
                         required: "Company email required",

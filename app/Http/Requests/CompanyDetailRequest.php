@@ -28,7 +28,7 @@ class CompanyDetailRequest extends FormRequest
             'business_name' => 'required',
             'category_id' => 'required',
             'year_of_incorporation' => 'required|numeric',
-            'number_of_staff' => 'required|numeric',
+            'number_of_staff' => 'numeric',
             'country_code' => 'required',
             'company_phone' => 'required',
             'company_email' => 'required|email',
