@@ -44,7 +44,7 @@ class Authentication
         // $signature = $this->generateSignature($this->passPhrase, $preSignature);
 
         // $jwtToken = $b64Header . '.' . $b64Payload . '.' . $signature;
-        $jwtToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MjMxOTQyMzEsIm5iZiI6MTcyMzE5NDIzMSwiZXhwIjoxNzIzMTk0NTMxLCJpc3MiOiJFTWFrYXRvIiwiYXVkIjoiRU1ha2F0byJ9.tSDqC8WE2R3RfJ8kXkgbs_eNJy4kTaBb1mRY-K6_R_w";
+        $jwtToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MjMyNzE1NDEsIm5iZiI6MTcyMzI3MTU0MSwiZXhwIjoxNzIzMjcxODQxLCJpc3MiOiJFTWFrYXRvIiwiYXVkIjoiRU1ha2F0byJ9.CBJXm9b8PEIWEejsQykKSpUOdxayaNLv22NVCEkpu0Y";
         return $jwtToken;
     }
 

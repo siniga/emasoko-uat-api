@@ -20,24 +20,22 @@ class CollectionController extends Controller
 
     public function create(Request $request)
     {
-        //validation 
-
         //create authentication token
         $AUTH_BEARER_TOKEN = $this->auth->generateToken();
 
         //create data
         $data = [
-            "collectionReference" => "12144",
-            "corporateReference" => "CO202402070803000001",
+            "collectionReference" => "12189",
+            "corporateReference" => "CO202409080803000041",
             "selectedPostingDate" => null,
             "createdBy" => "Steven.Gerald",
             "verifiedBy" => "Victor.Mpendazoe",
-            "createdDate" => "2024-02-08 12:00:00",
-            "verifyDate" => "2024-02-08 13:00:00",
+            "createdDate" => "2024-08-10 08:00:00",
+            "verifyDate" => "2024-08-010 09:00:00",
             "file" => [
                 "fileName" => "Payment_Collection3",
                 "fileType" => "CSV",
-                "fileData" => ""
+                "fileData" => "U0VSSUFMIE5vLjtCQU5LIENPREU7QlJBTkNIIE5BTUU7RU1QTE9ZRUUgTlVNQkVSO0NVU1RPTUVSIE5BTUU7QUNDT1VOVCBOTzsgQU1PVU5UIAoxOzE2O05NQjt4eXo7VGVzdCBUZXN0OzMwMTAyNDAwMDg1OzIwCjE7MTY7Tk1CO3h5ejtUZXN0IFRlc3Q7MzAxMDI0MDAwODU7MjA="
             ]
         ];
 
@@ -59,46 +57,19 @@ class CollectionController extends Controller
         //push payload => NMB Direct Debits
         $response = Http::withHeaders($headers)->post($API_URL, $payload);
 
-        if ($response->status() == 200) {
-            $data = $response->json();
-
-            //send response to eMakato
-            return response()->json([
-                'status' => "Success",
-                "corporateReference" => "CO202402070803000001",
-                'response' => [
-                    'responseCode' => 201,
-                    'responseDescription' => "Collection registration Complete"
-                ]
-            ], 201);
-        } else {
-            $data = $response->json();
-            Log::debug("Error code =>" . $response->status());
-            Log::debug($data);
-
-            //send response to eMakato
-            return response()->json([
-                'status' => "Fail",
-                'corporateReference' => "CO202402070803000001",
-                'response' => [
-                    'responseCode' => 500,
-                    'responseDescription' => "Internal Server Error"
-                ]
-            ], 500);
-        }
+        //send response to eMakato
+        return response()->json($response->json());
     }
 
     public function status(Request $request)
     {
-        //validation 
-
         //create authentication token
         $AUTH_BEARER_TOKEN = $this->auth->generateToken();
 
         //create payload
         $payload = [
             "user" => "EMakato",
-            "correlationId" => "b30d3134-5624-4391-9f49-1b7a776d692e",
+            "correlationId" => "b30d3134-5624-4391-9f49-1b7a776d7778",
             "targetService" => "CollectionStatus",
             "status" =>  "Check",
             "data" => [
@@ -115,34 +86,7 @@ class CollectionController extends Controller
         //push payload => NMB Direct Debits
         $response = Http::withHeaders($headers)->post($API_URL, $payload);
 
-        if ($response->status() == 200) {
-            $data = $response->json();
-
-            //check status via response code = 230 or 239 to modify response
-
-            //send response to eMakato
-            return response()->json([
-                'status' => "Success",
-                "collectionReference" => "CO202402070803000001",
-                'response' => [
-                    'responseCode' => 230,
-                    'responseDescription' => "Batch Completed"
-                ]
-            ], 201);
-        } else {
-            $data = $response->json();
-            Log::debug("Error code =>" . $response->status());
-            Log::debug($data);
-
-            //send response to eMakato
-            return response()->json([
-                'status' => "Fail",
-                "collectionReference" => "CO202402070803000001",
-                'response' => [
-                    'responseCode' => 500,
-                    'responseDescription' => "Internal Server Error"
-                ]
-            ], 500);
-        }
+        //send response to eMakato
+        return response()->json($response->json());
     }
 }

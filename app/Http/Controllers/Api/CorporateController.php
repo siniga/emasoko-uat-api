@@ -20,8 +20,6 @@ class CorporateController extends Controller
 
     public function registration(Request $request)
     {
-        //validation 
-
         //create authentication token
         $AUTH_BEARER_TOKEN = $request->post('AUTH_TOKEN');
 
