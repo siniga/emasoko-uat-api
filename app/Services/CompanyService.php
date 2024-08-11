@@ -112,18 +112,17 @@ class CompanyService
     }
 
     //create partner credentials
-    public function createCredential($data, Partner $partner): void
+    public function createCredential(Partner $partner): void
     {
         //token and password
         $token = Str::random(64);
-        $password = $data->password;
 
         //create user to store data
-        $user = User::firstOrNew(['email' => $data->email, 'TIN_number' => $data->tin_number]);
-        $user->name = $data->name;
-        $user->phone = $data->phone;
+        $user = User::firstOrNew(['email' => $partner->email, 'TIN_number' => $partner->tin_number]);
+        $user->name = $partner->business_name;
+        $user->phone = $partner->phone;
         $user->verify_token = $token;
-        $user->password = Hash::make($password);
+        $user->password = Hash::make("12345678");
         $user->save();
 
         //insert or create role
@@ -234,14 +233,10 @@ class CompanyService
             $partner->updated_by = auth()->id();
             $partner->save();
 
-            if ($partner->partnerUsers->isNotEmpty()) {
-                foreach ($partner->partnerUsers as $val) {
-                    //update user
-                    $user = User::findOrFail($val->user_id);
-                    $user->active = 1;
-                    $user->save();
-                }
-            }
+            //Create Credentials
+            $this->createCredential($partner);
+
+            //TODO: Create company users
 
             return 200;
         }
