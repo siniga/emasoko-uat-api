@@ -34,22 +34,22 @@
                 <div class="card-body">
                     <div class="stepwizard mb-4">
                         <div class="stepwizard-row setup-panel">
-                            <div class="stepwizard-step">
+                            <div class="stepwizard-step bg-success">
                                 <a href="#step-1" type="button" class="btn btn-success btn-circle text-white"
                                     disabled="disabled">1</a>
-                                <span class="text-success">Deduction Channel</span>
+                                <span class="text-white">Deduction Channel</span>
                             </div>
 
-                            <div class="stepwizard-step">
+                            <div class="stepwizard-step bg-success">
                                 <a href="#step-2" type="button" class="btn btn-success btn-circle text-white"
                                     disabled="disabled">2</a>
-                                <span class="text-success">Customer Deduction Information</span>
+                                <span class="text-white">Customer Deduction Information</span>
                             </div>
 
-                            <div class="stepwizard-step">
-                                <a href="#step-3" type="button" class="btn btn-success btn-circle text-white"
+                            <div class="stepwizard-step bg-primary">
+                                <a href="#step-3" type="button" class="btn btn-secondary btn-circle"
                                     disabled="disabled">3</a>
-                                <span class="text-success">Confirmation</span>
+                                <span class="text-white">Confirmation</span>
                             </div>
                         </div>
                     </div>

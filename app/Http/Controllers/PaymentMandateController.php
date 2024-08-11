@@ -232,8 +232,10 @@ class PaymentMandateController extends Controller
             'phone' => $unique_phone
         ]);
         $customer_account->uuid = $customer_account_uuid;
+        $customer_account->secondary_phone = casting_phone($validated['secondary_phone']);
         $customer_account->account_name = $validated['account_name'];
         $customer_account->account_number = $validated['account_number'];
+        $customer_account->bank_code = $validated['bank_code'];
         $customer_account->customer_id = $customer->id;
         $customer_account->created_by = Auth::user()->id;
         $customer_account->save();
@@ -290,7 +292,7 @@ class PaymentMandateController extends Controller
                     'required_if:debit_type,==,DYNAMIC',
                     function ($attribute, $value, $fail) use ($min_installment_amount, $max_installment_amount) {
                         if ($min_installment_amount > $max_installment_amount) {
-                            return $fail('Maximum deduction should not be less than minimum deduction amount');
+                            return $fail('Maximum installment amount should not be less than minimum deduction amount');
                         }
                     }
                 ],
@@ -361,8 +363,8 @@ class PaymentMandateController extends Controller
         $debit_order->reference = Carbon::now()->format('dmY') . rand(1000, 1999);
         $debit_order->debit_type = $request->input('debit_type');
         $debit_order->installment_amount = $installment_amount;
-        $debit_order->max_installment_amount = $min_installment_amount;
-        $debit_order->min_installment_amount = $max_installment_amount;
+        $debit_order->min_installment_amount = $min_installment_amount;
+        $debit_order->max_installment_amount = $max_installment_amount;
         $debit_order->periodicity = $request->input('periodicity');
         $debit_order->installment_number = $request->input('number_of_installment');
         $debit_order->start_date = $request->input('start_date');
@@ -388,7 +390,10 @@ class PaymentMandateController extends Controller
         $debit_order->approved = "PENDING";
         $debit_order->save();
 
-        if ($debit_order->wasRecentlyCreated) {
+        if ($debit_order) {
+            Log::debug("== Debit order creation ==");
+            Log::debug($debit_order);
+
             //create deduction installments
             $response = $this->deductionService->createInstallment($debit_order);
 
@@ -448,12 +453,14 @@ class PaymentMandateController extends Controller
 
         //update status of debit mandate
         $debit_order->status = 200;
-        $debit_order->save();
+       $debit_order->save();
 
         //create payload
         $payload = $this->payloadService->mandateRegistrationPayload($debit_order);
+        Log::debug("== Payload ==");
+        Log::debug($payload);
 
-        //TODO: Create Request to NMB
+        //Create Request to NMB
         dispatch(new MandateRegistrationJob($payload));
 
         //response

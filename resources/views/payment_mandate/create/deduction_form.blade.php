@@ -29,16 +29,22 @@
 
                 <div class="stepwizard mb-4">
                     <div class="stepwizard-row setup-panel">
-                        <div class="stepwizard-step">
+                        <div class="stepwizard-step bg-success">
                             <a href="#step-1" type="button" class="btn btn-success btn-circle text-white"
                                 disabled="disabled">1</a>
-                            <span class="text-success">Deduction Channel</span>
+                            <span class="text-white">Deduction Channel</span>
                         </div>
 
-                        <div class="stepwizard-step">
+                        <div class="stepwizard-step bg-primary">
                             <a href="#step-2" type="button" class="btn btn-secondary btn-circle"
                                 disabled="disabled">2</a>
-                            <span class="text-primary">Customer Deduction Information</span>
+                            <span class="text-white">Customer Deduction Information</span>
+                        </div>
+
+                         <div class="stepwizard-step">
+                                <a href="#step-2" type="button" class="btn btn-default btn-circle"
+                                    disabled="disabled">3</a>
+                                <span>Deduction Confirmation</span>
                         </div>
                     </div>
                 </div>
@@ -98,7 +104,6 @@
                                 <span class="text-danger">{{ $errors->first('loan_amount') }}</span>
                             </div>
                         </div>
-                        <!--./col -->
 
                         <div class="col-lg-3">
                             <div class="mb-3">
@@ -115,42 +120,30 @@
                                 <span class="text-danger">{{ $errors->first('debit_type') }}</span>
                             </div>
                         </div>
-                        <!--./col -->
 
-                        <div class="col-lg-3" id="standard_deduction" style="display: block">
+                        <div class="col-lg-3" id="fixed_deduction" style="display: block">
                             <div class="mb-3">
-                                <label>Deduction Amount <span class="text-danger">*</span></label>
+                                <label>Installment Amount <span class="text-danger">*</span></label>
                                 {{ Form::text('installment_amount', old('installment_amount', $debit_order ? number_format($debit_order->installment_amount) : ''), ['class="form-control number-separator"', 'placeholder="Write deduction amount..." x-model="form_data.deduction_amount"']) }}
                                 <span class="text-danger">{{ $errors->first('installment_amount') }}</span>
                             </div>
                         </div>
-                        <!--./col -->
 
-                        <div class="col-lg-6" id="max_min_deduction" style="display: none">
+                        <div class="col-lg-3" id="min_deduction" style="display: none">
                             <div class="mb-3">
-                                <label>Deduction Amount <span class="text-danger">*</span></label>
-                                <div class="row">
-                                    <div class="col-lg-6">
-                                        <div class="form-group">
-                                            {{ Form::text('min_installment_amount', old('min_installment_amount', $debit_order ? number_format($debit_order->min_installment_amount) : ''), ['class="form-control number-separator"', 'placeholder="Minimum deduction amount..."', 'id="min_installment_amount"']) }}
-                                            <span class="text-danger">{{ $errors->first('min_installment_amount') }}</span>
-                                        </div>
-                                    </div>
-                                    <!--./col -->
-
-                                    <div class="col-lg-6">
-                                        <div class="form-group">
-                                            {{ Form::text('max_installment_amount', old('max_installment_amount', $debit_order ? number_format($debit_order->max_installment_amount) : ''), ['class="form-control number-separator"', 'placeholder="Maximum deduction amount..."', 'id="max_installment_amount"']) }}
-                                            <span class="text-danger">{{ $errors->first('max_installment_amount') }}</span>
-                                        </div>
-                                    </div>
-                                    <!--./col -->
-                                </div>
-                                <!--row -->
-
+                                <label>Min Deduction Amount <span class="text-danger">*</span></label>
+                                {{ Form::text('min_installment_amount', old('min_installment_amount', $debit_order ? number_format($debit_order->min_installment_amount) : ''), ['class="form-control number-separator"', 'placeholder="Minimum deduction amount..." x-model="form_data.min_installment_amount"', 'id="min_installment_amount"']) }}
+                                <span class="text-danger">{{ $errors->first('min_installment_amount') }}</span>
                             </div>
                         </div>
-                        <!--./col -->
+
+                        <div class="col-lg-3" id="max_deduction" style="display: none">
+                            <div class="mb-3">
+                                <label>Installment Amount <span class="text-danger">*</span></label>
+                                {{ Form::text('max_installment_amount', old('max_installment_amount', $debit_order ? number_format($debit_order->max_installment_amount) : ''), ['class="form-control number-separator"', 'placeholder="Maximum deduction amount..." x-model="form_data.max_installment_amount"', 'id="max_installment_amount"']) }}
+                                <span class="text-danger">{{ $errors->first('max_installment_amount') }}</span>
+                            </div>
+                        </div>
 
                         <div class="col-lg-3">
                             <div class="mb-3">
@@ -171,7 +164,7 @@
 
                         <div class="col-lg-3">
                             <div class="mb-3">
-                                <label>Maximum No. of deduction <span class="text-danger">*</span></label>
+                                <label>Number of installments <span class="text-danger">*</span></label>
                                 {{ Form::number('number_of_installment', old('number_of_installment', $debit_order->installment_number ?? ''), ['class="form-control"', 'placeholder="Write number installment..." x-model="form_data.number_of_installment"', 'min' => 1]) }}
                                 <span class="text-danger">{{ $errors->first('number_of_installment') }}</span>
                             </div>
@@ -215,7 +208,7 @@
 
                         <div class="col-lg-3">
                             <div class="mb-3">
-                                <label for="formFile" class="form-label">Evidence of Aggrement <span class="text-danger">*</span></label>
+                                <label for="formFile" class="form-label">Evidence of Aggrement <small>(PDF File)</small> <span class="text-danger">*</span></label>
                                 <input class="form-control" type="file" id="formFile" name="evidence_of_aggrement"
                                     accept="application/pdf" />
                             </div>
@@ -252,11 +245,13 @@
             debitType = $('#debit_type').val();
 
             if (debitType === 'FIXED') {
-                $('#standard_deduction').css('display', '');
-                $('#max_min_deduction').css('display', 'none');
+                $('#fixed_deduction').css('display', '');
+                $('#min_deduction').css('display', 'none');
+                $('#max_deduction').css('display', 'none');
             } else if (debitType === 'DYNAMIC') {
-                $('#max_min_deduction').css('display', '');
-                $('#standard_deduction').css('display', 'none');
+                $('#min_deduction').css('display', '');
+                $('#max_deduction').css('display', '');
+                $('#fixed_deduction').css('display', 'none');
             }
 
             //type of debit on change
@@ -264,11 +259,13 @@
                 debitType = $(this).val();
 
                 if (debitType === 'FIXED') {
-                    $('#standard_deduction').css('display', '');
-                    $('#max_min_deduction').css('display', 'none');
+                    $('#fixed_deduction').css('display', '');
+                    $('#min_deduction').css('display', 'none');
+                    $('#max_deduction').css('display', 'none');
                 } else if (debitType === 'DYNAMIC') {
-                    $('#max_min_deduction').css('display', '');
-                    $('#standard_deduction').css('display', 'none');
+                    $('#min_deduction').css('display', '');
+                    $('#max_deduction').css('display', '');
+                    $('#fixed_deduction').css('display', 'none');
                 }
             });
 
@@ -298,6 +295,8 @@
                 form_data: {
                     total_amount: '',
                     deduction_amount: '',
+                    min_installment_amount: '',
+                    max_installment_amount: '',
                     debit_type: '',
                     number_of_installment: '',
                     periodicity: '',
@@ -307,6 +306,7 @@
                 numberOfInstallment() {
                     totalAmt = this.form_data.total_amount.replace(/,/g, "");
                     deductionAmt = this.form_data.deduction_amount.replace(/,/g, "");
+                    maxInstallmentAmt = this.form_data.max_installment_amount.replace(/,/g, "");
 
                     if (this.form_data.debit_type == "FIXED"){
                         numberInstallment = parseFloat(totalAmt)/parseFloat(deductionAmt)
@@ -314,8 +314,12 @@
 
                         console.log("== number of installment ==")
                         console.log(numberInstallment)
-                    }else {
+                    } else if(this.form_data.debit_type == "DYNAMIC") {
+                        numberInstallment = parseFloat(totalAmt)/parseFloat(maxInstallmentAmt)
+                        this.form_data.number_of_installment = Math.ceil(numberInstallment)
 
+                        console.log("== number of installment ==")
+                        console.log(numberInstallment)
                     }
                 },
             }

@@ -29,6 +29,7 @@ class MandateController extends Controller
             "mandateReferenceNumber" => "090820241384",
             "mandateStartDate" => "2024-08-16T22:00:00.000",
             "mandateEndDate" => "2024-10-09T22:00:00.000Z",
+            
             "directDebitType" => "Variable",
             "debitAccountHolderName" => "YYYY",
             "debitAccountNumber" => '31202402439',
@@ -36,6 +37,7 @@ class MandateController extends Controller
             "debitAccountHolderAddress1" => "IBILILO",
             "debitAccountHolderAddress2" => "MBEYA",
             "debitAccountHolderAddress3" => "IBILILO",
+
             "corporateReference" => "CO202402070803000014",
             "creditAccountNumber" => "24610003451",
             "creditAccountName" => "MyBiggieConglomerate",
@@ -44,6 +46,7 @@ class MandateController extends Controller
             "accountStatus" => "Account Is Valid",
             "creditAccountAddressLine1" => "MARA",
             "creditAccountAddressLine2" => "NYANDUGA",
+
             "amount" => 0,
             "maxAmount" => 100,
             "minAmount" => 15,
