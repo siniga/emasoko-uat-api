@@ -457,8 +457,6 @@ class PaymentMandateController extends Controller
 
         //create payload
         $payload = $this->payloadService->mandateRegistrationPayload($debit_order);
-        Log::debug("== Payload ==");
-        Log::debug($payload);
 
         //Create Request to NMB
         dispatch(new MandateRegistrationJob($payload));
