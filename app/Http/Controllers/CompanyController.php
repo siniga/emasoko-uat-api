@@ -667,7 +667,7 @@ class CompanyController extends Controller
             }
 
             //response
-            return response()->json(['error' => false, "status" => $http_status_code, "message" => 'Corporate Registration approved.'], 200);
+            return response()->json(['error' => false, "status" => $http_status_code, "message" => 'Corporate Registration approved and pending approval from NMB.'], 200);
         } else if ($http_status_code == 500) {
             //response
             return response()->json(['error' => false, "status" => $http_status_code, "remarks" => $request->remarks, "message" => 'Corporate registration rejected.'], 200);
@@ -705,7 +705,8 @@ class CompanyController extends Controller
 
         if ($result) {
             //TODO: check status of the corporate and send SMS
-
+            Log::debug("Event results");
+            Log::debug($result);
 
             // Event processing completed
             return response()->json(['error' => false, "status" => 200, "message" => 'Corporate status initiated.'], 200);
