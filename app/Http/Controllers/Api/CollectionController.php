@@ -36,7 +36,6 @@ class CollectionController extends Controller
                 "fileName" => "Payment_Collection4",
                 "fileType" => "CSV",
                 "fileData" => "U0VSSUFMIE5vLjtCQU5LIENPREU7QlJBTkNIIE5BTUU7RU1QTE9ZRUUgTlVNQkVSO0NVU1RPTUVSIE5BTUU7QUNDT1VOVCBOTzsgQU1PVU5UIAoxOzE2O05NQjt4eXo7VGVzdCBUZXN0OzYyMTAyNDAyNDMyOzIwCjE7MTY7Tk1CO3h5ejtUZXN0IFRlc3Q7NjE3MDI0MDA5Mzc7MjA="
-                "fileData" => "U0VSSUFMIE5vLjtCQU5LIENPREU7QlJBTkNIIE5BTUU7RU1QTE9ZRUUgTlVNQkVSO0NVU1RPTUVSIE5BTUU7QUNDT1VOVCBOTzsgQU1PVU5UIAoxOzE2O05NQjt4eXo7VGVzdCBUZXN0OzMwMTAyNDAwMDg1OzIwCjE7MTY7Tk1CO3h5ejtUZXN0IFRlc3Q7MzAxMDI0MDAwODU7MjA="
             ]
         ];
 
@@ -70,11 +69,7 @@ class CollectionController extends Controller
         //create payload
         $payload = [
             "user" => "EMakato",
-<<<<<<< HEAD
-            "correlationId" => "b30d3134-5624-4391-9f49-1b7a776d7732nfd",
-=======
             "correlationId" => "b30d3134-5624-4391-9f49-1b7a776d7778",
->>>>>>> 53dd7506ab2efb27118d02f6f5020bbee3530d20
             "targetService" => "CollectionStatus",
             "status" =>  "Check",
             "data" => [
