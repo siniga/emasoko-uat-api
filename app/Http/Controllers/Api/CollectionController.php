@@ -25,24 +25,24 @@ class CollectionController extends Controller
 
         //create data
         $data = [
-            "collectionReference" => "12189",
-            "corporateReference" => "CO202409080803000041",
+            "collectionReference" => "12190",
+            "corporateReference" => "CO202402070803000014",
             "selectedPostingDate" => null,
             "createdBy" => "Steven.Gerald",
             "verifiedBy" => "Victor.Mpendazoe",
             "createdDate" => "2024-08-10 08:00:00",
             "verifyDate" => "2024-08-010 09:00:00",
             "file" => [
-                "fileName" => "Payment_Collection3",
+                "fileName" => "Payment_Collection4",
                 "fileType" => "CSV",
-                "fileData" => "U0VSSUFMIE5vLjtCQU5LIENPREU7QlJBTkNIIE5BTUU7RU1QTE9ZRUUgTlVNQkVSO0NVU1RPTUVSIE5BTUU7QUNDT1VOVCBOTzsgQU1PVU5UIAoxOzE2O05NQjt4eXo7VGVzdCBUZXN0OzMwMTAyNDAwMDg1OzIwCjE7MTY7Tk1CO3h5ejtUZXN0IFRlc3Q7MzAxMDI0MDAwODU7MjA="
+                "fileData" => "U0VSSUFMIE5vLjtCQU5LIENPREU7QlJBTkNIIE5BTUU7RU1QTE9ZRUUgTlVNQkVSO0NVU1RPTUVSIE5BTUU7QUNDT1VOVCBOTzsgQU1PVU5UIAoxOzE2O05NQjt4eXo7VGVzdCBUZXN0OzYyMTAyNDAyNDMyOzIwCjE7MTY7Tk1CO3h5ejtUZXN0IFRlc3Q7NjE3MDI0MDA5Mzc7MjA="
             ]
         ];
 
         //create payload
         $payload = [
             "user" => "EMakato",
-            'correlationId' => "b30d3134-5624-4391-9f49-1b7a776d692e",
+            'correlationId' => "b30d3134-5624-4391-9f49-1b7a776fkedhhd",
             'targetService' => "CollectionCreate",
             'status' => "Create",
             "data" => $data
@@ -73,7 +73,7 @@ class CollectionController extends Controller
             "targetService" => "CollectionStatus",
             "status" =>  "Check",
             "data" => [
-                "collectionReference" => "CO202402070803000001"
+                "collectionReference" => "12190"
             ]
         ];
 
