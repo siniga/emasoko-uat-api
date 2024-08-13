@@ -25,4 +25,12 @@ class HomeController extends Controller
         //render view
         return view('home', compact('title'));
     }
+
+    public function showOtpForm()
+    {
+        $title = "Otp Verification Form";
+
+        //render view
+        return view('auth.otp_verification', compact('title'));
+    }
 }

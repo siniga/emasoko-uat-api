@@ -36,45 +36,8 @@ class SendSMSJob implements ShouldQueue
     {
         //call messaging class
         $messaging = new Messaging();
-
-        //data submitted
-        $messageId = $this->data['message_id'];
-        $schedule = $this->data['schedule'];
-
-        //limit
-        $limit = 100;
-        $no_of_pending_sms = SmsLog::where(['message_id' => $messageId, 'status' => 'PENDING'])->count();
-
-        //looping sms
-        $looping = $no_of_pending_sms / $limit;
-
-        //iterate looping
-        for ($i = 1; $i <= ceil($looping); $i++) {
-            $recipients = SmsLog::select('id', 'phone', 'schedule_at', 'message')->where(['message_id' => $messageId, 'status' => 'PENDING'])->take($limit)->get();
-
-            foreach ($recipients as $val) {
-                $arr_data = [
-                    'phone' => $messaging->castPhone($val->phone),
-                    'message' => $val->message
-                ];
-
-                //post data
-                $response = $messaging->sendSMS($arr_data);
-
-                //sms logs
-                $sms_log = SmsLog::findOrFail($val->id);
-
-                if ($response['status'] == 'F')
-                    $sms_log->status = "REJECTED";
-                elseif ($response['status'] == 'S')
-                    $sms_log->status = "SENT";
-
-                //update sms log status    
-                $sms_log->save();
-
-                Log::debug("SMS response");
-                Log::debug($response);
-            }
-        }
+        $response = $messaging->sendSMS($this->data['phone'], $this->data['message']);
+        Log::debug("== Sending SMS in background ==");
+        Log::debug($response);
     }
 }
