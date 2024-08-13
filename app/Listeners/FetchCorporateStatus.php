@@ -38,6 +38,7 @@ class FetchCorporateStatus
 
         //create authentication token
         $AUTH_BEARER_TOKEN = $this->auth->generateToken();
+        Log::debug("Token : {$AUTH_BEARER_TOKEN}");
 
         //Create Headers
         $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer ' . $AUTH_BEARER_TOKEN];
