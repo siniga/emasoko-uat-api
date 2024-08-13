@@ -40,21 +40,22 @@
                             <div></div>
 
                             <div class="text-sm-end d-none d-sm-block">
-                                <template x-if="status==100">
+                                <template x-if="status==100 || status==403 || status==500">
                                     <a href="{{ route('companies.registration', $company->uuid) }}" title="View"
                                         class="btn btn-warning btn-sm">
-                                        <i class='fa fa-pen'></i> Edit
+                                        <i class='fa fa-pen'></i> Update Information
                                     </a>
                                 </template>
 
-                                <template x-if="status==0 || status==100">
+                                <template x-if="status==0 || status==100 || status==403">
                                     <button title="Reject Registration" class="btn btn-danger btn-sm"
-                                        x-on:click="sidebarOpen = true" x-transition x-cloak>
+                                        x-on:click="openRejectModal();" x-transition x-cloak>
                                         <i class="fa fa-times"></i> Reject Registration
                                     </button>
                                 </template>
 
-                                <template x-if="status==100 || status==200 || status ==401 || status == 403 || status == 410 || status == 450 || status ==451">
+                                <template
+                                    x-if="status==100 || status==200">
                                     <button x-html="btnApprove" title="Approve Registration" class="btn btn-success btn-sm"
                                         x-on:click="approveRegistration('{{ $company->uuid }}')"></button>
                                 </template>
@@ -114,36 +115,39 @@
                                 <th>Status</th>
                                 <td colspan="3" id="company-status">
                                     <template x-if="status==0">
-                                        <span class="badge bg-warning">Registration Process</span>
+                                        <span class="badge bg-warning text-uppercase">Registration Process</span>
                                     </template>
 
                                     <template x-if="status==100">
-                                        <span class="badge bg-info">Approval Process</span>
-                                    </template>
-
-                                    <template x-if="status==999">
-                                        <span class="badge bg-danger">Rejected</span>
+                                        <span class="badge bg-warning text-uppercase">Pending Review</span>
                                     </template>
 
                                     <template x-if="status==200">
-                                        <span class="badge bg-success-1">Approved eMakato & NMB Processing</span>
+                                        <span class="badge bg-info text-uppercase">Pending Approval</span>
                                     </template>
 
                                     <template x-if="status==201">
-                                        <span class="badge bg-success-1">Created NMB</span>
+                                        <span class="badge bg-info text-uppercase">Pending Verification</span>
                                     </template>
 
-                                    <template x-if="status==240">
-                                        <span class="badge bg-success-1">Case Complete NMB</span>
+                                    <template x-if="status==202">
+                                        <span class="badge bg-success-1 text-uppercase">Verified</span>
                                     </template>
 
-                                    <template x-if="status==249">
-                                        <span class="badge bg-success-1">Case Processing NMB</span>
+                                    <template x-if="status==403">
+                                        <span class="badge bg-danger text-uppercase">Failed</span>
                                     </template>
 
                                     <template x-if="status==500">
-                                        <span class="badge bg-danger">Failed NMB</span>
+                                        <span class="badge bg-danger text-uppercase">Rejected</span>
                                     </template>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>Remarks</th>
+                                <td colspan="3">
+                                    <span x-text="remarks"></span>
                                 </td>
                             </tr>
 
@@ -223,10 +227,13 @@
                                     <tr>
                                         <th width="3%">#</th>
                                         <th width="20%">Account Type</th>
-                                        <th width="20%">Bank/MNO</th>
+                                        <th width="20%">Bank/Institutions</th>
                                         <th width="25%">Account Name</th>
-                                        <th width="20%">Account Number</th>
-                                        {{-- <th></th> --}}
+                                        <th width="10%">Account Number</th>
+                                        <th width="10%">Customer Number</th>
+                                        <th width="10%">Branch Code</th>
+                                        <th width="15%">Corporate Limit</th>
+                                        <th width="10%">Currency</th>
                                     </tr>
                                 </thead>
 
@@ -238,15 +245,10 @@
                                             <td>{{ $val->account->name ?? '' }}</td>
                                             <td>{{ $val->account_name ?? '' }}</td>
                                             <td>{{ $val->account_number ?? '' }}</td>
-                                            {{-- <td>
-                                                @if ($val->send_verification == 1)
-                                                    <i class="text-warning">Wait Verification</i>
-                                                @elseif ($val->response_sms && $val->verified_at)
-                                                    <i class="text-success">{{ $val->response_sms ?? '' }}</i>
-                                                @elseif ($val->response_sms && $val->rejected_at)
-                                                    <i class="text-danger">{{ $val->response_sms ?? '' }}</i>
-                                                @endif
-                                            </td> --}}
+                                            <td>{{ $val->customer_code ?? '' }}</td>
+                                            <td>{{ $val->branch_code ?? '' }}</td>
+                                            <td>{{ number_format($val->corporate_limit) ?? '' }}</td>
+                                            <td>{{ $val->currency->short_code ?? '' }}</td>
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -300,6 +302,8 @@
         {{-- <div id="offcanvas-wrp" x-show="sidebarOpen" x-transition>
             <div id="detail-div"></div>
         </div> --}}
+        
+        @include('companies.modals.reject_modal')
     </div>
 @endsection
 
@@ -311,6 +315,7 @@
                 sidebarOpen: false,
                 eModal: "Company_Information",
                 status: "{{ $company->status }}",
+                remarks: "{{ $company->remarks }}",
                 stages: [],
 
                 formData: {
@@ -335,6 +340,11 @@
                         .then(data => {
                             $('#detail-div').html(data)
                         });
+                },
+
+                //open reject modal
+                openRejectModal() {
+                    $('#rejectModal').modal('show');
                 },
 
                 //approval company registration
@@ -374,6 +384,42 @@
                         });
                 },
 
+                //reject company registration
+                rejectRegistration() {
+                    this.formLoading = true;
+                    this.btnSubmit = 'Reject Registration....';
+
+                    //format form 
+                    this.formData.action = "REJECT";
+
+                    fetch("/companies/confirm-assessment", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                Accept: "application/json",
+                                'X-CSRF-TOKEN': document.head.querySelector('meta[name=csrf-token]').content
+                            },
+                            body: JSON.stringify(this.formData),
+                        }).then(response => response.json())
+                        .then(responseJson => {
+                            console.log(responseJson);
+                            this.status = responseJson.status
+                            this.remarks = responseJson.remarks
+
+                            $('#message_wrp_1').html(
+                                "<div class='alert alert-success rounded-sm'>" + responseJson.message + "</div>"
+                            );
+                        }).catch(() => {
+                            //display message
+                            $('#message_wrp').html(
+                                "<div class='alert alert-danger rounded-sm'>Something went wrong.</div>"
+                            );
+
+                        }).finally(() => {
+                            this.formLoading = false;
+                            this.btnSubmit = 'Submit';
+                        });
+                },
 
                 //approval company registration
                 fetchRegistrationStatus() {

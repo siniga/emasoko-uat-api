@@ -40,10 +40,9 @@
                             <div></div>
 
                             <div class="text-sm-end d-none d-sm-block">
-                                <template
-                                    x-if="status==100 || status==200 || status ==401 || status == 403 || status == 410 || status == 450 || status ==451">
+                                <template x-if="status==100 || status==200 || status==201 || status==202 || status==405 || status==500">
                                     <button x-html="btnCancel" title="Mandate Cancellation" class="btn btn-danger btn-sm"
-                                        x-on:click="cancelMandate();"></button>
+                                        x-on:click="openMandateCancellationModal();"></button>
                                 </template>
 
                                 <template x-if="status==201">
@@ -137,32 +136,36 @@
 
                                         <th width="25%">Consent Status</th>
                                         <td width="25%">
-                                            <template x-if="status==100">
-                                                <span class="badge bg-info">Approval Process</span>
+                                            <template x-if="status==0">
+                                                <span class="badge bg-warning text-uppercase">Registration Process</span>
                                             </template>
 
-                                            <template x-if="status==999">
-                                                <span class="badge bg-danger">Rejected</span>
+                                            <template x-if="status==100">
+                                                <span class="badge bg-warning text-uppercase">Pending Review</span>
                                             </template>
 
                                             <template x-if="status==200">
-                                                <span class="badge bg-success-1">Approved eMakato & NMB Processing</span>
+                                                <span class="badge bg-info text-uppercase">Pending Approval</span>
                                             </template>
 
                                             <template x-if="status==201">
-                                                <span class="badge bg-success-1">Created NMB</span>
+                                                <span class="badge bg-info text-uppercase">Pending Verification</span>
                                             </template>
 
-                                            <template x-if="status==240">
-                                                <span class="badge bg-success-1">Case Complete NMB</span>
+                                            <template x-if="status==202">
+                                                <span class="badge bg-success-1 text-uppercase">Verified</span>
                                             </template>
 
-                                            <template x-if="status==249">
-                                                <span class="badge bg-success-1">Case Processing NMB</span>
+                                            <template x-if="status==403">
+                                                <span class="badge bg-danger text-uppercase">Failed</span>
+                                            </template>
+
+                                             <template x-if="status==405">
+                                                <span class="badge bg-danger text-uppercase">Cancelled</span>
                                             </template>
 
                                             <template x-if="status==500">
-                                                <span class="badge bg-danger">Failed NMB</span>
+                                                <span class="badge bg-danger text-uppercase">Rejected</span>
                                             </template>
                                         </td>
                                     </tr>
@@ -247,33 +250,30 @@
                                                 Deduction History
                                             </td>
                                         </tr>
-
-                                        {{-- <tr>
-                                        <th width="3%">#</th>
-                                        <th width="20%">Staff Name</th>
-                                        <th width="20%">NIDA Number</th>
-                                        <th width="25%">Email</th>
-                                        <th width="20%">Phone</th>
-                                        <th width="20%">Title</th>
-                                    </tr> --}}
                                     </thead>
 
-
+                                    <tbody>
+                                        <tr>
+                                            <td></td>
+                                        </tr>
+                                    </tbody>
                                 </table>
-
-                                <div class="alert alert-danger">No any deduction at the moment!</div>
-
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!--offcanvas wrp -->
+        {{-- <div id="offcanvas-wrp" x-show="sidebarOpen" x-transition>
+            <div id="detail-div"></div>
+        </div> --}}
+
+        @include('payment_mandate.modals.cancellation_modal')
     </div>
 @endsection
 
-{{-- <div id="offcanvas-wrp"></div> --}}
-<!--./offcanvas -->
 
 @section('script')
     <script type="text/javascript">
@@ -288,12 +288,14 @@
                 formData: {
                     mandate_id: "{{ $debit_order->id }}",
                     uuid: "{{ $debit_order->uuid }}",
+                    'remarks': "",
                 },
 
                 formLoading: false,
                 formMessage: "",
                 btnCancel: '<i class="fa fa-times"></i> Mandate Cancellation',
                 btnStatus: '<i class="fa fa-check"></i> Mandate Status',
+                buttonSubmit: "Submit",
 
                 //approval mandate status
                 fetchMandateStatus() {
@@ -328,10 +330,15 @@
                         });
                 },
 
-                //cancel mandate
-                cancelMandate() {
+                //open reject modal
+                openMandateCancellationModal() {
+                    $('#cancellationModal').modal('show');
+                },
+
+                //mandate cancellation
+                mandateCancellationForm() {
                     this.formLoading = true;
-                    this.btnCancel = '<i class="fas fa-spinner fa-spin"></i> Cancelling Mandate....';
+                    this.btnSubmit = '<i class="fas fa-spinner fa-spin"></i> Cancelling Mandate....';
 
                     fetch("/payment-mandate/cancel-mandate", {
                             method: "POST",
@@ -343,21 +350,26 @@
                             body: JSON.stringify(this.formData),
                         }).then(response => response.json())
                         .then(responseJson => {
-                            console.log(responseJson);
-                            this.status = responseJson.status
+                            //response code 
+                            const http_response_code = responseJson.http_response_code;
+                            this.status = responseJson.http_response_code
 
-                            $('#message_wrp').html(
-                                "<div class='alert alert-success rounded-sm'>Mandate cancellation initiated</div>"
-                            );
+                            if(http_response_code == 405){
+                                $('#message_wrp_1').html(
+                                    "<div class='alert alert-success rounded-sm'>Mandate cancelled.</div>"
+                                );
+                            } else {
+                                $('#message_wrp_1').html(
+                                    "<div class='alert alert-warning rounded-sm'>Failed to cancel mandate.</div>"
+                                );
+                            }  
                         }).catch(() => {
-                            //display message
-                            $('#message_wrp').html(
+                            $('#message_wrp_1').html(
                                 "<div class='alert alert-danger rounded-sm'>Something went wrong.</div>"
                             );
-
                         }).finally(() => {
                             this.formLoading = false;
-                            this.btnCancel = '<i class="fa fa-times"></i> Mandate Cancellation';
+                            this.btnSubmit = 'Submit';
                         });
                 },
 

@@ -67,16 +67,14 @@ class OtpVerificationRequest
         Log::debug($response);
 
         if ($response['status'] == "Success") {
-            $otp_request->status = $response['data']['response'][0]['responseCode'];
             $otp_request->http_response_code = $response['data']['response'][0]['responseCode'];
 
             //Update mandate status based on response
             $debit_order = DebitOrder::where('reference', '=', $mandate_reference)->first();
-            $debit_order->status = 201;
+            $debit_order->status = 202;
             $debit_order->approved = 'APPROVED';
             $debit_order->save();
         } else if ($response['status'] == "Fail") {
-            $otp_request->status = $response['data']['response'][0]['responseCode'];
             $otp_request->http_response_code = $response['data']['response'][0]['responseCode'];
 
             //Update mandate status based on response

@@ -186,8 +186,8 @@
                                 <div class="row">
                                     <div class="col-lg-12">
                                         <div class="mb-3 text-sm-end d-none d-sm-block">
-                                            <a href="{{ url('companies') }}"
-                                                class="btn btn-danger btn-xs text-medium">Cancel</a>
+                                            <a href="{{ route('companies.lists') }}"
+                                                class="btn btn-outline-danger btn-xs text-medium">Cancel</a>
                                             <button type="submit" id="submitButton"
                                                 class="btn btn-primary btn-xs text-medium">Update</button>
                                         </div>

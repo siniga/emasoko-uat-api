@@ -44,12 +44,13 @@ if (!function_exists('reverse_casting_phone')) {
     {
         if (preg_match("~^255\d+$~", $phone)) {
             return '0' . substr($phone, 3);
+        } else if (preg_match("~^+\d+$~", $phone)) {
+            return substr($phone, 1);
         } else {
             return $phone;
         }
     }
 }
-
 
 
 //complete registration notification

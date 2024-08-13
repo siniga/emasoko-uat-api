@@ -45,6 +45,7 @@ class Authentication
 
         // $jwtToken = $b64Header . '.' . $b64Payload . '.' . $signature;
         $jwtToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MjMyNzQ0MjksIm5iZiI6MTcyMzI3NDQyOSwiZXhwIjoxNzIzMjc0NzI5LCJpc3MiOiJFTWFrYXRvIiwiYXVkIjoiRU1ha2F0byJ9.2v-Y53T4Bw12nu1uDCo1PxkiBxJd_q2zWVDCLr1qhsg";
+        $jwtToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MjMyNzE1NDEsIm5iZiI6MTcyMzI3MTU0MSwiZXhwIjoxNzIzMjcxODQxLCJpc3MiOiJFTWFrYXRvIiwiYXVkIjoiRU1ha2F0byJ9.CBJXm9b8PEIWEejsQykKSpUOdxayaNLv22NVCEkpu0Y";
         return $jwtToken;
     }
 

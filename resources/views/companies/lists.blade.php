@@ -194,7 +194,7 @@
                                         <th width="10%">TIN Number</th>
                                         <th width="8%">Year of Incorporation</th>
                                         <th width="10%">Phone</th>
-                                        <th width="11%">Region</th>
+                                        <th width="10%">Region</th>
                                         <th width="10%">Status</th>
                                         <th style="width: 60px;">Actions</th>
                                     </tr>
@@ -214,13 +214,16 @@
                                                 @if ($company->status == 0)
                                                     <span class="badge bg-warning font-size-10 ">Registration Process</span>
                                                 @elseif($company->status == 100)
-                                                    <span class="badge bg-info font-size-10">Approval Process</span>
+                                                    <span class="badge bg-info font-size-10">Pending Review</span>
                                                 @elseif($company->status == 200)
-                                                    <span class="badge bg-success-1 font-size-10">Processing</span>
+                                                    <span class="badge bg-info font-size-10">Pending Approval</span>
                                                 @elseif($company->status == 201)
-                                                    <span class="badge bg-success-1 font-size-10">Approved</span>
-                                                @elseif($company->status == '401' || $company->status == '403' || $company->status == '410' || $company->status == '450' || $company->status == '451' || $company->status == '500')    
-                                                @elseif($company->status == 999)
+                                                    <span class="badge bg-info font-size-10">Pending Verification</span>
+                                                @elseif($company->status == 202)
+                                                    <span class="badge bg-success-1 font-size-10">Verified</span>
+                                                @elseif($company->status == 403) 
+                                                    <span class="badge bg-danger font-size-10">Failed</span>   
+                                                @elseif($company->status == 500)
                                                     <span class="badge bg-danger font-size-10">Rejected</span>
                                                 @endif
                                             </td>
@@ -230,14 +233,14 @@
                                                         title="View" class="btn btn-xss">
                                                         <i class="bx bxs-folder-open"></i>
                                                     </a>
-                                                @elseif($company->complete == 0)
-                                                    <a href="{{ route('companies.preview', $company->uuid) }}"
+                                                @elseif($company->complete == 0 || $company->status == 500)
+                                                    <a href="{{ route('companies.registration', $company->uuid) }}"
                                                         title="View" class="btn btn-xss">
                                                         <i class='bx bxs-plus-square bx-xs'></i>
                                                     </a>
                                                 @endif
 
-                                                @if ($company->status == 100 || $company->status ==401 || $company->status == 403 || $company->status == 410 || $company->status == 450 || $company->status ==451)
+                                                @if ($company->status == 100 || $company->status ==200 || $company->status == 201)
                                                     <a href="{{ route('companies.edit', $company->uuid) }}" title="Edit"
                                                         class="btn btn-xss">
                                                         <i class="bx bx-edit text-secondary"></i>

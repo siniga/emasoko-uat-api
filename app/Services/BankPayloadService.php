@@ -82,7 +82,6 @@ class BankPayloadService
         $partner = $debitOrder->partner;
         $partnerAccount = $debitOrder->partnerAccount;
 
-
         //create payload
         $payload = [
             "mandateReferenceNumber" => $debitOrder->reference,
@@ -91,7 +90,7 @@ class BankPayloadService
             "directDebitType" => $debitOrder->debit_type,
             "debitAccountHolderName" => $customerAccount->account_name,
             "debitAccountNumber" => $customerAccount->account_number,
-            "debitAccountBankCode" => $partnerAccount->branch_code,
+            "debitAccountBankCode" => $customerAccount->bank_code,
             "debitAccountHolderAddress1" => $customer->address,
             "debitAccountHolderAddress2" => $customer->address,
             "debitAccountHolderAddress3" => $customer->address,
@@ -140,7 +139,7 @@ class BankPayloadService
         $payload = [
             "mandateReferenceNumber" => $debitOrder->reference,
             "corporateReference" => $partner->reference,
-            "cancelReason" => "Does not comply",
+            "cancelReason" => $debitOrder->remarks,
             "createdBy" => static::userNameFormat($debitOrder->verifiedBy),
             "verifiedBy" => static::userNameFormat($debitOrder->verifiedBy),
             "createdDate" => $debitOrder->createdDate,

@@ -36,33 +36,33 @@
                     <div class="stepwizard mb-4">
                         <div class="stepwizard-row setup-panel">
 
-                            <div class="stepwizard-step">
+                            <div class="stepwizard-step bg-success">
                                 <a href="#step-1" type="button" class="btn btn-success btn-circle text-white">1</a>
-                                <span class="text-success">Company Information</span>
+                                <span class="text-white">Company Information</span>
                             </div>
 
-                            <div class="stepwizard-step">
+                            <div class="stepwizard-step bg-success">
                                 <a href="#step-2" type="button" class="btn btn-success btn-circle text-white"
                                     disabled="disabled">2</a>
-                                <span class="text-success">Company Documents</span>
+                                <span class="text-white">Company Documents</span>
                             </div>
 
-                            <div class="stepwizard-step">
+                            <div class="stepwizard-step bg-success">
                                 <a href="#step-2" type="button" class="btn btn-success btn-circle text-white"
                                     disabled="disabled">3</a>
-                                <span class="text-success">Collection Accounts</span>
+                                <span class="text-white">Collection Accounts</span>
                             </div>
 
-                            <div class="stepwizard-step">
+                            <div class="stepwizard-step bg-success">
                                 <a href="#step-2" type="button" class="btn btn-success btn-circle text-white"
                                     disabled="disabled">4</a>
-                                <span class="text-success">Authorized Representative</span>
+                                <span class="text-white">Authorized Representative</span>
                             </div>
 
-                            <div class="stepwizard-step">
-                                <a href="#step-5" type="button" class="btn btn-success btn-circle text-white"
+                            <div class="stepwizard-step bg-primary">
+                                <a href="#step-5" type="button" class="btn btn-secondary btn-circle text-white"
                                     disabled="disabled">5</a>
-                                <span class="text-success">Credentials</span>
+                                <span class="text-white">Company Preview</span>
                             </div>
                         </div>
                     </div>
@@ -121,7 +121,7 @@
 
                                             <th>Physical Address</th>
                                             <td>
-                                                Email: {{ $company->address }}
+                                                {{ $company->address }}
                                             </td>
                                         </tr>
 
@@ -185,8 +185,11 @@
                                                     <th width="20%">Account Type</th>
                                                     <th width="20%">Bank/Institutions</th>
                                                     <th width="25%">Account Name</th>
-                                                    <th width="20%">Account Number</th>
-                                                    <th></th>
+                                                    <th width="10%">Account Number</th>
+                                                    <th width="10%">Customer Number</th>
+                                                    <th width="10%">Branch Code</th>
+                                                    <th width="15%">Corporate Limit</th>
+                                                    <th width="10%">Currency</th>
                                                 </tr>
                                             </thead>
 
@@ -198,15 +201,10 @@
                                                         <td>{{ $val->account->name ?? '' }}</td>
                                                         <td>{{ $val->account_name ?? '' }}</td>
                                                         <td>{{ $val->account_number ?? '' }}</td>
-                                                        <td>
-                                                            @if ($val->send_verification == 1)
-                                                                <i class="text-warning">Wait Verification</i>
-                                                            @elseif ($val->response_sms && $val->verified_at)
-                                                                <i class="text-success">{{ $val->response_sms ?? '' }}</i>
-                                                            @elseif ($val->response_sms && $val->rejected_at)
-                                                                <i class="text-danger">{{ $val->response_sms ?? '' }}</i>
-                                                            @endif
-                                                        </td>
+                                                        <td>{{ $val->customer_code ?? '' }}</td>
+                                                        <td>{{ $val->branch_code ?? '' }}</td>
+                                                        <td>{{ number_format($val->corporate_limit) ?? '' }}</td>
+                                                        <td>{{ $val->currency->short_code ?? '' }}</td>       
                                                     </tr>
                                                 @endforeach
                                             </tbody>
@@ -257,7 +255,7 @@
                                 </div>
                             </div>
 
-                            <div class="row">
+                            {{-- <div class="row">
                                 <div class="col-lg-12">
                                     <table class="table table-stripped table-bordered">
                                         <tr>
@@ -278,7 +276,7 @@
                                         </tr>
                                     </table>
                                 </div>
-                            </div>
+                            </div> --}}
 
                             <div id="message_wrp"></div>
 
@@ -287,16 +285,16 @@
                                     <div class="col-md-12">
                                         <div class="mb-3 text-sm-end d-none d-sm-block">
                                             <a href="{{ route('companies.cancel-registration', $company->uuid) }}"
-                                                class="btn btn-danger cancel text-medium">Cancel</a>
+                                                class="btn btn-danger cancel text-medium mx-1">Cancel</a>
 
                                             <a href="{{ route('companies.registration', $company->uuid) }}"
-                                                class="btn btn-info text-medium">Edit</a>
+                                                class="btn btn-info text-medium mx-1">Edit</a>
 
-                                            <button type="submit" name="save" class="btn btn-secondary"
+                                            <button type="submit" name="save" class="btn btn-secondary text-medium mx-1"
                                                 x-text="buttonSave" :disabled="saveLoading" x-on:click="savingForm();">
                                             </button>
 
-                                            <button type="submit" name="submit" class="btn btn-success"
+                                            <button type="submit" name="submit" class="btn btn-success text-medium"
                                                 x-text="buttonSubmit" :disabled="submitLoading"
                                                 x-on:click="submitForm();"></button>
                                         </div>
@@ -354,6 +352,12 @@
                             $('#message_wrp').html(
                                 "<div class='alert alert-success rounded-sm'>Service provider registered, Waiting for assessment and approval process.</div>"
                             );
+
+                            //set timer
+                            setTimeout(function() {
+                                window.location.href = "/companies/details/" + responseJson.uuid;
+                            }, 1000);
+
                         }).catch(() => {
                             //change submit button text
                             $('#submitButton').text('Update');

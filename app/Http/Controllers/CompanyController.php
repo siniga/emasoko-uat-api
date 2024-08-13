@@ -642,18 +642,17 @@ class CompanyController extends Controller
         return response()->json(['error' => false, 'uuid' => $uuid, 'criteria' => $criteria], 200);
     }
 
-    //verify company
-    function confirmAssessment(Request $request)
+    //confirm/reject company assessment
+    public function confirmAssessment(Request $request)
     {
         //requests
         $uuid = $request->post('uuid');
-        $action = $request->post('action');
 
         //service provider
         $partner = Partner::where(['uuid' => $uuid])->firstOrFail();
 
         //process assessment
-        $http_status_code = $this->companyService->processAssessment($partner, $action);
+        $http_status_code = $this->companyService->processAssessment($partner, $request->all());
 
         if ($http_status_code == 200) {
             //partner accounts
@@ -668,10 +667,9 @@ class CompanyController extends Controller
 
             //response
             return response()->json(['error' => false, "status" => $http_status_code, "message" => 'Corporate Registration approved.'], 200);
-        } else if ($http_status_code == 403) {
-            //Failed
-
-            return response()->json(['error' => true, "status" => $http_status_code, "message" => 'Corporate registration rejected.'], 200);
+        } else if ($http_status_code == 500) {
+            //response
+            return response()->json(['error' => false, "status" => $http_status_code, "remarks" => $request->remarks ,"message" => 'Corporate registration rejected.'], 200);
         }
     }
 

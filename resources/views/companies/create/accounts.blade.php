@@ -29,22 +29,21 @@
                     <!--./form wizard -->
                     <div class="stepwizard mb-4">
                         <div class="stepwizard-row setup-panel">
-
-                            <div class="stepwizard-step">
+                            <div class="stepwizard-step bg-success">
                                 <a href="#step-1" type="button" class="btn btn-success btn-circle text-white">1</a>
-                                <span class="text-success">Company Information</span>
+                                <span class="text-white">Company Information</span>
                             </div>
 
-                            <div class="stepwizard-step">
+                            <div class="stepwizard-step bg-success">
                                 <a href="#step-2" type="button" class="btn btn-success btn-circle text-white"
                                     disabled="disabled">2</a>
-                                <span class="text-success">Company Documents</span>
+                                <span class="text-white">Company Documents</span>
                             </div>
 
-                            <div class="stepwizard-step">
+                            <div class="stepwizard-step bg-primary">
                                 <a href="#step-2" type="button" class="btn btn-secondary btn-circle"
                                     disabled="disabled">3</a>
-                                <span class="text-primary">Collection Accounts</span>
+                                <span class="text-white">Collection Accounts</span>
                             </div>
 
                             <div class="stepwizard-step">
@@ -56,7 +55,7 @@
                             <div class="stepwizard-step">
                                 <a href="#step-5" type="button" class="btn btn-default btn-circle"
                                     disabled="disabled">5</a>
-                                <span>Credentials</span>
+                                <span>Company Preview</span>
                             </div>
                         </div>
                     </div>
@@ -130,17 +129,25 @@
                                             </div>
                                         </div>
 
-                                        <div class="col-lg-4">
+                                        <div class="col-lg-2">
                                             <div class="mb-3">
                                                 <label>Account Number <span class="text-danger">*</span></label>
-                                                {{ Form::text('account_number[]', old('account_number[]', $data->account_number), ['class="form-control"', 'placeholder="Write account number..."']) }}
+                                                {{ Form::text('account_number[]', old('account_number[]', $data->account_number), ['class="form-control"', 'placeholder="Account number..."']) }}
+                                                <span class="formError"></span>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-lg-2">
+                                            <div class="mb-3">
+                                                <label>Customer Number <span class="text-danger">*</span></label>
+                                                {{ Form::text('customer_code[]', old('customer_code[]', $data->customer_code), ['class="form-control"', 'placeholder="Customer number..."']) }}
                                                 <span class="formError"></span>
                                             </div>
                                         </div>
 
                                         <div class="col-lg-4">
                                             <div class="mb-3">
-                                                <label>Corporate Limit <span class="text-danger">*</span></label>
+                                                <label>Corporate Limit (<small>Withdraw amount in a day</small>) <span class="text-danger">*</span></label>
                                                 {{ Form::text('corporate_limit[]', old('corporate_limit[]', $data->corporate_limit), ['class="form-control number-separator"', 'placeholder="Write corporate limit..."']) }}
                                                 <span class="formError"></span>
                                             </div>
@@ -238,18 +245,26 @@
                                         </div>
                                     </div>
 
-                                    <div class="col-lg-4">
+                                    <div class="col-lg-2">
                                         <div class="mb-3">
                                             <label for="basicpill-namecard-input">Account Number <span
                                                     class="text-danger">*</span></label>
-                                            {{ Form::text('account_number[]', old('account_number[]'), ['class="form-control"', 'placeholder="Write account number..."']) }}
+                                            {{ Form::text('account_number[]', old('account_number[]'), ['class="form-control"', 'placeholder="Account number..."']) }}
+                                            <span class="formError"></span>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-lg-2">
+                                        <div class="mb-3">
+                                            <label>Customer Number <span class="text-danger">*</span></label>
+                                            {{ Form::text('customer_code[]', old('corporate_limit[]'), ['class="form-control"', 'placeholder="Customer number..."']) }}
                                             <span class="formError"></span>
                                         </div>
                                     </div>
 
                                     <div class="col-lg-4">
                                         <div class="mb-3">
-                                            <label>Corporate Limit <span class="text-danger">*</span></label>
+                                            <label>Corporate Limit (<small>Withdraw amount in a day</small>) <span class="text-danger">*</span></label>
                                             {{ Form::text('corporate_limit[]', old('corporate_limit[]'), ['class="form-control number-separator"', 'placeholder="Write corporate limit..."']) }}
                                             <span class="formError"></span>
                                         </div>
@@ -354,7 +369,7 @@
             let maxField = 5; // Input fields increment limitation
             let wrapper = $('.field_wrapper'); // Input field wrapper
             let fieldHTML = `
-            <div class="row field-input row-div">
+            <div class="row field-input row-div border-top border-primary py-4">
                 <div class="col-lg-2">
                     <div class="mb-3">
                         <label>Account Type <span class="text-danger">*</span></label>
@@ -385,17 +400,25 @@
                     </div>
                 </div>
 
-                <div class="col-lg-4">
+                <div class="col-lg-2">
                     <div class="mb-3">
                         <label>Account Number <span class="text-danger">*</span></label>
-                        <input type="text" name="account_number[]" placeholder="Write account number..." class="form-control">
+                        <input type="text" name="account_number[]" placeholder="Account number..." class="form-control">
+                        <span class="formError"></span>
+                    </div>
+                </div>
+
+                <div class="col-lg-2">
+                    <div class="mb-3">
+                        <label>Customer Number <span class="text-danger">*</span></label>
+                        <input type="text" name="customer_code[]" placeholder="Customer number..." class="form-control">
                         <span class="formError"></span>
                     </div>
                 </div>
 
                 <div class="col-lg-4">
                     <div class="mb-3">
-                        <label>Corporate Limit <span class="text-danger">*</span></label>
+                        <label>Corporate Limit (<small>Withdraw amount in a day</small>) <span class="text-danger">*</span></label>
                         <input type="text" name="corporate_limit[]" placeholder="Write corporate limit..." class="form-control number-separator">
                         <span class="formError"></span>
                     </div>
@@ -451,6 +474,7 @@
                     "account_id[]": "required",
                     "account_name[]": "required",
                     "account_number[]": "required",
+                    "customer_code[]": "required",
                     "corporate_limit[]": "required",
                     "currency_id[]": "required",
                     "branch_code[]": "required",
@@ -460,6 +484,7 @@
                     "account_id[]": "Bank/MNO name required",
                     "account_name[]": "Account name required",
                     "account_number[]": "Account number required",
+                    "customer_code[]": "Customer number required",
                     "corporate_limit[]": "Corporate limit required",
                     "currency_id[]": "Currency required",
                     "branch_code[]": "Branch Code required",

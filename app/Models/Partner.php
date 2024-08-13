@@ -15,7 +15,7 @@ class Partner extends Model
     {
         parent::boot();
         static::creating(function ($model) {
-            $model->reference = Partner::document_number("reference", "CO", 6, true, false);
+            $model->reference = Partner::document_number("reference", "CO", 4, true, false);
             $model->short_code = strtoupper(substr($model->business_name, 0, 3));
             $model->client_code = strtoupper(substr($model->business_name, 0, 2));
         });

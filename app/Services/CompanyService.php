@@ -22,9 +22,7 @@ use Illuminate\Support\Facades\Auth;
 
 class CompanyService
 {
-    public function __construct()
-    {
-    }
+    public function __construct() {}
 
     //create company information
     public function createInformation($data, $uuid): Partner
@@ -80,11 +78,12 @@ class CompanyService
                         'account_name' => $data['account_name'][$i],
                         'account_number' => $data['account_number'][$i],
                     ]);
+
                     $partner_account->send_verification = 1;
-                    $partner->customer_code = $this->getCustomerCode();
-                    $partner->corporate_limit = floatval(str_replace(',', '', $data['corporate_limit'][$i]));
-                    $partner->branch_code = $data['branch_code'][$i];
-                    $partner->currency_id = $data['currency_id'][$i];
+                    $partner_account->customer_code = $data['customer_code'][$i];
+                    $partner_account->corporate_limit = floatval(str_replace(',', '', $data['corporate_limit'][$i]));
+                    $partner_account->branch_code = $data['branch_code'][$i];
+                    $partner_account->currency_id = $data['currency_id'][$i];
                     $partner_account->save();
                 }
             }
@@ -113,18 +112,17 @@ class CompanyService
     }
 
     //create partner credentials
-    public function createCredential($data, Partner $partner): void
+    public function createCredential(Partner $partner): void
     {
         //token and password
         $token = Str::random(64);
-        $password = $data->password;
 
         //create user to store data
-        $user = User::firstOrNew(['email' => $data->email, 'TIN_number' => $data->tin_number]);
-        $user->name = $data->name;
-        $user->phone = $data->phone;
+        $user = User::firstOrNew(['email' => $partner->email, 'TIN_number' => $partner->tin_number]);
+        $user->name = $partner->business_name;
+        $user->phone = $partner->phone;
         $user->verify_token = $token;
-        $user->password = Hash::make($password);
+        $user->password = Hash::make("12345678");
         $user->save();
 
         //insert or create role
@@ -185,7 +183,7 @@ class CompanyService
 
         //query for users
         $users = User::whereHas('roles', function ($q) {
-            $q->where('name', 'manager');
+            $q->where('name', 'Coordinator');
         })->get();
 
         if ($users->isNotEmpty()) {
@@ -203,26 +201,19 @@ class CompanyService
     }
 
     //process company assessment
-    function processAssessment(Partner $partner, $action)
+    function processAssessment(Partner $partner, $data)
     {
-        if ($action == "REJECTED") {
+        if ($data['action'] == "REJECT") {
             //update company registration status
-            $partner->status = 999;
+            $partner->status = 500;
+            $partner->complete = 0;
+            $partner->remarks = $data['remarks'];
             $partner->updated_by = auth()->id();
             $partner->save();
 
-            //deactivate partner users
-            if ($partner->partnerUsers->isNotEmpty()) {
-                foreach ($partner->partnerUsers as $val) {
-                    //update user
-                    $user = User::findOrFail($val->user_id);
-                    $user->active = 0;
-                    $user->save();
-                }
-            }
-
             //construct message
             $message = "<p>Company information has been rejected by eMakato.</p>";
+            $message .= "<p>" . $data['remarks'] . "</p>";
             $message .= "<p>Please, contact with eMakato Team to complete your information</p>";
 
             //send email
@@ -235,21 +226,17 @@ class CompanyService
             dispatch(new SendEmailJob($data));
 
             //return statement
-            return 403;
-        } else if ($action == "APPROVE") {
+            return 500;
+        } else if ($data['action'] == "APPROVE") {
             //update company registration status
             $partner->status = 200; //OK
             $partner->updated_by = auth()->id();
             $partner->save();
 
-            if ($partner->partnerUsers->isNotEmpty()) {
-                foreach ($partner->partnerUsers as $val) {
-                    //update user
-                    $user = User::findOrFail($val->user_id);
-                    $user->active = 1;
-                    $user->save();
-                }
-            }
+            //Create Credentials
+            $this->createCredential($partner);
+
+            //TODO: Create company users
 
             return 200;
         }

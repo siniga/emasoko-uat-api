@@ -222,6 +222,13 @@ Background Color
   background-color: #2c3e50 !important;
 }
 
+/*
+Border Colors
+*/
+.border-primary{
+  border-color: #0D47A1 !important;
+}
+
 /*===============================================|
 Button
 ================================================*/
@@ -466,25 +473,25 @@ Loader-spinner button
 }
 
 /*================FORM WIZARD ===============*/
-.stepwizard-step {
-  /* margin: 10px;*/
-  padding: 8px 4px; 
-  background-color: #E3F2FD;
-  width: 20%;
-}
-
-.stepwizard-step p {
-  margin-top: 10px;
-}
-
-.stepwizard-row {
-  display: table-row;
-}
-
 .stepwizard {
   display: table;
   width: 100%;
   position: relative;
+}
+
+.stepwizard-row {
+  display: table-row;
+  background-color: #E3F2FD;
+}
+
+.stepwizard-step {
+  padding: 8px 4px; 
+  width: 20%;
+  border-left: 1px solid #fff;
+}
+
+.stepwizard-step p {
+  margin-top: 10px;
 }
 
 .stepwizard-step button[disabled] {

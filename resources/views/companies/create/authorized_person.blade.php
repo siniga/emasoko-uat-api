@@ -56,7 +56,7 @@
                             <div class="stepwizard-step">
                                 <a href="#step-5" type="button" class="btn btn-secondary btn-circle"
                                     disabled="disabled">5</a>
-                                <span class="text-primary">Credentials</span>
+                                <span class="text-primary">Company Preview</span>
                             </div>
                         </div>
                     </div>

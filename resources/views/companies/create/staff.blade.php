@@ -29,34 +29,33 @@
                     <!--./form wizard -->
                     <div class="stepwizard mb-4">
                         <div class="stepwizard-row setup-panel">
-
-                            <div class="stepwizard-step">
+                            <div class="stepwizard-step bg-success">
                                 <a href="#step-1" type="button" class="btn btn-success btn-circle text-white">1</a>
-                                <span class="text-success">Company Information</span>
+                                <span class="text-white">Company Information</span>
                             </div>
 
-                            <div class="stepwizard-step">
+                            <div class="stepwizard-step bg-success">
                                 <a href="#step-2" type="button" class="btn btn-success btn-circle text-white"
                                     disabled="disabled">2</a>
-                                <span class="text-success">Company Documents</span>
+                                <span class="text-white">Company Documents</span>
                             </div>
 
-                            <div class="stepwizard-step">
+                            <div class="stepwizard-step bg-success">
                                 <a href="#step-2" type="button" class="btn btn-success btn-circle text-white"
                                     disabled="disabled">3</a>
-                                <span class="text-success">Collection Accounts</span>
+                                <span class="text-white">Collection Accounts</span>
                             </div>
 
-                            <div class="stepwizard-step">
+                            <div class="stepwizard-step bg-primary">
                                 <a href="#step-2" type="button" class="btn btn-secondary btn-circle"
                                     disabled="disabled">4</a>
-                                <span class="text-primary">Authorized Representative</span>
+                                <span class="text-white">Authorized Representative</span>
                             </div>
 
                             <div class="stepwizard-step">
                                 <a href="#step-5" type="button" class="btn btn-default btn-circle"
                                     disabled="disabled">5</a>
-                                <span>Credentials</span>
+                                <span>Company Preview</span>
                             </div>
                         </div>
                     </div>
@@ -214,7 +213,7 @@
             let maxField = 5; //Input fields increment limitation
             let wrapper = $('.field_wrapper'); //Input field wrapper
             let fieldHTML =
-                '<div class="row row-div">' +
+                '<div class="row row-div border-top border-primary py-4">' +
                 '<div class="col-lg-4">' +
                 '<div class="mb-3">' +
                 '<label>Staff Name <span class="text-danger">*</span></label>' +
@@ -329,7 +328,7 @@
 
                             //set timer
                             setTimeout(function() {
-                                window.location.href = "/companies/authorized-person/" + response.uuid;
+                                window.location.href = "/companies/preview/" + response.uuid;
                             }, 300);
                         },
                         error: function(e) {

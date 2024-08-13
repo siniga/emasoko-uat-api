@@ -29,8 +29,12 @@ class CustomerAccountRequest extends FormRequest
             'account_id' => 'required',
             'account_name' => 'required_if:account_type_id,==,1',
             'account_number' => 'required_if:account_type_id,==,1',
+            'bank_code' => 'required_if:account_type_id,==,1',
             'phone' => ['required_if:account_type_id,==,1', new PhoneNumber()],
+            'secondary_phone' => [new PhoneNumber()],
             'account_number_phone' => ['required_if:account_type_id,==,2', new PhoneNumber()],
+            'nida_number' => 'required',
+            'address' => 'required',
         ];
     }
 
@@ -46,8 +50,11 @@ class CustomerAccountRequest extends FormRequest
             'account_id.required' => 'Bank/MNO name required',
             'account_name.required_if' => 'Name of account holder required',
             'account_number.required_if' => 'Account number required',
-            'phone.required_if' => 'Phone connected to bank required',
+            'bank_code.required_if' => 'Bank code required',
+            'phone.required_if' => 'Phone required',
             'account_number_phone.required_if' => 'Phone required',
+            'nida_number.required' => 'NIDA number required',
+            'address.required' => 'Address required',
         ];
     }
 }

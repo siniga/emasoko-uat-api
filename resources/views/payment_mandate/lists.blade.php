@@ -206,12 +206,16 @@
 
                                             <td>
                                                 @if ($values->status == 100)
-                                                    <span class="badge badge-pill badge-soft-danger">Pending</span>
+                                                    <span class="badge badge-pill badge-soft-danger">Pending Registration</span>
                                                 @elseif($values->status == 200)
-                                                    <span class="badge badge-pill badge-soft-success">Processing</span>
+                                                    <span class="badge badge-pill badge-soft-success">Under Review</span>
                                                 @elseif($values->status == 201)
-                                                    <span class="badge badge-pill badge-soft-success">Approved</span>
-                                                @elseif($values->status == 999)
+                                                    <span class="badge badge-pill badge-soft-success">Pending Verification</span>
+                                                @elseif($values->status == 202)
+                                                    <span class="badge bg-success-1 font-size-10">Verified</span>
+                                                @elseif($values->status == 403) 
+                                                    <span class="badge bg-danger font-size-10">Failed</span> 
+                                                @elseif($values->status == 500)
                                                     <span class="badge badge-pill badge-soft-danger">Rejected</span>
                                                 @endif
                                             </td>
