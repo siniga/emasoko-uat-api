@@ -90,9 +90,6 @@ class AuthOtpController extends Controller
     //login with otp
     public function loginWithOtp(Request $request)
     {
-        Log::debug("Reached hapa 1");
-        Log::debug($request->all());
-
         #Validation
         $request->validate([
             'user_id' => 'required|exists:users,id',
@@ -101,9 +98,6 @@ class AuthOtpController extends Controller
 
         #Validation Logic
         $verificationCode = UserOtp::where('user_id', $request->user_id)->where('otp', $request->otp)->first();
-
-        Log::debug("Reached hapa 2");
-        Log::debug($verificationCode);
 
         $now = Carbon::now();
         if (!$verificationCode) {
@@ -114,9 +108,6 @@ class AuthOtpController extends Controller
 
         //query the user
         $user = User::whereId($request->user_id)->first();
-
-        Log::debug("Reached hapa 3");
-        Log::debug($user);
 
         if ($user) {
             // Expire The OTP
