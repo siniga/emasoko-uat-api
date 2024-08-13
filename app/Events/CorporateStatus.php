@@ -11,7 +11,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class CorporateStatus implements ShouldQueue
+class CorporateStatus
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
     public $payload;

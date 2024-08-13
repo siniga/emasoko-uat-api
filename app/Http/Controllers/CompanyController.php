@@ -8,6 +8,7 @@ use App\Exports\CompanyExport;
 use App\Http\Requests\CompanyAccountRequest;
 use App\Http\Requests\CompanyDetailRequest;
 use App\Jobs\CorporateRegistrationJob;
+use App\Listeners\FetchCorporateStatus;
 use App\Models\Account;
 use App\Models\AccountType;
 use App\Models\Country;
@@ -669,7 +670,7 @@ class CompanyController extends Controller
             return response()->json(['error' => false, "status" => $http_status_code, "message" => 'Corporate Registration approved.'], 200);
         } else if ($http_status_code == 500) {
             //response
-            return response()->json(['error' => false, "status" => $http_status_code, "remarks" => $request->remarks ,"message" => 'Corporate registration rejected.'], 200);
+            return response()->json(['error' => false, "status" => $http_status_code, "remarks" => $request->remarks, "message" => 'Corporate registration rejected.'], 200);
         }
     }
 
@@ -698,7 +699,19 @@ class CompanyController extends Controller
         //dispatch event
         event(new CorporateStatus($payload));
 
-        //response
-        return response()->json(['error' => false, "status" => 200, "message" => 'Corporate status initiated.'], 200);
+        // Manually call the listener to check completion
+        $listener = new FetchCorporateStatus();
+        $result = $listener->handle(new CorporateStatus($payload));
+
+        if ($result) {
+            //TODO: check status of the corporate and send SMS
+
+
+            // Event processing completed
+            return response()->json(['error' => false, "status" => 200, "message" => 'Corporate status initiated.'], 200);
+        } else {
+            // Event processing failed
+            return response()->json(['message' => 'Task processing failed.'], 500);
+        }
     }
 }

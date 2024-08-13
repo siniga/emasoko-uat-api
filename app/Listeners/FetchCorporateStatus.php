@@ -73,5 +73,7 @@ class FetchCorporateStatus
             $partner->remarks = $response['data']['response'][0]['responseDescription'];
             $partner->save();
         }
+
+        return true;
     }
 }
