@@ -3,6 +3,7 @@
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\Api\DashboardChartController;
 use App\Http\Controllers\Api\PaymentMandateController as ApiPaymentMandateController;
+use App\Http\Controllers\Auth\AuthOtpController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
@@ -40,12 +41,23 @@ use Illuminate\Support\Facades\Route;
 // //Language Translation
 // Route::get('index/{locale}', [App\Http\Controllers\HomeController::class, 'lang']);
 
-
-Route::get('/', [LoginController::class, 'showLoginForm'])->name('login');
-Route::post('auth/login', [LoginController::class, 'login'])->name('auth.login');
+Route::controller(AuthOtpController::class)->group(function(){
+    Route::get('/', 'login')->name('otp.login');
+    Route::get('/otp/login', 'login')->name('otp.login');
+    Route::post('/otp/generate', 'generate')->name('otp.generate');
+    Route::get('/otp/verification/{user_id}', 'verification')->name('otp.verification');
+    Route::post('/otp/login', 'loginWithOtp')->name('otp.getlogin');
+});
 Route::get('auth/logout', [LoginController::class, 'logout'])->name('auth.logout');
+
+// Route::get('/', [LoginController::class, 'showLoginForm'])->name('login');
+// Route::get('otp/verification/form', [HomeController::class, 'showOtpForm'])->name('otp.verification.form');
+// Route::post('otp/verification', [LoginController::class, 'otpVerification'])->name('otp.verification');
+// Route::post('auth/login', [LoginController::class, 'login'])->name('auth.login');
 // Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
 // Route::get('auth/login', [LoginController::class, 'showLoginForm'])->name('login');
+
+//After Login
 Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 Route::get('index', [DashboardController::class, 'index'])->name('index');
 

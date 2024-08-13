@@ -5,12 +5,14 @@ namespace App\Providers;
 use App\Events\CancelMandate;
 use App\Events\CorporateStatus;
 use App\Events\CreateOtp;
+use App\Events\LoginOtpRequest;
 use App\Events\MandateStatus;
 use App\Events\VerifyOtp;
 use App\Listeners\FetchCorporateStatus;
 use App\Listeners\FetchMandateStatus;
 use App\Listeners\OtpVerificationRequest;
 use App\Listeners\SendCreatedOtp;
+use App\Listeners\SendLoginOtpRequest;
 use App\Listeners\SendMandateCancellation;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
@@ -47,6 +49,10 @@ class EventServiceProvider extends ServiceProvider
 
         CancelMandate::class => [
             SendMandateCancellation::class,
+        ],
+
+        LoginOtpRequest::class => [
+            SendLoginOtpRequest::class,
         ],
     ];
 

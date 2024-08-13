@@ -5,6 +5,7 @@ namespace App\Classes;
 use Exception;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Firebase\JWT\JWT;
 
 class Authentication
 {
@@ -19,33 +20,25 @@ class Authentication
 
     public function generateToken()
     {
-        // $header = [
-        //     'alg' => 'HS256',
-        //     'typ' => 'JWT'
-        // ];
+        $issuedAt = time();
+        $expiresAt = $issuedAt + 300;
 
-        // $issuedAt = time();
-        // $expiresAt = $issuedAt + 300;
+        // Payload for the JWT
+        $payload = [
+            'iss' => $this->username,   // Issuer of the token
+            'aud' =>  $this->username,  //aud of the token
+            'iat' => $issuedAt,         // Time when the token was issued
+            'nbf' => $issuedAt,         // Time when the token was issued
+            'exp' => $expiresAt         // Expiration time (1 hour from now)
+        ];
 
-        // //create payload
-        // $payload = [
-        //     'iat' =>  $issuedAt,
-        //     'nbf' =>  $issuedAt,
-        //     'exp' => $expiresAt,
-        //     'iss' => $this->username,
-        //     'aud' =>  $this->username,
-        // ];
+        // Your secret key
+        $secretKey = env('JWT_SECRET');
 
-        // $b64Header = $this->toBase64(json_encode($header));
-        // $b64Payload =  $this->toBase64(json_encode($payload));
+        // Encode the payload to generate the token
+        $jwtToken = JWT::encode($payload, $secretKey, 'HS256');
 
-        // //prep signature
-        // $preSignature = $b64Header . '.' . $b64Payload;
-        // $signature = $this->generateSignature($this->passPhrase, $preSignature);
-
-        // $jwtToken = $b64Header . '.' . $b64Payload . '.' . $signature;
-        $jwtToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MjMyNzQ0MjksIm5iZiI6MTcyMzI3NDQyOSwiZXhwIjoxNzIzMjc0NzI5LCJpc3MiOiJFTWFrYXRvIiwiYXVkIjoiRU1ha2F0byJ9.2v-Y53T4Bw12nu1uDCo1PxkiBxJd_q2zWVDCLr1qhsg";
-        $jwtToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MjMyNzE1NDEsIm5iZiI6MTcyMzI3MTU0MSwiZXhwIjoxNzIzMjcxODQxLCJpc3MiOiJFTWFrYXRvIiwiYXVkIjoiRU1ha2F0byJ9.CBJXm9b8PEIWEejsQykKSpUOdxayaNLv22NVCEkpu0Y";
+        // Return the token
         return $jwtToken;
     }
 

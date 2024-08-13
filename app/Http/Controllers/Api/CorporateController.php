@@ -21,7 +21,10 @@ class CorporateController extends Controller
     public function registration(Request $request)
     {
         //create authentication token
-        $AUTH_BEARER_TOKEN = $request->post('AUTH_TOKEN');
+        $AUTH_BEARER_TOKEN = $AUTH_BEARER_TOKEN = $this->auth->generateToken();
+
+        return $AUTH_BEARER_TOKEN;
+        exit();
 
         //create data
         $data = [
