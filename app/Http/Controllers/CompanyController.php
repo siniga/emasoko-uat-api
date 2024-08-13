@@ -23,6 +23,7 @@ use App\Models\PartnerStaff;
 use App\Models\PartnerUser;
 use App\Models\Region;
 use App\Models\User;
+use App\Services\BankApiService;
 use App\Services\CompanyService;
 use App\Services\BankPayloadService;
 use Illuminate\Http\JsonResponse;
@@ -40,7 +41,7 @@ use PDF;
 
 class CompanyController extends Controller
 {
-    public function __construct(protected CompanyService $companyService, protected BankPayloadService $payloadService, protected Authentication $auth)
+    public function __construct(protected CompanyService $companyService, protected BankPayloadService $payloadService, protected Messaging $messaging, protected BankApiService $bankApi, protected Authentication $auth)
     {
         $this->middleware('auth');
     }
@@ -656,20 +657,22 @@ class CompanyController extends Controller
         $http_status_code = $this->companyService->processAssessment($partner, $request->all());
 
         if ($http_status_code == 200) {
-            //partner accounts
-            foreach ($partner->partnerAccounts as $val) {
-                if ($val->account->id == 1 & $val->send_verification == 1) {
-                    $payload = $this->payloadService->corporateRegistrationPayload($partner, $val);
+            //NMB partner accounts
+            $partner_account = $partner->partnerAccounts->where(['account_id' => 1, 'send_verification' => 1])->first();
 
-                    //TODO: Create Request to NMB
-                    dispatch(new CorporateRegistrationJob($payload));
-                }
+            if ($partner_account) {
+                //create payload
+                $payload = $this->payloadService->corporateRegistrationPayload($partner, $partner_account);
+
+                //TODO: Create Request to NMB
+                $response = $this->bankApi->corporateRegistrationRequest($payload);
+                Log::debug("response");
+                Log::debug($response);
             }
 
             //response
-            return response()->json(['error' => false, "status" => $http_status_code, "message" => 'Corporate Registration approved and pending approval from NMB.'], 200);
+            //return response()->json(['error' => false, "status" => $http_status_code, "message" => 'Corporate Registration approved and pending approval from NMB.'], 200);
         } else if ($http_status_code == 500) {
-            //response
             return response()->json(['error' => false, "status" => $http_status_code, "remarks" => $request->remarks, "message" => 'Corporate registration rejected.'], 200);
         }
     }

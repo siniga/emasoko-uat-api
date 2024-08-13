@@ -9,6 +9,8 @@ use App\Classes\Authentication;
 use App\Models\CollectionBatch;
 use App\Models\DebitOrder;
 use App\Models\OtpRequest;
+use App\Models\Partner;
+use Exception;
 
 class BankApiService
 {
@@ -20,7 +22,75 @@ class BankApiService
     }
 
     //corporate registration
-    public function corporateRegistrationRequest($data) {}
+    public function corporateRegistrationRequest($data)
+    {
+        //declare code
+        $http_code = 200;
+
+        //create authentication token
+        $AUTH_BEARER_TOKEN = $this->auth->generateToken();
+        Log::debug("Token : {$AUTH_BEARER_TOKEN}");
+
+        //Create Headers
+        $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer ' . $AUTH_BEARER_TOKEN];
+
+        //Create Payload
+        $payload = [
+            "user" => "EMakato",
+            "correlationId" => Str::uuid()->toString(),
+            "targetService" => "CorporateRegistration",
+            "status" => "Create",
+            "data" => $data
+        ];
+
+        //Create Payload
+        Log::debug('== CorporateRegistration Request == ');
+        Log::debug($payload);
+
+        //API URL 
+        $API_URL = env('API_URL');
+
+
+        try {
+            //response
+            $response = Http::withHeaders($headers)->post($API_URL, $payload);
+
+            if ($response) {
+                //update the corporate
+                $partner = Partner::where('reference', '=', $payload['data']['corporateReference'])->first();
+                $partner->http_response_json = $response;
+
+                //decode the response 
+                $response = json_decode($response, true);
+
+                //logging response
+                Log::debug('== CorporateRegistration Response ==');
+                Log::debug($response);
+
+                if ($response['status'] == "Success") {
+                    $partner->status = 201; //created
+
+                    //http code
+                    $http_code = 201;
+                } else if ($response['status'] == "Fail") {
+                    $http_code = 403; //Failed
+
+                    if ($response['data']['response'][0]['responseCode'] != 410)
+                        $partner->status = 403;
+                }
+
+                $partner->http_response_code = $response['data']['response'][0]['responseCode'];
+                $partner->remarks = $response['data']['response'][0]['responseDescription'];
+                $partner->save();
+
+                return response()->json(['error' => false, 'http_code' => $http_code, 'error_msg' => $response['data']['response'][0]['responseDescription']]);
+            } else {
+                return response()->json(['error' => true, 'http_code' => 500, 'error_msg' => 'No any response.']);
+            }
+        } catch (Exception $e) {
+            return response()->json(['error' => true, 'http_code' => 500, 'error_msg' => $e]);
+        }
+    }
 
     //corporate status
     public function corporateStatusRequest($data)
@@ -184,7 +254,7 @@ class BankApiService
         }
         $debit_order->save();
 
-        return $response_code;     
+        return $response_code;
     }
 
     //create Otp 
@@ -296,7 +366,7 @@ class BankApiService
         $otp_request->save(); //save
 
         return $response_code;
-    } 
+    }
 
     //send collection deduction
     public function collectionCreate($data)
