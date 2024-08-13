@@ -523,11 +523,11 @@ class PaymentMandateController extends Controller
         //create payload
         $payload = $this->payloadService->verifyOtpPayload($otp_request, $request->otpPin);
 
-        //dispatch event
-        event(new VerifyOtp($payload, $debit_order->customerAccount->account_number, $debit_order->reference));
+        //api service
+        $http_response_code = $this->bankApi->verifyOtpRequest($payload, $debit_order->customerAccount->account_number, $debit_order->reference);
 
         //response
-        return response()->json(['success' => true, 'success_msg' => "OTP verification initiated"], 200);
+        return response()->json(['success' => true, 'success_msg' => "OTP verification initiated", "http_response_code" => $http_response_code], 200);
     }
 
     //mandate status
@@ -566,10 +566,10 @@ class PaymentMandateController extends Controller
         //create payload
         $payload = $this->payloadService->mandateCancellationPayload($debit_order);
 
-        //service for sending request to API
-        event(new CancelMandate($payload));
+        //api service
+        $http_response_code = $this->bankApi->mandateCancellationRequest($payload);
 
-        return response()->json(['success' => true, 'success_msg' => "Mandate cancellation initiated"], 200);
+        return response()->json(['success' => true, 'success_msg' => "Mandate cancellation initiated", "http_response_code" => $http_response_code], 200);
     }
 
     //customer details

@@ -17,8 +17,8 @@
                         <div class="row">
                             <div class="col-lg-12 col-md-12 col-12">
                                 <div class="mb-2">
-                                    <label>Remarks</label>
-                                    <textarea name="remarks" x-model="formData.remarks" placeholder="Write remarks..." class="form-control" rows="2" required=""></textarea>
+                                    <label>Reason for rejection</label>
+                                    <textarea name="remarks" x-model="formData.remarks" placeholder="Write reason for rejection..." class="form-control" rows="2" required=""></textarea>
                                 </div>
                             </div>
                         </div>

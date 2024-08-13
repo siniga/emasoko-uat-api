@@ -115,31 +115,31 @@
                                 <th>Status</th>
                                 <td colspan="3" id="company-status">
                                     <template x-if="status==0">
-                                        <span class="badge bg-warning">Registration Process</span>
+                                        <span class="badge bg-warning text-uppercase">Registration Process</span>
                                     </template>
 
                                     <template x-if="status==100">
-                                        <span class="badge bg-warning">Pending Review</span>
+                                        <span class="badge bg-warning text-uppercase">Pending Review</span>
                                     </template>
 
                                     <template x-if="status==200">
-                                        <span class="badge bg-info">Pending Approval</span>
+                                        <span class="badge bg-info text-uppercase">Pending Approval</span>
                                     </template>
 
                                     <template x-if="status==201">
-                                        <span class="badge bg-success-1">Pending Verification</span>
+                                        <span class="badge bg-info text-uppercase">Pending Verification</span>
                                     </template>
 
                                     <template x-if="status==202">
-                                        <span class="badge bg-success-1">Verified</span>
+                                        <span class="badge bg-success-1 text-uppercase">Verified</span>
                                     </template>
 
                                     <template x-if="status==403">
-                                        <span class="badge bg-danger">Failed</span>
+                                        <span class="badge bg-danger text-uppercase">Failed</span>
                                     </template>
 
                                     <template x-if="status==500">
-                                        <span class="badge bg-danger">Rejected</span>
+                                        <span class="badge bg-danger text-uppercase">Rejected</span>
                                     </template>
                                 </td>
                             </tr>
@@ -302,6 +302,7 @@
         {{-- <div id="offcanvas-wrp" x-show="sidebarOpen" x-transition>
             <div id="detail-div"></div>
         </div> --}}
+        
         @include('companies.modals.reject_modal')
     </div>
 @endsection
@@ -341,7 +342,7 @@
                         });
                 },
 
-                //open price modal
+                //open reject modal
                 openRejectModal() {
                     $('#rejectModal').modal('show');
                 },

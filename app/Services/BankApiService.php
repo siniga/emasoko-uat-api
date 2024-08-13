@@ -7,6 +7,8 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use App\Classes\Authentication;
 use App\Models\CollectionBatch;
+use App\Models\DebitOrder;
+use App\Models\OtpRequest;
 
 class BankApiService
 {
@@ -18,9 +20,7 @@ class BankApiService
     }
 
     //corporate registration
-    public function corporateRegistrationRequest($data)
-    {
-    }
+    public function corporateRegistrationRequest($data) {}
 
     //corporate status
     public function corporateStatusRequest($data)
@@ -127,8 +127,11 @@ class BankApiService
     //mandate cancellation 
     public function mandateCancellationRequest($data)
     {
+        //responce code
+        $response_code = 200;
+
         //create authentication token
-        $AUTH_BEARER_TOKEN = "";
+        $AUTH_BEARER_TOKEN = $this->auth->generateToken();
 
         //Create Headers
         $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer ' . $AUTH_BEARER_TOKEN];
@@ -143,19 +146,45 @@ class BankApiService
         ];
 
         //Create Payload
-        Log::debug('Mandate Cancellation Request');
+        Log::debug('== Mandate Cancellation Request ==');
         Log::debug($payload);
 
         //API URL 
         $API_URL = env('API_URL');
 
         //response
-        // $response = Http::withHeaders($headers)->post($API_URL, $payload);
+        $response = Http::withHeaders($headers)->post($API_URL, $payload);
 
-        // //logging response
-        // Log::debug('OTPVerify Response =>' . $response);
+        //update the debit order
+        $debit_order = DebitOrder::where('reference', '=', $payload['data']['mandateReferenceNumber'])->first();
+        $debit_order->http_response_status_json = $response;
 
-        return 200;
+        //decode the response 
+        $response = json_decode($response, true);
+
+        //logging response
+        Log::debug('== MandateCancellation Response  ==');
+        Log::debug($response);
+
+        if ($response['status'] == "Success") {
+            $response_code = 405; //response code
+
+            $debit_order->deleted = 1;
+            $debit_order->status = 405;
+            $debit_order->cancellation_reason = $payload['data']['cancelReason'];
+            $debit_order->http_response_code = $response['data']['response'][0]['responseCode'];
+            $debit_order->remarks = $response['data']['response'][0]['responseDescription'];
+        } else if ($response['status'] == "Fail") {
+            $response_code = 500; //response code
+
+            $debit_order->deleted = 0;
+            $debit_order->status = 500;
+            $debit_order->http_response_code = $response['data']['response'][0]['responseCode'];
+            $debit_order->remarks = $response['data']['response'][0]['responseDescription'];
+        }
+        $debit_order->save();
+
+        return $response_code;     
     }
 
     //create Otp 
@@ -193,10 +222,13 @@ class BankApiService
     }
 
     //verify OTP
-    public function verifyOtpRequest($data)
+    public function verifyOtpRequest($data, $account_number, $mandate_reference)
     {
+        //responce code
+        $response_code = 200;
+
         //create authentication token
-        $AUTH_BEARER_TOKEN = "";
+        $AUTH_BEARER_TOKEN = $this->auth->generateToken();
 
         //Create Headers
         $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer ' . $AUTH_BEARER_TOKEN];
@@ -218,13 +250,53 @@ class BankApiService
         $API_URL = env('API_URL');
 
         //response
-        // $response = Http::withHeaders($headers)->post($API_URL, $payload);
+        $response = Http::withHeaders($headers)->post($API_URL, $payload);
 
-        // //logging response
-        // Log::debug('OTPVerify Response =>' . $response);
+        //update the otp request
+        $otp_request = OtpRequest::where(
+            [
+                'reference' => $payload['data']['caseReference'],
+                'account_number' => $account_number,
+                'action' => 'verify',
+            ]
+        )->first();
+        $otp_request->http_response_json = $response;
 
-        return 200;
-    }
+        //decode the response 
+        $response = json_decode($response, true);
+
+        //logging response
+        Log::debug('== OtpVerify Response  ==');
+        Log::debug($response);
+
+        if ($response['status'] == "Success") {
+            $response_code = 202; //response code
+
+            //update otp response code
+            $otp_request->http_response_code = $response['data']['response'][0]['responseCode'];
+
+            //Update mandate status based on response
+            $debit_order = DebitOrder::where('reference', '=', $mandate_reference)->first();
+            $debit_order->status = 202;
+            $debit_order->approved = 'APPROVED';
+            $debit_order->save();
+        } else if ($response['status'] == "Fail") {
+            $response_code = 500; //response code
+
+            //update otp response code
+            $otp_request->http_response_code = $response['data']['response'][0]['responseCode'];
+
+            //Update mandate status based on response
+            $debit_order = DebitOrder::where('reference', '=', $mandate_reference)->first();
+            $debit_order->status = 500;
+            $debit_order->approved = 'REJECTED';
+            $debit_order->remarks = $response['data']['response'][0]['responseDescription'];
+            $debit_order->save();
+        }
+        $otp_request->save(); //save
+
+        return $response_code;
+    } 
 
     //send collection deduction
     public function collectionCreate($data)

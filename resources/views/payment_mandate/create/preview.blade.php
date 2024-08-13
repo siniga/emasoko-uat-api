@@ -182,14 +182,14 @@
                                 </div>
                             </div>
 
-                            <template x-if="status=='200'">
+                            <template x-if="status==200 || status==201">
                                 <div class="row">
                                     <x-otp-verification-input :uuid="$debit_order->uuid" action="MandateApproval"
                                         :url="route('payment-mandate.verify-otp')" />
                                 </div>
                             </template>
 
-                            <template x-if="status=='100'">
+                            <template x-if="status==100">
                                 <div class="row">
                                     <div class="col-md-12">
                                         <div class="mb-3 text-sm-end d-none d-sm-block">
@@ -362,20 +362,27 @@
                         .then(responseJson => {
                             console.log(responseJson);
 
-                            console.log("jjjd");
-                            console.log(this.verifyForm.uuid);
+                            //response code 
+                            const http_response_code = responseJson.http_response_code;
 
-                            //display message
-                            $('#message_wrp').html(
-                                "<div class='alert alert-success rounded-sm'>OTP verification initiated</div>"
-                            );
+                            if(http_response_code == 202){
+                                //display message
+                                $('#message_wrp').html(
+                                    "<div class='alert alert-success rounded-sm'>OTP validated</div>"
+                                );
 
-                            //redirect to details page
-                            var redirectionURL = '/payment-mandate/show/' + this.verifyForm.uuid;
+                                //redirect to details page
+                                var redirectionURL = '/payment-mandate/show/' + this.verifyForm.uuid;
 
-                             setTimeout(function () {
-                                window.location.href = redirectionURL
-                            }, 3000);
+                                setTimeout(function () {
+                                    window.location.href = redirectionURL
+                                }, 3000);
+                            } else {
+                                //display message
+                                $('#message_wrp').html(
+                                    "<div class='alert alert-warning rounded-sm'>Failed to validate Otp, Try resend new Otp.</div>"
+                                );
+                            }
                         }).catch(() => {
                             this.formMessage = "Something went wrong.";
                         }).finally(() => {

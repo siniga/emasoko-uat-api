@@ -139,7 +139,7 @@ class BankPayloadService
         $payload = [
             "mandateReferenceNumber" => $debitOrder->reference,
             "corporateReference" => $partner->reference,
-            "cancelReason" => "Does not comply",
+            "cancelReason" => $debitOrder->remarks,
             "createdBy" => static::userNameFormat($debitOrder->verifiedBy),
             "verifiedBy" => static::userNameFormat($debitOrder->verifiedBy),
             "createdDate" => $debitOrder->createdDate,
