@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Classes\Authentication;
+use App\Classes\Messaging;
 use App\Events\CorporateStatus;
 use App\Exports\CompanyExport;
 use App\Http\Requests\CompanyAccountRequest;
