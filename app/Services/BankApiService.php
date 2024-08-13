@@ -88,7 +88,7 @@ class BankApiService
                 return response()->json(['error' => true, 'http_code' => 500, 'error_msg' => 'No any response.']);
             }
         } catch (Exception $e) {
-            return response()->json(['error' => true, 'http_code' => 500, 'error_msg' => $e]);
+            return response()->json(['error' => true, 'http_code' => 500, 'error_msg' => '']);
         }
     }
 
