@@ -280,23 +280,33 @@
 
                             <div id="message_wrp"></div>
 
-                            <template x-if="complete==0">
+                            <template x-if="complete==0 || complete==1">
                                 <div class="row">
                                     <div class="col-md-12">
                                         <div class="mb-3 text-sm-end d-none d-sm-block">
-                                            <a href="{{ route('companies.cancel-registration', $company->uuid) }}"
-                                                class="btn btn-danger cancel text-medium mx-1">Cancel</a>
+                                            <template x-if="status==0 || status==500">
+                                                <a href="{{ route('companies.cancel-registration', $company->uuid) }}"
+                                                    class="btn btn-danger cancel text-medium mx-1">Cancel
+                                                </a>
+                                            </template>
 
-                                            <a href="{{ route('companies.registration', $company->uuid) }}"
-                                                class="btn btn-info text-medium mx-1">Edit</a>
+                                            <template x-if="status==0 || status==500">
+                                                <a href="{{ route('companies.registration', $company->uuid) }}"
+                                                    class="btn btn-info text-medium mx-1">Edit
+                                                </a>
+                                            </template>
 
-                                            <button type="submit" name="save" class="btn btn-secondary text-medium mx-1"
-                                                x-text="buttonSave" :disabled="saveLoading" x-on:click="savingForm();">
-                                            </button>
+                                            <template x-if="status==0 || status==500">
+                                                <button type="submit" name="save" class="btn btn-secondary text-medium mx-1"
+                                                    x-text="buttonSave" :disabled="saveLoading" x-on:click="savingForm();">
+                                                </button>
+                                            </template>
 
-                                            <button type="submit" name="submit" class="btn btn-success text-medium"
-                                                x-text="buttonSubmit" :disabled="submitLoading"
-                                                x-on:click="submitForm();"></button>
+                                            <template x-if="status==0 || status==500">
+                                                <button type="submit" name="submit" class="btn btn-success text-medium"
+                                                    x-text="buttonSubmit" :disabled="submitLoading"
+                                                    x-on:click="submitForm();"></button>
+                                            </template>
                                         </div>
                                     </div>
                                 </div>
@@ -320,6 +330,7 @@
                     uuid: "{{ $company->uuid }}",
                 },
                 complete: "{{ $company->complete }}",
+                status: "{{ $company->status }}",
                 formMessage: "",
 
                 saveLoading: false,
