@@ -656,23 +656,23 @@ class CompanyController extends Controller
 
         //process assessment
         $http_status_code = $this->companyService->processAssessment($partner, $request->all());
+        Log::debug($http_status_code);
 
         if ($http_status_code == 200) {
             //NMB partner accounts
-            $partner_account = $partner->partnerAccounts->where(['account_id' => 1, 'send_verification' => 1])->first();
+            $partner_account = PartnerAccount::where(['account_id' => 1, 'send_verification' => 1])->first();
 
             if ($partner_account) {
                 //create payload
                 $payload = $this->payloadService->corporateRegistrationPayload($partner, $partner_account);
 
-                //TODO: Create Request to NMB
-                $response = $this->bankApi->corporateRegistrationRequest($payload);
-                Log::debug("response");
-                Log::debug($response);
+                //Create Request to NMB
+                dispatch(new CorporateRegistrationJob($payload));
+                
             }
 
             //response
-            //return response()->json(['error' => false, "status" => $http_status_code, "message" => 'Corporate Registration approved and pending approval from NMB.'], 200);
+            return response()->json(['error' => false, "status" => $http_status_code, "message" => 'Corporate Registration approved and pending approval from NMB.'], 200);
         } else if ($http_status_code == 500) {
             return response()->json(['error' => false, "status" => $http_status_code, "remarks" => $request->remarks, "message" => 'Corporate registration rejected.'], 200);
         }
