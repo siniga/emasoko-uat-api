@@ -60,23 +60,35 @@
                                     </div>
 
                                     <div class="mb-3">
-                                        <label for="username" class="form-label">Phone</label>
-                                        <input name="phone" type="text"
-                                            class="form-control @error('phone') is-invalid @enderror"
-                                            value="{{ old('phone') }}" id="username" placeholder="Enter phone..."
-                                            autocomplete="phone" required>
-                                        @error('phone')
-                                            <span class="invalid-feedback" role="alert">
-                                                {{ $message }}
-                                            </span>
-                                        @enderror
+                                        <label class="form-label">Password</label>
+                                        <div
+                                            class="input-group auth-pass-inputgroup @error('password') is-invalid @enderror">
+                                            <input type="password" name="password"
+                                                class="form-control  @error('password') is-invalid @enderror"
+                                                id="userpassword" placeholder="Enter password..." aria-label="Password"
+                                                aria-describedby="password-addon" required>
+                                            <button class="btn btn-light " type="button" id="password-addon"><i
+                                                    class="mdi mdi-eye-outline"></i></button>
+                                            @error('password')
+                                                <span class="invalid-feedback" role="alert">
+                                                    {{ $message }}
+                                                </span>
+                                            @enderror
 
-                                        <div class="invalid-feedback">
-                                            Phone required
+                                            <div class="invalid-feedback">
+                                                Password required
+                                            </div>
                                         </div>
                                     </div>
 
- 
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="remember"
+                                            {{ old('remember') ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="remember">
+                                            Remember me
+                                        </label>
+                                    </div>
+
 
                                     <div class="mt-3 d-grid">
                                         <button class="btn btn-primary waves-effect waves-light" type="submit">

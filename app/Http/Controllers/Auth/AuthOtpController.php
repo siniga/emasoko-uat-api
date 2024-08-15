@@ -28,15 +28,14 @@ class AuthOtpController extends Controller
         # Validate Data
         $request->validate([
             'email' => 'required|exists:users,email',
-            'phone' => 'required|exists:users,phone'
+            'password' => 'required'
         ]);
 
         # Verify phone and email match
-        $user = User::where(['email' => $request->email, 'phone' => $request->phone])->first();
-
+        $user = User::where(['email' => $request->email, 'password' => $request->password])->first();
 
         if (!$user) {
-            return Redirect::route('otp.login')->with('danger', 'Email address and phone number does not match');
+            return Redirect::route('otp.login')->with('danger', 'Invalid email or password');
         }
 
         # Generate An OTP
