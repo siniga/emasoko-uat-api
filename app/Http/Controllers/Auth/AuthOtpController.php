@@ -40,13 +40,13 @@ class AuthOtpController extends Controller
         }
 
         # Generate An OTP
-        $verificationCode = $this->generateOtp($request->phone);
+        $verificationCode = $this->generateOtp($user);
 
         //format mobile phone
-        $phone =  cast_phone($request->phone);
+        $phone =  cast_phone($user->phone);
 
         //construct message
-        $message = "Your OTP to Login is - " . $verificationCode->otp;
+        $message = "Your Emakato One Time Password(OTP) to Login is - " . $verificationCode->otp;
 
         //send sms
         $data = ["phone" => $phone, "message" => $message];
@@ -57,10 +57,8 @@ class AuthOtpController extends Controller
     }
 
     //generate and save otp
-    public function generateOtp($mobile_no)
+    public function generateOtp(User $user)
     {
-        $user = User::where('phone', $mobile_no)->first();
-
         # User Does not Have Any Existing OTP
         $verificationCode = UserOtp::where(['user_id' => $user->id])->latest()->first();
 
