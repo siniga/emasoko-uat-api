@@ -33,6 +33,8 @@ if (!function_exists('casting_phone')) {
     {
         if (preg_match("~^0\d+$~", $phone)) {
             return '255' . substr($phone, 1);
+        } else if (preg_match("~^+\d+$~", $phone)) {
+            return substr($phone, 1);
         } else {
             return $phone;
         }

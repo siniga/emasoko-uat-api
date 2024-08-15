@@ -43,7 +43,7 @@ class AuthOtpController extends Controller
         $verificationCode = $this->generateOtp($user);
 
         //format mobile phone
-        $phone =  cast_phone($user->phone);
+        $phone =  casting_phone($user->phone);
 
         //construct message
         $message = "Your Emakato One Time Password(OTP) to Login is - " . $verificationCode->otp;
