@@ -16,14 +16,17 @@ class Messaging
     {
         //create payload
         $payload = [
-            'user'       => 'SOLOCODES',
-            'pwd'          => 'L@1N@2022',
-            'senderid'     => 'Emakato',
+            'user'  => 'SOLOCODES',
+            'pwd'   => 'L@1N@2022',
+            'senderid'  => 'Emakato',
             'mobileno'  => $phone,
             'msgtext'  => $message,
             'priority'     => 'High',
             'CountryCode'    => 'ALL',
         ];
+
+        Log::debug("== SMS Payload ==");
+        Log::debug($payload);
 
         //send sms to API
         $response = Http::withOptions(['verify' => false])->get('https://mshastra.com/sendurl.aspx', $payload);
