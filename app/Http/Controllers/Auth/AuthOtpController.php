@@ -11,6 +11,7 @@ use App\Models\UserOtp;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 
@@ -32,7 +33,7 @@ class AuthOtpController extends Controller
         ]);
 
         # Verify phone and email match
-        $user = User::where(['email' => $request->email, 'password' => $request->password])->first();
+        $user = User::where(['email' => $request->email, 'plain_password' => $request->password])->first();
 
         if (!$user) {
             return Redirect::route('otp.login')->with('danger', 'Invalid email or password');
