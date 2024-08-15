@@ -667,8 +667,7 @@ class CompanyController extends Controller
                 $payload = $this->payloadService->corporateRegistrationPayload($partner, $partner_account);
 
                 //Create Request to NMB
-                dispatch(new CorporateRegistrationJob($payload));
-                
+                dispatch(new CorporateRegistrationJob($payload));     
             }
 
             //response
