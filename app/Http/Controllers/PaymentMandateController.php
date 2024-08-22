@@ -232,7 +232,7 @@ class PaymentMandateController extends Controller
             'phone' => $unique_phone
         ]);
         $customer_account->uuid = $customer_account_uuid;
-        $customer_account->secondary_phone = casting_phone($validated['secondary_phone']);
+        $customer_account->secondary_phone = $validated['secondary_phone'];
         $customer_account->account_name = $validated['account_name'];
         $customer_account->account_number = $validated['account_number'];
         $customer_account->bank_code = $validated['bank_code'];
@@ -296,7 +296,7 @@ class PaymentMandateController extends Controller
                         }
                     }
                 ],
-                'evidence_of_aggrement' => 'required',
+                //'evidence_of_aggrement' => 'required',
             ],
             [
                 'provider_id.required_if' => 'Service provider required',
@@ -310,9 +310,12 @@ class PaymentMandateController extends Controller
                 'start_date.required' => 'Start date required',
                 'deduction_end.required' => 'Deduction end required',
                 'end_date.required_if' => 'End date required',
-                'evidence_of_aggrement.required' => 'Evidence of aggrement is required',
+                //'evidence_of_aggrement.required' => 'Evidence of aggrement is required',
             ]
         );
+
+        //generate otp
+        $otp_code = rand(10000, 99999);
 
         //check for provider id
         if ($request->partner_id != null)
@@ -380,13 +383,7 @@ class PaymentMandateController extends Controller
             $debit_order->end_date = $$request->input('end_date');
         }
 
-        // evidence_of_aggrement attached
-        if ($request->hasFile('evidence_of_aggrement')) {
-            $path = $request->file('evidence_of_aggrement');
-            $docsName = $path->getClientOriginalName();
-            $path->move('assets/uploads/docs', $docsName);
-            $debit_order->evidence_of_aggrement = $docsName;
-        }
+        $debit_order->otp_code = $otp_code;
         $debit_order->approved = "PENDING";
         $debit_order->save();
 
@@ -406,10 +403,68 @@ class PaymentMandateController extends Controller
             );
             $customer_partner->created_by = Auth::user()->id;
             $customer_partner->save();
+
+            //construct message
+            $message = "Kuridhia Vigezo na Masharti toa namba ya siri {{$otp_code}} kwenda " . strtoupper($debit_order->partner->business_name);
+
+            //send SMS
+            $data = ["phone" => $customer_account->phone, "message" => $message];
+            dispatch(new SendSMSJob($data));
         }
 
         // redirect with message
-        return Redirect::route('payment-mandate.preview', [$debit_uuid])->with('success', "Customer deduction information saved");
+        return Redirect::route('payment-mandate.create-evidence', [$debit_uuid])->with('success', "Customer deduction information saved, OTP PIN sent to customer for Terms and Condition consent.");
+    }
+
+    //evidence of agrement
+    function create_evidence($debit_uuid)
+    {
+        $title = "Payment Mandate";
+
+        // debit order
+        $debit_order = DebitOrder::where(['uuid' => $debit_uuid])->firstOrFail();
+
+        //render view
+        return view('payment_mandate.create.create_evidence', compact('title', 'debit_order'));
+    }
+
+    //verify evidence of agrement
+    function verify_evidence(Request $request)
+    {
+        //Validate your data
+        $this->validate(
+            $request,
+            [
+                'otp_code' => 'required',
+            ]
+        );
+
+        //post data
+        $otp_code = $request->otp_code;
+        $debit_uuid = $request->debit_order_uuid;
+
+        //debit order
+        $debit_order = DebitOrder::where(['uuid' => $debit_uuid, 'otp_code' => $otp_code])->first();
+
+        if (!$debit_order) {
+            return Redirect::route('payment-mandate.create-evidence', $debit_uuid)->with('danger', 'Invalid OTP, please try again');
+        }
+
+        //Create Evidence of Agreement
+        view()->share('debit_order', $debit_order);
+        $pdf = PDF::loadView('payment_mandate.create.digital_evidence');
+
+        //create filename
+        $filename = $debit_order->uuid . '_evidence.pdf';
+
+        $path = 'assets/uploads/docs/pdf/';
+        $pdf->save($path  . $filename);
+
+        //save evidence in database
+        $debit_order->evidence_of_aggrement = $filename;
+
+         // redirect with message
+         return Redirect::route('payment-mandate.preview', [$debit_uuid])->with('success', "Customer Evidence of aggrement verified");
     }
 
     //customer preview
@@ -453,7 +508,7 @@ class PaymentMandateController extends Controller
 
         //update status of debit mandate
         $debit_order->status = 200;
-       $debit_order->save();
+        $debit_order->save();
 
         //create payload
         $payload = $this->payloadService->mandateRegistrationPayload($debit_order);

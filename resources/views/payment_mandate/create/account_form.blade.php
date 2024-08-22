@@ -41,8 +41,14 @@
                             </div>
 
                             <div class="stepwizard-step">
-                                <a href="#step-2" type="button" class="btn btn-default btn-circle"
+                                <a href="#step-3" type="button" class="btn btn-default btn-circle"
                                     disabled="disabled">3</a>
+                                <span>Evidence of Agrement</span>
+                            </div>
+
+                            <div class="stepwizard-step">
+                                <a href="#step-4" type="button" class="btn btn-default btn-circle"
+                                    disabled="disabled">4</a>
                                 <span>Deduction Confirmation</span>
                             </div>
                         </div>

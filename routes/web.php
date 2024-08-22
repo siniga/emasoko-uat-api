@@ -160,6 +160,10 @@ Route::post('payment-mandate/store-account', [PaymentMandateController::class, '
 Route::get('payment-mandate/create-deduction/{ca_uuid}/{do_uuid?}', [PaymentMandateController::class, 'create_deduction'])->name('payment-mandate.create-deduction');
 Route::post('payment-mandate/store-deduction', [PaymentMandateController::class, 'store_deduction'])->name('payment-mandate.store-deduction');
 
+//create evidennce
+Route::get('payment-mandate/create-evidence/{do_uuid}', [PaymentMandateController::class, 'create_evidence'])->name('payment-mandate.create-evidence');
+Route::post('payment-mandate/verify-evidence', [PaymentMandateController::class, 'verify_evidence'])->name('payment-mandate.verify-evidence');
+
 //preview 
 Route::get('payment-mandate/preview/{do_uuid}', [PaymentMandateController::class, 'preview'])->name('payment-mandate.preview');
 Route::get('payment-mandate/cancel/{do_uuid}', [PaymentMandateController::class, 'cancel'])->name('payment-mandate.cancel');

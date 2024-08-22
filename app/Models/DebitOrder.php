@@ -41,6 +41,11 @@ class DebitOrder extends Model
         return $query->where('status', '=', 'active');
     }
 
+    function installments()
+    {
+        return $this->hasMany(Installment::class, 'debit_order_id');
+    }
+
     function customerAccount()
     {
         return $this->belongsTo(CustomerAccount::class, 'customer_account_id');

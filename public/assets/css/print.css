@@ -1,0 +1,92 @@
+*{
+    font-family: "Roboto, Cerebri, Sans-serif" !important;
+}
+
+body{
+    width: 100%;
+    /* background-color: red; */
+    /* margin: 0px 0px 0px 0px; */
+}
+h2{
+    font-size: 20px;
+    margin-top: 0px;
+    padding-top: 0px;
+}
+
+header {
+    position: fixed;
+    top: -40px;
+    left: 0px;
+    right: 0px;
+    height: 70px;
+    font-size: 20px !important;
+    /* background-color: red; */
+   
+    /* color: white; */
+    /* text-align: center; */
+    /* line-height: 35px; */
+}
+.header-container{
+  display: inline-block;
+}
+
+footer {
+    position: fixed; 
+    bottom: 0px; 
+    left: 0px; 
+    right: 0px;
+    height: 70px; 
+    font-size: 20px !important;
+    /* background-color: #000; */
+    /* color: white;
+    text-align: center; */
+    /* line-height: 35px; */
+}
+
+.table-header{
+    width: 100%;
+    /* border: 1px red solid; */
+    padding: 5px 2px 5px 2px;
+    margin-bottom: 10px;
+}
+
+.table-header span{
+    font-size: 14px;
+    font-weight: bold;
+    color: #2A378A;
+}
+.main-body{
+    margin-top: 40px;
+}
+.border-div{
+    margin-top: 10px;
+    border: 3px solid #2A378A;
+}
+.header-text{
+    font-size: 15px;
+    font-weight: bold;
+}
+.sub-header-text{
+    font-size: 14px;
+    font-weight: 400;
+}
+.detail-table td, .detail-table th{
+    border: 1px solid gainsboro;
+    padding: .5rem .5rem;
+}
+.detail-table th{
+    background-color: aliceblue;
+}
+.note-text{
+    text-align: justify;
+    font-size: 17px;
+    font-weight: 900;
+}
+.page-break {
+    page-break-after: always;
+}
+.contract-desc{
+    font-size: 16px;
+    text-align: justify;
+    /* font-weight: 300; */
+}

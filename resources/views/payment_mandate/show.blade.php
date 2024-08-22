@@ -242,22 +242,37 @@
                                     </tr>
                                 </table>
 
+                                <div class="table-responsive">
+                                    <table class="table table-nowrap align-middle table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <td colspan="4" class="font-weight-600 text-uppercase">
+                                                    Deduction History
+                                                </td>
+                                            </tr>
+                                        </thead>
 
-                                <table class="table table-nowrap align-middle table-bordered">
-                                    <thead>
-                                        <tr>
-                                            <td colspan="4" class="font-weight-600 text-uppercase">
-                                                Deduction History
-                                            </td>
-                                        </tr>
-                                    </thead>
+                                        <tbody>
+                                            <tr>
+                                                @foreach($debit_order->installments as $val)
+                                                    <td>{{ date('d-m', strtotime($val->payment_date)) }}</td>
+                                                @endforeach
+                                            </tr>
 
-                                    <tbody>
-                                        <tr>
-                                            <td></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                                             <tr>
+                                                @foreach($debit_order->installments as $val)
+                                                    <td class="text-center">
+                                                        @if($val->status == "OPEN")
+                                                            <i class='bx bxs-x-square bx-sm text-danger'></i>
+                                                        @elseif($val->status == "CLOSED")
+                                                            <i class='bx bxs-check-square bx-sm text-success'></i>
+                                                        @endif
+                                                    </td>
+                                                @endforeach
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
