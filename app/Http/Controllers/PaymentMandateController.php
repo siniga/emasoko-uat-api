@@ -462,6 +462,7 @@ class PaymentMandateController extends Controller
 
         //save evidence in database
         $debit_order->evidence_of_aggrement = $filename;
+        $debit_order->save();
 
          // redirect with message
          return Redirect::route('payment-mandate.preview', [$debit_uuid])->with('success', "Customer Evidence of aggrement verified");
