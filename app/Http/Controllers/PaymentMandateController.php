@@ -405,7 +405,7 @@ class PaymentMandateController extends Controller
             $customer_partner->save();
 
             //construct message
-            $message = "Kuridhia Vigezo na Masharti toa namba ya siri {{$otp_code}} kwenda " . strtoupper($debit_order->partner->business_name);
+            $message = "Kuridhia Vigezo na Masharti toa namba ya siri {$otp_code} kwenda " . strtoupper($debit_order->partner->business_name);
 
             //send SMS
             $data = ["phone" => $customer_account->phone, "message" => $message];
