@@ -63,7 +63,7 @@ class MandateRegistrationJob implements ShouldQueue
         $API_URL = env('API_URL');
 
         //response
-        $response = Http::withHeaders($headers)->post($API_URL, $payload);
+        $response = Http::withOptions(['verify' => false])->withHeaders($headers)->post($API_URL, $payload);
 
         //update debit response
         $debit_order = DebitOrder::where('reference', '=', $payload['data']['mandateReferenceNumber'])->first();

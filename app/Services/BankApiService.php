@@ -53,7 +53,7 @@ class BankApiService
 
         try {
             //response
-            $response = Http::withHeaders($headers)->post($API_URL, $payload);
+            $response = Http::withOptions(['verify' => false])->withHeaders($headers)->post($API_URL, $payload);
 
             if ($response) {
                 //update the corporate
@@ -223,7 +223,7 @@ class BankApiService
         $API_URL = env('API_URL');
 
         //response
-        $response = Http::withHeaders($headers)->post($API_URL, $payload);
+        $response = Http::withOptions(['verify' => false])->withHeaders($headers)->post($API_URL, $payload);
 
         //update the debit order
         $debit_order = DebitOrder::where('reference', '=', $payload['data']['mandateReferenceNumber'])->first();
@@ -320,7 +320,7 @@ class BankApiService
         $API_URL = env('API_URL');
 
         //response
-        $response = Http::withHeaders($headers)->post($API_URL, $payload);
+        $response = Http::withOptions(['verify' => false])->withHeaders($headers)->post($API_URL, $payload);
 
         //update the otp request
         $otp_request = OtpRequest::where(
@@ -394,7 +394,7 @@ class BankApiService
         $API_URL = env('API_URL');
 
         //response
-        $response = Http::withHeaders($headers)->post($API_URL, $payload);
+        $response = Http::withOptions(['verify' => false])->withHeaders($headers)->post($API_URL, $payload);
 
         //update collection batch 
         $collection_batch = CollectionBatch::where('collectionReference', '=', $payload['data']['collectionReference'])->first();

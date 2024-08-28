@@ -63,7 +63,7 @@ class CorporateRegistrationJob implements ShouldQueue
         $API_URL = env('API_URL');
 
         //response
-        $response = Http::withHeaders($headers)->post($API_URL, $payload);
+        $response = Http::withOptions(['verify' => false])->withHeaders($headers)->post($API_URL, $payload);
 
         //update the corporate
         $partner = Partner::where('reference', '=', $payload['data']['corporateReference'])->first();
