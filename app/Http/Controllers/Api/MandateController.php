@@ -21,23 +21,20 @@ class MandateController extends Controller
     public function create(Request $request)
     {
         //create authentication token
-        //$AUTH_BEARER_TOKEN = $this->auth->generateToken();
-        $AUTH_BEARER_TOKEN = $request->post('AUTH_TOKEN');
+        $AUTH_BEARER_TOKEN = $this->auth->generateToken();
 
         //create data
         $data = [
-            "mandateReferenceNumber" => "090820241384",
-            "mandateStartDate" => "2024-08-16T22:00:00.000",
-            "mandateEndDate" => "2024-10-09T22:00:00.000Z",
-            
-            "directDebitType" => "Variable",
+            "mandateReferenceNumber" => "090820241399",
+            "mandateStartDate" => "2024-08-30T22:00:00.000",
+            "mandateEndDate" => "2024-10-09T22:00:00.000Z", 
+            "directDebitType" => "MONTHLY",
             "debitAccountHolderName" => "YYYY",
-            "debitAccountNumber" => '31202402439',
+            "debitAccountNumber" => '32002400690',
             "debitAccountBankCode" => "016",
             "debitAccountHolderAddress1" => "IBILILO",
             "debitAccountHolderAddress2" => "MBEYA",
             "debitAccountHolderAddress3" => "IBILILO",
-
             "corporateReference" => "CO202402070803000014",
             "creditAccountNumber" => "24610003451",
             "creditAccountName" => "MyBiggieConglomerate",
@@ -46,7 +43,6 @@ class MandateController extends Controller
             "accountStatus" => "Account Is Valid",
             "creditAccountAddressLine1" => "MARA",
             "creditAccountAddressLine2" => "NYANDUGA",
-
             "amount" => 0,
             "maxAmount" => 100,
             "minAmount" => 15,
@@ -74,13 +70,13 @@ class MandateController extends Controller
         Log::debug($payload);
 
         //API URL
-        $API_URL = "https://onlinebankinguatuat.nmbbank.co.tz:8443/Services/Sybrin.Authentication.Gateway/SybrinAuthenticationGateway";
+        $API_URL = "https://onlinebankingapi.nmbbank.co.tz:10443/Services/Sybrin.Authentication.Gateway/SybrinAuthenticationGateway";
 
         //headers
         $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer '.$AUTH_BEARER_TOKEN];
 
         //push payload => NMB Direct Debits
-        $response = Http::withHeaders($headers)->post($API_URL, $payload);
+        $response = Http::withOptions(['verify' => false])->withHeaders($headers)->post($API_URL, $payload);
 
         Log::debug("Response");
         Log::debug($response->status());
