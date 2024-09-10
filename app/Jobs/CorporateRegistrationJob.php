@@ -11,6 +11,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Http;
+use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -41,7 +42,6 @@ class CorporateRegistrationJob implements ShouldQueue
     {
         //create authentication token
         $AUTH_BEARER_TOKEN = $this->auth->generateToken();
-        Log::debug("Token : {$AUTH_BEARER_TOKEN}");
 
         //Create Headers
         $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer ' . $AUTH_BEARER_TOKEN];
@@ -56,11 +56,19 @@ class CorporateRegistrationJob implements ShouldQueue
         ];
 
         //Create Payload
+        Log::debug('== Headers == ');
+        // Log::debug($headers);
+
+        //Create Payload
         Log::debug('== CorporateRegistration Request == ');
         Log::debug($payload);
 
+        //encode payload 
+        $post_data = json_encode($payload);
+
         //API URL 
         $API_URL = env('API_URL');
+        Log::debug("API URL => ". $API_URL);
 
         //response
         $response = Http::withHeaders($headers)->post($API_URL, $payload);
