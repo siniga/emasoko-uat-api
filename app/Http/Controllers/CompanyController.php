@@ -664,7 +664,7 @@ class CompanyController extends Controller
 
         if ($http_status_code == 200) {
             //NMB partner accounts
-            $partner_account = PartnerAccount::where(['account_id' => 1, 'send_verification' => 1])->first();
+            $partner_account = PartnerAccount::where(['partner_id' => $partner->id, 'account_id' => 1, 'send_verification' => 1])->first();
 
             if ($partner_account) {
                 //create payload
