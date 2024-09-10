@@ -39,13 +39,13 @@ class CompanyService
         $partner->business_name = ucwords($data->business_name);
         $partner->tin_number = $data->tin_number;
         $partner->year_of_incorporation = $data->year_of_incorporation;
-        $partner->number_of_staff = $data->number_of_staff;
+        $partner->number_of_staff = 0;
         $partner->region_id = $data->region_id;
         $partner->phone = $phone;
         $partner->email = $data->company_email;
         $partner->postal_address = $data->postal_address;
         $partner->physical_address = $data->physical_address;
-        $partner->website = $data->company_website;
+        // $partner->website = $data->company_website;
         $partner->next_step = 'companies/documents/' . $data->partner_uuid;
         $partner->save();
 

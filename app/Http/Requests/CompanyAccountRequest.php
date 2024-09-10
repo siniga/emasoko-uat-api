@@ -27,8 +27,8 @@ class CompanyAccountRequest extends FormRequest
             'account_type_id.*' => 'required',
             'account_id.*' => 'required',
             'account_name.*' => 'required',
-            'account_number.*' => 'required',
-            'customer_code.*' => 'required',
+            'account_number.*' => 'required|unique:partner_accounts,account_number',
+            'customer_code.*' => 'required|unique:partner_accounts,customer_code',
         ];
     }
 

@@ -510,6 +510,7 @@
                         success: function(response) {
                             // Change submit button text
                             $('#submitButton').text('Next');
+
                             // Display message
                             $('.form-message').html(
                                 "<div class='alert alert-success py-2.5 px-2'>Service provider collection account(s) saved</div>"
@@ -520,7 +521,18 @@
                                     response.uuid;
                             }, 300);
                         },
-                        error: function(e) {
+                        error: function(error) {
+                            //display errors
+                            if (jQuery.type(error.responseJson.errors) == "object") {
+                                $('.form-message').html('');
+                                $.each(error.responseJson.errors, function(key, value) {
+                                    $('.form-message').append('<div class="alert alert-danger">' + value + '</div>');
+                                });
+                            } else {
+                                $('.form-message').html('<div class="alert alert-danger">' + error.responseJson.errors + '</div>');
+                            }
+
+                            //change submit button
                             $('#submitButton').text('Next');
                         }
                     });

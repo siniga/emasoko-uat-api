@@ -8,6 +8,7 @@ use App\Events\CorporateStatus;
 use App\Exports\CompanyExport;
 use App\Http\Requests\CompanyAccountRequest;
 use App\Http\Requests\CompanyDetailRequest;
+use App\Http\Requests\CompanyStaffRequest;
 use App\Jobs\CorporateRegistrationJob;
 use App\Listeners\FetchCorporateStatus;
 use App\Models\Account;
@@ -306,8 +307,11 @@ class CompanyController extends Controller
     }
 
     //store company staff
-    function storeCompanyStaff(Request $request)
+    function storeCompanyStaff(CompanyStaffRequest $request)
     {
+        // validated request
+        $validated = $request->validated();
+        
         //post data
         $id = $request->input('partner_id');
         $uuid = $request->input('partner_uuid');
@@ -667,7 +671,7 @@ class CompanyController extends Controller
                 $payload = $this->payloadService->corporateRegistrationPayload($partner, $partner_account);
 
                 //Create Request to NMB
-                dispatch(new CorporateRegistrationJob($payload));     
+                dispatch(new CorporateRegistrationJob($payload));
             }
 
             //response

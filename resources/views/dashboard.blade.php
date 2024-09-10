@@ -111,18 +111,17 @@
         </div>
         <!--./col -->
     </div>
-    <!--./row -->
 
     <div class="row">
         <div class="col-xl-8">
             <div class="card">
                 <div class="card-body">
                     <div class="clearfix">
-                        <h4 class="card-title mb-4">Payment Mandate Values</h4>
+                        <h4 class="card-title mb-4">Payment Mandate</h4>
                     </div>
                     <div class="row">
                         <div class="col-lg-12">
-                            <div id="consent-value-chart"></div>
+                            <div id="mandate-value-chart"></div>
                         </div>
                     </div>
                 </div>
@@ -142,7 +141,8 @@
                             <div class="col-6">
                                 <div class="mt-2">
                                     <p class="">
-                                        <i class="mdi mdi-circle text-success-1 my-1"></i> Approved : {{ $approved[0]->count }}
+                                        <i class="mdi mdi-circle text-success-1 my-1"></i> Approved :
+                                        {{ $approved[0]->count }}
                                     </p>
                                 </div>
                             </div>
@@ -161,7 +161,56 @@
         </div>
         <!--./col -->
     </div>
-    <!-- end row -->
+
+    <div class="row">
+        <div class="col-xl-8">
+            <div class="card">
+                <div class="card-body">
+                    <div class="clearfix">
+                        <h4 class="card-title mb-4">Expected vs Collected</h4>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div id="collected-mandate-value-chart"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--./col -->
+
+        <div class="col-xl-4">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title mb-4">Expected vs Collected Collections Rates</h4>
+                    <div>
+                        <div id="consent-rate-chart" class="apex-charts"></div>
+                    </div>
+                    <div class="text-center text-muted">
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="mt-2">
+                                    <p class="">
+                                        <i class="mdi mdi-circle text-success-1 my-1"></i> Approved :
+                                        {{ $approved[0]->count }}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="col-6">
+                                <div class="mt-2">
+                                    <p class="">
+                                        <i class="mdi mdi-circle text-danger my-1"></i> Pending : {{ $pending[0]->count }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--./col -->
+    </div>
 
     <div class="row">
         <div class="col-xl-8">
@@ -186,7 +235,7 @@
 
                     <div class="row">
                         <div class="col-lg-12">
-                            <div id="consent-channel-chart" dir="ltr"></div>
+                            <div id="mandate-channel-chart" dir="ltr"></div>
                         </div>
                     </div>
                 </div>
@@ -199,7 +248,6 @@
         <!--./col -->
 
     </div>
-    <!-- end row -->
 
     <div class="row">
         <div class="col-lg-12">
@@ -261,7 +309,8 @@
                                                     <td>
                                                         {{ $values->customerAccount->account_number ?? $values->customerAccount->phone }}
                                                     </td>
-                                                    <td>{{ $values->customerAccount->phone ?? $values->customerAccount->phone }}</td>
+                                                    <td>{{ $values->customerAccount->phone ?? $values->customerAccount->phone }}
+                                                    </td>
 
                                                     <td>
                                                         <a href="{{ route('payment-mandate.show', $values->uuid) }}"
@@ -312,16 +361,17 @@
                                                     <td>
                                                         {{ $values->customerAccount->account_number ?? $values->customerAccount->phone }}
                                                     </td>
-                                                    <td>{{ $values->customerAccount->phone ?? $values->customerAccount->phone }}</td>
+                                                    <td>{{ $values->customerAccount->phone ?? $values->customerAccount->phone }}
+                                                    </td>
 
                                                     <td>
-                                                        @if ($values->approved == "PENDING")
+                                                        @if ($values->approved == 'PENDING')
                                                             <span
                                                                 class="badge badge-pill badge-soft-warning">Pending</span>
-                                                        @elseif($values->approved == "APPROVED")
+                                                        @elseif($values->approved == 'APPROVED')
                                                             <span
                                                                 class="badge badge-pill badge-soft-success">Approved</span>
-                                                        @elseif($values->approved == "REJECTED")
+                                                        @elseif($values->approved == 'REJECTED')
                                                             <span
                                                                 class="badge badge-pill badge-soft-danger">Rejected</span>
                                                         @endif
@@ -370,16 +420,17 @@
                                                     <td>
                                                         {{ $values->customerAccount->account_number ?? $values->customerAccount->phone }}
                                                     </td>
-                                                    <td>{{ $values->customerAccount->phone ?? $values->customerAccount->phone }}</td>
+                                                    <td>{{ $values->customerAccount->phone ?? $values->customerAccount->phone }}
+                                                    </td>
 
                                                     <td>
-                                                        @if ($values->approved == "PENDING")
+                                                        @if ($values->approved == 'PENDING')
                                                             <span
                                                                 class="badge badge-pill badge-soft-warning">Pending</span>
-                                                        @elseif($values->approved == "APPROVED")
+                                                        @elseif($values->approved == 'APPROVED')
                                                             <span
                                                                 class="badge badge-pill badge-soft-success">Approved</span>
-                                                        @elseif($values->approved == "REJECTED")
+                                                        @elseif($values->approved == 'REJECTED')
                                                             <span
                                                                 class="badge badge-pill badge-soft-danger">Rejected</span>
                                                         @endif
@@ -402,7 +453,6 @@
             </div>
         </div>
     </div>
-    <!-- end row -->
 @endsection
 
 @section('script')

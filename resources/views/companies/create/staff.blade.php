@@ -288,7 +288,7 @@
                     "staff_title[]": "required",
                 },
                 messages: {
-                    "staff_name[]": "Full name required",
+                    "staff_name[]": "Staff name required",
                     "nida_number[]": "NIDA number required",
                     "staff_email[]": "Email address required",
                     "staff_phone[]": "Phone required",
@@ -331,7 +331,20 @@
                                 window.location.href = "/companies/preview/" + response.uuid;
                             }, 300);
                         },
-                        error: function(e) {
+                        error: function(error) {
+                            console.log("== reached hapa ==")
+                            console.log(response.responseText);
+                            //display errors
+                            if (jQuery.type(error.response.errors) == "object") {
+                                $('.form-message').html('');
+                                $.each(error.responseJson.errors, function(key, value) {
+                                    $('.form-message').append('<div class="alert alert-danger">' + value + '</div>');
+                                });
+                            } else {
+                                $('.form-message').html('<div class="alert alert-danger">' + error.responseJson.errors + '</div>');
+                            }
+
+                            //change submit button
                             $('#submitButton').text('Next');
                         }
                     });
