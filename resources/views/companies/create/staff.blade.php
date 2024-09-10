@@ -318,22 +318,29 @@
                         cache: false,
                         timeout: 800000,
                         success: function(response) {
-                            //change submit button text
-                            $('#submitButton').text('Next');
+                            if(response.success == true){
+                                //change submit button text
+                                $('#submitButton').text('Next');
 
-                            //display message
-                            $('.form-message').html(
-                                "<div class='alert alert-success py-2.5 px-2'>Service Provider credential saved</div>"
-                            );
+                                //display message
+                                $('.form-message').html(
+                                    "<div class='alert alert-success py-2.5 px-2'>Service Provider credential saved</div>"
+                                );
 
-                            //set timer
-                            setTimeout(function() {
-                                window.location.href = "/companies/preview/" + response.uuid;
-                            }, 300);
+                                //set timer
+                                setTimeout(function() {
+                                    window.location.href = "/companies/preview/" + response.uuid;
+                                }, 300);
+                            }   else if(response.success == false){
+                                     $('.form-message').html(
+                                        '<div class="alert alert-danger py-2.5 px-2">' + responseJson.message + '</div>'
+                                    );
+                            }
                         },
                         error: function(error) {
-                            console.log("== reached hapa ==")
-                            console.log(response.responseText);
+                            console.log("== reached hapa 2 ==")
+                            console.log(error);
+
                             //display errors
                             if (jQuery.type(error.response.errors) == "object") {
                                 $('.form-message').html('');

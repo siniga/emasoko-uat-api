@@ -2,7 +2,10 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Partner;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 
 class CompanyDetailRequest extends FormRequest
 {
@@ -23,15 +26,16 @@ class CompanyDetailRequest extends FormRequest
      */
     public function rules()
     {
+        $partner = Partner::where(['uuid' => $this->input('uuid')])->first();
+
         return [
-            'tin_number' => 'required|unique:partners,tin_number',
+            'tin_number' => 'required',
             'business_name' => 'required',
             'category_id' => 'required',
             'year_of_incorporation' => 'required|numeric',
-            // 'number_of_staff' => 'numeric',
             'country_code' => 'required',
             'company_phone' => 'required',
-            'company_email' => 'required|email|unique:partners,email',
+            'company_email' => 'required|email',
             'region_id' => 'required',
             'physical_address' => 'required',
         ];

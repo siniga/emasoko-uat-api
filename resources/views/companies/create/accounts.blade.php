@@ -515,6 +515,7 @@
                             $('.form-message').html(
                                 "<div class='alert alert-success py-2.5 px-2'>Service provider collection account(s) saved</div>"
                             );
+
                             // Set timer
                             setTimeout(function() {
                                 window.location.href = "/companies/staff/" +

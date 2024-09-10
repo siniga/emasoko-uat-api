@@ -331,16 +331,21 @@
                                     $('.form-message').html('<div class="alert alert-danger">' + responseJson.errors + '</div>');
                                 }
                             } else {
-                                //display message
-                                $('.form-message').html(
-                                    "<div class='alert alert-success py-2.5 px-2'>Service provider information saved</div>"
-                                );
+                                if(responseJson.success == true){
+                                    //display message
+                                    $('.form-message').html(
+                                        "<div class='alert alert-success py-2.5 px-2'>Service provider information saved</div>"
+                                    );
 
-                                //set timer
-                                setTimeout(function() {
-                                    window.location.href = "/companies/documents/" +
-                                        responseJson.uuid;
-                                }, 300);
+                                    //set timer
+                                    setTimeout(function() {
+                                        window.location.href = "/companies/documents/" + responseJson.uuid;
+                                    }, 300);
+                                }else if(responseJson.success == false){
+                                     $('.form-message').html(
+                                        '<div class="alert alert-danger py-2.5 px-2">' + responseJson.message + '</div>'
+                                    );
+                                }
                             }
                         }).catch((error) => {
                             //logging the errors

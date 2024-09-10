@@ -182,16 +182,32 @@ class CompanyController extends Controller
         // validated request
         $validated = $request->validated();
 
-        DB::beginTransaction();
         //capture if uuid is not null
         if ($request->input('partner_uuid') != null)
             $uuid = $request->input('partner_uuid');
         else
             $uuid = Str::uuid();
 
-        //create or update service provider    
-        $partner = $this->companyService->createInformation((object) $request->all(), $uuid);
+        //validate tin number
+        $partner = Partner::where(['tin_number' => $request->input('tin_number')])->first();
+        if ($partner){
+            //check if uuid with db_uuid
+            if ($partner->uuid != $uuid)
+                return response()->json(['success' => false, 'message' => 'Tin number already exist.'], 200);
+        }
+
+        //validate email
+        $partner = Partner::where(['email' => $request->input('company_email')])->first();
+        if ($partner){
+            //check if uuid with db_uuid
+            if ($partner->uuid != $uuid)
+                return response()->json(['success' => false, 'message' => 'Email already taken.'], 200);
+        }
+
+        DB::beginTransaction();  
+            $partner = $this->companyService->createInformation((object) $request->all(), $uuid);
         DB::commit();
+
         //response
         return response()->json(['success' => true, 'uuid' => $uuid, 'message' => 'Service provider information saved!'], 200);
     }
@@ -283,11 +299,14 @@ class CompanyController extends Controller
         $id = $request->input('partner_id');
         $uuid = $request->input('partner_uuid');
 
+        //TODO: validate account number and customer code
+
         //next stage
         $partner = $this->companyService->updateNextStep($id, 'companies/staff/' . $uuid);
 
-        //partner account
-        $this->companyService->createCollectionAccount($request->all(), $partner);
+        DB::beginTransaction();
+            $this->companyService->createCollectionAccount($request->all(), $partner);
+        DB::commit();
 
         //response
         return response()->json(['success' => true, 'uuid' => $uuid, 'message' => 'Service Provider collection account(s) saved'], 200);
@@ -316,11 +335,33 @@ class CompanyController extends Controller
         $id = $request->input('partner_id');
         $uuid = $request->input('partner_uuid');
 
-        //next stage
-        $partner = $this->companyService->updateNextStep($id, 'companies/authorized-person/' . $uuid);
+        //validate email and nida number
+        if ($validated['staff_name']) {
+            for ($i = 0; $i < sizeof($validated['staff_name']); $i++) {
+                //validate email
+                $partner_staff = PartnerStaff::where(['email' => $validated['staff_email'][$i]])->first();
+                if ($partner_staff) {
+                    if($partner_staff->partner_id != $id) {
+                        return response()->json(['success' => false, 'message' => 'Email already exists'], 200);
+                    }                   
+                }
 
-        //partner staff
-        $this->companyService->createStaff($request->all(), $partner);
+                //validate nida number
+                $partner_staff = PartnerStaff::where(['nida_number' => $validated['nida_number'][$i]])->first();
+                if ($partner_staff) {
+                    if($partner_staff->partner_id != $id) {
+                        return response()->json(['success' => false, 'message' => 'NIDA number already exists'], 200);
+                    }                   
+                }
+            }
+        }
+
+        //next stage
+        $partner = $this->companyService->updateNextStep($id, 'companies/preview/' . $uuid);
+
+        DB::beginTransaction();
+            $this->companyService->createStaff($request->all(), $partner);
+        DB::commit();
 
         //response
         return response()->json(['success' => true, 'uuid' => $uuid, 'message' => 'Service Provider staff saved'], 200);
@@ -342,13 +383,17 @@ class CompanyController extends Controller
     function storeCompanyAuthorizedPerson(Request $request)
     {
         //validate the request data
-        $validator = Validator::make($request->all(), [
-            'email'  =>  'required|email|max:255|unique:users',
-        ]);
+        Log::debug("== validation ==");
+        Log::debug($request->all());
 
-        if ($validator->fails()) {
-            return new JsonResponse(['success' => false, 'message' => $validator->errors()], 422);
-        }
+
+        // $validator = Validator::make($request->all(), [
+        //     'email'  =>  'required|email|max:255|unique:users',
+        // ]);
+
+        // if ($validator->fails()) {
+        //     return new JsonResponse(['success' => false, 'message' => $validator->errors()], 422);
+        // }
 
         //post data
         $id = $request->input('partner_id');
@@ -357,8 +402,9 @@ class CompanyController extends Controller
         //next stage
         $partner = $this->companyService->updateNextStep($id, 'companies/preview/' . $uuid);
 
-        //create user
-        $this->companyService->createCredential((object) $request->all(), $partner);
+        DB::beginTransaction();
+            $this->companyService->createCredential((object) $request->all(), $partner);
+        DB::commit();
 
         //response
         return response()->json(['success' => true, 'uuid' => $uuid, 'message' => 'Service Provider credentials saved'], 200);
@@ -663,7 +709,7 @@ class CompanyController extends Controller
         Log::debug($http_status_code);
 
         if ($http_status_code == 200) {
-            //NMB partner accounts
+            //TODO: Check if corporate has NMB partner accounts
             $partner_account = PartnerAccount::where(['partner_id' => $partner->id, 'account_id' => 1, 'send_verification' => 1])->first();
 
             if ($partner_account) {

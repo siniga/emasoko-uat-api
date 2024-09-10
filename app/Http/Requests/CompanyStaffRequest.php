@@ -13,7 +13,7 @@ class CompanyStaffRequest extends FormRequest
      */
     public function authorize()
     {
-        return false;
+        return true;
     }
 
     /**
@@ -25,8 +25,8 @@ class CompanyStaffRequest extends FormRequest
     {
         return [
             'staff_name.*' => 'required',
-            'nida_number.*' => 'required|unique:partner_staff,nida_number',
-            'staff_email.*' => 'required|unique:partner_staff,email',
+            'nida_number.*' => 'required',
+            'staff_email.*' => 'required',
             'staff_phone.*' => 'required',
             'staff_title.*' => 'required',
         ];
