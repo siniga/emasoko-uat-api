@@ -131,14 +131,14 @@
                                     </div>
                                 </div>
 
-                                <div class="col-lg-3">
+                                {{-- <div class="col-lg-3">
                                     <div class="mb-3">
                                         <label>Number of Staff
                                         </label>
                                         {{ Form::number('number_of_staff', old('number_of_staff', $company->number_of_staff ?? ''), ['class="form-control"', 'placeholder="Write number of staff..."', 'min' => 1]) }}
                                         <span class="formError"></span>
                                     </div>
-                                </div>
+                                </div> --}}
 
                                 <div class="col-lg-3">
                                     <div class="mb-3">
@@ -149,12 +149,12 @@
                                     </div>
                                 </div>
 
-                                <div class="col-lg-3">
+                                {{-- <div class="col-lg-3">
                                     <div class="mb-3">
                                         <label>Website</label>
                                         {{ Form::text('company_website', old('company_website', $company->website ?? ''), ['class="form-control"', 'placeholder="Write company website..."']) }}
                                     </div>
-                                </div>
+                                </div> --}}
 
                                 <div class="col-lg-6">
                                     <label>Company Phone <span class="text-danger">*</span></label>
@@ -320,33 +320,34 @@
                             body: JSON.stringify(jsonData),
                         }).then(response => response.json())
                         .then(responseJson => {
-                            //change submit button text
-                            $('#submitButton').text('Next');
+                            if (responseJson.errors) {
+                                //display error message
+                                if (jQuery.type(responseJson.errors) == "object") {
+                                    $('.form-message').html('');
+                                    $.each(responseJson.errors, function(key, value) {
+                                        $('.form-message').append('<div class="alert alert-danger">' + value + '</div>');
+                                    });
+                                } else {
+                                    $('.form-message').html('<div class="alert alert-danger">' + responseJson.errors + '</div>');
+                                }
+                            } else {
+                                //display message
+                                $('.form-message').html(
+                                    "<div class='alert alert-success py-2.5 px-2'>Service provider information saved</div>"
+                                );
 
-                            //display message
-                            $('.form-message').html(
-                                "<div class='alert alert-success py-2.5 px-2'>Service provider information saved</div>"
-                            );
-
-                            //set timer
-                            setTimeout(function() {
-                                window.location.href = "/companies/documents/" +
-                                    responseJson.uuid;
-                            }, 300);
-
-                        }).catch(() => {
-                            //change submit button text
-                            $('#submitButton').text('Next');
-
-                            //write error message
-                            $('#tinNumberError').text(response.responseJSON.errors
-                                .tin_number);
-                            $('#companyEmailError').text(response.responseJSON.errors
-                                .company_email);
+                                //set timer
+                                setTimeout(function() {
+                                    window.location.href = "/companies/documents/" +
+                                        responseJson.uuid;
+                                }, 300);
+                            }
+                        }).catch((error) => {
+                            //logging the errors
 
                         }).finally(() => {
-                            //console
-                            console.log("Step pass");
+                            //change submit button text
+                            $('#submitButton').text('Next');
                         });
                     return false;
                 }

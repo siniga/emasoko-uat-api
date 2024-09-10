@@ -1,10 +1,23 @@
+
+const handleBarClick = ({ clientX, clientY }, chartContext, {dataPointIndex}) => {
+    console.log("== data points ==");
+    console.log(dataPointIndex);
+ };
+
+
 //pending and approved mandate value
 $.getJSON('api/dashboard/mandate-values', (data) => {
+    console.log("== data ==")
+    console.log(data)
+
+
+
     if (data.error == false) {
         var arr_month = [];
         var arr_total = [];
-        var arr_approved = [];
         var arr_pending = [];
+        var arr_approved = [];
+        
 
         for (k = 0; k < data.chart.length; k++) {
             arr_month.push(data.chart[k].month);
@@ -20,30 +33,20 @@ $.getJSON('api/dashboard/mandate-values', (data) => {
                     data: arr_total
                 },
                 {
-                    name: "Approved",
-                    data: arr_approved
-                },
-                {
                     name: "Pending",
                     data: arr_pending
                 },
+                {
+                    name: "Approved",
+                    data: arr_approved
+                },
             ],
-            // chart: {
-            //     height: 320,
-            //     type: "line",
-            //     toolbar: "false",
-            //     dropShadow: {
-            //         enabled: !0,
-            //         color: "#000",
-            //         top: 18,
-            //         left: 7,
-            //         blur: 8,
-            //         opacity: .8
-            //     }
-            // },
             chart: {
                 type: 'bar',
                 height: 350,
+                events: {
+                    click: handleBarClick,
+                },
             },
             plotOptions: {
                 bar: {
@@ -61,7 +64,8 @@ $.getJSON('api/dashboard/mandate-values', (data) => {
             },
             stroke: {
                 show: true,
-                width: 2,
+                curve: "smooth",
+                width: 3,
                 colors: ['transparent']
             },
             fill: {
@@ -83,19 +87,14 @@ $.getJSON('api/dashboard/mandate-values', (data) => {
                 crosshair: true,
                 categories: arr_month,
             },
-            colors: ["#1565C0", "#66BB6A", "#F44336"],
-            // stroke: {
-            //     curve: "smooth",
-            //     width: 3
-            // }
+            colors: ["#1565C0",  "#F44336", "#66BB6A"]
         };
 
         //render chart  
-        var chart = new ApexCharts(document.querySelector("#consent-value-chart"), options);
+        var chart = new ApexCharts(document.querySelector("#mandate-value-chart"), options);
         chart.render();
     }
 });
-
 
 //pending and approved mandate percentage
 $.getJSON('api/dashboard/mandate-percentages', (data) => {
@@ -124,6 +123,90 @@ $.getJSON('api/dashboard/mandate-percentages', (data) => {
         //render chart
         var chart = new ApexCharts(document.querySelector("#consent-rate-chart"), options);
         chart.render()
+    }
+});
+
+//expected and collected payment mandates
+$.getJSON('api/dashboard/collected-mandate', (data) => {
+    console.log("== data ==")
+    console.log(data)
+
+
+
+    if (data.error == false) {
+        var arr_month = [];
+        var arr_total = [];
+        var arr_paid = [];
+        
+        for (k = 0; k < data.chart.length; k++) {
+            arr_month.push(data.chart[k].month);
+            arr_total.push(data.chart[k].total);
+            arr_paid.push(data.chart[k].paid);
+        }
+
+        var options = {
+            series: [
+                {
+                    name: "Expected",
+                    data: arr_total
+                },
+                {
+                    name: "Collected",
+                    data: arr_paid
+                },
+            ],
+            chart: {
+                type: 'bar',
+                height: 350,
+                events: {
+                    click: handleBarClick,
+                },
+            },
+            plotOptions: {
+                bar: {
+                    borderRadius: 4,
+                    horizontal: false,
+                    columnWidth: '75%',
+                    endingShape: 'rounded',
+                    dataLabels: {
+                        position: 'bottom'
+                    },
+                }
+            },
+            dataLabels: {
+                enabled: !1
+            },
+            stroke: {
+                show: true,
+                curve: "smooth",
+                width: 3,
+                colors: ['transparent']
+            },
+            fill: {
+                opacity: 1
+            },
+            yaxis: {
+                labels: {
+                    formatter: function (value) {
+                        return value.toLocaleString();
+                    }
+                },
+            },
+            xaxis: {
+                labels: {
+                    show: true,
+                    rotate: -45,
+                    rotateAlways: false,
+                },
+                crosshair: true,
+                categories: arr_month,
+            },
+            colors: ["#004D40", "#66BB6A"]
+        };
+
+        //render chart  
+        var chart = new ApexCharts(document.querySelector("#collected-mandate-value-chart"), options);
+        chart.render();
     }
 });
 
@@ -174,7 +257,7 @@ $.getJSON('api/dashboard/consent-per-channel', (data) => {
         };
 
         //render chart  
-        var chart = new ApexCharts(document.querySelector("#consent-channel-chart"), options);
+        var chart = new ApexCharts(document.querySelector("#mandate-channel-chart"), options);
         chart.render();
     }
 });

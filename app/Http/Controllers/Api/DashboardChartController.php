@@ -34,7 +34,7 @@ class DashboardChartController extends Controller
         echo json_encode(['error' => FALSE, 'approved' => $percent_approved, 'pending' => $percent_pending], 200);
     }
 
-    //mandate values
+    //Pending and Approved Mandates
     function mandate_values()
     {
         //declare variable
@@ -48,45 +48,81 @@ class DashboardChartController extends Controller
             //query
             $debit_orders = DebitOrder::select('debit_orders.approved', DB::raw('SUM(debit_orders.total_amount) as total_amount'))
                 ->where(function ($query) {
-                    $query->where('debit_orders.approved', '=', "APPROVED")
-                        ->orWhere('debit_orders.approved', '=', "PENDING")
+                    $query->where('debit_orders.approved', '=', "PENDING")
+                        ->orWhere('debit_orders.approved', '=', "APPROVED")
                         ->orWhere('debit_orders.approved', '=', "REJECTED");
-                })->groupBy('debit_orders.approved')
-                ->orderBy('debit_orders.approved', 'DESC')->toBase();
+                })->groupBy('debit_orders.approved')->toBase();
 
             $debit_orders = $debit_orders->whereMonth('created_at', $month)->whereYear('created_at', $year)->get();
 
-            //approve 
-            $approved = 0;
-            if (isset($debit_orders[0]->total_amount) && $debit_orders[0]->total_amount != null)
-                $approved = $debit_orders[0]->total_amount;
-
             //pending
-            $pending = 0;
+            $pending_amount = 0;
+            if (isset($debit_orders[0]->total_amount) && $debit_orders[0]->total_amount != null)
+                $pending_amount = $debit_orders[0]->total_amount;
+
+            //approved 
+            $approved_amount = 0;
             if (isset($debit_orders[1]->total_amount) && $debit_orders[1]->total_amount != null)
-                $pending = $debit_orders[1]->total_amount;
+                $approved_amount = $debit_orders[1]->total_amount;
 
             //rejected
-            $rejected = 0;
+            $rejected_amount = 0;
             if (isset($debit_orders[2]->total_amount) && $debit_orders[2]->total_amount != null)
-                $rejected = $debit_orders[2]->total_amount;
+                $rejected_amount = $debit_orders[2]->total_amount;
 
             ///aggregate mandate
-            $aggregate = $approved + $pending + $rejected;
+            $total_amount = $pending_amount + $approved_amount + $rejected_amount;
 
             //create data array
             $data_array[] = [
                 // "month" => date("F", mktime(0, 0, 0, $month, 10)) . ',' . $year,
                 "month" => date("M", mktime(0, 0, 0, $month, 10)),
-                "total" => (int) $aggregate,
-                "pending" => (int) $pending,
-                "approved" => (int) $approved
+                "total" => (int) $total_amount,
+                "pending" => (int) $pending_amount,
+                "approved" => (int) $approved_amount
             ];
         }
 
         //response
         echo json_encode(['error' => FALSE, 'chart' => $data_array], 200);
     }
+
+    //Collected 
+    function collected_mandates()
+    {
+        //declare variable
+        $data_array = [];
+
+        for ($i = 0; $i <= 11; $i++) {
+            $year_month = date("Y-m", strtotime(date('Y-m-01') . " -$i months"));
+            $month = date('m', strtotime($year_month));
+            $year = date('Y', strtotime($year_month));
+
+            //query
+            $debit_orders = DebitOrder::select(DB::raw('SUM(debit_orders.total_amount) as total_amount'), DB::raw('SUM(debit_orders.paid_amount) as paid_amount'))
+                ->where(function ($query) {
+                    $query->where('debit_orders.approved', '=', "APPROVED");
+                })->toBase();
+
+            $debit_orders = $debit_orders->whereMonth('created_at', $month)->whereYear('created_at', $year)->get();
+
+            //total amount
+            $total_amount = $debit_orders[0]->total_amount;
+            $paid_amount = $debit_orders[0]->paid_amount;
+
+            //create data array
+            $data_array[] = [
+                // "month" => date("F", mktime(0, 0, 0, $month, 10)) . ',' . $year,
+                "month" => date("M", mktime(0, 0, 0, $month, 10)),
+                "total" => (int) $total_amount,
+                "paid" => (int) $paid_amount,
+            ];
+        }
+
+        //response
+        echo json_encode(['error' => FALSE, 'chart' => $data_array], 200);
+    }
+
 
     //consent per channel
     function getConsentPerChannel()

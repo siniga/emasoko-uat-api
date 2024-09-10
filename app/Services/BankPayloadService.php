@@ -40,7 +40,7 @@ class BankPayloadService
             "accountStatus" => null,
             "address1" => $region->name ?? null,
             "address2" => $partner->physical_address ?? null,
-            "address3" => $partner->postal_address ?? null,
+            "address3" => $partner->physical_address ?? null,
             "phoneNumber" => $partner->phone ?? null,
             "email" => $partner->email ?? null,
             "secondaryMobile" => $partner->phone ?? null,

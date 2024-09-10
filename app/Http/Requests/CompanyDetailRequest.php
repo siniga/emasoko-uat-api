@@ -24,14 +24,14 @@ class CompanyDetailRequest extends FormRequest
     public function rules()
     {
         return [
-            'tin_number' => 'required',
+            'tin_number' => 'required|unique:partners,tin_number',
             'business_name' => 'required',
             'category_id' => 'required',
             'year_of_incorporation' => 'required|numeric',
-            'number_of_staff' => 'numeric',
+            // 'number_of_staff' => 'numeric',
             'country_code' => 'required',
             'company_phone' => 'required',
-            'company_email' => 'required|email',
+            'company_email' => 'required|email|unique:partners,email',
             'region_id' => 'required',
             'physical_address' => 'required',
         ];
@@ -51,8 +51,8 @@ class CompanyDetailRequest extends FormRequest
             'category_id.required' => 'Category required',
             'year_of_incorporation.required' => 'Year of incorporation required',
             'year_of_incorporation.numeric' => 'Year of incorporation should be numeric',
-            'number_of_staff.required' => 'Number of staff required',
-            'number_of_staff.numeric' => 'Number of staff should be numeric',
+            // 'number_of_staff.required' => 'Number of staff required',
+            // 'number_of_staff.numeric' => 'Number of staff should be numeric',
             'country_code.required' => 'This is required',
             'company_phone.required' => 'Phone number required',
             'company_email.required' => 'Email required',
