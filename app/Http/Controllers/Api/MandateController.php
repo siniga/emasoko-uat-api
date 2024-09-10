@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Log;
 use App\Classes\Authentication;
 use Str;
@@ -25,12 +26,12 @@ class MandateController extends Controller
 
         //create data
         $data = [
-            "mandateReferenceNumber" => "090820241399",
+            "mandateReferenceNumber" => "090820241387",
             "mandateStartDate" => "2024-08-30T22:00:00.000",
             "mandateEndDate" => "2024-10-09T22:00:00.000Z", 
             "directDebitType" => "MONTHLY",
             "debitAccountHolderName" => "YYYY",
-            "debitAccountNumber" => '32002400690',
+            "debitAccountNumber" => '61702400937',
             "debitAccountBankCode" => "016",
             "debitAccountHolderAddress1" => "IBILILO",
             "debitAccountHolderAddress2" => "MBEYA",
@@ -76,14 +77,25 @@ class MandateController extends Controller
         $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer '.$AUTH_BEARER_TOKEN];
 
         //push payload => NMB Direct Debits
-        $response = Http::withOptions(['verify' => false])->withHeaders($headers)->post($API_URL, $payload);
+        
+        //$response = Http::withOptions(['verify' => false])->withHeaders($headers)->post($API_URL, $payload);
 
-        Log::debug("Response");
-        Log::debug($response->status());
-        Log::debug($response);
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_URL, $API_URL);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+		curl_setopt($ch, CURLOPT_HEADER, 1);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, FALSE);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
+        curl_setopt($ch, CURLOPT_VERBOSE, true);
+        $result = curl_exec($ch);
 
-        //send response to eMakato
-        return response()->json($response->json());
+        return $result;
+
+
 
         // if ($response->status() == 200) {
         //     $data = $response->json();
