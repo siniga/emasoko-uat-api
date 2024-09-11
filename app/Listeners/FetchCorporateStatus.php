@@ -60,7 +60,7 @@ class FetchCorporateStatus
         Log::debug('== CorporateStatus Response  ==');
         Log::debug($response);
 
-        if ($response['status'] == "Success") {
+        if (strtolower($response['status']) == "success") {
             $partner->status = 202;
             $partner->http_response_code = $response['data']['response'][0]['responseCode'];
             $partner->remarks = $response['data']['response'][0]['responseDescription'];
@@ -68,7 +68,7 @@ class FetchCorporateStatus
 
             //TODO 1: Send default password to partner_users
 
-        } else if ($response['status'] == "Fail") {
+        } else if (strtolower($response['status']) == "fail") {
             $partner->status = 500;
             $partner->http_response_code = $response['data']['response'][0]['responseCode'];
             $partner->remarks = $response['data']['response'][0]['responseDescription'];

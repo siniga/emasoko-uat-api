@@ -77,9 +77,9 @@ class MandateRegistrationJob implements ShouldQueue
         Log::debug($response);
 
         // Separate status code
-        if ($response['status'] == "Success")
+        if (strtolower($response['status']) == "success") 
             $debit_order->status = 201;
-        else if ($response['status'] == "Fail")
+        else if(strtolower($response['status']) == "fail")
             $debit_order->status == 403;
 
         //TODO: Send OTP message on success

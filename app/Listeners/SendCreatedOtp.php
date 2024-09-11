@@ -65,7 +65,7 @@ class SendCreatedOtp
         Log::debug('== OtpCreate Response  ==');
         Log::debug($response);
 
-        if ($response['status'] == "Success" || $response['status'] == "Fail") {
+        if (strtolower($response['status']) == "success" || strtolower($response['status']) == "fail") {
             $otp_request->http_response_code = $response['data']['response'][0]['responseCode'];
         }
         $otp_request->save();

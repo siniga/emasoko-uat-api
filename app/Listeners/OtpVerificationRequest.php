@@ -67,7 +67,7 @@ class OtpVerificationRequest
         Log::debug('== OtpVerify Response  ==');
         Log::debug($response);
 
-        if ($response['status'] == "Success") {
+        if (strtolower($response['status']) == "success") {
             $otp_request->http_response_code = $response['data']['response'][0]['responseCode'];
 
             //Update mandate status based on response
@@ -75,7 +75,7 @@ class OtpVerificationRequest
             $debit_order->status = 202;
             $debit_order->approved = 'APPROVED';
             $debit_order->save();
-        } else if ($response['status'] == "Fail") {
+        } else if (strtolower($response['status']) == "fail") {
             $otp_request->http_response_code = $response['data']['response'][0]['responseCode'];
 
             //Update mandate status based on response

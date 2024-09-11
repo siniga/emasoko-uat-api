@@ -59,10 +59,10 @@ class FetchMandateStatus
         Log::debug('== MandateStatus Response  ==');
         Log::debug($response);
 
-        if ($response['status'] == "Success") {
+        if (strtolower($response['status']) == "success") {
             $debit_order->http_response_code = $response['data']['response'][0]['responseCode'];
             $debit_order->remarks = $response['data']['response'][0]['responseDescription'];
-        } else if ($response['status'] == "Fail") {
+        } else if(strtolower($response['status']) == "fail") {
             $debit_order->status = 500;
             $debit_order->http_response_code = $response['data']['response'][0]['responseCode'];
             $debit_order->remarks = $response['data']['response'][0]['responseDescription'];
