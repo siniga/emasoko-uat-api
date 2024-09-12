@@ -57,7 +57,7 @@ class MandateRegistrationJob implements ShouldQueue
 
         //Create Payload
         Log::debug('== MandateRegistration Request Sent== ');
-        // Log::debug($payload);
+        Log::debug($payload);
 
         //API URL 
         $API_URL = env('API_URL');
@@ -77,15 +77,26 @@ class MandateRegistrationJob implements ShouldQueue
         Log::debug($response);
 
         // Separate status code
-        if (strtolower($response['status']) == "success") 
+        if (strtolower($response['status']) == "success")
             $debit_order->status = 201;
         else if(strtolower($response['status']) == "fail")
-            $debit_order->status == 403;
-
-        //TODO: Send OTP message on success          
+            $debit_order->status == 403;         
 
         $debit_order->http_response_code = $response['data']['response'][0]['responseCode'];
         $debit_order->remarks = $response['data']['response'][0]['responseDescription'];
         $debit_order->save();
+
+        //TODO: Send OTP message on FAILURE
+        if(strtolower($response['status']) == "fail"){
+            //construct message
+            $message = "Payment Mandate failed to be processed from NMB endpoint. \n\n Description: " . $response['data']['response'][0]['responseDescription'] . "\n\nKindly update mandate information and process again.";
+
+            //format mobile phone
+            $phone =  casting_phone($debit_order->userCreated->phone);
+
+            //send sms
+            $data = ["phone" => $phone, "message" => $message];
+            dispatch(new SendSMSJob($data));
+        }
     }
 }
