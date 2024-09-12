@@ -56,8 +56,8 @@ class MandateRegistrationJob implements ShouldQueue
         ];
 
         //Create Payload
-        Log::debug('== MandateRegistration Request == ');
-        Log::debug($payload);
+        Log::debug('== MandateRegistration Request Sent== ');
+        // Log::debug($payload);
 
         //API URL 
         $API_URL = env('API_URL');

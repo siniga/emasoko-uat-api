@@ -462,6 +462,8 @@ class PaymentMandateController extends Controller
 
         //save evidence in database
         $debit_order->evidence_of_aggrement = $filename;
+        $debit_order->status = 100;
+
         $debit_order->save();
 
          // redirect with message
