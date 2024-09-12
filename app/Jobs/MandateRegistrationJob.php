@@ -82,8 +82,7 @@ class MandateRegistrationJob implements ShouldQueue
         else if(strtolower($response['status']) == "fail")
             $debit_order->status == 403;
 
-        //TODO: Send OTP message on success
-                
+        //TODO: Send OTP message on success          
 
         $debit_order->http_response_code = $response['data']['response'][0]['responseCode'];
         $debit_order->remarks = $response['data']['response'][0]['responseDescription'];
