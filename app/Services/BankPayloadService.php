@@ -87,7 +87,7 @@ class BankPayloadService
             "mandateReferenceNumber" => $debitOrder->reference,
             "mandateStartDate" => Carbon::parse($debitOrder->start_date)->format('Y-m-d\TH:i:s.v'),
             "mandateEndDate" => Carbon::parse($debitOrder->end_date)->format('Y-m-d\TH:i:s.v'),
-            "directDebitType" => $debitOrder->debit_type,
+            "directDebitType" => strtoupper($debitOrder->periodicity),
             "debitAccountHolderName" => $customerAccount->account_name,
             "debitAccountNumber" => $customerAccount->account_number,
             "debitAccountBankCode" => $customerAccount->bank_code,
