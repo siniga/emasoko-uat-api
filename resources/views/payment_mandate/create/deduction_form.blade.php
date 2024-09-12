@@ -95,7 +95,7 @@
                                         $options = ['' => 'Select'] + $options;
                                     @endphp
 
-                                    {{ Form::select('provider_id', $options, old('provider_id'), ['class' => 'form-control select2', 'id' => 'provider_id', 'x-model="form_data.partner_id"']) }}
+                                    {{ Form::select('provider_id', $options, old('provider_id', $debit_order->partner_id ?? ''), ['class' => 'form-control select2', 'id' => 'provider_id', 'x-model="form_data.partner_id"']) }}
                                     <span class="text-danger">{{ $errors->first('provider_id') }}</span>
                                 </div>
                             </div>
