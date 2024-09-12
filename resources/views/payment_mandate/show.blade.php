@@ -51,7 +51,7 @@
                                 </template>
 
                                 <template x-if="status==100 || status==403 || status==500">
-                                    <a href="{{ route('payment-mandate.edit', $debit_order->id) }}" title="Edit"
+                                    <a href="{{ route('payment-mandate.create-account', $debit_order->id) }}" title="Edit"
                                         class="btn btn-outline-secondary text-medium btn-sm">
                                         <i class="bx bx-edit font-size-12"></i> Edit
                                     </a>
