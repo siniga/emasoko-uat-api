@@ -295,7 +295,7 @@ class BankApiService
                 'account_number' => $payload['data']['accountNumber'],
                 'action' => 'create',
             ]
-        )->last();
+        )->latest();
         $otp_request->http_response_json = $response;
 
         //decode the response 
@@ -358,7 +358,7 @@ class BankApiService
                 'account_number' => $account_number,
                 'action' => 'verify',
             ]
-        )->last();
+        )->latest();
         $otp_request->http_response_json = $response;
 
         //decode the response 
