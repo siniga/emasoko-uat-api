@@ -373,6 +373,7 @@ class BankApiService
 
             //update otp response code
             $otp_request->http_response_code = $response['data']['response'][0]['responseCode'];
+            $otp_request->save(); //save
 
             //Update mandate status based on response
             $debit_order = DebitOrder::where('reference', '=', $mandate_reference)->first();
@@ -384,6 +385,7 @@ class BankApiService
 
             //update otp response code
             $otp_request->http_response_code = $response['data']['response'][0]['responseCode'];
+            $otp_request->save(); //save
 
             //Update mandate status based on response
             $debit_order = DebitOrder::where('reference', '=', $mandate_reference)->first();
@@ -392,7 +394,6 @@ class BankApiService
             $debit_order->remarks = $response['data']['response'][0]['responseDescription'];
             $debit_order->save();
         }
-        $otp_request->save(); //save
 
         return $response_code;
     }

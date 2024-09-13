@@ -78,7 +78,7 @@ class MandateRegistrationJob implements ShouldQueue
         // Separate status code
         if (strtolower($response['status']) == "success"){
             $debit_order->status = 201;
-            $debit_order->otp_reference = $response['data']['response']['otpCaseReference'];
+            $debit_order->otp_reference = $response['data']['otpCaseReference'];
         } else if(strtolower($response['status']) == "fail"){
             if ($response['data']['response'][0]['responseCode'] != 410)
                 $debit_order->status = 403;
