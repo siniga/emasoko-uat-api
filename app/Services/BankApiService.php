@@ -260,6 +260,9 @@ class BankApiService
     //create Otp 
     public function createOtpRequest($data)
     {
+        //responce code
+        $response_code = 200;
+
         //create authentication token
         $AUTH_BEARER_TOKEN = $this->auth->generateToken();
 
@@ -285,10 +288,36 @@ class BankApiService
         //response
         $response = Http::withHeaders($headers)->post($API_URL, $payload);
 
-        //logging response
-        Log::debug('OTPCreate Response =>' . $response);
+        //update the otp request
+        $otp_request = OtpRequest::where(
+            [
+                'reference' => $payload['data']['caseReference'],
+                'account_number' => $payload['data']['accountNumber'],
+                'action' => 'create',
+            ]
+        )->last();
+        $otp_request->http_response_json = $response;
 
-        return 200;
+        //decode the response 
+        $response = json_decode($response, true);
+
+        //logging response
+        Log::debug('== OtpCreate Response  ==');
+        Log::debug($response);
+
+        if (strtolower($response['status']) == "success") {
+            $response_code = 200; //response code
+
+            //update otp response code
+            $otp_request->http_response_code = $response['data']['response'][0]['responseCode'];
+        } else if (strtolower($response['status']) == "fail") {
+            $response_code = 500; //response code
+
+            //update otp response code
+            $otp_request->http_response_code = $response['data']['response'][0]['responseCode'];
+        }
+
+        return $response_code;
     }
 
     //verify OTP
@@ -329,7 +358,7 @@ class BankApiService
                 'account_number' => $account_number,
                 'action' => 'verify',
             ]
-        )->first();
+        )->last();
         $otp_request->http_response_json = $response;
 
         //decode the response 
@@ -339,7 +368,7 @@ class BankApiService
         Log::debug('== OtpVerify Response  ==');
         Log::debug($response);
 
-        if ($response['status'] == "Success") {
+        if (strtolower($response['status']) == "success") {
             $response_code = 202; //response code
 
             //update otp response code
@@ -350,7 +379,7 @@ class BankApiService
             $debit_order->status = 202;
             $debit_order->approved = 'APPROVED';
             $debit_order->save();
-        } else if ($response['status'] == "Fail") {
+        } else if (strtolower($response['status']) == "fail") {
             $response_code = 500; //response code
 
             //update otp response code

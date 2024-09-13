@@ -152,7 +152,6 @@ class BankPayloadService
     //create otp payload
     public function createOtpPayload(OtpRequest $otpRequest)
     {
-
         $payload = [
             "caseReference" => $otpRequest->reference,
             "accountNumber" => $otpRequest->account_number,

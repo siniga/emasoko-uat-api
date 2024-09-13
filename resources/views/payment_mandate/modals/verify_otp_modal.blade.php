@@ -35,7 +35,7 @@
                                         Close
                                     </button>
                                     <button type="submit" name="submit" class="btn btn-primary btn-block"
-                                        x-html="buttonSubmit" :disabled="formLoading"></button>
+                                        x-html="buttonVerify" :disabled="formLoading"></button>
                                 </div>
                             </div>
                         </div>

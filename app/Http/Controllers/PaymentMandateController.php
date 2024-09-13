@@ -466,8 +466,8 @@ class PaymentMandateController extends Controller
 
         $debit_order->save();
 
-         // redirect with message
-         return Redirect::route('payment-mandate.preview', [$debit_uuid])->with('success', "Customer Evidence of aggrement verified");
+        // redirect with message
+        return Redirect::route('payment-mandate.preview', [$debit_uuid])->with('success', "Customer Evidence of aggrement verified");
     }
 
     //customer preview
@@ -560,8 +560,34 @@ class PaymentMandateController extends Controller
         //create otp
         $http_response_code = $this->bankApi->createOtpRequest($payload);
 
-        //response
-        return response()->json(['success' => true, 'success_msg' => "OTP request initiated"], 200);
+        if ($http_response_code == 200) {
+            return response()->json(
+                [
+                    'success' => true,
+                    'success_msg' => "New OTP sent",
+                    "http_response_code" => $http_response_code
+                ],
+                200
+            );
+        } else if ($http_response_code == 500) {
+            return response()->json(
+                [
+                    'success' => false,
+                    'success_msg' => "Failed to send OTP, Try resend OTP.",
+                    "http_response_code" => $http_response_code
+                ],
+                200
+            );
+        } else {
+            return response()->json(
+                [
+                    'success' => false,
+                    'success_msg' => "Failed to send OTP, Try resend OTP.",
+                    "http_response_code" => 500
+                ],
+                200
+            );
+        }
     }
 
     // verify_otp
@@ -584,8 +610,34 @@ class PaymentMandateController extends Controller
         //api service
         $http_response_code = $this->bankApi->verifyOtpRequest($payload, $debit_order->customerAccount->account_number, $debit_order->reference);
 
-        //response
-        return response()->json(['success' => true, 'success_msg' => "OTP verification initiated", "http_response_code" => $http_response_code], 200);
+        if ($http_response_code == 202) {
+            return response()->json(
+                [
+                    'success' => true,
+                    'success_msg' => "OTP verified",
+                    "http_response_code" => $http_response_code
+                ],
+                200
+            );
+        } else if ($http_response_code == 500) {
+            return response()->json(
+                [
+                    'success' => false,
+                    'success_msg' => "Failed to verify OTP, Try again or resend OTP.",
+                    "http_response_code" => $http_response_code
+                ],
+                200
+            );
+        } else {
+            return response()->json(
+                [
+                    'success' => false,
+                    'success_msg' => "Failed to verify OTP, Try again or resend OTP.",
+                    "http_response_code" => 500
+                ],
+                200
+            );
+        }
     }
 
     //mandate status
