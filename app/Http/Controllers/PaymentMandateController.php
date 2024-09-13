@@ -548,7 +548,7 @@ class PaymentMandateController extends Controller
 
         //create otp request
         $otp_request = new OtpRequest();
-        $otp_request->reference = date('dmYHi');
+        $otp_request->reference = $debit_order->reference;
         $otp_request->account_number = $debit_order->customerAccount->account_number;
         $otp_request->action = 'create';
         $otp_request->created_by = Auth::user()->id;
