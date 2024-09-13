@@ -310,7 +310,7 @@ class BankApiService
 
             //update otp response code
             $otp_request->http_response_code = $response['data']['response'][0]['responseCode'];
-        } else if (strtolower($response['status']) == "fail") {
+        } else if (strtolower($response['status']) == "failed") {
             $response_code = 500; //response code
 
             //update otp response code
