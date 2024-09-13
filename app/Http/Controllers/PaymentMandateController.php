@@ -557,8 +557,8 @@ class PaymentMandateController extends Controller
         //create payload
         $payload = $this->payloadService->createOtpPayload($otp_request);
 
-        //dispatch event
-        event(new CreateOtp($payload));
+        //create otp
+        $http_response_code = $this->bankApi->createOtpRequest($payload);
 
         //response
         return response()->json(['success' => true, 'success_msg' => "OTP request initiated"], 200);

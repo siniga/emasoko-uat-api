@@ -261,7 +261,7 @@ class BankApiService
     public function createOtpRequest($data)
     {
         //create authentication token
-        $AUTH_BEARER_TOKEN = "";
+        $AUTH_BEARER_TOKEN = $this->auth->generateToken();
 
         //Create Headers
         $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer ' . $AUTH_BEARER_TOKEN];
@@ -283,10 +283,10 @@ class BankApiService
         $API_URL = env('API_URL');
 
         //response
-        //$response = Http::withHeaders($headers)->post($API_URL, $payload);
+        $response = Http::withHeaders($headers)->post($API_URL, $payload);
 
         //logging response
-        //Log::debug('OTPCreate Response =>' . $response);
+        Log::debug('OTPCreate Response =>' . $response);
 
         return 200;
     }
