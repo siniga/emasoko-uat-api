@@ -373,24 +373,20 @@ class PaymentMandateController extends Controller
         $debit_order->start_date = $request->input('start_date');
         $debit_order->next_debit_date = $request->input('start_date');
         $debit_order->deduction_end_date = $request->input('deduction_end');
-
-        // calculate end date
-        if ($request->input('deduction_end') === 'totalLoanCovered') {
-            // TODO: Create end date by check number of installment
-            $debit_order->end_date = date('Y-m-d', strtotime($request->input('start_date') . '+2 year'));
-        } else if ($request->input('deduction_end') == 'specificDate') {
-            // fixed end date
-            $debit_order->end_date = $$request->input('end_date');
-        }
-
         $debit_order->otp_code = $otp_code;
         $debit_order->approved = "PENDING";
         $debit_order->save();
 
-        if ($debit_order) {
-            Log::debug("== Debit order creation ==");
-            Log::debug($debit_order);
+        // // calculate end date
+        // if ($request->input('deduction_end') === 'totalLoanCovered') {
+        //     // TODO: Create end date by check number of installment
+        //     $debit_order->end_date = date('Y-m-d', strtotime($request->input('start_date') . '+2 year'));
+        // } else if ($request->input('deduction_end') == 'specificDate') {
+        //     // fixed end date
+        //     $debit_order->end_date = $$request->input('end_date');
+        // }
 
+        if ($debit_order) {
             //create deduction installments
             $response = $this->deductionService->createInstallment($debit_order);
 
@@ -632,7 +628,7 @@ class PaymentMandateController extends Controller
             return response()->json(
                 [
                     'success' => false,
-                    'success_msg' => "Failed to verify OTP, Try again or resend OTP.",
+                    'success_msg' => "Failed to verify OTP, Try again or contact support.",
                     "http_response_code" => 500
                 ],
                 200

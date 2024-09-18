@@ -192,7 +192,7 @@
                                 @php
                                     $options = [
                                         'totalLoanCovered' => 'Until total loan covered',
-                                        'specificDate' => 'Specific date',
+                                        //'specificDate' => 'Specific date',
                                     ];
                                     $options = ['' => 'Select'] + $options;
                                 @endphp

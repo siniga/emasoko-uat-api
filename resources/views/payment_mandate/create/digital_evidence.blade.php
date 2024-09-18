@@ -121,7 +121,8 @@
             <tbody>
                 <tr>
                     <td>
-                        <img src="{{ public_path('assets/images/emakato_logo_colored.png') }}" width="150px" alt="Emakato">
+                        <img src="{{ public_path('assets/images/emakato_logo_colored.png') }}" width="150px"
+                            alt="Emakato">
                     </td>
                 </tr>
             </tbody>
@@ -135,15 +136,9 @@
         <table class="table-header">
             <tbody>
                 <tr>
-                    <td class="text-left">
-                        <span>+255 222 774 012</span> <br><span>+255 768 170 000</span>
-                    </td>
                     <td class="text-center">
-                    </td>
-                    <td class="text-right text-sm-end" align="right">
-                        <div>
-                            <span>https://www.emakato.co.tz</span> <br><span>info@emakato.co.tz</span>
-                        </div>
+                        <span>Solocodes Limited|15th Floor Victoria Noble Center |P.O. Box 77499 | Dar es salaam.</span> <br>
+                        <span>Mob: +255 684 512 512 | www.emakato.co.tz</span>
                     </td>
                 </tr>
             </tbody>
@@ -152,26 +147,56 @@
     </footer>
 
     <div class="main-body">
-        <h2 class="text-center">A: Makubaliano kati ya mteja, Emakato na MFI husika.</h2>
-        <p class="contract-desc">
-            <p>Mimi Mteja ninaridhia kwa Emakato kama ifuatavyo:- <br></p>
-            1. Nina Ridhia malipo yafanyike kutoka kwenye akaunti yangu kulingana na ombi/maelekezo nitakayotuma kupitia
-            mfumo wa malipo wa Emakato <br> </p>
+        <h2 class="text-center">
+            This stands as a consent form between customer, EMakato and {{ $debit_order->partner->business_name }}. /Hii inasimama kama fomu ya
+            ridhaa kati ya Mteja , Emakato, na {{ $debit_order->partner->business_name }}.
+        </h2>
 
         <p class="contract-desc">
-            2. Nina Ridhia kuwa fedha zitakazokatwa kutoka kwenye akaunti yangu inaweza kutolewa tarehe tofauti kila
-            mwezi kulingana na muda na aina ya njia za kutoa na kulipa fedha kupitia mfumo wa malipo wa emakato.
-            uliotajwa hapo juu <br /><br />
-
-            3. Nitawataarifu {{ $debit_order->customerAccount->account->name }} na {{ $debit_order->partner->business_name }}. kwa maandishi iwapo nitataka kukatisha maagizo haya. <br /><br />
-
-            4. Nina ridhia kwamba number ya makubaliano (otp) kutumika kama sahihi yangu. <br />
+            I customer consent for payments to be deducted from my account at {{ $debit_order->customerAccount->account->name }} as per the request/instruction
+            from {{ $debit_order->partner->business_name }} through EMakato. Mimi Mteja nina Ridhia malipo yafanyike kutoka kwenye akaunti yangu
+            kulingana na ombi/maelekezo nitakayotuma kupitia kwa {{ $debit_order->partner->business_name }} kwa kutumia mfumo wa EMakato.
         </p>
 
-       <p class="contract-desc">
-            Jina kamili: {{ $debit_order->customerAccount->account_name }}<br/><br />
-            Sahihi Iliyoidhinishwa:  {{ $debit_order->otp_code }} 
-       </p>
+        <p class="contract-desc">
+            I customer consent that the installment amount or deduction amount may be debited according to the deduction
+            schedule in favor of {{ $debit_order->partner->business_name }}. Debit Duration will be as per the deduction schedule provided
+            through EMakato platform and accepted by {{ $debit_order->partner->business_name }} and customers. Mimi mteja Nina Ridhia kuwa fedha
+            zitakazokatwa kutoka kwenye akaunti yangu inaweza kutolewa tarehe tofauti kila mwezi kulingana na muda na
+            aina ya njia za kutoa.
+        </p>
+
+        <p class="contract-desc">
+            I customer shall duly notify {{ $debit_order->customerAccount->account->name }} and {{ $debit_order->partner->business_name }} in writing if I wish to cancel this
+            instruction. Mimi mteja Nitawataarifu {{ $debit_order->customerAccount->account->name }} na {{ $debit_order->partner->business_name }} kwa maandishi iwapo nitataka kukatisha
+            maagizo haya.
+        </p>
+
+        <p class="contract-desc">
+            I customer consent to Solocodes collecting, processing and using information derived from the credit
+            reference bureau and any other relevant sources for the development of the emakato platform. Mimi mteja nina
+            ridhia kwa Solocodes kukusanya na kuchakata taarifa zangu kutoka kwenye Taasisi za mikopo mbalimbali ili
+            kuweza kuboresha Mfumo wa emakato.
+        </p>
+
+        <p class="contract-desc">
+            I customer consent to the Authorization code(otp) being used as my signature. Mimi mteja nina ridhia kwamba
+            number ya makubaliano (otp) kutumika kama sahihi yangu.
+        </p>
+
+        <p class="contract-desc">
+            I customer confirm that the phone number I provided to {{ $debit_order->partner->business_name }} is directly linked to the (Bank/MNO)
+            that I have provided. I further confirm that I have received the consent code on this phone number and
+            understand that it will be used for verifying my consent for transactions. Mimi mteja ninakubali kwamba
+            nambari ya simu niliyotoa kwa {{ $debit_order->partner->business_name }} inahusishwa moja kwa moja na (Benki/MNO) nilitoa. Aidha, nina
+            thibitisha kwamba nimepokea number ya makubaliano (otp) kwenye nambari hii ya simu na naelewa kuwa utatumika
+            kuthibitisha ridhaa yangu kwa miamala
+        </p>
+
+        <p class="contract-desc">
+            Fullname/Jina kamili: {{ $debit_order->customerAccount->account_name }}<br /><br />
+            Authorization code/Sahihi Iliyoidhinishwa: {{ $debit_order->otp_code }}
+        </p>
     </div>
 
 </body>

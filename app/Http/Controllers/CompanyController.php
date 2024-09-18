@@ -190,7 +190,7 @@ class CompanyController extends Controller
 
         //validate tin number
         $partner = Partner::where(['tin_number' => $request->input('tin_number')])->first();
-        if ($partner){
+        if ($partner) {
             //check if uuid with db_uuid
             if ($partner->uuid != $uuid)
                 return response()->json(['success' => false, 'message' => 'Tin number already exist.'], 200);
@@ -198,14 +198,14 @@ class CompanyController extends Controller
 
         //validate email
         $partner = Partner::where(['email' => $request->input('company_email')])->first();
-        if ($partner){
+        if ($partner) {
             //check if uuid with db_uuid
             if ($partner->uuid != $uuid)
                 return response()->json(['success' => false, 'message' => 'Email already taken.'], 200);
         }
 
-        DB::beginTransaction();  
-            $partner = $this->companyService->createInformation((object) $request->all(), $uuid);
+        DB::beginTransaction();
+        $partner = $this->companyService->createInformation((object) $request->all(), $uuid);
         DB::commit();
 
         //response
@@ -305,7 +305,7 @@ class CompanyController extends Controller
         $partner = $this->companyService->updateNextStep($id, 'companies/staff/' . $uuid);
 
         DB::beginTransaction();
-            $this->companyService->createCollectionAccount($request->all(), $partner);
+        $this->companyService->createCollectionAccount($request->all(), $partner);
         DB::commit();
 
         //response
@@ -330,7 +330,7 @@ class CompanyController extends Controller
     {
         // validated request
         $validated = $request->validated();
-        
+
         //post data
         $id = $request->input('partner_id');
         $uuid = $request->input('partner_uuid');
@@ -341,17 +341,17 @@ class CompanyController extends Controller
                 //validate email
                 $partner_staff = PartnerStaff::where(['email' => $validated['staff_email'][$i]])->first();
                 if ($partner_staff) {
-                    if($partner_staff->partner_id != $id) {
+                    if ($partner_staff->partner_id != $id) {
                         return response()->json(['success' => false, 'message' => 'Email already exists'], 200);
-                    }                   
+                    }
                 }
 
                 //validate nida number
                 $partner_staff = PartnerStaff::where(['nida_number' => $validated['nida_number'][$i]])->first();
                 if ($partner_staff) {
-                    if($partner_staff->partner_id != $id) {
+                    if ($partner_staff->partner_id != $id) {
                         return response()->json(['success' => false, 'message' => 'NIDA number already exists'], 200);
-                    }                   
+                    }
                 }
             }
         }
@@ -360,7 +360,7 @@ class CompanyController extends Controller
         $partner = $this->companyService->updateNextStep($id, 'companies/preview/' . $uuid);
 
         DB::beginTransaction();
-            $this->companyService->createStaff($request->all(), $partner);
+        $this->companyService->createStaff($request->all(), $partner);
         DB::commit();
 
         //response
@@ -403,7 +403,7 @@ class CompanyController extends Controller
         $partner = $this->companyService->updateNextStep($id, 'companies/preview/' . $uuid);
 
         DB::beginTransaction();
-            $this->companyService->createCredential((object) $request->all(), $partner);
+        $this->companyService->createCredential((object) $request->all(), $partner);
         DB::commit();
 
         //response
@@ -737,35 +737,56 @@ class CompanyController extends Controller
         $partner = Partner::where(['uuid' => $uuid])->firstOrFail();
 
         //create payload
-        $payload = [
-            "user" => "EMakato",
-            "correlationId" => Str::uuid()->toString(),
-            "targetService" => "CorporateStatus",
-            "status" =>  "Check",
-            "data" => [
-                "corporateReference" => $partner->reference
-            ]
-        ];
-        Log::debug('== CorporateStatus Request ==');
-        Log::debug($payload);
+        $payload = $this->payloadService->corporateStatusPayload($partner);
 
-        //dispatch event
-        event(new CorporateStatus($payload));
+        //api service
+        $arr_response = $this->bankApi->corporateStatusRequest($payload);
 
-        // Manually call the listener to check completion
-        $listener = new FetchCorporateStatus();
-        $result = $listener->handle(new CorporateStatus($payload));
+        if ($arr_response) {
+            $http_response_code = $arr_response[0];
+            $remarks = $arr_response[1];
 
-        if ($result) {
-            //TODO: check status of the corporate and send SMS
-            Log::debug("Event results");
-            Log::debug($result);
-
-            // Event processing completed
-            return response()->json(['error' => false, "status" => 200, "message" => 'Corporate status initiated.'], 200);
+            if ($http_response_code == 202) {
+                return response()->json(
+                    [
+                        "success" => true,
+                        'success_msg' => "Corporate status updated",
+                        "http_response_code" => $http_response_code,
+                        "remarks" => $remarks
+                    ],
+                    200
+                );
+            } else if ($http_response_code == 500) {
+                return response()->json(
+                    [
+                        "success" => false,
+                        'success_msg' => "Failed to update corporate status, Try again...",
+                        "http_response_code" => $http_response_code,
+                        "remarks" => $remarks
+                    ],
+                    200
+                );
+            } else {
+                return response()->json(
+                    [
+                        "success" => false,
+                        'success_msg' => "Failed to update corporate status, Try again...",
+                        "http_response_code" => 500,
+                        "remarks" => $remarks
+                    ],
+                    200
+                );
+            }
         } else {
-            // Event processing failed
-            return response()->json(['message' => 'Task processing failed.'], 500);
+            return response()->json(
+                [
+                    "success" => false,
+                    'success_msg' => "Failed to update corporate status, Try again...",
+                    "http_response_code" => 500,
+                    "remarks" => "API does not response, Kindly try again or contact support."
+                ],
+                200
+            );
         }
     }
 }

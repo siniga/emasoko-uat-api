@@ -56,15 +56,8 @@ class CorporateRegistrationJob implements ShouldQueue
         ];
 
         //Create Payload
-        Log::debug('== Headers == ');
-        // Log::debug($headers);
-
-        //Create Payload
         Log::debug('== CorporateRegistration Request == ');
         Log::debug($payload);
-
-        //encode payload 
-        $post_data = json_encode($payload);
 
         //API URL 
         $API_URL = env('API_URL');

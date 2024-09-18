@@ -95,6 +95,10 @@ class BankApiService
     //corporate status
     public function corporateStatusRequest($data)
     {
+        //responce code
+        $response_code = 200;
+        $remarks = "";
+
         //create authentication token
         $AUTH_BEARER_TOKEN = $this->auth->generateToken();
 
@@ -111,19 +115,45 @@ class BankApiService
         ];
 
         //Create Payload
-        Log::debug('Corporate Ststus Request');
+        Log::debug('== Corporate Status Request ==');
         Log::debug($payload);
 
         //API URL 
         $API_URL = env('API_URL');
 
         //response
-        //$response = Http::withHeaders($headers)->post($API_URL, $payload);
+        $response = Http::withHeaders($headers)->post($API_URL, $payload);
+
+        //update the corporate
+        $partner = Partner::where('reference', '=', $payload['data']['corporateReference'])->first();
+        $partner->http_response_status_json = $response;
+
+        //decode the response 
+        $response = json_decode($response, true);
 
         //logging response
-        //Log::debug('OTPCreate Response =>' . $response);
+        Log::debug('== CorporateStatus Response  ==');
+        Log::debug($response);
 
-        return 200;
+        if (strtolower($response['status']) == "success") {
+            $response_code = 202; //response code
+            $remarks = $response['data']['response'][0]['responseDescription'];
+
+            $partner->status = 202;
+            $partner->http_response_code = $response['data']['response'][0]['responseCode'];
+            $partner->remarks = $response['data']['response'][0]['responseDescription'];
+            $partner->save();
+        } else if (strtolower($response['status']) == "fail") {
+            $response_code = 500; //response code
+            $remarks = $response['data']['response'][0]['responseDescription'];
+
+            $partner->status = 500;
+            $partner->http_response_code = $response['data']['response'][0]['responseCode'];
+            $partner->remarks = $response['data']['response'][0]['responseDescription'];
+            $partner->save();
+        }
+
+        return [$response_code, $remarks];
     }
 
     //mandate registartion

@@ -28,6 +28,9 @@
                         <div class="col-lg-12 col-md-12">
                             <div class="mb-2 d-flex justify-content-between">
                                 <div>
+                                    <a href="{{ route('payment-mandate.create-account', [$customer_account->uuid, $debit_order->uuid]) }}" class="btn btn-outline-primary">
+                                        <i class="bx bx-edit"></i> Edit Mandate
+                                    </a>
                                 </div>
                                 <div>
                                     <button type="button" class="btn btn-outline-danger waves-effect"

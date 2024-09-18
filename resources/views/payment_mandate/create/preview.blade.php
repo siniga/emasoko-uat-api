@@ -436,12 +436,12 @@
                             } else if(http_response_code == 500) {
                                 //display message
                                 $('#message_wrp_1').html(
-                                    "<div class='alert alert-warning rounded-sm'>Failed to verify OTP, Try again or resend OTP.</div>"
+                                    "<div class='alert alert-danger rounded-sm'>Failed to verify OTP, Try again or resend OTP.</div>"
                                 );
                             } else {
                                 //display message
                                 $('#message_wrp_1').html(
-                                    "<div class='alert alert-warning rounded-sm'>Failed to verify OTP, Try again or resend OTP.</div>"
+                                    "<div class='alert alert-danger rounded-sm'>Failed to verify OTP, Try again or contact support.</div>"
                                 );
                             }
                         }).catch(() => {

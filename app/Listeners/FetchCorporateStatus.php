@@ -66,8 +66,6 @@ class FetchCorporateStatus
             $partner->remarks = $response['data']['response'][0]['responseDescription'];
             $partner->save();
 
-            //TODO 1: Send default password to partner_users
-
         } else if (strtolower($response['status']) == "fail") {
             $partner->status = 500;
             $partner->http_response_code = $response['data']['response'][0]['responseCode'];

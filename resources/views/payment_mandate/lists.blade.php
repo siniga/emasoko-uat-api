@@ -174,88 +174,101 @@
                                 </div>
                             </div>
 
-                            <table class="table table-bordered" id="dynamicTable">
-                                <thead>
-                                    <tr>
-                                        <th width="3%">#</th>
-                                        <th width="18%">Account Name</th>
-                                        <th width="15%">NIDA Number</th>
-                                        <th width="8%">Payment Channel</th>
-                                        <th width="10%">Bank Name/MNO</th>
-                                        <th width="12%">Account Number</th>
-                                        <th width="12%">Phone<br /><small>(Connected to Bank)</small></th>
-                                        <th width="8%">Consent Status</th>
-                                        <th style="width: 90px; !important">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @php $serial = 1; @endphp
-                                    @foreach ($debit_orders as $values)
+                            <div class="table-responsive">
+                                <table class="table table-bordered dt-responsive  nowrap w-100" id="dynamicTable">
+                                    <thead>
                                         <tr>
-                                            <td>{{ $serial }}</td>
-                                            <td>{{ $values->customerAccount->account_name ?? $values->customerAccount->phone }}
-                                            </td>
-                                            <td><small>{{ $values->customerAccount->customer->id_number ?? 'NIL' }}</small>
-                                            </td>
-                                            <td>{{ $values->customerAccount->accountType->name ?? '' }}</td>
-                                            <td>{{ $values->customerAccount->account->name ?? '' }}</td>
-                                            <td>
-                                                {{ $values->customerAccount->account_number ?? $values->customerAccount->phone }}
-                                            </td>
-                                            <td>{{ $values->customerAccount->phone ?? '' }}</td>
-
-                                            <td>
-                                                @if ($values->status == 100)
-                                                    <span class="badge badge-pill badge-soft-danger">Pending Registration</span>
-                                                @elseif($values->status == 200)
-                                                    <span class="badge badge-pill badge-soft-success">Under Review</span>
-                                                @elseif($values->status == 201)
-                                                    <span class="badge badge-pill badge-soft-success">Pending Verification</span>
-                                                @elseif($values->status == 202)
-                                                    <span class="badge bg-success-1 font-size-10">Verified</span>
-                                                @elseif($values->status == 403) 
-                                                    <span class="badge bg-danger font-size-10">Failed</span> 
-                                                @elseif($values->status == 500)
-                                                    <span class="badge badge-pill badge-soft-danger">Rejected</span>
-                                                @endif
-                                            </td>
-
-                                            <td>
-                                                @if ($values->status == 100)
-                                                    <a href="{{ route('payment-mandate.preview', $values->uuid) }}"
-                                                        title="Preview application" class="btn btn-xss">
-                                                        <i class='bx bxs-check-square bx-xs text-success'></i>
-                                                    </a>
-                                                @endif
-
-                                                @if ($values->status != 100)
-                                                    <a href="{{ route('payment-mandate.show', $values->uuid) }}" title="View"
-                                                        class="btn btn-xss">
-                                                        <i class="bx bxs-folder-open"></i>
-                                                    </a>
-                                                @endif
-
-                                                @if ($values->status == 100)
-                                                    <a href="{{ route('payment-mandate.edit', $values->uuid) }}"
-                                                        title="Edit" class="btn btn-xss">
-                                                        <i class="bx bx-edit text-secondary"></i>
-                                                    </a>
-
-                                                    <a href="{{ route('payment-mandate.delete', $values->uuid) }}"
-                                                        title="Delete" class="btn btn-xss delete">
-                                                        <i class="bx bx-trash text-danger"></i>
-                                                    </a>
-                                                @endif
-                                            </td>
+                                            <th width="3%">#</th>
+                                            <th width="20%">Account Name</th>
+                                            <th>Payment Channel</th>
+                                            <th>Bank Name/MNO</th>
+                                            <th>Corporate Reference</th>
+                                            <th>Account Number</th>
+                                            <th>Primary Phone</th>
+                                            <th>Consent Status</th>
+                                            <th>Created Date</th>
+                                            <th style="width: 90px; !important">Actions</th>
                                         </tr>
-                                        @php $serial++; @endphp
-                                    @endforeach
-                                </tbody>
-                            </table>
-                            <div class="d-flex justify-content-end">
-                                @if (method_exists($debit_orders, 'links'))
-                                    {{ $debit_orders->links() }}
-                                @endif
+                                    </thead>
+                                    <tbody>
+                                        @php $serial = 1; @endphp
+                                        @foreach ($debit_orders as $values)
+                                            <tr>
+                                                <td>{{ $serial }}</td>
+                                                <td>
+                                                    {{ $values->customerAccount->account_name ?? $values->customerAccount->phone }}<br>
+                                                    ID: {{ $values->customerAccount->customer->id_number ?? 'NIL' }}
+                                                </td>
+                                                </td>
+                                                <td>{{ $values->customerAccount->accountType->name ?? '' }}</td>
+                                                <td>{{ $values->customerAccount->account->name ?? '' }}</td>
+                                                <td>
+                                                    {{ $values->customerAccount->account_number ?? $values->customerAccount->phone }}
+                                                </td>
+                                                <td>
+                                                    {{ $values->reference }}
+                                                </td>
+                                                <td>{{ $values->customerAccount->phone ?? '' }}</td>
+
+                                                <td>
+                                                    @if ($values->status == 100)
+                                                        <span class="badge badge-pill badge-soft-danger">Pending Registration</span>
+                                                    @elseif($values->status == 200)
+                                                        <span class="badge badge-pill badge-soft-success">Under Review</span>
+                                                    @elseif($values->status == 201)
+                                                        <span class="badge badge-pill badge-soft-success">Pending Verification</span>
+                                                    @elseif($values->status == 202)
+                                                        <span class="badge bg-success-1 font-size-10">Verified</span>
+                                                    @elseif($values->status == 403) 
+                                                        <span class="badge bg-danger font-size-10">Failed</span> 
+                                                    @elseif($values->status == 500)
+                                                        <span class="badge badge-pill badge-soft-danger">Rejected</span>
+                                                    @endif
+                                                </td>
+
+                                                <td>
+                                                    {{ date('d-m-Y H:i', strtotime($values->updated_at)) }}
+                                                </td>
+
+                                                <td>
+                                                    @if ($values->status == 100)
+                                                        <a href="{{ route('payment-mandate.preview', $values->uuid) }}"
+                                                            title="Preview application" class="btn btn-xss">
+                                                            <i class='bx bxs-check-square bx-xs text-success'></i>
+                                                        </a>
+                                                    @endif
+
+                                                    @if ($values->status != 100)
+                                                        <a href="{{ route('payment-mandate.show', $values->uuid) }}" title="View"
+                                                            class="btn btn-xss">
+                                                            <i class="bx bxs-folder-open"></i>
+                                                        </a>
+                                                    @endif
+
+                                                    @if ($values->status == 100)
+                                                        <a href="{{ route('payment-mandate.edit', $values->uuid) }}"
+                                                            title="Edit" class="btn btn-xss">
+                                                            <i class="bx bx-edit text-secondary"></i>
+                                                        </a>
+                                                    @endif
+
+                                                    @if ($values->status == 100 || $values->status == 200)
+                                                        <a href="{{ route('payment-mandate.delete', $values->uuid) }}"
+                                                            title="Delete" class="btn btn-xss delete">
+                                                            <i class="bx bx-trash text-danger"></i>
+                                                        </a>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                            @php $serial++; @endphp
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                                <div class="d-flex justify-content-end">
+                                    @if (method_exists($debit_orders, 'links'))
+                                        {{ $debit_orders->links() }}
+                                    @endif
+                                </div>
                             </div>
                             <!--./d-flex -->
                         @else

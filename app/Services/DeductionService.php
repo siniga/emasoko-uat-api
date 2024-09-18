@@ -36,7 +36,10 @@ class DeductionService
         else if ($periodicity == "DAILY")
             $number_of_days = "+1 day";
 
-        //2. Calculate installment dates
+        //3. Delete all installments
+        $delete_installment = Installment::where('debit_order_id', $debitOrder->id)->delete();    
+
+        //4. Calculate installment dates
         if ($debit_type == "FIXED") {
             $sum_installment_amount = 0;
             for ($i = 1; $i <= $number_of_installment; $i++) {
@@ -78,9 +81,6 @@ class DeductionService
                     ]
                 );
                 $installment->save();
-                
-                Log::debug("== Created Installment ==");
-                Log::debug($installment);
             }
         } else if ($debit_type == "DYNAMIC") {
             $sum_installment_amount = 0;
@@ -129,11 +129,12 @@ class DeductionService
                     ]
                 );
                 $installment->save();
-
-                Log::debug("== Created Installment ==");
-                Log::debug($installment);
             }
         }
+
+        //5. Ppdate debit order end_date
+        $debitOrder->end_date = $last_installment_date;
+        $debitOrder->save();
 
         return 200;
     }

@@ -60,12 +60,10 @@
                                         x-on:click="approveRegistration('{{ $company->uuid }}')"></button>
                                 </template>
 
-                                <template x-if="status ==201">
+                                <template x-if="status ==201 || status==403 || status==500">
                                     <button x-html="btnStatus" title="Get Status" class="btn btn-success btn-sm"
                                         x-on:click="fetchRegistrationStatus('{{ $company->uuid }}')"></button>
                                 </template>
-
-
                             </div>
                         </div>
 
@@ -131,7 +129,7 @@
                                     </template>
 
                                     <template x-if="status==202">
-                                        <span class="badge bg-success-1 text-uppercase">Verified</span>
+                                        <span class="badge bg-success-1 text-uppercase">Company Verified</span>
                                     </template>
 
                                     <template x-if="status==403">
@@ -441,7 +439,8 @@
                         }).then(response => response.json())
                         .then(responseJson => {
                             console.log(responseJson);
-                            this.status = responseJson.status
+                            this.status = responseJson.status;
+                            this.remarks = responseJson.remarks;
 
                             $('#message_wrp').html(
                                 "<div class='alert alert-success rounded-sm'>" + responseJson.message + "</div>"
