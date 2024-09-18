@@ -45,7 +45,7 @@
                                         x-on:click="openMandateCancellationModal();"></button>
                                 </template>
 
-                                <template x-if="status==201">
+                                <template x-if="status==202">
                                     <button x-html="btnStatus" title="Get Mandate Status" class="btn btn-success btn-sm"
                                         x-on:click="fetchMandateStatus();"></button>
                                 </template>

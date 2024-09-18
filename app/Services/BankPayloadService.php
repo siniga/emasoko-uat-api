@@ -167,7 +167,7 @@ class BankPayloadService
     {
         $payload = [
             "caseReference" => $otpRequest->reference,
-            "processName" => "MandateApproval",
+            "processName" => "EMakato Mandate Registration",
             "otpPin" => $otpPin
         ];
 
