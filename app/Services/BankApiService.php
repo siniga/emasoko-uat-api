@@ -193,8 +193,12 @@ class BankApiService
     //mandate cancellation 
     public function mandateStatusRequest($data)
     {
+        //responce code
+        $response_code = 200;
+        $remarks = "";
+
         //create authentication token
-        $AUTH_BEARER_TOKEN = "";
+        $AUTH_BEARER_TOKEN = $this->auth->generateToken();
 
         //Create Headers
         $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer ' . $AUTH_BEARER_TOKEN];
@@ -216,12 +220,39 @@ class BankApiService
         $API_URL = env('API_URL');
 
         //response
-        // $response = Http::withHeaders($headers)->post($API_URL, $payload);
+        $response = Http::withHeaders($headers)->post($API_URL, $payload);
 
-        // //logging response
-        // Log::debug('OTPVerify Response =>' . $response);
+        //update the debit order
+        $debit_order = DebitOrder::where('reference', '=', $payload['data']['mandateReferenceNumber'])->first();
+        $debit_order->http_response_status_json = $response;
 
-        return 200;
+        //decode the response 
+        $response = json_decode($response, true);
+
+        //logging response
+        Log::debug('== MandateStatus Response  ==');
+        Log::debug($response);
+
+        if (strtolower($response['status']) == "success") {
+            $response_code = $response['data']['response'][0]['responseCode']; //response code
+            $remarks = $response['data']['response'][0]['responseDescription'];
+
+            //update debit order
+            $debit_order->status = $response['data']['response'][0]['responseCode'];
+            $debit_order->http_response_code = $response['data']['response'][0]['responseCode'];
+            $debit_order->remarks = $response['data']['response'][0]['responseDescription'];
+        } else if(strtolower($response['status']) == "fail") {
+            $response_code = 501; //response code
+            $remarks = $response['data']['response'][0]['responseDescription'];
+
+            //update debit order
+            $debit_order->status = 501; //status failed
+            $debit_order->http_response_code = $response['data']['response'][0]['responseCode'];
+            $debit_order->remarks = $response['data']['response'][0]['responseDescription'];
+        }
+        $debit_order->save();
+
+        return [$response_code, $remarks];
     }
 
     //mandate cancellation 
@@ -229,6 +260,7 @@ class BankApiService
     {
         //responce code
         $response_code = 200;
+        $remarks = "";
 
         //create authentication token
         $AUTH_BEARER_TOKEN = $this->auth->generateToken();
@@ -266,25 +298,28 @@ class BankApiService
         Log::debug('== MandateCancellation Response  ==');
         Log::debug($response);
 
-        if ($response['status'] == "Success") {
+        if (strtolower($response['status']) == "success") {
             $response_code = 405; //response code
+            $remarks = $response['data']['response'][0]['responseDescription'];
 
             $debit_order->deleted = 1;
             $debit_order->status = 405;
-            $debit_order->cancellation_reason = $payload['data']['cancelReason'];
             $debit_order->http_response_code = $response['data']['response'][0]['responseCode'];
             $debit_order->remarks = $response['data']['response'][0]['responseDescription'];
-        } else if ($response['status'] == "Fail") {
+            $debit_order->save();
+
+        } else if(strtolower($response['status']) == "fail") {
             $response_code = 500; //response code
+            $remarks = $response['data']['response'][0]['responseDescription'];
 
             $debit_order->deleted = 0;
             $debit_order->status = 500;
             $debit_order->http_response_code = $response['data']['response'][0]['responseCode'];
             $debit_order->remarks = $response['data']['response'][0]['responseDescription'];
+            $debit_order->save();
         }
-        $debit_order->save();
-
-        return $response_code;
+        
+        return [$response_code, $remarks];
     }
 
     //create Otp 

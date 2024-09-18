@@ -40,13 +40,13 @@
                             <div></div>
 
                             <div class="text-sm-end d-none d-sm-block">
-                                <template x-if="status==100 || status==200 || status==201 || status==202 || status==405 || status==500">
-                                    <button x-html="btnCancel" title="Mandate Cancellation" class="btn btn-danger btn-sm"
+                                <template x-if="status==201 || status==202 || status==405 || status==500">
+                                    <button x-html="btnCancel" title="Mandate Cancellation" class="btn btn-outline-danger text-medium btn-sm btn-sm"
                                         x-on:click="openMandateCancellationModal();"></button>
                                 </template>
 
-                                <template x-if="status==202">
-                                    <button x-html="btnStatus" title="Get Mandate Status" class="btn btn-success btn-sm"
+                                <template x-if="status==202 || status==501">
+                                    <button x-html="btnStatus" title="Get Mandate Status" class="btn btn-outline-success btn-sm"
                                         x-on:click="fetchMandateStatus();"></button>
                                 </template>
 
@@ -57,8 +57,8 @@
                                     </a>
                                 </template>
 
-                                <template x-if="status==100">
-                                    <a href="{{ route('payment-mandate.delete', $debit_order->id) }}" title="Delete"
+                                <template x-if="status==100 || status==200">
+                                    <a href="{{ route('payment-mandate.delete', $debit_order->uuid) }}" title="Delete"
                                         class="btn btn-outline-danger text-medium btn-sm delete">
                                         <i class="bx bx-trash font-size-12"></i> Delete
                                     </a>
@@ -105,18 +105,9 @@
                                             <span>{{ $debit_order->customerAccount->phone ?? '' }}</span>
                                         </td>
 
-                                        <th>Status</th>
-                                        <td></td>
+                                        <th>Secondary Phone</th>
+                                        <td>{{ $debit_order->customerAccount->secondary_phone ?? '' }}</td>
                                     </tr>
-
-                                    @if ($debit_order->customerAccount->remarks)
-                                        <tr>
-                                            <th>Remarks</th>
-                                            <td colspan="3">
-                                                <span>{{ $debit_order->customerAccount->remarks ?? '' }}</span>
-                                            </td>
-                                        </tr>
-                                    @endif
                                 </table>
                             </div>
                         </div>
@@ -134,18 +125,18 @@
                                         <th width="25%">Application Date</th>
                                         <td width="25%">{{ date('d,M-Y', strtotime($debit_order->created_at)) }}</td>
 
-                                        <th width="25%">Consent Status</th>
+                                        <th width="25%">Mandate Status</th>
                                         <td width="25%">
                                             <template x-if="status==0">
                                                 <span class="badge bg-warning text-uppercase">Registration Process</span>
                                             </template>
 
                                             <template x-if="status==100">
-                                                <span class="badge bg-warning text-uppercase">Pending Review</span>
+                                                <span class="badge bg-warning text-uppercase">Pending Registration</span>
                                             </template>
 
                                             <template x-if="status==200">
-                                                <span class="badge bg-info text-uppercase">Pending Approval</span>
+                                                <span class="badge bg-info text-uppercase">Under Review</span>
                                             </template>
 
                                             <template x-if="status==201">
@@ -154,6 +145,14 @@
 
                                             <template x-if="status==202">
                                                 <span class="badge bg-success-1 text-uppercase">Verified</span>
+                                            </template>
+
+                                            <template x-if="status==240">
+                                                <span class="badge bg-success-1 text-uppercase">Active</span>
+                                            </template>
+
+                                            <template x-if="status==249">
+                                                <span class="badge bg-success-1 text-uppercase">Processing</span>
                                             </template>
 
                                             <template x-if="status==403">
@@ -167,6 +166,17 @@
                                             <template x-if="status==500">
                                                 <span class="badge bg-danger text-uppercase">Rejected</span>
                                             </template>
+
+                                            <template x-if="status==501">
+                                                <span class="badge bg-danger text-uppercase">Inactive</span>
+                                            </template>
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <th width="25%">Remarks</th>
+                                        <td colspan="3">
+                                            <span x-text="remarks"></span>
                                         </td>
                                     </tr>
 
@@ -255,7 +265,7 @@
                                         <tbody>
                                             <tr>
                                                 @foreach($debit_order->installments as $val)
-                                                    <td>{{ date('d-m', strtotime($val->payment_date)) }}</td>
+                                                    <td class="text-center">{{ date('d-m', strtotime($val->payment_date)) }}</td>
                                                 @endforeach
                                             </tr>
 
@@ -298,6 +308,7 @@
                 sidebarOpen: false,
                 eModal: "Mandate_Information",
                 status: "{{ $debit_order->status }}",
+                remarks: "{{ $debit_order->remarks }}",
                 approved: "{{ $debit_order->approved }}",
 
                 formData: {
@@ -328,10 +339,11 @@
                         }).then(response => response.json())
                         .then(responseJson => {
                             console.log(responseJson);
-                            this.status = responseJson.status
+                            this.status = responseJson.http_response_code
+                            this.remarks = responseJson.remarks
 
                             $('#message_wrp').html(
-                                "<div class='alert alert-success rounded-sm'>Mandate registration status initiated.</div>"
+                                "<div class='alert alert-success rounded-sm'>" + responseJson.success_msg + "</div>"
                             );
                         }).catch(() => {
                             //display message
@@ -368,6 +380,7 @@
                             //response code 
                             const http_response_code = responseJson.http_response_code;
                             this.status = responseJson.http_response_code
+                            this.remarks = responseJson.remarks
 
                             if(http_response_code == 405){
                                 $('#message_wrp_1').html(

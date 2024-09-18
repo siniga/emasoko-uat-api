@@ -214,15 +214,23 @@
                                                     @if ($values->status == 100)
                                                         <span class="badge badge-pill badge-soft-danger">Pending Registration</span>
                                                     @elseif($values->status == 200)
-                                                        <span class="badge badge-pill badge-soft-success">Under Review</span>
+                                                        <span class="badge badge-pill badge-soft-info">Under Review</span>
                                                     @elseif($values->status == 201)
-                                                        <span class="badge badge-pill badge-soft-success">Pending Verification</span>
+                                                        <span class="badge badge-pill badge-soft-info">Pending Verification</span>
                                                     @elseif($values->status == 202)
                                                         <span class="badge bg-success-1 font-size-10">Verified</span>
+                                                    @elseif($values->status == 240)
+                                                        <span class="badge bg-success-1 font-size-10">Active</span>
+                                                    @elseif($values->status == 249)
+                                                        <span class="badge bg-success-1 font-size-10">Processing</span>
                                                     @elseif($values->status == 403) 
-                                                        <span class="badge bg-danger font-size-10">Failed</span> 
+                                                        <span class="badge bg-danger font-size-10">Failed</span>
+                                                    @elseif($values->status == 405) 
+                                                        <span class="badge bg-danger font-size-10">Cancelled</span>  
                                                     @elseif($values->status == 500)
                                                         <span class="badge badge-pill badge-soft-danger">Rejected</span>
+                                                    @elseif($values->status == 501)
+                                                        <span class="badge badge-pill badge-soft-danger">Inactive</span>
                                                     @endif
                                                 </td>
 

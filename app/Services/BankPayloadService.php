@@ -139,11 +139,11 @@ class BankPayloadService
         $payload = [
             "mandateReferenceNumber" => $debitOrder->reference,
             "corporateReference" => $partner->reference,
-            "cancelReason" => $debitOrder->remarks,
-            "createdBy" => static::userNameFormat($debitOrder->verifiedBy),
-            "verifiedBy" => static::userNameFormat($debitOrder->verifiedBy),
-            "createdDate" => $debitOrder->createdDate,
-            "verifyDate" => $debitOrder->verifyDate
+            "cancelReason" => $debitOrder->cancellation_reason,
+            "createdBy" => static::userNameFormat($debitOrder->cancellationStartedBy),
+            "verifiedBy" => static::userNameFormat($debitOrder->cancellationApprovedBy),
+            "createdDate" => $debitOrder->cancellationStartedAt,
+            "verifyDate" => $debitOrder->cancellationApprovedAt
         ];
 
         return $payload;

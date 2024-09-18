@@ -639,28 +639,61 @@ class PaymentMandateController extends Controller
     //mandate status
     function fetch_status(Request $request)
     {
-        // post data
+        // debit order
         $debit_order = DebitOrder::where("uuid", $request->uuid)->first();
 
         //create payload
-        $payload = [
-            "user" => "EMakato",
-            "correlationId" => Str::uuid()->toString(),
-            "targetService" => "MandateStatus",
-            "status" =>  "Check",
-            "data" => [
-                "mandateReferenceNumber" => $debit_order->reference
-            ]
-        ];
+        $payload = $this->payloadService->mandateStatusPayload($debit_order);
 
-        Log::debug('== MandateStatus Request ==');
-        Log::debug($payload);
+        //api service
+        $arr_response = $this->bankApi->mandateStatusRequest($payload);
 
-        //dispatch event
-        event(new MandateStatus($payload));
+        if ($arr_response) {
+            $http_response_code = $arr_response[0];
+            $remarks = $arr_response[1];
 
-        //response
-        return response()->json(['error' => false, "status" => 200, "message" => 'Mandate status initiated.'], 200);
+            if ($http_response_code == 240 || $http_response_code == 249) {
+                return response()->json(
+                    [
+                        "success" => true,
+                        'success_msg' => $remarks,
+                        "http_response_code" => $http_response_code,
+                        "remarks" => $remarks
+                    ],
+                    200
+                );
+            } else if ($http_response_code == 501) {
+                return response()->json(
+                    [
+                        "success" => false,
+                        'success_msg' => $remarks,
+                        "http_response_code" => $http_response_code,
+                        "remarks" => $remarks
+                    ],
+                    200
+                );
+            } else {
+                return response()->json(
+                    [
+                        "success" => false,
+                        'success_msg' => "Failed to update mandate status, Try again...",
+                        "http_response_code" => 501,
+                        "remarks" => $remarks
+                    ],
+                    200
+                );
+            }
+        } else {
+            return response()->json(
+                [
+                    "success" => false,
+                    'success_msg' => "API does not response, Kindly try again or contact support.",
+                    "http_response_code" => 501,
+                    "remarks" => "API does not response, Kindly try again or contact support."
+                ],
+                200
+            );
+        }
     }
 
     //mandate cancellation
@@ -669,13 +702,66 @@ class PaymentMandateController extends Controller
         // post data
         $debit_order = DebitOrder::where("uuid", $request->uuid)->first();
 
+        //save cancellation information
+        $debit_order->cancellation_reason = $request->remarks;
+        $debit_order->cancellationStartedBy = Auth::user()->id;
+        $debit_order->cancellationStartedAt = date('Y-m-d H:i:s');
+        $debit_order->cancellationApprovedBy = Auth::user()->id;
+        $debit_order->cancellationApprovedAt = date('Y-m-d H:i:s');
+        $debit_order->save();
+
         //create payload
         $payload = $this->payloadService->mandateCancellationPayload($debit_order);
 
-        //api service
-        $http_response_code = $this->bankApi->mandateCancellationRequest($payload);
+        //api response
+        $arr_response = $this->bankApi->mandateCancellationRequest($payload);
 
-        return response()->json(['success' => true, 'success_msg' => "Mandate cancellation initiated", "http_response_code" => $http_response_code], 200);
+        if ($arr_response) {
+            $http_response_code = $arr_response[0];
+            $remarks = $arr_response[1];
+
+            if ($http_response_code == 405) {
+                return response()->json(
+                    [
+                        "success" => true,
+                        'success_msg' => $remarks,
+                        "http_response_code" => $http_response_code,
+                        "remarks" => $remarks
+                    ],
+                    200
+                );
+            } else if ($http_response_code == 500) {
+                return response()->json(
+                    [
+                        "success" => false,
+                        'success_msg' => $remarks,
+                        "http_response_code" => $http_response_code,
+                        "remarks" => $remarks
+                    ],
+                    200
+                );
+            } else {
+                return response()->json(
+                    [
+                        "success" => false,
+                        'success_msg' => "Failed to update mandate status, Try again...",
+                        "http_response_code" => 500,
+                        "remarks" => $remarks
+                    ],
+                    200
+                );
+            }
+        } else {
+            return response()->json(
+                [
+                    "success" => false,
+                    'success_msg' => "API does not response, Kindly try again or contact support.",
+                    "http_response_code" => 500,
+                    "remarks" => "API does not response, Kindly try again or contact support."
+                ],
+                200
+            );
+        }
     }
 
     //customer details

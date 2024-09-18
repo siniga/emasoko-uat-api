@@ -61,7 +61,7 @@
                                 </template>
 
                                 <template x-if="status ==201 || status==403 || status==500">
-                                    <button x-html="btnStatus" title="Get Status" class="btn btn-success btn-sm"
+                                    <button x-html="btnStatus" title="Get Status" class="btn btn-outline-success btn-sm"
                                         x-on:click="fetchRegistrationStatus('{{ $company->uuid }}')"></button>
                                 </template>
                             </div>
@@ -400,7 +400,6 @@
                             body: JSON.stringify(this.formData),
                         }).then(response => response.json())
                         .then(responseJson => {
-                            console.log(responseJson);
                             this.status = responseJson.status
                             this.remarks = responseJson.remarks
 
@@ -439,7 +438,7 @@
                         }).then(response => response.json())
                         .then(responseJson => {
                             console.log(responseJson);
-                            this.status = responseJson.status;
+                            this.status = responseJson.http_response_code;
                             this.remarks = responseJson.remarks;
 
                             $('#message_wrp').html(

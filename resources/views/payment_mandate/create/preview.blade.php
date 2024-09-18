@@ -118,10 +118,8 @@
                                                     <span>{{ $customer_account->secondary_phone ?? '' }}</span>
                                                 </td>
 
-                                                <th>Account Status</th>
-                                                <td>
-                                                    <span>{{ $customer_account->status ?? '' }}</span>
-                                                </td>
+                                                <th>Secondary Phone</th>
+                                                <td>{{ $debit_order->customerAccount->secondary_phone ?? '' }}</td>
                                             </tr>
                                         </table>
                                     </div>
