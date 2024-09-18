@@ -25,7 +25,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         // lists of commands
-        $schedule->command('send:batches')->dailyAt('23:00');
+        $schedule->command('send:batches')->dailyAt('04:00');
     }
 
     /**
