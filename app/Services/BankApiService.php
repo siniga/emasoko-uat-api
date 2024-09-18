@@ -403,26 +403,32 @@ class BankApiService
 
             //update otp response code
             $otp_request->http_response_code = $response['data']['response'][0]['responseCode'];
-            $otp_request->save(); //save
+            //$otp_request->save(); //save
 
             //Update mandate status based on response
             $debit_order = DebitOrder::where('reference', '=', $mandate_reference)->first();
-            $debit_order->status = 202;
-            $debit_order->approved = 'APPROVED';
-            $debit_order->save();
+
+            if($debit_order) {
+                $debit_order->status = 202;
+                $debit_order->approved = 'APPROVED';
+                $debit_order->save();
+            }
         } else if (strtolower($response['status']) == "fail") {
             $response_code = 500; //response code
 
             //update otp response code
             $otp_request->http_response_code = $response['data']['response'][0]['responseCode'];
-            $otp_request->save(); //save
+            //$otp_request->save(); //save
 
             //Update mandate status based on response
             $debit_order = DebitOrder::where('reference', '=', $mandate_reference)->first();
-            $debit_order->status = 500;
-            $debit_order->approved = 'REJECTED';
-            $debit_order->remarks = $response['data']['response'][0]['responseDescription'];
-            $debit_order->save();
+
+            if($debit_order) {
+                $debit_order->status = 500;
+                $debit_order->approved = 'REJECTED';
+                $debit_order->remarks = $response['data']['response'][0]['responseDescription'];
+                $debit_order->save();
+            }
         }
 
         return $response_code;
