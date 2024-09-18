@@ -508,7 +508,7 @@ class BankApiService
         Log::debug('== CollectionCreate Response ==');
         Log::debug($response);
 
-        if ($response['status'] == "Success" || $response['status'] == "Fail") {
+        if (strtolower($response['status']) == "success" || strtolower($response['status']) == "fail") {
             $collection_batch->status = $response['data']['response'][0]['responseCode'];
             $collection_batch->http_response_code = $response['data']['response'][0]['responseCode'];
             $collection_batch->remarks = $response['data']['response'][0]['responseDescription'];

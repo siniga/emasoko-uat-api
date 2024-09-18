@@ -60,6 +60,7 @@ class CreateCollectionBatch extends Command
         foreach ($partners as $partner) {
             //1. Select debit orders based of partner
             $debit_orders = $partner->debitOrders->where('contract_status', '=', 'OPEN')
+                ->where('deleted', '=', 0)
                 ->whereBetween('next_debit_date', [Carbon::now()->startOfDay(), Carbon::now()->endOfDay()]);
 
             if ($debit_orders->count() > 0) {
