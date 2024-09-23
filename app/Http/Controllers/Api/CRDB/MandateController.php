@@ -25,13 +25,14 @@ class MandateController extends Controller
         $headers = [
             'channel' => 'thirdparty',
             'Accept' => 'application/json',
-            'checksum' => 'd7267c3cab7ba4111c7c4f9e6e725c4a4a33c803e341cc0f431fcde2cd41b4c9',
+            'Authorization' => 'Bearer '.$AUTH_BEARER_TOKEN,
             'Content-Type' => 'application/json'
         ];
 
         //create payload
         $payload = [
             "partnerId" =>  "762-983-029",
+            'checksum' => 'd7267c3cab7ba4111c7c4f9e6e725c4a4a33c803e341cc0f431fcde2cd41b4c9',
             "requestId" => "8e207710e-ea3e-4f02-9568-be2d9ade7432",
             "phoneNumber" =>  "255717705746",
             "debitAccount" =>  "0112478119100",
