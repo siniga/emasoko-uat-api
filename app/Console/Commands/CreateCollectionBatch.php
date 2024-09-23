@@ -109,10 +109,10 @@ class CreateCollectionBatch extends Command
                     $batch->save();
 
                     //5. Create payload for collection 
-                    // $payload = $bankPayload->collectionPayload($batch, $csv);
+                    $payload = $bankPayload->collectionPayload($batch, $csv);
 
-                    // //6. Send payload to a server
-                    // $response = $bankApi->collectionCreate($payload);
+                    //6. Send payload to a server
+                    $response = $bankApi->collectionCreate($payload);
                 }
             }
         }
