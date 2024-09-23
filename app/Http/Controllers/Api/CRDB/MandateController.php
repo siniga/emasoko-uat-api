@@ -45,6 +45,9 @@ class MandateController extends Controller
             'Content-Type' => 'application/json'
         ];
 
+        Log::debug("== Headers ==");
+        Log::debug($headers);
+
         //create payload
         $payload = [
             "partnerId" =>  $partnerId,
@@ -68,7 +71,7 @@ class MandateController extends Controller
         $API_URL = "https://pre-prod-esb-wso2am-gw.crdbbank.co.tz";
 
         //push payload => NMB Direct Debits
-        $response = Http::withOptions(['verify' => false])->withHeaders($headers)->post($API_URL, $payload);
+        $response = Http::withHeaders($headers)->post($API_URL, $payload);
 
         Log::debug("== Response ==");
         Log::debug($response->status());
