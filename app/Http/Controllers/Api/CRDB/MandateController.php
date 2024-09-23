@@ -22,6 +22,7 @@ class MandateController extends Controller
     {
         //predefined variables
         $debitAccount = "0112478119100";
+        $phone = "255717705746";
         $partnerId = "fcc19daa-68c9-482e-86cd-a5f1d64cb8d2";
         $requestId = Str::uuid()->toString();
 
@@ -31,6 +32,8 @@ class MandateController extends Controller
 
         //create checksum
         $checksum = $this->auth->generateChecksum($data, $salt);
+        Log::debug("== checksum ==");
+        Log::debug($checksum);
 
         $AUTH_BEARER_TOKEN = $this->auth->generateToken();
 
@@ -47,8 +50,8 @@ class MandateController extends Controller
             "partnerId" =>  $partnerId,
             'checksum' => $checksum,
             "requestId" => $requestId,
-            "phoneNumber" =>  "255717705746",
-            "debitAccount" =>  "0112478119100",
+            "phoneNumber" =>  $phone,
+            "debitAccount" =>  $debitAccount,
             "totalAmount" =>  "100.00",
             "startDate" => "25-09-2024",
             "endDate" => "31-12-2024",
