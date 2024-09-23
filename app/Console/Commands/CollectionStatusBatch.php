@@ -3,6 +3,12 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use App\Models\CollectionBatch;
+use App\Models\DebitOrder;
+
+use App\Services\BankPayloadService;
+use App\Services\BankApiService;
+use App\Services\DeductionService;
 
 class CollectionStatusBatch extends Command
 {
@@ -37,6 +43,19 @@ class CollectionStatusBatch extends Command
      */
     public function handle()
     {
-        return 0;
+        //initialize deduction service
+        $deductionService = new DeductionService();
+        $bankPayload = new BankPayloadService();
+        $bankApi =  new BankApiService();
+
+        $collection_batches = CollectionBatch::where(['status' => 201, 'batch_processed' => 0])->get();
+
+        foreach ($collection_batches as $collection_batch) {
+            //create payload
+            $payload = $bankPayload->collectionStatusPayload($collection_batch);
+
+            //send request
+            $response = $bankApi->collectionStatus($payload);
+        }
     }
 }

@@ -6,8 +6,10 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use App\Classes\Authentication;
+use App\Jobs\SendSMSJob;
 use App\Models\CollectionBatch;
 use App\Models\DebitOrder;
+use App\Models\Installment;
 use App\Models\OtpRequest;
 use App\Models\Partner;
 use Exception;
@@ -241,7 +243,7 @@ class BankApiService
             $debit_order->status = $response['data']['response'][0]['responseCode'];
             $debit_order->http_response_code = $response['data']['response'][0]['responseCode'];
             $debit_order->remarks = $response['data']['response'][0]['responseDescription'];
-        } else if(strtolower($response['status']) == "fail") {
+        } else if (strtolower($response['status']) == "fail") {
             $response_code = 501; //response code
             $remarks = $response['data']['response'][0]['responseDescription'];
 
@@ -307,8 +309,7 @@ class BankApiService
             $debit_order->http_response_code = $response['data']['response'][0]['responseCode'];
             $debit_order->remarks = $response['data']['response'][0]['responseDescription'];
             $debit_order->save();
-
-        } else if(strtolower($response['status']) == "fail") {
+        } else if (strtolower($response['status']) == "fail") {
             $response_code = 500; //response code
             $remarks = $response['data']['response'][0]['responseDescription'];
 
@@ -318,7 +319,7 @@ class BankApiService
             $debit_order->remarks = $response['data']['response'][0]['responseDescription'];
             $debit_order->save();
         }
-        
+
         return [$response_code, $remarks];
     }
 
@@ -443,7 +444,7 @@ class BankApiService
             //Update mandate status based on response
             $debit_order = DebitOrder::where('reference', '=', $mandate_reference)->first();
 
-            if($debit_order) {
+            if ($debit_order) {
                 $debit_order->status = 202;
                 $debit_order->approved = 'APPROVED';
                 $debit_order->save();
@@ -458,7 +459,7 @@ class BankApiService
             //Update mandate status based on response
             $debit_order = DebitOrder::where('reference', '=', $mandate_reference)->first();
 
-            if($debit_order) {
+            if ($debit_order) {
                 $debit_order->status = 500;
                 $debit_order->approved = 'REJECTED';
                 $debit_order->remarks = $response['data']['response'][0]['responseDescription'];
@@ -469,7 +470,7 @@ class BankApiService
         return $response_code;
     }
 
-    //send collection deduction
+    //create collection deduction
     public function collectionCreate($data)
     {
         //create authentication token
@@ -514,6 +515,124 @@ class BankApiService
             $collection_batch->remarks = $response['data']['response'][0]['responseDescription'];
         }
         $collection_batch->save();
+
+        return 200;
+    }
+
+
+    //create collection deduction status
+    public function collectionStatus($data)
+    {
+        //create authentication token
+        $AUTH_BEARER_TOKEN = $this->auth->generateToken();
+
+        //Create Headers
+        $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer ' . $AUTH_BEARER_TOKEN];
+
+        //Create Payload
+        $payload = [
+            "user" => "EMakato",
+            "correlationId" => Str::uuid()->toString(),
+            "targetService" => "CollectionStatus",
+            "status" => "Check",
+            "data" => $data
+        ];
+
+        //Create Payload
+        Log::debug('== CollectionStatus Request ==');
+        Log::debug($payload);
+
+        //API URL 
+        $API_URL = env('API_URL');
+
+        //response
+        $response = Http::withHeaders($headers)->post($API_URL, $payload);
+
+        //update collection batch 
+        $collection_batch = CollectionBatch::where('collectionReference', '=', $payload['data']['collectionReference'])->first();
+        $collection_batch->http_response_json = $response;
+
+        //decode the response 
+        $response = json_decode($response, true);
+
+        //logging response
+        Log::debug('== CollectionStatus Response ==');
+        Log::debug($response);
+
+        if (strtolower($response['status']) == "success") {
+            $batch_status = $response['data']['response'][0]['responseCode'];
+
+            //update batch status
+            $collection_batch->status = $response['data']['response'][0]['responseCode'];
+            $collection_batch->http_response_code = $response['data']['response'][0]['responseCode'];
+            $collection_batch->remarks = $response['data']['response'][0]['responseDescription'];
+
+            //check for batch processing or batch complete
+            if ($batch_status == 230) {
+                //1. read csv file
+                $data = base64_to_content($response['data']['file']['fileData']);
+
+                Log::debug("csv data");
+                Log::debug($data);
+
+                // Convert the data into an array of rows
+                $rows = explode("\n", $data);
+
+                //remove empty rows
+                $rows = array_filter($rows);
+
+                //2. process installment
+                foreach ($rows as $index => $row) {
+                    // Skip the first row as it contains headers
+                    if ($index === 0) {
+                        continue;
+                    }
+
+                    // Split the row into individual fields using semicolon as delimiter
+                    $fields = explode(";", $row);
+
+                    //get installment from id
+                    $installment = Installment::where('id', '=', $fields[0])->first();
+
+                    if ($installment) {
+                        //status
+                        $status = strtolower($fields[7]);
+                        $amount = floatval($fields[6]);
+
+                        //check for status
+                        if ($status == "fail") {
+                            //updated status of installment
+                            $installment->status = "FAILED";
+                            $installment->save();
+
+                            //TODO: send sms to FAILED mandate
+                            $phone = $installment->debitOrder->customerAccount->phone;
+                            $message = "Makato ya tarehe {$installment->payment_date} ya kiasi cha shilingi {$installment->installment_amount} yameshindikana. Tafadhali weka pesa kwenye akaunti yako ya benki kwa ajili ya makato.";
+
+                            //send sms
+                            $data = ["phone" => $phone, "message" => $message];
+                            dispatch(new SendSMSJob($data));
+                        } else if ($status == "success") {
+                            //updated status of installment
+                            $installment->status = "SUCCESS";
+                            $installment->last_paid_amount = $amount;
+                            $installment->save();
+
+                            //TODO: process calculation for installment and debit order.
+                        }
+                    }
+                }
+
+                //3. process batch
+                $collection_batch->batch_processed = 1;
+                $collection_batch->save();
+            }
+        } else if (strtolower($response['status']) == "fail") {
+            $collection_batch->status = $response['data']['response'][0]['responseCode'];
+            $collection_batch->http_response_code = $response['data']['response'][0]['responseCode'];
+            $collection_batch->remarks = $response['data']['response'][0]['responseDescription'];
+            $collection_batch->save();
+        }
 
         return 200;
     }

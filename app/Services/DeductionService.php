@@ -14,6 +14,7 @@ class DeductionService
 {
     public function __construct() {}
 
+    //create debit order installments
     public function createInstallment(DebitOrder $debitOrder)
     {
         //1. Get debit order details
@@ -37,7 +38,7 @@ class DeductionService
             $number_of_days = "+1 day";
 
         //3. Delete all installments
-        $delete_installment = Installment::where('debit_order_id', $debitOrder->id)->delete();    
+        $delete_installment = Installment::where('debit_order_id', $debitOrder->id)->delete();
 
         //4. Calculate installment dates
         if ($debit_type == "FIXED") {
@@ -138,6 +139,9 @@ class DeductionService
 
         return 200;
     }
+
+    //process installment
+    public function processInstallment() {}
 
     //get collection reference
     function getCollectionReference()
