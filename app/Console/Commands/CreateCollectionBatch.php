@@ -65,10 +65,10 @@ class CreateCollectionBatch extends Command
                 ->where('deleted', '=', 0)
                 ->whereDate('next_debit_date', "=", Carbon::now());
 
-                Log::debug("== debit order 1 ==");
-                Log::debug($debit_orders->get());
-
             if ($debit_orders->count() > 0) {
+                //declare data points
+                $data_point = 0;
+
                 //2. Create collection batch based on partner 
                 $batch = CollectionBatch::create([
                     "collectionReference" => $deductionService->getCollectionReference(),
@@ -91,23 +91,25 @@ class CreateCollectionBatch extends Command
                         // Your Eloquent query executed by using get()
                         $installments = Installment::where(['debit_order_id' => $val->id, 'status' => 'OPEN'])
                         ->whereDate('payment_date', '<=', $val->next_debit_date)->get();
-                            
-                        Log::debug("debit_order_id ==" . $val->id);
-                        Log::debug("payment date ==" . $val->next_debit_date);
-                        Log::debug("== Installment ==");
-                        Log::debug($installments);
 
                         foreach ($installments as $installment) {
+                            //create csv file
                             $csv .= "{$installment->id};016;NMB;{$val->customerAccount->account_number};{$val->customerAccount->account_name};{$val->customerAccount->account_number};{$installment->installment_amount}\n";
+
+                            //increment data point
+                            $data_point += 1;
                         }
                     }
                 }
 
-                //4. Create payload for collection 
-                $payload = $bankPayload->collectionPayload($batch, $csv);
+                //check if data point > 0
+                if($data_point > 0){
+                    //4. Create payload for collection 
+                    $payload = $bankPayload->collectionPayload($batch, $csv);
 
-                //5. Send payload to a server
-                $response = $bankApi->collectionCreate($payload);
+                    //5. Send payload to a server
+                    $response = $bankApi->collectionCreate($payload);
+                }
             }
         }
 
