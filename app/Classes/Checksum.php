@@ -35,7 +35,7 @@ class Checksum
         $response = $response->json();
         Log::debug($response);
 
-        return $response['access_token'];
+        return $response->access_token;
     }
 
 
