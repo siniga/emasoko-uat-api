@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\CollectionController;
 use App\Http\Controllers\Api\PaymentMandateController;
 use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\CorporateController;
+use App\Http\Controllers\Api\CRDB\MandateController as CRDBMandateController;
 use App\Http\Controllers\Api\MandateController;
 use App\Http\Controllers\Api\OtpController;
 use Illuminate\Http\Request;
@@ -59,5 +60,8 @@ Route::post('otp/verify', [OtpController::class, 'verify']);
 //Collections APIs
 Route::post('collection/create', [CollectionController::class, 'create']);
 Route::post('collection/status', [CollectionController::class, 'status']);
+
+//CRDB apis
+Route::post('mandate/crdb', [CRDBMandateController::class, 'create']);
 
 
