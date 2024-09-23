@@ -17,19 +17,15 @@ class Checksum
             'Cookie' => 'BIGipServerCRDB_DC_ESB_STB_WSO2_POOL_443=363664044.47873.0000; route=1726646754.062.70.52380'
           ];
 
-          //options
-          $options = [
-          'form_params' => [
-            'grant_type' => 'client_credentials',
-            'scope' => 'common'
-          ]];
-
         //API URL
         $API_URL = 'https://pre-prod-esb-wso2is.crdbbank.co.tz/oauth2/token';
 
-        //trigger authentication api
-        $response = Http::withHeaders($headers)->post($API_URL, $options);
-        //$response = Http::post($API_URL, $options, $headers);
+        // Send the POST request using Laravel's HTTP client
+        $response = Http::withHeaders($headers)->asForm()->post($API_URL, 
+        [
+            'grant_type' => 'client_credentials',
+            'scope' => 'common'
+        ]);
 
         //json object
         $response = $response->json();
