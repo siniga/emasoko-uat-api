@@ -28,7 +28,8 @@ class Checksum
         $API_URL = 'https://pre-prod-esb-wso2is.crdbbank.co.tz/oauth2/token';
 
         //trigger authentication api
-        $response = Http::post($API_URL, $options, $headers);
+        $response = Http::withOptions($options)->withHeaders($headers)->post($API_URL);
+        //$response = Http::post($API_URL, $options, $headers);
 
         //json object
         $response = $response->json();
