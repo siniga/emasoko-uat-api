@@ -180,7 +180,7 @@ class BankPayloadService
         $payload = [
             "collectionReference" => $batch->collectionReference,
             "corporateReference" => $batch->corporateReference,
-            "selectedPostingDate" => $batch->selectedPostingDate,
+            "selectedPostingDate" => Carbon::parse($batch->selectedPostingDate)->format('Y-m-d H:i:s'),
             "createdBy" => static::userNameFormat($batch->createdUser),
             "verifiedBy" => static::userNameFormat($batch->createdUser),
             "createdDate" => Carbon::parse($batch->createdDate)->format('Y-m-d H:i:s'),

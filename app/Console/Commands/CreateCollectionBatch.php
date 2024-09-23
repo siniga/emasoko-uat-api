@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\CollectionBatch;
 use App\Models\Installment;
 use App\Models\Partner;
+use App\Models\DebitOrder;
 use App\Services\BankPayloadService;
 use App\Services\BankApiService;
 use App\Services\DeductionService;
@@ -54,21 +55,25 @@ class CreateCollectionBatch extends Command
         //debit orders => status=OPEN and NEXT_DEBIT_DATE = today()
         $partners = Partner::whereHas('debitOrders', function ($query) {
             return $query->where('contract_status', '=', 'OPEN')
-                ->whereBetween('next_debit_date', [Carbon::now()->startOfDay(), Carbon::now()->endOfDay()]);
+                ->whereDate('next_debit_date', "=" , Carbon::now());
         })->get();
 
         foreach ($partners as $partner) {
             //1. Select debit orders based of partner
-            $debit_orders = $partner->debitOrders->where('contract_status', '=', 'OPEN')
+            $debit_orders = DebitOrder::where('contract_status', '=', 'OPEN')
+                ->where('partner_id', '=', $partner->id)
                 ->where('deleted', '=', 0)
-                ->whereBetween('next_debit_date', [Carbon::now()->startOfDay(), Carbon::now()->endOfDay()]);
+                ->whereDate('next_debit_date', "=", Carbon::now());
+
+                Log::debug("== debit order 1 ==");
+                Log::debug($debit_orders->get());
 
             if ($debit_orders->count() > 0) {
                 //2. Create collection batch based on partner 
                 $batch = CollectionBatch::create([
                     "collectionReference" => $deductionService->getCollectionReference(),
                     "corporateReference" => $partner->reference,
-                    "selectedPostingDate" => null,
+                    "selectedPostingDate" => Carbon::now(),
                     "createdBy" => 1,
                     "verifiedBy" => 1,
                     "createdDate" => Carbon::now(),
@@ -76,15 +81,24 @@ class CreateCollectionBatch extends Command
                 ]);
 
                 if ($batch->wasRecentlyCreated) {
+                    //debit orders
+                    $debit_orders = $debit_orders->get();
+
                     //3. Create CSV file based installment
                     $csv = "SERIAL No.;BANK CODE;BRANCH NAME;EMPLOYEE NUMBER;CUSTOMER NAME;ACCOUNT NO;AMOUNT\n";
 
                     foreach ($debit_orders as $val) {
+                        // Your Eloquent query executed by using get()
                         $installments = Installment::where(['debit_order_id' => $val->id, 'status' => 'OPEN'])
-                            ->whereDate('payment_date', '<=', $val->next_debit_date)->get();
+                        ->whereDate('payment_date', '<=', $val->next_debit_date)->get();
+                            
+                        Log::debug("debit_order_id ==" . $val->id);
+                        Log::debug("payment date ==" . $val->next_debit_date);
+                        Log::debug("== Installment ==");
+                        Log::debug($installments);
 
                         foreach ($installments as $installment) {
-                            $csv .= "{$installment->id};16;NMB;{$val->customerAccount->account_number};{$val->customerAccount->account_name};{$val->customerAccount->account_number};{$installment->installment_amount}\n";
+                            $csv .= "{$installment->id};016;NMB;{$val->customerAccount->account_number};{$val->customerAccount->account_name};{$val->customerAccount->account_number};{$installment->installment_amount}\n";
                         }
                     }
                 }
