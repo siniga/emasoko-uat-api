@@ -104,11 +104,15 @@ class CreateCollectionBatch extends Command
 
                 //check if data point > 0
                 if($data_point > 0){
-                    //4. Create payload for collection 
-                    $payload = $bankPayload->collectionPayload($batch, $csv);
+                    //4. Save csv payload in database
+                    $batch->csv = $csv;
+                    $batch->save();
 
-                    //5. Send payload to a server
-                    $response = $bankApi->collectionCreate($payload);
+                    //5. Create payload for collection 
+                    // $payload = $bankPayload->collectionPayload($batch, $csv);
+
+                    // //6. Send payload to a server
+                    // $response = $bankApi->collectionCreate($payload);
                 }
             }
         }
