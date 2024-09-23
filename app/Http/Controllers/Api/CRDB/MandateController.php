@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers\Api\CRDB;
 
-use App\Classes\Authentication;
+use App\Classes\Checksum;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Str;
 
 class MandateController extends Controller
 {
@@ -14,31 +15,43 @@ class MandateController extends Controller
 
     function __construct()
     {
-        $this->auth = new Authentication();
+        $this->auth = new Checksum();
     }
 
     public function create(Request $request)
     {
-        $AUTH_BEARER_TOKEN = "";
+        //predefined variables
+        $debitAccount = "0112478119100";
+        $partnerId = "fcc19daa-68c9-482e-86cd-a5f1d64cb8d2";
+        $requestId = Str::uuid()->toString();
+
+        //data and salt
+        $data = $requestId . substr($debitAccount, -4) . $partnerId;
+        $salt = "kdaz9/m4nSLNUGoFLc5SPSKG/n63wMBTo9Ws3kvbXELm/D0gbAhJpeyQfvhp+Kv7i78TFg6BvOV+64LYax2JSCJcO5ySF1bLSraJUvYbgmUIMKIzP4TBIJQxzPULIHAylLbLMA==";
+
+        //create checksum
+        $checksum = $this->auth->generateChecksum($data, $salt);
+
+        $AUTH_BEARER_TOKEN = $this->auth->generateToken();
 
         //headers
         $headers = [
             'channel' => 'thirdparty',
             'Accept' => 'application/json',
-            'Authorization' => 'Bearer '.$AUTH_BEARER_TOKEN,
+            'Authorization' => 'Bearer ' . $AUTH_BEARER_TOKEN,
             'Content-Type' => 'application/json'
         ];
 
         //create payload
         $payload = [
-            "partnerId" =>  "762-983-029",
-            'checksum' => 'd7267c3cab7ba4111c7c4f9e6e725c4a4a33c803e341cc0f431fcde2cd41b4c9',
-            "requestId" => "8e207710e-ea3e-4f02-9568-be2d9ade7432",
+            "partnerId" =>  $partnerId,
+            'checksum' => $checksum,
+            "requestId" => $requestId,
             "phoneNumber" =>  "255717705746",
             "debitAccount" =>  "0112478119100",
             "totalAmount" =>  "100.00",
-            "startDate" => "31-08-2024",
-            "endDate" => "31-10-2024",
+            "startDate" => "25-09-2024",
+            "endDate" => "31-12-2024",
             "installmentAmount" => "10.00",
             "frequencyType" => "DAILY",
             "frequency" => "1",
@@ -49,12 +62,12 @@ class MandateController extends Controller
         Log::debug($payload);
 
         //API URL
-        $API_URL = "";
+        $API_URL = "https://pre-prod-esb-wso2am-gw.crdbbank.co.tz";
 
         //push payload => NMB Direct Debits
         $response = Http::withOptions(['verify' => false])->withHeaders($headers)->post($API_URL, $payload);
 
-        Log::debug("Response");
+        Log::debug("== Response ==");
         Log::debug($response->status());
         Log::debug($response);
 
