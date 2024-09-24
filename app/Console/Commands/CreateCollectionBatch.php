@@ -105,7 +105,7 @@ class CreateCollectionBatch extends Command
                 //check if data point > 0
                 if($data_point > 0){
                     //4. Save csv payload in database
-                    $batch->csv = $csv;
+                    $batch->request_csv = $csv;
                     $batch->save();
 
                     //5. Create payload for collection 

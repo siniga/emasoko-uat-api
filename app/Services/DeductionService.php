@@ -2,11 +2,13 @@
 
 namespace App\Services;
 
+use App\Jobs\SendSMSJob;
 use App\Models\AppVariable;
 use App\Models\DebitOrder;
 use App\Models\Partner;
 use App\Models\PartnerAccount;
 use App\Models\Installment;
+use App\Models\InstallmentPayment;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
@@ -124,6 +126,7 @@ class DeductionService
                     [
                         'min_installment_amount' => $min_paid_amount,
                         'max_installment_amount' => $paid_amount,
+                        'installment_amount' => $paid_amount,
                         'current_balance' => 0,
                         'outstanding_amount' => $paid_amount,
                         'payment_date' => $installment_date
@@ -141,7 +144,54 @@ class DeductionService
     }
 
     //process installment
-    public function processInstallment() {}
+    public function processInstallment(Installment $installment, $amount, $reference)
+    {
+        //1. Update installment => outstanding amount, current balance
+        $outstanding_amount = $installment->outstanding_amount - $amount;
+        $current_balance = $installment->current_balance + $amount;
+        $installment->outstanding_amount = $outstanding_amount;
+        $installment->current_balance = $current_balance;
+
+        //2. update installment status {OPEN, CLOSED, PARTIAL_PAID}
+        if ($outstanding_amount <= 0)
+            $installment->status = "CLOSED";
+        else if ($outstanding_amount > 0)
+            $installment->status = "PARTIAL_PAID";
+
+        //3. Save installment
+        $installment->save();
+
+        //4. Insert payment in installment amount
+        $payment = new InstallmentPayment();
+        $payment->installment_id = $installment->id;
+        $payment->amount = $amount;
+        $payment->reference = $reference;
+        $payment->save();
+
+        //5. Update debit order => outstanding amount, current balance
+        $debit_order = $installment->debitOrder;
+        $outstanding_amount = $debit_order->outstanding_amount - $amount;
+        $current_balance = $debit_order->current_balance + $amount;
+        $debit_order->outstanding_amount = $outstanding_amount;
+        $debit_order->current_balance = $current_balance;
+
+        //6. Update contract status = outstanding amount <= 0
+        if ($outstanding_amount <= 0)
+            $debit_order->contract_status = "CLOSED";
+
+        //save debit order
+        $debit_order->save();
+
+        //. Send message for outstanding amount and current balance from eMakato.
+        $phone = $installment->debitOrder->customerAccount->phone;
+        $message = "Makato ya tarehe {$installment->payment_date} ya kiasi cha shilingi {$installment->installment_amount} yamekamilishwa na kiasi kilichobaki ni Tsh {$outstanding_amount}. Asante kwa kutumia eMakato.";
+
+        //send sms
+        $data = ["phone" => $phone, "message" => $message];
+        dispatch(new SendSMSJob($data));
+
+        return 200;
+    }
 
     //get collection reference
     function getCollectionReference()
