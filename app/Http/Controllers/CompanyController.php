@@ -239,6 +239,8 @@ class CompanyController extends Controller
     //store company details
     function storeCompanyDocuments(Request $request)
     {
+        //validate documents
+
         //post data
         $id = $request->input('partner_id');
         $uuid = $request->input('partner_uuid');

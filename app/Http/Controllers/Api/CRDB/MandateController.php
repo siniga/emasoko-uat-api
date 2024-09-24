@@ -68,7 +68,7 @@ class MandateController extends Controller
         Log::debug($payload);
 
         //API URL
-        $API_URL = "https://pre-prod-esb-wso2am-gw.crdbbank.co.tz";
+        $API_URL = "https://pre-prod-esb-wso2am-gw.crdbbank.co.tz/direct-debit/1.0.0/mandate/";
 
         //push payload => NMB Direct Debits
         $response = Http::withHeaders($headers)->post($API_URL, $payload);

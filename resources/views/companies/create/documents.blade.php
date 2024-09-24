@@ -86,7 +86,8 @@
                                                 <thead>
                                                     <tr>
                                                         <th width="70%">Attachments</th>
-                                                        <th width="20%">Note: Only PDF documents required</th>
+                                                        <th width="20%" class="text-danger">Note: Only PDF documents
+                                                            required (Max 5MB)</th>
                                                     </tr>
                                                 </thead>
 
@@ -101,9 +102,7 @@
                                                             </td>
                                                             <td>
                                                                 @if (in_array($val->key, $arr_documents))
-                                                                    <a
-                                                                        href="{{ asset('assets/uploads/docs/' . $val->name) }}">{{ $val->key }}
-                                                                    </a>
+                                                                    <a href="{{ asset('assets/uploads/docs/' . $val->name) }}">{{ $val->key }}</a>
 
                                                                     <input type="file" name="{{ $val->key }}"
                                                                         id="formFile" class="form-control"
@@ -158,30 +157,30 @@
 
             //validate form
             $("#companyForm").validate({
-                // errorClass: "formError",
-                // errorElement: "span",
-                // rules: {
-                //     Business_Licence: {
-                //         required: true
-                //     },
-                //     Certificate_of_incorporation: {
-                //         required: true
-                //     },
-                //     TIN_Certificate: {
-                //         required: true
-                //     }
-                // },
-                // messages: {
-                //     Business_Licence: {
-                //         required: "Business Licence required"
-                //     },
-                //     Certificate_of_incorporation: {
-                //         required: "Certificate of incorporation required"
-                //     },
-                //     TIN_Certificate: {
-                //         required: "TIN certificate required"
-                //     }
-                // },
+                //errorClass: "formError",
+                //errorElement: "span",
+                //rules: {
+                //    Business_Licence: {
+                //        required: true
+                //    },
+                //    Certificate_of_incorporation: {
+                //        required: true
+                //    },
+                //    TIN_Certificate: {
+                //        required: true
+                //    }
+                //},
+                //messages: {
+                //    Business_Licence: {
+                //        required: "Business Licence required"
+                //    },
+                //    Certificate_of_incorporation: {
+                //        required: "Certificate of incorporation required"
+                //    },
+                //    TIN_Certificate: {
+                //        required: "TIN certificate required"
+                //    }
+                //},
                 submitHandler: function(form, e) {
                     e.preventDefault();
 
@@ -214,7 +213,8 @@
 
                             //set timer
                             setTimeout(function() {
-                                window.location.href = "/companies/accounts/" + response.uuid;
+                                window.location.href = "/companies/accounts/" +
+                                    response.uuid;
                             }, 300);
                         },
                         error: function(e) {
