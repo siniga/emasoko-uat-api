@@ -157,30 +157,6 @@
 
             //validate form
             $("#companyForm").validate({
-                //errorClass: "formError",
-                //errorElement: "span",
-                //rules: {
-                //    Business_Licence: {
-                //        required: true
-                //    },
-                //    Certificate_of_incorporation: {
-                //        required: true
-                //    },
-                //    TIN_Certificate: {
-                //        required: true
-                //    }
-                //},
-                //messages: {
-                //    Business_Licence: {
-                //        required: "Business Licence required"
-                //    },
-                //    Certificate_of_incorporation: {
-                //        required: "Certificate of incorporation required"
-                //    },
-                //    TIN_Certificate: {
-                //        required: "TIN certificate required"
-                //    }
-                //},
                 submitHandler: function(form, e) {
                     e.preventDefault();
 
@@ -217,7 +193,18 @@
                                     response.uuid;
                             }, 300);
                         },
-                        error: function(e) {
+                        error: function(error) {
+                            //display errors
+                            if (jQuery.type(error.responseJSON.errors) == "object") {
+                                $('.form-message').html('');
+                                $.each(error.responseJSON.errors, function(key, value) {
+                                    $('.form-message').append('<div class="alert alert-danger">' + value + '</div>');
+                                });
+                            } else {
+                                $('.form-message').html('<div class="alert alert-danger">' + error.responseJSON.errors + '</div>');
+                            }
+
+                            //change submit button
                             $('#submitButton').text('Next');
                         }
                     });

@@ -240,6 +240,34 @@ class CompanyController extends Controller
     function storeCompanyDocuments(Request $request)
     {
         //validate documents
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'Business_Licence' => 'file|max:5048|mimes:pdf',
+                'Certificate_of_incorporation' => 'file|max:5048|mimes:pdf',
+                'TIN_Certificate' => 'file|max:5048|mimes:pdf',
+                'BRELA_report_for_shareholders' => 'file|max:5048|mimes:pdf',
+                'Audited_financial_statement' => 'file|max:5048|mimes:pdf',
+                'Introduction_letter' => 'file|max:5048|mimes:pdf',
+                'Annual_return' => 'file|max:5048|mimes:pdf',
+            ],
+            [
+                'Business_Licence.max' => 'The Business Licence should not exceed 5 MB.',
+                'Certificate_of_incorporation.max' => 'The Certificate of incorporation should not exceed 5 MB.',
+                'TIN_Certificate.max' => 'The TIN Certificate should not exceed 5 MB.',
+                'BRELA_report_for_shareholders.max' => 'The BRELA report for shareholders should not exceed 5 MB.',
+                'Audited_financial_statement.max' => 'The Audited financial statement should not exceed 5 MB.',
+                'Introduction_letter.max' => 'The Introduction letter should not exceed 5 MB.',
+                'Annual_return.max' => 'The Annual return should not exceed 5 MB.',
+            ]
+        );
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
 
         //post data
         $id = $request->input('partner_id');
