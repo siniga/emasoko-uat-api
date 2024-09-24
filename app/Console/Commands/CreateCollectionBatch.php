@@ -11,8 +11,6 @@ use App\Services\BankApiService;
 use App\Services\DeductionService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class CreateCollectionBatch extends Command
 {
