@@ -171,77 +171,73 @@
                                 </div>
                             </div>
 
-                            <table class="table table-bordered">
-                                <thead>
-                                    <tr>
-                                        <th width="3%">#</th>
-                                        <th width="16%">Account Name</th>
-                                        <th width="14%">NIDA Number</th>
-                                        <th width="10%">Payment Channel</th>
-                                        <th width="12%">Bank Name/MNO</th>
-                                        <th width="12%">Account Number</th>
-                                        <th width="10%">Created</th>
-                                        <th width="10%">Status</th>
-                                        <th style="width: 80px; !important">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @php $serial = 1; @endphp
-                                    @foreach ($customer_accounts as $values)
+                            <div class="table-responsive">
+                                <table class="table table-bordered dt-responsive  nowrap w-100" id="dynamicTable">
+                                    <thead>
                                         <tr>
-                                            <td>{{ $serial }}</td>
-                                            <td>
-                                                @if ($values->account_name == null)
-                                                    {{ $values->phone }}
-                                                @else
-                                                    {{ $values->account_name }}
-                                                @endif
-                                            </td>
-                                            <td>
-                                                <small>{{ $values->customer->id_number ?? 'NIN' }}</small>
-                                            </td>
-                                            <td>{{ $values->accountType->name ?? 'NIL' }}</td>
-                                            <td>{{ $values->account->name ?? 'NIL' }}</td>
-
-                                            <td>
-                                                {{ $values->account_number ?? $values->phone }}
-                                            </td>
-
-                                            <td>{{ date('d-m-Y H:i', strtotime($values->created_at)) }}</td>
-
-                                            <td>
-                                                @if ($values->status == 'partial')
-                                                    <span class="badge bg-info">Partial Approved</span>
-                                                @elseif($values->status == 'approved')
-                                                    <span class="badge bg-success">Approved</span>
-                                                @elseif($values->status == 'rejected')
-                                                    <span class="badge bg-danger">Rejected</span>
-                                                @endif
-                                            </td>
-
-                                            <td>
-                                                <a href="{{ route('customer-accounts.show', $values->id) }}" title="View"
-                                                    class="btn btn-xss">
-                                                    <i class="bx bxs-folder-open"></i>
-                                                </a>
-
-                                                @if ($values->status == 'partial' || $values->status == 'rejected')
-                                                    <a href="{{ route('customer-accounts.edit', $values->id) }}"
-                                                        title="Edit" class="btn btn-xss">
-                                                        <i class="bx bx-edit text-secondary"></i>
-                                                    </a>
-
-                                                    <a href="{{ route('customer-accounts.delete', $values->id) }}"
-                                                        title="Delete" class="btn btn-xss delete">
-                                                        <i class="bx bx-trash text-danger"></i>
-                                                    </a>
-                                                @endif
-                                            </td>
+                                            <th width="3%">#</th>
+                                            <th>Account Name</th>
+                                            <th>NIDA Number</th>
+                                            <th>Payment Channel</th>
+                                            <th>Bank Name/MNO</th>
+                                            <th>Account Number</th>
+                                            <th>Phone</th>
+                                            <th>Created</th>
+                                            <th>Actions</th>
                                         </tr>
-                                        @php $serial++; @endphp
-                                    @endforeach
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        @php $serial = 1; @endphp
+                                        @foreach ($customer_accounts as $values)
+                                            <tr>
+                                                <td>{{ $serial }}</td>
+                                                <td>
+                                                    @if ($values->account_name == null)
+                                                        {{ $values->phone }}
+                                                    @else
+                                                        {{ $values->account_name }}
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    {{ $values->customer->id_number ?? 'NIN' }}
+                                                </td>
+                                                <td>{{ $values->accountType->name ?? 'NIL' }}</td>
+                                                <td>{{ $values->account->name ?? 'NIL' }}</td>
+
+                                                <td>
+                                                    {{ $values->account_number ?? $values->phone }}
+                                                </td>
+
+                                                <td>
+                                                    {{ $values->phone }}
+                                                </td>
+
+                                                <td>{{ date('d-m-Y H:i', strtotime($values->created_at)) }}</td>
+
+                                                <td>
+                                                    <a href="{{ route('customer-accounts.show', $values->id) }}"
+                                                        title="View" class="btn btn-xss">
+                                                        <i class="bx bxs-folder-open"></i>
+                                                    </a>
+
+                                                    @if ($values->status == 'partial' || $values->status == 'rejected')
+                                                        <a href="{{ route('customer-accounts.edit', $values->id) }}"
+                                                            title="Edit" class="btn btn-xss">
+                                                            <i class="bx bx-edit text-secondary"></i>
+                                                        </a>
+
+                                                        <a href="{{ route('customer-accounts.delete', $values->id) }}"
+                                                            title="Delete" class="btn btn-xss delete">
+                                                            <i class="bx bx-trash text-danger"></i>
+                                                        </a>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                            @php $serial++; @endphp
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
                         @else
                             <div class="alert alert-danger"> No any customer account at the moment!</div>
                         @endif

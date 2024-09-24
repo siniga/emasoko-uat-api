@@ -120,7 +120,7 @@
                         <table class="table table-bordered" id="dynamicTable">
                             <tr>
                                 <th width="3%">#</th>
-                                <th width="12%">Loan Amount</th>
+                                <th width="12%">Total Amount</th>
                                 <th width="10%">Debit Type</th>
                                 <th width="10%">Installment Amount</th>
                                 <th width="10%">Peridiocity</th>
