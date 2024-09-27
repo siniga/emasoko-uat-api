@@ -87,7 +87,8 @@ class User extends Authenticatable
             'name' => 'required|string',
             'email' => 'required|string|max:255|unique:users',
             'phone' => ['required', new PhoneNumber()],
-            'role_ids' => 'required',
+            'role_id' => 'required',
+            'provider_id' => 'required_if:role_id,==,2,4',
             'password' => 'required|string|min:8',
             'password_confirm' => 'required|same:password'
         ];
@@ -101,7 +102,8 @@ class User extends Authenticatable
             'email.required' => 'Email is required',
             'email.unique' => 'Email must be unique',
             'phone.required' => 'Phone is required',
-            'role_ids.required' => 'Role(s) required',
+            'role_id.required' => 'Role required',
+            'provider_id.required_if' => 'Service provider required',
             'password.required' => 'Password is required',
             'password_confirm.required' => 'Confirm password is required',
             'password_confirm.same:password' => 'Password must match',

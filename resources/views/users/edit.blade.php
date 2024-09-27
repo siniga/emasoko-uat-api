@@ -24,7 +24,7 @@
                         </div><br />
                     @endif
 
-                    {{ Form::open(['url' => route('users.update', $user->id), 'method' => 'PUT', 'class' => 'form-horizontal needs-validation', 'novalidate']) }}
+                    {{ Form::open(['url' => route('users.update', $user->id), 'method' => 'PUT', 'class' => 'form-horizontal']) }}
                     {{ Form::token() }}
 
                     <div class="row">
@@ -32,40 +32,25 @@
                             <div class="mb-3">
                                 <label>Fullname <span class="red">*</span></label>
                                 {{ Form::text('name', old('name', $user->name), ['class="form-control"', 'placeholder="Write a full name..."', 'required']) }}
-                                <span class="invalid-feedback">{{ $errors->first('name') }}</span>
-
-                                <div class="invalid-feedback">
-                                    Name required
-                                </div>
+                                <span class="text-danger">{{ $errors->first('name') }}</span>
                             </div>
                         </div>
-                        <!--./col-lg-4 -->
 
                         <div class="col-lg-6 col-12">
                             <div class="mb-3">
                                 <label>Email <span class="red">*</span></label>
                                 {{ Form::text('email', old('email', $user->email), ['class="form-control"', 'placeholder="Write a email address..."', 'required']) }}
-                                <span class="invalid-feedback">{{ $errors->first('email') }}</span>
-
-                                <div class="invalid-feedback">
-                                    Email required
-                                </div>
+                                <span class="text-danger">{{ $errors->first('email') }}</span>
                             </div>
                         </div>
-                        <!--./col-lg-4 -->
 
                         <div class="col-lg-6 col-12">
                             <div class="mb-3">
                                 <label>Phone <span class="red">*</span></label>
                                 {{ Form::text('phone', old('phone', $user->phone), ['class="form-control"', 'placeholder="Write a phone..."', 'required']) }}
-                                <span class="invalid-feedback">{{ $errors->first('phone') }}</span>
-
-                                <div class="invalid-feedback">
-                                    Phone required
-                                </div>
+                                <span class="text-danger">{{ $errors->first('phone') }}</span>
                             </div>
                         </div>
-                        <!--./col-lg-4 -->
                     </div>
                     <!--./row -->
 
@@ -74,70 +59,61 @@
                             <h6 class="text-uppercase font-weight-600">Login Information</h6>
                             <hr />
                         </div>
-                        <!--./col-md-12 -->
                     </div>
-                    <!--./row -->
 
                     <div class="row">
-                        <div class="col-lg-12">
+                        <div class="col-lg-6 col-md-6">
                             <div class="mb-3">
-                                <label>Roles <span class="red">*</span></label>
-                                <table>
-                                    <tr>
-                                        <?php $serial = 0; ?>
-                                        @foreach ($roles as $role)
-                                            @if ($serial % 6 == 0)
-                                    </tr>
-                                    <tr>
-                                        @endif
-
-                                        @php
-                                            $rID = $role->id;
-                                            $checked = null;
-                                            $item = null;
-                                            
-                                            foreach ($current_roles as $grp) {
-                                                if ($rID == $grp->role_id) {
-                                                    $checked = ' checked="checked"';
-                                                }
-                                            }
-                                        @endphp
-                                        <td>
-                                            <input type="checkbox" name="role_ids[]" value="{{ $role->id }}"
-                                                {{ $checked }}>
-                                            <label>{{ $role->description }}</label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                                        </td>
-                                        <?php $serial++; ?>
-                                        @endforeach
-                                    </tr>
-                                </table>
-                                <span class="invalid-feedback">{{ $errors->first('role_ids') }}</span>
+                                <label>Main Role <span class="red">*</span></label>
+                                @php $options = []; @endphp
+                                @foreach ($roles as $role)
+                                    @php
+                                        $options[$role->id] = $role->description;
+                                    @endphp
+                                @endforeach
+                                @php
+                                    $options = ['' => '-- Select --'] + $options;
+                                @endphp
+                                {{ Form::select('role_id', $options, old('role_id', $current_role->role_id ?? ''), ['class' => 'form-control', 'id' => 'role_id', 'x-on:change="onRoleChange"']) }}
+                                <span class="text-danger">{{ $errors->first('role_id') }}</span>
                             </div>
                         </div>
-                        <!--./col-lg-12 -->
+
+                        <div class="col-lg-6 col-md-6">
+                            <div class="mb-3">
+                                <label>Service Provider</label>
+                                @php $options = []; @endphp
+                                @foreach ($providers as $provider)
+                                    @php
+                                        $options[$provider->id] = $provider->business_name;
+                                    @endphp
+                                @endforeach
+                                @php
+                                    $options = ['' => '-- Select --'] + $options;
+                                @endphp
+                                {{ Form::select('provider_id', $options, old('provider_id', $partner_user->partner_id ?? ''), ['class' => 'form-control', 'id' => 'provider_id']) }}
+                                <span class="text-danger">{{ $errors->first('provider_id') }}</span>
+                            </div>
+                        </div>
                     </div>
-                    <!--./row -->
 
                     <div class="row">
                         <div class="col-lg-6">
                             <div class="mb-3">
                                 <label>Password</label>
                                 {{ Form::password('password', ['placeholder="Write a password..."', 'class="form-control"']) }}
-                                <span class="invalid-feedback">{{ $errors->first('password') }}</span>
+                                <span class="text-danger">{{ $errors->first('password') }}</span>
                             </div>
                         </div>
-                        <!--./col-lg-6 -->
 
                         <div class="col-lg-6">
                             <div class="mb-3">
                                 <label>Confirm Password </label>
                                 {{ Form::password('password_confirm', ['placeholder="Confirm password..."', 'class="form-control"']) }}
-                                <span class="invalid-feedback">{{ $errors->first('password_confirm') }}</span>
+                                <span class="text-danger">{{ $errors->first('password_confirm') }}</span>
                             </div>
                         </div>
-                        <!--./col-lg-6 -->
                     </div>
-                    <!--./row -->
 
                     <div class="row">
                         <div class="col-lg-12">

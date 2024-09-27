@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Partner;
+use App\Models\PartnerUser;
 use App\Models\Role;
+use App\Models\RoleUser;
 use App\Models\User;
+use App\Rules\PhoneNumber;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -11,7 +15,7 @@ use Illuminate\Support\Facades\Redirect;
 
 class UserController extends Controller
 {
-        /**
+    /**
      * Create a new controller instance.
      */
     public function __construct()
@@ -37,8 +41,11 @@ class UserController extends Controller
         //roles
         $roles = Role::all();
 
+        //service provider
+        $providers = Partner::orderBy('business_name')->get();
+
         //render view
-        return view('users.create', compact('roles'));
+        return view('users.create', compact('title', 'roles', 'providers'));
     }
 
     function store(Request $request)
@@ -57,9 +64,24 @@ class UserController extends Controller
         ]);
         $user->save();
 
-        //insert roles
-        foreach ($request->input('role_ids') as $role_id) {
-            $user->roles()->attach($role_id);
+        //insert or create role
+        $user->roles()->attach($request->input('role_id'));
+
+        //service provider
+        if ($request->input('role_id') == 2 || $request->input('role_id') == 4) {
+            //partner
+            $partner = Partner::where(['id' => $request->input('provider_id')])->first();
+
+            if ($partner) {
+                //partner user
+                $partner_user = PartnerUser::firstOrNew([
+                    'user_id' => $user->id,
+                    'partner_id' => $partner->id,
+                    'partner_uuid' => $partner->uuid
+                ]);
+                $partner_user->authorize = 1;
+                $partner_user->save();
+            }
         }
 
         //redirect
@@ -76,11 +98,17 @@ class UserController extends Controller
         //roles
         $roles = Role::all();
 
+        //service provider
+        $providers = Partner::orderBy('business_name')->get();
+
         //current roles
-        $current_roles = DB::table('role_user')->where('user_id', $id)->get();
+        $current_role = RoleUser::where('user_id', $id)->first();
+
+        //partner user
+        $partner_user = PartnerUser::where('user_id', $id)->first();
 
         //render view
-        return view('users.edit', compact('user', 'roles', 'current_roles'));
+        return view('users.edit', compact('title', 'user', 'roles', 'providers', 'current_role', 'partner_user'));
     }
 
     function update(Request $request, $id)
@@ -91,13 +119,15 @@ class UserController extends Controller
                 'name' => 'required|string',
                 'email' => 'required|string|max:255',
                 'phone' => ['required'],
-                'role_ids' => 'required'
+                'role_id' => 'required',
+                'provider_id' => 'required_if:role_id,==,2,4',
             ],
             [
                 'name.required' => 'Full name is required',
                 'email.required' => 'Email is required',
                 'phone.required' => 'Phone is required',
-                'role_ids.required' => 'Role(s) required'
+                'role_id.required' => 'Role required',
+                'provider_id.required_if' => 'Service provider required',
             ]
         );
 
@@ -126,11 +156,26 @@ class UserController extends Controller
         $user->save();
 
         //remove role from role_user
-        DB::table('role_user')->where('user_id', $id)->delete();
+        RoleUser::where('user_id', $id)->delete();
 
-        //insert roles
-        foreach ($request->input('role_ids') as $role_id) {
-            $user->roles()->attach($role_id);
+        //insert or create role
+        $user->roles()->attach($request->input('role_id'));
+
+        //service provider
+        if ($request->input('role_id') == 2 || $request->input('role_id') == 4) {
+            //partner
+            $partner = Partner::where(['id' => $request->input('provider_id')])->first();
+
+            if ($partner) {
+                //partner user
+                $partner_user = PartnerUser::firstOrNew([
+                    'user_id' => $user->id,
+                ]);
+                $partner_user->partner_id = $partner->id;
+                $partner_user->partner_uuid = $partner->uuid;
+                $partner_user->authorize = 1;
+                $partner_user->save();
+            }
         }
 
         //redirect
@@ -169,10 +214,10 @@ class UserController extends Controller
         $user->save();
 
         //design message
-        if($status == 1)
+        if ($status == 1)
             $message = 'User account activated';
-        else if($status == 0)
-            $message = 'User account deactivated';    
+        else if ($status == 0)
+            $message = 'User account deactivated';
 
         //redirect
         return Redirect::route('users.index')->with('success', $message);

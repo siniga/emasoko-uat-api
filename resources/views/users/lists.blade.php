@@ -64,7 +64,7 @@
                                             <td>
                                                 @php $i = 1; @endphp
                                                 @foreach ($values->roles as $role)
-                                                    <small>{{ strtoupper($role->name) }}</small><br />
+                                                    {{ $role->description }}<br />
                                                     @php $i++; @endphp
                                                 @endforeach
                                             </td>
