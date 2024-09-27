@@ -118,7 +118,7 @@ class UserController extends Controller
             [
                 'name' => 'required|string',
                 'email' => 'required|string|max:255',
-                'phone' => ['required'],
+                'phone' => ['required', new PhoneNumber()],
                 'role_id' => 'required',
                 'provider_id' => 'required_if:role_id,==,2,4',
             ],

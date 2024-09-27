@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\PhoneNumber;
 use Illuminate\Foundation\Http\FormRequest;
 
 class CompanyStaffRequest extends FormRequest
@@ -27,7 +28,7 @@ class CompanyStaffRequest extends FormRequest
             'staff_name.*' => 'required',
             'nida_number.*' => 'required',
             'staff_email.*' => 'required',
-            'staff_phone.*' => 'required',
+            'staff_phone.*' => ['required'],
             'staff_title.*' => 'required',
         ];
     }

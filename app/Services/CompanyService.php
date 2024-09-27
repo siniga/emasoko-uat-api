@@ -28,7 +28,7 @@ class CompanyService
     public function createInformation($data, $uuid): Partner
     {
         //modify phone number
-        $phone = $data->country_code . cast_phone($data->company_phone);
+        $phone = $data->company_phone;
 
         //create or update partner information
         $partner = Partner::firstOrNew(['uuid' => $uuid]);

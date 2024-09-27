@@ -46,7 +46,7 @@
 
                         <div class="col-lg-6 col-12">
                             <div class="mb-3">
-                                <label>Phone <span class="red">*</span></label>
+                                <label>Phone<span class="red">*</span></label>
                                 {{ Form::text('phone', old('phone', $user->phone), ['class="form-control"', 'placeholder="Write a phone..."', 'required']) }}
                                 <span class="text-danger">{{ $errors->first('phone') }}</span>
                             </div>
