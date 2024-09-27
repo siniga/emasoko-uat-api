@@ -48,7 +48,7 @@ class CollectionStatusBatch extends Command
         $bankPayload = new BankPayloadService();
         $bankApi =  new BankApiService();
 
-        $collection_batches = CollectionBatch::where(['status' => 201, 'batch_processed' => 0])->get();
+        $collection_batches = CollectionBatch::where(['status' => 200, 'batch_processed' => 0])->get();
 
         foreach ($collection_batches as $collection_batch) {
             //create payload
