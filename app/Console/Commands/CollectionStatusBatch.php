@@ -17,7 +17,7 @@ class CollectionStatusBatch extends Command
      *
      * @var string
      */
-    protected $signature = 'collection:query-status';
+    protected $signature = 'collection:status';
 
     /**
      * The console command description.
@@ -50,12 +50,16 @@ class CollectionStatusBatch extends Command
 
         $collection_batches = CollectionBatch::where(['status' => 200, 'batch_processed' => 0])->get();
 
-        foreach ($collection_batches as $collection_batch) {
-            //create payload
-            $payload = $bankPayload->collectionStatusPayload($collection_batch);
+        if ($collection_batches) {
+            foreach ($collection_batches as $collection_batch) {
+                //create payload
+                $payload = $bankPayload->collectionStatusPayload($collection_batch);
 
-            //send request
-            $response = $bankApi->collectionStatus($payload);
+                //send request
+                $response = $bankApi->collectionStatus($payload);
+            }
         }
+
+        return 200;
     }
 }
