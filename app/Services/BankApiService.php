@@ -511,16 +511,19 @@ class BankApiService
         Log::debug('== CollectionCreate Response ==');
         Log::debug($response);
 
-        // if (strtolower($response['status']) == "success" || strtolower($response['status']) == "fail") {
-        //     $collection_batch->status = $response['data']['response'][0]['responseCode'];
-        //     $collection_batch->http_response_code = $response['data']['response'][0]['responseCode'];
-        //     $collection_batch->remarks = $response['data']['response'][0]['responseDescription'];
-        // }
-        // $collection_batch->save();
+        if ($response) {
+            if (strtolower($response['status']) == "success" || strtolower($response['status']) == "fail") {
+                $collection_batch->status = $response['data']['response'][0]['responseCode'];
+                $collection_batch->http_response_code = $response['data']['response'][0]['responseCode'];
+                $collection_batch->remarks = $response['data']['response'][0]['responseDescription'];
+                $collection_batch->save();
+            } else {
+                Log::debug('== CollectionCreate Response not success ==');
+            }
+        }
 
         return 200;
     }
-
 
     //create collection deduction status
     public function collectionStatus($data)
@@ -562,89 +565,91 @@ class BankApiService
         Log::debug('== CollectionStatus Response ==');
         Log::debug($response);
 
-        // if (strtolower($response['status']) == "success") {
-        //     $batch_status = $response['data']['response'][0]['responseCode'];
+        if ($response) {
+            if (strtolower($response['status']) == "success") {
+                $batch_status = $response['data']['response'][0]['responseCode'];
 
-        //     //update batch status
-        //     $collection_batch->status = $response['data']['response'][0]['responseCode'];
-        //     $collection_batch->http_response_code = $response['data']['response'][0]['responseCode'];
-        //     $collection_batch->remarks = $response['data']['response'][0]['responseDescription'];
+                //update batch status
+                $collection_batch->status = $response['data']['response'][0]['responseCode'];
+                $collection_batch->http_response_code = $response['data']['response'][0]['responseCode'];
+                $collection_batch->remarks = $response['data']['response'][0]['responseDescription'];
 
-        //     //check for batch processing or batch complete
-        //     if ($batch_status == 230) {
-        //         //1. read csv file
-        //         $data = base64_to_content($response['data']['file']['fileData']);
-        //         $collection_batch->response_csv = $data;
+                //check for batch processing or batch complete
+                if ($batch_status == 230) {
+                    //1. read csv file
+                    $data = base64_to_content($response['data']['file']['fileData']);
+                    $collection_batch->response_csv = $data;
 
-        //         Log::debug("== reponse data ==");
-        //         Log::debug($data);
+                    Log::debug("== reponse data ==");
+                    Log::debug($data);
 
-        //         // Convert the data into an array of rows
-        //         $rows = explode("\n", $data);
+                    // Convert the data into an array of rows
+                    $rows = explode("\n", $data);
 
-        //         //remove empty rows
-        //         $rows = array_filter($rows);
+                    //remove empty rows
+                    $rows = array_filter($rows);
 
-        //         //count failed installments
-        //         $failed_installments = 0;
+                    //count failed installments
+                    $failed_installments = 0;
 
-        //         //2. process installment
-        //         foreach ($rows as $index => $row) {
-        //             // Skip the first row as it contains headers
-        //             if ($index === 0) {
-        //                 continue;
-        //             }
+                    //2. process installment
+                    foreach ($rows as $index => $row) {
+                        // Skip the first row as it contains headers
+                        if ($index === 0) {
+                            continue;
+                        }
 
-        //             // Split the row into individual fields using semicolon as delimiter
-        //             $fields = explode(";", $row);
+                        // Split the row into individual fields using semicolon as delimiter
+                        $fields = explode(";", $row);
 
-        //             //get installment from id
-        //             $installment = Installment::where('id', '=', $fields[0])->first();
+                        //get installment from id
+                        $installment = Installment::where('id', '=', $fields[0])->first();
 
-        //             if ($installment) {
-        //                 //status
-        //                 $status = strtolower($fields[7]);
-        //                 $amount = floatval($fields[6]);
+                        if ($installment) {
+                            //status
+                            $status = strtolower($fields[7]);
+                            $amount = floatval($fields[6]);
 
-        //                 //check for status
-        //                 if ($status == "fail") {
-        //                     //updated status of installment
-        //                     $installment->status = "FAILED";
-        //                     $installment->save();
+                            //check for status
+                            if ($status == "fail") {
+                                //updated status of installment
+                                $installment->status = "FAILED";
+                                $installment->save();
 
-        //                     //increment failed count
-        //                     $failed_installments += 1;
+                                //increment failed count
+                                $failed_installments += 1;
 
-        //                     //send sms to FAILED mandate
-        //                     $phone = $installment->debitOrder->customerAccount->phone;
-        //                     $message = "Makato ya tarehe {$installment->payment_date} ya kiasi cha shilingi {$installment->installment_amount} yameshindikana. Tafadhali weka pesa kwenye akaunti yako ya benki kwa ajili ya makato.";
+                                //send sms to FAILED mandate
+                                $phone = $installment->debitOrder->customerAccount->phone;
+                                $message = "Makato ya tarehe {$installment->payment_date} ya kiasi cha shilingi {$installment->installment_amount} yameshindikana. Tafadhali weka pesa kwenye akaunti yako ya benki kwa ajili ya makato.";
 
-        //                     //send sms
-        //                     $data = ["phone" => $phone, "message" => $message];
-        //                     dispatch(new SendSMSJob($data));
-        //                 } else if ($status == "success") {
-        //                     //updated status of installment
-        //                     $installment->status = "SUCCESS";
-        //                     $installment->last_paid_amount = $amount;
-        //                     $installment->save();
+                                //send sms
+                                $data = ["phone" => $phone, "message" => $message];
+                                dispatch(new SendSMSJob($data));
+                            } else if ($status == "success") {
+                                //updated status of installment
+                                $installment->status = "SUCCESS";
+                                $installment->last_paid_amount = $amount;
+                                $installment->save();
 
-        //                     //process calculation for installment and debit order.
-        //                     $this->deduction_service->processInstallment($installment, $amount, $collection_reference);
-        //                 }
-        //             }
-        //         }
+                                //process calculation for installment and debit order.
+                                $this->deduction_service->processInstallment($installment, $amount, $collection_reference);
+                            }
+                        }
+                    }
 
-        //         //3. process batch
-        //         $collection_batch->failed = $failed_installments;
-        //         $collection_batch->batch_processed = 1;
-        //         $collection_batch->save();
-        //     }
-        // } else if (strtolower($response['status']) == "fail") {
-        //     $collection_batch->status = $response['data']['response'][0]['responseCode'];
-        //     $collection_batch->http_response_code = $response['data']['response'][0]['responseCode'];
-        //     $collection_batch->remarks = $response['data']['response'][0]['responseDescription'];
-        //     $collection_batch->save();
-        // }
+                    //3. process batch
+                    $collection_batch->failed = $failed_installments;
+                    $collection_batch->batch_processed = 1;
+                    $collection_batch->save();
+                }
+            } else if (strtolower($response['status']) == "fail") {
+                $collection_batch->status = $response['data']['response'][0]['responseCode'];
+                $collection_batch->http_response_code = $response['data']['response'][0]['responseCode'];
+                $collection_batch->remarks = $response['data']['response'][0]['responseDescription'];
+                $collection_batch->save();
+            }
+        }
 
         return 200;
     }
