@@ -91,8 +91,12 @@ class CreateCollectionBatch extends Command
                         ->whereDate('payment_date', '<=', $val->next_debit_date)->get();
 
                         foreach ($installments as $installment) {
+                            //account details
+                            $account_name = strtoupper($val->customerAccount->account_name);
+                            $account_number = $val->customerAccount->account_number;
+                            
                             //create csv file
-                            $csv .= "{$installment->id};016;NMB;{$val->customerAccount->account_number};{$val->customerAccount->account_name};{$val->customerAccount->account_number};{$installment->installment_amount}\n";
+                            $csv .= "{$installment->id};016;NMB;{$account_number};{$account_name};{$account_number};{$installment->installment_amount}\n";
 
                             //increment data point
                             $data_point += 1;

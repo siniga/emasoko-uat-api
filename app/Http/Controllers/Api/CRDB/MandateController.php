@@ -18,6 +18,7 @@ class MandateController extends Controller
         $this->auth = new Checksum();
     }
 
+    //push mandate to CRDB
     public function create(Request $request)
     {
         //predefined variables
@@ -81,5 +82,14 @@ class MandateController extends Controller
 
         //send response to eMakato
         return response()->json($response->json());
+    }
+
+    //callback function from CRDB
+    public function callback(Request $request)
+    {
+        // Log the callback response for debugging
+        Log::info('Payment Callback', $request->all());
+
+        return response()->json(['message' => 'Payment successful'], 200);
     }
 }

@@ -63,5 +63,6 @@ Route::post('collection/status', [CollectionController::class, 'status']);
 
 //CRDB apis
 Route::post('mandate/crdb', [CRDBMandateController::class, 'create']);
+Route::post('mandate/crdb/callback', [CRDBMandateController::class, 'callback']);
 
 
