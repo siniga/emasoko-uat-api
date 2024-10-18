@@ -579,7 +579,7 @@ class BankApiService
                 $data = base64_to_content($response['data']['file']['fileData']);
                 $collection_batch->response_csv = $data;
 
-                Log::debug("== reponse data ==");
+                Log::debug("== Collection csv file ==");
                 Log::debug($data);
 
                 // Convert the data into an array of rows

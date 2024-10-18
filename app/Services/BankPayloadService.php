@@ -105,7 +105,7 @@ class BankPayloadService
             "accountStatus" => "Account Is Valid",
             "creditAccountAddressLine1" => $partner->region->name ?? null,
             "creditAccountAddressLine2" => $partner->physical_address ?? null,
-            "amount" => $debitOrder->total_amount,
+            "amount" => $debitOrder->installment_amount,
             "maxAmount" => $debitOrder->max_installment_amount,
             "minAmount" =>  $debitOrder->min_installment_amount,
             "createdBy" => static::userNameFormat($debitOrder->userCreated),
@@ -144,8 +144,11 @@ class BankPayloadService
             "mandateReferenceNumber" => $debitOrder->reference,
             "corporateReference" => $partner->reference,
             "cancelReason" => $debitOrder->cancellation_reason,
-            "createdBy" => static::userNameFormat($debitOrder->cancellationStartedBy),
-            "verifiedBy" => static::userNameFormat($debitOrder->cancellationApprovedBy),
+            "createdBy" => static::userNameFormat(auth()->user()),
+            "verifiedBy" => static::userNameFormat(auth()->user()),
+
+            // "createdBy" => static::userNameFormat($debitOrder->cancellationStartedBy),
+            // "verifiedBy" => static::userNameFormat($debitOrder->cancellationApprovedBy),
             "createdDate" => $debitOrder->cancellationStartedAt,
             "verifyDate" => $debitOrder->cancellationApprovedAt
         ];

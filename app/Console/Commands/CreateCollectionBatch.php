@@ -94,9 +94,10 @@ class CreateCollectionBatch extends Command
                             //account details
                             $account_name = strtoupper($val->customerAccount->account_name);
                             $account_number = $val->customerAccount->account_number;
+                            $mandate_reference = $val->reference;
                             
                             //create csv file
-                            $csv .= "{$installment->id};016;NMB;{$account_number};{$account_name};{$account_number};{$installment->installment_amount}\n";
+                            $csv .= "{$installment->id};016;NMB;{$mandate_reference};{$account_name};{$account_number};{$installment->installment_amount}\n";
 
                             //increment data point
                             $data_point += 1;
