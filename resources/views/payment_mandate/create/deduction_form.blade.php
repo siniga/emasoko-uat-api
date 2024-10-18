@@ -41,16 +41,10 @@
                             <span class="text-white">Customer Deduction Information</span>
                         </div>
 
-                        <div class="stepwizard-step">
-                                <a href="#step-3" type="button" class="btn btn-default btn-circle"
-                                    disabled="disabled">3</a>
-                                <span>Evidence of Agrement</span>
-                            </div>
-
                          <div class="stepwizard-step">
-                                <a href="#step-4" type="button" class="btn btn-default btn-circle"
-                                    disabled="disabled">4</a>
-                                <span>Deduction Confirmation</span>
+                            <a href="#step-3" type="button" class="btn btn-default btn-circle"
+                                disabled="disabled">3</a>
+                            <span>Deduction Confirmation</span>
                         </div>
                     </div>
                 </div>
@@ -211,15 +205,6 @@
                             </div>
                         </div>
                         <!--./col -->
-
-                        {{-- <div class="col-lg-3">
-                            <div class="mb-3">
-                                <label for="formFile" class="form-label">Evidence of Aggrement <small>(PDF File)</small> <span class="text-danger">*</span></label>
-                                <input class="form-control" type="file" id="formFile" name="evidence_of_aggrement"
-                                    accept="application/pdf" />
-                            </div>
-                        </div>
-                        <!--./col --> --}}
                     </div>
                     <!--./row -->
 
@@ -299,9 +284,9 @@
         function initData() {
             return {
                 form_data: {
-                  partner_id: "{{ $debit_order ? $debit_order->partner_id : '' }}",
-                  total_amount: "{{ $debit_order ? number_format($debit_order->total_amount) : '' }}",
-                  deduction_amount: '{{ $debit_order ? number_format($debit_order->installment_amount) : '' }}',
+                     partner_id: "{{ $debit_order ? $debit_order->partner_id : '' }}",
+                    total_amount: "{{ $debit_order ? number_format($debit_order->total_amount) : '' }}",
+                    deduction_amount: '{{ $debit_order ? number_format($debit_order->installment_amount) : '' }}',
                     min_installment_amount: '{{ $debit_order ? number_format($debit_order->min_installment_amount) : '' }}',
                     max_installment_amount: '{{ $debit_order ? number_format($debit_order->max_installment_amount) : '' }}',
                     debit_type: '{{ $debit_order ? $debit_order->debit_type : '' }}',
@@ -334,7 +319,5 @@
                 },
             }
         }
-
-
     </script>
 @endsection

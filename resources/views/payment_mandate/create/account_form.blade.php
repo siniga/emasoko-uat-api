@@ -43,12 +43,6 @@
                             <div class="stepwizard-step">
                                 <a href="#step-3" type="button" class="btn btn-default btn-circle"
                                     disabled="disabled">3</a>
-                                <span>Evidence of Agrement</span>
-                            </div>
-
-                            <div class="stepwizard-step">
-                                <a href="#step-4" type="button" class="btn btn-default btn-circle"
-                                    disabled="disabled">4</a>
                                 <span>Deduction Confirmation</span>
                             </div>
                         </div>
@@ -64,8 +58,8 @@
 
                     <!-- Customer Information -->
                     <section>
-                        <div class="row ">                        
-                            <div class="col-lg-3">
+                        <div class="row">                        
+                            <div class="col-lg-3 col-md-3 col-12">
                                 <div class="mb-3">
                                     <label>Payment Channel <span class="text-danger">*</span></label>
                                     @php
@@ -87,7 +81,7 @@
                                 </div>
                             </div>
 
-                            <div class="col-lg-3">
+                            <div class="col-lg-3 col-md-3 col-12">
                                 <div class="mb-3">
                                     <label>Bank Name/MNO <span class="text-danger">*</span></label>
                                     @php $options = []; @endphp
@@ -105,7 +99,7 @@
                                 </div>
                             </div>
 
-                            <div class="col-lg-6" id="account_name" style="display: block;">
+                            <div class="col-lg-6 col-md-6 col-12" id="account_name" style="display: block;">
                                 <div class="mb-3">
                                     <label>Name of Account Holder <span class="text-danger">*</span></label>
                                     {{ Form::text('account_name', old('account_name', $customer_account->account_name ?? ''), ['class="form-control"', 'placeholder="Enter name of account holder..."', 'id="account_name"']) }}
@@ -113,7 +107,7 @@
                                 </div>
                             </div>
 
-                            <div class="col-lg-3" id="account_number" style="display: block;">
+                            <div class="col-lg-3 col-md-3 col-12" id="account_number" style="display: block;">
                                 <div class="mb-3">
                                     <label>Bank Account Number <span class="text-danger">*</span></label>
                                     {{ Form::text('account_number', old('account_number', $customer_account->account_number ?? ''), ['class="form-control"', 'placeholder="Enter account number..."']) }}
@@ -121,15 +115,7 @@
                                 </div>
                             </div>
 
-                            <div class="col-lg-3" id="bank_code" style="display: block;">
-                                <div class="mb-3">
-                                    <label>Bank Code <span class="text-danger">*</span></label>
-                                    {{ Form::text('bank_code', old('bank_code', $customer_account->bank_code ?? ''), ['class="form-control"', 'placeholder="Enter bank code..."']) }}
-                                    <span class="text-danger">{{ $errors->first('bank_code') }}</span>
-                                </div>
-                            </div>
-
-                            <div class="col-lg-3" id="account_number_phone" style="display: none;">
+                            <div class="col-lg-3 col-md-3 col-12" id="account_number_phone" style="display: none;">
                                 <div class="mb-3">
                                     <label>MNO Phone <span class="text-danger">*</span></label>
                                     {{ Form::text('account_number_phone', old('account_number_phone', $customer_account ? reverse_casting_phone($customer_account->phone) : ''), ['class="form-control"', 'placeholder="Enter phone number..."']) }}
@@ -137,7 +123,7 @@
                                 </div>
                             </div>
 
-                            <div class="col-lg-3" id="account_phone" style="display: block;">
+                            <div class="col-lg-3 col-md-3 col-12" id="account_phone" style="display: block;">
                                 <div class="mb-3">
                                     <label>Phone <small>(Connected to bank account)</small> <span class="text-danger">*</span></label>
                                     {{ Form::text('phone', old('phone', $customer_account ? reverse_casting_phone($customer_account->phone) : ''), ['class="form-control"', 'placeholder="Enter phone connected to the bank account..."']) }}
@@ -145,7 +131,7 @@
                                 </div>
                             </div>
 
-                            <div class="col-lg-3">
+                            <div class="col-lg-3 col-md-3 col-12">
                                 <div class="mb-3">
                                     <label>Secondary Phone</label>
                                     {{ Form::text('secondary_phone', old('secondary_phone', $customer_account->secondary_phone ?? ''), ['class="form-control input-mask"', 'placeholder="Enter secondary phone..."']) }}
@@ -153,34 +139,34 @@
                                 </div>
                             </div>
 
-                            <div class="col-lg-3">
+                            <div class="col-lg-3 col-md-3 col-12">
                                 <div class="mb-3">
                                     <label>NIDA Number <span class="text-danger">*</span></label>
                                     {{ Form::text('nida_number', old('nida_number', $customer_account->customer->id_number ?? ''), ['class="form-control input-mask"', 'placeholder="Enter NIDA number..."', 'data-inputmask' => "'mask': '99999999-99999-99999-99'"]) }}
-                                    <div class="text-danger">{{ $errors->first('nida_number') }}</div>
+                                    <span class="text-danger">{{ $errors->first('nida_number') }}</span>
                                 </div>
                             </div>
 
-                            <div class="col-lg-3">
+                            <div class="col-lg-3 col-md-3 col-12">
                                 <div class="mb-3">
                                     <label>Email</label>
                                     {{ Form::email('email', old('email', $customer_account->customer->email ?? ''), ['class="form-control input-mask"', 'placeholder="Enter email..."']) }}
-                                    <div class="text-danger">{{ $errors->first('email') }}</div>
+                                    <span class="text-danger">{{ $errors->first('email') }}</span>
                                 </div>
                             </div>
 
-                            <div class="col-lg-6">
+                            <div class="col-lg-6 col-md-6 col-12">
                                 <div class="mb-3">
                                     <label>Address <span class="text-danger">*</span></label>
                                     {{ Form::text('address', old('address', $customer_account->customer->address ?? ''), ['class="form-control input-mask"', 'placeholder="Enter address..."']) }}
-                                    <div class="text-danger">{{ $errors->first('address') }}</div>
+                                    <span class="text-danger">{{ $errors->first('address') }}</span>
                                 </div>
                             </div>
                         </div>
                         <!--./row -->
 
                         <div class="row">
-                            <div class="col-md-12">
+                            <div class="col-lg-12 col-md-12 col-12">
                                 <div class="mb-3 text-sm-end d-none d-sm-block">
                                     <a href="{{ route('payment-mandate.lists') }}"
                                         class="btn btn-outline-danger text-medium">

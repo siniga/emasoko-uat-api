@@ -152,17 +152,17 @@ Route::any('payment-mandate/lists/{consent?}', [PaymentMandateController::class,
 Route::get('payment-mandate/export-xls', [PaymentMandateController::class, 'export_xls'])->name('payment-mandate.export-xls');
 Route::get('payment-mandate/export-pdf', [PaymentMandateController::class, 'export_pdf'])->name('payment-mandate.export-pdf');
 
-//account info
+//customer account 
 Route::get('payment-mandate/create-account/{ca_uuid?}/{do_uuid?}', [PaymentMandateController::class, 'create_account'])->name('payment-mandate.create-account');
 Route::post('payment-mandate/store-account', [PaymentMandateController::class, 'store_account'])->name('payment-mandate.store-account');
 
-//deduction info
+//customer deduction
 Route::get('payment-mandate/create-deduction/{ca_uuid}/{do_uuid?}', [PaymentMandateController::class, 'create_deduction'])->name('payment-mandate.create-deduction');
 Route::post('payment-mandate/store-deduction', [PaymentMandateController::class, 'store_deduction'])->name('payment-mandate.store-deduction');
 
 //create evidennce
-Route::get('payment-mandate/create-evidence/{do_uuid}', [PaymentMandateController::class, 'create_evidence'])->name('payment-mandate.create-evidence');
-Route::post('payment-mandate/verify-evidence', [PaymentMandateController::class, 'verify_evidence'])->name('payment-mandate.verify-evidence');
+// Route::get('payment-mandate/create-evidence/{do_uuid}', [PaymentMandateController::class, 'create_evidence'])->name('payment-mandate.create-evidence');
+// Route::post('payment-mandate/verify-evidence', [PaymentMandateController::class, 'verify_evidence'])->name('payment-mandate.verify-evidence');
 
 //preview 
 Route::get('payment-mandate/preview/{do_uuid}', [PaymentMandateController::class, 'preview'])->name('payment-mandate.preview');

@@ -32,6 +32,8 @@ class MandateController extends Controller
         $salt = "dPQ11iVNGI2aLnCUGdQ3LQA2tCx00WzTxj6zPsdLK3vvR34n5J9s4U4kwzMguTTlahYY66yr6ieqbo7CfGZsVOlt8xKZr+Jon7jc599v9Zkw94ZIpI6Y3YmgXwLZql9nGsgWyA==";
         //create checksum
         $checksum = $this->auth->generateChecksum($data, $salt);
+
+
         Log::debug("== checksum ==");
         Log::debug($checksum);
 
@@ -69,19 +71,6 @@ class MandateController extends Controller
 
         Log::debug("== Payload ==");
         Log::debug($payload);
-
-        //API URL
-        $API_URL = "https://pre-prod-esb-wso2am-gw.crdbbank.co.tz/common/direct-debit/1.0.0/mandate";
-
-        //push payload => NMB Direct Debits
-        $response = Http::withHeaders($headers)->post($API_URL, $payload);
-
-        Log::debug("== Response ==");
-        Log::debug($response->status());
-        Log::debug($response);
-
-        //send response to eMakato
-        return response()->json($response->json());
     }
 
     //callback function from CRDB
