@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\CRDB;
 
 use App\Classes\Checksum;
 use App\Http\Controllers\Controller;
+use App\Models\DebitOrder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -76,12 +77,28 @@ class MandateController extends Controller
     //callback function from CRDB
     public function callback(Request $request)
     {
-        // Log the callback response for debugging
-        // Log::info('Payment Callback', $request->all());
-        // Log::info('Status Code => ', $request['ResponseHeader']);
+        //logging response
+        Log::debug('== Callback Response ==');
+        Log::debug($request->all());
 
-        //return $request['ResponseHeader']['StatusCode'];
+        return $request['callbackType'];
 
-        // return response()->json(['message' => 'Payment successful'], 200);
+        if ($request['callbackType'] == "REQUEST_STATUS") {
+            //query debit order by reference id
+            $debit_order = DebitOrder::where('crdb_reference', '=', $request['data']['reference'])->first();
+
+            //check status
+            if (strtolower($request['data']['status']) == "approved") {
+                $debit_order->approved = 1;
+                $debit_order->status = 202;
+            } else if (strtolower($request['data']['status']) == "cancelled") {
+                $debit_order->status = 501;
+            } else {
+                $debit_order->status = 501;
+            }
+            $debit_order->save();
+        } else if ($request['callbackType'] == "PAYMENT_STATUS") {
+            //update installment amount
+        }
     }
 }
