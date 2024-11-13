@@ -173,15 +173,7 @@
                                             </div>
                                         </div>
 
-                                        <div class="col-lg-2">
-                                            <div class="mb-3">
-                                                <label for="basicpill-namecard-input">Branch Code <span
-                                                        class="text-danger">*</span></label>
-                                                {{ Form::text('branch_code[]', old('branch_code[]', $data->branch_code), ['class="form-control"', 'placeholder="Write branch code..."']) }}
-                                                <span class="formError"></span>
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-4">
+                                        <div class="col-lg-6">
                                             <div class="mt-4 pt-2 text-sm-end d-none d-sm-block">
                                                 <button type="button" name="add" id="add_button"
                                                     class="btn btn-info btn-sm text-medium">
@@ -289,16 +281,7 @@
                                         </div>
                                     </div>
 
-                                    <div class="col-lg-2">
-                                        <div class="mb-3">
-                                            <label for="basicpill-namecard-input">Branch Code <span
-                                                    class="text-danger">*</span></label>
-                                            {{ Form::text('branch_code[]', old('branch_code[]'), ['class="form-control"', 'placeholder="Write branch code..."']) }}
-                                            <span class="formError"></span>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-lg-4">
+                                    <div class="col-lg-6">
                                         <div class="mt-4 pt-2 text-sm-end d-none d-sm-block">
                                             <button type="button" name="add" id="add_button"
                                                 class="btn btn-info btn-sm text-medium">
@@ -434,14 +417,8 @@
                         <span class="formError"></span>
                     </div>
                 </div>
-                <div class="col-lg-2">
-                    <div class="mb-3">
-                        <label>Branch Code <span class="text-danger">*</span></label>
-                        <input type="text" name="branch_code[]" placeholder="Write branch code..." class="form-control">
-                        <span class="formError"></span>
-                    </div>
-                </div>
-                <div class="col-lg-4">
+                
+                <div class="col-lg-6">
                     <div class="mt-4 pt-2 text-sm-end d-none d-sm-block">
                         Do you want to delete this account? <input type="checkbox" class="remove_button" />
                     </div>
@@ -477,7 +454,6 @@
                     "customer_code[]": "required",
                     "corporate_limit[]": "required",
                     "currency_id[]": "required",
-                    "branch_code[]": "required",
                 },
                 messages: {
                     "account_type_id[]": "Account type required",
@@ -487,7 +463,6 @@
                     "customer_code[]": "Customer number required",
                     "corporate_limit[]": "Corporate limit required",
                     "currency_id[]": "Currency required",
-                    "branch_code[]": "Branch Code required",
                 },
                 // Submit form
                 submitHandler: function(form, e) {

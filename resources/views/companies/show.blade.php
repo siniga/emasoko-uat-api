@@ -40,6 +40,11 @@
                             <div></div>
 
                             <div class="text-sm-end d-none d-sm-block">
+                                    <a href="{{ route('companies.create-invoice', $company->uuid) }}" title="Send Invoice"
+                                        class="btn btn-success btn-sm">
+                                        <i class='fa fa-file-pdf'></i> Send Invoice
+                                    </a>
+
                                 <template x-if="status==100 || status==403 || status==500">
                                     <a href="{{ route('companies.registration', $company->uuid) }}" title="View"
                                         class="btn btn-warning btn-sm">
@@ -129,7 +134,7 @@
                                     </template>
 
                                     <template x-if="status==202">
-                                        <span class="badge bg-success-1 text-uppercase">Company Verified</span>
+                                        <span class="badge bg-success text-uppercase">Company Verified</span>
                                     </template>
 
                                     <template x-if="status==403">
@@ -139,13 +144,6 @@
                                     <template x-if="status==500">
                                         <span class="badge bg-danger text-uppercase">Rejected</span>
                                     </template>
-                                </td>
-                            </tr>
-
-                            <tr>
-                                <th>Remarks</th>
-                                <td colspan="3">
-                                    <span x-text="remarks"></span>
                                 </td>
                             </tr>
 
@@ -224,14 +222,14 @@
 
                                     <tr>
                                         <th width="3%">#</th>
-                                        <th width="20%">Account Type</th>
-                                        <th width="20%">Bank/Institutions</th>
+                                        <th width="12%">Account Type</th>
+                                        <th width="20%">Bank/MNO</th>
                                         <th width="25%">Account Name</th>
-                                        <th width="10%">Account Number</th>
-                                        <th width="10%">Customer Number</th>
-                                        <th width="10%">Branch Code</th>
+                                        <th width="10%">Account No.</th>
+                                        <th width="8%">Customer No.</th>
                                         <th width="15%">Corporate Limit</th>
                                         <th width="10%">Currency</th>
+                                        <th width="15%">Status</th>
                                     </tr>
                                 </thead>
 
@@ -244,9 +242,15 @@
                                             <td>{{ $val->account_name ?? '' }}</td>
                                             <td>{{ $val->account_number ?? '' }}</td>
                                             <td>{{ $val->customer_code ?? '' }}</td>
-                                            <td>{{ $val->branch_code ?? '' }}</td>
                                             <td>{{ number_format($val->corporate_limit) ?? '' }}</td>
                                             <td>{{ $val->currency->short_code ?? '' }}</td>
+                                            <td>
+                                                @if($val->status == 1)
+                                                    <span class="badge bg-success">Active</span>
+                                                @else
+                                                    <span class="badge bg-danger">Inactive</span>
+                                                @endif    
+                                            </td>
                                         </tr>
                                     @endforeach
                                 </tbody>

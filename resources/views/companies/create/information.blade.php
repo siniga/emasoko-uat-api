@@ -131,15 +131,6 @@
                                     </div>
                                 </div>
 
-                                {{-- <div class="col-lg-3">
-                                    <div class="mb-3">
-                                        <label>Number of Staff
-                                        </label>
-                                        {{ Form::number('number_of_staff', old('number_of_staff', $company->number_of_staff ?? ''), ['class="form-control"', 'placeholder="Write number of staff..."', 'min' => 1]) }}
-                                        <span class="formError"></span>
-                                    </div>
-                                </div> --}}
-
                                 <div class="col-lg-3">
                                     <div class="mb-3">
                                         <label>Company Email <span class="text-danger">*</span>
@@ -148,13 +139,6 @@
                                         <span class="formError" id="companyEmailError"></span>
                                     </div>
                                 </div>
-
-                                {{-- <div class="col-lg-3">
-                                    <div class="mb-3">
-                                        <label>Website</label>
-                                        {{ Form::text('company_website', old('company_website', $company->website ?? ''), ['class="form-control"', 'placeholder="Write company website..."']) }}
-                                    </div>
-                                </div> --}}
 
                                 <div class="col-lg-6">
                                     <label>Company Phone <span class="text-danger">*</span></label>
@@ -171,7 +155,7 @@
                                         </div>
 
                                         <div class="col-md-8">
-                                            {{ Form::number('company_phone', old('company_phone', substr($company->phone ?? '', 4)), ['class="form-control"', 'placeholder="Write phone..."']) }}
+                                            {{ Form::number('company_phone', old('company_phone', $company->phone ?? ''), ['class="form-control"', 'placeholder="Write phone..."']) }}
                                             <span class="formError"></span>
                                         </div>
                                     </div>
@@ -348,8 +332,8 @@
                                 }
                             }
                         }).catch((error) => {
-                            //logging the errors
-
+                            //display errors
+                            
                         }).finally(() => {
                             //change submit button text
                             $('#submitButton').text('Next');

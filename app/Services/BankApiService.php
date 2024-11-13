@@ -147,6 +147,11 @@ class BankApiService
             $partner->http_response_code = $response['data']['response'][0]['responseCode'];
             $partner->remarks = $response['data']['response'][0]['responseDescription'];
             $partner->save();
+
+            //TODO: update partner account
+            
+
+
         } else if (strtolower($response['status']) == "fail") {
             $response_code = 500; //response code
             $remarks = $response['data']['response'][0]['responseDescription'];

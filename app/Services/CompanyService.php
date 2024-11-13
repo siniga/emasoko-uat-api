@@ -82,7 +82,7 @@ class CompanyService
                     $partner_account->send_verification = 1;
                     $partner_account->customer_code = $data['customer_code'][$i];
                     $partner_account->corporate_limit = floatval(str_replace(',', '', $data['corporate_limit'][$i]));
-                    $partner_account->branch_code = $data['branch_code'][$i];
+                    $partner_account->branch_code = substr($data['account_number'][$i], 0, 3);
                     $partner_account->currency_id = $data['currency_id'][$i];
                     $partner_account->save();
                 }

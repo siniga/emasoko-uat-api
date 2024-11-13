@@ -338,9 +338,6 @@
                             }
                         },
                         error: function(error) {
-                            console.log("== reached hapa 2 ==")
-                            console.log(error);
-
                             //display errors
                             if (jQuery.type(error.response.errors) == "object") {
                                 $('.form-message').html('');

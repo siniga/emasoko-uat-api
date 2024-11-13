@@ -34,7 +34,7 @@ class CompanyDetailRequest extends FormRequest
             'year_of_incorporation' => 'required|numeric',
             'country_code' => 'required',
             'company_phone' => ['required', new PhoneNumber()],
-            'company_email' => 'required|email|max:255|unique:users',
+            'company_email' => 'required|email|max:255',
             'region_id' => 'required',
             'physical_address' => 'required',
         ];

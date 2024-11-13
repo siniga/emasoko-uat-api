@@ -29,6 +29,8 @@ class CompanyAccountRequest extends FormRequest
             'account_name.*' => 'required',
             'account_number.*' => 'required',
             'customer_code.*' => 'required',
+            'corporate_limit.*' => 'required',
+            'currency_id.*' => 'required',
         ];
     }
 
@@ -44,6 +46,9 @@ class CompanyAccountRequest extends FormRequest
             'account_id.*.required' => 'Bank/MNO name required',
             'account_name.*.required' => 'Account name required',
             'account_number.*.required' => 'Account number required',
+            'customer_code.*.required' => 'Customer code required',
+            'corporate_limit.*.required' => 'Corporate limit required',
+            'currency_id.*.required' => 'Currency required',
         ];
     }
 }

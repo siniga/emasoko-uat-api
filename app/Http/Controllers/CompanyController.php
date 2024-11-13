@@ -551,6 +551,27 @@ class CompanyController extends Controller
         return view('companies.show', compact('title', 'company', 'company_info_approval', 'company_docs_approval', 'company_accounts_approval', 'company_staff_approval'));
     }
 
+    //create invoice
+    public function createInvoice($uuid)
+    {
+        //service provider
+        $company = Partner::where(['uuid' => $uuid])->firstOrFail();
+
+        //Create Evidence of Agreement
+        view()->share('company', $company);
+
+        //pdf creation        
+        $pdf = PDF::loadView('companies.pdf_invoice');
+
+        //create filename
+        $filename = "{$company->reference}.pdf";
+
+        $path = 'assets/uploads/pdf/';
+        $pdf->save($path  . $filename);
+
+        return $filename;
+    }
+
     /**
      * Show the form for editing the specified resource.
      *
@@ -739,21 +760,55 @@ class CompanyController extends Controller
         Log::debug($http_status_code);
 
         if ($http_status_code == 200) {
-            //TODO: Check if corporate has NMB partner accounts
-            $partner_account = PartnerAccount::where(['partner_id' => $partner->id, 'account_id' => 1, 'send_verification' => 1])->first();
+            //TODO: Check if corporate has NMB or CRDB partner accounts
+            $partner_account = PartnerAccount::where(['partner_id' => $partner->id, 'account_type_id' => 1]);
 
-            if ($partner_account) {
-                //create payload
-                $payload = $this->payloadService->corporateRegistrationPayload($partner, $partner_account);
+            $success_msg = "";
+            if ($partner_account->count() > 0) {
 
-                //Create Request to NMB
-                dispatch(new CorporateRegistrationJob($payload));
+                //check for NMB partner accounts
+                $nmb_partner_account = PartnerAccount::where(['partner_id' => $partner->id, 'account_type_id' => 1, 'account_id' => 1]);
+
+                //check for CRDB partner accounts
+                $crdb_partner_account = PartnerAccount::where(['partner_id' => $partner->id, 'account_type_id' => 1, 'account_id' => 2]);
+
+                //if ()
+
+
+                if($nmb_partner_account->count() > 0) {
+                    $nmb_partner_account = $nmb_partner_account->first();
+
+                    //create payload
+                    $payload = $this->payloadService->corporateRegistrationPayload($partner, $nmb_partner_account);
+
+                    //Create Request to NMB
+                    dispatch(new CorporateRegistrationJob($payload));
+
+                    //create success msg
+                    $success_msg = "Service provider approved and pending approval from NMB.";
+                }
+
+                if($crdb_partner_account->count() > 0) {
+                    $crdb_partner_account = $crdb_partner_account->first();
+
+                    //approve partner account
+                    $crdb_partner_account->status = 1;
+                    $crdb_partner_account->save();
+
+                    //approve partner
+                    $partner->status = 202;
+                    $partner->save();
+
+                    //create success msg
+                    $success_msg = "Service provider approved.";
+                    $http_status_code = 202;
+                } 
             }
 
             //response
-            return response()->json(['error' => false, "status" => $http_status_code, "message" => 'Corporate Registration approved and pending approval from NMB.'], 200);
+            return response()->json(['error' => false, "status" => $http_status_code, "message" => $success_msg], 200);
         } else if ($http_status_code == 500) {
-            return response()->json(['error' => false, "status" => $http_status_code, "remarks" => $request->remarks, "message" => 'Corporate registration rejected.'], 200);
+            return response()->json(['error' => false, "status" => $http_status_code, "remarks" => $request->remarks, "message" => 'Service provider rejected.'], 200);
         }
     }
 
