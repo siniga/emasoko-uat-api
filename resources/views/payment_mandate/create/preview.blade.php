@@ -210,7 +210,7 @@
                                 <template x-if="status==100">
                                     <div class="row">
                                         <div class="col-md-12">
-                                            <div class="mb-3 text-sm-end d-none d-sm-block">
+                                            <div class="mb-3 text-sm-end d-sm-block">
                                                 <a href="{{ route('payment-mandate.cancel', $debit_order->uuid) }}"
                                                     class="btn btn-danger text-medium">
                                                     Cancel

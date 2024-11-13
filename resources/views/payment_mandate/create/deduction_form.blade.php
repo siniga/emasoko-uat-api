@@ -210,11 +210,11 @@
 
                     <div class="row">
                         <div class="col-md-12">
-                            <div class="mb-3 text-sm-end d-none d-sm-block">
+                            <div class="mb-3 text-sm-end d-sm-block">
                                 <a href="{{ route('payment-mandate.create-account',[$customer_account->uuid, ($debit_order ? $debit_order->uuid : '')]) }}"
                                     class="btn btn-outline-danger text-medium">Previous</a>
 
-                                <button type="submit" class="btn btn-primary">Next</button>
+                                <button type="submit" class="btn btn-primary px-3">Next</button>
                             </div>
                         </div>
                         <!--./col -->
