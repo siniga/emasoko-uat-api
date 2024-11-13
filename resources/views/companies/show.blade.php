@@ -40,10 +40,10 @@
                             <div></div>
 
                             <div class="text-sm-end d-none d-sm-block">
-                                    <a href="{{ route('companies.create-invoice', $company->uuid) }}" title="Send Invoice"
-                                        class="btn btn-success btn-sm">
-                                        <i class='fa fa-file-pdf'></i> Send Invoice
-                                    </a>
+                                {{-- <a href="{{ route('companies.create-invoice', $company->uuid) }}" title="Send Invoice"
+                                    class="btn btn-success btn-sm">
+                                    <i class='fa fa-file-pdf'></i> Send Invoice
+                                </a> --}}
 
                                 <template x-if="status==100 || status==403 || status==500">
                                     <a href="{{ route('companies.registration', $company->uuid) }}" title="View"
@@ -112,9 +112,6 @@
                             </tr>
 
                             <tr>
-                                <th>Number of Staff</th>
-                                <td>{{ $company->number_of_staff }}</td>
-
                                 <th>Status</th>
                                 <td colspan="3" id="company-status">
                                     <template x-if="status==0">

@@ -111,37 +111,6 @@ class CompanyService
         }
     }
 
-    //create partner credentials
-    public function createCredential(Partner $partner): void
-    {
-        //token and password
-        $token = Str::random(64);
-
-        //create user to store data
-        $user = User::firstOrNew(['email' => $partner->email, 'TIN_number' => $partner->tin_number]);
-        $user->name = $partner->business_name;
-        $user->phone = $partner->phone;
-        $user->verify_token = $token;
-        $user->password = Hash::make("12345678");
-        $user->save();
-
-        //insert or create role
-        $role_user = RoleUser::firstOrNew([
-            'user_id' => $user->id,
-            'role_id' => 2
-        ]);
-        $role_user->save();
-
-        //partner user
-        $partner_user = PartnerUser::firstOrNew([
-            'user_id' => $user->id,
-            'partner_id' => $partner->id,
-            'partner_uuid' => $partner->uuid
-        ]);
-        $partner_user->authorize = 1;
-        $partner_user->save();
-    }
-
     //create assessment stages
     public function createAssessmentStages(Partner $partner): void
     {
@@ -183,7 +152,7 @@ class CompanyService
 
         //query for users
         $users = User::whereHas('roles', function ($q) {
-            $q->where('name', 'Coordinator');
+            $q->where('name', 'Manager');
         })->get();
 
         if ($users->isNotEmpty()) {
@@ -240,6 +209,38 @@ class CompanyService
 
             return 200;
         }
+    }
+
+    //create partner credentials
+    public function createCredential(Partner $partner): void
+    {
+        //token and password
+        $token = Str::random(64);
+
+        //create user to store data
+        $user = User::firstOrNew(['email' => $partner->email, 'TIN_number' => $partner->tin_number]);
+        $user->name = $partner->business_name;
+        $user->phone = $partner->phone;
+        $user->verify_token = $token;
+        $user->password = Hash::make("12345678");
+        $user->active = 1;
+        $user->save();
+
+        //insert or create role
+        $role_user = RoleUser::firstOrNew([
+            'user_id' => $user->id,
+            'role_id' => 2
+        ]);
+        $role_user->save();
+
+        //partner user
+        $partner_user = PartnerUser::firstOrNew([
+            'user_id' => $user->id,
+            'partner_id' => $partner->id,
+            'partner_uuid' => $partner->uuid
+        ]);
+        $partner_user->authorize = 1;
+        $partner_user->save();
     }
 
     //get Customer Code

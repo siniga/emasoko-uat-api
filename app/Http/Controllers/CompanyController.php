@@ -772,9 +772,6 @@ class CompanyController extends Controller
                 //check for CRDB partner accounts
                 $crdb_partner_account = PartnerAccount::where(['partner_id' => $partner->id, 'account_type_id' => 1, 'account_id' => 2]);
 
-                //if ()
-
-
                 if($nmb_partner_account->count() > 0) {
                     $nmb_partner_account = $nmb_partner_account->first();
 

@@ -12,6 +12,7 @@ use App\Models\DebitOrder;
 use App\Models\Installment;
 use App\Models\OtpRequest;
 use App\Models\Partner;
+use App\Models\PartnerAccount;
 use Exception;
 
 class BankApiService
@@ -149,8 +150,9 @@ class BankApiService
             $partner->save();
 
             //TODO: update partner account
-            
-
+            $nmb_partner_account = PartnerAccount::where(['partner_id' => $partner->id, 'account_type_id' => 1, 'account_id' => 1])->first();
+            $nmb_partner_account->status = 1;
+            $nmb_partner_account->save();       
 
         } else if (strtolower($response['status']) == "fail") {
             $response_code = 500; //response code

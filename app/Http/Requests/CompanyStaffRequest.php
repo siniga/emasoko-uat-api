@@ -25,11 +25,11 @@ class CompanyStaffRequest extends FormRequest
     public function rules()
     {
         return [
-            'staff_name.*' => 'required',
-            'nida_number.*' => 'required',
-            'staff_email.*' => 'required',
+            'staff_name.*' => ['required'],
+            'nida_number.*' => ['required'],
+            'staff_email.*' => ['required'],
             'staff_phone.*' => ['required'],
-            'staff_title.*' => 'required',
+            'staff_title.*' => ['required'],
         ];
     }
 
