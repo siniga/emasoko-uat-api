@@ -47,23 +47,16 @@
                                     <span class="text-white">Customer Deduction Information</span>
                                 </div>
 
-                                <div class="stepwizard-step bg-success">
-                                    <a href="#step-3" type="button" class="btn btn-success btn-circle text-white"
-                                        disabled="disabled">3</a>
-                                    <span class="text-white">Evidence of Agrement</span>
-                                </div>
-
                                 <div class="stepwizard-step bg-primary">
-                                    <a href="#step-4" type="button" class="btn btn-secondary btn-circle"
-                                        disabled="disabled">4</a>
+                                    <a href="#step-3" type="button" class="btn btn-secondary btn-circle"
+                                        disabled="disabled">3</a>
                                     <span class="text-white">Deduction Confirmation</span>
                                 </div>
                             </div>
                         </div>
 
 
-                        <form @submit.prevent="">
-                            <input type="hidden" name="mandate_id" x-model="formData.mandate_id">
+                        <form @submit.prevent="submitForm();" autocomplete="off">
                             <section>
                                 <div id="message_wrp" class=""></div>
 
@@ -179,7 +172,7 @@
                                                     <span>
                                                         @if ($debit_order->evidence_of_aggrement != null)
                                                             <a download=""
-                                                                href="{{ asset('assets/uploads/docs/pdf/' . $debit_order->evidence_of_aggrement) }}">
+                                                                href="{{ asset('assets/uploads/pdf/' . $debit_order->evidence_of_aggrement) }}">
                                                                 {{ $debit_order->evidence_of_aggrement }}
                                                             </a>
                                                         @else
@@ -258,7 +251,6 @@
                 status: "{{ $debit_order->status }}",
 
                 formData: {
-                    mandate_id: "{{ $debit_order->id }}",
                     uuid: "{{ $debit_order->uuid }}",
                 },
 

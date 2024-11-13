@@ -2,17 +2,22 @@
 
 namespace App\Services;
 
+use App\Classes\Checksum;
 use App\Models\CollectionBatch;
 use App\Models\DebitOrder;
 use App\Models\OtpRequest;
 use App\Models\Partner;
 use App\Models\PartnerAccount;
 use Carbon\Carbon;
+use Illuminate\Support\Str;
 
 class BankPayloadService
 {
+    private $auth;
+
     public function __construct()
     {
+        $this->auth = new Checksum();
     }
 
     public static function userNameFormat($user)
@@ -82,9 +87,6 @@ class BankPayloadService
         $partner = $debitOrder->partner;
         $partnerAccount = $debitOrder->partnerAccount;
 
-        //debit order attachment
-        $attachment = $debitOrder->evidence_of_aggrement;
-
         //create payload
         $payload = [
             "mandateReferenceNumber" => $debitOrder->reference,
@@ -115,9 +117,40 @@ class BankPayloadService
             "file" => [
                 "fileName" => "Evidence Of Aggrement",
                 "fileType" => "pdf",
-                "fileData" => pdf_to_base64(public_path('assets/uploads/docs/Invoice_EUINTZ24_9765.pdf'))
-                //"fileData" => pdf_to_base64(public_path("assets/uploads/docs/pdf/". $attachment))
+                //"fileData" => pdf_to_base64(public_path('assets/uploads/docs/Invoice_EUINTZ24_9765.pdf'))
+                "fileData" => pdf_to_base64(public_path("assets/uploads/pdf/" . $debitOrder->evidence_of_aggrement))
             ]
+        ];
+
+        return $payload;
+    }
+
+    //create CRDB mandate payload
+    public function CRDBMandatePayload(DebitOrder $debitOrder, $requestId)
+    {
+        $customerAccount = $debitOrder->customerAccount;
+        $partnerId = env("CRDB_PARTNER_ID");
+
+        //data and salt
+        $data = $requestId . substr($customerAccount->account_number, -4) . $partnerId;
+        $salt = env("CRDB_SALT");
+
+        //create checksum
+        $checksum = $this->auth->generateChecksum($data, $salt);
+
+        $payload = [
+            "PartnerId" =>  $partnerId,
+            "RequestId" => $requestId,
+            'Checksum' => $checksum,
+            "PhoneNumber" =>  $customerAccount->phone,
+            "DebitAccount" =>  $customerAccount->account_number,
+            "TotalAmount" =>  $debitOrder->total_amount,
+            "InstallmentAmount" => $debitOrder->installment_amount,
+            "StartDate" => Carbon::parse($debitOrder->start_date)->format('d-m-Y'),
+            "EndDate" => Carbon::parse($debitOrder->end_date)->format('d-m-Y'),
+            "FrequencyType" => strtoupper($debitOrder->periodicity),
+            "Frequency" => "1",
+            "BillDetails" => "Recurring payment"
         ];
 
         return $payload;

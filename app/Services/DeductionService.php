@@ -16,6 +16,11 @@ class DeductionService
 {
     public function __construct() {}
 
+    //create debit order evidence of aggrement
+    public function createEvidence(DebitOrder $debitOrder){
+
+    }
+
     //create debit order installments
     public function createInstallment(DebitOrder $debitOrder)
     {

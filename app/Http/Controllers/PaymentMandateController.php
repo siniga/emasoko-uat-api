@@ -12,33 +12,25 @@ use App\Models\PartnerUser;
 use App\Rules\PhoneNumber;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Classes\Messaging;
-use App\Events\CancelMandate;
-use App\Events\CreateOtp;
-use App\Events\MandateStatus;
-use App\Events\VerifyOtp;
 use App\Http\Requests\CustomerAccountRequest;
 use App\Http\Requests\CustomerDeductionRequest;
+use App\Jobs\CRDBMandateRegistrationJob;
 use App\Jobs\MandateRegistrationJob;
 use App\Jobs\SendSMSJob;
 use App\Models\CustomerPartner;
+use App\Models\Installment;
 use App\Models\OtpRequest;
 use App\Models\Partner;
-use App\Models\SmsLog;
 use App\Services\BankApiService;
-use App\Services\BankApiServices;
 use App\Services\BankPayloadService;
 use App\Services\DeductionService;
-use App\Services\MnoBankServices;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Session;
 use PDF;
+
 
 class PaymentMandateController extends Controller
 {
@@ -170,19 +162,19 @@ class PaymentMandateController extends Controller
     }
 
     //payment details form
-    function create_account($ca_id = null, $do_id = null)
+    function create_account($customer_id = null, $debit_order_id = null)
     {
         $title = "Payment Mandate";
 
         //customer account
         $customer_account = [];
-        if ($ca_id != null)
-            $customer_account = CustomerAccount::where(['uuid' => $ca_id])->first();
+        if ($customer_id != null)
+            $customer_account = CustomerAccount::where(['uuid' => $customer_id])->first();
 
         //payment mandate
         $debit_order = [];
-        if ($do_id != null)
-            $debit_order = DebitOrder::where(['uuid' => $do_id])->first();
+        if ($debit_order_id != null)
+            $debit_order = DebitOrder::where(['uuid' => $debit_order_id])->first();
 
         //populate data
         $account_types = AccountType::all();
@@ -215,6 +207,10 @@ class PaymentMandateController extends Controller
 
         //TODO: validate phone number to MNO for matching details
 
+        //get Bank code if account_type_id = 1
+        $bank_code = null;
+        if ($validated['account_type_id'] == 1)
+            $bank_code = substr($validated['account_number'], 0, 3);
 
         //create or update customer
         $customer = Customer::firstOrNew(['phone' => $unique_phone,]);
@@ -235,7 +231,7 @@ class PaymentMandateController extends Controller
         $customer_account->secondary_phone = $validated['secondary_phone'];
         $customer_account->account_name = $validated['account_name'];
         $customer_account->account_number = $validated['account_number'];
-        $customer_account->bank_code = $validated['bank_code'];
+        $customer_account->bank_code = $bank_code;
         $customer_account->customer_id = $customer->id;
         $customer_account->created_by = Auth::user()->id;
         $customer_account->save();
@@ -245,17 +241,17 @@ class PaymentMandateController extends Controller
         return Redirect::route('payment-mandate.create-deduction', [$customer_account_uuid, $debit_order_uuid])->with('success', "Customer deduction channel saved");
     }
 
-    function create_deduction($ca_id, $do_id = null)
+    function create_deduction($customer_account_uuid, $debit_order_uuid = null)
     {
         $title = "Payment Mandate";
 
         //customer account
-        $customer_account = CustomerAccount::where(['uuid' => $ca_id])->first();
+        $customer_account = CustomerAccount::where(['uuid' => $customer_account_uuid])->first();
 
         //debit order
         $debit_order = [];
-        if ($do_id != null)
-            $debit_order = DebitOrder::where(['uuid' => $do_id])->first();
+        if ($debit_order_uuid != null)
+            $debit_order = DebitOrder::where(['uuid' => $debit_order_uuid])->first();
 
         //populate data
         $provider = PartnerUser::where(['user_id' => Auth::user()->id])->first();
@@ -296,7 +292,6 @@ class PaymentMandateController extends Controller
                         }
                     }
                 ],
-                //'evidence_of_aggrement' => 'required',
             ],
             [
                 'provider_id.required_if' => 'Service provider required',
@@ -310,7 +305,6 @@ class PaymentMandateController extends Controller
                 'start_date.required' => 'Start date required',
                 'deduction_end.required' => 'Deduction end required',
                 'end_date.required_if' => 'End date required',
-                //'evidence_of_aggrement.required' => 'Evidence of aggrement is required',
             ]
         );
 
@@ -324,21 +318,20 @@ class PaymentMandateController extends Controller
             $partner_id = $request->provider_id;
 
         //customer account id
-        $ca_id = $request->input('customer_account_id');
-        $ca_uuid = $request->input('customer_account_uuid');
+        $customer_account_uuid = $request->input('customer_account_uuid');
 
         //customer account
-        $customer_account = CustomerAccount::findOrFail($ca_id);
+        $customer_account = CustomerAccount::where("uuid", "=", $customer_account_uuid)->first();
 
         //debit order uuid
         if ($request->debit_order_uuid != null)
-            $debit_uuid = $request->debit_order_uuid;
+            $debit_order_uuid = $request->debit_order_uuid;
         else
-            $debit_uuid = Str::uuid();
+            $debit_order_uuid = Str::uuid();
 
         //create or update debit order
-        if ($debit_uuid != null) {
-            $debit_order = DebitOrder::where(['uuid' => $debit_uuid]);
+        if ($debit_order_uuid != null) {
+            $debit_order = DebitOrder::where(['uuid' => $debit_order_uuid]);
 
             if ($debit_order->count() > 0) {
                 $debit_order = $debit_order->first();
@@ -357,7 +350,7 @@ class PaymentMandateController extends Controller
             ]);
         }
 
-        $debit_order->uuid = $debit_uuid;
+        $debit_order->uuid = $debit_order_uuid;
         $debit_order->total_amount = $loan_amount;
         $debit_order->outstanding_amount = $loan_amount;
         if ($debit_order->created_by == null) {
@@ -377,15 +370,6 @@ class PaymentMandateController extends Controller
         $debit_order->approved = "PENDING";
         $debit_order->save();
 
-        // // calculate end date
-        // if ($request->input('deduction_end') === 'totalLoanCovered') {
-        //     // TODO: Create end date by check number of installment
-        //     $debit_order->end_date = date('Y-m-d', strtotime($request->input('start_date') . '+2 year'));
-        // } else if ($request->input('deduction_end') == 'specificDate') {
-        //     // fixed end date
-        //     $debit_order->end_date = $$request->input('end_date');
-        // }
-
         if ($debit_order) {
             //create deduction installments
             $response = $this->deductionService->createInstallment($debit_order);
@@ -400,70 +384,15 @@ class PaymentMandateController extends Controller
             $customer_partner->created_by = Auth::user()->id;
             $customer_partner->save();
 
-            //construct message
-            $message = "Kuridhia Vigezo na Masharti toa namba ya siri {$otp_code} kwenda " . strtoupper($debit_order->partner->business_name);
-
-            //send SMS
-            $data = ["phone" => $customer_account->phone, "message" => $message];
-            dispatch(new SendSMSJob($data));
+            //create evidence of aggrement
+            $filename = $this->create_evidence($debit_order);
+            $debit_order->evidence_of_aggrement = $filename;
+            $debit_order->status = 100;
+            $debit_order->save();
         }
 
         // redirect with message
-        return Redirect::route('payment-mandate.create-evidence', [$debit_uuid])->with('success', "Customer deduction information saved, OTP PIN sent to customer for Terms and Condition consent.");
-    }
-
-    //evidence of agrement
-    function create_evidence($debit_uuid)
-    {
-        $title = "Payment Mandate";
-
-        // debit order
-        $debit_order = DebitOrder::where(['uuid' => $debit_uuid])->firstOrFail();
-
-        //render view
-        return view('payment_mandate.create.create_evidence', compact('title', 'debit_order'));
-    }
-
-    //verify evidence of agrement
-    function verify_evidence(Request $request)
-    {
-        //Validate your data
-        $this->validate(
-            $request,
-            [
-                'otp_code' => 'required',
-            ]
-        );
-
-        //post data
-        $otp_code = $request->otp_code;
-        $debit_uuid = $request->debit_order_uuid;
-
-        //debit order
-        $debit_order = DebitOrder::where(['uuid' => $debit_uuid, 'otp_code' => $otp_code])->first();
-
-        if (!$debit_order) {
-            return Redirect::route('payment-mandate.create-evidence', $debit_uuid)->with('danger', 'Invalid OTP, please try again');
-        }
-
-        //Create Evidence of Agreement
-        view()->share('debit_order', $debit_order);
-        $pdf = PDF::loadView('payment_mandate.create.digital_evidence');
-
-        //create filename
-        $filename = $debit_order->uuid . '_evidence.pdf';
-
-        $path = 'assets/uploads/docs/pdf/';
-        $pdf->save($path  . $filename);
-
-        //save evidence in database
-        $debit_order->evidence_of_aggrement = $filename;
-        $debit_order->status = 100;
-
-        $debit_order->save();
-
-        // redirect with message
-        return Redirect::route('payment-mandate.preview', [$debit_uuid])->with('success', "Customer Evidence of aggrement verified");
+        return Redirect::route('payment-mandate.preview', [$debit_order_uuid])->with('success', "Customer deduction information saved, OTP PIN sent to customer for Terms and Condition consent.");
     }
 
     //customer preview
@@ -482,14 +411,15 @@ class PaymentMandateController extends Controller
     }
 
     // cancel registration
-    function cancel($debit_uuid)
+    function cancel($debit_order_uuid)
     {
         $title = 'Cancel payment mandate';
 
         // debit order
-        $debit_order = DebitOrder::where(['uuid' => $debit_uuid])->first();
+        $debit_order = DebitOrder::where(['uuid' => $debit_order_uuid])->first();
 
         //delete debit order
+        $del_installment = Installment::where(['debit_order_id' => $debit_order->id])->delete();
         $debit_order->delete();
 
         //redirect
@@ -500,23 +430,39 @@ class PaymentMandateController extends Controller
     function confirm(Request $request)
     {
         //post data
-        $debit_uuid = $request->input('mandate_id');
+        $debit_order_uuid = $request->input('uuid');
 
         //debit order
-        $debit_order = DebitOrder::findOrFail($debit_uuid);
+        $debit_order = DebitOrder::where("uuid", "=", $debit_order_uuid)->first();
 
         //update status of debit mandate
         $debit_order->status = 200;
         $debit_order->save();
 
-        //create payload
-        $payload = $this->payloadService->mandateRegistrationPayload($debit_order);
+        //check if account is NMB/CRDB/EcoBank/NBC
+        if ($debit_order->customerAccount->account->slug == "nmb-bank") {
+            //create payload
+            $payload = $this->payloadService->mandateRegistrationPayload($debit_order);
 
-        //Create Request to NMB
-        dispatch(new MandateRegistrationJob($payload));
+            //Create Request to NMB
+            dispatch(new MandateRegistrationJob($payload));
+        } elseif ($debit_order->customerAccount->account->slug == "crdb-bank") {
+            //requestId
+            $requestId = Str::uuid()->toString();
+
+            //create payload
+            $payload = $this->payloadService->CRDBMandatePayload($debit_order, $requestId);
+
+            //create data
+            $data['payload'] = $payload;
+            $data['requestId'] = $requestId;
+
+            //Create Request to CRDB
+            dispatch(new CRDBMandateRegistrationJob($data));
+        }
 
         //response
-        return response()->json(['success' => false, 'success_msg' => "Debit mandate processed"], 200);
+        return response()->json(['success' => true, 'success_msg' => "Debit mandate processed"], 200);
     }
 
     //saving application
@@ -922,6 +868,24 @@ class PaymentMandateController extends Controller
 
         //redirect
         return Redirect::route('payment-mandate.lists')->with('danger', 'Payment mandate deleted!');
+    }
+
+
+    public function create_evidence(DebitOrder $debit_order)
+    {
+        //Create Evidence of Agreement
+        view()->share('debit_order', $debit_order);
+
+        //pdf creation        
+        $pdf = PDF::loadView('payment_mandate.create.digital_evidence');
+
+        //create filename
+        $filename = "{$debit_order->reference}.pdf";
+
+        $path = 'assets/uploads/pdf/';
+        $pdf->save($path  . $filename);
+
+        return $filename;
     }
 
     //send remainder for payment mandate
