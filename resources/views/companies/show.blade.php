@@ -442,7 +442,7 @@
                             this.remarks = responseJson.remarks;
 
                             $('#message_wrp').html(
-                                "<div class='alert alert-success rounded-sm'>" + responseJson.message + "</div>"
+                                "<div class='alert alert-success rounded-sm'>" + responseJson.success_msg + "</div>"
                             );
                         }).catch(() => {
                             //display message

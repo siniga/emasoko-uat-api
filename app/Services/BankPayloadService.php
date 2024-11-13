@@ -161,9 +161,11 @@ class BankPayloadService
     {
         $payload = [
             "caseReference" => $otpRequest->reference,
+            "mandateReference" => $otpRequest->reference,
             "accountNumber" => $otpRequest->account_number,
+            "vendorName" => strtoupper($otpRequest->account_name),
             "processName" => "EMakato Mandate Registration",
-            "makerName" => static::userNameFormat($otpRequest->created_by)
+            "makerName" => static::userNameFormat($otpRequest->userCreated)
         ];
 
         return $payload;

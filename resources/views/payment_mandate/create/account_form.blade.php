@@ -181,12 +181,12 @@
 
                         <div class="row">
                             <div class="col-md-12">
-                                <div class="mb-3 text-sm-end d-none d-sm-block">
+                                <div class="mb-3 text-sm-end d-sm-block">
                                     <a href="{{ route('payment-mandate.lists') }}"
                                         class="btn btn-outline-danger text-medium">
                                         Cancel
                                     </a>
-                                    <button type="submit" class="btn btn-primary">
+                                    <button type="submit" class="btn btn-primary px-3">
                                         Next
                                     </button>
                                 </div>
