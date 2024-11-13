@@ -77,8 +77,11 @@ class MandateController extends Controller
     public function callback(Request $request)
     {
         // Log the callback response for debugging
-        Log::info('Payment Callback', $request->all());
+        // Log::info('Payment Callback', $request->all());
+        // Log::info('Status Code => ', $request['ResponseHeader']);
 
-        return response()->json(['message' => 'Payment successful'], 200);
+        //return $request['ResponseHeader']['StatusCode'];
+
+        // return response()->json(['message' => 'Payment successful'], 200);
     }
 }

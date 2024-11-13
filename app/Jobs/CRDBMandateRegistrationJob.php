@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Classes\Checksum;
+use App\Models\DebitOrder;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -55,11 +56,40 @@ class CRDBMandateRegistrationJob implements ShouldQueue
         //push payload => NMB Direct Debits
         $response = Http::withHeaders($headers)->post($API_URL, $this->data['payload']);
 
-        Log::debug("== Response ==");
-        Log::debug($response->status());
+        //update the debit order
+        $debit_order = DebitOrder::where('reference', '=', $this->data['mandateReferenceNumber'])->first();
+        $debit_order->http_response_status_json = $response;
+
+        //decode the response 
+        $response = json_decode($response, true);
+
+        //logging response
+        Log::debug('== MandateRegistration Response ==');
         Log::debug($response);
 
-        //send response to eMakato
-        return response()->json($response->json());
+        // Separate status code
+        if ($response['ResponseHeader']['StatusCode'] == 1000) {
+            $debit_order->status = 201;
+            $debit_order->crdb_reference = $response['ResponseBody']['Reference'];
+        } else if ($response['ResponseHeader']['StatusCode'] == 1001) {
+            $debit_order->status = 403;
+        }
+
+        $debit_order->http_response_code = $response['ResponseHeader']['StatusCode'];
+        $debit_order->remarks = $response['ResponseHeader']['StatusDesc'];
+        $debit_order->save();
+
+        //TODO: Send OTP message on FAILURE
+        if ($response['ResponseHeader']['StatusCode'] == 1001) {
+            //construct message
+            $message = "Payment Mandate failed from CRDB endpoint. Kindly update mandate information and process again.";
+
+            //format mobile phone
+            $phone =  casting_phone($debit_order->userCreated->phone);
+
+            //send sms
+            $data = ["phone" => $phone, "message" => $message];
+            dispatch(new SendSMSJob($data));
+        }
     }
 }

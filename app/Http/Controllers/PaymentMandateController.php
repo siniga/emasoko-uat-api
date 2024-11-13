@@ -339,14 +339,14 @@ class PaymentMandateController extends Controller
                 $debit_order = DebitOrder::firstOrNew([
                     'customer_account_id' => $customer_account->id,
                     'partner_id' => $partner_id,
-                    'approved' => "PENDING"
+                    'approved' => 0
                 ]);
             }
         } else {
             $debit_order = DebitOrder::firstOrNew([
                 'customer_account_id' => $customer_account->id,
                 'partner_id' => $partner_id,
-                'approved' => "PENDING"
+                'approved' => 0
             ]);
         }
 
@@ -367,7 +367,7 @@ class PaymentMandateController extends Controller
         $debit_order->next_debit_date = $request->input('start_date');
         $debit_order->deduction_end_date = $request->input('deduction_end');
         $debit_order->otp_code = $otp_code;
-        $debit_order->approved = "PENDING";
+        $debit_order->approved = 0;
         $debit_order->save();
 
         if ($debit_order) {
@@ -456,6 +456,7 @@ class PaymentMandateController extends Controller
             //create data
             $data['payload'] = $payload;
             $data['requestId'] = $requestId;
+            $data['mandateReferenceNumber'] = $debit_order->reference;
 
             //Create Request to CRDB
             dispatch(new CRDBMandateRegistrationJob($data));

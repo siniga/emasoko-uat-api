@@ -107,12 +107,7 @@
 
                                             <tr>
                                                 <th>Secondary Phone</th>
-                                                <td>
-                                                    <span>{{ $customer_account->secondary_phone ?? '' }}</span>
-                                                </td>
-
-                                                <th>Secondary Phone</th>
-                                                <td>{{ $debit_order->customerAccount->secondary_phone ?? '' }}</td>
+                                                <td colspan="3">{{ $debit_order->customerAccount->secondary_phone ?? '' }}</td>
                                             </tr>
                                         </table>
                                     </div>
