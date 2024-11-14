@@ -29,7 +29,7 @@ use App\Services\BankApiService;
 use App\Services\BankPayloadService;
 use App\Services\DeductionService;
 use Carbon\Carbon;
-use PDF;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 
 class PaymentMandateController extends Controller
@@ -385,8 +385,8 @@ class PaymentMandateController extends Controller
             $customer_partner->save();
 
             //create evidence of aggrement
-            $filename = $this->create_evidence($debit_order);
-            $debit_order->evidence_of_aggrement = $filename;
+            $filename = $this->createEvidence($debit_order);
+            $debit_order->aggrement_evidence = $filename;
             $debit_order->status = 100;
             $debit_order->save();
         }
@@ -429,6 +429,8 @@ class PaymentMandateController extends Controller
     //confirm application
     function confirm(Request $request)
     {
+        $show_modal = false; //show OTP Modal
+
         //post data
         $debit_order_uuid = $request->input('uuid');
 
@@ -440,13 +442,16 @@ class PaymentMandateController extends Controller
         $debit_order->save();
 
         //check if account is NMB/CRDB/EcoBank/NBC
-        if ($debit_order->customerAccount->account->slug == "nmb-bank") {
+        if ($debit_order->customerAccount->account->slug == "NMB") {
             //create payload
             $payload = $this->payloadService->mandateRegistrationPayload($debit_order);
 
+            //show OTP Modal
+            $show_modal = true;
+
             //Create Request to NMB
             dispatch(new MandateRegistrationJob($payload));
-        } elseif ($debit_order->customerAccount->account->slug == "crdb-bank") {
+        } elseif ($debit_order->customerAccount->account->slug == "CRDB") {
             //requestId
             $requestId = Str::uuid()->toString();
 
@@ -458,12 +463,15 @@ class PaymentMandateController extends Controller
             $data['requestId'] = $requestId;
             $data['mandateReferenceNumber'] = $debit_order->reference;
 
+            //show OTP Modal
+            $show_modal = false;
+
             //Create Request to CRDB
             dispatch(new CRDBMandateRegistrationJob($data));
         }
 
         //response
-        return response()->json(['success' => true, 'success_msg' => "Debit mandate processed"], 200);
+        return response()->json(['success' => true, 'show_modal' => $show_modal, 'success_msg' => "Debit mandate processed"], 200);
     }
 
     //saving application
@@ -542,7 +550,7 @@ class PaymentMandateController extends Controller
 
         //create otp request
         $otp_request = new OtpRequest();
-        $otp_request->reference = $debit_order->otp_reference;
+        $otp_request->reference = $debit_order->reference;
         $otp_request->account_number = $debit_order->customerAccount->account_number;
         $otp_request->action = 'verify';
         $otp_request->created_by = Auth::user()->id;
@@ -551,8 +559,12 @@ class PaymentMandateController extends Controller
         //create payload
         $payload = $this->payloadService->verifyOtpPayload($otp_request, $request->otpPin);
 
+        //passing data
+        $accountNumber = $debit_order->customerAccount->account_number;
+        $otpReference = $debit_order->reference;
+
         //api service
-        $http_response_code = $this->bankApi->verifyOtpRequest($payload, $debit_order->customerAccount->account_number, $debit_order->reference);
+        $http_response_code = $this->bankApi->verifyOtpRequest($payload, $accountNumber, $otpReference);
 
         if ($http_response_code == 202) {
             return response()->json(
@@ -872,13 +884,13 @@ class PaymentMandateController extends Controller
     }
 
 
-    public function create_evidence(DebitOrder $debit_order)
+    public function createEvidence(DebitOrder $debit_order)
     {
         //Create Evidence of Agreement
         view()->share('debit_order', $debit_order);
 
-        //pdf creation        
-        $pdf = PDF::loadView('payment_mandate.create.digital_evidence');
+        //PDF Creation
+        $pdf = Pdf::loadView('payment_mandate.pdf.evidence');
 
         //create filename
         $filename = "{$debit_order->reference}.pdf";

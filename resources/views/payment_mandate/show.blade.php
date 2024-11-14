@@ -220,10 +220,10 @@
                                         <th>Evidence of Aggrement</th>
                                         <td>
                                             <span>
-                                                @if ($debit_order->evidence_of_aggrement != null)
+                                                @if ($debit_order->aggrement_evidence != null)
                                                     <a download=""
-                                                        href="{{ asset('assets/uploads/docs/' . $debit_order->evidence_of_aggrement) }}">
-                                                        {{ $debit_order->evidence_of_aggrement }}
+                                                        href="{{ asset('assets/uploads/pdf/' . $debit_order->aggrement_evidence) }}">
+                                                        {{ $debit_order->aggrement_evidence }}
                                                     </a>
                                                 @else
                                                     NIL

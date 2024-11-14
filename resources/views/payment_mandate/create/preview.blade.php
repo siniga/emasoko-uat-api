@@ -58,7 +58,7 @@
 
                         <form @submit.prevent="submitForm();" autocomplete="off">
                             <section>
-                                <div id="message_wrp" class=""></div>
+                                <div id="message_wrp" class="message_wrp"></div>
 
                                 <div class="row">
                                     <div class="col-lg-12">
@@ -165,10 +165,10 @@
                                                 <th>Evidence of Aggrement</th>
                                                 <td>
                                                     <span>
-                                                        @if ($debit_order->evidence_of_aggrement != null)
+                                                        @if ($debit_order->aggrement_evidence != null)
                                                             <a download=""
-                                                                href="{{ asset('assets/uploads/pdf/' . $debit_order->evidence_of_aggrement) }}">
-                                                                {{ $debit_order->evidence_of_aggrement }}
+                                                                href="{{ asset('assets/uploads/pdf/' . $debit_order->aggrement_evidence) }}">
+                                                                {{ $debit_order->aggrement_evidence }}
                                                             </a>
                                                         @else
                                                             NIL
@@ -244,6 +244,7 @@
             return {
                 uuid: "{{ $debit_order->uuid }}",
                 status: "{{ $debit_order->status }}",
+                show_modal: false,
 
                 formData: {
                     uuid: "{{ $debit_order->uuid }}",
@@ -283,15 +284,29 @@
                             console.log(responseJson);
                             //change status
                             this.status = 200;
-
-                            //display message
-                            $('#message_wrp_1').html(
-                                "<div class='alert alert-success rounded-sm'>Payment mandate successfully created. Input the OTP PIN to confirm customer consent.</div>"
-                            );
-
-                            //todo: create modal for verifying Otp 
-                            $('#verifyOtpModal').modal('show');
                             
+                            //check if required to show modal
+                            if(responseJson.show_modal == true){
+                                //display message
+                                $('#message_wrp_1').html(
+                                    "<div class='alert alert-success rounded-sm'>Payment mandate successfully created. Input the OTP PIN to confirm customer consent.</div>"
+                                );
+
+                                //create modal for verifying OTP 
+                                $('#verifyOtpModal').modal('show');
+                            } else {
+                                //display message
+                                $('.message_wrp').html(
+                                    "<div class='alert alert-success rounded-sm'>Payment mandate successfully created.</div>"
+                                );
+
+                                //redirect to details page 
+                                var redirectionURL = '/payment-mandate/show/' + this.uuid;
+
+                                setTimeout(function () {
+                                    window.location.href = redirectionURL
+                                }, 2000);
+                            }
                         }).catch(() => {
                             this.formMessage = "Something went wrong.";
                         }).finally(() => {
@@ -417,7 +432,7 @@
 
                                 setTimeout(function () {
                                     window.location.href = redirectionURL
-                                }, 3000);
+                                }, 2000);
                             } else if(http_response_code == 500) {
                                 //display message
                                 $('#message_wrp_1').html(

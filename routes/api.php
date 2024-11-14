@@ -5,6 +5,8 @@ use App\Http\Controllers\Api\PaymentMandateController;
 use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\CorporateController;
 use App\Http\Controllers\Api\CRDB\MandateController as CRDBMandateController;
+use App\Http\Controllers\Api\ExternalApp\AuthController;
+use App\Http\Controllers\Api\ExternalApp\MandateRegistrationController;
 use App\Http\Controllers\Api\MandateController;
 use App\Http\Controllers\Api\OtpController;
 use Illuminate\Http\Request;
@@ -21,9 +23,17 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-// Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-//     return $request->user();
-// });
+Route::controller(AuthController::class)->group(function () {
+    //Route::post('register', 'register');
+    Route::post('login', 'login');
+});
+
+Route::middleware('auth:sanctum')->group( function () {
+    Route::post('create-mandate', [MandateRegistrationController::class, 'create']);
+    Route::post('verify-otp', [MandateRegistrationController::class, 'verifyOtp']);
+    Route::post('create-otp', [MandateRegistrationController::class, 'createOtp']);
+});
+
 
 //contacts 
 Route::post('contacts', [CompanyController::class, 'contacts']);
@@ -64,5 +74,3 @@ Route::post('collection/status', [CollectionController::class, 'status']);
 //CRDB apis
 Route::post('mandate/crdb', [CRDBMandateController::class, 'create']);
 Route::post('mandate/crdb/callback', [CRDBMandateController::class, 'callback']);
-
-
