@@ -83,6 +83,29 @@ class MandateController extends Controller
 
         return $request['callbackType'];
 
+        // {
+        //     "callbackType": "PAYMENT_STATUS",
+        //     "requestId": "8feb5f39-9955-43cb-8548-caefddb3848d",
+        //     "data": {
+        //         "reference": 10020,
+        //         "phoneNumber": "255752059910",
+        //         "accountNumber": "0152202249000",
+        //         "transferResponse": "success",
+        //         "transactionDateTime": "2023-12-01T05:56:15.649142047"
+        //     }
+        // }
+        
+         
+        
+        // {
+        //     "callbackType": "REQUEST_STATUS",
+        //     "requestId": "8feb5f39-9955-43cb-8548-caefddb3848d",
+        //     "data": {
+        //         "reference": 10020,
+        //         "status": "APPROVED"
+        //     }
+        // }
+
         if ($request['callbackType'] == "REQUEST_STATUS") {
             //query debit order by reference id
             $debit_order = DebitOrder::where('crdb_reference', '=', $request['data']['reference'])->first();
