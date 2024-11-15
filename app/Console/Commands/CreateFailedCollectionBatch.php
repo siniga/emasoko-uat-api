@@ -94,8 +94,14 @@ class CreateFailedCollectionBatch extends Command
                             $installment = Installment::where(['id' => $fields[0], 'status' => 'FAILED'])->first();
 
                             if ($installment) {
+                                //account details
+                                $bank_code = $installment->debitOrder->customerAccount->bank_code;
+                                $account_name = strtoupper($installment->debitOrder->customerAccount->account_name);
+                                $account_number = $installment->debitOrder->customerAccount->account_number;
+                                $mandate_reference = $installment->debitOrder->reference;
+
                                 //create csv file
-                                $csv .= "{$installment->id};016;NMB;{$installment->debitOrder->customerAccount->account_number};{$installment->debitOrder->customerAccount->account_name};{$installment->debitOrder->customerAccount->account_number};{$installment->installment_amount}\n";
+                                $csv .= "{$installment->id};{$bank_code};NMB;{$mandate_reference};{$account_name};{$account_number};{$installment->installment_amount}\n";
                             }
                         }
                     }

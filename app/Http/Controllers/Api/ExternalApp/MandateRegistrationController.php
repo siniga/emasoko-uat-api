@@ -139,6 +139,7 @@ class MandateRegistrationController extends Controller
         $debit_order->uuid = Str::uuid();
         $debit_order->partner_id = $partner_id;
         $debit_order->customer_account_id = $customer_account->id;
+        $debit_order->channel = $customer_account->account->slug;
         $debit_order->total_amount = $total_amount;
         $debit_order->outstanding_amount = $total_amount;
         $debit_order->reference = Carbon::now()->format('dmY') . rand(1000, 1999);

@@ -11,6 +11,7 @@ use App\Services\BankApiService;
 use App\Services\DeductionService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 
 class CreateCollectionBatch extends Command
 {
@@ -52,13 +53,13 @@ class CreateCollectionBatch extends Command
 
         //debit orders => status=OPEN and NEXT_DEBIT_DATE = today()
         $partners = Partner::whereHas('debitOrders', function ($query) {
-            return $query->where(['contract_status' => 'OPEN', 'approved' => 'APPROVED'])
-                ->whereDate('next_debit_date', "=" , Carbon::now());
+            return $query->where(['contract_status' => 'OPEN', 'channel' => 'NMB'  ,'approved' => 1, 'deleted' => 0])
+                ->whereDate('next_debit_date', "=", Carbon::now());
         })->get();
 
         foreach ($partners as $partner) {
             //1. Select debit orders based of partner
-            $debit_orders = DebitOrder::where(['contract_status' => 'OPEN', 'approved' => 'APPROVED'])
+            $debit_orders = DebitOrder::where(['contract_status' => 'OPEN', 'approved' => 1])
                 ->where('partner_id', '=', $partner->id)
                 ->where('deleted', '=', 0)
                 ->whereDate('next_debit_date', "=", Carbon::now());
@@ -88,16 +89,17 @@ class CreateCollectionBatch extends Command
                     foreach ($debit_orders as $val) {
                         // Your Eloquent query executed by using get()
                         $installments = Installment::where(['debit_order_id' => $val->id, 'status' => 'OPEN'])
-                        ->whereDate('payment_date', '<=', $val->next_debit_date)->get();
+                            ->whereDate('payment_date', '<=', $val->next_debit_date)->get();
 
                         foreach ($installments as $installment) {
                             //account details
+                            $bank_code = $val->customerAccount->bank_code;
                             $account_name = strtoupper($val->customerAccount->account_name);
                             $account_number = $val->customerAccount->account_number;
                             $mandate_reference = $val->reference;
-                            
+
                             //create csv file
-                            $csv .= "{$installment->id};016;NMB;{$mandate_reference};{$account_name};{$account_number};{$installment->installment_amount}\n";
+                            $csv .= "{$installment->id};{$bank_code};NMB;{$mandate_reference};{$account_name};{$account_number};{$installment->installment_amount}\n";
 
                             //increment data point
                             $data_point += 1;
@@ -106,7 +108,7 @@ class CreateCollectionBatch extends Command
                 }
 
                 //check if data point > 0
-                if($data_point > 0){
+                if ($data_point > 0) {
                     //4. Save csv payload in database
                     $batch->request_csv = $csv;
                     $batch->save();

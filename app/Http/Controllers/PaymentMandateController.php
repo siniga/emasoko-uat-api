@@ -368,6 +368,7 @@ class PaymentMandateController extends Controller
         $debit_order->deduction_end_date = $request->input('deduction_end');
         $debit_order->otp_code = $otp_code;
         $debit_order->approved = 0;
+        $debit_order->channel = $customer_account->account->slug;
         $debit_order->save();
 
         if ($debit_order) {

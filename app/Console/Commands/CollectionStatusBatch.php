@@ -9,6 +9,7 @@ use App\Models\DebitOrder;
 use App\Services\BankPayloadService;
 use App\Services\BankApiService;
 use App\Services\DeductionService;
+use Illuminate\Support\Facades\Log;
 
 class CollectionStatusBatch extends Command
 {
