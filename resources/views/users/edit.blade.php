@@ -74,7 +74,7 @@
                                 @php
                                     $options = ['' => '-- Select --'] + $options;
                                 @endphp
-                                {{ Form::select('role_id', $options, old('role_id', $current_role->role_id ?? ''), ['class' => 'form-control', 'id' => 'role_id', 'x-on:change="onRoleChange"']) }}
+                                {{ Form::select('role_id', $options, old('role_id', $current_role->role_id ?? ''), ['class' => 'form-control', 'id' => 'role_id']) }}
                                 <span class="text-danger">{{ $errors->first('role_id') }}</span>
                             </div>
                         </div>
@@ -93,6 +93,23 @@
                                 @endphp
                                 {{ Form::select('provider_id', $options, old('provider_id', $partner_user->partner_id ?? ''), ['class' => 'form-control', 'id' => 'provider_id']) }}
                                 <span class="text-danger">{{ $errors->first('provider_id') }}</span>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6 col-md-6">
+                            <div class="mb-3">
+                                <label>eMakato Partner</label>
+                                @php $options = []; @endphp
+                                @foreach ($companies as $company)
+                                    @php
+                                        $options[$company->id] = $company->company_name;
+                                    @endphp
+                                @endforeach
+                                @php
+                                    $options = ['' => '-- Select --'] + $options;
+                                @endphp
+                                {{ Form::select('company_id', $options, old('company_id', $company_user->company_id ?? ''), ['class' => 'form-control', 'id' => 'company_id']) }}
+                                <span class="text-danger">{{ $errors->first('company_id') }}</span>
                             </div>
                         </div>
                     </div>

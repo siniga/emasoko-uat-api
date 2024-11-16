@@ -38,7 +38,7 @@ use Illuminate\Support\Facades\Validator;
 use Stidges\CountryFlags\CountryFlag;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Str;
-use PDF;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 
 class CompanyController extends Controller
@@ -105,7 +105,7 @@ class CompanyController extends Controller
     }
 
     //export pdf
-    function exportPDF(Request $request)
+    public function exportPDF(Request $request)
     {
         //all request
         $requests = $request->all();
@@ -121,7 +121,7 @@ class CompanyController extends Controller
         $companies = $companies->get();
 
         //pdf
-        $pdf = PDF::loadView('companies.export_pdf', compact('companies'))->setPaper('a4', 'landscape');
+        $pdf = Pdf::loadView('companies.export_pdf', compact('companies'))->setPaper('a4', 'landscape');
 
         // download PDF file with download method
         return $pdf->download(date('YmdHis') . '-Companies.pdf');
@@ -151,7 +151,7 @@ class CompanyController extends Controller
     }
 
     //company registration
-    function registrationForm($uuid = null)
+    public function registrationForm($uuid = null)
     {
         $title = 'Company Registration';
 
@@ -177,7 +177,7 @@ class CompanyController extends Controller
     }
 
     //store company details
-    function storeCompanyDetail(CompanyDetailRequest $request)
+    public function storeCompanyDetail(CompanyDetailRequest $request)
     {
         // validated request
         $validated = $request->validated();
@@ -213,7 +213,7 @@ class CompanyController extends Controller
     }
 
     //company documents
-    function companyDocumentsForm($uuid)
+    public function companyDocumentsForm($uuid)
     {
         $title = 'Company Registration';
 
@@ -237,7 +237,7 @@ class CompanyController extends Controller
     }
 
     //store company details
-    function storeCompanyDocuments(Request $request)
+    public function storeCompanyDocuments(Request $request)
     {
         //validate documents
         $validator = Validator::make(
@@ -303,7 +303,7 @@ class CompanyController extends Controller
     }
 
     //company Account
-    function companyAccountForm($uuid)
+    public function companyAccountForm($uuid)
     {
         $title = 'Company Registration';
 
@@ -320,7 +320,7 @@ class CompanyController extends Controller
     }
 
     //store company accounts
-    function storeCompanyAccounts(CompanyAccountRequest $request)
+    public function storeCompanyAccounts(CompanyAccountRequest $request)
     {
         // validated request
         $validated = $request->validated();
@@ -343,7 +343,7 @@ class CompanyController extends Controller
     }
 
     //company staff
-    function companyStaffForm($uuid)
+    public function companyStaffForm($uuid)
     {
         $title = 'Company Registration';
 
@@ -356,7 +356,7 @@ class CompanyController extends Controller
     }
 
     //store company staff
-    function storeCompanyStaff(CompanyStaffRequest $request)
+    public function storeCompanyStaff(CompanyStaffRequest $request)
     {
         // validated request
         $validated = $request->validated();
@@ -398,7 +398,7 @@ class CompanyController extends Controller
     }
 
     //authorized person
-    function companyAuthorizedPersonForm($uuid)
+    public function companyAuthorizedPersonForm($uuid)
     {
         $title = 'Company Registration';
 
@@ -410,7 +410,7 @@ class CompanyController extends Controller
     }
 
     //store company authorized person
-    function storeCompanyAuthorizedPerson(Request $request)
+    public function storeCompanyAuthorizedPerson(Request $request)
     {
         //validate the request data
         Log::debug("== validation ==");
@@ -441,7 +441,7 @@ class CompanyController extends Controller
     }
 
     //company info overview
-    function companyPreview($uuid)
+    public function companyPreview($uuid)
     {
         $title = 'Company Registration';
 
@@ -453,7 +453,7 @@ class CompanyController extends Controller
     }
 
     //confirm  application
-    function confirmRegistration(Request $request)
+    public function confirmRegistration(Request $request)
     {
         //post data
         $uuid = $request->input('uuid');
@@ -476,7 +476,7 @@ class CompanyController extends Controller
     }
 
     //saving application
-    function savingRegistration(Request $request)
+    public function savingRegistration(Request $request)
     {
         //post data
         $uuid = $request->input('uuid');
@@ -494,7 +494,7 @@ class CompanyController extends Controller
     }
 
     //cancel registration
-    function cancelRegistration($uuid)
+    public function cancelRegistration($uuid)
     {
         //company
         $company = Partner::where(['uuid' => $uuid])->firstOrFail();
@@ -641,7 +641,7 @@ class CompanyController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    function destroy($uuid)
+    public function destroy($uuid)
     {
         //'Delete Company';
         // has_allowed('cars', 'delete');
@@ -673,7 +673,7 @@ class CompanyController extends Controller
     }
 
     //company assessment
-    function companyAssessment($uuid)
+    public function companyAssessment($uuid)
     {
         $title = "Company Assessment";
 
@@ -685,7 +685,7 @@ class CompanyController extends Controller
     }
 
     //get assessment approval
-    function companyAssessmentStages(Request $request)
+    public function companyAssessmentStages(Request $request)
     {
         $uuid = $request->input('uuid');
 
@@ -700,7 +700,7 @@ class CompanyController extends Controller
     }
 
     //get assessment approval
-    function companyAssessmentApproval(Request $request)
+    public function companyAssessmentApproval(Request $request)
     {
         $uuid = $request->input('uuid');
         $stage = $request->input('stage');
@@ -724,7 +724,7 @@ class CompanyController extends Controller
     }
 
     //store company assessment
-    function storeAssessment(Request $request)
+    public function storeAssessment(Request $request)
     {
         //requests
         $uuid = $request->input('uuid');

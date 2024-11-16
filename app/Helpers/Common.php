@@ -59,7 +59,7 @@ if (!function_exists('reverse_casting_phone')) {
 if (!function_exists('get_company_notification')) {
     function get_company_notification()
     {
-        $companies = Partner::where(function ($query) {
+        $companies = Partner::filterCondition()->where(function ($query) {
             $query->where('status', '=', 1)
                 ->orWhere('status', '=', 2);
         });

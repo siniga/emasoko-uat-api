@@ -48,7 +48,7 @@
                                         <th width="16%">Email</th>
                                         <th width="12%">Phone</th>
                                         <th width="13%">Roles</th>
-                                        <th width="16%">Registered On</th>
+                                        <th width="12%">Registered On</th>
                                         <th width="8%">Status</th>
                                         <th style="width: 60px;">Actions</th>
                                     </tr>
@@ -68,7 +68,7 @@
                                                     @php $i++; @endphp
                                                 @endforeach
                                             </td>
-                                            <td>{{ $values->created_at }}</td>
+                                            <td>{{ date('d-m-Y', strtotime($values->created_at)) }}</td>
                                             <td>
                                                 @if ($values->active == 1)
                                                     <span class="badge bg-success-1 font-10">Active</span>

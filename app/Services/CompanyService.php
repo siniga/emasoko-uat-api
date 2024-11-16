@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Jobs\SendEmailJob;
 use App\Models\AppVariable;
+use App\Models\CompanyUser;
 use App\Models\DocumentCategory;
 use App\Models\Partner;
 use App\Models\PartnerAccount;
@@ -27,6 +28,19 @@ class CompanyService
     //create company information
     public function createInformation($data, $uuid): Partner
     {
+        //logged in user
+        $user = User::findOrFail(Auth::user()->id);
+
+        //declare company
+        $company_id = null;
+
+        if ($user->hasRole('Partner')) {
+            $company_user = CompanyUser::where(['user_id' => Auth::user()->id])->first();
+
+            if ($company_user)
+                $company_id = $company_user->company_id;
+        }
+
         //modify phone number
         $phone = $data->company_phone;
 
@@ -45,8 +59,8 @@ class CompanyService
         $partner->email = $data->company_email;
         $partner->postal_address = $data->postal_address;
         $partner->physical_address = $data->physical_address;
-        // $partner->website = $data->company_website;
         $partner->next_step = 'companies/documents/' . $data->partner_uuid;
+        $partner->company_id = $company_id;
         $partner->save();
 
         return $partner;

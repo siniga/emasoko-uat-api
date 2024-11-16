@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 use App\Classes\Authentication;
-use Str;
+use Illuminate\Support\Str;
 
 class OtpController extends Controller
 {

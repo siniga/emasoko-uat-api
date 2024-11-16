@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Traits\DocumentNumberTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 class Partner extends Model
 {
@@ -19,6 +20,24 @@ class Partner extends Model
             $model->short_code = strtoupper(substr($model->business_name, 0, 3));
             $model->client_code = strtoupper(substr($model->business_name, 0, 2));
         });
+    }
+
+    //where condition
+    public static function filterCondition()
+    {
+        $user = User::findOrFail(Auth::user()->id);
+
+        $partners = static::orderBy('partners.created_at', 'DESC');
+
+        if ($user->hasRole('Partner')) {
+            $company_user = CompanyUser::where(['user_id' => $user->id])->first();
+
+            if ($company_user) {
+                $partners = $partners->where('partners.company_id', '=', $company_user->company_id);
+            }
+        }
+
+        return $partners;
     }
 
     function partnerAuthorizeUser()

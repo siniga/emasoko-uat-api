@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Company;
+use App\Models\CompanyUser;
 use App\Models\Partner;
 use App\Models\PartnerUser;
 use App\Models\Role;
@@ -43,9 +45,10 @@ class UserController extends Controller
 
         //service provider
         $providers = Partner::orderBy('business_name')->get();
+        $companies = Company::orderBy('company_name')->get();
 
         //render view
-        return view('users.create', compact('title', 'roles', 'providers'));
+        return view('users.create', compact('title', 'roles', 'providers', 'companies'));
     }
 
     function store(Request $request)
@@ -82,6 +85,14 @@ class UserController extends Controller
                 $partner_user->authorize = 1;
                 $partner_user->save();
             }
+        } else if ($request->input('role_id') == 6) {
+            //create company user
+            $company_user = CompanyUser::firstOrNew([
+                'user_id' => $user->id,
+                'company_id' => $request->input('company_id')
+            ]);
+            $company_user->authorize = 1;
+            $company_user->save();
         }
 
         //redirect
@@ -101,14 +112,20 @@ class UserController extends Controller
         //service provider
         $providers = Partner::orderBy('business_name')->get();
 
+        //companies
+        $companies = Company::orderBy('company_name')->get();
+
         //current roles
         $current_role = RoleUser::where('user_id', $id)->first();
 
         //partner user
         $partner_user = PartnerUser::where('user_id', $id)->first();
 
+        //company user
+        $company_user = CompanyUser::where('user_id', $id)->first();
+
         //render view
-        return view('users.edit', compact('title', 'user', 'roles', 'providers', 'current_role', 'partner_user'));
+        return view('users.edit', compact('title', 'user', 'roles', 'providers', 'companies', 'current_role', 'partner_user', 'company_user'));
     }
 
     function update(Request $request, $id)
@@ -121,6 +138,7 @@ class UserController extends Controller
                 'phone' => ['required', new PhoneNumber()],
                 'role_id' => 'required',
                 'provider_id' => 'required_if:role_id,==,2,4',
+                'company_id' => 'required_if:role_id,==,6',
             ],
             [
                 'name.required' => 'Full name is required',
@@ -128,6 +146,7 @@ class UserController extends Controller
                 'phone.required' => 'Phone is required',
                 'role_id.required' => 'Role required',
                 'provider_id.required_if' => 'Service provider required',
+                'company_id.required_if' => 'eMakato partner is required',
             ]
         );
 
@@ -176,6 +195,14 @@ class UserController extends Controller
                 $partner_user->authorize = 1;
                 $partner_user->save();
             }
+        } else if ($request->input('role_id') == 6) {
+            //create company user
+            $company_user = CompanyUser::firstOrNew([
+                'user_id' => $user->id,
+                'company_id' => $request->input('company_id')
+            ]);
+            $company_user->authorize = 1;
+            $company_user->save();
         }
 
         //redirect

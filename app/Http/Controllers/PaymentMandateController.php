@@ -884,7 +884,6 @@ class PaymentMandateController extends Controller
         return Redirect::route('payment-mandate.lists')->with('danger', 'Payment mandate deleted!');
     }
 
-
     public function createEvidence(DebitOrder $debit_order)
     {
         //Create Evidence of Agreement

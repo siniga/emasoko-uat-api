@@ -15,7 +15,7 @@
                     </a>
                 </li>
 
-                @if (Auth::user()->hasRole(['admin']))
+                @if (Auth::user()->hasRole(['admin']) || Auth::user()->hasRole(['Partner']))
                     <li class="{{ Route::is('companies.lists', 'companies.registration', 'companies.register-documents', 'companies.register-accounts', 'companies.register-staff', 'companies.register-authorized-person' ,'companies.preview', 'companies.details', 'companies.edit') ? "mm-active" : ""}}">
                         <a href="{{ route('companies.lists') }}" class="waves-effect ">
                             <i class="bx bx-building"></i>
@@ -31,12 +31,14 @@
                         </a>
                     </li>
            
-                    <li class="{{ Route::is('customer-accounts.lists', 'customer-accounts.index' ,'customer-accounts.delete', 'customer-accounts.create', 'customer-accounts.edit', 'customer-accounts.show') ? "mm-active" : ""}}">
-                        <a href="{{ route('customer-accounts.lists') }}" class="waves-effect">
-                            <i class='bx bxs-user-badge'></i>
-                            <span key="t-layouts">Customer Accounts</span>
-                        </a>
-                    </li>
+                    @if (Auth::user()->hasRole(['admin']))
+                        <li class="{{ Route::is('customer-accounts.lists', 'customer-accounts.index' ,'customer-accounts.delete', 'customer-accounts.create', 'customer-accounts.edit', 'customer-accounts.show') ? "mm-active" : ""}}">
+                            <a href="{{ route('customer-accounts.lists') }}" class="waves-effect">
+                                <i class='bx bxs-user-badge'></i>
+                                <span key="t-layouts">Customer Accounts</span>
+                            </a>
+                        </li>
+                    @endif
                 @endif
 
                 <li class="{{ Route::is('payment-mandate.create-account') ? "mm-active" : ""}}">

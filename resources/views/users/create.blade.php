@@ -73,7 +73,7 @@
                                 @php
                                     $options = ['' => '-- Select --'] + $options;
                                 @endphp
-                                {{ Form::select('role_id', $options, old('role_id'), ['class' => 'form-control', 'id' => 'role_id', 'x-on:change="onRoleChange"']) }}
+                                {{ Form::select('role_id', $options, old('role_id'), ['class' => 'form-control', 'id' => 'role_id']) }}
                                 <span class="text-danger">{{ $errors->first('role_id') }}</span>
                             </div>
                         </div>
@@ -92,6 +92,23 @@
                                 @endphp
                                 {{ Form::select('provider_id', $options, old('provider_id'), ['class' => 'form-control', 'id' => 'provider_id']) }}
                                 <span class="text-danger">{{ $errors->first('provider_id') }}</span>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6 col-md-6">
+                            <div class="mb-3">
+                                <label>eMakato Partner</label>
+                                @php $options = []; @endphp
+                                @foreach ($companies as $company)
+                                    @php
+                                        $options[$company->id] = $company->company_name;
+                                    @endphp
+                                @endforeach
+                                @php
+                                    $options = ['' => '-- Select --'] + $options;
+                                @endphp
+                                {{ Form::select('company_id', $options, old('company_id'), ['class' => 'form-control', 'id' => 'company_id']) }}
+                                <span class="text-danger">{{ $errors->first('company_id') }}</span>
                             </div>
                         </div>
                     </div>
@@ -134,19 +151,22 @@
         //initiate data
         function initData() {
             return {
+                showProviderView: false,
                 showPartnerView: false,
-
 
                 onRoleChange(e) {
                     var selectedValue = e.target.value;
                     console.log(selectedValue)
 
                     if (selectedValue == 2 || selectedValue == 4) {
-                        this.showPartnerView = true
+                        this.showProviderView = true;
+                        this.showPartnerView = false;
                     } else if (selectedValue == 6) {
-                        this.showPartnerView = false
+                        this.showProviderView = false;
+                        this.showPartnerView = true;
                     } else {
-                        this.showPartnerView = false
+                        this.showProviderView = false;
+                        this.showPartnerView = false;
                     }
                 },
             }

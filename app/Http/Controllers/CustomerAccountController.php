@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Facades\Excel;
-use PDF;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class CustomerAccountController extends Controller
 {
@@ -298,7 +298,7 @@ class CustomerAccountController extends Controller
         $customer_accounts = $customer_accounts->get();
 
         //pdf
-        $pdf = PDF::loadView('customer_accounts.export_pdf', compact('customer_accounts'))->setPaper('a4', 'landscape');
+        $pdf = Pdf::loadView('customer_accounts.export_pdf', compact('customer_accounts'))->setPaper('a4', 'landscape');
 
         // download PDF file with download method
         return $pdf->download(date('YmdHis') . '-CustomerAccounts.pdf');

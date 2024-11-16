@@ -89,6 +89,7 @@ class User extends Authenticatable
             'phone' => ['required', new PhoneNumber()],
             'role_id' => 'required',
             'provider_id' => 'required_if:role_id,==,2,4',
+            'company_id' => 'required_if:role_id,==,6',
             'password' => 'required|string|min:8',
             'password_confirm' => 'required|same:password'
         ];
@@ -103,7 +104,8 @@ class User extends Authenticatable
             'email.unique' => 'Email must be unique',
             'phone.required' => 'Phone is required',
             'role_id.required' => 'Role required',
-            'provider_id.required_if' => 'Service provider required',
+            'provider_id.required_if' => 'Service provider is required',
+            'company_id.required_if' => 'eMakato partner is required',
             'password.required' => 'Password is required',
             'password_confirm.required' => 'Confirm password is required',
             'password_confirm.same:password' => 'Password must match',
