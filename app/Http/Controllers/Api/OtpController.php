@@ -28,10 +28,12 @@ class OtpController extends Controller
 
         //create data
         $data = [
-            "caseReference" => "0011432",
-            "accountNumber" => "62102402432",
-            "processName" => "Test JWT Tokens Code",
-            "makerName" => "ETest"
+            "caseReference" => "141120241405",
+            "mandateReference" => "141120241405",
+            "accountNumber" => "61702400937",
+            "vendorName" => "YYYY",
+            "processName" => "EMakato Mandate Registration",
+            "makerName" => "ETest",
         ];
 
         //create payload
