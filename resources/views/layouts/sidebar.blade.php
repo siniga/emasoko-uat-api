@@ -73,7 +73,6 @@
                     </li>
                 @endif
 
-
                 @if (Auth::user()->hasRole(['admin']))
                     <li class="menu-title" key="t-apps">Authentication</li>
 
