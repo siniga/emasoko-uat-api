@@ -86,7 +86,7 @@
 
                     <li class="{{ Route::is('users.view-otp') ? "mm-active":""}}">
                         <a href="{{ route('users.view-otp') }}" class="waves-effect">
-                            <i class="bx bx-user-plus"></i>
+                            <i class='bx bx-info-circle'></i>
                             <span key="t-chat">Users OTP</span>
                         </a>
                     </li>
