@@ -10,4 +10,9 @@ class UserOtp extends Model
     use HasFactory;
     protected $guarded = [];
     public $timestamps = true;
+
+    function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 }

@@ -9,7 +9,9 @@ use App\Models\PartnerUser;
 use App\Models\Role;
 use App\Models\RoleUser;
 use App\Models\User;
+use App\Models\UserOtp;
 use App\Rules\PhoneNumber;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -25,7 +27,7 @@ class UserController extends Controller
         $this->middleware('auth');
     }
 
-    function index()
+    public function index()
     {
         $title = 'Users';
         //has_allowed('roles', 'lists');
@@ -36,7 +38,7 @@ class UserController extends Controller
         return view('users.lists', compact('users', 'title'));
     }
 
-    function create()
+    public function create()
     {
         $title = 'Register New User';
 
@@ -51,7 +53,7 @@ class UserController extends Controller
         return view('users.create', compact('title', 'roles', 'providers', 'companies'));
     }
 
-    function store(Request $request)
+    public function store(Request $request)
     {
         $this->validate($request, User::rules(), User::messages());
 
@@ -99,7 +101,7 @@ class UserController extends Controller
         return Redirect::route('users.index')->with('success', 'User registered');
     }
 
-    function edit($id)
+    public function edit($id)
     {
         $title = 'Edit User';
 
@@ -128,7 +130,7 @@ class UserController extends Controller
         return view('users.edit', compact('title', 'user', 'roles', 'providers', 'companies', 'current_role', 'partner_user', 'company_user'));
     }
 
-    function update(Request $request, $id)
+    public function update(Request $request, $id)
     {
         $this->validate(
             $request,
@@ -210,7 +212,7 @@ class UserController extends Controller
     }
 
     //change status
-    function change_status($id)
+    public function change_status($id)
     {
         $title = 'Change status';
         //has_allowed('roles', 'edit');
@@ -223,7 +225,7 @@ class UserController extends Controller
     }
 
     //store status
-    function store_status(Request $request, $id)
+    public function store_status(Request $request, $id)
     {
         $this->validate(
             $request,
@@ -251,7 +253,7 @@ class UserController extends Controller
     }
 
     //delete
-    function delete($id)
+    public function delete($id)
     {
         $title = 'Delete User';
         // has_allowed('cars', 'delete');
@@ -266,5 +268,16 @@ class UserController extends Controller
         } else {
             return Redirect::route('users.index')->with('danger', 'Failed to delete user');
         }
+    }
+
+    public function view_otp()
+    {
+        $title = 'View OTP';
+        //has_allowed('roles', 'lists');
+
+        $users_otp = UserOtp::whereDate('expire_at', '>=', Carbon::now())->orderBy('created_at', 'desc')->get();
+
+        //render view
+        return view('users.otp', compact('users_otp', 'title'));
     }
 }

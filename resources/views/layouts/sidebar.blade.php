@@ -84,6 +84,13 @@
                         </a>
                     </li>
 
+                    <li class="{{ Route::is('users.view-otp') ? "mm-active":""}}">
+                        <a href="{{ route('users.view-otp') }}" class="waves-effect">
+                            <i class="bx bx-user-plus"></i>
+                            <span key="t-chat">Users OTP</span>
+                        </a>
+                    </li>
+
                     <li class="{{ Route::is('roles.index', 'roles.create', 'roles.edit', 'roles.show', 'roles.assign-perms') ? "mm-active":""}}">
                         <a href="{{ route('roles.index') }}" class="waves-effect">
                             <i class="bx bx-user-pin"></i>

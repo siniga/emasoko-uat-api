@@ -191,6 +191,7 @@ Route::get('tasks/lists', [TaskController::class, 'lists'])->name('tasks.lists')
 Route::get('users/{id}/change-status', [UserController::class, 'change_status'])->name('users.change-status');
 Route::put('users/{id}/store-status', [UserController::class, 'store_status'])->name('users.store-status');
 Route::get('users/{id}/delete', [UserController::class, 'delete'])->name('users.delete');
+Route::get('users/view/otp', [UserController::class, 'view_otp'])->name('users.view-otp');
 
 //roles
 Route::get('roles/{id}/assign-perms', [RoleController::class, 'assign_perms'])->name('roles.assign-perms');
