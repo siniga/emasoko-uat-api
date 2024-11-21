@@ -60,6 +60,7 @@ class MandateRegistrationJob implements ShouldQueue
 
         //API URL 
         $API_URL = env('API_URL');
+        Log::debug("API URL =>" . $API_URL);
 
         //response
         $response = Http::withHeaders($headers)->post($API_URL, $payload);
@@ -75,30 +76,34 @@ class MandateRegistrationJob implements ShouldQueue
         Log::debug('== MandateRegistration Response ==');
         Log::debug($response);
 
-        // Separate status code
-        if (strtolower($response['status']) == "success"){
-            $debit_order->status = 201;
-            $debit_order->otp_reference = $response['data']['otpCaseReference'];
-        } else if(strtolower($response['status']) == "fail"){
-            if ($response['data']['response'][0]['responseCode'] != 410)
-                $debit_order->status = 403;
-        }       
+        if($response) {
+            // Separate status code
+            if (strtolower($response['status']) == "success"){
+                $debit_order->status = 201;
+                $debit_order->otp_reference = $response['data']['otpCaseReference'];
+            } else if(strtolower($response['status']) == "fail"){
+                if ($response['data']['response'][0]['responseCode'] != 410)
+                    $debit_order->status = 403;
+            }       
 
-        $debit_order->http_response_code = $response['data']['response'][0]['responseCode'];
-        $debit_order->remarks = $response['data']['response'][0]['responseDescription'];
-        $debit_order->save();
+            $debit_order->http_response_code = $response['data']['response'][0]['responseCode'];
+            $debit_order->remarks = $response['data']['response'][0]['responseDescription'];
+            $debit_order->save();
 
-        //TODO: Send OTP message on FAILURE
-        if(strtolower($response['status']) == "fail"){
-            //construct message
-            $message = "Payment Mandate failed from NMB endpoint. Kindly update mandate information and process again.";
+            //TODO: Send OTP message on FAILURE
+            if(strtolower($response['status']) == "fail"){
+                //construct message
+                $message = "Payment Mandate failed from NMB endpoint. Kindly update mandate information and process again.";
 
-            //format mobile phone
-            $phone =  casting_phone($debit_order->userCreated->phone);
+                //format mobile phone
+                $phone =  casting_phone($debit_order->userCreated->phone);
 
-            //send sms
-            $data = ["phone" => $phone, "message" => $message];
-            dispatch(new SendSMSJob($data));
+                //send sms
+                $data = ["phone" => $phone, "message" => $message];
+                dispatch(new SendSMSJob($data));
+            }
+        } else {
+            Log::debug("No response from NMB end");
         }
     }
 }

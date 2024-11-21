@@ -369,7 +369,7 @@ class BankApiService
                 'account_number' => $payload['data']['accountNumber'],
                 'action' => 'create',
             ]
-        )->latest();
+        )->first();
         $otp_request->http_response_json = $response;
 
         //decode the response 
@@ -383,14 +383,14 @@ class BankApiService
             $response_code = 200; //response code
 
             //update otp response code
-            $otp_request->http_response_code = $response['data']['response'][0]['responseCode'];
-            $otp_request->save();
+            // $otp_request->http_response_code = $response['data']['response'][0]['responseCode'];
+            // $otp_request->save();
         } else if (strtolower($response['status']) == "failed") {
             $response_code = 500; //response code
 
             //update otp response code
-            $otp_request->http_response_code = $response['data']['response'][0]['responseCode'];
-            $otp_request->save();
+            // $otp_request->http_response_code = $response['data']['response'][0]['responseCode'];
+            // $otp_request->save();
         }
 
         return $response_code;
@@ -434,7 +434,7 @@ class BankApiService
                 'account_number' => $account_number,
                 'action' => 'verify',
             ]
-        )->latest();
+        )->first();
         $otp_request->http_response_json = $response;
 
         //decode the response 
@@ -448,8 +448,8 @@ class BankApiService
             $response_code = 202; //response code
 
             //update otp response code
-            $otp_request->http_response_code = $response['data']['response'][0]['responseCode'];
-            $otp_request->save(); //save
+            //$otp_request->http_response_code = $response['data']['response'][0]['responseCode'];
+            //$otp_request->save(); //save
 
             //Update mandate status based on response
             $debit_order = DebitOrder::where('reference', '=', $otp_reference)->first();
@@ -463,8 +463,8 @@ class BankApiService
             $response_code = 500; //response code
 
             //update otp response code
-            $otp_request->http_response_code = $response['data']['response'][0]['responseCode'];
-            $otp_request->save(); //save
+            //$otp_request->http_response_code = $response['data']['response'][0]['responseCode'];
+            //$otp_request->save(); //save
 
             //Update mandate status based on response
             $debit_order = DebitOrder::where('reference', '=', $otp_reference)->first();
