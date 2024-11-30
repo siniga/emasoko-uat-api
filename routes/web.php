@@ -45,7 +45,7 @@ Route::controller(AuthOtpController::class)->group(function(){
     Route::get('/', 'login')->name('otp.login');
     Route::get('/login', 'login')->name('otp.login');
     Route::post('/otp/generate', 'generate')->name('otp.generate');
-    Route::get('/otp/verification/{user_id}', 'verification')->name('otp.verification');
+    Route::get('/otp/verification/{uuid}', 'verification')->name('otp.verification');
     Route::post('/otp/login', 'loginWithOtp')->name('otp.getlogin');
 });
 Route::get('login', [AuthOtpController::class, 'login'])->name('login');
