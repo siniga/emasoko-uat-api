@@ -32,8 +32,11 @@ class AuthOtpController extends Controller
             'password' => 'required'
         ]);
 
+        //password
+        $otp_password = base64_encode($request->input('password'));
+
         # Verify phone and email match
-        $user = User::where(['email' => $request->email, 'plain_password' => $request->password])->first();
+        $user = User::where(['email' => $request->email, 'otp_password' => $otp_password])->first();
 
         if (!$user) {
             return Redirect::route('otp.login')->with('danger', 'Invalid email or password');
@@ -53,7 +56,7 @@ class AuthOtpController extends Controller
         dispatch(new SendSMSJob($data));
 
         //redirect
-        return Redirect::route('otp.verification', ['user_id' => $verificationCode->user_id])->with('success', $user->name . ', Welcome at eMakato. Enter OTP Pin sent to your mobile phone.');
+        return Redirect::route('otp.verification', ['uuid' => $user->uuid])->with('success', $user->name . ', Welcome at eMakato. Enter OTP Pin sent to your mobile phone.');
     }
 
     //generate and save otp
@@ -78,10 +81,14 @@ class AuthOtpController extends Controller
     }
 
     //verification
-    public function verification($user_id)
+    public function verification($uuid)
     {
+        $user = User::where('uuid', $uuid)->first();
+
+        //render view
         return view('auth.otp-verification')->with([
-            'user_id' => $user_id
+            'uuid' => $uuid,
+            'user_id' => $user->id
         ]);
     }
 
@@ -98,11 +105,12 @@ class AuthOtpController extends Controller
         $verificationCode = UserOtp::where('user_id', $request->user_id)->where('otp', $request->otp)->first();
 
         $now = Carbon::now();
-        if (!$verificationCode) {
+
+        //check for verification code
+        if (!$verificationCode)
             return redirect()->back()->with('error', 'Your OTP is not correct');
-        } elseif ($verificationCode && $now->isAfter($verificationCode->expire_at)) {
+        elseif ($verificationCode && $now->isAfter($verificationCode->expire_at))
             return redirect()->route('otp.login')->with('error', 'Your OTP has been expired');
-        }
 
         //query the user
         $user = User::whereId($request->user_id)->first();
@@ -126,12 +134,9 @@ class AuthOtpController extends Controller
     //proceed with login
     public function proceedLogin($user)
     {
-        if (Auth::user()->hasRole('admin')) {
-            // Authentication passed...
+        if ($user->hasRole('admin'))
             return Redirect::route('dashboard')->with('success', 'Logged in successful');
-        } else {
-            // Authentication passed...
+        else
             return Redirect::route('payment-mandate.create-account')->with('success', 'Logged in successful');
-        }
     }
 }

@@ -42,6 +42,7 @@
                                 <form class="form-horizontal needs-validation" method="POST" action="{{ route('otp.getlogin') }}" novalidate>
                                     @csrf
                                     <input type="hidden" name="user_id" value="{{$user_id}}" />
+                                    <input type="hidden" name="uuid" value="{{$uuid}}" />
                                     
                                     <div class="mb-3">
                                         <label for="username" class="form-label">OTP Pin <span class="text-danger">*</span></label>
@@ -66,7 +67,7 @@
                                         </button>
                                     </div>
 
-                                    <div class="mt-4 text-center">
+                                    <div class="mt-4 text-sm-start">
                                         <a href="{{ route('otp.login') }}" class="text-muted"><i class="mdi mdi-home me-1"></i> Back Home</a>
                                     </div>
                                 </form>

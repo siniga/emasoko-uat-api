@@ -43,9 +43,9 @@
                                     @csrf
                                     <div class="mb-3">
                                         <label for="username" class="form-label">OTP Pin <span class="text-danger">*</span></label>
-                                        <input name="otp_pin" type="text"
-                                            class="form-control @error('otp_pin') is-invalid @enderror"
-                                            value="{{ old('otp_pin') }}" id="otp_pin" placeholder="Enter OTP Pin..."
+                                        <input name="otp" type="text"
+                                            class="form-control @error('otp') is-invalid @enderror"
+                                            value="{{ old('otp') }}" id="otp" placeholder="Enter OTP Pindddd..."
                                             autocomplete="otp_pin" required>
                                         @error('otp_pin')
                                             <span class="invalid-feedback" role="alert">
@@ -58,13 +58,13 @@
                                         </div>
                                     </div>
 
-                                    <div class="mt-3 d-grid">
+                                    <div class="mb-3 d-grid">
                                         <button class="btn btn-primary waves-effect waves-light" type="submit">
                                             Submit
                                         </button>
                                     </div>
 
-                                    <div class="mt-4 text-center">
+                                    <div class="mb-2 text-center">
                                         <a href="{{ route('login') }}" class="text-muted"><i class="mdi mdi-home me-1"></i> Back Home</a>
                                     </div>
                                 </form>

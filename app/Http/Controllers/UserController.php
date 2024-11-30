@@ -16,6 +16,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Str;
 
 class UserController extends Controller
 {
@@ -57,14 +58,17 @@ class UserController extends Controller
     {
         $this->validate($request, User::rules(), User::messages());
 
+        //password
         $password = $request->input('password');
 
         //create user to store data
         $user = new User([
+            'uuid' => Str::uuid(),
             'name' => $request->input('name'),
             'email' => $request->input('email'),
             'phone' => $request->input('phone'),
             'password' => Hash::make($password),
+            'otp_password' => base64_encode($password),
             'active' => 1,
         ]);
         $user->save();
@@ -165,14 +169,19 @@ class UserController extends Controller
             ]);
         }
 
+        //password
+        $password = $request->input('password');
+
         //create object to store data
         $user = User::find($id);
         $user->name = $request->input('name');
         $user->email = $request->input('email');
         $user->phone = $request->input('phone');
 
-        if ($request->input('password') != null || $request->input('password') != '')
-            $user->password = Hash::make($request->input('password'));
+        if ($request->input('password') != null || $request->input('password') != ''){
+            $user->password = Hash::make($password);
+            $user->otp_password = base64_encode($password);
+        }
 
         $user->save();
 
