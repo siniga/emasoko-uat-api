@@ -182,8 +182,8 @@
                                             <th width="20%">Account Name</th>
                                             <th>Payment Channel</th>
                                             <th>Bank Name/MNO</th>
-                                            <th>Corporate Reference</th>
                                             <th>Account Number</th>
+                                            <th>Mandate Reference</th>
                                             <th>Primary Phone</th>
                                             <th>Consent Status</th>
                                             <th>Created Date</th>

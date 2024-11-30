@@ -99,7 +99,7 @@ class CreateCollectionBatch extends Command
                             $mandate_reference = $val->reference;
 
                             //create csv file
-                            $csv .= "{$installment->id};{$bank_code};NMB;{$mandate_reference};{$account_name};{$account_number};{$installment->installment_amount}\n";
+                            $csv .= "{$installment->id};016;NMB;{$mandate_reference};{$account_name};{$account_number};{$installment->installment_amount}\n";
 
                             //increment data point
                             $data_point += 1;

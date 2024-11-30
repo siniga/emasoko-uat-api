@@ -117,8 +117,8 @@ class BankPayloadService
             "file" => [
                 "fileName" => "Evidence Of Aggrement",
                 "fileType" => "pdf",
-                "fileData" => pdf_to_base64(public_path("assets/uploads/pdf/" . $debitOrder->aggrement_evidence))
-                //"fileData" => pdf_to_base64(public_path('assets/uploads/docs/Invoice_EUINTZ24_9765.pdf'))
+                //"fileData" => pdf_to_base64(public_path("assets/uploads/pdf/" . $debitOrder->aggrement_evidence))
+                "fileData" => pdf_to_base64(public_path('assets/uploads/docs/Invoice_EUINTZ24_9765.pdf'))
             ]
         ];
 
