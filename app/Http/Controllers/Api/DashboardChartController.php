@@ -17,10 +17,10 @@ class DashboardChartController extends Controller
     function mandate_percentages()
     {
         //pending
-        $pending = DebitOrder::where_cond()->toBase()->where(['approved' => "PENDING"])->count();
+        $pending = DebitOrder::where_cond()->toBase()->where(['approved' => 0])->count();
 
         //approved
-        $approved = DebitOrder::where_cond()->toBase()->where(['approved' => "APPROVED"])->count();
+        $approved = DebitOrder::where_cond()->toBase()->where(['approved' => 1])->count();
 
         //aggregate
         $aggregate = $pending + $approved;
@@ -48,9 +48,9 @@ class DashboardChartController extends Controller
             //query
             $debit_orders = DebitOrder::select('debit_orders.approved', DB::raw('SUM(debit_orders.total_amount) as total_amount'))
                 ->where(function ($query) {
-                    $query->where('debit_orders.approved', '=', "PENDING")
-                        ->orWhere('debit_orders.approved', '=', "APPROVED")
-                        ->orWhere('debit_orders.approved', '=', "REJECTED");
+                    $query->where('debit_orders.approved', '=', 0)
+                        ->orWhere('debit_orders.approved', '=', 1)
+                        ->orWhere('debit_orders.approved', '=', 2);
                 })->groupBy('debit_orders.approved')->toBase();
 
             $debit_orders = $debit_orders->whereMonth('created_at', $month)->whereYear('created_at', $year)->get();
@@ -101,7 +101,7 @@ class DashboardChartController extends Controller
             //query
             $debit_orders = DebitOrder::select(DB::raw('SUM(debit_orders.total_amount) as total_amount'), DB::raw('SUM(debit_orders.paid_amount) as paid_amount'))
                 ->where(function ($query) {
-                    $query->where('debit_orders.approved', '=', "APPROVED");
+                    $query->where('debit_orders.approved', '=', 1);
                 })->toBase();
 
             $debit_orders = $debit_orders->whereMonth('created_at', $month)->whereYear('created_at', $year)->get();
@@ -141,8 +141,8 @@ class DashboardChartController extends Controller
                 ->join('customer_accounts', 'customer_accounts.id', '=', 'debit_orders.customer_account_id')
                 ->where('customer_accounts.account_id', '=', $val->id)
                 ->where(function ($query) {
-                    $query->where('debit_orders.approved', '=', "APPROVED")
-                        ->orWhere('debit_orders.approved', '=', "PENDING");
+                    $query->where('debit_orders.approved', '=', 1)
+                        ->orWhere('debit_orders.approved', '=', 0);
                 })
                 ->groupBy('debit_orders.approved')
                 ->orderBy('debit_orders.approved', 'DESC');
