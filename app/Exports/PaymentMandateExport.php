@@ -29,8 +29,8 @@ class PaymentMandateExport implements FromQuery, WithHeadings, ShouldAutoSize, W
     public function query()
     {
         //debit
-        //$debit_orders = DebitOrder::where_cond();
-        $debit_orders = DebitOrder::query();
+        $debit_orders = DebitOrder::where_cond();
+        //$debit_orders = DebitOrder::query();
 
         //join
         $debit_orders = $debit_orders->join('customer_accounts', 'customer_accounts.id', '=', 'debit_orders.customer_account_id');
@@ -108,11 +108,11 @@ class PaymentMandateExport implements FromQuery, WithHeadings, ShouldAutoSize, W
             $debit_orders->customerAccount->account->name ?? '',
             $debit_orders->customerAccount->account_number ?? '',
             $debit_orders->customerAccount->phone ?? '',
-            $debit_orders->approved == "APPROVED" ? 'Approved' : 'Pending',
+            $debit_orders->approved == 1 ? 'Approved' : 'Pending',
             number_format($debit_orders->total_amount),
-            number_format($debit_orders->paid_amount),
+            number_format($debit_orders->current_balance),
             number_format($debit_orders->outstanding_amount),
-            number_format($debit_orders->installment_amount),
+            $debit_orders->installment_amount == 0 ? number_format($debit_orders->max_installment_amount) : number_format($debit_orders->installment_amount),
             $debit_orders->debit_type,
             $debit_orders->installment_number,
             $debit_orders->periodicity,

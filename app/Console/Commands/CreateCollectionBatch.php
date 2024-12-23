@@ -64,6 +64,10 @@ class CreateCollectionBatch extends Command
                 ->where('deleted', '=', 0)
                 ->whereDate('next_debit_date', "=", Carbon::now());
 
+                Log::debug("== debit orders ==");
+                Log::debug($debit_orders->count());
+
+
             if ($debit_orders->count() > 0) {
                 //declare data points
                 $data_point = 0;

@@ -155,7 +155,7 @@ class PaymentMandateController extends Controller
         $debit_orders = $debit_orders->get();
 
         //pdf
-        $pdf = PDF::loadView('payment_mandate.export_pdf', compact('ddestination_account_idebit_orders'))->setPaper('a4', 'landscape');
+        $pdf = PDF::loadView('payment_mandate.export_pdf', compact('debit_orders'))->setPaper('a4', 'landscape');
 
         // download PDF file with download method
         return $pdf->download(date('YmdHis') . '-Paymentmandate.pdf');

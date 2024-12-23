@@ -43,9 +43,9 @@
                                     <div class="mb-3">
                                         @php
                                             $options = [
-                                                'PENDING' => 'Pending',
-                                                'APPROVED' => 'Approved',
-                                                'REJECTED' => 'Rejected',
+                                                0 => 'Pending',
+                                                1 => 'Approved',
+                                                2 => 'Rejected',
                                             ];
                                             $options = ['' => '-- Consent Status --'] + $options;
                                         @endphp

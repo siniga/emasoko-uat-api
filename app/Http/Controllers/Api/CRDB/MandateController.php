@@ -23,8 +23,8 @@ class MandateController extends Controller
     public function create(Request $request)
     {
         //predefined variables
-        $debitAccount = "0152503822900";
-        $phone = "255762412130";
+        $debitAccount = "019461235600";
+        $phone = "255755676052";
         $partnerId = "7c0e38cf-1f74-4fc1-83d0-abd4afb5b9d9";
         $requestId = Str::uuid()->toString();
 
@@ -61,17 +61,28 @@ class MandateController extends Controller
             'Checksum' => $checksum,
             "PhoneNumber" =>  $phone,
             "DebitAccount" =>  $debitAccount,
-            "TotalAmount" =>  "100.00",
-            "InstallmentAmount" => "10.00",
-            "StartDate" => "25-10-2024",
+            "TotalAmount" =>  "1000",
+            "InstallmentAmount" => "100",
+            "StartDate" => "20-12-2024",
             "EndDate" => "31-12-2024",
-            "FrequencyType" => "DAILY",
+            "FrequencyType" => "WEEKLY",
             "Frequency" => "1",
             "BillDetails" => "Recurring payment"
         ];
 
         Log::debug("== Payload ==");
         Log::debug($payload);
+
+        //API URL
+        $API_URL = env('CRDB_API_URL');
+
+        //push payload => NMB Direct Debits
+        $response = Http::withHeaders($headers)->post($API_URL, $payload);
+
+        Log::debug('== MandateRegistration Response ==');
+        Log::debug($response);
+
+        return $response;
     }
 
     //callback function from CRDB
