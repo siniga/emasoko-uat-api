@@ -228,7 +228,7 @@
                                                     @elseif($values->status == 405) 
                                                         <span class="badge bg-danger font-size-10">Cancelled</span>  
                                                     @elseif($values->status == 500)
-                                                        <span class="badge badge-pill badge-soft-danger">Rejected</span>
+                                                        <span class="badge badge-pill badge-soft-danger">Failed Verification</span>
                                                     @elseif($values->status == 501)
                                                         <span class="badge badge-pill badge-soft-danger">Inactive</span>
                                                     @endif
