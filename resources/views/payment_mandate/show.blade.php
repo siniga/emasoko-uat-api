@@ -55,10 +55,10 @@
                                         x-on:click="fetchMandateStatus();"></button>
                                 </template>
 
-                                <template x-if="status==100 || status==200 || status==403 || status==500">
+                                <template x-if="status==100 || status==200 || status==403 || status==500 || status==501">
                                     <a href="{{ route('payment-mandate.create-account', [$debit_order->customerAccount->uuid, $debit_order->uuid] ) }}" title="Edit"
                                         class="btn btn-outline-secondary text-medium btn-sm">
-                                        <i class="bx bx-edit font-size-12"></i> Edit
+                                        <i class="bx bx-edit font-size-12"></i> Edit Mandate
                                     </a>
                                 </template>
 
