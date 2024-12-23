@@ -356,7 +356,7 @@ class PaymentMandateController extends Controller
         if ($debit_order->created_by == null) {
             $debit_order->created_by = auth()->id();
         }
-        $debit_order->reference = Carbon::now()->format('dmY') . rand(1000, 1999);
+        $debit_order->reference = Carbon::now()->format('dmY') . $this->deductionService->getMandateReference();
         $debit_order->debit_type = $request->input('debit_type');
         $debit_order->installment_amount = $installment_amount;
         $debit_order->min_installment_amount = $min_installment_amount;
