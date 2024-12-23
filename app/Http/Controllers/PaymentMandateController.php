@@ -52,6 +52,7 @@ class PaymentMandateController extends Controller
 
         //debit
         $debit_orders = DebitOrder::where_cond();
+        
         if ($consent) {
             $debit_orders->where(['approved' => $consent]);
         }

@@ -45,17 +45,17 @@
                                         x-on:click="openMandateCancellationModal();"></button>
                                 </template>
 
-                                <template x-if="status==201 || status==249 || status==500">
+                                <template x-if="status==201 || status==249 || status==430 || status==500">
                                     <button x-html="verifyTXT" title="Verify OTP" class="btn btn-outline-primary text-medium btn-sm btn-sm"
                                         x-on:click="verifyButton();"></button>
                                 </template>
 
-                                <template x-if="status==202 || status==249 || status==501">
+                                <template x-if="status==202 || status==249 || status==430 || status==501 ">
                                     <button x-html="btnStatus" title="Get Mandate Status" class="btn btn-outline-success btn-sm"
                                         x-on:click="fetchMandateStatus();"></button>
                                 </template>
 
-                                <template x-if="status==100 || status==200 || status==403 || status==500 || status==501">
+                                <template x-if="status==100 || status==200 || status==403 || status==430 || status==500 || status==501">
                                     <a href="{{ route('payment-mandate.create-account', [$debit_order->customerAccount->uuid, $debit_order->uuid] ) }}" title="Edit"
                                         class="btn btn-outline-secondary text-medium btn-sm">
                                         <i class="bx bx-edit font-size-12"></i> Edit Mandate

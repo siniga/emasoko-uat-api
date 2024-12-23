@@ -10,8 +10,6 @@ $.getJSON('api/dashboard/mandate-values', (data) => {
     console.log("== data ==")
     console.log(data)
 
-
-
     if (data.error == false) {
         var arr_month = [];
         var arr_total = [];
@@ -130,8 +128,6 @@ $.getJSON('api/dashboard/mandate-percentages', (data) => {
 $.getJSON('api/dashboard/collected-mandate', (data) => {
     console.log("== data ==")
     console.log(data)
-
-
 
     if (data.error == false) {
         var arr_month = [];
