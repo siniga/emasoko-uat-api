@@ -45,6 +45,11 @@
                                         x-on:click="openMandateCancellationModal();"></button>
                                 </template>
 
+                                <template x-if="status==201">
+                                    <button x-html="verifyTXT" title="Verify OTP" class="btn btn-outline-primary text-medium btn-sm btn-sm"
+                                        x-on:click="verifyButton();"></button>
+                                </template>
+
                                 <template x-if="status==202 || status==249 || status==501">
                                     <button x-html="btnStatus" title="Get Mandate Status" class="btn btn-outline-success btn-sm"
                                         x-on:click="fetchMandateStatus();"></button>
@@ -290,11 +295,8 @@
             </div>
         </div>
 
-        <!--offcanvas wrp -->
-        {{-- <div id="offcanvas-wrp" x-show="sidebarOpen" x-transition>
-            <div id="detail-div"></div>
-        </div> --}}
-
+        <!-- include modals -->
+        @include('payment_mandate.modals.verify_otp_modal')
         @include('payment_mandate.modals.cancellation_modal')
     </div>
 @endsection
@@ -310,6 +312,7 @@
                 status: "{{ $debit_order->status }}",
                 remarks: "{{ $debit_order->remarks }}",
                 approved: "{{ $debit_order->approved }}",
+                verifyTXT: "<i class='bx bx-check-square'></i> Verify OTP",
 
                 formData: {
                     mandate_id: "{{ $debit_order->id }}",
@@ -317,11 +320,23 @@
                     'remarks': "",
                 },
 
+                resendForm: {
+                    uuid: "{{ $debit_order->uuid }}",
+                },
+
+                verifyForm: {
+                    uuid: "{{ $debit_order->uuid }}",
+                    otpPin: "",
+                },
+
                 formLoading: false,
                 formMessage: "",
                 btnCancel: '<i class="fa fa-times"></i> Mandate Cancellation',
                 btnStatus: '<i class="fa fa-check"></i> Mandate Status',
                 buttonSubmit: "Submit",
+
+                verifyLoading: false,
+                buttonVerify: "Verify",
 
                 //approval mandate status
                 fetchMandateStatus() {
@@ -398,6 +413,112 @@
                         }).finally(() => {
                             this.formLoading = false;
                             this.btnSubmit = 'Submit';
+                        });
+                },
+
+                //verifyButton
+                verifyButton() {
+                    //display message
+                    $('#message_wrp_1').html(
+                        "<div class='alert alert-success rounded-sm'>Resend OTP and input the OTP PIN to confirm customer consent.</div>"
+                    );
+
+                    //todo: create modal for verifying Otp 
+                    $('#verifyOtpModal').modal('show');
+                },
+
+                //resend OTP
+                resendOtp() {
+                    //api for action
+                    fetch("/payment-mandate/resend-otp", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                Accept: "application/json",
+                                'X-CSRF-TOKEN': document.head.querySelector('meta[name=csrf-token]').content
+                            },
+                            body: JSON.stringify(this.resendForm),
+                        }).then(response => response.json())
+                        .then(responseJson => {
+                            console.log(responseJson);
+
+                            //response code 
+                            const http_response_code = responseJson.http_response_code;
+
+                            if(http_response_code == 200){
+                                //display message
+                                $('#message_wrp_1').html(
+                                    "<div class='alert alert-success rounded-sm'>OTP sent successfully</div>"
+                                );
+                            } else if(http_response_code == 500) {
+                                //display message
+                                $('#message_wrp_1').html(
+                                    "<div class='alert alert-warning rounded-sm'>Failed to send OTP, Try again.</div>"
+                                );
+                            } else {
+                                //display message
+                                $('#message_wrp_1').html(
+                                    "<div class='alert alert-warning rounded-sm'>Failed to send OTP, Try again.</div>"
+                                );
+                            }
+
+                        }).catch(() => {
+                            this.formMessage = "Something went wrong.";
+                        }).finally(() => {
+
+                        });
+                },
+
+                //verify OTP
+                verifyOtp() {
+                    this.formMessage = "";
+                    this.verifyLoading = true;
+                    this.buttonVerify = "Verifying...";
+
+                    //api for action
+                    fetch("/payment-mandate/verify-otp", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                Accept: "application/json",
+                                'X-CSRF-TOKEN': document.head.querySelector('meta[name=csrf-token]').content
+                            },
+                            body: JSON.stringify(this.verifyForm),
+                        }).then(response => response.json())
+                        .then(responseJson => {
+                            console.log(responseJson);
+
+                            //response code 
+                            const http_response_code = responseJson.http_response_code;
+
+                            if(http_response_code == 202){
+                                //display message
+                                $('#message_wrp_1').html(
+                                    "<div class='alert alert-success rounded-sm'>OTP validated</div>"
+                                );
+
+                                //redirect to details page
+                                var redirectionURL = '/payment-mandate/show/' + this.verifyForm.uuid;
+
+                                setTimeout(function () {
+                                    window.location.href = redirectionURL
+                                }, 2000);
+                            } else if(http_response_code == 500) {
+                                //display message
+                                $('#message_wrp_1').html(
+                                    "<div class='alert alert-danger rounded-sm'>Failed to verify OTP, Try again or resend OTP.</div>"
+                                );
+                            } else {
+                                //display message
+                                $('#message_wrp_1').html(
+                                    "<div class='alert alert-danger rounded-sm'>Failed to verify OTP, Try again or contact support.</div>"
+                                );
+                            }
+                        }).catch(() => {
+                            this.formMessage = "Something went wrong.";
+                        }).finally(() => {
+                            this.verifyLoading = false;
+                            this.buttonVerify = "Verify";
                         });
                 },
 
