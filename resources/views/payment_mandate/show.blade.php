@@ -157,7 +157,7 @@
                                             </template>
 
                                             <template x-if="status==249">
-                                                <span class="badge bg-success-1 text-uppercase">Processing</span>
+                                                <span class="badge bg-warning text-uppercase">Processing</span>
                                             </template>
 
                                             <template x-if="status==403">

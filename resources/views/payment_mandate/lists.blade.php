@@ -222,7 +222,7 @@
                                                     @elseif($values->status == 240)
                                                         <span class="badge bg-success-1 font-size-10">Active</span>
                                                     @elseif($values->status == 249)
-                                                        <span class="badge bg-success-1 font-size-10">Processing</span>
+                                                        <span class="badge bg-warning font-size-10">Processing</span>
                                                     @elseif($values->status == 403) 
                                                         <span class="badge bg-danger font-size-10">Failed</span>
                                                     @elseif($values->status == 405) 
