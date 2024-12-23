@@ -443,7 +443,7 @@ class PaymentMandateController extends Controller
         $debit_order->save();
 
         //check if account is NMB/CRDB/EcoBank/NBC
-        if ($debit_order->customerAccount->account->slug == "NMB") {
+        if ($debit_order->channel == "NMB") {
             //create payload
             $payload = $this->payloadService->mandateRegistrationPayload($debit_order);
 
@@ -452,7 +452,7 @@ class PaymentMandateController extends Controller
 
             //Create Request to NMB
             dispatch(new MandateRegistrationJob($payload));
-        } elseif ($debit_order->customerAccount->account->slug == "CRDB") {
+        } else if ($debit_order->channel == "CRDB") {
             //requestId
             $requestId = Str::uuid()->toString();
 
