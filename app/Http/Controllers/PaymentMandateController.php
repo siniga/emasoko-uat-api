@@ -733,8 +733,11 @@ class PaymentMandateController extends Controller
         //debit order
         $debit_order = DebitOrder::where(['uuid' => $id])->first();
 
+        // customer account
+        $customer_account = $debit_order->customerAccount ?? null;
+
         //render view
-        return view('payment_mandate.show', compact('title', 'debit_order'));
+        return view('payment_mandate.show', compact('title', 'debit_order', 'customer_account'));
     }
 
     /**
