@@ -45,7 +45,7 @@
                                         x-on:click="openMandateCancellationModal();"></button>
                                 </template>
 
-                                <template x-if="status==201 || status==249">
+                                <template x-if="status==201 || status==249 || status==500">
                                     <button x-html="verifyTXT" title="Verify OTP" class="btn btn-outline-primary text-medium btn-sm btn-sm"
                                         x-on:click="verifyButton();"></button>
                                 </template>
@@ -169,7 +169,7 @@
                                             </template>
 
                                             <template x-if="status==500">
-                                                <span class="badge bg-danger text-uppercase">Rejected</span>
+                                                <span class="badge bg-danger text-uppercase">Failed Verification</span>
                                             </template>
 
                                             <template x-if="status==501">
