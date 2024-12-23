@@ -106,7 +106,7 @@ class AuthOtpController extends Controller
 
         $now = Carbon::now();
 
-        //check for verification code
+        //check for verification
         if (!$verificationCode)
             return redirect()->back()->with('error', 'Your OTP is not correct');
         elseif ($verificationCode && $now->isAfter($verificationCode->expire_at))
