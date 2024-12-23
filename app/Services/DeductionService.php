@@ -17,9 +17,7 @@ class DeductionService
     public function __construct() {}
 
     //create debit order evidence of aggrement
-    public function createEvidence(DebitOrder $debitOrder){
-
-    }
+    public function createEvidence(DebitOrder $debitOrder) {}
 
     //create debit order installments
     public function createInstallment(DebitOrder $debitOrder)
@@ -196,6 +194,24 @@ class DeductionService
         dispatch(new SendSMSJob($data));
 
         return 200;
+    }
+
+    //get mandate reference
+    function getMandateReference()
+    {
+        //app variable
+        $app_variable = AppVariable::first();
+
+        static $number = $app_variable->cur_mandate_reference;
+
+        $number++;
+        $cur_mandate_reference = $number;
+
+        //update app variable
+        $app_variable->cur_mandate_reference = $cur_mandate_reference;
+        $app_variable->save();
+
+        return $cur_mandate_reference;
     }
 
     //get collection reference
