@@ -51,9 +51,12 @@ class CreateCollectionBatch extends Command
         $bankPayload = new BankPayloadService();
         $bankApi =  new BankApiService();
 
+        $created_date = "2024-12-19";
+        //$created_date = Carbon::now();
+ 
         //debit orders => status=OPEN and NEXT_DEBIT_DATE = today()
         $partners = Partner::whereHas('debitOrders', function ($query) {
-            return $query->where(['contract_status' => 'OPEN', 'channel' => 'NMB'  ,'approved' => 1, 'deleted' => 0])
+            return $query->where(['contract_status' => 'OPEN', 'channel' => 'NMB'  ,'approved' => 1, 'deleted' => 0, 'partner_id' => 10])
                 ->whereDate('next_debit_date', "=", Carbon::now());
         })->get();
 
