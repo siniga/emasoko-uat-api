@@ -130,7 +130,7 @@ class DashboardChartController extends Controller
             $year = date('Y', strtotime($year_month));
 
             //query
-            $debit_orders = DebitOrder::select(DB::raw('SUM(debit_orders.total_amount) as total_amount'), DB::raw('SUM(debit_orders.paid_amount) as paid_amount'))
+            $debit_orders = DebitOrder::select(DB::raw('SUM(debit_orders.total_amount) as total_amount'), DB::raw('SUM(debit_orders.current_balance) as paid_amount'))
                 ->where(function ($query) {
                     $query->where('debit_orders.approved', '=', 1);
                 })->toBase();
