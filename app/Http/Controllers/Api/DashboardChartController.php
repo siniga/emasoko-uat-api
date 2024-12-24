@@ -22,16 +22,20 @@ class DashboardChartController extends Controller
         //approved
         $approved = DebitOrder::where_cond()->toBase()->where(['approved' => 1])->count();
 
+        //rejected
+        $rejected = DebitOrder::where_cond()->toBase()->where(['approved' => 2])->count();
+
         //aggregate
-        $aggregate = $pending + $approved;
+        $aggregate = $pending + $approved + $rejected;
 
         //percentage
         $aggregate = $aggregate ? $aggregate : 1;
         $percent_approved = ($approved / $aggregate) * 100;
+        $percent_rejected = ($rejected / $aggregate) * 100;
         $percent_pending = ($pending / $aggregate) * 100;
 
         //response
-        echo json_encode(['error' => FALSE, 'approved' => $percent_approved, 'pending' => $percent_pending], 200);
+        return response()->json(['error' => FALSE, 'approved' => $percent_approved, 'rejected' => $percent_rejected, 'pending' => $percent_pending], 200);
     }
 
     //Pending and Approved Mandates
@@ -139,17 +143,16 @@ class DashboardChartController extends Controller
 
         //declare array
         $data_array = [];
+        $approvedStatuses = [0, 1, 2];
+
         foreach ($accounts as $key => $val) {
             //query per channel
-            $debit_orders = DebitOrder::select('debit_orders.approved', DB::raw('COUNT(debit_orders.id) as count_approved'))
-                ->join('customer_accounts', 'customer_accounts.id', '=', 'debit_orders.customer_account_id')
-                ->where('customer_accounts.account_id', '=', $val->id)
-                ->where(function ($query) {
-                    $query->where('debit_orders.approved', '=', 1)
-                        ->orWhere('debit_orders.approved', '=', 0);
-                })
-                ->groupBy('debit_orders.approved')
-                ->orderBy('debit_orders.approved', 'DESC');
+            $debit_orders = DebitOrder::select('debit_orders.approved', DB::raw('COALESCE(COUNT(debit_orders.id), 0) as number_of_approved'))
+                ->whereHas('customerAccount', function ($q) use ($val) {
+                    $q->where('account_id', $val->id);
+                })->where(function ($query) {
+                    $query->whereIn('debit_orders.approved', [0, 1, 2]);
+                })->groupBy('debit_orders.approved')->orderBy('debit_orders.approved');
 
             if (isset($_GET['month']) && $_GET['month'] != null) {
                 $debit_orders = $debit_orders->whereMonth('debit_orders.created_at', $_GET['month'])
@@ -158,25 +161,34 @@ class DashboardChartController extends Controller
 
             $debit_orders = $debit_orders->get();
 
+            // Map over all approved statuses to ensure complete results
+            $results = collect($approvedStatuses)->map(function ($status) use ($debit_orders) {
+                $order = $debit_orders->firstWhere('approved', $status);
+                return [
+                    'approved' => $status,
+                    'number_of_approved' => $order ? $order->number_of_approved : 0,
+                ];
+            });
+
             //pending
-            $pending = 0;
-            if (isset($debit_orders[0]->count_approved) && $debit_orders[0]->count_approved != null)
-                $pending = $debit_orders[0]->count_approved;
+            $pending = $results[0]['number_of_approved'];
 
             //approve 
-            $approved = 0;
-            if (isset($debit_orders[1]->count_approved) && $debit_orders[1]->count_approved != null)
-                $approved = $debit_orders[1]->count_approved;
+            $approved = $results[1]['number_of_approved'];
+
+            //rejected
+            $rejected = $results[2]['number_of_approved'];
 
             //create data array
             $data_array[] = [
                 "name" => $val->name,
                 "pending" =>  (int) $pending,
-                "approved" => (int) $approved
+                "approved" => (int) $approved,
+                "rejected" => (int) $rejected
             ];
         }
 
         //response
-        echo json_encode(['error' => FALSE, 'chart' => $data_array], 200);
+        return response()->json(['error' => FALSE, 'chart' => $data_array], 200);
     }
 }
