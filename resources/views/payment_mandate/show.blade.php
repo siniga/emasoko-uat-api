@@ -54,14 +54,14 @@
                                     </a>
                                 </template>
 
-                                <template x-if="status==201 || status==249 || status==430 || status==500">
-                                    <button x-html="verifyTXT" title="Verify OTP" class="btn btn-outline-primary text-medium btn-sm btn-sm"
-                                        x-on:click="verifyButton();"></button>
-                                </template>
-
                                 <template x-if="status==201 || status==202 || status==240 || status==249 || status==405 || status==500">
                                     <button x-html="btnCancel" title="Cancel Mandate" class="btn btn-outline-danger text-medium btn-sm btn-sm"
                                         x-on:click="openMandateCancellationModal();"></button>
+                                </template>
+
+                                <template x-if="status==201 || status==249 || status==430 || status==500">
+                                    <button x-html="verifyTXT" title="Verify OTP" class="btn btn-outline-primary text-medium btn-sm btn-sm"
+                                        x-on:click="verifyButton();"></button>
                                 </template>
 
                                 <template x-if="status==202 || status==249 || status==430 || status==501 ">
