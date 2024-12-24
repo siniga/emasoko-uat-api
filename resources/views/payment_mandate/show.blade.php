@@ -40,23 +40,6 @@
                             <div></div>
 
                             <div class="text-sm-end d-none d-sm-block">
-                                <template x-if="status==201 || status==202 || status==240 || status==249 || status==405 || status==500">
-                                    <button x-html="btnCancel" title="Mandate Cancellation" class="btn btn-outline-danger text-medium btn-sm btn-sm"
-                                        x-on:click="openMandateCancellationModal();"></button>
-                                </template>
-
-                                <span x-text="status"></span>
-
-                                <template x-if="status==201 || status==249 || status==430 || status==500">
-                                    <button x-html="verifyTXT" title="Verify OTP" class="btn btn-outline-primary text-medium btn-sm btn-sm"
-                                        x-on:click="verifyButton();"></button>
-                                </template>
-
-                                <template x-if="status==202 || status==249 || status==430 || status==501 ">
-                                    <button x-html="btnStatus" title="Get Mandate Status" class="btn btn-outline-success btn-sm"
-                                        x-on:click="fetchMandateStatus();"></button>
-                                </template>
-
                                 <template x-if="status==100 || status==200 || status==403 || status==430 || status==500 || status==501">
                                     <a href="{{ route('payment-mandate.create-account', [$debit_order->customerAccount->uuid, $debit_order->uuid] ) }}" title="Edit"
                                         class="btn btn-outline-secondary text-medium btn-sm">
@@ -67,8 +50,23 @@
                                 <template x-if="status==100 || status==200">
                                     <a href="{{ route('payment-mandate.delete', $debit_order->uuid) }}" title="Delete"
                                         class="btn btn-outline-danger text-medium btn-sm delete">
-                                        <i class="bx bx-trash font-size-12"></i> Delete
+                                        <i class="bx bx-trash font-size-12"></i> Delete Mandate
                                     </a>
+                                </template>
+
+                                <template x-if="status==201 || status==249 || status==430 || status==500">
+                                    <button x-html="verifyTXT" title="Verify OTP" class="btn btn-outline-primary text-medium btn-sm btn-sm"
+                                        x-on:click="verifyButton();"></button>
+                                </template>
+
+                                <template x-if="status==201 || status==202 || status==240 || status==249 || status==405 || status==500">
+                                    <button x-html="btnCancel" title="Mandate Cancellation" class="btn btn-outline-danger text-medium btn-sm btn-sm"
+                                        x-on:click="openMandateCancellationModal();"></button>
+                                </template>
+
+                                <template x-if="status==202 || status==249 || status==430 || status==501 ">
+                                    <button x-html="btnStatus" title="Get Mandate Status" class="btn btn-outline-success btn-sm"
+                                        x-on:click="fetchMandateStatus();"></button>
                                 </template>
                             </div>
                         </div>
