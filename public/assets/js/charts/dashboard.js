@@ -111,7 +111,7 @@ $.getJSON('api/dashboard/mandate-percentages', (data) => {
                 type: "donut",
                 height: 340,
             },
-            labels: ["Pending", "Approved", "Rejected"],
+            labels: ["Pending", "Approved", "Failed"],
             colors: ["#F44336", "#66BB6A", "#B71C1C"],
             legend: {
                 show: !1

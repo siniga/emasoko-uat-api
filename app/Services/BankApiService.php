@@ -251,6 +251,8 @@ class BankApiService
             $debit_order->status = $response['data']['response'][0]['responseCode'];
             $debit_order->http_response_code = $response['data']['response'][0]['responseCode'];
             $debit_order->remarks = $response['data']['response'][0]['responseDescription'];
+            $debit_order->approved = 1;
+
         } else if (strtolower($response['status']) == "fail") {
             $response_code = 501; //response code
             $remarks = $response['data']['response'][0]['responseDescription'];
@@ -259,6 +261,7 @@ class BankApiService
             $debit_order->status = 501; //status failed
             $debit_order->http_response_code = $response['data']['response'][0]['responseCode'];
             $debit_order->remarks = $response['data']['response'][0]['responseDescription'];
+            $debit_order->approved = 2;
         }
         $debit_order->save();
 
@@ -447,31 +450,21 @@ class BankApiService
         if (strtolower($response['status']) == "success") {
             $response_code = 202; //response code
 
-            //update otp response code
-            //$otp_request->http_response_code = $response['data']['response'][0]['responseCode'];
-            //$otp_request->save(); //save
-
             //Update mandate status based on response
             $debit_order = DebitOrder::where('reference', '=', $otp_reference)->first();
 
             if ($debit_order) {
                 $debit_order->status = 202;
-                $debit_order->approved = 1;
                 $debit_order->save();
             }
         } else if (strtolower($response['status']) == "fail") {
             $response_code = 500; //response code
-
-            //update otp response code
-            //$otp_request->http_response_code = $response['data']['response'][0]['responseCode'];
-            //$otp_request->save(); //save
 
             //Update mandate status based on response
             $debit_order = DebitOrder::where('reference', '=', $otp_reference)->first();
 
             if ($debit_order) {
                 $debit_order->status = 500;
-                $debit_order->approved = 2;
                 $debit_order->remarks = $response['data']['response'][0]['responseDescription'];
                 $debit_order->save();
             }
@@ -601,7 +594,6 @@ class BankApiService
                 //2. batch failed
                 $collection_batch->batch_processed = 2; //batch FAILED
                 $collection_batch->save();
-
             } else if ($batch_status == 239) {
                 //3.Batch Processing
                 //3.1: read csv file
@@ -681,7 +673,7 @@ class BankApiService
 
                     //process calculation for installment and debit order.
                     $this->deduction_service->processInstallment($installment, $amount, $collection_reference);
-                }else {
+                } else {
                     //updated status of installment
                     $installment->status = $status;
                     $installment->save();

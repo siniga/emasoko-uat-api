@@ -158,7 +158,7 @@
                             <div class="col-lg-4 col-md-4 col-4">
                                 <div class="my-2">
                                     <p class="text-xs">
-                                        <i class="mdi mdi-circle text-danger-1 my-1"></i> Rejected : {{ $rejected[0]->count }}
+                                        <i class="mdi mdi-circle text-danger-1 my-1"></i> Failed : {{ $rejected[0]->count }}
                                     </p>
                                 </div>
                             </div>
@@ -281,7 +281,7 @@
                         <li class="nav-item">
                             <a class="nav-link" data-bs-toggle="tab" href="#rejected" role="tab">
                                 <span class="d-block d-sm-none"><i class="far fa-envelope"></i></span>
-                                <span class="d-none d-sm-block">Rejected</span>
+                                <span class="d-none d-sm-block">Failed</span>
                             </a>
                         </li>
                     </ul>
