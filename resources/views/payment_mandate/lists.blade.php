@@ -180,7 +180,6 @@
                                         <tr>
                                             <th width="3%">#</th>
                                             <th width="20%">Account Name</th>
-                                            <th>Payment Channel</th>
                                             <th>Bank Name/MNO</th>
                                             <th>Account Number</th>
                                             <th>Mandate Reference</th>
@@ -200,7 +199,6 @@
                                                     ID: {{ $values->customerAccount->customer->id_number ?? 'NIL' }}
                                                 </td>
                                                 </td>
-                                                <td>{{ $values->customerAccount->accountType->name ?? '' }}</td>
                                                 <td>{{ $values->customerAccount->account->name ?? '' }}</td>
                                                 <td>
                                                     {{ $values->customerAccount->account_number ?? $values->customerAccount->phone }}
