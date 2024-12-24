@@ -202,4 +202,4 @@ Route::post('roles/{id}/store-perms', [RoleController::class, 'store_perms'])->n
 Route::get('api/dashboard/mandate-values', [DashboardChartController::class, 'mandate_values']);
 Route::get('api/dashboard/collected-mandate', [DashboardChartController::class, 'collected_mandates']);
 Route::get('api/dashboard/mandate-percentages', [DashboardChartController::class, 'mandate_percentages']);
-Route::get('api/dashboard/consent-per-channel', [DashboardChartController::class, 'getConsentPerChannel']);
+Route::get('api/dashboard/consent-per-channel', [DashboardChartController::class, 'consent_per_channel']);

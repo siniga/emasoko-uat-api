@@ -14,32 +14,56 @@ use function GuzzleHttp\Promise\rejection_for;
 class DashboardChartController extends Controller
 {
     //aggregate consent percentage
-    function mandate_percentages()
+    public function mandate_percentages()
     {
-        //pending
-        $pending = DebitOrder::where_cond()->toBase()->where(['approved' => 0])->count();
+        //debit order
+        $debit_orders = DebitOrder::where_cond();
 
-        //approved
-        $approved = DebitOrder::where_cond()->toBase()->where(['approved' => 1])->count();
+        //declare array
+        $data_array = [];
+        $approvedStatuses = [0, 1, 2];
+
+        //query
+        $debit_orders = DebitOrder::select('debit_orders.approved', DB::raw('COALESCE(COUNT(debit_orders.id), 0) as number_of_approved'))
+            ->where(function ($query) {
+                $query->whereIn('debit_orders.approved', [0, 1, 2]);
+            })->groupBy('debit_orders.approved')->orderBy('debit_orders.approved')->toBase();
+
+        $debit_orders = $debit_orders->get();
+
+        // Map over all approved statuses to ensure complete results
+        $results = collect($approvedStatuses)->map(function ($status) use ($debit_orders) {
+            $order = $debit_orders->firstWhere('approved', $status);
+            return [
+                'approved' => $status,
+                'number_of_approved' => $order ? $order->number_of_approved : 0,
+            ];
+        });
+
+        //pending
+        $pending = $results[0]['number_of_approved'];
+
+        //approve 
+        $approved = $results[1]['number_of_approved'];
 
         //rejected
-        $rejected = DebitOrder::where_cond()->toBase()->where(['approved' => 2])->count();
+        $rejected = $results[2]['number_of_approved'];
 
         //aggregate
         $aggregate = $pending + $approved + $rejected;
 
         //percentage
         $aggregate = $aggregate ? $aggregate : 1;
-        $percent_approved = ($approved / $aggregate) * 100;
-        $percent_rejected = ($rejected / $aggregate) * 100;
-        $percent_pending = ($pending / $aggregate) * 100;
+        $percent_approved = round(($approved / $aggregate) * 100, 2);
+        $percent_rejected = round(($rejected / $aggregate) * 100, 2);
+        $percent_pending = round(($pending / $aggregate) * 100, 2);
 
         //response
         return response()->json(['error' => FALSE, 'approved' => $percent_approved, 'rejected' => $percent_rejected, 'pending' => $percent_pending], 200);
     }
 
     //Pending and Approved Mandates
-    function mandate_values()
+    public function mandate_values()
     {
         //declare variable
         $data_array = [];
@@ -85,18 +109,17 @@ class DashboardChartController extends Controller
                 "month" => date("M", mktime(0, 0, 0, $month, 10)),
                 "total" => (int) $total_amount,
                 "approved" => (int) $approved_amount,
-                "pending" => (int) $pending_amount
+                "pending" => (int) $pending_amount,
+                "rejected" => (int) $rejected_amount,
             ];
         }
-
-        Log::debug($data_array);
 
         //response
         return response()->json(['error' => FALSE, 'chart' => $data_array]);
     }
 
     //Collected 
-    function collected_mandates()
+    public function collected_mandates()
     {
         //declare variable
         $data_array = [];
@@ -128,12 +151,11 @@ class DashboardChartController extends Controller
         }
 
         //response
-        echo json_encode(['error' => FALSE, 'chart' => $data_array], 200);
+        return response()->json(['error' => FALSE, 'chart' => $data_array], 200);
     }
 
-
     //consent per channel
-    function getConsentPerChannel()
+    public function consent_per_channel()
     {
         //debit order
         $debit_orders = DebitOrder::where_cond();
