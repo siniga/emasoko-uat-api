@@ -60,7 +60,7 @@
                                 </template>
 
                                 <template x-if="status==201 || status==202 || status==240 || status==249 || status==405 || status==500">
-                                    <button x-html="btnCancel" title="Mandate Cancellation" class="btn btn-outline-danger text-medium btn-sm btn-sm"
+                                    <button x-html="btnCancel" title="Cancel Mandate" class="btn btn-outline-danger text-medium btn-sm btn-sm"
                                         x-on:click="openMandateCancellationModal();"></button>
                                 </template>
 
@@ -331,7 +331,7 @@
 
                 formLoading: false,
                 formMessage: "",
-                btnCancel: '<i class="fa fa-times"></i> Mandate Cancellation',
+                btnCancel: '<i class="fa fa-times"></i> Cancel Mandate',
                 btnStatus: '<i class="fa fa-check"></i> Mandate Status',
                 buttonSubmit: "Submit",
 
