@@ -138,22 +138,31 @@
                     </div>
                     <div class="text-center text-muted">
                         <div class="row">
-                            <div class="col-6">
-                                <div class="mt-2">
-                                    <p class="">
+                            <div class="col-lg-4 col-md-4 col-4">
+                                <div class="my-2">
+                                    <p class="text-xs">
                                         <i class="mdi mdi-circle text-success-1 my-1"></i> Approved :
                                         {{ $approved[0]->count }}
                                     </p>
                                 </div>
                             </div>
 
-                            <div class="col-6">
-                                <div class="mt-2">
-                                    <p class="">
+                            <div class="col-lg-4 col-md-4 col-4">
+                                <div class="my-2">
+                                    <p class="text-xs">
                                         <i class="mdi mdi-circle text-danger my-1"></i> Pending : {{ $pending[0]->count }}
                                     </p>
                                 </div>
                             </div>
+
+                            <div class="col-lg-4 col-md-4 col-4">
+                                <div class="my-2">
+                                    <p class="text-xs">
+                                        <i class="mdi mdi-circle text-danger-1 my-1"></i> Rejected : {{ $rejected[0]->count }}
+                                    </p>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                 </div>

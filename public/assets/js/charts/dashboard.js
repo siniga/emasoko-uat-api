@@ -1,27 +1,30 @@
 
 const handleBarClick = ({ clientX, clientY }, chartContext, {dataPointIndex}) => {
-    console.log("== data points ==");
-    console.log(dataPointIndex);
+    //console.log("== data points ==");
+    //console.log(dataPointIndex);
  };
 
 
 //pending and approved mandate value
 $.getJSON('api/dashboard/mandate-values', (data) => {
-    console.log("== data ==")
-    console.log(data)
+    //console.log("== data ==")
+    //console.log(data)
 
     if (data.error == false) {
         var arr_month = [];
         var arr_total = [];
-        var arr_pending = [];
         var arr_approved = [];
+        var arr_pending = [];
+        var arr_rejected = [];
+        
         
 
         for (k = 0; k < data.chart.length; k++) {
             arr_month.push(data.chart[k].month);
             arr_total.push(data.chart[k].total);
-            arr_pending.push(data.chart[k].pending);
             arr_approved.push(data.chart[k].approved);
+            arr_pending.push(data.chart[k].pending);
+            arr_rejected.push(data.chart[k].rejected);   
         }
 
         var options = {
@@ -31,13 +34,14 @@ $.getJSON('api/dashboard/mandate-values', (data) => {
                     data: arr_total
                 },
                 {
-                    name: "Pending",
-                    data: arr_pending
-                },
-                {
                     name: "Approved",
                     data: arr_approved
                 },
+                {
+                    name: "Pending",
+                    data: arr_pending
+                },
+                
             ],
             chart: {
                 type: 'bar',
@@ -85,7 +89,7 @@ $.getJSON('api/dashboard/mandate-values', (data) => {
                 crosshair: true,
                 categories: arr_month,
             },
-            colors: ["#1565C0",  "#F44336", "#66BB6A"]
+            colors: ["#1565C0", "#66BB6A", "#F44336"]
         };
 
         //render chart  
@@ -97,15 +101,18 @@ $.getJSON('api/dashboard/mandate-values', (data) => {
 //pending and approved mandate percentage
 $.getJSON('api/dashboard/mandate-percentages', (data) => {
     if (data.error == false) {
+        console.log("== percent data ==");
+        console.log(data);
+
         //charts
         var options = {
-            series: [data.pending, data.approved],
+            series: [data.pending, data.approved, data.rejected],
             chart: {
                 type: "donut",
                 height: 340,
             },
-            labels: ["Pending", "Approved"],
-            colors: ["#F44336", "#66BB6A"],
+            labels: ["Pending", "Approved", "Rejected"],
+            colors: ["#F44336", "#66BB6A", "#B71C1C"],
             legend: {
                 show: !1
             },
@@ -126,8 +133,8 @@ $.getJSON('api/dashboard/mandate-percentages', (data) => {
 
 //expected and collected payment mandates
 $.getJSON('api/dashboard/collected-mandate', (data) => {
-    console.log("== data ==")
-    console.log(data)
+    //console.log("== data ==")
+    //console.log(data)
 
     if (data.error == false) {
         var arr_month = [];
