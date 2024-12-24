@@ -30,7 +30,8 @@ use App\Services\BankPayloadService;
 use App\Services\DeductionService;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
-
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class PaymentMandateController extends Controller
 {
@@ -50,6 +51,8 @@ class PaymentMandateController extends Controller
         $title = 'Payment Mandate';
         //has_allowed('roles', 'lists');
 
+        DB::enableQueryLog();
+
         //debit
         $debit_orders = DebitOrder::where_cond();
         
@@ -59,26 +62,22 @@ class PaymentMandateController extends Controller
         if (isset($_POST['filter'])) {
             //all request
             $requests = $request->all();
+            Log::debug("== requests ==");
+            Log::debug($requests);
 
-            $debit_orders = $debit_orders
-                ->when($requests, function ($query) use ($requests) {
-                    $query->withFilters($requests);
-                });
+            $debit_orders = $debit_orders->when($requests, function ($query) use ($requests) {
+                $query->withFilters($requests);
+            });
 
             //debit orders
             $debit_orders = $debit_orders->get();
+
+            Log::debug("== debit orders ==");
+            Log::debug($debit_orders);
+
+            Log::debug(DB::getQueryLog());
+
         } else {
-            //if consent not null
-            // if ($consent != null) {
-            //     if ($consent == 'pending') {
-            //         $consent = 0;
-            //     } else if ($consent == 'approved') {
-            //         $consent = 1;
-            //     } else if ($consent == 'rejected') {
-            //         $consent = 99;
-            //     }
-            //     $debit_orders = $debit_orders->where('debit_orders.approved', $consent);
-            // }
             //debit orders
             $debit_orders = $debit_orders->paginate(50);
         }

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class DebitOrder extends Model
@@ -93,7 +94,6 @@ class DebitOrder extends Model
         $status            = $request['status'] ?? null;
         $keyword           = $request['keyword'] ?? null;
 
-
         return $query->when($start_date, function ($query) use ($start_date, $end_date) {
             if ($start_date != null || $end_date != null) {
                 if ($start_date != null && $end_date != null)
@@ -110,18 +110,10 @@ class DebitOrder extends Model
                 $query->where('debit_orders.approved', $status);
             })
             ->when($keyword, function ($query) use ($keyword) {
-                $query->join("partners", "partners.id", "=", "debit_orders.partner_id");
-                $query->where('partners.business_name', 'LIKE', "%$keyword%");
+                $query->whereHas("customerAccount", function ($q) use ($keyword) {
+                    $q->where(DB::raw('LOWER(account_name)'), 'like', "%".strtolower($keyword)."%")
+                        ->orWhere(DB::raw('LOWER(account_number)'), 'like', "%".strtolower($keyword)."%");
+                });
             });
-        // ->when($account_type_id, function ($query) use ($account_type_id) {
-        //     $query->where('customer_accounts.account_type_id', $account_type_id);
-        // });
-        // ->when($account_id, function ($query) use ($account_id) {
-        //     $query->where('customer_accounts.account_id', $account_id);
-        // })
-        // ->when($keyword, function ($query) use ($keyword) {
-        //     $query->orWhere('customer_accounts.account_name', 'LIKE', "%$keyword%")
-        //         ->orWhere('customer_accounts.account_number', 'LIKE', "%$keyword%");
-        // });
     }
 }

@@ -51,7 +51,7 @@ class DashboardChartController extends Controller
                     $query->where('debit_orders.approved', '=', 0)
                         ->orWhere('debit_orders.approved', '=', 1)
                         ->orWhere('debit_orders.approved', '=', 2);
-                })->groupBy('debit_orders.approved')->toBase();
+                })->groupBy('debit_orders.approved')->orderBy('debit_orders.approved')->toBase();
 
             $debit_orders = $debit_orders->whereMonth('created_at', $month)->whereYear('created_at', $year)->get();
 
@@ -82,6 +82,8 @@ class DashboardChartController extends Controller
                 "approved" => (int) $approved_amount
             ];
         }
+
+        // Log::debug($data_array);
 
         //response
         echo json_encode(['error' => FALSE, 'chart' => $data_array], 200);
