@@ -186,7 +186,7 @@
                                             <th>Primary Phone</th>
                                             <th>Consent Status</th>
                                             <th>Created Date</th>
-                                            <th style="width: 90px; !important">Actions</th>
+                                            <th style="width: 120px; !important">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -216,7 +216,7 @@
                                                     @elseif($values->status == 201)
                                                         <span class="badge badge-pill badge-soft-info">Pending Verification</span>
                                                     @elseif($values->status == 202)
-                                                        <span class="badge bg-success-1 font-size-10">Verified</span>
+                                                        <span class="badge bg-success font-size-10">Verified</span>
                                                     @elseif($values->status == 240)
                                                         <span class="badge bg-success-1 font-size-10">Active</span>
                                                     @elseif($values->status == 249)
@@ -225,7 +225,7 @@
                                                         <span class="badge bg-danger font-size-10">Failed</span>
                                                     @elseif($values->status == 405) 
                                                         <span class="badge bg-danger font-size-10">Cancelled</span>  
-                                                    @elseif($values->status == 500)
+                                                    @elseif($values->status == 500 || $values->status == 430)
                                                         <span class="badge badge-pill badge-soft-danger">Failed Verification</span>
                                                     @elseif($values->status == 501)
                                                         <span class="badge badge-pill badge-soft-danger">Inactive</span>
