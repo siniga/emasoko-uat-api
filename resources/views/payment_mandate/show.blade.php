@@ -45,6 +45,8 @@
                                         x-on:click="openMandateCancellationModal();"></button>
                                 </template>
 
+                                <span x-text="status"></span>
+
                                 <template x-if="status==201 || status==249 || status==430 || status==500">
                                     <button x-html="verifyTXT" title="Verify OTP" class="btn btn-outline-primary text-medium btn-sm btn-sm"
                                         x-on:click="verifyButton();"></button>
