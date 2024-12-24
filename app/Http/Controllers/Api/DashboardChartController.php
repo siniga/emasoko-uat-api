@@ -39,6 +39,7 @@ class DashboardChartController extends Controller
     {
         //declare variable
         $data_array = [];
+        $approvedStatuses = [0, 1, 2];
 
         for ($i = 0; $i <= 11; $i++) {
             $year_month = date("Y-m", strtotime(date('Y-m-01') . " -$i months"));
@@ -46,29 +47,30 @@ class DashboardChartController extends Controller
             $year = date('Y', strtotime($year_month));
 
             //query
-            $debit_orders = DebitOrder::select('debit_orders.approved', DB::raw('SUM(debit_orders.total_amount) as total_amount'))
+            $debit_orders = DebitOrder::select('debit_orders.approved', DB::raw('COALESCE(SUM(debit_orders.total_amount), 0) as total_amount'))
                 ->where(function ($query) {
-                    $query->where('debit_orders.approved', '=', 0)
-                        ->orWhere('debit_orders.approved', '=', 1)
-                        ->orWhere('debit_orders.approved', '=', 2);
+                    $query->whereIn('debit_orders.approved', [0, 1, 2]);
                 })->groupBy('debit_orders.approved')->orderBy('debit_orders.approved')->toBase();
 
             $debit_orders = $debit_orders->whereMonth('created_at', $month)->whereYear('created_at', $year)->get();
 
+            // Map over all approved statuses to ensure complete results
+            $results = collect($approvedStatuses)->map(function ($status) use ($debit_orders) {
+                $order = $debit_orders->firstWhere('approved', $status);
+                return [
+                    'approved' => $status,
+                    'total_amount' => $order ? $order->total_amount : 0,
+                ];
+            });
+
             //pending
-            $pending_amount = 0;
-            if (isset($debit_orders[0]->total_amount) && $debit_orders[0]->total_amount != null)
-                $pending_amount = $debit_orders[0]->total_amount;
+            $pending_amount = $results[0]['total_amount'];
 
             //approved 
-            $approved_amount = 0;
-            if (isset($debit_orders[1]->total_amount) && $debit_orders[1]->total_amount != null)
-                $approved_amount = $debit_orders[1]->total_amount;
+            $approved_amount = $results[1]['total_amount'];
 
             //rejected
-            $rejected_amount = 0;
-            if (isset($debit_orders[2]->total_amount) && $debit_orders[2]->total_amount != null)
-                $rejected_amount = $debit_orders[2]->total_amount;
+            $rejected_amount = $results[2]['total_amount'];
 
             ///aggregate mandate
             $total_amount = $pending_amount + $approved_amount + $rejected_amount;
@@ -78,15 +80,15 @@ class DashboardChartController extends Controller
                 // "month" => date("F", mktime(0, 0, 0, $month, 10)) . ',' . $year,
                 "month" => date("M", mktime(0, 0, 0, $month, 10)),
                 "total" => (int) $total_amount,
-                "pending" => (int) $pending_amount,
-                "approved" => (int) $approved_amount
+                "approved" => (int) $approved_amount,
+                "pending" => (int) $pending_amount
             ];
         }
 
-        // Log::debug($data_array);
+        Log::debug($data_array);
 
         //response
-        echo json_encode(['error' => FALSE, 'chart' => $data_array], 200);
+        return response()->json(['error' => FALSE, 'chart' => $data_array]);
     }
 
     //Collected 
