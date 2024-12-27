@@ -69,7 +69,7 @@
                                     <tr>
                                         <th>Service Provider</th>
                                         <td>
-                                            <span></span>
+                                            <span>{{ $batch->partner->business_name }}</span>
                                         </td>
 
                                         <th>Corporate Reference</th>
@@ -86,7 +86,11 @@
 
                                         <th>Processed</th>
                                         <td>
-                                            <span>{{ $batch->batch_processed }}</span>
+                                            @if($batch->processed == 0)
+                                                <span class="badge bg-danger">No</span>
+                                            @elseif($batch->processed == 1)
+                                                <span class="badge bg-success-1">Yes</span>
+                                            @endif
                                         </td>
                                     </tr>
 
@@ -167,16 +171,15 @@
                                                     $sum_current_balance += $val['current_balance'];
                                                     $sum_outstanding_amount += $val['outstanding_amount'];
                                                 @endphp
-
-                                                <tr>
-                                                    <td colspan="4" class="font-weight-600">Total</td>
-                                                    <td class="text-sm-end">{{ number_format($sum_expected_amount) }}</td>
-                                                    <td class="text-sm-end">{{ number_format($sum_paid_amount) }}</td>
-                                                    <td class="text-sm-end">{{ number_format($sum_current_balance) }}</td>
-                                                    <td class="text-sm-end">{{ number_format($sum_outstanding_amount) }}</td>
-                                                    <td colspan="2"></td>
-                                                </tr>
                                             @endforeach
+                                             <tr>
+                                                <td colspan="4" class="font-weight-600">Total</td>
+                                                <td class="text-sm-end">{{ number_format($sum_expected_amount) }}</td>
+                                                <td class="text-sm-end">{{ number_format($sum_paid_amount) }}</td>
+                                                <td class="text-sm-end">{{ number_format($sum_current_balance) }}</td>
+                                                <td class="text-sm-end">{{ number_format($sum_outstanding_amount) }}</td>
+                                                <td colspan="2"></td>
+                                            </tr>
                                         </tbody>
                                     </table>
                                 </div>

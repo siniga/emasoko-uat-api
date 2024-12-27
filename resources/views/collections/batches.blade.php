@@ -104,9 +104,8 @@
                                             <th width="20%">Service Provider</th>
                                             <th>Reference</th>
                                             <th>Processed</th>
-                                            <th>Success</th>
-                                            <th>Failures</th>
-                                            <th>Insufficient</th>
+                                            <th>No. of Success</th>
+                                            <th>No. of Failed</th>
                                             <th>Created Date</th>
                                             <th>Updated Date</th>
                                             <th style="width: 20px; !important">Actions</th>
@@ -120,13 +119,12 @@
                                                 <td>{{ $values->partner->business_name }}</td>
                                                 <td>{{ $values->collectionReference ?? '' }}</td>
                                                 <td>
-                                                    @if($values->batch_processed == 0)
+                                                    @if($values->processed == 0)
                                                         <span class="badge bg-danger">No</span>
-                                                    @elseif($values->batch_processed == 1)
+                                                    @elseif($values->processed == 1)
                                                         <span class="badge bg-success-1">Yes</span>
                                                     @endif
                                                 </td>
-                                                <td class="text-sm-end">0</td>
                                                 <td class="text-sm-end">0</td>
                                                 <td class="text-sm-end">0</td>
                                                 <td>{{ date('d-m-Y', strtotime($values->created_at)) }}</td>
