@@ -70,6 +70,7 @@ class CreateCollectionBatch extends Command
 
                 //2. Create collection batch based on partner 
                 $batch = CollectionBatch::create([
+                    'partner_id' => $partner->id,
                     "collectionReference" => $deductionService->getCollectionReference(),
                     "corporateReference" => $partner->reference,
                     "selectedPostingDate" => Carbon::now(),
