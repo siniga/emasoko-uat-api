@@ -48,8 +48,6 @@ class CreateCollectionBatch extends Command
     {
         //initialize deduction service
         $deductionService = new DeductionService();
-        $bankPayload = new BankPayloadService();
-        $bankApi =  new BankApiService();
 
         //debit orders => status=OPEN and NEXT_DEBIT_DATE = today()
         $partners = Partner::whereHas('debitOrders', function ($query) {
@@ -114,12 +112,6 @@ class CreateCollectionBatch extends Command
                     //4. Save csv payload in database
                     $batch->request_csv = $csv;
                     $batch->save();
-
-                    //5. Create payload for collection 
-                    //$payload = $bankPayload->collectionPayload($batch, $csv);
-
-                    //6. Send payload to a server
-                    //$response = $bankApi->collectionCreate($payload);
                 }
             }
         }
