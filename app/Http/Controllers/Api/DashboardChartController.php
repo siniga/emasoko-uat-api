@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Account;
 use App\Models\DebitOrder;
+use App\Models\Installment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -23,8 +24,6 @@ class DashboardChartController extends Controller
         for ($i = 1; $i <= 12; $i++) {
             $month = date('m', mktime(0, 0, 0, $i, 10));
             $year = date('Y');
-            Log::debug("month => " . $month);
-
 
             //query
             $debit_orders = DebitOrder::select('debit_orders.approved', DB::raw('COALESCE(SUM(debit_orders.total_amount), 0) as total_amount'))
@@ -125,26 +124,21 @@ class DashboardChartController extends Controller
         //declare variable
         $data_array = [];
 
-        for ($i = 0; $i <= 11; $i++) {
-            $year_month = date("Y-m", strtotime(date('Y-m-01') . " -$i months"));
-            $month = date('m', strtotime($year_month));
-            $year = date('Y', strtotime($year_month));
+        for ($i = 1; $i <= 12; $i++) {
+            $month = date('m', mktime(0, 0, 0, $i, 10));
+            $year = date('Y');
+            Log::debug("month => " . $month);
 
-            //query
-            $debit_orders = DebitOrder::select(DB::raw('SUM(debit_orders.total_amount) as total_amount'), DB::raw('SUM(debit_orders.current_balance) as paid_amount'))
-                ->where(function ($query) {
-                    $query->where('debit_orders.approved', '=', 1);
-                })->toBase();
-
-            $debit_orders = $debit_orders->whereMonth('created_at', $month)->whereYear('created_at', $year)->get();
+            //installments
+            $installments = Installment::select(DB::raw('COALESCE(SUM(installments.installment_amount), 0) as total_amount'), DB::raw('COALESCE(SUM(installments.current_balance), 0) as paid_amount'))->toBase();
+            $installments = $installments->whereMonth('payment_date', $month)->whereYear('payment_date', $year)->get();
 
             //total amount
-            $total_amount = $debit_orders[0]->total_amount;
-            $paid_amount = $debit_orders[0]->paid_amount;
+            $total_amount = $installments[0]->total_amount;
+            $paid_amount = $installments[0]->paid_amount;
 
             //create data array
             $data_array[] = [
-                // "month" => date("F", mktime(0, 0, 0, $month, 10)) . ',' . $year,
                 "month" => date("M", mktime(0, 0, 0, $month, 10)),
                 "total" => (int) $total_amount,
                 "paid" => (int) $paid_amount,
@@ -158,9 +152,6 @@ class DashboardChartController extends Controller
     //mandate per channel
     public function mandate_channel(Request $request)
     {
-        Log::debug("== request ==");
-        Log::debug($request->all());
-
         //debit order
         $debit_orders = DebitOrder::filterCondition();
 

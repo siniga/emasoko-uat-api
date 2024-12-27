@@ -182,13 +182,29 @@
         <!--./col -->
     </div>
 
-    {{-- <div class="row">
+    <div class="row">
         <div class="col-xl-8">
             <div class="card">
                 <div class="card-body">
-                    <div class="clearfix">
-                        <h4 class="card-title mb-4">Expected vs Collected</h4>
+                <div class="clearfix">
+                        <div class="float-end">
+                            <div class="input-group input-group-sm">
+                                <select class="form-select form-select-sm" id="mandate-value-select-year">
+                                    @php
+                                        $year_options = [];
+                                        $current_year = date('Y');
+                                    @endphp
+
+                                    @foreach (range(2024, $current_year+2) as $v)
+                                        <option value="{{ $v }}">{{ $v }}</option>
+                                    @endforeach
+                                </select>
+                                <label class="input-group-text">Year</label>
+                            </div>
+                        </div>
+                        <h4 class="card-title mb-3">Expected vs Collected</h4>
                     </div>
+
                     <div class="row">
                         <div class="col-lg-12">
                             <div id="collected-mandate-value-chart"></div>
@@ -230,7 +246,7 @@
             </div>
         </div>
         <!--./col -->
-    </div> --}}
+    </div>
 
     <div class="row">
         <div class="col-xl-8">
