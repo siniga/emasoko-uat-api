@@ -37,55 +37,6 @@
                 </div>
             </a>
         </div>
-        <!--./col -->
-
-        <div class="col-md-3">
-            <a href="{{ route('payment-mandate.lists', 'pending') }}">
-                <div class="card border-left-info bg-danger-1 shadow h-96 py-2">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xss font-weight-600 text-white mb-1">
-                                    Pending Mandate
-                                </div>
-
-                                <div class="h5 mb-0 font-weight-700 text-white">
-                                    {{ number_format($pending[0]->total_amount) }}
-                                </div>
-                            </div>
-                            <div class="col-auto">
-                                <i class='bx bx-copy-alt fa-3x text-white'></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </a>
-        </div>
-        <!--./col -->
-
-        <div class="col-md-3">
-            <a href="{{ route('payment-mandate.lists', 'rejected') }}">
-                <div class="card border-left-info bg-danger shadow h-96 py-2">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xss font-weight-600 text-white mb-1">
-                                    Failed Mandate
-                                </div>
-
-                                <div class="h5 mb-0 font-weight-700 text-white">
-                                    {{ number_format($rejected[0]->total_amount) }}
-                                </div>
-                            </div>
-                            <div class="col-auto">
-                                <i class='bx bx-copy-alt fa-3x text-white'></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </a>
-        </div>
-        <!--./col -->
 
         <div class="col-md-3">
             <a href="{{ route('payment-mandate.lists', 'approved') }}">
@@ -109,7 +60,52 @@
                 </div>
             </a>
         </div>
-        <!--./col -->
+
+        <div class="col-md-3">
+            <a href="{{ route('payment-mandate.lists', 'pending') }}">
+                <div class="card border-left-info bg-danger-1 shadow h-96 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xss font-weight-600 text-white mb-1">
+                                    Pending Mandate
+                                </div>
+
+                                <div class="h5 mb-0 font-weight-700 text-white">
+                                    {{ number_format($pending[0]->total_amount) }}
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <i class='bx bx-copy-alt fa-3x text-white'></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-3">
+            <a href="{{ route('payment-mandate.lists', 'rejected') }}">
+                <div class="card border-left-info bg-danger shadow h-96 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xss font-weight-600 text-white mb-1">
+                                    Failed Mandate
+                                </div>
+
+                                <div class="h5 mb-0 font-weight-700 text-white">
+                                    {{ number_format($rejected[0]->total_amount) }}
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <i class='bx bx-copy-alt fa-3x text-white'></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
     </div>
 
     <div class="row">
@@ -117,17 +113,32 @@
             <div class="card">
                 <div class="card-body">
                     <div class="clearfix">
-                        <h4 class="card-title mb-4">Payment Mandate</h4>
+                        <div class="float-end">
+                            <div class="input-group input-group-sm">
+                                <select class="form-select form-select-sm" id="mandate-value-select-year">
+                                    @php
+                                        $year_options = [];
+                                        $current_year = date('Y');
+                                    @endphp
+
+                                    @foreach (range(2024, $current_year) as $v)
+                                        <option value="{{ $v }}">{{ $v }}</option>
+                                    @endforeach
+                                </select>
+                                <label class="input-group-text">Year</label>
+                            </div>
+                        </div>
+                        <h4 class="card-title mb-3">Payment Mandate Values</h4>
                     </div>
+
                     <div class="row">
-                        <div class="col-lg-12">
+                        <div class="col-lg-12 col-md-12 col-12">
                             <div id="mandate-value-chart"></div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <!--./col -->
 
         <div class="col-xl-4">
             <div class="card">
@@ -171,7 +182,7 @@
         <!--./col -->
     </div>
 
-    <div class="row">
+    {{-- <div class="row">
         <div class="col-xl-8">
             <div class="card">
                 <div class="card-body">
@@ -219,7 +230,7 @@
             </div>
         </div>
         <!--./col -->
-    </div>
+    </div> --}}
 
     <div class="row">
         <div class="col-xl-8">
