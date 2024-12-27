@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Classes\Messaging;
 use App\Http\Controllers\Controller;
+use App\Jobs\SendEmailJob;
 use App\Jobs\SendSMSJob;
 use App\Models\OtpRequest;
 use App\Models\User;
@@ -55,8 +56,17 @@ class AuthOtpController extends Controller
         $data = ["phone" => $phone, "message" => $message];
         dispatch(new SendSMSJob($data));
 
+        //send email
+        $data = [
+            "email" => $user->email,
+            "name" => $user->name,
+            "subject" => "eMakato OTP Verification",
+            "body" => $message
+        ];
+        dispatch(new SendEmailJob($data));
+
         //redirect
-        return Redirect::route('otp.verification', ['uuid' => $user->uuid])->with('success', $user->name . ', Welcome at eMakato. Enter OTP Pin sent to your mobile phone.');
+        return Redirect::route('otp.verification', ['uuid' => $user->uuid])->with('success', $user->name . ', Welcome at eMakato. Enter OTP Pin sent to your phone and email.');
     }
 
     //generate and save otp
