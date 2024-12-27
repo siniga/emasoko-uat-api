@@ -17,7 +17,7 @@ class DashboardChartController extends Controller
     public function mandate_percentages()
     {
         //debit order
-        $debit_orders = DebitOrder::where_cond();
+        $debit_orders = DebitOrder::filterCondition();
 
         //declare array
         $data_array = [];
@@ -158,7 +158,7 @@ class DashboardChartController extends Controller
     public function consent_per_channel()
     {
         //debit order
-        $debit_orders = DebitOrder::where_cond();
+        $debit_orders = DebitOrder::filterCondition();
 
         //acounts
         $accounts = Account::toBase()->get();

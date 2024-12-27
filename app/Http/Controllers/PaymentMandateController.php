@@ -51,19 +51,16 @@ class PaymentMandateController extends Controller
         $title = 'Payment Mandate';
         //has_allowed('roles', 'lists');
 
-        DB::enableQueryLog();
-
         //debit
-        $debit_orders = DebitOrder::where_cond();
+        $debit_orders = DebitOrder::filterCondition();
         
         if ($consent) {
             $debit_orders->where(['approved' => $consent]);
         }
+        
         if (isset($_POST['filter'])) {
             //all request
             $requests = $request->all();
-            Log::debug("== requests ==");
-            Log::debug($requests);
 
             $debit_orders = $debit_orders->when($requests, function ($query) use ($requests) {
                 $query->withFilters($requests);
@@ -71,11 +68,6 @@ class PaymentMandateController extends Controller
 
             //debit orders
             $debit_orders = $debit_orders->get();
-
-            Log::debug("== debit orders ==");
-            Log::debug($debit_orders);
-
-            Log::debug(DB::getQueryLog());
 
         } else {
             //debit orders
@@ -116,7 +108,7 @@ class PaymentMandateController extends Controller
         $keyword = $request->input('keyword');
 
         //debit
-        $debit_orders = DebitOrder::where_cond();
+        $debit_orders = DebitOrder::filterCondition();
 
         //join
         $debit_orders = $debit_orders->join('customer_accounts', 'customer_accounts.id', '=', 'debit_orders.customer_account_id');

@@ -55,6 +55,13 @@
                     </a>
                 </li>
 
+                <li class="{{ Route::is('collections.batches', 'collections.show') ? "mm-active" : ""}}">
+                    <a href="{{ route('collections.batches') }}" class="waves-effect">
+                        <i class="bx bx-wallet"></i>
+                        <span key="t-layouts">Collection Batches</span>
+                    </a>
+                </li>
+
                 <li class="{{ Route::is('reports.lists') ? "mm-active" : ""}}">
                     <a href="{{ route('reports.lists') }}" class="waves-effect">
                         <i class='bx bxs-report'></i>

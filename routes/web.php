@@ -2,11 +2,11 @@
 
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\Api\DashboardChartController;
-use App\Http\Controllers\Api\PaymentMandateController as ApiPaymentMandateController;
 use App\Http\Controllers\Auth\AuthOtpController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\CollectionController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\CustomerAccountController;
 use App\Http\Controllers\CustomerController;
@@ -41,7 +41,7 @@ use Illuminate\Support\Facades\Route;
 // //Language Translation
 // Route::get('index/{locale}', [App\Http\Controllers\HomeController::class, 'lang']);
 
-Route::controller(AuthOtpController::class)->group(function(){
+Route::controller(AuthOtpController::class)->group(function () {
     Route::get('/', 'login')->name('otp.login');
     Route::get('/login', 'login')->name('otp.login');
     Route::post('/otp/generate', 'generate')->name('otp.generate');
@@ -180,6 +180,12 @@ Route::get('payment-mandate/delete/{do_uuid}', [PaymentMandateController::class,
 Route::post('payment-mandate/fetch-status', [PaymentMandateController::class, 'fetch_status'])->name('payment-mandate.fetch-status');
 Route::post('payment-mandate/cancel-mandate', [PaymentMandateController::class, 'cancel_mandate'])->name('payment-mandate.cancel-mandate');
 Route::get('payment-mandate/send-remainder/{do_uuid}', [PaymentMandateController::class, 'sendRemainder'])->name('payment-mandate.send-remainder');
+
+
+//collection batches
+Route::any('collections/batches', [CollectionController::class, 'batches'])->name('collections.batches');
+Route::get('collections/show/{id}', [CollectionController::class, 'show'])->name('collections.show');
+
 
 //reports
 Route::any('reports/lists', [ReportController::class, 'lists'])->name('reports.lists');

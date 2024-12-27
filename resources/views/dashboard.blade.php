@@ -70,7 +70,7 @@
                         <div class="row no-gutters align-items-center">
                             <div class="col mr-2">
                                 <div class="text-xss font-weight-600 text-white mb-1">
-                                    Rejected Mandate
+                                    Failed Mandate
                                 </div>
 
                                 <div class="h5 mb-0 font-weight-700 text-white">

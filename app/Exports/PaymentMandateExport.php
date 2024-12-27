@@ -29,10 +29,10 @@ class PaymentMandateExport implements FromQuery, WithHeadings, ShouldAutoSize, W
     public function query()
     {
         //debit
-        $debit_orders = DebitOrder::where_cond();
-        //$debit_orders = DebitOrder::query();
+        $debit_orders = DebitOrder::filterCondition();
 
         //join
+        //$debit_orders = $debit_orders->with('customerAccount');
         $debit_orders = $debit_orders->join('customer_accounts', 'customer_accounts.id', '=', 'debit_orders.customer_account_id');
 
         //start data and end date
