@@ -49,16 +49,17 @@ class CollectionStatusBatch extends Command
         $bankPayload = new BankPayloadService();
         $bankApi =  new BankApiService();
 
-        $collection_batches = CollectionBatch::where(['batch_processed' => 0, 'collectionReference' => 10049])->get();
+        $collection_batches = CollectionBatch::where(['pushed' => 1, 'processed' => 0])->orderBy('collectionReference', 'ASC');
 
-        if ($collection_batches) {
-            foreach ($collection_batches as $collection_batch) {
-                //create payload
-                $payload = $bankPayload->collectionStatusPayload($collection_batch);
+        if ($collection_batches->count() > 0) {
+            //take the first collection batch
+            $collection_batch = $collection_batches->first();
 
-                //send request
-                $response = $bankApi->collectionStatus($payload);
-            }
+            //create payload
+            $payload = $bankPayload->collectionStatusPayload($collection_batch);
+
+            //send request
+            $response = $bankApi->collectionStatus($payload);
         }
 
         return 200;

@@ -252,7 +252,6 @@ class BankApiService
             $debit_order->http_response_code = $response['data']['response'][0]['responseCode'];
             $debit_order->remarks = $response['data']['response'][0]['responseDescription'];
             $debit_order->approved = 1;
-
         } else if (strtolower($response['status']) == "fail") {
             $response_code = 501; //response code
             $remarks = $response['data']['response'][0]['responseDescription'];
@@ -555,8 +554,10 @@ class BankApiService
         //response
         $response = Http::withHeaders($headers)->post($API_URL, $payload);
 
-        //update collection batch 
+        //collection reference
         $collection_reference = $payload['data']['collectionReference'];
+
+        //update collection batch 
         $collection_batch = CollectionBatch::where('collectionReference', '=', $collection_reference)->first();
         $collection_batch->http_response_json = $response;
 
@@ -574,6 +575,7 @@ class BankApiService
             $collection_batch->status = $response['data']['response'][0]['responseCode'];
             $collection_batch->http_response_code = $response['data']['response'][0]['responseCode'];
             $collection_batch->remarks = $response['data']['response'][0]['responseDescription'];
+            $collection_batch->processed = 1;
 
             //check for batch processing or batch complete
             if ($batch_status == 230) {
@@ -585,15 +587,11 @@ class BankApiService
                 Log::debug("== Collection CSV ==");
                 Log::debug($data);
 
-                $failed_installments = $this->updateInstallments($data, $collection_reference);
+                $response = $this->updateInstallments($data, $collection_reference);
 
                 //3. process batch
-                $collection_batch->failed = $failed_installments;
-                $collection_batch->batch_processed = 1;
-                $collection_batch->save();
-            } else if ($batch_status == 235) {
-                //2. batch failed
-                $collection_batch->batch_processed = 2; //batch FAILED
+                $collection_batch->success = $response[0];
+                $collection_batch->failed = $response[1];
                 $collection_batch->save();
             } else if ($batch_status == 239) {
                 //3.Batch Processing
@@ -604,17 +602,18 @@ class BankApiService
                 Log::debug("== Collection CSV ==");
                 Log::debug($data);
 
-                $failed_installments = $this->updateInstallments($data, $collection_reference);
+                $response = $this->updateInstallments($data, $collection_reference);
 
                 //3. process batch
-                $collection_batch->failed = $failed_installments;
-                $collection_batch->batch_processed = 0;
+                $collection_batch->success = $response[0];
+                $collection_batch->failed = $response[1];
                 $collection_batch->save();
             }
         } else if (strtolower($response['status']) == "fail") {
             $collection_batch->status = $response['data']['response'][0]['responseCode'];
             $collection_batch->http_response_code = $response['data']['response'][0]['responseCode'];
             $collection_batch->remarks = $response['data']['response'][0]['responseDescription'];
+            $collection_batch->processed = 1;
             $collection_batch->save();
         }
 
@@ -629,7 +628,8 @@ class BankApiService
         //remove empty rows
         $rows = array_filter($rows);
 
-        //count failed installments
+        //count success and failed installments
+        $success_installments = 0;
         $failed_installments = 0;
 
         //2. process installment
@@ -646,7 +646,13 @@ class BankApiService
             $installment = Installment::where('id', '=', $fields[0])->first();
 
             if ($installment) {
-                //status
+                //installment amount
+                $installment_amount = $installment->installment_amount;
+
+                //payment date
+                $payment_date = $installment->payment_date;
+
+                //status and paid amount
                 $status = strtolower($fields[7]);
                 $amount = floatval($fields[6]);
 
@@ -661,7 +667,7 @@ class BankApiService
 
                     //send sms to FAILED mandate
                     $phone = $installment->debitOrder->customerAccount->phone;
-                    $message = "Makato ya tarehe {$installment->payment_date} ya kiasi cha shilingi {$installment->installment_amount} yameshindikana. Tafadhali weka pesa kwenye akaunti yako ya benki kwa ajili ya makato.";
+                    $message = "Makato ya tarehe {$payment_date} ya kiasi cha shilingi {$installment_amount} yameshindikana. Tafadhali weka pesa kwenye akaunti yako ya benki kwa ajili ya makato.";
 
                     //send sms
                     $data = ["phone" => $phone, "message" => $message];
@@ -671,6 +677,9 @@ class BankApiService
                     $installment->status = "SUCCESS";
                     $installment->last_paid_amount = $amount;
                     $installment->save();
+
+                    //increment success count
+                    $success_installments += 1;
 
                     //process calculation for installment and debit order.
                     $this->deduction_service->processInstallment($installment, $amount, $collection_reference);
@@ -682,6 +691,6 @@ class BankApiService
             }
         }
 
-        return $failed_installments;
+        return [$success_installments, $failed_installments];
     }
 }
