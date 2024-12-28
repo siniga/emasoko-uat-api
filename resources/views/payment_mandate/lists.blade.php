@@ -45,7 +45,7 @@
                                             $options = [
                                                 0 => 'Pending',
                                                 1 => 'Approved',
-                                                2 => 'Rejected',
+                                                2 => 'Failed',
                                             ];
                                             $options = ['' => '-- Consent Status --'] + $options;
                                         @endphp
