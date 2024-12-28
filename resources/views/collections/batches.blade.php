@@ -125,8 +125,8 @@
                                                         <span class="badge bg-success-1">Yes</span>
                                                     @endif
                                                 </td>
-                                                <td class="text-sm-end">0</td>
-                                                <td class="text-sm-end">0</td>
+                                                <td class="text-sm-end">{{ $values->success }}</td>
+                                                <td class="text-sm-end">{{ $values->failed }}</td>
                                                 <td>{{ date('d-m-Y', strtotime($values->created_at)) }}</td>
                                                 <td>{{ date('d-m-Y', strtotime($values->updated_at)) }}</td>
 
