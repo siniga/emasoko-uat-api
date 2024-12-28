@@ -95,6 +95,13 @@
                                     </tr>
 
                                     <tr>
+                                        <th>Remarks</th>
+                                        <td colspan="3">
+                                            <span>{{ $batch->remarks }}</span>
+                                        </td>
+                                    </tr>
+
+                                    <tr>
                                         <th>Created Date</th>
                                         <td>
                                             <span>{{ date('d-m-Y', strtotime($batch->created_at)) }}</span>
@@ -105,6 +112,8 @@
                                             <span>{{ date('d-m-Y', strtotime($batch->updated_at)) }}</span>
                                         </td>
                                     </tr>
+
+
                                 </table>
                             </div>
                         </div>
