@@ -149,55 +149,58 @@ class DeductionService
     //process installment
     public function processInstallment(Installment $installment, $amount, $reference)
     {
-        //1. Update installment => outstanding amount, current balance
-        $outstanding_amount = $installment->outstanding_amount - $amount;
-        $current_balance = $installment->current_balance + $amount;
-        $installment->outstanding_amount = $outstanding_amount;
-        $installment->current_balance = $current_balance;
+        //0. Check if installment status is not CLOSED
+        if ($installment->status != 'CLOSED') {
+            //1. Update installment => outstanding amount, current balance
+            $outstanding_amount = $installment->outstanding_amount - $amount;
+            $current_balance = $installment->current_balance + $amount;
+            $installment->outstanding_amount = $outstanding_amount;
+            $installment->current_balance = $current_balance;
 
-        //2. update installment status {OPEN, CLOSED, PARTIAL_PAID}
-        if ($outstanding_amount <= 0)
-            $installment->status = "CLOSED";
-        else if ($outstanding_amount > 0)
-            $installment->status = "PARTIAL_PAID";
+            //2. update installment status {OPEN, CLOSED, PARTIAL_PAID}
+            if ($outstanding_amount <= 0)
+                $installment->status = "CLOSED";
+            else if ($outstanding_amount > 0)
+                $installment->status = "PARTIAL_PAID";
 
-        //3. Save installment
-        $installment->save();
+            //3. Save installment
+            $installment->save();
 
-        //4. Insert payment in installment amount
-        $payment = new InstallmentPayment();
-        $payment->installment_id = $installment->id;
-        $payment->amount = $amount;
-        $payment->reference = $reference;
-        $payment->save();
+            //4. Insert payment in installment amount
+            $payment = new InstallmentPayment();
+            $payment->installment_id = $installment->id;
+            $payment->amount = $amount;
+            $payment->reference = $reference;
+            $payment->save();
 
-        //5. Update debit order => outstanding amount, current balance
-        $debit_order = $installment->debitOrder;
-        $outstanding_amount = $debit_order->outstanding_amount - $amount;
-        $current_balance = $debit_order->current_balance + $amount;
-        $debit_order->outstanding_amount = $outstanding_amount;
-        $debit_order->current_balance = $current_balance;
+            //5. Update debit order => outstanding amount, current balance
+            $debit_order = $installment->debitOrder;
+            $outstanding_amount = $debit_order->outstanding_amount - $amount;
+            $current_balance = $debit_order->current_balance + $amount;
+            $debit_order->outstanding_amount = $outstanding_amount;
+            $debit_order->current_balance = $current_balance;
 
-        //6. Update contract status = outstanding amount <= 0
-        if ($outstanding_amount <= 0)
-            $debit_order->contract_status = "CLOSED";
+            //6. Update contract status = outstanding amount <= 0
+            if ($outstanding_amount <= 0)
+                $debit_order->contract_status = "CLOSED";
 
-        //save debit order
-        $debit_order->save();
+            //save debit order
+            $debit_order->save();
 
-        //installment amount
-        $installment_amount = $installment->installment_amount;
+            //installment amount
+            $installment_amount = $installment->installment_amount;
 
-        //payment date
-        $payment_date = $installment->payment_date;
+            //payment date
+            $payment_date = $installment->payment_date;
 
-        //. Send message for outstanding amount and current balance from eMakato.
-        $phone = $installment->debitOrder->customerAccount->phone;
-        $message = "Makato ya tarehe {$payment_date} ya kiasi cha shilingi {$installment_amount} yamekamilishwa na kiasi kilichobaki ni Tsh {$outstanding_amount}. Asante kwa kutumia eMakato.";
+            //. Send message for outstanding amount and current balance from eMakato.
+            $phone = $installment->debitOrder->customerAccount->phone;
+            $message = "Makato ya tarehe {$payment_date} ya kiasi cha shilingi {$installment_amount} yamekamilishwa na kiasi kilichobaki ni Tsh {$outstanding_amount}. Asante kwa kutumia eMakato.";
 
-        //send sms
-        $data = ["phone" => $phone, "message" => $message];
-        dispatch(new SendSMSJob($data));
+            //send sms
+            $data = ["phone" => $phone, "message" => $message];
+            dispatch(new SendSMSJob($data));
+        }
 
         return 200;
     }
