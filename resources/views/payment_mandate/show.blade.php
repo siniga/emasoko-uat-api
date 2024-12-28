@@ -81,6 +81,18 @@
                                     </tr>
 
                                     <tr>
+                                        <th>Mandate Reference</th>
+                                        <td>
+                                            <span>{{ $debit_order->reference ?? '' }}</span>
+                                        </td>
+
+                                        <th>Service Provider</th>
+                                        <td>
+                                            <span>{{ $debit_order->partner->business_name ?? '' }}</span>
+                                        </td>
+                                    </tr>
+
+                                    <tr>
                                         <th width=25%>Payment Channel</th>
                                         <td width=25%>
                                             <span>{{ $debit_order->customerAccount->accountType->name ?? '' }}</span>

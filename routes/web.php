@@ -2,11 +2,11 @@
 
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\Api\DashboardChartController;
-use App\Http\Controllers\Api\PaymentMandateController as ApiPaymentMandateController;
 use App\Http\Controllers\Auth\AuthOtpController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\CollectionController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\CustomerAccountController;
 use App\Http\Controllers\CustomerController;
@@ -41,7 +41,7 @@ use Illuminate\Support\Facades\Route;
 // //Language Translation
 // Route::get('index/{locale}', [App\Http\Controllers\HomeController::class, 'lang']);
 
-Route::controller(AuthOtpController::class)->group(function(){
+Route::controller(AuthOtpController::class)->group(function () {
     Route::get('/', 'login')->name('otp.login');
     Route::get('/login', 'login')->name('otp.login');
     Route::post('/otp/generate', 'generate')->name('otp.generate');
@@ -181,6 +181,12 @@ Route::post('payment-mandate/fetch-status', [PaymentMandateController::class, 'f
 Route::post('payment-mandate/cancel-mandate', [PaymentMandateController::class, 'cancel_mandate'])->name('payment-mandate.cancel-mandate');
 Route::get('payment-mandate/send-remainder/{do_uuid}', [PaymentMandateController::class, 'sendRemainder'])->name('payment-mandate.send-remainder');
 
+
+//collection batches
+Route::any('collections/batches', [CollectionController::class, 'batches'])->name('collections.batches');
+Route::get('collections/show/{id}', [CollectionController::class, 'show'])->name('collections.show');
+
+
 //reports
 Route::any('reports/lists', [ReportController::class, 'lists'])->name('reports.lists');
 
@@ -202,4 +208,4 @@ Route::post('roles/{id}/store-perms', [RoleController::class, 'store_perms'])->n
 Route::get('api/dashboard/mandate-values', [DashboardChartController::class, 'mandate_values']);
 Route::get('api/dashboard/collected-mandate', [DashboardChartController::class, 'collected_mandates']);
 Route::get('api/dashboard/mandate-percentages', [DashboardChartController::class, 'mandate_percentages']);
-Route::get('api/dashboard/consent-per-channel', [DashboardChartController::class, 'consent_per_channel']);
+Route::get('api/dashboard/mandate-channel', [DashboardChartController::class, 'mandate_channel']);

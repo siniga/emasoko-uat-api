@@ -6,7 +6,7 @@
         <div id="sidebar-menu">
             <!-- Left Menu Start -->
             <ul class="metismenu list-unstyled" id="side-menu">
-                <li class="menu-title" key="t-menu">@lang('translation.Menu')</li>
+                {{-- <li class="menu-title" key="t-menu">@lang('translation.Menu')</li> --}}
 
                 <li>
                     <a href="{{ route('dashboard') }}" class="waves-effect">
@@ -52,6 +52,13 @@
                     <a href="{{ route('payment-mandate.lists') }}" class="waves-effect">
                         <i class="bx bxs-wallet-alt"></i>
                         <span key="t-layouts">Payment Mandate</span>
+                    </a>
+                </li>
+
+                <li class="{{ Route::is('collections.batches', 'collections.show') ? "mm-active" : ""}}">
+                    <a href="{{ route('collections.batches') }}" class="waves-effect">
+                        <i class="bx bx-wallet"></i>
+                        <span key="t-layouts">Collection Batches</span>
                     </a>
                 </li>
 

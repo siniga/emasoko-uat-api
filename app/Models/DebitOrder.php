@@ -14,7 +14,7 @@ class DebitOrder extends Model
     protected $guarded = [];
 
     //where condition
-    public static function where_cond()
+    public static function filterCondition()
     {
         $user = User::findOrFail(Auth::user()->id);
 
@@ -24,9 +24,8 @@ class DebitOrder extends Model
         if ($user->hasRole('Company_Approver') || $user->hasRole('Company_User')) {
             $partner_user = PartnerUser::where(['user_id' => $user->id])->first();
 
-            if ($partner_user) {
+            if ($partner_user)
                 $debit_orders = $debit_orders->where('debit_orders.partner_id', '=', $partner_user->partner_id);
-            }
         }
 
         return $debit_orders;
@@ -111,8 +110,8 @@ class DebitOrder extends Model
             })
             ->when($keyword, function ($query) use ($keyword) {
                 $query->whereHas("customerAccount", function ($q) use ($keyword) {
-                    $q->where(DB::raw('LOWER(account_name)'), 'like', "%".strtolower($keyword)."%")
-                        ->orWhere(DB::raw('LOWER(account_number)'), 'like', "%".strtolower($keyword)."%");
+                    $q->where(DB::raw('LOWER(account_name)'), 'like', "%" . strtolower($keyword) . "%")
+                        ->orWhere(DB::raw('LOWER(account_number)'), 'like', "%" . strtolower($keyword) . "%");
                 });
             });
     }

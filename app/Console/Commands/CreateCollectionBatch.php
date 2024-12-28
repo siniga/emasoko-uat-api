@@ -20,14 +20,14 @@ class CreateCollectionBatch extends Command
      *
      * @var string
      */
-    protected $signature = 'send:batches';
+    protected $signature = 'create:batches';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Create and Send payment bacthes';
+    protected $description = 'Create collection bacthes';
 
     /**
      * Create a new command instance.
@@ -48,16 +48,11 @@ class CreateCollectionBatch extends Command
     {
         //initialize deduction service
         $deductionService = new DeductionService();
-        $bankPayload = new BankPayloadService();
-        $bankApi =  new BankApiService();
 
-        $created_date = "2024-12-19";
-        //$created_date = Carbon::now();
- 
         //debit orders => status=OPEN and NEXT_DEBIT_DATE = today()
         $partners = Partner::whereHas('debitOrders', function ($query) {
-            return $query->where(['contract_status' => 'OPEN', 'channel' => 'NMB'  ,'approved' => 1, 'deleted' => 0, 'partner_id' => 10])
-                ->whereDate('next_debit_date', "=", "2024-12-22");
+            return $query->where(['contract_status' => 'OPEN', 'channel' => 'NMB', 'approved' => 1, 'deleted' => 0])
+                ->whereDate('next_debit_date', "=", Carbon::now());
         })->get();
 
         foreach ($partners as $partner) {
@@ -65,11 +60,7 @@ class CreateCollectionBatch extends Command
             $debit_orders = DebitOrder::where(['contract_status' => 'OPEN', 'approved' => 1])
                 ->where('partner_id', '=', $partner->id)
                 ->where('deleted', '=', 0)
-                ->whereDate('next_debit_date', "=", "2024-12-22");
-
-                Log::debug("== debit orders ==");
-                Log::debug($debit_orders->count());
-
+                ->whereDate('next_debit_date', "=", Carbon::now());
 
             if ($debit_orders->count() > 0) {
                 //declare data points
@@ -77,6 +68,7 @@ class CreateCollectionBatch extends Command
 
                 //2. Create collection batch based on partner 
                 $batch = CollectionBatch::create([
+                    'partner_id' => $partner->id,
                     "collectionReference" => $deductionService->getCollectionReference(),
                     "corporateReference" => $partner->reference,
                     "selectedPostingDate" => Carbon::now(),
@@ -100,13 +92,14 @@ class CreateCollectionBatch extends Command
 
                         foreach ($installments as $installment) {
                             //account details
-                            $bank_code = $val->customerAccount->bank_code;
                             $account_name = strtoupper($val->customerAccount->account_name);
                             $account_number = $val->customerAccount->account_number;
                             $mandate_reference = $val->reference;
+                            $installment_id = $installment->id;
+                            $payment_amount = $installment->installment_amount;
 
                             //create csv file
-                            $csv .= "{$installment->id};016;NMB;{$mandate_reference};{$account_name};{$account_number};{$installment->installment_amount}\n";
+                            $csv .= "{$installment_id};016;NMB;{$mandate_reference};{$account_name};{$account_number};{$payment_amount}\n";
 
                             //increment data point
                             $data_point += 1;
@@ -119,12 +112,6 @@ class CreateCollectionBatch extends Command
                     //4. Save csv payload in database
                     $batch->request_csv = $csv;
                     $batch->save();
-
-                    //5. Create payload for collection 
-                    $payload = $bankPayload->collectionPayload($batch, $csv);
-
-                    //6. Send payload to a server
-                    $response = $bankApi->collectionCreate($payload);
                 }
             }
         }

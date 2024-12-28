@@ -198,7 +198,6 @@
                                                     {{ $values->customerAccount->account_name ?? $values->customerAccount->phone }}<br>
                                                     ID: {{ $values->customerAccount->customer->id_number ?? 'NIL' }}
                                                 </td>
-                                                </td>
                                                 <td>{{ $values->customerAccount->account->name ?? '' }}</td>
                                                 <td>
                                                     {{ $values->customerAccount->account_number ?? $values->customerAccount->phone }}
