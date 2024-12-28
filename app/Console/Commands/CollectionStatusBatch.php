@@ -49,7 +49,7 @@ class CollectionStatusBatch extends Command
         $bankPayload = new BankPayloadService();
         $bankApi =  new BankApiService();
 
-        $collection_batches = CollectionBatch::where(['batch_processed' => 0, 'collectionReference' => 10049])->get();
+        $collection_batches = CollectionBatch::where(['collectionReference' => 10052])->get();
 
         if ($collection_batches) {
             foreach ($collection_batches as $collection_batch) {
