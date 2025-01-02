@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\DebitOrder;
+use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
@@ -28,46 +29,51 @@ class PaymentMandateExport implements FromQuery, WithHeadings, ShouldAutoSize, W
 
     public function query()
     {
-        //debit
+        //debit orders
         $debit_orders = DebitOrder::filterCondition();
-
-        //join
-        //$debit_orders = $debit_orders->with('customerAccount');
-        $debit_orders = $debit_orders->join('customer_accounts', 'customer_accounts.id', '=', 'debit_orders.customer_account_id');
 
         //start data and end date
         if ($this->start_at != null && $this->end_at != null) {
-            $start_at = date('Y-m-d', strtotime($this->start_at));
-            $end_at = date('Y-m-d', strtotime($this->end_at));
+            if ($this->start_at != null && $this->end_at != null)
+                $debit_orders = $debit_orders->whereBetween('debit_orders.created_at', [$this->start_at, $this->end_at]);
 
-            $debit_orders = $debit_orders->whereBetween('debit_orders.created_at', [$start_at, $end_at]);
+            else if ($this->start_at != null)
+                $debit_orders = $debit_orders->where('debit_orders.created_at', '>=', $this->start_at);
+
+            else if ($this->end_at != null)
+                $debit_orders = $debit_orders->where('debit_orders.created_at', '<=', $this->end_at);
         }
 
-        //payment channel
         if ($this->account_type_id != null) {
-            $debit_orders = $debit_orders->where('customer_accounts.account_type_id', $this->account_type_id);
+            $account_type_id = $this->account_type_id; //payment channel
+
+            $debit_orders = $debit_orders->whereHas("customerAccount", function ($q) use ($account_type_id) {
+                $q->where('customer_accounts.account_type_id', $account_type_id);
+            });
         }
 
-        //bank account
         if ($this->account_id != null) {
-            $debit_orders = $debit_orders->where('customer_accounts.account_id', $this->account_id);
+            $account_id = $this->account_id; //bank account
+
+            $debit_orders = $debit_orders->whereHas("customerAccount", function ($q) use ($account_id) {
+                $q->where('customer_accounts.account_id', $account_id);
+            });
         }
 
         //status
         if ($this->status != null)
             $debit_orders = $debit_orders->where('debit_orders.approved', $this->status);
 
-        //keyword
         if ($this->keyword != null) {
-            $keyword = $this->keyword;
+            $keyword = $this->keyword; //keyword
 
-            //query
-            $debit_orders = $debit_orders->where(function ($query) use ($keyword) {
-                $query->orWhere('customer_accounts.account_name', 'LIKE', "%$keyword%")
-                    ->orWhere('customer_accounts.account_number', 'LIKE', "%$keyword%");
+            $debit_orders = $debit_orders->whereHas("customerAccount", function ($q) use ($keyword) {
+                $q->where(DB::raw('LOWER(account_name)'), 'like', "%" . strtolower($keyword) . "%")
+                    ->orWhere(DB::raw('LOWER(account_number)'), 'like', "%" . strtolower($keyword) . "%");
             });
         }
 
+        $debit_orders = $debit_orders->orderBy('debit_orders.created_at', 'DESC');
 
         //return
         return $debit_orders;
@@ -90,7 +96,7 @@ class PaymentMandateExport implements FromQuery, WithHeadings, ShouldAutoSize, W
             'Deduction Amount',
             'Debit Type',
             'Number of Installment',
-            'Frequency of Installment', 
+            'Frequency of Installment',
             'Deduction Start Date',
             'Deduction End Date',
             'Contract Status',
@@ -121,7 +127,6 @@ class PaymentMandateExport implements FromQuery, WithHeadings, ShouldAutoSize, W
             $debit_orders->contract_status,
             $debit_orders->created_at,
         ];
-
     }
 
     //events

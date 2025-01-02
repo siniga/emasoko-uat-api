@@ -30,14 +30,12 @@
                                         {{ Form::date('start_at', old('start_at', $post_data['start_at']), ['placeholder="Start Date..."', 'class="form-control"']) }}
                                     </div>
                                 </div>
-                                <!--./col -->
 
                                 <div class="col-lg-2">
                                     <div class="mb-3">
                                         {{ Form::date('end_at', old('end_at', $post_data['end_at']), ['placeholder="End Date..."', 'class="form-control"']) }}
                                     </div>
                                 </div>
-                                <!--./col -->
 
                                 <div class="col-lg-2">
                                     <div class="mb-3">
@@ -47,7 +45,7 @@
                                                 1 => 'Approved',
                                                 2 => 'Failed',
                                             ];
-                                            $options = ['' => '-- Consent Status --'] + $options;
+                                            $options = ['' => '-- Mandate Status --'] + $options;
                                         @endphp
 
                                         {{ Form::select('status', $options, old('status', $post_data['status']), ['class' => 'form-control']) }}
@@ -73,7 +71,6 @@
                                         {{ Form::select('account_type_id', $options, old('account_type_id', $post_data['account_type_id']), ['class' => 'form-control account_type_id', 'id' => 'account_type_id']) }}
                                     </div>
                                 </div>
-                                <!--./col -->
 
                                 <div class="col-lg-3">
                                     <div class="mb-3">
@@ -89,18 +86,15 @@
 
                                         {{ Form::select('account_id', $options, old('account_id', $post_data['account_id']), ['class' => 'form-control account_id', 'id' => 'account_id']) }}
                                     </div>
-                                </div>
-                               
+                                </div>         
                             </div>
-                            <!--./row -->
 
                             <div class="row">
                                 <div class="col-lg-6">
                                     <div class="mb-3">
-                                        {{ Form::text('keyword', old('keyword', $post_data['keyword']), ['class="form-control"', 'placeholder="Search by name of account holder or number..."']) }}
+                                        {{ Form::text('keyword', old('keyword'), ['class="form-control"', 'placeholder="Search by name of account holder or number..."']) }}
                                     </div>
                                 </div>
-                                <!--./col -->
 
                                 <div class="col-lg-6">
                                     <div class="mb-3">
@@ -111,14 +105,10 @@
                                         </div>
                                     </div>
                                 </div>
-                                <!--./col -->
                             </div>
-                            <!--./row -->
                             {{ Form::close() }}
                         </div>
-                        <!--./col-lg-12 -->
                     </div>
-                    <!--./row -->
                 </div>
             </div>
 
@@ -156,10 +146,6 @@
                                             href="{{ route('payment-mandate.create-account') }}">
                                             <i class="fas fa-plus"></i> Create New
                                         </a>
-
-                                        {{-- <a class="btn btn-secondary btn-sm" href="{{ route('companies.registration') }}">
-                                            <i class="fas fa-upload"></i> Import
-                                        </a> --}}
 
                                         <a title="Export" class="btn btn-outline-success btn-sm"
                                             href="{{ route('payment-mandate.export-xls', ['start_at' => $post_data['start_at'], 'end_at' => $post_data['end_at'], 'account_type_id' => $post_data['account_type_id'], 'account_id' => $post_data['account_id'], 'status' => $post_data['status'], 'keyword' => $post_data['keyword']]) }}">
@@ -275,7 +261,6 @@
                                     @endif
                                 </div>
                             </div>
-                            <!--./d-flex -->
                         @else
                             <div class="alert alert-danger"> No any payment mandate at the moment!</div>
                         @endif

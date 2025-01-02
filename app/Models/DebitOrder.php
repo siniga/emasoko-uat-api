@@ -112,6 +112,16 @@ class DebitOrder extends Model
             ->when($status, function ($query) use ($status) {
                 $query->where('debit_orders.approved', $status);
             })
+            ->when($account_type_id, function ($query) use ($account_type_id) {
+                $query->whereHas("customerAccount", function ($q) use ($account_type_id) {
+                    $q->where('account_type_id', $account_type_id);
+                });
+            })
+            ->when($account_id, function ($query) use ($account_id) {
+                $query->whereHas("customerAccount", function ($q) use ($account_id) {
+                    $q->where('account_id', $account_id);
+                });
+            })
             ->when($keyword, function ($query) use ($keyword) {
                 $query->whereHas("customerAccount", function ($q) use ($keyword) {
                     $q->where(DB::raw('LOWER(account_name)'), 'like', "%" . strtolower($keyword) . "%")

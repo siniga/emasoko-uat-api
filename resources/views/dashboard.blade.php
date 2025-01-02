@@ -85,7 +85,7 @@
         </div>
 
         <div class="col-md-3">
-            <a href="{{ route('payment-mandate.lists', 'rejected') }}">
+            <a href="{{ route('payment-mandate.lists', 'failed') }}">
                 <div class="card border-left-info bg-danger shadow h-96 py-2">
                     <div class="card-body">
                         <div class="row no-gutters align-items-center">

@@ -3,9 +3,23 @@
 
 <head>
     <meta charset="utf-8" />
-    <title>PAYMENT MANDATE REPORT</title>
+    <title>Payment Mandate Report</title>
 
     <style>
+        * {
+            font-family: "Roboto, Cerebri, Sans-serif" !important;
+        }
+
+        body {
+            width: 100%;
+        }
+
+        h2 {
+            font-size: 20px;
+            margin-top: 0px;
+            padding-top: 0px;
+        }
+
         .invoice-box {
             width: 100%;
             margin: auto;
@@ -48,50 +62,67 @@
 </head>
 
 <body>
+    <header>
+        <table class="table-header">
+            <tbody>
+                <tr>
+                    <td>
+                        <img src="{{ public_path('assets/images/emakato_logo_colored.png') }}" width="150px"
+                            alt="Emakato">
+                    </td>
+                <tr>
+
+                <tr>
+                    <td>
+                        <h4>eMakato Payment Mandate Report</h4>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="border-div"></div>
+    </header>
+
     <div class="invoice-box">
-        <div class="title" align="center">
-            {{-- <img src="<?= base_url('assets/img/logo_icon.png') ?>" width="75"/> --}}
-            <h2>eMakato Deduction Solution</h2>
-            <h4>Payment Mandate Report</h4>
-        </div>
-
-
         <table width="100%">
             <tr style="background-color: #ECEFF1;">
                 <th width="3%">#</th>
-                <th width="18%">Account Name</th>
-                <th width="15%">NIDA Number</th>
-                <th width="8%">Payment Channel</th>
+                <th width="20%">Account Name</th>
                 <th width="10%">Bank Name/MNO</th>
-                <th width="12%">Account Number</th>
-                <th width="12%">Phone<br /><small>(Connected to Bank)</small></th>
-                <th width="8%">Consent Status</th>
+                <th width="10%">Account Number</th>
+                <th width="10%">Mandate Reference</th>
+                <th width="10%">Primary Phone</th>
+                <th width="10%">Mandate Status</th>
+                <th width="10%">Created Date</th>
             </tr>
 
             @php $serial = 1; @endphp
             @foreach ($debit_orders as $values)
                 <tr>
                     <td>{{ $serial }}</td>
-                    <td>{{ $values->customerAccount->account_name ?? $values->customerAccount->phone }}
+                    <td>
+                        {{ strtoupper($values->customerAccount->account_name) ?? $values->customerAccount->phone }}<br>
+                        ID: {{ $values->customerAccount->customer->id_number ?? 'NIL' }}
                     </td>
-                    <td><small>{{ $values->customerAccount->customer->id_number ?? 'NIL' }}</small>
-                    </td>
-                    <td>{{ $values->customerAccount->accountType->name ?? '' }}</td>
                     <td>{{ $values->customerAccount->account->name ?? '' }}</td>
                     <td>
                         {{ $values->customerAccount->account_number ?? $values->customerAccount->phone }}
+                    </td>
+                    <td>
+                        {{ $values->reference }}
                     </td>
                     <td>{{ $values->customerAccount->phone ?? '' }}</td>
 
                     <td>
                         @if ($values->approved == 0)
-                            <span class="badge badge-pill badge-soft-danger">Pending</span>
+                            <span>Pending</span>
                         @elseif($values->approved == 1)
-                            <span class="badge badge-pill badge-soft-success">Approved</span>
-                        @elseif($values->approved == 99)
-                            <span class="badge badge-pill badge-soft-danger">Rejected</span>
+                            <span>Approved</span>
+                        @elseif($values->approved == 2)
+                            <span>Failed</span>
                         @endif
                     </td>
+
+                    <td>{{ date('d-m-Y H:i', strtotime($values->updated_at)) }}</td>
                 </tr>
                 @php $serial++; @endphp
             @endforeach

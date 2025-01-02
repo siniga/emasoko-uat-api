@@ -14,8 +14,6 @@
 
         body {
             width: 100%;
-            /* background-color: red; */
-            /* margin: 0px 0px 0px 0px; */
         }
 
         h2 {
@@ -31,15 +29,22 @@
             right: 0px;
             height: 70px;
             font-size: 20px !important;
-            /* background-color: red; */
-
-            /* color: white; */
-            /* text-align: center; */
-            /* line-height: 35px; */
         }
 
         .header-container {
             display: inline-block;
+        }
+
+        .table-header {
+            width: 100%;
+            padding: 5px 2px 5px 2px;
+            margin-bottom: 10px;
+        }
+
+        .table-header span {
+            font-size: 14px;
+            font-weight: bold;
+            color: #0D47A1;
         }
 
         footer {
@@ -49,23 +54,6 @@
             right: 0px;
             height: 70px;
             font-size: 20px !important;
-            /* background-color: #000; */
-            /* color: white;
-    text-align: center; */
-            /* line-height: 35px; */
-        }
-
-        .table-header {
-            width: 100%;
-            /* border: 1px red solid; */
-            padding: 5px 2px 5px 2px;
-            margin-bottom: 10px;
-        }
-
-        .table-header span {
-            font-size: 14px;
-            font-weight: bold;
-            color: #0D47A1;
         }
 
         .main-body {
