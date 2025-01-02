@@ -493,33 +493,18 @@ class PaymentMandateController extends Controller
         //create otp
         $http_response_code = $this->bankApi->createOtpRequest($payload);
 
-        if ($http_response_code == 200) {
-            return response()->json(
-                [
-                    'success' => true,
-                    'success_msg' => "New OTP sent",
-                    "http_response_code" => $http_response_code
-                ],
-                200
-            );
-        } else if ($http_response_code == 500) {
-            return response()->json(
-                [
-                    'success' => false,
-                    'success_msg' => "Failed to send OTP, Try resend OTP.",
-                    "http_response_code" => $http_response_code
-                ],
-                200
-            );
+        if ($http_response_code == 202) {
+            return response()->json(['success' => true, 'success_msg' => "OTP succesfully generated and sent", "http_response_code" => $http_response_code], 200);
+        } else if ($http_response_code == 404) {
+            return response()->json(['success' => true, 'success_msg' => "Mandate not found, Edit mandate and process again.", "http_response_code" => $http_response_code], 200);
+        } else if ($http_response_code == 410) {
+            return response()->json(['success' => true, 'success_msg' => "Duplicate request found, wait for first request to process.", "http_response_code" => $http_response_code], 200);
+        } else if ($http_response_code == 510) {
+            return response()->json(['success' => true, 'success_msg' => "Users mobile number is missing, edit mandate and process again", "http_response_code" => $http_response_code], 200);
+        } else if ($http_response_code == 520) {
+            return response()->json(['success' => true, 'success_msg' => "SMS failed to send, contact eMakato support team.", "http_response_code" => $http_response_code], 200);
         } else {
-            return response()->json(
-                [
-                    'success' => false,
-                    'success_msg' => "Failed to send OTP, Try resend OTP.",
-                    "http_response_code" => 500
-                ],
-                200
-            );
+            return response()->json(['success' => true, 'success_msg' => "System error, contact eMakato support team.", "http_response_code" => $http_response_code], 200);
         }
     }
 
@@ -548,32 +533,15 @@ class PaymentMandateController extends Controller
         $http_response_code = $this->bankApi->verifyOtpRequest($payload, $accountNumber, $otpReference);
 
         if ($http_response_code == 202) {
-            return response()->json(
-                [
-                    'success' => true,
-                    'success_msg' => "OTP verified",
-                    "http_response_code" => $http_response_code
-                ],
-                200
-            );
-        } else if ($http_response_code == 500) {
-            return response()->json(
-                [
-                    'success' => false,
-                    'success_msg' => "Failed to verify OTP, Try again or resend OTP.",
-                    "http_response_code" => $http_response_code
-                ],
-                200
-            );
+            return response()->json(['success' => true, 'success_msg' => "OTP verified", "http_response_code" => $http_response_code], 200);
+        } else if ($http_response_code == 404) {
+            return response()->json(['success' => true, 'success_msg' => "Mandate not found, Edit mandate and process again.", "http_response_code" => $http_response_code], 200);
+        } else if ($http_response_code == 430) {
+            return response()->json(['success' => true, 'success_msg' => "OTP Invalid, Enter valid otp sent to a customer phone.", "http_response_code" => $http_response_code], 200);
+        } else if ($http_response_code == 431) {
+            return response()->json(['success' => true, 'success_msg' => "OTP Expired, create new OTP by click resend otp link.", "http_response_code" => $http_response_code], 200);
         } else {
-            return response()->json(
-                [
-                    'success' => false,
-                    'success_msg' => "Failed to verify OTP, Try again or contact support.",
-                    "http_response_code" => 500
-                ],
-                200
-            );
+            return response()->json(['success' => true, 'success_msg' => "System error, contact eMakato support team.", "http_response_code" => $http_response_code], 200);
         }
     }
 
