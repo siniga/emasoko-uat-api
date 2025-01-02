@@ -45,14 +45,14 @@ class CustomerAccountController extends Controller
             });
 
             //customer accounts
-            $customer_accounts = $customer_accounts->get();
+            $customer_accounts = $customer_accounts->orderBy('customer_accounts.created_at', 'DESC')->get();
         } else {
             //customer accounts
-            $customer_accounts = $customer_accounts->paginate(50);
+            $customer_accounts = $customer_accounts->orderBy('customer_accounts.created_at', 'DESC')->paginate(50);
         }
 
         //post data
-        $post_data = [
+        $data = [
             'start_at' => $request->start_at ?? null,
             'end_at' => $request->end_at ?? null,
             'account_type_id' => $request->account_type_id ?? null,
@@ -66,7 +66,7 @@ class CustomerAccountController extends Controller
         $accounts = Account::all();
 
         //render view
-        return view('customer_accounts.lists', compact('title', 'account_types', 'accounts', 'customer_accounts', 'post_data'));
+        return view('customer_accounts.lists', compact('title', 'account_types', 'accounts', 'customer_accounts', 'data'));
     }
 
     /**
@@ -219,52 +219,23 @@ class CustomerAccountController extends Controller
     //export pdf
     function export_pdf(Request $request)
     {
-        //variables
-        $start_at = $request->start_at;
-        $end_at = $request->end_at;
-        $account_type_id = $request->account_type_id;
-        $account_id = $request->account_id;
-        $status = $request->status;
-        $keyword = $request->keyword;
+        //all request
+        $requests = $request->all();
+
+         //customer accounts
+         $customer_accounts = CustomerAccount::filterCondition();
+
+        $customer_accounts = $customer_accounts->when($requests, function ($query) use ($requests) {
+            $query->withFilters($requests);
+        });
 
         //customer accounts
-        $customer_accounts = CustomerAccount::where_cond();
-
-        //start data and end date
-        if ($start_at != null && $end_at != null) {
-            $start_at = date('Y-m-d', strtotime($start_at));
-            $end_at = date('Y-m-d', strtotime($end_at));
-
-            $customer_accounts = $customer_accounts->whereBetween('customer_accounts.created_at', [$start_at, $end_at]);
-        }
-
-        //payment channel
-        if ($account_type_id != null)
-            $customer_accounts = $customer_accounts->where('customer_accounts.account_type_id', $account_type_id);
-
-        //bank account
-        if ($account_id != null)
-            $customer_accounts = $customer_accounts->where('customer_accounts.account_id', $account_id);
-
-        //status
-        if ($status != null)
-            $customer_accounts = $customer_accounts->where('customer_accounts.status', $status);
-
-        //keyword
-        if ($keyword != null) {
-            $customer_accounts = $customer_accounts->where(function ($query) use ($keyword) {
-                $query->orWhere('customer_accounts.account_name', 'LIKE', "%$keyword%")
-                    ->orWhere('customer_accounts.account_number', 'LIKE', "%$keyword%");
-            });
-        }
-
-        //customer accounts
-        $customer_accounts = $customer_accounts->get();
+        $customer_accounts = $customer_accounts->orderBy('customer_accounts.created_at', 'DESC')->get();
 
         //pdf
-        $pdf = Pdf::loadView('customer_accounts.export_pdf', compact('customer_accounts'))->setPaper('a4', 'landscape');
+        $pdf = Pdf::loadView('customer_accounts.pdf.report', compact('customer_accounts'))->setPaper('a4', 'landscape');
 
         // download PDF file with download method
-        return $pdf->download(date('YmdHis') . '-CustomerAccounts.pdf');
+        return $pdf->download(date('YmdHis') . '-Customer_Accounts.pdf');
     }
 }

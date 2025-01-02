@@ -36,14 +36,12 @@
                                         {{ Form::date('start_at', old('start_at', $data['start_at']), ['placeholder="Start Date..."', 'class="form-control"']) }}
                                     </div>
                                 </div>
-                                <!--./col -->
 
                                 <div class="col-lg-2">
                                     <div class="mb-3">
                                         {{ Form::date('end_at', old('end_at', $data['end_at']), ['placeholder="End Date..."', 'class="form-control"']) }}
                                     </div>
                                 </div>
-                                <!--./col -->
 
                                 <div class="col-lg-2">
                                     <div class="mb-3">
@@ -64,7 +62,6 @@
                                         {{ Form::select('account_type_id', $options, old('account_type_id', $data['account_type_id']), ['class' => 'form-control account_type_id', 'id' => 'account_type_id']) }}
                                     </div>
                                 </div>
-                                <!--./col -->
 
                                 <div class="col-lg-3">
                                     <div class="mb-3">
@@ -81,7 +78,6 @@
                                         {{ Form::select('account_id', $options, old('account_id', $data['account_id']), ['class' => 'form-control account_id', 'id' => 'account_id']) }}
                                     </div>
                                 </div>
-                                <!--./col -->
 
                                 <div class="col-lg-3">
                                     <div class="mb-3">
@@ -97,9 +93,7 @@
                                         {{ Form::select('status', $options, old('status', $data['status']), ['class' => 'form-control']) }}
                                     </div>
                                 </div>
-                                <!--./col -->
                             </div>
-                            <!--./row -->
 
                             <div class="row">
                                 <div class="col-lg-6">
@@ -107,7 +101,6 @@
                                         {{ Form::text('keyword', old('keyword', $data['keyword']), ['class="form-control"', 'placeholder="Search by name of account holder or number..."']) }}
                                     </div>
                                 </div>
-                                <!--./col -->
 
                                 <div class="col-lg-6">
                                     <div class="mb-3">
@@ -118,14 +111,10 @@
                                         </div>
                                     </div>
                                 </div>
-                                <!--./col -->
                             </div>
-                            <!--./row -->
                             {{ Form::close() }}
                         </div>
-                        <!--./col-lg-12 -->
                     </div>
-                    <!--./row -->
                 </div>
             </div>
 
@@ -176,14 +165,12 @@
                                     <thead>
                                         <tr>
                                             <th width="3%">#</th>
-                                            <th>Account Name</th>
-                                            <th>NIDA Number</th>
-                                            <th>Payment Channel</th>
+                                            <th width="30%">Account Name</th>
                                             <th>Bank Name/MNO</th>
                                             <th>Account Number</th>
                                             <th>Phone</th>
                                             <th>Created</th>
-                                            <th>Actions</th>
+                                            <th style="width: 40px; !important">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -192,51 +179,40 @@
                                             <tr>
                                                 <td>{{ $serial }}</td>
                                                 <td>
-                                                    @if ($values->account_name == null)
-                                                        {{ $values->phone }}
-                                                    @else
-                                                        {{ $values->account_name }}
-                                                    @endif
+                                                    {{ strtoupper($values->account_name) ?? $values->phone }}<br>
+                                                    ID: {{ $values->customer->id_number ?? 'NIL' }}
                                                 </td>
-                                                <td>
-                                                    {{ $values->customer->id_number ?? 'NIN' }}
-                                                </td>
-                                                <td>{{ $values->accountType->name ?? 'NIL' }}</td>
                                                 <td>{{ $values->account->name ?? 'NIL' }}</td>
-
-                                                <td>
-                                                    {{ $values->account_number ?? $values->phone }}
-                                                </td>
-
-                                                <td>
-                                                    {{ $values->phone }}
-                                                </td>
-
+                                                <td>{{ $values->account_number ?? $values->phone }}</td>
+                                                <td>{{ $values->phone }}</td>
                                                 <td>{{ date('d-m-Y H:i', strtotime($values->created_at)) }}</td>
-
                                                 <td>
                                                     <a href="{{ route('customer-accounts.show', $values->id) }}"
                                                         title="View" class="btn btn-xss">
                                                         <i class="bx bxs-folder-open"></i>
                                                     </a>
 
-                                                    @if ($values->status == 'partial' || $values->status == 'rejected')
-                                                        <a href="{{ route('customer-accounts.edit', $values->id) }}"
-                                                            title="Edit" class="btn btn-xss">
-                                                            <i class="bx bx-edit text-secondary"></i>
-                                                        </a>
+                                                    {{-- <a href="{{ route('customer-accounts.edit', $values->id) }}"
+                                                        title="Edit" class="btn btn-xss">
+                                                        <i class="bx bx-edit text-secondary"></i>
+                                                    </a>
 
-                                                        <a href="{{ route('customer-accounts.delete', $values->id) }}"
-                                                            title="Delete" class="btn btn-xss delete">
-                                                            <i class="bx bx-trash text-danger"></i>
-                                                        </a>
-                                                    @endif
+                                                    <a href="{{ route('customer-accounts.delete', $values->id) }}"
+                                                        title="Delete" class="btn btn-xss delete">
+                                                        <i class="bx bx-trash text-danger"></i>
+                                                    </a> --}}
                                                 </td>
                                             </tr>
                                             @php $serial++; @endphp
                                         @endforeach
                                     </tbody>
                                 </table>
+
+                                <div class="d-flex justify-content-end">
+                                    @if (method_exists($customer_accounts, 'links'))
+                                        {{ $customer_accounts->links() }}
+                                    @endif
+                                </div>
                             </div>
                         @else
                             <div class="alert alert-danger"> No any customer account at the moment!</div>

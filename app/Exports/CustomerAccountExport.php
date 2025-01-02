@@ -28,7 +28,7 @@ class CustomerAccountExport implements FromQuery, WithHeadings, ShouldAutoSize, 
     public function query()
     {
         //customer accounts
-        $customer_accounts = CustomerAccount::where_cond();
+        $customer_accounts = CustomerAccount::filterCondition();
 
         //start data and end date
         if ($this->start_at != null && $this->end_at != null) {
@@ -63,6 +63,8 @@ class CustomerAccountExport implements FromQuery, WithHeadings, ShouldAutoSize, 
             });
         }
 
+        $customer_accounts = $customer_accounts->orderBy('customer_accounts.created_at', 'DESC');
+
         //return customer accounts
         return $customer_accounts;
     }
@@ -76,9 +78,8 @@ class CustomerAccountExport implements FromQuery, WithHeadings, ShouldAutoSize, 
             'Payment Channel',
             'Bank Name/MNO',
             'Account Number',
-            'Status',
-            'Remarks',
-            'Created'
+            'Phone',
+            'Created Date'
         ];
     }
 
@@ -91,8 +92,7 @@ class CustomerAccountExport implements FromQuery, WithHeadings, ShouldAutoSize, 
             $customer_accounts->accountType->name ?? '',
             $customer_accounts->account->name ?? '',
             $customer_accounts->account_number ?? $customer_accounts->phone,
-            $customer_accounts->status == 'approved' ? 'Approved' : 'Partial Approved',
-            $customer_accounts->remarks ?? '',
+            $customer_accounts->phone,
             $customer_accounts->created_at,
         ];
     }
@@ -102,7 +102,7 @@ class CustomerAccountExport implements FromQuery, WithHeadings, ShouldAutoSize, 
     {
         return [
             AfterSheet::class    => function (AfterSheet $event) {
-                $cellRange = 'A1:H1'; // All headers
+                $cellRange = 'A1:G1'; // All headers
                 $event->sheet->getDelegate()->getStyle($cellRange)->getFont()->setSize(12);
                 $event->sheet->getDelegate()->getStyle($cellRange)->getFont()->setBold(true);
             },

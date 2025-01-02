@@ -18,17 +18,7 @@ class CustomerAccount extends Model
         $user = User::findOrFail(Auth::user()->id);
 
         //debit orders
-        $customer_accounts = static::orderBy('customer_accounts.created_at', 'DESC');
-
-        // if ($user->hasRole('Company_Approver') || $user->hasRole('Company_User')) {
-        //     $arr_partners = [];
-
-        //     // foreach ($user->partners as $val)
-        //     //     array_push($arr_partners, $val->partner_id);
-
-
-        //     //$customer_accounts = $customer_accounts->whereIn('debit_orders.partner_id', $arr_partners);
-        // }
+        $customer_accounts = static::query();
 
         return $customer_accounts;
     }
