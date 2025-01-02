@@ -40,6 +40,11 @@
                             <div></div>
 
                             <div class="text-sm-end d-none d-sm-block">
+                                <a href="{{ route('payment-mandate.create-deduction', [$debit_order->customerAccount->uuid]) }}"
+                                    title="New Payment Mandate" class="btn btn-primary text-medium btn-sm">
+                                    <i class="bx bx-plus font-size-12"></i> Create Mandate
+                                </a>
+
                                 <template x-if="status==100 || status==200 || status==403 || status==430 || status==500 || status==501">
                                     <a href="{{ route('payment-mandate.create-account', [$debit_order->customerAccount->uuid, $debit_order->uuid] ) }}" title="Edit"
                                         class="btn btn-outline-secondary text-medium btn-sm">

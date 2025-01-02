@@ -7,6 +7,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
@@ -88,7 +89,7 @@ class User extends Authenticatable
             'email' => 'required|string|max:255|unique:users',
             'phone' => ['required', new PhoneNumber()],
             'role_id' => 'required',
-            'provider_id' => 'required_if:role_id,==,2,4',
+            'provider_ids' => 'required_if:role_id,==,2,4',
             'company_id' => 'required_if:role_id,==,6',
             'password' => 'required|string|min:8',
             'password_confirm' => 'required|same:password'
@@ -104,11 +105,21 @@ class User extends Authenticatable
             'email.unique' => 'Email must be unique',
             'phone.required' => 'Phone is required',
             'role_id.required' => 'Role required',
-            'provider_id.required_if' => 'Service provider is required',
+            'provider_ids.required_if' => 'Service providers is required',
             'company_id.required_if' => 'eMakato partner is required',
             'password.required' => 'Password is required',
             'password_confirm.required' => 'Confirm password is required',
             'password_confirm.same:password' => 'Password must match',
         ];
+    }
+
+    public function partners()
+    {
+        return $this->hasMany(PartnerUser::class, 'user_id');
+    }
+
+    public function companies()
+    {
+        return $this->hasMany(CompanyUser::class, 'user_id');
     }
 }

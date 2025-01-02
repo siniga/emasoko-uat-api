@@ -25,6 +25,7 @@ use App\Models\CustomerPartner;
 use App\Models\Installment;
 use App\Models\OtpRequest;
 use App\Models\Partner;
+use App\Models\User;
 use App\Services\BankApiService;
 use App\Services\BankPayloadService;
 use App\Services\DeductionService;
@@ -53,11 +54,11 @@ class PaymentMandateController extends Controller
 
         //debit
         $debit_orders = DebitOrder::filterCondition();
-        
+
         if ($consent) {
             $debit_orders->where(['approved' => $consent]);
         }
-        
+
         if (isset($_POST['filter'])) {
             //all request
             $requests = $request->all();
@@ -68,7 +69,6 @@ class PaymentMandateController extends Controller
 
             //debit orders
             $debit_orders = $debit_orders->get();
-
         } else {
             //debit orders
             $debit_orders = $debit_orders->paginate(50);
@@ -237,6 +237,13 @@ class PaymentMandateController extends Controller
     {
         $title = "Payment Mandate";
 
+        //users
+        $user = User::findOrFail(Auth::user()->id);
+
+        $provider = null;
+        if ($user->partners->where('authorize', '=', 1)->count() == 1)
+            $provider = $user->partners[0];     
+
         //customer account
         $customer_account = CustomerAccount::where(['uuid' => $customer_account_uuid])->first();
 
@@ -245,9 +252,9 @@ class PaymentMandateController extends Controller
         if ($debit_order_uuid != null)
             $debit_order = DebitOrder::where(['uuid' => $debit_order_uuid])->first();
 
-        //populate data
-        $provider = PartnerUser::where(['user_id' => Auth::user()->id])->first();
-        $providers = Partner::all();
+        //providers
+        $providers = Partner::filterCondition();
+        $providers = $providers->get();
 
         //render view
         return view('payment_mandate.create.deduction_form', compact('title', 'customer_account', 'debit_order', 'providers', 'provider'));

@@ -34,67 +34,31 @@ class CustomerAccountController extends Controller
         //has_allowed('roles', 'lists');
 
         //customer accounts
-        $customer_accounts = CustomerAccount::where_cond();
+        $customer_accounts = CustomerAccount::filterCondition();
 
         if (isset($_POST['filter'])) {
-            $start_at = $request->input('start_at');
-            $end_at = $request->input('end_at');
-            $account_type_id = $request->input('account_type_id');
-            $account_id = $request->input('account_id');
-            $status = $request->input('status');
-            $keyword = $request->input('keyword');
+            //all request
+            $requests = $request->all();
 
-            //start data and end date
-            if ($start_at != null && $end_at != null) {
-                $start_at = date('Y-m-d', strtotime($start_at));
-                $end_at = date('Y-m-d', strtotime($end_at));
-
-                $customer_accounts = $customer_accounts->whereBetween('customer_accounts.created_at', [$start_at, $end_at]);
-            }
-
-            //payment channel
-            if ($account_type_id != null)
-                $customer_accounts = $customer_accounts->where('customer_accounts.account_type_id', $account_type_id);
-
-            //bank account
-            if ($account_id != null)
-                $customer_accounts = $customer_accounts->where('customer_accounts.account_id', $account_id);
-
-            //status
-            if ($status != null)
-                $customer_accounts = $customer_accounts->where('customer_accounts.status', $status);
-
-            //keyword
-            if ($keyword != null) {
-                $customer_accounts = $customer_accounts->where(function ($query) use ($keyword) {
-                    $query->orWhere('customer_accounts.account_name', 'LIKE', "%$keyword%")
-                        ->orWhere('customer_accounts.account_number', 'LIKE', "%$keyword%");
-                });
-            }
+            $customer_accounts = $customer_accounts->when($requests, function ($query) use ($requests) {
+                $query->withFilters($requests);
+            });
 
             //customer accounts
             $customer_accounts = $customer_accounts->get();
         } else {
-            //passing variables
-            $start_at = null;
-            $end_at = null;
-            $account_type_id = null;
-            $account_id = null;
-            $status = null;
-            $keyword = null;
-
             //customer accounts
-            $customer_accounts = $customer_accounts->get();
+            $customer_accounts = $customer_accounts->paginate(50);
         }
 
-        //passing data
-        $data = [
-            'start_at' => $start_at,
-            'end_at' => $end_at,
-            'account_type_id' => $account_type_id,
-            'account_id' => $account_id,
-            'status' => $status,
-            'keyword' => $keyword
+        //post data
+        $post_data = [
+            'start_at' => $request->start_at ?? null,
+            'end_at' => $request->end_at ?? null,
+            'account_type_id' => $request->account_type_id ?? null,
+            'account_id' => $request->account_id ?? null,
+            'status' => $request->status ?? null,
+            'keyword' => $request->keyword ?? null
         ];
 
         //populate data
@@ -102,7 +66,7 @@ class CustomerAccountController extends Controller
         $accounts = Account::all();
 
         //render view
-        return view('customer_accounts.lists', compact('title', 'account_types', 'accounts', 'data', 'customer_accounts'));
+        return view('customer_accounts.lists', compact('title', 'account_types', 'accounts', 'customer_accounts', 'post_data'));
     }
 
     /**
@@ -181,8 +145,8 @@ class CustomerAccountController extends Controller
      */
     public function update(CustomerAccountRequest $request, $id)
     {
-         // validated request
-         $validated = $request->validated();
+        // validated request
+        $validated = $request->validated();
 
         //unique phone
         if ($validated['account_type_id'] == 1)

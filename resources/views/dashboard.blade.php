@@ -26,7 +26,7 @@
                                 </div>
 
                                 <div class="h5 mb-0 font-weight-700 text-white">
-                                    {{ number_format($total[0]->total_amount) }}
+                                    {{ number_format($stats['total_mandate_value']) }}
                                 </div>
                             </div>
                             <div class="col-auto">
@@ -49,7 +49,7 @@
                                 </div>
 
                                 <div class="h5 mb-0 font-weight-700 text-white">
-                                    {{ number_format($approved[0]->total_amount) }}
+                                    {{ number_format($stats['approved_mandate_value']) }}
                                 </div>
                             </div>
                             <div class="col-auto">
@@ -72,7 +72,7 @@
                                 </div>
 
                                 <div class="h5 mb-0 font-weight-700 text-white">
-                                    {{ number_format($pending[0]->total_amount) }}
+                                    {{ number_format($stats['pending_mandate_value']) }}
                                 </div>
                             </div>
                             <div class="col-auto">
@@ -95,7 +95,7 @@
                                 </div>
 
                                 <div class="h5 mb-0 font-weight-700 text-white">
-                                    {{ number_format($rejected[0]->total_amount) }}
+                                    {{ number_format($stats['failed_mandate_value']) }}
                                 </div>
                             </div>
                             <div class="col-auto">
@@ -121,6 +121,7 @@
                                         $current_year = date('Y');
                                     @endphp
 
+                                    <option value="">Select</option>
                                     @foreach (range(2024, $current_year) as $v)
                                         <option value="{{ $v }}">{{ $v }}</option>
                                     @endforeach
@@ -153,7 +154,7 @@
                                 <div class="my-2">
                                     <p class="text-xs">
                                         <i class="mdi mdi-circle text-success-1 my-1"></i> Approved :
-                                        {{ $approved[0]->count }}
+                                        {{ $stats['number_of_approved_mandate'] }}
                                     </p>
                                 </div>
                             </div>
@@ -161,7 +162,8 @@
                             <div class="col-lg-4 col-md-4 col-4">
                                 <div class="my-2">
                                     <p class="text-xs">
-                                        <i class="mdi mdi-circle text-danger my-1"></i> Pending : {{ $pending[0]->count }}
+                                        <i class="mdi mdi-circle text-danger my-1"></i> Pending : 
+                                        {{ $stats['number_of_pending_mandate'] }}
                                     </p>
                                 </div>
                             </div>
@@ -169,7 +171,8 @@
                             <div class="col-lg-4 col-md-4 col-4">
                                 <div class="my-2">
                                     <p class="text-xs">
-                                        <i class="mdi mdi-circle text-danger-1 my-1"></i> Failed : {{ $rejected[0]->count }}
+                                        <i class="mdi mdi-circle text-danger-1 my-1"></i> Failed : 
+                                        {{ $stats['number_of_failed_mandate'] }}
                                     </p>
                                 </div>
                             </div>
@@ -228,7 +231,7 @@
                                 <div class="mt-2">
                                     <p class="">
                                         <i class="mdi mdi-circle text-success-1 my-1"></i> Approved :
-                                        {{ $approved[0]->count }}
+                                        {{ $stats['number_of_approved_mandate'] }}
                                     </p>
                                 </div>
                             </div>
@@ -236,7 +239,8 @@
                             <div class="col-6">
                                 <div class="mt-2">
                                     <p class="">
-                                        <i class="mdi mdi-circle text-danger my-1"></i> Pending : {{ $pending[0]->count }}
+                                        <i class="mdi mdi-circle text-danger my-1"></i> Pending : 
+                                        {{ $stats['number_of_pending_mandate'] }}
                                     </p>
                                 </div>
                             </div>
@@ -317,17 +321,18 @@
                     <div class="tab-content p-3 text-muted">
                         <div class="tab-pane active" id="pending" role="tabpanel">
                             <div class="table-responsive">
-                                @if (isset($pending_debit_orders) && count($pending_debit_orders) > 0)
+                                @if (isset($pending_debit_orders) && $pending_debit_orders)
                                     <table id="dt" class="table table-hover table-bordered">
                                         <thead>
                                             <tr>
                                                 <th width="3%">#</th>
                                                 <th width="20%">Account Name</th>
-                                                <th width="20%">NIDA Number</th>
-                                                <th width="10%">Payment Channel</th>
-                                                <th width="10%">Bank Name/MNO</th>
-                                                <th width="12%">Account Number</th>
-                                                <th width="12%">Phone<br /><small>(Connected to Bank)</small></th>
+                                                <th>Bank Name/MNO</th>
+                                                <th>Account Number</th>
+                                                <th>Mandate Reference</th>
+                                                <th>Primary Phone</th>
+                                                <th>Mandate Status</th>
+                                                <th>Created Date</th>
                                                 <th width="4%">Action</th>
                                             </tr>
                                         </thead>
@@ -336,17 +341,46 @@
                                             @foreach ($pending_debit_orders as $values)
                                                 <tr>
                                                     <td>{{ $serial }}</td>
-                                                    <td>{{ $values->customerAccount->account_name ?? $values->customerAccount->phone }}
-                                                    </td>
-                                                    <td><small>{{ $values->customerAccount->customer->id_number ?? 'NIL' }}</small>
-                                                    </td>
-                                                    <td>{{ $values->customerAccount->accountType->name ?? '' }}</td>
-                                                    <td>{{ $values->customerAccount->account->name ?? '' }}</td>
-                                                    <td>
-                                                        {{ $values->customerAccount->account_number ?? $values->customerAccount->phone }}
-                                                    </td>
-                                                    <td>{{ $values->customerAccount->phone ?? $values->customerAccount->phone }}
-                                                    </td>
+                                                <td>
+                                                    {{ strtoupper($values->customerAccount->account_name) ?? $values->customerAccount->phone }}<br>
+                                                    ID: {{ $values->customerAccount->customer->id_number ?? 'NIL' }}
+                                                </td>
+                                                <td>{{ $values->customerAccount->account->name ?? '' }}</td>
+                                                <td>
+                                                    {{ $values->customerAccount->account_number ?? $values->customerAccount->phone }}
+                                                </td>
+                                                <td>
+                                                    {{ $values->reference }}
+                                                </td>
+                                                <td>{{ $values->customerAccount->phone ?? '' }}</td>
+
+                                                <td>
+                                                    @if ($values->status == 100)
+                                                        <span class="badge badge-pill badge-soft-danger">Pending Registration</span>
+                                                    @elseif($values->status == 200)
+                                                        <span class="badge badge-pill badge-soft-info">Under Review</span>
+                                                    @elseif($values->status == 201)
+                                                        <span class="badge badge-pill badge-soft-info">Pending Verification</span>
+                                                    @elseif($values->status == 202)
+                                                        <span class="badge badge-pill bg-success">Verified</span>
+                                                    @elseif($values->status == 240)
+                                                        <span class="badge badge-pill bg-success">Active</span>
+                                                    @elseif($values->status == 249)
+                                                        <span class="badge badge-pill badge-soft-warning">Processing</span>
+                                                    @elseif($values->status == 403) 
+                                                        <span class="badge badge-pill badge-soft-danger">Failed</span>
+                                                    @elseif($values->status == 405) 
+                                                        <span class="badge badge-pill badge-soft-danger">Cancelled</span>  
+                                                    @elseif($values->status == 500 || $values->status == 430)
+                                                        <span class="badge badge-pill badge-soft-danger">Failed Verification</span>
+                                                    @elseif($values->status == 501)
+                                                        <span class="badge badge-pill badge-soft-danger">Inactive</span>
+                                                    @endif
+                                                </td>
+
+                                                <td>
+                                                    {{ date('d-m-Y H:i', strtotime($values->updated_at)) }}
+                                                </td>
 
                                                     <td>
                                                         <a href="{{ route('payment-mandate.show', $values->uuid) }}"
@@ -363,24 +397,24 @@
                                     <div class="alert alert-danger"> No any pending payment mandate</div>
                                 @endif
                             </div>
-                            <!--./table-responsive -->
                         </div>
-                        <!--./tab-pane -->
+
 
                         <div class="tab-pane" id="approved" role="tabpanel">
                             <div class="table-responsive">
-                                @if (isset($approved_debit_orders) && count($approved_debit_orders) > 0)
+                                @if (isset($approved_debit_orders) && $approved_debit_orders)
                                     <table id="dt" class="table table-hover table-bordered">
                                         <thead>
                                             <tr>
                                                 <th width="3%">#</th>
                                                 <th width="20%">Account Name</th>
-                                                <th width="16%">NIDA Number</th>
-                                                <th width="10%">Payment Channel</th>
-                                                <th width="10%">Bank Name/MNO</th>
-                                                <th width="12%">Account Number</th>
-                                                <th width="12%">Phone<br /><small>(Connected to Bank)</small></th>
-                                                <th width="8%">Consent Status</th>
+                                                <th>Bank Name/MNO</th>
+                                                <th>Account Number</th>
+                                                <th>Mandate Reference</th>
+                                                <th>Primary Phone</th>
+                                                <th>Mandate Status</th>
+                                                <th>Created Date</th>
+                                                <th width="4%">Action</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -388,29 +422,52 @@
                                             @foreach ($approved_debit_orders as $values)
                                                 <tr>
                                                     <td>{{ $serial }}</td>
-                                                    <td>{{ $values->customerAccount->account_name ?? $values->customerAccount->phone }}
+                                                    <td>
+                                                        {{ strtoupper($values->customerAccount->account_name) ?? $values->customerAccount->phone }}<br>
+                                                        ID: {{ $values->customerAccount->customer->id_number ?? 'NIL' }}
                                                     </td>
-                                                    <td><small>{{ $values->customerAccount->customer->id_number ?? 'NIL' }}</small>
-                                                    </td>
-                                                    <td>{{ $values->customerAccount->accountType->name ?? '' }}</td>
                                                     <td>{{ $values->customerAccount->account->name ?? '' }}</td>
                                                     <td>
                                                         {{ $values->customerAccount->account_number ?? $values->customerAccount->phone }}
                                                     </td>
-                                                    <td>{{ $values->customerAccount->phone ?? $values->customerAccount->phone }}
+                                                    <td>
+                                                        {{ $values->reference }}
+                                                    </td>
+                                                    <td>{{ $values->customerAccount->phone ?? '' }}</td>
+
+                                                    <td>
+                                                        @if ($values->status == 100)
+                                                            <span class="badge badge-pill badge-soft-danger">Pending Registration</span>
+                                                        @elseif($values->status == 200)
+                                                            <span class="badge badge-pill badge-soft-info">Under Review</span>
+                                                        @elseif($values->status == 201)
+                                                            <span class="badge badge-pill badge-soft-info">Pending Verification</span>
+                                                        @elseif($values->status == 202)
+                                                            <span class="badge badge-pill bg-success">Verified</span>
+                                                        @elseif($values->status == 240)
+                                                            <span class="badge badge-pill bg-success">Active</span>
+                                                        @elseif($values->status == 249)
+                                                            <span class="badge badge-pill badge-soft-warning">Processing</span>
+                                                        @elseif($values->status == 403) 
+                                                            <span class="badge badge-pill badge-soft-danger">Failed</span>
+                                                        @elseif($values->status == 405) 
+                                                            <span class="badge badge-pill badge-soft-danger">Cancelled</span>  
+                                                        @elseif($values->status == 500 || $values->status == 430)
+                                                            <span class="badge badge-pill badge-soft-danger">Failed Verification</span>
+                                                        @elseif($values->status == 501)
+                                                            <span class="badge badge-pill badge-soft-danger">Inactive</span>
+                                                        @endif
                                                     </td>
 
                                                     <td>
-                                                        @if ($values->approved == 'PENDING')
-                                                            <span
-                                                                class="badge badge-pill badge-soft-warning">Pending</span>
-                                                        @elseif($values->approved == 'APPROVED')
-                                                            <span
-                                                                class="badge badge-pill badge-soft-success">Approved</span>
-                                                        @elseif($values->approved == 'REJECTED')
-                                                            <span
-                                                                class="badge badge-pill badge-soft-danger">Rejected</span>
-                                                        @endif
+                                                        {{ date('d-m-Y H:i', strtotime($values->updated_at)) }}
+                                                    </td>
+
+                                                    <td>
+                                                        <a href="{{ route('payment-mandate.show', $values->uuid) }}"
+                                                            title="View" class="btn btn-xss">
+                                                            <i class="bx bxs-folder-open"></i>
+                                                        </a>
                                                     </td>
                                                 </tr>
                                                 @php $serial++; @endphp
@@ -421,55 +478,76 @@
                                     <div class="alert alert-danger"> No any approved payment mandate</div>
                                 @endif
                             </div>
-                            <!--./table-responsive -->
                         </div>
-                        <!--./tab-pane -->
 
                         <div class="tab-pane" id="rejected" role="tabpanel">
                             <div class="table-responsive">
-                                @if (isset($rejected_debit_orders) && count($rejected_debit_orders) > 0)
+                                @if (isset($failed_debit_orders) && $failed_debit_orders)
                                     <table id="dt" class="table table-hover table-bordered">
                                         <thead>
                                             <tr>
                                                 <th width="3%">#</th>
                                                 <th width="20%">Account Name</th>
-                                                <th width="16%">NIDA Number</th>
-                                                <th width="10%">Payment Channel</th>
-                                                <th width="10%">Bank Name/MNO</th>
-                                                <th width="12%">Account Number</th>
-                                                <th width="12%">Phone<br /><small>(Connected to Bank)</small></th>
-                                                <th width="8%">Consent Status</th>
+                                                <th>Bank Name/MNO</th>
+                                                <th>Account Number</th>
+                                                <th>Mandate Reference</th>
+                                                <th>Primary Phone</th>
+                                                <th>Mandate Status</th>
+                                                <th>Created Date</th>
+                                                <th width="4%">Action</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             @php $serial = 1; @endphp
-                                            @foreach ($rejected_debit_orders as $values)
+                                            @foreach ($failed_debit_orders as $values)
                                                 <tr>
                                                     <td>{{ $serial }}</td>
                                                     <td>
-                                                        {{ $values->customerAccount->account_name ?? $values->customerAccount->phone }}
+                                                        {{ strtoupper($values->customerAccount->account_name) ?? $values->customerAccount->phone }}<br>
+                                                        ID: {{ $values->customerAccount->customer->id_number ?? 'NIL' }}
                                                     </td>
-                                                    <td><small>{{ $values->customerAccount->customer->id_number ?? 'NIL' }}</small>
-                                                    </td>
-                                                    <td>{{ $values->customerAccount->accountType->name ?? '' }}</td>
                                                     <td>{{ $values->customerAccount->account->name ?? '' }}</td>
                                                     <td>
                                                         {{ $values->customerAccount->account_number ?? $values->customerAccount->phone }}
                                                     </td>
-                                                    <td>{{ $values->customerAccount->phone ?? $values->customerAccount->phone }}
+                                                    <td>
+                                                        {{ $values->reference }}
+                                                    </td>
+                                                    <td>{{ $values->customerAccount->phone ?? '' }}</td>
+
+                                                    <td>
+                                                        @if ($values->status == 100)
+                                                            <span class="badge badge-pill badge-soft-danger">Pending Registration</span>
+                                                        @elseif($values->status == 200)
+                                                            <span class="badge badge-pill badge-soft-info">Under Review</span>
+                                                        @elseif($values->status == 201)
+                                                            <span class="badge badge-pill badge-soft-info">Pending Verification</span>
+                                                        @elseif($values->status == 202)
+                                                            <span class="badge badge-pill bg-success">Verified</span>
+                                                        @elseif($values->status == 240)
+                                                            <span class="badge badge-pill bg-success">Active</span>
+                                                        @elseif($values->status == 249)
+                                                            <span class="badge badge-pill badge-soft-warning">Processing</span>
+                                                        @elseif($values->status == 403) 
+                                                            <span class="badge badge-pill badge-soft-danger">Failed</span>
+                                                        @elseif($values->status == 405) 
+                                                            <span class="badge badge-pill badge-soft-danger">Cancelled</span>  
+                                                        @elseif($values->status == 500 || $values->status == 430)
+                                                            <span class="badge badge-pill badge-soft-danger">Failed Verification</span>
+                                                        @elseif($values->status == 501)
+                                                            <span class="badge badge-pill badge-soft-danger">Inactive</span>
+                                                        @endif
                                                     </td>
 
                                                     <td>
-                                                        @if ($values->approved == 'PENDING')
-                                                            <span
-                                                                class="badge badge-pill badge-soft-warning">Pending</span>
-                                                        @elseif($values->approved == 'APPROVED')
-                                                            <span
-                                                                class="badge badge-pill badge-soft-success">Approved</span>
-                                                        @elseif($values->approved == 'REJECTED')
-                                                            <span
-                                                                class="badge badge-pill badge-soft-danger">Rejected</span>
-                                                        @endif
+                                                        {{ date('d-m-Y H:i', strtotime($values->updated_at)) }}
+                                                    </td>
+
+                                                    <td>
+                                                        <a href="{{ route('payment-mandate.show', $values->uuid) }}"
+                                                            title="View" class="btn btn-xss">
+                                                            <i class="bx bxs-folder-open"></i>
+                                                        </a>
                                                     </td>
                                                 </tr>
                                                 @php $serial++; @endphp
@@ -480,11 +558,8 @@
                                     <div class="alert alert-danger"> No any rejected payment mandate</div>
                                 @endif
                             </div>
-                            <!--./table-responsive -->
                         </div>
-                        <!--./tab-pane -->
                     </div>
-                    <!--./tab-content -->
                 </div>
             </div>
         </div>

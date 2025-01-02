@@ -127,7 +127,6 @@ class DashboardChartController extends Controller
         for ($i = 1; $i <= 12; $i++) {
             $month = date('m', mktime(0, 0, 0, $i, 10));
             $year = date('Y');
-            Log::debug("month => " . $month);
 
             //installments
             $installments = Installment::select(DB::raw('COALESCE(SUM(installments.installment_amount), 0) as total_amount'), DB::raw('COALESCE(SUM(installments.current_balance), 0) as paid_amount'))->toBase();
@@ -204,9 +203,6 @@ class DashboardChartController extends Controller
                 "rejected" => (int) $rejected
             ];
         }
-
-        Log::debug($request->month);
-        Log::debug($data_array);
 
         //response
         return response()->json(['error' => FALSE, 'chart' => $data_array], 200);

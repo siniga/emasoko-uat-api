@@ -184,7 +184,7 @@
                                             <th>Account Number</th>
                                             <th>Mandate Reference</th>
                                             <th>Primary Phone</th>
-                                            <th>Consent Status</th>
+                                            <th>Mandate Status</th>
                                             <th>Created Date</th>
                                             <th style="width: 120px; !important">Actions</th>
                                         </tr>
@@ -195,7 +195,7 @@
                                             <tr>
                                                 <td>{{ $serial }}</td>
                                                 <td>
-                                                    {{ $values->customerAccount->account_name ?? $values->customerAccount->phone }}<br>
+                                                    {{ strtoupper($values->customerAccount->account_name) ?? $values->customerAccount->phone }}<br>
                                                     ID: {{ $values->customerAccount->customer->id_number ?? 'NIL' }}
                                                 </td>
                                                 <td>{{ $values->customerAccount->account->name ?? '' }}</td>
@@ -215,15 +215,15 @@
                                                     @elseif($values->status == 201)
                                                         <span class="badge badge-pill badge-soft-info">Pending Verification</span>
                                                     @elseif($values->status == 202)
-                                                        <span class="badge bg-success font-size-10">Verified</span>
+                                                        <span class="badge badge-pill bg-success">Verified</span>
                                                     @elseif($values->status == 240)
-                                                        <span class="badge bg-success-1 font-size-10">Active</span>
+                                                        <span class="badge badge-pill bg-success">Active</span>
                                                     @elseif($values->status == 249)
-                                                        <span class="badge bg-warning font-size-10">Processing</span>
+                                                        <span class="badge badge-pill badge-soft-warning">Processing</span>
                                                     @elseif($values->status == 403) 
-                                                        <span class="badge bg-danger font-size-10">Failed</span>
+                                                        <span class="badge badge-pill badge-soft-danger">Failed</span>
                                                     @elseif($values->status == 405) 
-                                                        <span class="badge bg-danger font-size-10">Cancelled</span>  
+                                                        <span class="badge badge-pill badge-soft-danger">Cancelled</span>  
                                                     @elseif($values->status == 500 || $values->status == 430)
                                                         <span class="badge badge-pill badge-soft-danger">Failed Verification</span>
                                                     @elseif($values->status == 501)
@@ -285,6 +285,7 @@
         </div>
     </div>
     <!-- end row -->
+    
 @endsection
 @section('script')
     <script type="text/javascript">

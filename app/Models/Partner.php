@@ -32,9 +32,18 @@ class Partner extends Model
         if ($user->hasRole('Partner')) {
             $company_user = CompanyUser::where(['user_id' => $user->id])->first();
 
-            if ($company_user) {
+            if ($company_user)
                 $partners = $partners->where('partners.company_id', '=', $company_user->company_id);
-            }
+
+        } else if ($user->hasRole('Company_Approver') || $user->hasRole('Company_User')) {
+            $arr_partners = [];
+
+            $user_partners = $user->partners->where('authorize', '=', 1);
+            foreach ($user_partners as $val)
+                array_push($arr_partners, $val->partner_id);
+
+            if ($arr_partners)
+                $partners = $partners->whereIn('partners.id', $arr_partners);
         }
 
         return $partners;
@@ -45,7 +54,7 @@ class Partner extends Model
         return $this->hasOne(PartnerUser::class, 'partner_id')->where('authorize', '=', 1);
     }
 
-    function partnerUsers()
+    function users()
     {
         return $this->hasMany(PartnerUser::class, 'partner_id');
     }

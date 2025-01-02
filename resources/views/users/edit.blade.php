@@ -74,25 +74,8 @@
                                 @php
                                     $options = ['' => '-- Select --'] + $options;
                                 @endphp
-                                {{ Form::select('role_id', $options, old('role_id', $current_role->role_id ?? ''), ['class' => 'form-control', 'id' => 'role_id']) }}
+                                {{ Form::select('role_id', $options, old('role_id', $current_role->id ?? ''), ['class' => 'form-control', 'id' => 'role_id']) }}
                                 <span class="text-danger">{{ $errors->first('role_id') }}</span>
-                            </div>
-                        </div>
-
-                        <div class="col-lg-6 col-md-6">
-                            <div class="mb-3">
-                                <label>Service Provider</label>
-                                @php $options = []; @endphp
-                                @foreach ($providers as $provider)
-                                    @php
-                                        $options[$provider->id] = $provider->business_name;
-                                    @endphp
-                                @endforeach
-                                @php
-                                    $options = ['' => '-- Select --'] + $options;
-                                @endphp
-                                {{ Form::select('provider_id', $options, old('provider_id', $partner_user->partner_id ?? ''), ['class' => 'form-control', 'id' => 'provider_id']) }}
-                                <span class="text-danger">{{ $errors->first('provider_id') }}</span>
                             </div>
                         </div>
 
@@ -108,10 +91,24 @@
                                 @php
                                     $options = ['' => '-- Select --'] + $options;
                                 @endphp
-                                {{ Form::select('company_id', $options, old('company_id', $company_user->company_id ?? ''), ['class' => 'form-control', 'id' => 'company_id']) }}
+                                {{ Form::select('company_id', $options, old('company_id', $company_user->id ?? ''), ['class' => 'form-control', 'id' => 'company_id']) }}
                                 <span class="text-danger">{{ $errors->first('company_id') }}</span>
                             </div>
                         </div>
+
+                        <div class="col-lg-12 col-md-12">
+                            <div class="mb-3">
+                                <label>Service Provider</label>
+                                @php $options = []; @endphp
+                                @foreach ($providers as $provider)
+                                    @php
+                                        $options[$provider->id] = $provider->business_name;
+                                    @endphp
+                                @endforeach
+                                {{ Form::select('provider_ids[]', $options, old('provider_ids', $assigned_partners ?? null), ['class' => 'select2 form-control select2-multiple', 'id' => 'provider_id', 'multiple' => 'multiple', 'data-placeholder' => 'Choose...']) }}
+                                <span class="text-danger">{{ $errors->first('provider_ids') }}</span>
+                            </div>
+                        </div>  
                     </div>
 
                     <div class="row">

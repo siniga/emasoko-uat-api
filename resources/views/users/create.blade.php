@@ -80,23 +80,6 @@
 
                         <div class="col-lg-6 col-md-6">
                             <div class="mb-3">
-                                <label>Service Provider</label>
-                                @php $options = []; @endphp
-                                @foreach ($providers as $provider)
-                                    @php
-                                        $options[$provider->id] = $provider->business_name;
-                                    @endphp
-                                @endforeach
-                                @php
-                                    $options = ['' => '-- Select --'] + $options;
-                                @endphp
-                                {{ Form::select('provider_id', $options, old('provider_id'), ['class' => 'form-control', 'id' => 'provider_id']) }}
-                                <span class="text-danger">{{ $errors->first('provider_id') }}</span>
-                            </div>
-                        </div>
-
-                        <div class="col-lg-6 col-md-6">
-                            <div class="mb-3">
                                 <label>eMakato Partner</label>
                                 @php $options = []; @endphp
                                 @foreach ($companies as $company)
@@ -109,6 +92,20 @@
                                 @endphp
                                 {{ Form::select('company_id', $options, old('company_id'), ['class' => 'form-control', 'id' => 'company_id']) }}
                                 <span class="text-danger">{{ $errors->first('company_id') }}</span>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-12 col-md-12">
+                            <div class="mb-3">
+                                <label>Service Provider</label>
+                                @php $options = []; @endphp
+                                @foreach ($providers as $provider)
+                                    @php
+                                        $options[$provider->id] = $provider->business_name;
+                                    @endphp
+                                @endforeach
+                                {{ Form::select('provider_ids[]', $options, old('provider_ids'), ['class' => 'select2 form-control select2-multiple', 'id' => 'provider_id', 'multiple' => 'multiple', 'data-placeholder' => 'Choose...']) }}
+                                <span class="text-danger">{{ $errors->first('provider_ids') }}</span>
                             </div>
                         </div>
                     </div>

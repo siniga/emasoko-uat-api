@@ -15,6 +15,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Str;
 
@@ -28,15 +29,80 @@ class UserController extends Controller
         $this->middleware('auth');
     }
 
-    public function index()
+    public function index(Request $request)
     {
         $title = 'Users';
         //has_allowed('roles', 'lists');
 
-        $users = User::all();
+        if (isset($_POST['filter'])) {
+            //request 
+            $start_date  = $request->start_at ?? null;
+            $end_date    = $request->end_at ?? null;
+            $partner_id  = $request->partner_id ?? null;
+            $status      = $request->status ?? null;
+            $keyword     = $request->keyword ?? null;
+
+            //users
+            $users = User::orderBy('name');
+
+            //start date and end data
+            if ($request->has('start_at') || $request->has('end_at')) {
+                $users = $users->when($start_date, function ($query) use ($start_date, $end_date) {
+                    if ($start_date != null && $end_date != null)
+                        $query->whereBetween('users.created_at', [$start_date, $end_date]);
+
+                    else if ($start_date != null)
+                        $query->where('users.created_at', '>=', $start_date);
+
+                    else if ($end_date != null)
+                        $query->where('users.created_at', '<=', $end_date);
+                });
+            }
+
+            //status
+            if ($request->has('status')) {
+                $users = $users->when($status, function ($query) use ($status) {
+                    $query->where('users.active', '=', $status);
+                });
+            }
+
+            //partner id    
+            if ($request->has('partner_id')) {
+                $users = $users->when($partner_id, function ($query) use ($partner_id) {
+                    $query->whereHas("partners", function ($q) use ($partner_id) {
+                        $q->where('partner_id', '=', $partner_id);
+                    });
+                });
+            }
+
+            //keyword
+            if ($request->has('keyword')) {
+                $users = $users->when($keyword, function ($query) use ($keyword) {
+                    $query->where(DB::raw('LOWER(name)'), 'like', "%" . strtolower($keyword) . "%")
+                        ->orWhere(DB::raw('LOWER(phone)'), 'like', "%" . strtolower($keyword) . "%");
+                });
+            }
+
+            //users
+            $users = $users->get();
+        } else {
+            $users = User::paginate(50);
+        }
+
+        //post data
+        $post_data = [
+            'start_at' => $request->start_at ?? null,
+            'end_at' => $request->end_at ?? null,
+            'partner_id' => $request->partner_id ?? null,
+            'status' => $request->status ?? null,
+            'keyword' => $request->keyword ?? null
+        ];
+
+        //service provider
+        $providers = Partner::orderBy('business_name')->get();
 
         //render view
-        return view('users.lists', compact('users', 'title'));
+        return view('users.lists', compact('users', 'providers', 'post_data', 'title'));
     }
 
     public function create()
@@ -48,6 +114,8 @@ class UserController extends Controller
 
         //service provider
         $providers = Partner::orderBy('business_name')->get();
+
+        //companies
         $companies = Company::orderBy('company_name')->get();
 
         //render view
@@ -78,18 +146,20 @@ class UserController extends Controller
 
         //service provider
         if ($request->input('role_id') == 2 || $request->input('role_id') == 4) {
-            //partner
-            $partner = Partner::where(['id' => $request->input('provider_id')])->first();
+            foreach ($request->input('provider_ids') as $provider_id) {
+                //partner
+                $partner = Partner::where(['id' => $provider_id])->first();
 
-            if ($partner) {
-                //partner user
-                $partner_user = PartnerUser::firstOrNew([
-                    'user_id' => $user->id,
-                    'partner_id' => $partner->id,
-                    'partner_uuid' => $partner->uuid
-                ]);
-                $partner_user->authorize = 1;
-                $partner_user->save();
+                if ($partner) {
+                    //partner user
+                    $partner_user = PartnerUser::firstOrNew([
+                        'user_id' => $user->id,
+                        'partner_id' => $partner->id,
+                        'partner_uuid' => $partner->uuid
+                    ]);
+                    $partner_user->authorize = 1;
+                    $partner_user->save();
+                }
             }
         } else if ($request->input('role_id') == 6) {
             //create company user
@@ -112,6 +182,20 @@ class UserController extends Controller
         //user
         $user = User::findOrFail($id);
 
+        //user current role
+        $current_role = $user->roles[0] ?? null;
+
+        //company user
+        $company_user = $user->companies[0] ?? null;
+
+        //assigned partners
+        $assigned_partners = [];
+        $partners = $user->partners->where('authorize', '=', 1);
+
+        foreach ($partners as $partner) {
+            array_push($assigned_partners, $partner->partner_id);
+        }
+
         //roles
         $roles = Role::all();
 
@@ -121,17 +205,8 @@ class UserController extends Controller
         //companies
         $companies = Company::orderBy('company_name')->get();
 
-        //current roles
-        $current_role = RoleUser::where('user_id', $id)->first();
-
-        //partner user
-        $partner_user = PartnerUser::where('user_id', $id)->first();
-
-        //company user
-        $company_user = CompanyUser::where('user_id', $id)->first();
-
         //render view
-        return view('users.edit', compact('title', 'user', 'roles', 'providers', 'companies', 'current_role', 'partner_user', 'company_user'));
+        return view('users.edit', compact('title', 'user', 'roles', 'providers', 'companies', 'current_role', 'company_user', 'assigned_partners'));
     }
 
     public function update(Request $request, $id)
@@ -143,7 +218,7 @@ class UserController extends Controller
                 'email' => 'required|string|max:255',
                 'phone' => ['required', new PhoneNumber()],
                 'role_id' => 'required',
-                'provider_id' => 'required_if:role_id,==,2,4',
+                'provider_ids' => 'required_if:role_id,==,2,4',
                 'company_id' => 'required_if:role_id,==,6',
             ],
             [
@@ -151,7 +226,7 @@ class UserController extends Controller
                 'email.required' => 'Email is required',
                 'phone.required' => 'Phone is required',
                 'role_id.required' => 'Role required',
-                'provider_id.required_if' => 'Service provider required',
+                'provider_ids.required_if' => 'Service providers required',
                 'company_id.required_if' => 'eMakato partner is required',
             ]
         );
@@ -178,7 +253,7 @@ class UserController extends Controller
         $user->email = $request->input('email');
         $user->phone = $request->input('phone');
 
-        if ($request->input('password') != null || $request->input('password') != ''){
+        if ($request->input('password') != null || $request->input('password') != '') {
             $user->password = Hash::make($password);
             $user->otp_password = base64_encode($password);
         }
@@ -193,18 +268,23 @@ class UserController extends Controller
 
         //service provider
         if ($request->input('role_id') == 2 || $request->input('role_id') == 4) {
-            //partner
-            $partner = Partner::where(['id' => $request->input('provider_id')])->first();
+            //deactivate all the partners by user_id
+            $deactivate_pt = PartnerUser::where('user_id', '=', $user->id)->update(['authorize' => 0]);
 
-            if ($partner) {
-                //partner user
-                $partner_user = PartnerUser::firstOrNew([
-                    'user_id' => $user->id,
-                ]);
-                $partner_user->partner_id = $partner->id;
-                $partner_user->partner_uuid = $partner->uuid;
-                $partner_user->authorize = 1;
-                $partner_user->save();
+            //activate selected users
+            foreach ($request->input('provider_ids') as $provider_id) {
+                //partner
+                $partner = Partner::where(['id' => $provider_id])->first();
+
+                if ($partner) {
+                    $partner_user = PartnerUser::firstOrNew([
+                        'user_id' => $user->id,
+                        'partner_id' => $partner->id,
+                        'partner_uuid' => $partner->uuid
+                    ]);
+                    $partner_user->authorize = 1;
+                    $partner_user->save();
+                }
             }
         } else if ($request->input('role_id') == 6) {
             //create company user
@@ -219,6 +299,8 @@ class UserController extends Controller
         //redirect
         return Redirect::route('users.index')->with('success', 'User updated');
     }
+
+    public function show($id) {}
 
     //change status
     public function change_status($id)

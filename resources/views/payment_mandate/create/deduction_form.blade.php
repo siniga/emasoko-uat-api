@@ -51,13 +51,13 @@
                 <!--./form wizard -->
 
                 @if (session()->get('success'))
-                    <div class="alert alert-success">
+                    <div class="alert alert-success mb-2">
                         {{ session()->get('success') }}
-                    </div><br />
+                    </div>
                 @elseif(session()->get('danger'))
-                    <div class="alert alert-danger">
+                    <div class="alert alert-danger mb-2">
                         {{ session()->get('danger') }}
-                    </div><br />
+                    </div>
                 @endif
 
                 {{ Form::open(['url' => route('payment-mandate.store-deduction'), 'class' => 'form-horizontal', 'enctype' => 'multipart/form-data']) }}
@@ -72,7 +72,7 @@
 
                 <!-- Customer Information -->
                 <section>
-                    @if (Auth::user()->hasRole(['admin']))
+                    @if ($provider == null)
                         <div class="row">
                             <div class="col-lg-6 col-md-6">
                                 <div class="mb-3">

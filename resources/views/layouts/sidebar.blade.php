@@ -83,8 +83,8 @@
                 @if (Auth::user()->hasRole(['admin']))
                     <li class="menu-title" key="t-apps">Authentication</li>
 
-                    <li class="{{ Route::is('users.index', 'users.create', 'users.edit', 'users.show', 'users.change-status') ? "mm-active":""}}">
-                        <a href="{{ route('users.index') }}" class="waves-effect">
+                    <li class="{{ Route::is('users.lists', 'users.create', 'users.edit', 'users.show', 'users.change-status') ? "mm-active":""}}">
+                        <a href="{{ route('users.lists') }}" class="waves-effect">
                             <i class="bx bx-user-plus"></i>
                             <span key="t-chat">Users</span>
                         </a>

@@ -110,7 +110,7 @@
 
                         <div class="text-sm-end">
                             <a href="{{ route('payment-mandate.create-deduction', [$customer_account->uuid]) }}"
-                                title="New Payment Mandate" class="btn btn-outline-primary text-medium btn-sm">
+                                title="New Payment Mandate" class="btn btn-primary text-medium btn-sm">
                                 <i class="bx bx-plus font-size-12"></i> Create Mandate
                             </a>
                         </div>

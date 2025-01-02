@@ -135,6 +135,9 @@ Route::get('customer-accounts/{id}/delete', [CustomerAccountController::class, '
 Route::get('customer-accounts/export-xls', [CustomerAccountController::class, 'export_xls'])->name('customer-accounts.export-xls');
 Route::get('customer-accounts/export-pdf', [CustomerAccountController::class, 'export_pdf'])->name('customer-accounts.export-pdf');
 
+//users
+Route::any("users/lists", [UserController::class, 'index'])->name('users.lists');
+
 //resources routes
 Route::resources([
     'payment-channels' => PaymentChannelController::class,
