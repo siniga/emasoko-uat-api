@@ -427,14 +427,11 @@ class PaymentMandateController extends Controller
             //create payload
             $payload = $this->payloadService->mandateRegistrationPayload($debit_order);
 
-            Log::debug("== payload ==");
-            Log::debug($payload);
-
             //show OTP Modal
             $show_modal = true;
 
             //Create Request to NMB
-            //dispatch(new MandateRegistrationJob($payload));
+            dispatch(new MandateRegistrationJob($payload));
         } else if ($debit_order->channel == "CRDB") {
             //requestId
             $requestId = Str::uuid()->toString();

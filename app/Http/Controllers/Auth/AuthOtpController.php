@@ -57,13 +57,13 @@ class AuthOtpController extends Controller
         dispatch(new SendSMSJob($data));
 
         //send email
-        $data = [
-            "email" => $user->email,
-            "name" => $user->name,
-            "subject" => "eMakato OTP Verification",
-            "body" => $message
-        ];
-        dispatch(new SendEmailJob($data));
+        // $data = [
+        //     "email" => $user->email,
+        //     "name" => $user->name,
+        //     "subject" => "eMakato OTP Verification",
+        //     "body" => $message
+        // ];
+        // dispatch(new SendEmailJob($data));
 
         //redirect
         return Redirect::route('otp.verification', ['uuid' => $user->uuid])->with('success', $user->name . ', Welcome at eMakato. Enter OTP Pin sent to your phone and email.');
