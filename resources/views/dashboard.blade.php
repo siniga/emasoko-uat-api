@@ -192,13 +192,14 @@
                 <div class="clearfix">
                         <div class="float-end">
                             <div class="input-group input-group-sm">
-                                <select class="form-select form-select-sm" id="mandate-value-select-year">
+                                <select class="form-select form-select-sm" id="collected-mandate-value-select-year">
                                     @php
                                         $year_options = [];
                                         $current_year = date('Y');
                                     @endphp
 
-                                    @foreach (range(2024, $current_year+2) as $v)
+                                    <option value="">Select</option>
+                                    @foreach (range(2024, $current_year+5) as $v)
                                         <option value="{{ $v }}">{{ $v }}</option>
                                     @endforeach
                                 </select>
@@ -231,7 +232,7 @@
                                 <div class="mt-2">
                                     <p class="">
                                         <i class="mdi mdi-circle text-success-1 my-1"></i> Approved :
-                                        {{ $stats['number_of_approved_mandate'] }}
+                                        {{-- {{ $stats['number_of_approved_mandate'] }} --}}
                                     </p>
                                 </div>
                             </div>
@@ -240,7 +241,7 @@
                                 <div class="mt-2">
                                     <p class="">
                                         <i class="mdi mdi-circle text-danger my-1"></i> Pending : 
-                                        {{ $stats['number_of_pending_mandate'] }}
+                                        {{-- {{ $stats['number_of_pending_mandate'] }} --}}
                                     </p>
                                 </div>
                             </div>
@@ -260,6 +261,7 @@
                         <div class="float-end">
                             <div class="input-group input-group-sm">
                                 <select class="form-select form-select-sm" id="select-month">
+                                    <option value="">Select</option>
                                     @foreach (range(1, 12) as $v)
                                         @php
                                             $month_name = date('F', mktime(0, 0, 0, $v, 10)); // convert number to month
