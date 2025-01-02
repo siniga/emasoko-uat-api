@@ -48,8 +48,8 @@
                 <div class="row mb-2">
                     <div class="col-md-12 d-flex justify-content-end text-sm-end">
                         <div class="m-1">
-                            <i>Didn't receive otp?</i> <span role="button" class="text-primary ms-2 resend_otp"
-                                x-on:click="resendOtp()">Resend</span>
+                            <i>Didn't receive otp?</i> 
+                            <span role="button" class="text-primary ms-2 resend_otp" x-on:click="resendOtp()" x-text="resendTXT"></span>
                         </div>
                     </div>
                 </div>

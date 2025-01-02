@@ -263,6 +263,8 @@
                 verifyLoading: false,
                 buttonVerify: "Verify",
 
+                resendTXT: "Resend",
+
                 //submit form
                 submitForm() {
                     this.formMessage = "";
@@ -357,6 +359,8 @@
 
                 //resend OTP
                 resendOtp() {
+                    this.resendTXT = "Resending...";
+
                     //api for action
                     fetch("/payment-mandate/resend-otp", {
                             method: "POST",
@@ -374,13 +378,11 @@
                             let http_response_code = responseJson.http_response_code;
                             let success_msg = responseJson.success_msg;
 
-                            if(http_response_code == 200){
-                                //display message
+                            if(http_response_code == 202){
                                 $('#message_wrp_1').html(
                                     "<div class='alert alert-success rounded-sm'>OTP succesfully generated and sent.</div>"
                                 );
                             } else {
-                                //display message
                                 $('#message_wrp_1').html(
                                     "<div class='alert alert-danger rounded-sm'>" + success_msg + "</div>"
                                 );
@@ -389,7 +391,7 @@
                         }).catch(() => {
                             this.formMessage = "Something went wrong.";
                         }).finally(() => {
-
+                            this.resendTXT = "Resend";
                         });
                 },
 
@@ -417,7 +419,6 @@
                             let success_msg = responseJson.success_msg;
 
                             if(http_response_code == 202){
-                                //display message
                                 $('#message_wrp_1').html(
                                     "<div class='alert alert-success rounded-sm'>OTP verified</div>"
                                 );
@@ -429,7 +430,6 @@
                                     window.location.href = redirectionURL
                                 }, 2000);
                             } else {
-                                //display message
                                 $('#message_wrp_1').html(
                                     "<div class='alert alert-danger rounded-sm'>" + success_msg + "</div>"
                                 );
