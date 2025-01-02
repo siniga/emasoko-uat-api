@@ -6,6 +6,10 @@
             font-family: "Roboto, Cerebri, Sans-serif" !important;
         }
 
+        @page {
+            size: A4 landscape;
+        }
+
         body {
             width: 100%;
             margin: 20px;

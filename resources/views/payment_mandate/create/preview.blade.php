@@ -56,7 +56,7 @@
                         </div>
 
 
-                        <form @submit.prevent="submitForm();" autocomplete="off">
+                        <form @submit.prevent="" autocomplete="off">
                             <section>
                                 <div id="message_wrp" class="message_wrp"></div>
 
