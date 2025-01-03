@@ -14,9 +14,8 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
-        // Commands\CreateCollectionBatch::class,
+        Commands\CreateCollectionBatch::class,
         // Commands\PushCollectionBatch::class
-        Commands\BatchFileStatus::class,
     ];
 
     /**
@@ -28,9 +27,8 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         // lists of commands
-        $schedule->command('send:sms')->everyMinute();
-        //$schedule->command('create:batches')->dailyAt('04:00');
-        //$schedule->command('push:batches')->dailyAt('05:00');
+        $schedule->command('create:batches')->dailyAt('04:00');
+        $schedule->command('push:batches')->everyTwoHours();
         //$schedule->command('collection:status')->dailyAt('08:00');
         // $schedule->command('send:failed-batches')->dailyAt('09:00');
         // $schedule->command('send:failed-batches')->dailyAt('12:00');

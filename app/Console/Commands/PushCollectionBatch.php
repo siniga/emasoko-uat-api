@@ -44,21 +44,27 @@ class PushCollectionBatch extends Command
         $bankApi =  new BankApiService();
 
         //get unprocessed collection batch
-        $batches = CollectionBatch::where(['pushed' => 0])->orderBy('collectionReference', 'ASC');
+        $collection_batches = CollectionBatch::where(['pushed' => 0])->orderBy('collectionReference', 'ASC');
 
-        if ($batches->count() > 0) {
+        if ($collection_batches->count() > 0) {
             //take the first batch
-            $batch = $batches->first();
+            $collection_batches = $collection_batches->take(10)->get();
 
-            if (!empty($batch->request_csv)) {
-                //1. Create payload for collection 
-                $payload = $bankPayload->collectionPayload($batch, $batch->request_csv);
+            foreach ($collection_batches as $value) {
+                //single batch
+                $batch = CollectionBatch::findOrFail($value->id);
 
-                //2. Send payload to a server
-                $response = $bankApi->collectionCreate($payload);
-            } else {
-                //Delete the batch
-                $batch->delete();
+                if (!empty($batch->request_csv)) {
+                    //1. Create payload for collection 
+                    $payload = $bankPayload->collectionPayload($batch, $batch->request_csv);
+
+                    //2. Send payload to a server
+                    $response = $bankApi->collectionCreate($payload);
+                } else {
+                    //Delete the batch
+                    $batch->delete();
+                }
+                sleep(60);
             }
         }
 

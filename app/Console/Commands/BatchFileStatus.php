@@ -2,11 +2,9 @@
 
 namespace App\Console\Commands;
 
-use App\Classes\Messaging;
 use App\Models\CollectionBatch;
 use App\Services\MnoBankServices;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Log;
 
 class BatchFileStatus extends Command
 {
@@ -15,7 +13,7 @@ class BatchFileStatus extends Command
      *
      * @var string
      */
-    protected $signature = 'send:sms';
+    protected $signature = 'batch:status';
 
     /**
      * The console command description.
@@ -41,8 +39,14 @@ class BatchFileStatus extends Command
      */
     public function handle()
     {
-        //call messaging class
-        Log::debug("== Sending SMS in command ==");
+        $batches = CollectionBatch::get();
+        foreach ($batches as $batch) {
+            $debit = $batch->debits()->first();
+            $debitOrder = $debit->debitOrder;
+            $account = $debitOrder->customerAccount->account;
+            $mnoBank = new MnoBankServices($account);
+            $mnoBank->collectionStatus(request(), $batch);
+        }
         return 0;
     }
 }
