@@ -47,7 +47,7 @@ class PushCollectionBatch extends Command
         $collection_batches = CollectionBatch::where(['pushed' => 0])->orderBy('collectionReference', 'ASC');
 
         if ($collection_batches->count() > 0) {
-            //take the first batch
+            //take the first 10 collection batches
             $collection_batches = $collection_batches->take(10)->get();
 
             foreach ($collection_batches as $value) {
@@ -64,7 +64,7 @@ class PushCollectionBatch extends Command
                     //Delete the batch
                     $batch->delete();
                 }
-                sleep(60);
+                sleep(30);
             }
         }
 

@@ -45,7 +45,6 @@ class CollectionStatusBatch extends Command
     public function handle()
     {
         //initialize deduction service
-        $deductionService = new DeductionService();
         $bankPayload = new BankPayloadService();
         $bankApi =  new BankApiService();
 
@@ -53,14 +52,21 @@ class CollectionStatusBatch extends Command
 
 
         if ($collection_batches->count() > 0) {
-            //take the first collection batch
-            $collection_batch = $collection_batches->first();
+            //take the first 10 collection batches
+            $collection_batches = $collection_batches->take(10)->get();
 
-            //create payload
-            $payload = $bankPayload->collectionStatusPayload($collection_batch);
+            foreach ($collection_batches as $value) {
+                //single batch
+                $batch = CollectionBatch::findOrFail($value->id);
 
-            //send request
-            $response = $bankApi->collectionStatus($payload);
+                //create payload
+                $payload = $bankPayload->collectionStatusPayload($batch);
+
+                //send request
+                $response = $bankApi->collectionStatus($payload);
+
+                sleep(30);
+            }
         }
 
         return 200;

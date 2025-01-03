@@ -135,7 +135,7 @@ class PaymentMandateController extends Controller
     }
 
     //payment details form
-    function create_account($customer_id = null, $debit_order_id = null)
+    public function create_account($customer_id = null, $debit_order_id = null)
     {
         $title = "Payment Mandate";
 
@@ -158,7 +158,7 @@ class PaymentMandateController extends Controller
     }
 
     //store payment details
-    function store_account(CustomerAccountRequest $request)
+    public function store_account(CustomerAccountRequest $request)
     {
         // validated request
         $validated = $request->validated();
@@ -214,7 +214,7 @@ class PaymentMandateController extends Controller
         return Redirect::route('payment-mandate.create-deduction', [$customer_account_uuid, $debit_order_uuid])->with('success', "Customer deduction channel saved");
     }
 
-    function create_deduction($customer_account_uuid, $debit_order_uuid = null)
+    public function create_deduction($customer_account_uuid, $debit_order_uuid = null)
     {
         $title = "Payment Mandate";
 
@@ -242,7 +242,7 @@ class PaymentMandateController extends Controller
     }
 
     //store deduction information
-    function store_deduction(Request $request)
+    public function store_deduction(Request $request)
     {
         //mandate post data
         $loan_amount = floatval(str_replace(',', '', $request->input('loan_amount')));
@@ -377,7 +377,7 @@ class PaymentMandateController extends Controller
     }
 
     //customer preview
-    function preview($debit_uuid)
+    public function preview($debit_uuid)
     {
         $title = "Payment Mandate";
 
@@ -392,7 +392,7 @@ class PaymentMandateController extends Controller
     }
 
     // cancel registration
-    function cancel($debit_order_uuid)
+    public function cancel($debit_order_uuid)
     {
         $title = 'Cancel payment mandate';
 
@@ -408,7 +408,7 @@ class PaymentMandateController extends Controller
     }
 
     //confirm application
-    function confirm(Request $request)
+    public function confirm(Request $request)
     {
         $show_modal = false; //show OTP Modal
 
@@ -456,7 +456,7 @@ class PaymentMandateController extends Controller
     }
 
     //saving application
-    function saving(Request $request)
+    public function saving(Request $request)
     {
         //post data
         $mandate_id = $request->input('mandate_id');
@@ -473,7 +473,7 @@ class PaymentMandateController extends Controller
     }
 
     //resend otp
-    function resend_otp(Request $request)
+    public function resend_otp(Request $request)
     {
         //post data
         $debit_order = DebitOrder::where("uuid", $request->uuid)->first();
@@ -509,7 +509,7 @@ class PaymentMandateController extends Controller
     }
 
     // verify_otp
-    function verify_otp(Request $request)
+    public function verify_otp(Request $request)
     {
         // post data
         $debit_order = DebitOrder::where("uuid", $request->uuid)->first();
@@ -545,8 +545,8 @@ class PaymentMandateController extends Controller
         }
     }
 
-    //mandate status
-    function fetch_status(Request $request)
+    //query mandate status
+    public function fetch_status(Request $request)
     {
         // debit order
         $debit_order = DebitOrder::where("uuid", $request->uuid)->first();
