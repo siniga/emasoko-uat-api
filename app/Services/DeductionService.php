@@ -150,7 +150,7 @@ class DeductionService
     public function processInstallment(Installment $installment, $amount, $reference)
     {
         //0. Check if installment status is not CLOSED
-        if ($installment->status != 'CLOSED') {
+        if ($installment->status == 'OPEN') {
             //1. Update installment => outstanding amount, current balance
             $outstanding_amount = $installment->outstanding_amount - $amount;
             $current_balance = $installment->current_balance + $amount;
@@ -188,18 +188,23 @@ class DeductionService
             $debit_order->save();
 
             //installment amount
-            $installment_amount = $installment->installment_amount;
+            // $installment_amount = $installment->installment_amount;
 
-            //payment date
-            $payment_date = $installment->payment_date;
+            // //payment date
+            // $payment_date = $installment->payment_date;
 
             //. Send message for outstanding amount and current balance from eMakato.
-            $phone = $installment->debitOrder->customerAccount->phone;
-            $message = "Makato ya tarehe {$payment_date} ya kiasi cha shilingi {$installment_amount} yamekamilishwa na kiasi kilichobaki ni Tsh {$outstanding_amount}. Asante kwa kutumia eMakato.";
+            // $phone = $installment->debitOrder->customerAccount->phone;
+            // $message = "Makato ya tarehe {$payment_date} ya kiasi cha shilingi {$installment_amount} yamekamilishwa na kiasi kilichobaki ni Tsh {$outstanding_amount}. Asante kwa kutumia eMakato.";
 
-            //send sms
-            $data = ["phone" => $phone, "message" => $message];
-            dispatch(new SendSMSJob($data));
+            // //send sms
+            // $data = ["phone" => $phone, "message" => $message];
+            // dispatch(new SendSMSJob($data));
+            Log::debug("Installment => Processed");
+        } else if ($installment->status == 'PARTIAL_PAID') {
+            Log::debug("Installment => Partial Paid");
+        } else if ($installment->status == 'CLOSED') {
+            Log::debug("Installement => Closed");
         }
 
         return 200;
