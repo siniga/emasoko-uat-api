@@ -113,12 +113,13 @@ class CollectionController extends Controller
         return view('collections.show', compact('title', 'batch', 'arr_data'));
     }
 
-    public function push($id)
+    public function push(Request $request)
     {
         $title = "Push Collection Batch";
 
-        //batch
-        $batch = CollectionBatch::where(['id' => $id])->firstOrFail();
+        //collection batch
+        $collection_batch = CollectionBatch::where(['id' => $request->batch_id])->firstOrFail();
+        
     }
 
     public function fetch_status(Request $request)
