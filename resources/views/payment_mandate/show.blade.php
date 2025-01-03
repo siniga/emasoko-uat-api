@@ -40,6 +40,11 @@
                             <div></div>
 
                             <div class="text-sm-end d-none d-sm-block">
+                                <a href="{{ route('payment-mandate.create-deduction', [$debit_order->customerAccount->uuid]) }}"
+                                    title="New Payment Mandate" class="btn btn-primary text-medium btn-sm">
+                                    <i class="bx bx-plus font-size-12"></i> Create Mandate
+                                </a>
+
                                 <template x-if="status==100 || status==200 || status==403 || status==430 || status==500 || status==501">
                                     <a href="{{ route('payment-mandate.create-account', [$debit_order->customerAccount->uuid, $debit_order->uuid] ) }}" title="Edit"
                                         class="btn btn-outline-secondary text-medium btn-sm">
@@ -353,7 +358,7 @@
                 //approval mandate status
                 fetchMandateStatus() {
                     this.formLoading = true;
-                    this.btnStatus = '<i class="fas fa-spinner fa-spin"></i> Fetch Mandate status....';
+                    this.btnStatus = '<i class="fas fa-spinner fa-spin"></i> Fetching mandate status....';
 
                     fetch("/payment-mandate/fetch-status", {
                             method: "POST",
@@ -365,15 +370,31 @@
                             body: JSON.stringify(this.formData),
                         }).then(response => response.json())
                         .then(responseJson => {
-                            console.log(responseJson);
                             this.status = responseJson.http_response_code
-                            this.remarks = responseJson.remarks
+                            this.remarks = responseJson.success_msg
 
-                            $('#message_wrp').html(
-                                "<div class='alert alert-success rounded-sm'>" + responseJson.success_msg + "</div>"
-                            );
+                            //response code and message
+                            let http_response_code = responseJson.http_response_code;
+                            let success_msg = responseJson.success_msg;
+
+                            if(http_response_code == 240){
+                                $('#message_wrp').html(
+                                    "<div class='alert alert-success rounded-sm'>" + success_msg + "</div>"
+                                );
+                            } else if(http_response_code == 249 || http_response_code == 430){
+                                $('#message_wrp').html(
+                                    "<div class='alert alert-info rounded-sm'>" + success_msg + "</div>"
+                                );
+                            } else if(http_response_code == 404){
+                                $('#message_wrp').html(
+                                    "<div class='alert alert-danger rounded-sm'>" + success_msg + "</div>"
+                                );                                
+                            } else {
+                                $('#message_wrp').html(
+                                    "<div class='alert alert-danger rounded-sm'>" + success_msg + "</div>"
+                                );                                 
+                            }
                         }).catch(() => {
-                            //display message
                             $('#message_wrp').html(
                                 "<div class='alert alert-danger rounded-sm'>Something went wrong.</div>"
                             );

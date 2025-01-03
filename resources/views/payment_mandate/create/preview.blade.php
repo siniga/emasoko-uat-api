@@ -23,7 +23,6 @@
                         <li class="breadcrumb-item active">Summary</li>
                     </ol>
                 </div>
-
             </div>
         </div>
     </div>
@@ -55,8 +54,7 @@
                             </div>
                         </div>
 
-
-                        <form @submit.prevent="submitForm();" autocomplete="off">
+                        <form @submit.prevent="" autocomplete="off">
                             <section>
                                 <div id="message_wrp" class="message_wrp"></div>
 
@@ -265,6 +263,8 @@
                 verifyLoading: false,
                 buttonVerify: "Verify",
 
+                resendTXT: "Resend",
+
                 //submit form
                 submitForm() {
                     this.formMessage = "";
@@ -359,6 +359,8 @@
 
                 //resend OTP
                 resendOtp() {
+                    this.resendTXT = "Resending...";
+
                     //api for action
                     fetch("/payment-mandate/resend-otp", {
                             method: "POST",
@@ -372,30 +374,24 @@
                         .then(responseJson => {
                             console.log(responseJson);
 
-                            //response code 
-                            const http_response_code = responseJson.http_response_code;
+                            //response code and message
+                            let http_response_code = responseJson.http_response_code;
+                            let success_msg = responseJson.success_msg;
 
-                            if(http_response_code == 200){
-                                //display message
+                            if(http_response_code == 202){
                                 $('#message_wrp_1').html(
-                                    "<div class='alert alert-success rounded-sm'>OTP sent successfully</div>"
-                                );
-                            } else if(http_response_code == 500) {
-                                //display message
-                                $('#message_wrp_1').html(
-                                    "<div class='alert alert-warning rounded-sm'>Failed to send OTP, Try again.</div>"
+                                    "<div class='alert alert-success rounded-sm'>OTP succesfully generated and sent.</div>"
                                 );
                             } else {
-                                //display message
                                 $('#message_wrp_1').html(
-                                    "<div class='alert alert-warning rounded-sm'>Failed to send OTP, Try again.</div>"
+                                    "<div class='alert alert-danger rounded-sm'>" + success_msg + "</div>"
                                 );
                             }
 
                         }).catch(() => {
                             this.formMessage = "Something went wrong.";
                         }).finally(() => {
-
+                            this.resendTXT = "Resend";
                         });
                 },
 
@@ -418,13 +414,13 @@
                         .then(responseJson => {
                             console.log(responseJson);
 
-                            //response code 
-                            const http_response_code = responseJson.http_response_code;
+                            //response code and message
+                            let http_response_code = responseJson.http_response_code;
+                            let success_msg = responseJson.success_msg;
 
                             if(http_response_code == 202){
-                                //display message
                                 $('#message_wrp_1').html(
-                                    "<div class='alert alert-success rounded-sm'>OTP validated</div>"
+                                    "<div class='alert alert-success rounded-sm'>OTP verified</div>"
                                 );
 
                                 //redirect to details page
@@ -433,15 +429,9 @@
                                 setTimeout(function () {
                                     window.location.href = redirectionURL
                                 }, 2000);
-                            } else if(http_response_code == 500) {
-                                //display message
-                                $('#message_wrp_1').html(
-                                    "<div class='alert alert-danger rounded-sm'>Failed to verify OTP, Try again or resend OTP.</div>"
-                                );
                             } else {
-                                //display message
                                 $('#message_wrp_1').html(
-                                    "<div class='alert alert-danger rounded-sm'>Failed to verify OTP, Try again or contact support.</div>"
+                                    "<div class='alert alert-danger rounded-sm'>" + success_msg + "</div>"
                                 );
                             }
                         }).catch(() => {

@@ -15,18 +15,22 @@ use function GuzzleHttp\Promise\rejection_for;
 class DashboardChartController extends Controller
 {
     //Pending and Approved Mandates
-    public function mandate_values()
+    public function mandate_values(Request $request)
     {
+        //current or requested year
+        $year = date('Y');
+        if ($request->has('year'))
+            $year = $request->year;
+
         //declare variable
         $data_array = [];
         $approvedStatuses = [0, 1, 2];
 
         for ($i = 1; $i <= 12; $i++) {
             $month = date('m', mktime(0, 0, 0, $i, 10));
-            $year = date('Y');
 
             //query
-            $debit_orders = DebitOrder::select('debit_orders.approved', DB::raw('COALESCE(SUM(debit_orders.total_amount), 0) as total_amount'))
+            $debit_orders = DebitOrder::filterCondition()->select('debit_orders.approved', DB::raw('COALESCE(SUM(debit_orders.total_amount), 0) as total_amount'))
                 ->where(function ($query) {
                     $query->whereIn('debit_orders.approved', [0, 1, 2]);
                 })->groupBy('debit_orders.approved')->orderBy('debit_orders.approved')->toBase();
@@ -119,15 +123,18 @@ class DashboardChartController extends Controller
     }
 
     //Collected 
-    public function collected_mandates()
+    public function collected_mandates(Request $request)
     {
+        //current or requested year
+        $year = date('Y');
+        if ($request->has('year'))
+            $year = $request->year;
+
         //declare variable
         $data_array = [];
 
         for ($i = 1; $i <= 12; $i++) {
             $month = date('m', mktime(0, 0, 0, $i, 10));
-            $year = date('Y');
-            Log::debug("month => " . $month);
 
             //installments
             $installments = Installment::select(DB::raw('COALESCE(SUM(installments.installment_amount), 0) as total_amount'), DB::raw('COALESCE(SUM(installments.current_balance), 0) as paid_amount'))->toBase();
@@ -204,9 +211,6 @@ class DashboardChartController extends Controller
                 "rejected" => (int) $rejected
             ];
         }
-
-        Log::debug($request->month);
-        Log::debug($data_array);
 
         //response
         return response()->json(['error' => FALSE, 'chart' => $data_array], 200);

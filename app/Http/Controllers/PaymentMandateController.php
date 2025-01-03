@@ -25,6 +25,7 @@ use App\Models\CustomerPartner;
 use App\Models\Installment;
 use App\Models\OtpRequest;
 use App\Models\Partner;
+use App\Models\User;
 use App\Services\BankApiService;
 use App\Services\BankPayloadService;
 use App\Services\DeductionService;
@@ -46,18 +47,33 @@ class PaymentMandateController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function lists(Request $request, $consent = null)
+    public function lists(Request $request, $status = null)
     {
         $title = 'Payment Mandate';
         //has_allowed('roles', 'lists');
 
-        //debit
+        //debit orders
         $debit_orders = DebitOrder::filterCondition();
-        
-        if ($consent) {
-            $debit_orders->where(['approved' => $consent]);
+
+        if ($status) {
+            switch ($status) {
+                case 'pending':
+                    $approved = 0;
+                    break;
+                case 'approved':
+                    $approved = 1;
+                    break;
+                case 'failed':
+                    $approved = 2;
+                    break;
+                default:
+                    $approved = 0;
+            }
+
+            //where condition
+            $debit_orders->where(['approved' => $approved]);
         }
-        
+
         if (isset($_POST['filter'])) {
             //all request
             $requests = $request->all();
@@ -67,11 +83,10 @@ class PaymentMandateController extends Controller
             });
 
             //debit orders
-            $debit_orders = $debit_orders->get();
-
+            $debit_orders = $debit_orders->orderBy('debit_orders.created_at', 'DESC')->get();
         } else {
             //debit orders
-            $debit_orders = $debit_orders->paginate(50);
+            $debit_orders = $debit_orders->orderBy('debit_orders.created_at', 'DESC')->paginate(50);
         }
 
         $post_data = [
@@ -92,65 +107,31 @@ class PaymentMandateController extends Controller
     }
 
     //export xls
-    function export_xls(Request $request)
+    public function export_xls(Request $request)
     {
         return Excel::download(new PaymentMandateExport($request->start_at, $request->end_at, $request->account_type_id, $request->account_id, $request->status, $request->keyword), date('YmdHis') . '-PaymentMandate.xlsx');
     }
 
     //export xls
-    function export_pdf(Request $request)
+    public function export_pdf(Request $request)
     {
-        $start_at = $request->input('start_at');
-        $end_at = $request->input('end_at');
-        $account_type_id = $request->input('account_type_id');
-        $account_id = $request->input('account_id');
-        $status = $request->input('status');
-        $keyword = $request->input('keyword');
-
-        //debit
-        $debit_orders = DebitOrder::filterCondition();
-
-        //join
-        $debit_orders = $debit_orders->join('customer_accounts', 'customer_accounts.id', '=', 'debit_orders.customer_account_id');
-
-        //start data and end date
-        if ($start_at != null && $end_at != null) {
-            $start_at = date('Y-m-d', strtotime($start_at));
-            $end_at = date('Y-m-d', strtotime($end_at));
-
-            $debit_orders = $debit_orders->whereBetween('debit_orders.created_at', [$start_at, $end_at]);
-        }
-
-        //payment channel
-        if ($account_type_id != null) {
-            $debit_orders = $debit_orders->where('customer_accounts.account_type_id', $account_type_id);
-        }
-
-        //bank account
-        if ($account_id != null) {
-            $debit_orders = $debit_orders->where('customer_accounts.account_id', $account_id);
-        }
-
-        //status
-        if ($status != null)
-            $debit_orders = $debit_orders->where('debit_orders.approved', $status);
-
-        //keyword
-        if ($keyword != null) {
-            $debit_orders = $debit_orders->where(function ($query) use ($keyword) {
-                $query->orWhere('customer_accounts.account_name', 'LIKE', "%$keyword%")
-                    ->orWhere('customer_accounts.account_number', 'LIKE', "%$keyword%");
-            });
-        }
+        $requests = $request->all();
 
         //debit orders
-        $debit_orders = $debit_orders->get();
+        $debit_orders = DebitOrder::filterCondition();
+
+        $debit_orders = $debit_orders->when($requests, function ($query) use ($requests) {
+            $query->withFilters($requests);
+        });
+
+        //debit orders
+        $debit_orders = $debit_orders->orderBy('debit_orders.created_at', 'DESC')->get();
 
         //pdf
-        $pdf = PDF::loadView('payment_mandate.export_pdf', compact('debit_orders'))->setPaper('a4', 'landscape');
+        $pdf = PDF::loadView('payment_mandate.pdf.report', compact('debit_orders'))->setPaper('a4', 'portrait');
 
         // download PDF file with download method
-        return $pdf->download(date('YmdHis') . '-Paymentmandate.pdf');
+        return $pdf->download(date('YmdHis') . '_Payment_Mandate.pdf');
     }
 
     //payment details form
@@ -237,6 +218,13 @@ class PaymentMandateController extends Controller
     {
         $title = "Payment Mandate";
 
+        //users
+        $user = User::findOrFail(Auth::user()->id);
+
+        $provider = null;
+        if ($user->partners->where('authorize', '=', 1)->count() == 1)
+            $provider = $user->partners[0];
+
         //customer account
         $customer_account = CustomerAccount::where(['uuid' => $customer_account_uuid])->first();
 
@@ -245,9 +233,9 @@ class PaymentMandateController extends Controller
         if ($debit_order_uuid != null)
             $debit_order = DebitOrder::where(['uuid' => $debit_order_uuid])->first();
 
-        //populate data
-        $provider = PartnerUser::where(['user_id' => Auth::user()->id])->first();
-        $providers = Partner::all();
+        //providers
+        $providers = Partner::filterCondition();
+        $providers = $providers->get();
 
         //render view
         return view('payment_mandate.create.deduction_form', compact('title', 'customer_account', 'debit_order', 'providers', 'provider'));
@@ -505,33 +493,18 @@ class PaymentMandateController extends Controller
         //create otp
         $http_response_code = $this->bankApi->createOtpRequest($payload);
 
-        if ($http_response_code == 200) {
-            return response()->json(
-                [
-                    'success' => true,
-                    'success_msg' => "New OTP sent",
-                    "http_response_code" => $http_response_code
-                ],
-                200
-            );
-        } else if ($http_response_code == 500) {
-            return response()->json(
-                [
-                    'success' => false,
-                    'success_msg' => "Failed to send OTP, Try resend OTP.",
-                    "http_response_code" => $http_response_code
-                ],
-                200
-            );
+        if ($http_response_code == 202) {
+            return response()->json(['success' => true, 'success_msg' => "OTP succesfully generated and sent", "http_response_code" => $http_response_code], 200);
+        } else if ($http_response_code == 404) {
+            return response()->json(['success' => true, 'success_msg' => "Mandate not found, Edit mandate and process again.", "http_response_code" => $http_response_code], 200);
+        } else if ($http_response_code == 410) {
+            return response()->json(['success' => true, 'success_msg' => "Duplicate request found, wait for first request to process.", "http_response_code" => $http_response_code], 200);
+        } else if ($http_response_code == 510) {
+            return response()->json(['success' => true, 'success_msg' => "Users mobile number is missing, edit mandate and process again", "http_response_code" => $http_response_code], 200);
+        } else if ($http_response_code == 520) {
+            return response()->json(['success' => true, 'success_msg' => "SMS failed to send, contact eMakato support team.", "http_response_code" => $http_response_code], 200);
         } else {
-            return response()->json(
-                [
-                    'success' => false,
-                    'success_msg' => "Failed to send OTP, Try resend OTP.",
-                    "http_response_code" => 500
-                ],
-                200
-            );
+            return response()->json(['success' => true, 'success_msg' => "System error, contact eMakato support team.", "http_response_code" => $http_response_code], 200);
         }
     }
 
@@ -560,32 +533,15 @@ class PaymentMandateController extends Controller
         $http_response_code = $this->bankApi->verifyOtpRequest($payload, $accountNumber, $otpReference);
 
         if ($http_response_code == 202) {
-            return response()->json(
-                [
-                    'success' => true,
-                    'success_msg' => "OTP verified",
-                    "http_response_code" => $http_response_code
-                ],
-                200
-            );
-        } else if ($http_response_code == 500) {
-            return response()->json(
-                [
-                    'success' => false,
-                    'success_msg' => "Failed to verify OTP, Try again or resend OTP.",
-                    "http_response_code" => $http_response_code
-                ],
-                200
-            );
+            return response()->json(['success' => true, 'success_msg' => "OTP verified", "http_response_code" => $http_response_code], 200);
+        } else if ($http_response_code == 404) {
+            return response()->json(['success' => true, 'success_msg' => "Mandate not found, Edit mandate and process again.", "http_response_code" => $http_response_code], 200);
+        } else if ($http_response_code == 430) {
+            return response()->json(['success' => true, 'success_msg' => "OTP Invalid, Enter valid otp sent to a customer phone.", "http_response_code" => $http_response_code], 200);
+        } else if ($http_response_code == 431) {
+            return response()->json(['success' => true, 'success_msg' => "OTP Expired, create new OTP by click resend otp link.", "http_response_code" => $http_response_code], 200);
         } else {
-            return response()->json(
-                [
-                    'success' => false,
-                    'success_msg' => "Failed to verify OTP, Try again or contact support.",
-                    "http_response_code" => 500
-                ],
-                200
-            );
+            return response()->json(['success' => true, 'success_msg' => "System error, contact eMakato support team.", "http_response_code" => $http_response_code], 200);
         }
     }
 
@@ -605,47 +561,17 @@ class PaymentMandateController extends Controller
             $http_response_code = $arr_response[0];
             $remarks = $arr_response[1];
 
-            if ($http_response_code == 240 || $http_response_code == 249) {
-                return response()->json(
-                    [
-                        "success" => true,
-                        'success_msg' => $remarks,
-                        "http_response_code" => $http_response_code,
-                        "remarks" => $remarks
-                    ],
-                    200
-                );
-            } else if ($http_response_code == 501) {
-                return response()->json(
-                    [
-                        "success" => false,
-                        'success_msg' => $remarks,
-                        "http_response_code" => $http_response_code,
-                        "remarks" => $remarks
-                    ],
-                    200
-                );
+            if ($http_response_code == 240) {
+                return response()->json(["success" => true, 'success_msg' => "Mandate activated.", "http_response_code" => $http_response_code], 200);
+            } else if ($http_response_code == 249 || $http_response_code == 430) {
+                return response()->json(["success" => true, 'success_msg' => $remarks, "http_response_code" => $http_response_code], 200);
+            } else if ($http_response_code == 404) {
+                return response()->json(["success" => true, 'success_msg' => "Mandate not found, Edit mandate and process again.", "http_response_code" => $http_response_code], 200);
             } else {
-                return response()->json(
-                    [
-                        "success" => false,
-                        'success_msg' => "Failed to update mandate status, Try again...",
-                        "http_response_code" => 501,
-                        "remarks" => $remarks
-                    ],
-                    200
-                );
+                return response()->json(['success' => true, 'success_msg' => "System error, contact eMakato support team.", "http_response_code" => $http_response_code], 200);
             }
         } else {
-            return response()->json(
-                [
-                    "success" => false,
-                    'success_msg' => "API does not response, Kindly try again or contact support.",
-                    "http_response_code" => 501,
-                    "remarks" => "API does not response, Kindly try again or contact support."
-                ],
-                200
-            );
+            return response()->json(['success' => true, 'success_msg' => "System error, contact eMakato support team.", "http_response_code" => 500], 200);
         }
     }
 

@@ -13,19 +13,23 @@ class DebitOrder extends Model
     use HasFactory;
     protected $guarded = [];
 
-    //where condition
+    //filter condition
     public static function filterCondition()
     {
         $user = User::findOrFail(Auth::user()->id);
 
-        //customers
-        $debit_orders = static::orderBy('debit_orders.created_at', 'DESC');
+        //debit orders
+        $debit_orders = static::query();
 
         if ($user->hasRole('Company_Approver') || $user->hasRole('Company_User')) {
-            $partner_user = PartnerUser::where(['user_id' => $user->id])->first();
+            $arr_partners = [];
 
-            if ($partner_user)
-                $debit_orders = $debit_orders->where('debit_orders.partner_id', '=', $partner_user->partner_id);
+            $partners = $user->partners->where('authorize', '=', 1);
+            foreach ($partners as $val)
+                array_push($arr_partners, $val->partner_id);
+
+            if ($arr_partners)
+                $debit_orders = $debit_orders->whereIn('debit_orders.partner_id', $arr_partners);
         }
 
         return $debit_orders;
@@ -107,6 +111,16 @@ class DebitOrder extends Model
         })
             ->when($status, function ($query) use ($status) {
                 $query->where('debit_orders.approved', $status);
+            })
+            ->when($account_type_id, function ($query) use ($account_type_id) {
+                $query->whereHas("customerAccount", function ($q) use ($account_type_id) {
+                    $q->where('account_type_id', $account_type_id);
+                });
+            })
+            ->when($account_id, function ($query) use ($account_id) {
+                $query->whereHas("customerAccount", function ($q) use ($account_id) {
+                    $q->where('account_id', $account_id);
+                });
             })
             ->when($keyword, function ($query) use ($keyword) {
                 $query->whereHas("customerAccount", function ($q) use ($keyword) {

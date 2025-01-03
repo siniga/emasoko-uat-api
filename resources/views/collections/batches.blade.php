@@ -120,9 +120,9 @@
                                                 <td>{{ $values->collectionReference ?? '' }}</td>
                                                 <td>
                                                     @if($values->processed == 0)
-                                                        <span class="badge bg-danger">No</span>
+                                                        <span class="badge badge-pill badge-soft-danger">No</span>
                                                     @elseif($values->processed == 1)
-                                                        <span class="badge bg-success-1">Yes</span>
+                                                        <span class="badge badge-pill badge-soft-success">Yes</span>
                                                     @endif
                                                 </td>
                                                 <td class="text-sm-end">{{ $values->success }}</td>

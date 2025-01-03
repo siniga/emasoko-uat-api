@@ -30,14 +30,12 @@
                                         {{ Form::date('start_at', old('start_at', $post_data['start_at']), ['placeholder="Start Date..."', 'class="form-control"']) }}
                                     </div>
                                 </div>
-                                <!--./col -->
 
                                 <div class="col-lg-2">
                                     <div class="mb-3">
                                         {{ Form::date('end_at', old('end_at', $post_data['end_at']), ['placeholder="End Date..."', 'class="form-control"']) }}
                                     </div>
                                 </div>
-                                <!--./col -->
 
                                 <div class="col-lg-2">
                                     <div class="mb-3">
@@ -47,7 +45,7 @@
                                                 1 => 'Approved',
                                                 2 => 'Failed',
                                             ];
-                                            $options = ['' => '-- Consent Status --'] + $options;
+                                            $options = ['' => '-- Mandate Status --'] + $options;
                                         @endphp
 
                                         {{ Form::select('status', $options, old('status', $post_data['status']), ['class' => 'form-control']) }}
@@ -73,7 +71,6 @@
                                         {{ Form::select('account_type_id', $options, old('account_type_id', $post_data['account_type_id']), ['class' => 'form-control account_type_id', 'id' => 'account_type_id']) }}
                                     </div>
                                 </div>
-                                <!--./col -->
 
                                 <div class="col-lg-3">
                                     <div class="mb-3">
@@ -89,18 +86,15 @@
 
                                         {{ Form::select('account_id', $options, old('account_id', $post_data['account_id']), ['class' => 'form-control account_id', 'id' => 'account_id']) }}
                                     </div>
-                                </div>
-                               
+                                </div>         
                             </div>
-                            <!--./row -->
 
                             <div class="row">
                                 <div class="col-lg-6">
                                     <div class="mb-3">
-                                        {{ Form::text('keyword', old('keyword', $post_data['keyword']), ['class="form-control"', 'placeholder="Search by name of account holder or number..."']) }}
+                                        {{ Form::text('keyword', old('keyword'), ['class="form-control"', 'placeholder="Search by name of account holder or number..."']) }}
                                     </div>
                                 </div>
-                                <!--./col -->
 
                                 <div class="col-lg-6">
                                     <div class="mb-3">
@@ -111,14 +105,10 @@
                                         </div>
                                     </div>
                                 </div>
-                                <!--./col -->
                             </div>
-                            <!--./row -->
                             {{ Form::close() }}
                         </div>
-                        <!--./col-lg-12 -->
                     </div>
-                    <!--./row -->
                 </div>
             </div>
 
@@ -157,10 +147,6 @@
                                             <i class="fas fa-plus"></i> Create New
                                         </a>
 
-                                        {{-- <a class="btn btn-secondary btn-sm" href="{{ route('companies.registration') }}">
-                                            <i class="fas fa-upload"></i> Import
-                                        </a> --}}
-
                                         <a title="Export" class="btn btn-outline-success btn-sm"
                                             href="{{ route('payment-mandate.export-xls', ['start_at' => $post_data['start_at'], 'end_at' => $post_data['end_at'], 'account_type_id' => $post_data['account_type_id'], 'account_id' => $post_data['account_id'], 'status' => $post_data['status'], 'keyword' => $post_data['keyword']]) }}">
                                             <i class="bx bx-export"></i> Export XLS
@@ -184,7 +170,7 @@
                                             <th>Account Number</th>
                                             <th>Mandate Reference</th>
                                             <th>Primary Phone</th>
-                                            <th>Consent Status</th>
+                                            <th>Mandate Status</th>
                                             <th>Created Date</th>
                                             <th style="width: 120px; !important">Actions</th>
                                         </tr>
@@ -195,7 +181,7 @@
                                             <tr>
                                                 <td>{{ $serial }}</td>
                                                 <td>
-                                                    {{ $values->customerAccount->account_name ?? $values->customerAccount->phone }}<br>
+                                                    {{ strtoupper($values->customerAccount->account_name) ?? $values->customerAccount->phone }}<br>
                                                     ID: {{ $values->customerAccount->customer->id_number ?? 'NIL' }}
                                                 </td>
                                                 <td>{{ $values->customerAccount->account->name ?? '' }}</td>
@@ -215,15 +201,15 @@
                                                     @elseif($values->status == 201)
                                                         <span class="badge badge-pill badge-soft-info">Pending Verification</span>
                                                     @elseif($values->status == 202)
-                                                        <span class="badge bg-success font-size-10">Verified</span>
+                                                        <span class="badge badge-pill bg-success">Verified</span>
                                                     @elseif($values->status == 240)
-                                                        <span class="badge bg-success-1 font-size-10">Active</span>
+                                                        <span class="badge badge-pill bg-success">Active</span>
                                                     @elseif($values->status == 249)
-                                                        <span class="badge bg-warning font-size-10">Processing</span>
+                                                        <span class="badge badge-pill badge-soft-warning">Processing</span>
                                                     @elseif($values->status == 403) 
-                                                        <span class="badge bg-danger font-size-10">Failed</span>
+                                                        <span class="badge badge-pill badge-soft-danger">Failed</span>
                                                     @elseif($values->status == 405) 
-                                                        <span class="badge bg-danger font-size-10">Cancelled</span>  
+                                                        <span class="badge badge-pill badge-soft-danger">Cancelled</span>  
                                                     @elseif($values->status == 500 || $values->status == 430)
                                                         <span class="badge badge-pill badge-soft-danger">Failed Verification</span>
                                                     @elseif($values->status == 501)
@@ -275,7 +261,6 @@
                                     @endif
                                 </div>
                             </div>
-                            <!--./d-flex -->
                         @else
                             <div class="alert alert-danger"> No any payment mandate at the moment!</div>
                         @endif
@@ -285,6 +270,7 @@
         </div>
     </div>
     <!-- end row -->
+    
 @endsection
 @section('script')
     <script type="text/javascript">
