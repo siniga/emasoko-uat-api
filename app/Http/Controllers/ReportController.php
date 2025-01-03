@@ -30,7 +30,7 @@ class ReportController extends Controller
             $account_type_id = $request->account_type_id;
             $account_id = $request->account_id;
 
-            if ($report_type == "PAYMENT_MANDATE") {
+            if ($report_type == "MANDATE") {
                 return Excel::download(new PaymentMandateExport($request->start_at, $request->end_at, $request->account_type_id, $request->account_id, null, null), date('YmdHis') . '-PaymentMandate.xlsx');
             }
         }
