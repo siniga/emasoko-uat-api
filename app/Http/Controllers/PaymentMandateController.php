@@ -561,47 +561,17 @@ class PaymentMandateController extends Controller
             $http_response_code = $arr_response[0];
             $remarks = $arr_response[1];
 
-            if ($http_response_code == 240 || $http_response_code == 249) {
-                return response()->json(
-                    [
-                        "success" => true,
-                        'success_msg' => $remarks,
-                        "http_response_code" => $http_response_code,
-                        "remarks" => $remarks
-                    ],
-                    200
-                );
-            } else if ($http_response_code == 501) {
-                return response()->json(
-                    [
-                        "success" => false,
-                        'success_msg' => $remarks,
-                        "http_response_code" => $http_response_code,
-                        "remarks" => $remarks
-                    ],
-                    200
-                );
+            if ($http_response_code == 240) {
+                return response()->json(["success" => true, 'success_msg' => "Mandate activated.", "http_response_code" => $http_response_code], 200);
+            } else if ($http_response_code == 249 || $http_response_code == 430) {
+                return response()->json(["success" => true, 'success_msg' => $remarks, "http_response_code" => $http_response_code], 200);
+            } else if ($http_response_code == 404) {
+                return response()->json(["success" => true, 'success_msg' => "Mandate not found, Edit mandate and process again.", "http_response_code" => $http_response_code], 200);
             } else {
-                return response()->json(
-                    [
-                        "success" => false,
-                        'success_msg' => "Failed to update mandate status, Try again...",
-                        "http_response_code" => 501,
-                        "remarks" => $remarks
-                    ],
-                    200
-                );
+                return response()->json(['success' => true, 'success_msg' => "System error, contact eMakato support team.", "http_response_code" => $http_response_code], 200);
             }
         } else {
-            return response()->json(
-                [
-                    "success" => false,
-                    'success_msg' => "API does not response, Kindly try again or contact support.",
-                    "http_response_code" => 501,
-                    "remarks" => "API does not response, Kindly try again or contact support."
-                ],
-                200
-            );
+            return response()->json(['success' => true, 'success_msg' => "System error, contact eMakato support team.", "http_response_code" => 500], 200);
         }
     }
 

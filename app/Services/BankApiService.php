@@ -244,7 +244,7 @@ class BankApiService
         Log::debug($response);
 
         if (strtolower($response['status']) == "success") {
-            $response_code = $response['data']['response'][0]['responseCode']; //response code
+            $response_code = $response['data']['response'][0]['responseCode'];
             $remarks = $response['data']['response'][0]['responseDescription'];
 
             //update debit order
@@ -252,20 +252,19 @@ class BankApiService
             $debit_order->http_response_code = $response['data']['response'][0]['responseCode'];
             $debit_order->remarks = $response['data']['response'][0]['responseDescription'];
 
-            if ($response['data']['response'][0]['responseCode'] == 240)
+            //update debit order => approved
+            if ($response_code == 240)
                 $debit_order->approved = 1;
-            else if ($response['data']['response'][0]['responseCode'] == 249)
-                $debit_order->approved = 0;
-            else if ($response['data']['response'][0]['responseCode'] == 430)
+            else if ($response_code == 249 || $response_code == 430)
                 $debit_order->approved = 0;
             else
                 $debit_order->approved = 2;
         } else if (strtolower($response['status']) == "fail") {
-            $response_code = 501; //response code
+            $response_code = $response['data']['response'][0]['responseCode'];
             $remarks = $response['data']['response'][0]['responseDescription'];
 
             //update debit order
-            $debit_order->status = 501; //status failed
+            $debit_order->status = 500;
             $debit_order->http_response_code = $response['data']['response'][0]['responseCode'];
             $debit_order->remarks = $response['data']['response'][0]['responseDescription'];
             $debit_order->approved = 2;
