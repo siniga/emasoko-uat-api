@@ -16,7 +16,7 @@ class Kernel extends ConsoleKernel
     protected $commands = [
         // Commands\CreateCollectionBatch::class,
         // Commands\PushCollectionBatch::class
-        //BatchFileStatus::class,
+        Commands\BatchFileStatus::class,
     ];
 
     /**
