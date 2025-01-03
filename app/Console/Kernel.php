@@ -2,7 +2,6 @@
 
 namespace App\Console;
 
-use App\Console\Commands\BatchFileStatus;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
@@ -15,7 +14,8 @@ class Kernel extends ConsoleKernel
      */
     protected $commands = [
         Commands\CreateCollectionBatch::class,
-        // Commands\PushCollectionBatch::class
+        Commands\PushCollectionBatch::class,
+        Commands\CollectionStatusBatch::class,
     ];
 
     /**
