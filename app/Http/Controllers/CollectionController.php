@@ -13,7 +13,7 @@ use Illuminate\Http\Request;
 
 class CollectionController extends Controller
 {
-    public function __construct(protected DeductionService $deductionService, protected BankPayloadService $payloadService, protected Messaging $messaging, protected BankApiService $bankApi)
+    public function __construct(protected BankPayloadService $payloadService, protected BankApiService $bankApi)
     {
         $this->middleware('auth');
     }
@@ -111,5 +111,30 @@ class CollectionController extends Controller
 
         //render view
         return view('collections.show', compact('title', 'batch', 'arr_data'));
+    }
+
+    public function push($id)
+    {
+        $title = "Push Collection Batch";
+
+        //batch
+        $batch = CollectionBatch::where(['id' => $id])->firstOrFail();
+    }
+
+    public function fetch_status(Request $request)
+    {
+        $title = "Fetch Collection Status";
+
+        //collection batch
+        $collection_batch = CollectionBatch::where(['id' => $request->batch_id])->firstOrFail();
+
+        //create payload
+        $payload = $this->payloadService->collectionStatusPayload($collection_batch);
+
+        //send request
+        $response = $this->bankApi->collectionStatus($payload);
+
+        //response
+        return response()->json(['success' => true, 'success_msg' => "Collection status successful fetched."], 200);
     }
 }
