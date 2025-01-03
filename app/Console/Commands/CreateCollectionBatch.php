@@ -90,7 +90,6 @@ class CreateCollectionBatch extends Command
                         $installments = Installment::where(['debit_order_id' => $val->id, 'status' => 'OPEN'])
                             ->whereDate('payment_date', '<=', $val->next_debit_date)->get();
 
-                        $arr_accounts = [];
                         foreach ($installments as $installment) {
                             //account details
                             $account_name = strtoupper($val->customerAccount->account_name);
@@ -99,31 +98,12 @@ class CreateCollectionBatch extends Command
                             $installment_id = $installment->id;
                             $payment_amount = $installment->installment_amount;
 
-                            //check if account exists in this batch
-                            if (!in_array($account_number, $arr_accounts)) {
-                                //create csv file
-                                $csv .= "{$installment_id};016;NMB;{$mandate_reference};{$account_name};{$account_number};{$payment_amount}\n";
+                            //create csv file
+                            $csv .= "{$installment_id};016;NMB;{$mandate_reference};{$account_name};{$account_number};{$payment_amount}\n";
 
-                                //increment data point
-                                $data_point += 1;
-
-                                //append account in array
-                                array_push($arr_accounts, $account_number);
-                            }
+                            //increment data point
+                            $data_point += 1;
                         }
-                    }
-
-                    //next installment
-                    $next_installment = Installment::where(['debit_order_id' => $val->id, 'status' => 'OPEN'])
-                        ->whereDate('payment_date', '>', $val->next_debit_date)->orderBy("payment_date", "ASC");
-
-                    if ($next_installment->count() > 0) {
-                        $next_installment = $next_installment->first();
-
-                        //update next debit date
-                        $dd = DebitOrder::firstOrFail($val->id);
-                        $dd->next_debit_date = $next_installment->payment_date;
-                        $dd->save();
                     }
                 }
 
