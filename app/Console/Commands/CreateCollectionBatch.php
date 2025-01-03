@@ -90,6 +90,7 @@ class CreateCollectionBatch extends Command
                         $installments = Installment::where(['debit_order_id' => $val->id, 'status' => 'OPEN'])
                             ->whereDate('payment_date', '<=', $val->next_debit_date)->get();
 
+                        $arr_accounts = [];
                         foreach ($installments as $installment) {
                             //account details
                             $account_name = strtoupper($val->customerAccount->account_name);
@@ -98,11 +99,17 @@ class CreateCollectionBatch extends Command
                             $installment_id = $installment->id;
                             $payment_amount = $installment->installment_amount;
 
-                            //create csv file
-                            $csv .= "{$installment_id};016;NMB;{$mandate_reference};{$account_name};{$account_number};{$payment_amount}\n";
+                            //check if account exists in this batch
+                            if (!in_array($account_number, $arr_accounts)) {
+                                //create csv file
+                                $csv .= "{$installment_id};016;NMB;{$mandate_reference};{$account_name};{$account_number};{$payment_amount}\n";
 
-                            //increment data point
-                            $data_point += 1;
+                                //increment data point
+                                $data_point += 1;
+
+                                //append account in array
+                                array_push($arr_accounts, $account_number);
+                            }
                         }
                     }
 
