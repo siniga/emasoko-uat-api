@@ -101,8 +101,25 @@ class CreateCollectionBatch extends Command
                             //create csv file
                             $csv .= "{$installment_id};016;NMB;{$mandate_reference};{$account_name};{$account_number};{$payment_amount}\n";
 
-                            //increment data point
-                            $data_point += 1;
+                                //increment data point
+                                $data_point += 1;
+
+                                //append account in array
+                                array_push($arr_accounts, $account_number);
+                            }
+                        }
+
+                        //next installment
+                        $next_installment = Installment::where(['debit_order_id' => $val->id, 'status' => 'OPEN'])
+                            ->whereDate('payment_date', '>', $val->next_debit_date)->orderBy("payment_date", "ASC");
+
+                        if ($next_installment->count() > 0) {
+                            $next_installment = $next_installment->first();
+
+                            //update next debit date
+                            $dd = DebitOrder::firstOrFail($val->id);
+                            $dd->next_debit_date = $next_installment->payment_date;
+                            $dd->save();
                         }
                     }
                 }
