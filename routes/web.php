@@ -188,7 +188,7 @@ Route::get('payment-mandate/send-remainder/{do_uuid}', [PaymentMandateController
 //collection batches
 Route::any('collections/batches', [CollectionController::class, 'batches'])->name('collections.batches');
 Route::get('collections/show/{id}', [CollectionController::class, 'show'])->name('collections.show');
-
+Route::post('collections/fetch-status', [CollectionController::class, 'fetch_status'])->name('collections.fetch-status');
 
 //reports
 Route::any('reports/lists', [ReportController::class, 'lists'])->name('reports.lists');
