@@ -60,7 +60,7 @@ class CreateCollectionBatch extends Command
             $debit_orders = DebitOrder::where(['contract_status' => 'OPEN', 'approved' => 1])
                 ->where('partner_id', '=', $partner->id)
                 ->where('deleted', '=', 0)
-                ->whereDate('next_debit_date', "=", Carbon::now());
+                ->whereDate('next_debit_date', "<=", Carbon::now());
 
             if ($debit_orders->count() > 0) {
                 //declare data points
@@ -113,7 +113,7 @@ class CreateCollectionBatch extends Command
                         }
 
                         //update debit date
-                        $deductionService->updateNextDebitDate($val->id, $val->next_debit_dat);
+                        $deductionService->updateNextDebitDate($val->id, $val->next_debit_date);
                     }
                 }
 
