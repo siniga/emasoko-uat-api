@@ -210,6 +210,23 @@ class DeductionService
         return 200;
     }
 
+    //update debit date
+    public function updateNextDebitDate($debit_id, $payment_date)
+    {
+        //next installment
+        $next_installment = Installment::where(['debit_order_id' => $debit_id, 'status' => 'OPEN'])
+            ->whereDate('payment_date', '>', $payment_date)->orderBy("payment_date", "ASC");
+
+        if ($next_installment->count() > 0) {
+            $next_installment = $next_installment->first();
+
+            //update next debit date
+            $debit_order = DebitOrder::where("id", "=", $debit_id)->first();
+            $debit_order->next_debit_date = $next_installment->payment_date;
+            $debit_order->save();
+        }
+    }
+
     //get mandate reference
     function getMandateReference()
     {

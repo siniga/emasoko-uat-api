@@ -112,18 +112,8 @@ class CreateCollectionBatch extends Command
                             }
                         }
 
-                        //next installment
-                        // $next_installment = Installment::where(['debit_order_id' => $val->id, 'status' => 'OPEN'])
-                        //     ->whereDate('payment_date', '>', $val->next_debit_date)->orderBy("payment_date", "ASC");
-
-                        // if ($next_installment->count() > 0) {
-                        //     $next_installment = $next_installment->first();
-
-                        //     //update next debit date
-                        //     $dd = DebitOrder::firstOrFail($val->id);
-                        //     $dd->next_debit_date = $next_installment->payment_date;
-                        //     $dd->save();
-                        // }
+                        //update debit date
+                        $deductionService->updateNextDebitDate($val->id, $val->next_debit_dat);
                     }
                 }
 
