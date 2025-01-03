@@ -113,7 +113,7 @@ class CreateCollectionBatch extends Command
                         }
 
                         //update debit date
-                        $deductionService->updateNextDebitDate($val->id, $val->next_debit_dat);
+                        $deductionService->updateNextDebitDate($val->id, $val->next_debit_date);
                     }
                 }
 
