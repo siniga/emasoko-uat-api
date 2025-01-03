@@ -42,7 +42,7 @@ class BatchFileStatus extends Command
     public function handle()
     {
         //call messaging class
-        Log::debug("== Sending SMS in background ==");
+        Log::debug("== Sending SMS in command ==");
         return 0;
     }
 }
