@@ -41,31 +41,31 @@ class SendCompanyCollectionAccount extends Command
      *
      * @return int
      */
-    public function handle()
-    {
-        Log::debug("Command excuted");
-        // $debits = DebitOrder::whereHas("partner", function ($query) {
-        //     return $query->where("business_name", "NHC");
-        // })->active()->get();
-        // foreach ($debits as $debit) {
-        //     DB::beginTransaction();
-        //     $mnoBank = new MnoBankServices($debit->customerAccount->account);
-        //     $res = $mnoBank->mandateRegistration(request(), $debit);
-        //     dd($res);
-        //     DB::commit();
-        // }
-        // $partnerAccounts = PartnerAccount::where('send_verification', 1)->get();
-        // foreach ($partnerAccounts as $partnerAccount) {
-        //     DB::beginTransaction();
-        //     $mnoBank = new MnoBankServices($partnerAccount->account);
-        //     $registration = $mnoBank->corporateRegistration(request(), $partnerAccount);
-        //     if ($registration->status) {
-        //         sleep(10);
-        //         $mnoBank->corporateRegistrationStatus(request(), $partnerAccount);
-        //     }
-        //     DB::commit();
-        //     sleep(15);
-        // }
-        // return 0;
-    }
+    // public function handle()
+    // {
+    //     Log::debug("Command excuted");
+    //     $debits = DebitOrder::whereHas("partner", function ($query) {
+    //         return $query->where("business_name", "NHC");
+    //     })->active()->get();
+    //     foreach ($debits as $debit) {
+    //         DB::beginTransaction();
+    //         $mnoBank = new MnoBankServices($debit->customerAccount->account);
+    //         $res = $mnoBank->mandateRegistration(request(), $debit);
+    //         dd($res);
+    //         DB::commit();
+    //     }
+    //     $partnerAccounts = PartnerAccount::where('send_verification', 1)->get();
+    //     foreach ($partnerAccounts as $partnerAccount) {
+    //         DB::beginTransaction();
+    //         $mnoBank = new MnoBankServices($partnerAccount->account);
+    //         $registration = $mnoBank->corporateRegistration(request(), $partnerAccount);
+    //         if ($registration->status) {
+    //             sleep(10);
+    //             $mnoBank->corporateRegistrationStatus(request(), $partnerAccount);
+    //         }
+    //         DB::commit();
+    //         sleep(15);
+    //     }
+    //     return 0;
+    // }
 }

@@ -8,6 +8,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
 class MandateStatusJob implements ShouldQueue
 {
@@ -30,6 +31,6 @@ class MandateStatusJob implements ShouldQueue
      */
     public function handle()
     {
-        //
+        Log::debug("== Querying mandate status via schedule ==");
     }
 }
