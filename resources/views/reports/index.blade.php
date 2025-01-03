@@ -29,7 +29,7 @@
                                         @php
                                             $options = [
                                                 'MANDATE' => 'Payment Mandate',
-                                                'COLLECTION' => 'Mandate Collection',
+                                               
                                             ];
                                             $options = ['' => '-- Report Type --'] + $options;
                                         @endphp

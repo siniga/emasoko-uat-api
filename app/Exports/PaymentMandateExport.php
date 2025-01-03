@@ -45,7 +45,7 @@ class PaymentMandateExport implements FromQuery, WithHeadings, ShouldAutoSize, W
         }
 
         if ($this->account_type_id != null) {
-            $account_type_id = $this->account_type_id; //payment channel
+            $account_type_id = $this->account_type_id;
 
             $debit_orders = $debit_orders->whereHas("customerAccount", function ($q) use ($account_type_id) {
                 $q->where('customer_accounts.account_type_id', $account_type_id);
@@ -53,19 +53,18 @@ class PaymentMandateExport implements FromQuery, WithHeadings, ShouldAutoSize, W
         }
 
         if ($this->account_id != null) {
-            $account_id = $this->account_id; //bank account
+            $account_id = $this->account_id;
 
             $debit_orders = $debit_orders->whereHas("customerAccount", function ($q) use ($account_id) {
                 $q->where('customer_accounts.account_id', $account_id);
             });
         }
 
-        //status
         if ($this->status != null)
             $debit_orders = $debit_orders->where('debit_orders.approved', $this->status);
 
         if ($this->keyword != null) {
-            $keyword = $this->keyword; //keyword
+            $keyword = $this->keyword;
 
             $debit_orders = $debit_orders->whereHas("customerAccount", function ($q) use ($keyword) {
                 $q->where(DB::raw('LOWER(account_name)'), 'like', "%" . strtolower($keyword) . "%")
