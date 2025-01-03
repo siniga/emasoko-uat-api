@@ -251,7 +251,16 @@ class BankApiService
             $debit_order->status = $response['data']['response'][0]['responseCode'];
             $debit_order->http_response_code = $response['data']['response'][0]['responseCode'];
             $debit_order->remarks = $response['data']['response'][0]['responseDescription'];
-            $debit_order->approved = 1;
+
+            if($response['data']['response'][0]['responseCode'] == 240)
+                $debit_order->approved = 1;
+            else if($response['data']['response'][0]['responseCode'] == 249)
+                $debit_order->approved = 0;
+            else if($response['data']['response'][0]['responseCode'] == 430)
+                $debit_order->approved = 0;
+            else 
+                $debit_order->approved = 2;
+
         } else if (strtolower($response['status']) == "fail") {
             $response_code = 501; //response code
             $remarks = $response['data']['response'][0]['responseDescription'];
