@@ -673,6 +673,7 @@ class BankApiService
                 $payment_date = $installment->payment_date;
 
                 //status and paid amount
+                $message = strtolower($fields[8]);
                 $status = strtolower($fields[7]);
                 $amount = floatval($fields[6]);
 
@@ -685,13 +686,15 @@ class BankApiService
                     //increment failed count
                     $failed_installments += 1;
 
-                    //send sms to FAILED mandate
-                    $phone = $installment->debitOrder->customerAccount->phone;
-                    $message = "Makato ya tarehe {$payment_date} ya kiasi cha shilingi {$installment_amount} yameshindikana. Tafadhali weka pesa kwenye akaunti yako ya benki kwa ajili ya makato.";
+                    if ($message == 'insufficient funds') {
+                        //send sms to FAILED mandate
+                        $phone = $installment->debitOrder->customerAccount->phone;
+                        $message = "Makato ya tarehe {$payment_date} ya kiasi cha shilingi {$installment_amount} yameshindikana. Tafadhali weka pesa kwenye akaunti yako ya benki kwa ajili ya makato.";
 
-                    //send sms
-                    $data = ["phone" => $phone, "message" => $message];
-                    dispatch(new SendSMSJob($data));
+                        //send sms
+                        $data = ["phone" => $phone, "message" => $message];
+                        dispatch(new SendSMSJob($data));
+                    }
                 } else if ($status == "success") {
                     //updated status of installment
                     $installment->status = "SUCCESS";
