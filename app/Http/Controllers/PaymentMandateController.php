@@ -195,12 +195,10 @@ class PaymentMandateController extends Controller
         $customer->save();
 
         //create or update customer account
-        $customer_account = CustomerAccount::firstOrNew([
-            'account_type_id' => $validated['account_type_id'],
-            'account_id' => $validated['account_id'],
-            'phone' => $unique_phone
-        ]);
-        $customer_account->uuid = $customer_account_uuid;
+        $customer_account = CustomerAccount::firstOrNew(['uuid' => $customer_account_uuid]);
+        $customer_account->account_type_id = $validated['account_type_id'];
+        $customer_account->account_id = $validated['account_id'];
+        $customer_account->phone = $unique_phone;
         $customer_account->secondary_phone = $validated['secondary_phone'];
         $customer_account->account_name = $validated['account_name'];
         $customer_account->account_number = $validated['account_number'];
