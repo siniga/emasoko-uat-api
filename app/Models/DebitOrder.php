@@ -21,7 +21,7 @@ class DebitOrder extends Model
         //debit orders
         $debit_orders = static::query();
 
-        if ($user->hasRole('Company_Approver') || $user->hasRole('Company_User')) {
+        if ($user->hasRole('Company_Approver')) {
             $arr_partners = [];
 
             $partners = $user->partners->where('authorize', '=', 1);
@@ -30,6 +30,8 @@ class DebitOrder extends Model
 
             if ($arr_partners)
                 $debit_orders = $debit_orders->whereIn('debit_orders.partner_id', $arr_partners);
+        } else if ($user->hasRole('Company_User')) {
+            $debit_orders = $debit_orders->where('debit_orders.created_by', '=' ,$user->id);
         }
 
         return $debit_orders;

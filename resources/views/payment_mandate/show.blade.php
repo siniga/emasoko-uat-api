@@ -355,6 +355,8 @@
                 verifyLoading: false,
                 buttonVerify: "Verify",
 
+                resendTXT: "Resend",
+
                 //approval mandate status
                 fetchMandateStatus() {
                     this.formLoading = true;

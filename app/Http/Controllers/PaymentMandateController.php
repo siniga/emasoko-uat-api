@@ -186,7 +186,7 @@ class PaymentMandateController extends Controller
             $bank_code = substr($validated['account_number'], 0, 3);
 
         //create or update customer
-        $customer = Customer::firstOrNew(['phone' => $unique_phone,]);
+        $customer = Customer::firstOrNew(['phone' => $unique_phone]);
         $customer->fullname = strtoupper($validated['account_name']);
         $customer->email = $request->input('email');
         $customer->id_number = $request->input('nida_number');
