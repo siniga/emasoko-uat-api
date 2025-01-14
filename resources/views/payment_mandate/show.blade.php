@@ -272,6 +272,18 @@
                                             <span>{{ date('d-m-Y', strtotime($debit_order->end_date)) }}</span>
                                         </td>
                                     </tr>
+
+                                    <tr>
+                                        <th>Created Date</th>
+                                        <td>
+                                            <span>{{ date('d-m-Y H:i:s', strtotime($debit_order->created_at)) }}</span>
+                                        </td>
+
+                                        <th>Created By</th>
+                                        <td>
+                                            <span>{{ $debit_order->userCreated->name }}</span>
+                                        </td>
+                                    </tr>
                                 </table>
 
                                 <div class="table-responsive">
