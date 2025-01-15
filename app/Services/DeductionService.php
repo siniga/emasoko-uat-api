@@ -31,6 +31,9 @@ class DeductionService
         $number_of_installment = $debitOrder->installment_number;
         $total_amount = $debitOrder->total_amount;
 
+        //dates
+        $dayOfMonth = date('d', strtotime($start_date));
+
         // 2. Set addition number of days from periodicity
         $number_of_days = "+0 day";
         if ($periodicity == "ANNUALLY")
@@ -62,6 +65,15 @@ class DeductionService
                     $last_installment_date =  $installment_date;
                 } else {
                     $installment_date = date('Y-m-d', strtotime($last_installment_date . $number_of_days));
+
+                    //formating all the dates if periodicity = "MONTHLY"
+                    if ($periodicity == "MONTHLY") {
+                        $year = date('Y', strtotime($installment_date));
+                        $month = date('m', strtotime($installment_date));
+
+                        $date = Carbon::createFromDate($year, $month, $dayOfMonth);
+                        $installment_date = $date->format('Y-m-d'); // Format as dd-mm-yyyy
+                    }
 
                     //SUMMATION installment Amount
                     $sum_installment_amount += $debitOrder->installment_amount;

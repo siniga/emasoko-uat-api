@@ -137,7 +137,7 @@
                             <div class="row mb-2">
                                 <div class="col-md-6">
                                     <span class="font-weight-500">No. of payment mandate:
-                                        {{ number_format(count($debit_orders)) }}</span>
+                                        {{ number_format($number_of_debit_orders) }}</span>
                                 </div>
 
                                 <div class="col-md-6">

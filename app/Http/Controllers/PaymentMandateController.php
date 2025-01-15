@@ -53,6 +53,7 @@ class PaymentMandateController extends Controller
         //has_allowed('roles', 'lists');
 
         //debit orders
+        $number_of_debit_orders = 0;
         $debit_orders = DebitOrder::filterCondition();
 
         if ($status) {
@@ -83,9 +84,11 @@ class PaymentMandateController extends Controller
             });
 
             //debit orders
-            $debit_orders = $debit_orders->orderBy('debit_orders.created_at', 'DESC')->get();
+            $number_of_debit_orders = $debit_orders->count();
+            $debit_orders = $debit_orders->orderBy('debit_orders.created_at', 'DESC')->get();     
         } else {
             //debit orders
+            $number_of_debit_orders = $debit_orders->count();
             $debit_orders = $debit_orders->orderBy('debit_orders.created_at', 'DESC')->paginate(50);
         }
 
@@ -103,7 +106,7 @@ class PaymentMandateController extends Controller
         $accounts = Account::all();
 
         //render view
-        return view('payment_mandate.lists', compact('title', 'account_types', 'accounts', 'debit_orders', 'post_data'));
+        return view('payment_mandate.lists', compact('title', 'account_types', 'accounts', 'debit_orders', 'number_of_debit_orders' ,'post_data'));
     }
 
     //export xls
