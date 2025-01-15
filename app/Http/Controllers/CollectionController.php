@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Classes\Messaging;
 use App\Http\Requests\CollectionRequest;
+use App\Jobs\PushCollectionJob;
 use App\Models\CollectionBatch;
 use App\Models\DebitOrder;
 use App\Models\Installment;
@@ -167,8 +168,8 @@ class CollectionController extends Controller
                     //5. Create payload for collection 
                     $payload = $this->payloadService->collectionPayload($batch, $csv);
 
-                    //6. Send payload to a server
-                    $response = $this->bankApi->collectionCreate($payload);
+                    //Create Request to NMB
+                    dispatch(new PushCollectionJob($payload));
                 }
             }
 
