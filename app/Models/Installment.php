@@ -4,11 +4,43 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 class Installment extends Model
 {
     use HasFactory;
     protected $guarded = [];
+
+    //filter condition
+    public static function filterCondition()
+    {
+        $user = User::findOrFail(Auth::user()->id);
+
+        //installments
+        $installments = static::query();
+
+        if ($user->hasRole('Company_Approver')) {
+            $arr_partners = [];
+
+            //partners
+            $partners = $user->partners->where('authorize', '=', 1);
+
+            foreach ($partners as $val)
+                array_push($arr_partners, $val->partner_id);
+
+            if ($arr_partners) {
+                $installments = $installments->with('debitOrder', function ($query) use ($arr_partners) {
+                    $query->whereIn('debit_orders.partner_id', $arr_partners);
+                });
+            }
+        } else if ($user->hasRole('Company_User')) {
+            $installments = $installments->with('debitOrder', function ($query) use ($user) {
+                $query->where('debit_orders.created_by', '=', $user->id);
+            });
+        }
+
+        return $installments;
+    }
 
     public function debitOrder()
     {

@@ -78,20 +78,15 @@
                             <div class="row mb-2">
                                 <div class="col-md-6">
                                     <span class="font-weight-500">No. of collection batches:
-                                        {{ number_format(count($batches)) }}</span>
+                                        {{ number_format($number_of_batches) }}</span>
                                 </div>
 
                                 <div class="col-md-6">
                                     <div class="text-sm-end d-none d-sm-block">
-                                        {{-- <a title="Export" class="btn btn-outline-success btn-sm"
-                                            href="{{ route('payment-mandate.export-xls', ['start_at' => $post_data['start_at'], 'end_at' => $post_data['end_at'], 'account_type_id' => $post_data['account_type_id'], 'account_id' => $post_data['account_id'], 'status' => $post_data['status'], 'keyword' => $post_data['keyword']]) }}">
-                                            <i class="bx bx-export"></i> Export XLS
-                                        </a> --}}
-
-                                        {{-- <a title="Export" class="btn btn-outline-danger btn-sm"
-                                            href="{{ route('payment-mandate.export-pdf', ['start_at' => $post_data['start_at'], 'end_at' => $post_data['end_at'], 'account_type_id' => $post_data['account_type_id'], 'account_id' => $post_data['account_id'], 'status' => $post_data['status'], 'keyword' => $post_data['keyword']]) }}">
-                                            <i class="fas fa-file-pdf"></i> Export PDF
-                                        </a> --}}
+                                        <a class="btn btn-primary btn-sm"
+                                            href="{{ route('collections.create') }}">
+                                            <i class="fas fa-plus"></i> Create Batch
+                                        </a>
                                     </div>
                                 </div>
                             </div>

@@ -184,9 +184,10 @@ Route::post('payment-mandate/fetch-status', [PaymentMandateController::class, 'f
 Route::post('payment-mandate/cancel-mandate', [PaymentMandateController::class, 'cancel_mandate'])->name('payment-mandate.cancel-mandate');
 Route::get('payment-mandate/send-remainder/{do_uuid}', [PaymentMandateController::class, 'sendRemainder'])->name('payment-mandate.send-remainder');
 
-
 //collection batches
 Route::any('collections/batches', [CollectionController::class, 'batches'])->name('collections.batches');
+Route::get('collections/create', [CollectionController::class, 'create'])->name('collections.create');
+Route::post('collections/store', [CollectionController::class, 'store'])->name('collections.store');
 Route::get('collections/show/{id}', [CollectionController::class, 'show'])->name('collections.show');
 Route::post('collections/fetch-status', [CollectionController::class, 'fetch_status'])->name('collections.fetch-status');
 

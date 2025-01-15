@@ -53,6 +53,7 @@ class PaymentMandateController extends Controller
         //has_allowed('roles', 'lists');
 
         //debit orders
+        $number_of_debit_orders = 0;
         $debit_orders = DebitOrder::filterCondition();
 
         if ($status) {
@@ -83,9 +84,11 @@ class PaymentMandateController extends Controller
             });
 
             //debit orders
-            $debit_orders = $debit_orders->orderBy('debit_orders.created_at', 'DESC')->get();
+            $number_of_debit_orders = $debit_orders->count();
+            $debit_orders = $debit_orders->orderBy('debit_orders.created_at', 'DESC')->get();     
         } else {
             //debit orders
+            $number_of_debit_orders = $debit_orders->count();
             $debit_orders = $debit_orders->orderBy('debit_orders.created_at', 'DESC')->paginate(50);
         }
 
@@ -103,7 +106,7 @@ class PaymentMandateController extends Controller
         $accounts = Account::all();
 
         //render view
-        return view('payment_mandate.lists', compact('title', 'account_types', 'accounts', 'debit_orders', 'post_data'));
+        return view('payment_mandate.lists', compact('title', 'account_types', 'accounts', 'debit_orders', 'number_of_debit_orders' ,'post_data'));
     }
 
     //export xls
@@ -186,7 +189,7 @@ class PaymentMandateController extends Controller
             $bank_code = substr($validated['account_number'], 0, 3);
 
         //create or update customer
-        $customer = Customer::firstOrNew(['phone' => $unique_phone,]);
+        $customer = Customer::firstOrNew(['phone' => $unique_phone]);
         $customer->fullname = strtoupper($validated['account_name']);
         $customer->email = $request->input('email');
         $customer->id_number = $request->input('nida_number');
@@ -195,12 +198,10 @@ class PaymentMandateController extends Controller
         $customer->save();
 
         //create or update customer account
-        $customer_account = CustomerAccount::firstOrNew([
-            'account_type_id' => $validated['account_type_id'],
-            'account_id' => $validated['account_id'],
-            'phone' => $unique_phone
-        ]);
-        $customer_account->uuid = $customer_account_uuid;
+        $customer_account = CustomerAccount::firstOrNew(['uuid' => $customer_account_uuid]);
+        $customer_account->account_type_id = $validated['account_type_id'];
+        $customer_account->account_id = $validated['account_id'];
+        $customer_account->phone = $unique_phone;
         $customer_account->secondary_phone = $validated['secondary_phone'];
         $customer_account->account_name = $validated['account_name'];
         $customer_account->account_number = $validated['account_number'];
