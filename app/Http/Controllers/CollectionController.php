@@ -165,10 +165,10 @@ class CollectionController extends Controller
                     $batch->save();
 
                     //5. Create payload for collection 
-                    // $payload = $this->payloadService->collectionPayload($batch, $csv);
+                    $payload = $this->payloadService->collectionPayload($batch, $csv);
 
-                    // //6. Send payload to a server
-                    // $response = $this->bankApi->collectionCreate($payload);
+                    //6. Send payload to a server
+                    $response = $this->bankApi->collectionCreate($payload);
                 }
             }
 
