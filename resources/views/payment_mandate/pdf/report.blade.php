@@ -88,11 +88,11 @@
 
                     <td>
                         @if ($values->approved == 0)
-                            <span>Pending</span>
+                            <span>PENDING</span>
                         @elseif($values->approved == 1)
-                            <span>Approved</span>
+                            <span>APPROVED</span>
                         @elseif($values->approved == 2)
-                            <span>Failed</span>
+                            <span>FAILED</span>
                         @endif
                     </td>
 
