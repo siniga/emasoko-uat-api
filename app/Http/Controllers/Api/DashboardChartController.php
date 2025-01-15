@@ -137,8 +137,8 @@ class DashboardChartController extends Controller
             $installments = Installment::filterCondition()->select(DB::raw('COALESCE(SUM(installments.installment_amount), 0) as total_amount'), DB::raw('COALESCE(SUM(installments.current_balance), 0) as paid_amount'))->toBase();
             $installments = $installments->whereMonth('payment_date', $month)->whereYear('payment_date', $year)->get();
 
-            Log::debug("== installments ==");
-            Log::debug($installments);
+            // Log::debug("== installments ==");
+            // Log::debug($installments);
 
             //total amount
             $total_amount = $installments[0]->total_amount;

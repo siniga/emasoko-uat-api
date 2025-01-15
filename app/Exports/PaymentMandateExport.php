@@ -108,11 +108,12 @@ class PaymentMandateExport implements FromQuery, WithHeadings, ShouldAutoSize, W
     public function map($debit_orders): array
     {
         //format status
+        $consent_status = "PENDING";
         if ($debit_orders->approved == 0)
             $consent_status = "PENDING";
         else if($debit_orders->approved == 1)
             $consent_status = "APPROVED";
-        else if($debit_orders->approved == 1)
+        else if($debit_orders->approved == 2)
             $consent_status = "FAILED";
 
         return [
@@ -143,7 +144,7 @@ class PaymentMandateExport implements FromQuery, WithHeadings, ShouldAutoSize, W
     {
         return [
             AfterSheet::class    => function (AfterSheet $event) {
-                $cellRange = 'A1:R1'; // All headers
+                $cellRange = 'A1:S1'; // All headers
                 $event->sheet->getDelegate()->getStyle($cellRange)->getFont()->setSize(12);
                 $event->sheet->getDelegate()->getStyle($cellRange)->getFont()->setBold(true);
             },
