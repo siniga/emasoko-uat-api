@@ -85,7 +85,7 @@ class PaymentMandateController extends Controller
 
             //debit orders
             $number_of_debit_orders = $debit_orders->count();
-            $debit_orders = $debit_orders->orderBy('debit_orders.created_at', 'DESC')->get();     
+            $debit_orders = $debit_orders->orderBy('debit_orders.created_at', 'DESC')->get();
         } else {
             //debit orders
             $number_of_debit_orders = $debit_orders->count();
@@ -106,7 +106,7 @@ class PaymentMandateController extends Controller
         $accounts = Account::all();
 
         //render view
-        return view('payment_mandate.lists', compact('title', 'account_types', 'accounts', 'debit_orders', 'number_of_debit_orders' ,'post_data'));
+        return view('payment_mandate.lists', compact('title', 'account_types', 'accounts', 'debit_orders', 'number_of_debit_orders', 'post_data'));
     }
 
     //export xls
@@ -577,7 +577,7 @@ class PaymentMandateController extends Controller
     }
 
     //mandate cancellation
-    function cancel_mandate(Request $request)
+    public function cancel_mandate(Request $request)
     {
         // post data
         $debit_order = DebitOrder::where("uuid", $request->uuid)->first();
@@ -645,7 +645,7 @@ class PaymentMandateController extends Controller
     }
 
     //customer details
-    function show($id)
+    public function show($id)
     {
         $title = "Debit Order Information";
 
@@ -821,6 +821,38 @@ class PaymentMandateController extends Controller
         $pdf->save($path  . $filename);
 
         return $filename;
+    }
+
+    public function update_installments()
+    {
+        $debit_orders = DebitOrder::where(['periodicity' => 'MONTHLY'])->get();
+
+        foreach ($debit_orders as $val) {
+            $dayOfMonth = date('d', strtotime($val->start_date));
+
+            $installments = Installment::where(['debit_order_id' => $val->id])->get();
+
+            foreach ($installments as $installment) {
+                $year = date('Y', strtotime($installment->payment_date));
+                $month = date('m', strtotime($installment->payment_date));
+
+                $date = Carbon::createFromDate($year, $month, $dayOfMonth);
+                $installment_date = $date->format('Y-m-d'); // Format as dd-mm-yyyy
+
+                //update installment
+                $up_installment = Installment::findOrFail($installment->id);
+                $up_installment->payment_date = $installment_date;
+                $up_installment->save();
+            }
+        }
+
+        return response()->json(
+            [
+                "success" => true,
+                'success_msg' => "Installments updated",
+            ],
+            200
+        );
     }
 
     //send remainder for payment mandate
