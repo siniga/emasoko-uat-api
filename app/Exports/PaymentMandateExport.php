@@ -88,7 +88,7 @@ class PaymentMandateExport implements FromQuery, WithHeadings, ShouldAutoSize, W
             'Bank Name/MNO',
             'Account Number',
             'Phone (Connected to Bank)',
-            'Consent Status',
+            'Mandate Status',
             'Total Amount',
             'Paid Amount',
             'Outstanding Amount',
@@ -106,6 +106,14 @@ class PaymentMandateExport implements FromQuery, WithHeadings, ShouldAutoSize, W
     //map
     public function map($debit_orders): array
     {
+        //format status
+        if ($debit_orders->approved == 0)
+            $consent_status = "PENDING";
+        else if($debit_orders->approved == 1)
+            $consent_status = "APPROVED";
+        else if($debit_orders->approved == 1)
+            $consent_status = "FAILED";
+
         return [
             strtoupper($debit_orders->customerAccount->account_name ?? ''),
             $debit_orders->customerAccount->customer->id_number ?? 'NIL',
@@ -113,7 +121,7 @@ class PaymentMandateExport implements FromQuery, WithHeadings, ShouldAutoSize, W
             $debit_orders->customerAccount->account->name ?? '',
             $debit_orders->customerAccount->account_number ?? '',
             $debit_orders->customerAccount->phone ?? '',
-            $debit_orders->approved == 1 ? 'Approved' : 'Pending',
+            $consent_status,
             number_format($debit_orders->total_amount),
             number_format($debit_orders->current_balance),
             number_format($debit_orders->outstanding_amount),
