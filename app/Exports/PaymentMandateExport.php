@@ -99,7 +99,8 @@ class PaymentMandateExport implements FromQuery, WithHeadings, ShouldAutoSize, W
             'Deduction Start Date',
             'Deduction End Date',
             'Contract Status',
-            'Created On',
+            'Created Date',
+            'Created By',
         ];
     }
 
@@ -133,6 +134,7 @@ class PaymentMandateExport implements FromQuery, WithHeadings, ShouldAutoSize, W
             $debit_orders->end_date,
             $debit_orders->contract_status,
             $debit_orders->created_at,
+            $debit_orders->userCreated->name,
         ];
     }
 

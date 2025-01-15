@@ -66,6 +66,7 @@
                 <th width="10%">Primary Phone</th>
                 <th width="10%">Mandate Status</th>
                 <th width="10%">Created Date</th>
+                <th width="10%">Created By</th>
             </tr>
         </thead>
         <tbody>
@@ -97,6 +98,7 @@
                     </td>
 
                     <td>{{ date('d-m-Y H:i', strtotime($values->updated_at)) }}</td>
+                    <td>{{ $values->userCreated->name, }}</td>
                 </tr>
                 @php $serial++; @endphp
             @endforeach
