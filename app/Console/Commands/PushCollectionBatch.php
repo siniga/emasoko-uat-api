@@ -2,10 +2,12 @@
 
 namespace App\Console\Commands;
 
+use App\Jobs\PushCollectionJob;
 use App\Models\CollectionBatch;
 use App\Services\BankApiService;
 use App\Services\BankPayloadService;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 
 class PushCollectionBatch extends Command
 {
@@ -55,16 +57,17 @@ class PushCollectionBatch extends Command
                 $batch = CollectionBatch::findOrFail($value->id);
 
                 if (!empty($batch->request_csv)) {
-                    //1. Create payload for collection 
-                    $payload = $bankPayload->collectionPayload($batch, $batch->request_csv);
+                    //1. Create parameters
+                    $csv = $batch->request_csv;
+                    $arr_installments = explode(",", $batch->installment_ids);
 
-                    //2. Send payload to a server
-                    $response = $bankApi->collectionCreate($payload);
-                } else {
-                    //Delete the batch
-                    $batch->delete();
+                    //2. Create payload for collection 
+                    $payload = $bankPayload->collectionPayload($batch, $csv);
+
+                    //3. BackgroundJob for creating collection batches
+                    dispatch(new PushCollectionJob($payload, $arr_installments));
                 }
-                sleep(30);
+                sleep(10); //sleep for 10 seconds
             }
         }
 

@@ -167,6 +167,7 @@ class CollectionController extends Controller
 
                 //4. Save csv payload in database
                 $batch->request_csv = $csv;
+                $batch->installment_ids = implode(",", $arr_installments);
                 $batch->save();
 
                 //5. Create payload for collection 

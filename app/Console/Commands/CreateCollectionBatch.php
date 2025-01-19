@@ -55,7 +55,7 @@ class CreateCollectionBatch extends Command
         // ->where("partners.id", "!=", 10)
         $partners = Partner::whereHas('debitOrders', function ($query) {
             return $query->where(['contract_status' => 'OPEN', 'channel' => 'NMB', 'approved' => 1, 'deleted' => 0])
-                ->whereDate('next_debit_date', "=", Carbon::now());
+                ->whereDate('next_debit_date', "=", "2025-01-18");
         })->get();
 
         foreach ($partners as $partner) {
@@ -63,7 +63,7 @@ class CreateCollectionBatch extends Command
             $debit_orders = DebitOrder::where(['contract_status' => 'OPEN', 'approved' => 1])
                 ->where('partner_id', '=', $partner->id)
                 ->where('deleted', '=', 0)
-                ->whereDate('next_debit_date', "<=", Carbon::now());
+                ->whereDate('next_debit_date', "=", "2025-01-18");
 
             if ($debit_orders->count() > 0) {
                 //2.0 Create collection batch based on partner 
@@ -120,13 +120,8 @@ class CreateCollectionBatch extends Command
                     if ($arr_installments) {
                         //4. Save csv payload in database
                         $batch->request_csv = $csv;
+                        $batch->installment_ids = implode(",", $arr_installments);
                         $batch->save();
-
-                        //5. Create payload for collection 
-                        $payload = $bankPayload->collectionPayload($batch, $csv);
-
-                        //BackgroundJob for creating collection batches
-                        dispatch(new PushCollectionJob($payload, $arr_installments));
                     } else {
                         //Delete the batch
                         $batch->delete();
