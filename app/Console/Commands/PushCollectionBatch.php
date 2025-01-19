@@ -67,7 +67,7 @@ class PushCollectionBatch extends Command
                     //3. BackgroundJob for creating collection batches
                     dispatch(new PushCollectionJob($payload, $arr_installments));
                 }
-                sleep(10); //sleep for 10 seconds
+                sleep(5); //sleep for 5 seconds
             }
         }
 
