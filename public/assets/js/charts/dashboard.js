@@ -418,6 +418,90 @@ $("#collected-mandate-value-select-year").on("change", function (e) {
     });
 });
 
+//Expected and collected Mandates
+// $.getJSON("api/dashboard/weekly-collected-mandate", (data) => {
+//     console.log(data);
+
+//     if (data.error == false) {
+//         var arr_dates = [];
+//         var arr_total = [];
+//         var arr_paid = [];
+
+//         for (k = 0; k < data.chart.length; k++) {
+//             arr_dates.push(data.chart[k].date);
+//             arr_total.push(data.chart[k].total);
+//             arr_paid.push(data.chart[k].paid);
+//         }
+
+//         var options = {
+//             series: [
+//                 {
+//                     name: "Expected",
+//                     data: arr_total,
+//                 },
+//                 {
+//                     name: "Collected",
+//                     data: arr_paid,
+//                 },
+//             ],
+//             chart: {
+//                 type: "bar",
+//                 height: 350,
+//                 events: {
+//                     click: handleBarClick,
+//                 },
+//             },
+//             plotOptions: {
+//                 bar: {
+//                     borderRadius: 4,
+//                     horizontal: false,
+//                     columnWidth: "75%",
+//                     endingShape: "rounded",
+//                     dataLabels: {
+//                         position: "bottom",
+//                     },
+//                 },
+//             },
+//             dataLabels: {
+//                 enabled: !1,
+//             },
+//             stroke: {
+//                 show: true,
+//                 curve: "smooth",
+//                 width: 3,
+//                 colors: ["transparent"],
+//             },
+//             fill: {
+//                 opacity: 1,
+//             },
+//             yaxis: {
+//                 labels: {
+//                     formatter: function (value) {
+//                         return value.toLocaleString();
+//                     },
+//                 },
+//             },
+//             xaxis: {
+//                 labels: {
+//                     show: true,
+//                     rotate: -45,
+//                     rotateAlways: false,
+//                 },
+//                 crosshair: true,
+//                 categories: arr_dates,
+//             },
+//             colors: ["#01579B", "#66BB6A"],
+//         };
+
+//         //render chart
+//         var chart = new ApexCharts(
+//             document.querySelector("#collected-mandate-value-weekly-chart"),
+//             options
+//         );
+//         chart.render();
+//     }
+// });
+
 //pending and approved by payment channel
 $.getJSON("api/dashboard/mandate-channel", (data) => {
     if (data.error == false) {

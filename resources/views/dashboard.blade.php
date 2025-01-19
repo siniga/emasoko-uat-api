@@ -109,6 +109,88 @@
     </div>
 
     <div class="row">
+        <div class="col-md-3">
+            <a href="#">
+                <div class="card border-left-info bg-primary shadow h-96 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xss font-weight-600 text-white mb-1">
+                                    Expected Collection ({{ $stats['month'] }})
+                                </div>
+
+                                <div class="h5 mb-0 font-weight-700 text-white">
+                                    {{ number_format($stats['this_month_expected']) }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-3">
+            <a href="#">
+                <div class="card border-left-info bg-success-1 shadow h-96 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xss font-weight-600 text-white mb-1">
+                                    Actual Collection ({{ $stats['month'] }})
+                                </div>
+
+                                <div class="h5 mb-0 font-weight-700 text-white">
+                                    {{ number_format($stats['this_month_paid']) }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-3">
+            <a href="#">
+                <div class="card border-left-info bg-primary shadow h-96 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xss font-weight-600 text-white mb-1">
+                                    Expected Collection (Today)
+                                </div>
+
+                                <div class="h5 mb-0 font-weight-700 text-white">
+                                    {{ number_format($stats['today_expected']) }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>  
+
+        <div class="col-md-3">
+            <a href="#">
+                <div class="card border-left-info bg-success-1 shadow h-96 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xss font-weight-600 text-white mb-1">
+                                    Actual Collection (Today)
+                                </div>
+
+                                <div class="h5 mb-0 font-weight-700 text-white">
+                                    {{ number_format($stats['today_paid']) }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>              
+    </div>
+
+    <div class="row">
         <div class="col-xl-8">
             <div class="card">
                 <div class="card-body">
@@ -189,7 +271,7 @@
         <div class="col-xl-8">
             <div class="card">
                 <div class="card-body">
-                <div class="clearfix">
+                    <div class="clearfix">
                         <div class="float-end">
                             <div class="input-group input-group-sm">
                                 <select class="form-select form-select-sm" id="collected-mandate-value-select-year">
@@ -222,31 +304,32 @@
         <div class="col-xl-4">
             <div class="card">
                 <div class="card-body">
-                    <h4 class="card-title mb-4">Expected vs Collected Collections Rates</h4>
-                    <div>
-                        <div id="consent-rate-chart" class="apex-charts"></div>
-                    </div>
-                    <div class="text-center text-muted">
-                        <div class="row">
-                            <div class="col-6">
-                                <div class="mt-2">
-                                    <p class="">
-                                        <i class="mdi mdi-circle text-success-1 my-1"></i> Approved :
-                                        {{-- {{ $stats['number_of_approved_mandate'] }} --}}
-                                    </p>
-                                </div>
-                            </div>
+                    <div class="clearfix">
+                        <div class="float-end">
+                            <div class="input-group input-group-sm">
+                                <select class="form-select form-select-sm" id="collected-mandate-value-select-week">
+                                    @php
+                                        $year_options = [];
+                                        $current_year = date('Y');
+                                    @endphp
 
-                            <div class="col-6">
-                                <div class="mt-2">
-                                    <p class="">
-                                        <i class="mdi mdi-circle text-danger my-1"></i> Pending : 
-                                        {{-- {{ $stats['number_of_pending_mandate'] }} --}}
-                                    </p>
-                                </div>
+                                    <option value="">Select</option>
+                                    <option value="Last_Week">Last Week</option>
+                                    <option value="This_Week">This Week</option>
+                                    <option value="Next_Week">Next Week</option>
+                                </select>
+                                <label class="input-group-text">Weekly</label>
                             </div>
                         </div>
+                        <h4 class="card-title mb-3">Collections</h4>
                     </div>
+
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div id="collected-mandate-value-weekly-chart"></div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
