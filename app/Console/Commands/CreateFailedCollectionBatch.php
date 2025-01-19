@@ -45,11 +45,10 @@ class CreateFailedCollectionBatch extends Command
     {
         //initialize deduction service
         $deductionService = new DeductionService();
-        $bankPayload = new BankPayloadService();
-        $bankApi =  new BankApiService();
 
-        //FAILED collection batch
-        $collection_batches = CollectionBatch::where('failed', '>', 0)->where(['batch_processed' => 1])->get();
+        //FAILED collection batch ->where('partner_id', '=', 10)
+        $collection_batches = CollectionBatch::where('failed', '>', 0)
+            ->where(['pushed' => 1, 'processed' => 1])->get();
 
         if ($collection_batches) {
             foreach ($collection_batches as $batch) {
@@ -76,6 +75,10 @@ class CreateFailedCollectionBatch extends Command
                     //remove empty rows
                     $rows = array_filter($rows);
 
+                    //Declare variables
+                    $arr_installments = [];
+                    $arr_accounts = [];
+
                     foreach ($rows as $index => $row) {
                         // Skip the first row as it contains headers
                         if ($index === 0) {
@@ -95,26 +98,34 @@ class CreateFailedCollectionBatch extends Command
 
                             if ($installment) {
                                 //account details
-                                $bank_code = $installment->debitOrder->customerAccount->bank_code;
                                 $account_name = strtoupper($installment->debitOrder->customerAccount->account_name);
                                 $account_number = $installment->debitOrder->customerAccount->account_number;
                                 $mandate_reference = $installment->debitOrder->reference;
+                                $installment_id = $installment->id;
+                                $payment_amount = $installment->installment_amount;
 
-                                //create csv file
-                                $csv .= "{$installment->id};{$bank_code};NMB;{$mandate_reference};{$account_name};{$account_number};{$installment->installment_amount}\n";
+                                //check if account exists in this batch
+                                if (!in_array($account_number, $arr_accounts)) {
+                                    //create csv file
+                                    $csv .= "{$installment_id};016;NMB;{$mandate_reference};{$account_name};{$account_number};{$payment_amount}\n";
+
+                                    //append account in array
+                                    array_push($arr_accounts, $account_number);
+
+                                    //update array installments
+                                    array_push($arr_installments, $installment_id);
+                                }
                             }
                         }
                     }
 
-                    //4. Save csv payload in database
-                    $new_batch->request_csv = $csv;
-                    $new_batch->save();
-
-                    //5. Create payload for collection 
-                    $payload = $bankPayload->collectionPayload($new_batch, $csv);
-
-                    //6. Send payload to a server
-                    $response = $bankApi->collectionCreate($payload);
+                    //check if installments is not null
+                    if ($arr_installments) {
+                        // Save csv payload in database
+                        $new_batch->request_csv = $csv;
+                        $new_batch->installment_ids = implode(",", $arr_installments);
+                        $new_batch->save();
+                    }
                 }
 
                 //update batch FAILED = 0; 
