@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Classes\Authentication;
 use App\Models\CollectionBatch;
+use App\Models\Installment;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -24,12 +25,14 @@ class PushCollectionJob implements ShouldQueue
      * @return void
      */
     protected $data;
+    protected $installments;
     private $auth;
 
 
-    public function __construct($data)
+    public function __construct($data, $installments)
     {
         $this->data = $data;
+        $this->installments = $installments;
         $this->auth = new Authentication();
     }
 
@@ -77,14 +80,37 @@ class PushCollectionJob implements ShouldQueue
         Log::debug($response);
 
         if ($response) {
-            if (strtolower($response['status']) == "success" || strtolower($response['status']) == "fail") {
+            if (strtolower($response['status']) == "success") {
+                $response_code = $response['data']['response'][0]['responseCode'];
+                $remarks = $response['data']['response'][0]['responseDescription'];
+
+                //update collection batch
                 $collection_batch->status = $response['data']['response'][0]['responseCode'];
                 $collection_batch->http_response_code = $response['data']['response'][0]['responseCode'];
                 $collection_batch->remarks = $response['data']['response'][0]['responseDescription'];
                 $collection_batch->pushed = 1;
                 $collection_batch->save();
-            } else {
-                Log::debug('== CollectionCreate Response not success ==');
+
+                //update debit order => approved
+                if ($response_code == 200 || $response_code == 201) {
+                    //update installments
+                    foreach ($this->installments as $key => $v) {
+                        $installment = Installment::findOrFail($v);
+                        $installment->pushed = 1;
+                        $installment->save();
+                    }
+                }
+            } else if (strtolower($response['status']) == "fail") {
+                $response_code = $response['data']['response'][0]['responseCode'];
+                $remarks = $response['data']['response'][0]['responseDescription'];
+
+                //update collection batch
+                $collection_batch->status = 500;
+                $collection_batch->http_response_code = $response['data']['response'][0]['responseCode'];
+                $collection_batch->remarks = $response['data']['response'][0]['responseDescription'];
+                $collection_batch->save();
+
+                Log::debug('== Failed to create collection batch ==');
             }
         }
     }

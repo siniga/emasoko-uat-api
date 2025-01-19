@@ -40,13 +40,9 @@
                             <div></div>
 
                             <div class="text-sm-end d-none d-sm-block">
-                                {{-- <template x-if="status==201 || status==249 || status==430 || status==500">
-                                    <button x-html="verifyTXT" title="Verify OTP" class="btn btn-outline-primary text-medium btn-sm btn-sm"
-                                        x-on:click="verifyButton();"></button>
-                                </template> --}}
 
                                 <template x-if="failed > 0">
-                                    <button x-html="btnStatus" title="Get Collection Status" class="btn btn-outline-success btn-sm"
+                                    <button x-html="btnStatus" title="Collection Status" class="btn btn-outline-success btn-sm"
                                         x-on:click="fetchCollectionStatus();"></button>
                                 </template>
                             </div>
@@ -113,82 +109,87 @@
                             </div>
                         </div>
 
-                        <div class="row">
-                            <div class="col-lg-12">
+                        @if($batch->pushed == 0)
 
-                                <div class="table-responsive">
-                                    <table class="table table-nowrap align-middle table-bordered">
-                                        <thead>
-                                            <tr>
-                                                <td colspan="4" class="font-weight-600 text-uppercase">
-                                                    Deduction History
-                                                </td>
-                                            </tr>
-                                        </thead>
+                        @endif
 
-                                        <tbody>
-                                           <tr>
-                                                <th width="3%">#</th>
-                                                <th width="8%">Mandate Ref</th>
-                                                <th width="12%">Account Name</th>
-                                                <th width="10%">Account No.</th>
-                                                <th width="8%">Expected Amt</th>
-                                                <th width="8%">Paid Amt</th>
-                                                <th width="8%">Current Balance</th>
-                                                <th width="8%">Outstanding Amt</th>
-                                                <th width="8%">Status</th>
-                                                <th width="24%">Message</th>
-                                            </tr>
-
-                                            @php
-                                                $sum_expected_amount = 0;
-                                                $sum_paid_amount = 0;
-                                                $sum_current_balance = 0;
-                                                $sum_outstanding_amount = 0;
-                                            @endphp
-
-                                            @foreach ($arr_data as $val)
+                        @if($batch->processed == 1)
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="table-responsive">
+                                        <table class="table table-nowrap align-middle table-bordered">
+                                            <thead>
                                                 <tr>
-                                                    <td>{{ $loop->iteration }}</td>
-                                                    <td>{{ $val['reference'] }}</td>
-                                                    <td>{{ $val['account_name'] }}</td>
-                                                    <td>{{ $val['account_number'] }}</td>
-                                                    <td class="text-sm-end">{{ number_format($val['expected_amount']) }}</td>
-                                                    <td class="text-sm-end">{{ number_format($val['paid_amount']) }}</td>
-                                                    <td class="text-sm-end">{{ number_format($val['current_balance']) }}</td>
-                                                    <td class="text-sm-end">{{ number_format($val['outstanding_amount']) }}</td>
-                                                    <td>
-                                                        @if($val['payment_status'] == "SUCCESS")
-                                                            <span class="badge bg-success-1">Paid</span>
-                                                        @elseif($val['payment_status'] == "FAIL")  
-                                                            <span class="badge bg-danger">Unpaid</span>    
-                                                        @else
-                                                            <span class="badge bg-warning">Processing</span>  
-                                                        @endif
+                                                    <td colspan="4" class="font-weight-600 text-uppercase">
+                                                        Deduction History
                                                     </td>
-                                                    <td>{{ $val['message'] }}</td>
+                                                </tr>
+                                            </thead>
+
+                                            <tbody>
+                                            <tr>
+                                                    <th width="3%">#</th>
+                                                    <th width="8%">Mandate Ref</th>
+                                                    <th width="12%">Account Name</th>
+                                                    <th width="10%">Account No.</th>
+                                                    <th width="8%">Expected Amt</th>
+                                                    <th width="8%">Paid Amt</th>
+                                                    <th width="8%">Current Balance</th>
+                                                    <th width="8%">Outstanding Amt</th>
+                                                    <th width="8%">Status</th>
+                                                    <th width="24%">Message</th>
                                                 </tr>
 
                                                 @php
-                                                    $sum_expected_amount += $val['expected_amount'];
-                                                    $sum_paid_amount += $val['paid_amount'];
-                                                    $sum_current_balance += $val['current_balance'];
-                                                    $sum_outstanding_amount += $val['outstanding_amount'];
+                                                    $sum_expected_amount = 0;
+                                                    $sum_paid_amount = 0;
+                                                    $sum_current_balance = 0;
+                                                    $sum_outstanding_amount = 0;
                                                 @endphp
-                                            @endforeach
-                                             <tr>
-                                                <td colspan="4" class="font-weight-600">Total</td>
-                                                <td class="text-sm-end">{{ number_format($sum_expected_amount) }}</td>
-                                                <td class="text-sm-end">{{ number_format($sum_paid_amount) }}</td>
-                                                <td class="text-sm-end">{{ number_format($sum_current_balance) }}</td>
-                                                <td class="text-sm-end">{{ number_format($sum_outstanding_amount) }}</td>
-                                                <td colspan="2"></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+
+                                                @foreach ($arr_data as $val)
+                                                    <tr>
+                                                        <td>{{ $loop->iteration }}</td>
+                                                        <td>{{ $val['reference'] }}</td>
+                                                        <td>{{ $val['account_name'] }}</td>
+                                                        <td>{{ $val['account_number'] }}</td>
+                                                        <td class="text-sm-end">{{ number_format($val['expected_amount']) }}</td>
+                                                        <td class="text-sm-end">{{ number_format($val['paid_amount']) }}</td>
+                                                        <td class="text-sm-end">{{ number_format($val['current_balance']) }}</td>
+                                                        <td class="text-sm-end">{{ number_format($val['outstanding_amount']) }}</td>
+                                                        <td>
+                                                            @if($val['payment_status'] == "SUCCESS")
+                                                                <span class="badge bg-success-1">Paid</span>
+                                                            @elseif($val['payment_status'] == "FAIL")  
+                                                                <span class="badge bg-danger">Unpaid</span>    
+                                                            @else
+                                                                <span class="badge bg-warning">Processing</span>  
+                                                            @endif
+                                                        </td>
+                                                        <td>{{ $val['message'] }}</td>
+                                                    </tr>
+
+                                                    @php
+                                                        $sum_expected_amount += $val['expected_amount'];
+                                                        $sum_paid_amount += $val['paid_amount'];
+                                                        $sum_current_balance += $val['current_balance'];
+                                                        $sum_outstanding_amount += $val['outstanding_amount'];
+                                                    @endphp
+                                                @endforeach
+                                                <tr>
+                                                    <td colspan="4" class="font-weight-600">Total</td>
+                                                    <td class="text-sm-end">{{ number_format($sum_expected_amount) }}</td>
+                                                    <td class="text-sm-end">{{ number_format($sum_paid_amount) }}</td>
+                                                    <td class="text-sm-end">{{ number_format($sum_current_balance) }}</td>
+                                                    <td class="text-sm-end">{{ number_format($sum_outstanding_amount) }}</td>
+                                                    <td colspan="2"></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -253,8 +254,6 @@
                             this.btnStatus = '<i class="fa fa-check"></i> Collection Status';
                         });
                 },
-
-
 
             }
         }

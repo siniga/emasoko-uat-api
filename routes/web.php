@@ -187,7 +187,7 @@ Route::get('payment-mandate/send-remainder/{do_uuid}', [PaymentMandateController
 
 //collection batches
 Route::any('collections/batches', [CollectionController::class, 'batches'])->name('collections.batches');
-Route::get('collections/create', [CollectionController::class, 'create'])->name('collections.create');
+Route::any('collections/create', [CollectionController::class, 'create'])->name('collections.create');
 Route::post('collections/store', [CollectionController::class, 'store'])->name('collections.store');
 Route::get('collections/show/{id}', [CollectionController::class, 'show'])->name('collections.show');
 Route::post('collections/fetch-status', [CollectionController::class, 'fetch_status'])->name('collections.fetch-status');

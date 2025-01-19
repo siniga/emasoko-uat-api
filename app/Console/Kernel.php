@@ -14,7 +14,7 @@ class Kernel extends ConsoleKernel
      */
     protected $commands = [
         Commands\CreateCollectionBatch::class,
-        Commands\PushCollectionBatch::class,
+        // Commands\PushCollectionBatch::class,
         Commands\CollectionStatusBatch::class,
     ];
 
@@ -28,7 +28,7 @@ class Kernel extends ConsoleKernel
     {
         // lists of commands
         $schedule->command('create:batches')->dailyAt('04:00');
-        $schedule->command('push:batches')->everyTwoHours();
+        //$schedule->command('push:batches')->everyTwoHours();
         $schedule->command('collection:status')->everyThreeHours();
     }
 

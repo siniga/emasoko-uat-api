@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Jobs\PushCollectionJob;
 use App\Models\CollectionBatch;
 use App\Models\Installment;
 use App\Models\Partner;
@@ -48,25 +49,24 @@ class CreateCollectionBatch extends Command
     {
         //initialize deduction service
         $deductionService = new DeductionService();
+        $bankPayload = new BankPayloadService();
 
         //debit orders => status=OPEN and NEXT_DEBIT_DATE = today()
+        // ->where("partners.id", "!=", 10)
         $partners = Partner::whereHas('debitOrders', function ($query) {
             return $query->where(['contract_status' => 'OPEN', 'channel' => 'NMB', 'approved' => 1, 'deleted' => 0])
                 ->whereDate('next_debit_date', "=", Carbon::now());
         })->get();
 
         foreach ($partners as $partner) {
-            //1. Select debit orders based of partner
+            //1.0 Select debit orders based of partner
             $debit_orders = DebitOrder::where(['contract_status' => 'OPEN', 'approved' => 1])
                 ->where('partner_id', '=', $partner->id)
                 ->where('deleted', '=', 0)
                 ->whereDate('next_debit_date', "<=", Carbon::now());
 
             if ($debit_orders->count() > 0) {
-                //declare data points
-                $data_point = 0;
-
-                //2. Create collection batch based on partner 
+                //2.0 Create collection batch based on partner 
                 $batch = CollectionBatch::create([
                     'partner_id' => $partner->id,
                     "collectionReference" => $deductionService->getCollectionReference(),
@@ -79,6 +79,9 @@ class CreateCollectionBatch extends Command
                 ]);
 
                 if ($batch->wasRecentlyCreated) {
+                    //2.1 Declare variables
+                    $arr_installments = [];
+
                     //debit orders
                     $debit_orders = $debit_orders->get();
 
@@ -87,8 +90,8 @@ class CreateCollectionBatch extends Command
 
                     foreach ($debit_orders as $val) {
                         // Your Eloquent query executed by using get()
-                        $installments = Installment::where(['debit_order_id' => $val->id, 'status' => 'OPEN'])
-                            ->whereDate('payment_date', '<=', $val->next_debit_date)->get();
+                        $installments = Installment::where(['debit_order_id' => $val->id, 'status' => 'OPEN', 'pushed' => 0])
+                            ->whereDate('payment_date', '=', $val->next_debit_date)->get();
 
                         $arr_accounts = [];
                         foreach ($installments as $installment) {
@@ -104,24 +107,30 @@ class CreateCollectionBatch extends Command
                                 //create csv file
                                 $csv .= "{$installment_id};016;NMB;{$mandate_reference};{$account_name};{$account_number};{$payment_amount}\n";
 
-                                //increment data point
-                                $data_point += 1;
-
                                 //append account in array
                                 array_push($arr_accounts, $account_number);
+
+                                //update array installments
+                                array_push($arr_installments, $installment->id);
                             }
                         }
-
-                        //update debit date
-                        $deductionService->updateNextDebitDate($val->id, $val->next_debit_date);
                     }
-                }
 
-                //check if data point > 0
-                if ($data_point > 0) {
-                    //4. Save csv payload in database
-                    $batch->request_csv = $csv;
-                    $batch->save();
+                    //check if installments is not null
+                    if ($arr_installments) {
+                        //4. Save csv payload in database
+                        $batch->request_csv = $csv;
+                        $batch->save();
+
+                        //5. Create payload for collection 
+                        $payload = $bankPayload->collectionPayload($batch, $csv);
+
+                        //BackgroundJob for creating collection batches
+                        dispatch(new PushCollectionJob($payload, $arr_installments));
+                    } else {
+                        //Delete the batch
+                        $batch->delete();
+                    }
                 }
             }
         }

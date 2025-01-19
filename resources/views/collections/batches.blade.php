@@ -98,6 +98,7 @@
                                             <th width="3%">#</th>
                                             <th width="20%">Service Provider</th>
                                             <th>Reference</th>
+                                            <th>Pushed</th>
                                             <th>Processed</th>
                                             <th>No. of Success</th>
                                             <th>No. of Failed</th>
@@ -114,10 +115,21 @@
                                                 <td>{{ $values->partner->business_name }}</td>
                                                 <td>{{ $values->collectionReference ?? '' }}</td>
                                                 <td>
-                                                    @if($values->processed == 0)
+                                                    @if($values->pushed == 0)
                                                         <span class="badge badge-pill badge-soft-danger">No</span>
-                                                    @elseif($values->processed == 1)
+                                                    @elseif($values->pushed == 1)
                                                         <span class="badge badge-pill badge-soft-success">Yes</span>
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    @if($values->pushed == 0)
+                                                        <span class="badge badge-pill badge-soft-danger">No</span>
+                                                    @elseif($values->pushed == 1)
+                                                        @if($values->processed == 0)
+                                                            <span class="badge badge-pill badge-soft-warning">On Progress</span>
+                                                        @elseif($values->processed == 1)
+                                                            <span class="badge badge-pill badge-soft-success">Yes</span>
+                                                        @endif
                                                     @endif
                                                 </td>
                                                 <td class="text-sm-end">{{ $values->success }}</td>
