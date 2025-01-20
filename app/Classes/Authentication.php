@@ -39,6 +39,7 @@ class Authentication
         // Check the key type
         if (!is_string($secretKey)) {
             Log::debug("eMakato Log: The key must be a string.");
+            Log::debug($secretKey);
             throw new InvalidArgumentException('The key must be a string.');
         }
 
