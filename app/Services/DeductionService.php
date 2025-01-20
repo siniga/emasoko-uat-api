@@ -216,9 +216,9 @@ class DeductionService
                     }
                 } else if ($status == "success") {
                     //updated status of installment
-                    $installment->status = "SUCCESS";
-                    $installment->last_paid_amount = $amount;
-                    $installment->save();
+                    // $installment->status = "SUCCESS";
+                    // $installment->last_paid_amount = $amount;
+                    // $installment->save();
 
                     //increment success count
                     $success_installments += 1;
