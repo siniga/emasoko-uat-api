@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\DebitOrder;
+use App\Models\Installment;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -51,6 +53,19 @@ class DashboardController extends Controller
         //summation of mandate values
         $total_mandate_value = $mandates[0]['total_amount'] + $mandates[1]['total_amount'] + $mandates[2]['total_amount'];
 
+        //current date
+        $current_year = date('Y');
+        $current_month = date('m');
+
+        //collection stats
+        $installments = Installment::filterCondition()->select(DB::raw('COALESCE(SUM(installments.installment_amount), 0) as total_amount'), DB::raw('COALESCE(SUM(installments.current_balance), 0) as paid_amount'))->toBase();
+
+        //this month collection
+        $this_month = $installments->whereMonth('payment_date', $current_month)->whereYear('payment_date', $current_year)->get();
+
+        //today collection
+        $today = $installments->whereDate('payment_date', Carbon::now())->get();
+       
         //stats
         $stats  = [
             //number of mandates
@@ -63,7 +78,14 @@ class DashboardController extends Controller
             'pending_mandate_value' => $mandates[0]['total_amount'],
             'approved_mandate_value' => $mandates[1]['total_amount'],
             'failed_mandate_value' => $mandates[2]['total_amount'],
-            'total_mandate_value' => $total_mandate_value
+            'total_mandate_value' => $total_mandate_value,
+
+            //this month and today collection
+            'month' => date('F'),
+            'this_month_expected' => $this_month[0]->total_amount,
+            'this_month_paid' => $this_month[0]->paid_amount,
+            'today_expected' => $today[0]->total_amount,
+            'today_paid' => $today[0]->paid_amount
         ];
 
         //pending debit orders
@@ -76,6 +98,6 @@ class DashboardController extends Controller
         $failed_debit_orders = DebitOrder::filterCondition()->where(['approved' => 2])->take(10)->get();
 
         //render view
-        return view('dashboard', compact('title', 'pending_debit_orders', 'approved_debit_orders', 'failed_debit_orders' ,'stats'));
+        return view('dashboard', compact('title', 'pending_debit_orders', 'approved_debit_orders', 'failed_debit_orders', 'stats'));
     }
 }

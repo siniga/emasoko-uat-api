@@ -23,8 +23,8 @@ class MandateController extends Controller
     public function create(Request $request)
     {
         //predefined variables
-        $debitAccount = "0152202269000";
-        $phone = "255759323107";
+        $debitAccount = "0152418973800";
+        $phone = "255711711125";
         $partnerId = "7c0e38cf-1f74-4fc1-83d0-abd4afb5b9d9";
         $requestId = Str::uuid()->toString();
 
@@ -63,7 +63,7 @@ class MandateController extends Controller
             "DebitAccount" =>  $debitAccount,
             "TotalAmount" =>  "1000",
             "InstallmentAmount" => "100",
-            "StartDate" => "15-01-2025",
+            "StartDate" => "17-01-2025",
             "EndDate" => "10-10-2025",
             "FrequencyType" => "WEEKLY",
             "Frequency" => "1",

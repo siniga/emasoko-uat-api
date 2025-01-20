@@ -16,6 +16,7 @@ use App\Services\DeductionService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 
 class CollectionController extends Controller
@@ -62,6 +63,43 @@ class CollectionController extends Controller
     {
         $title = 'Create Mandate Collection';
 
+        $partner_id = null;
+        $arr_installments = [];
+
+        if (isset($_POST['filter'])) {
+            //all request
+            $requests = $request->all();
+            $partner_id =  $requests['partner_id'];
+
+            $debit_orders = DebitOrder::where(['contract_status' => 'OPEN', 'approved' => 1])
+                ->where('partner_id', '=', $requests['partner_id'])
+                ->where('deleted', '=', 0)
+                ->whereDate('next_debit_date', "=", $requests['debit_date']);
+
+            if ($debit_orders->count() > 0) {
+                foreach ($debit_orders->get() as $val) {
+                    $installments = Installment::where(['debit_order_id' => $val->id, 'status' => 'OPEN', 'pushed' => 0])
+                        ->whereDate('payment_date', '=', $val->next_debit_date)->get();
+
+                    foreach ($installments as $v) {
+                        $arr_installments[] = [
+                            'id' => $v->id,
+                            'reference' => $val->reference,
+                            'account_name' => strtoupper($val->customerAccount->account_name),
+                            'account_number' => $val->customerAccount->account_number,
+                            'amount' => $v->installment_amount,
+                            'current_balance' => $v->current_balance,
+                            'outstanding_amount' => $v->outstanding_amount,
+                            'payment_date' => $v->payment_date,
+                        ];
+                    }
+                }
+            } else {
+                //redirect
+                return Redirect::route('collections.create')->with('danger', 'No any collection on this ' . $requests['debit_date']);
+            }
+        }
+
         //users
         $user = User::findOrFail(Auth::user()->id);
 
@@ -74,110 +112,76 @@ class CollectionController extends Controller
         $providers = $providers->get();
 
         //render view
-        return view('collections.create', compact('title', 'providers', 'provider'));
+        return view('collections.create', compact('title', 'providers', 'provider', 'partner_id', 'arr_installments'));
     }
 
-    public function store(CollectionRequest $request)
+    public function store(Request $request)
     {
-        // validated request
-        $validated = $request->validated();
+        if ($request->selected_partner_id && $request->installment_ids) {
+            //1. Find partner information
+            $partner = Partner::findOrFail($request->selected_partner_id);
 
-        //post data
-        $partner_id = $validated['provider_id'];
-        $debit_date = $validated['created_at'];
+            //2.0 Create collection batch based on partner 
+            $batch = CollectionBatch::create([
+                'partner_id' => $partner->id,
+                "collectionReference" => $this->deductionService->getCollectionReference(),
+                "corporateReference" => $partner->reference,
+                "selectedPostingDate" => Carbon::now(),
+                "createdBy" => Auth::user()->id,
+                "verifiedBy" => Auth::user()->id,
+                "createdDate" => Carbon::now(),
+                "verifyDate" => Carbon::now(),
+            ]);
 
-        //debit orders => status=OPEN and NEXT_DEBIT_DATE = today()
-        $partner = Partner::whereHas('debitOrders', function ($query) use ($debit_date) {
-            return $query->where(['contract_status' => 'OPEN', 'channel' => 'NMB', 'approved' => 1, 'deleted' => 0])
-                ->whereDate('next_debit_date', "=", $debit_date);
-        })->where('partners.id', '=', $partner_id)->first();
+            if ($batch->wasRecentlyCreated) {
+                //2.1 Declare variables
+                $arr_installments = [];
 
-        if ($partner) {
-            //1. Select debit orders based of partner
-            $debit_orders = DebitOrder::where(['contract_status' => 'OPEN', 'approved' => 1])
-                ->where('partner_id', '=', $partner->id)
-                ->where('deleted', '=', 0)
-                ->whereDate('next_debit_date', "<=", $debit_date);
+                //3. Create CSV file based installment
+                $csv = "SERIAL No.;BANK CODE;BRANCH NAME;EMPLOYEE NUMBER;CUSTOMER NAME;ACCOUNT NO;AMOUNT\n";
 
-            if ($debit_orders->count() > 0) {
-                //declare data points
-                $data_point = 0;
+                $arr_accounts = []; //declare array accounts
+                foreach ($request->installment_ids as $id) {
+                    //installment
+                    $installment = Installment::findOrFail($id);
 
-                //2. Create collection batch based on partner 
-                $batch = CollectionBatch::create([
-                    'partner_id' => $partner->id,
-                    "collectionReference" => $this->deductionService->getCollectionReference(),
-                    "corporateReference" => $partner->reference,
-                    "selectedPostingDate" => $debit_date,
-                    "createdBy" => Auth::user()->id,
-                    "verifiedBy" => Auth::user()->id,
-                    "createdDate" => Carbon::now(),
-                    "verifyDate" => Carbon::now(),
-                ]);
+                    //account details
+                    $account_name = strtoupper($installment->debitOrder->customerAccount->account_name);
+                    $account_number = $installment->debitOrder->customerAccount->account_number;
+                    $mandate_reference = $installment->debitOrder->reference;
+                    $installment_id = $installment->id;
+                    $payment_amount = $installment->installment_amount;
 
-                if ($batch->wasRecentlyCreated) {
-                    //debit orders
-                    $debit_orders = $debit_orders->get();
+                    //check if account exists in this batch
+                    if (!in_array($account_number, $arr_accounts)) {
+                        //create csv file
+                        $csv .= "{$installment_id};016;NMB;{$mandate_reference};{$account_name};{$account_number};{$payment_amount}\n";
 
-                    //3. Create CSV file based installment
-                    $csv = "SERIAL No.;BANK CODE;BRANCH NAME;EMPLOYEE NUMBER;CUSTOMER NAME;ACCOUNT NO;AMOUNT\n";
+                        //append account in array
+                        array_push($arr_accounts, $account_number);
 
-                    foreach ($debit_orders as $val) {
-                        // Your Eloquent query executed by using get()
-                        $installments = Installment::where(['debit_order_id' => $val->id, 'status' => 'OPEN', 'pushed' => 0])
-                            ->whereDate('payment_date', '<=', $val->next_debit_date)->get();
-
-                        $arr_accounts = [];
-                        foreach ($installments as $installment) {
-                            //account details
-                            $account_name = strtoupper($val->customerAccount->account_name);
-                            $account_number = $val->customerAccount->account_number;
-                            $mandate_reference = $val->reference;
-                            $installment_id = $installment->id;
-                            $payment_amount = $installment->installment_amount;
-
-                            //check if account exists in this batch
-                            if (!in_array($account_number, $arr_accounts)) {
-                                //create csv file
-                                $csv .= "{$installment_id};016;NMB;{$mandate_reference};{$account_name};{$account_number};{$payment_amount}\n";
-
-                                //increment data point
-                                $data_point += 1;
-
-                                //append account in array
-                                array_push($arr_accounts, $account_number);
-
-                                //update installment
-                                $installment = Installment::where(['id' => $installment->id])->first();
-                                $installment->pushed = 1;
-                                $installment->save();
-                            }
-                        }
-
-                        //update debit date
-                        $this->deductionService->updateNextDebitDate($val->id, $val->next_debit_date);
+                        //update array installments
+                        array_push($arr_installments, $installment->id);
                     }
                 }
 
-                //check if data point > 0
-                if ($data_point > 0) {
-                    //4. Save csv payload in database
-                    $batch->request_csv = $csv;
-                    $batch->save();
+                //4. Save csv payload in database
+                $batch->request_csv = $csv;
+                $batch->installment_ids = implode(",", $arr_installments);
+                $batch->save();
 
-                    //5. Create payload for collection 
-                    $payload = $this->payloadService->collectionPayload($batch, $csv);
+                //5. Create payload for collection 
+                $payload = $this->payloadService->collectionPayload($batch, $csv);
 
-                    //Create Request to NMB
-                    dispatch(new PushCollectionJob($payload));
-                }
+                //BackgroundJob for creating collection batches
+                dispatch(new PushCollectionJob($payload, $arr_installments));
             }
 
             //redirect
-            return Redirect::route('collections.create')->with('success', 'Collection batch created and pushed');
+            return Redirect::route('collections.create')->with('success', 'Collection batch created.');
         } else {
             //redirect
-            return Redirect::route('collections.create')->with('danger', 'No any Collection batch in this date');
+            return Redirect::route('collections.create')->with('danger', 'No any collection selected.');
         }
     }
 

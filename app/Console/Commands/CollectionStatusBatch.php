@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Jobs\CollectionStatusJob;
 use Illuminate\Console\Command;
 use App\Models\CollectionBatch;
 use App\Models\DebitOrder;
@@ -56,16 +57,15 @@ class CollectionStatusBatch extends Command
             $collection_batches = $collection_batches->take(10)->get();
 
             foreach ($collection_batches as $value) {
-                //single batch
+                //collection batch
                 $batch = CollectionBatch::findOrFail($value->id);
 
                 //create payload
                 $payload = $bankPayload->collectionStatusPayload($batch);
 
-                //send request
-                $response = $bankApi->collectionStatus($payload);
-
-                sleep(30);
+                //3. BackgroundJob for creating collection batches
+                dispatch(new CollectionStatusJob($payload));
+                sleep(5); // sleep for 5 seconds
             }
         }
 

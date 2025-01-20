@@ -6,6 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Account;
 use App\Models\DebitOrder;
 use App\Models\Installment;
+use Carbon\Carbon;
+use Carbon\CarbonPeriod;
+use DateInterval;
+use DatePeriod;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -119,7 +123,7 @@ class DashboardChartController extends Controller
         return response()->json(['error' => FALSE, 'approved' => $percent_approved, 'rejected' => $percent_rejected, 'pending' => $percent_pending], 200);
     }
 
-    //Collected 
+    //Monthly Collected 
     public function collected_mandates(Request $request)
     {
         //current or requested year
@@ -147,6 +151,47 @@ class DashboardChartController extends Controller
             //create data array
             $data_array[] = [
                 "month" => date("M", mktime(0, 0, 0, $month, 10)),
+                "total" => (int) $total_amount,
+                "paid" => (int) $paid_amount,
+            ];
+        }
+
+        //response
+        return response()->json(['error' => FALSE, 'chart' => $data_array], 200);
+    }
+
+    //Weekly Collection
+    public function weekly_collected_mandates(Request $request)
+    {
+        //current date
+        $current_date = date('Y-m-d');
+        if ($request->has('input_week')) {
+            if ($request->input_week == "Last_Week")
+                $current_date = date('Y-m-d', strtotime($current_date . ' - 7 days'));
+            else if ($request->input_week == "Next_Week")
+                $current_date = date('Y-m-d', strtotime($current_date . ' + 7 days'));
+            else
+                $current_date = $current_date;
+        }
+
+        //get dates
+        $dates = $this->get_dates($current_date);
+
+        //declare variable
+        $data_array = [];
+
+        foreach ($dates as $key => $v) {
+            //installments
+            $installments = Installment::filterCondition()->select(DB::raw('COALESCE(SUM(installments.installment_amount), 0) as total_amount'), DB::raw('COALESCE(SUM(installments.current_balance), 0) as paid_amount'))->toBase();
+            $installments = $installments->whereDate('payment_date', Carbon::now())->get();
+
+            //total amount
+            $total_amount = $installments[0]->total_amount;
+            $paid_amount = $installments[0]->paid_amount;
+
+            //create data array
+            $data_array[] = [
+                "date" => date("d-m", strtotime($v)),
                 "total" => (int) $total_amount,
                 "paid" => (int) $paid_amount,
             ];
@@ -211,5 +256,27 @@ class DashboardChartController extends Controller
 
         //response
         return response()->json(['error' => FALSE, 'chart' => $data_array], 200);
+    }
+
+    public function get_dates($currentDate)
+    {
+        //convert date to string
+        $currentDate = Carbon::parse($currentDate);
+
+        // Determine the start of the week (Monday)
+        $startOfWeek = $currentDate->startOfWeek(Carbon::MONDAY);
+
+        // Determine the end of the week (Sunday)
+        $endOfWeek = $currentDate->endOfWeek(Carbon::SUNDAY);
+
+
+        // Collect all dates for the week
+        $datesForWeek = [];
+        for ($date = $startOfWeek->copy(); $date->lte($endOfWeek); $date->addDay()) {
+            $datesForWeek[] = $date->toDateString(); // Format as 'YYYY-MM-DD'
+        }
+
+        // Output the week dates
+        return $datesForWeek;
     }
 }

@@ -607,7 +607,7 @@ class BankApiService
                 Log::debug("== Collection CSV ==");
                 Log::debug($data);
 
-                $response = $this->updateInstallments($data, $collection_reference);
+                $response = $this->deduction_service->updateInstallments($data, $collection_reference);
 
                 //3. process batch
                 $collection_batch->success = $response[0];
@@ -622,7 +622,8 @@ class BankApiService
                 Log::debug("== Collection CSV ==");
                 Log::debug($data);
 
-                $response = $this->updateInstallments($data, $collection_reference);
+                //response
+                $response = $this->deduction_service->updateInstallments($data, $collection_reference);
 
                 //3. process batch
                 $collection_batch->success = $response[0];
@@ -630,6 +631,7 @@ class BankApiService
                 $collection_batch->save();
             }
         } else if (strtolower($response['status']) == "fail") {
+            //update status
             $collection_batch->status = $response['data']['response'][0]['responseCode'];
             $collection_batch->http_response_code = $response['data']['response'][0]['responseCode'];
             $collection_batch->remarks = $response['data']['response'][0]['responseDescription'];
@@ -638,82 +640,5 @@ class BankApiService
         }
 
         return 200;
-    }
-
-    protected function updateInstallments($data, $collection_reference)
-    {
-        //Convert the data into an array of rows
-        $rows = explode("\n", $data);
-
-        //remove empty rows
-        $rows = array_filter($rows);
-
-        //count success and failed installments
-        $success_installments = 0;
-        $failed_installments = 0;
-
-        //2. process installment
-        foreach ($rows as $index => $row) {
-            // Skip the first row as it contains headers
-            if ($index === 0) {
-                continue;
-            }
-
-            // Split the row into individual fields using semicolon as delimiter
-            $fields = explode(";", $row);
-
-            //get installment from id
-            $installment = Installment::where('id', '=', $fields[0])->first();
-
-            if ($installment) {
-                //installment amount
-                $installment_amount = $installment->installment_amount;
-
-                //payment date
-                $payment_date = $installment->payment_date;
-
-                //status and paid amount
-                $message = strtolower($fields[8]);
-                $status = strtolower($fields[7]);
-                $amount = floatval($fields[6]);
-
-                //check for status
-                if ($status == "fail") {
-                    //updated status of installment
-                    $installment->status = "FAILED";
-                    $installment->save();
-
-                    //increment failed count
-                    $failed_installments += 1;
-
-                    if ($message == 'insufficient funds') {
-                        //send sms to FAILED mandate
-                        $phone = $installment->debitOrder->customerAccount->phone;
-                        $message = "Makato ya tarehe {$payment_date} ya kiasi cha shilingi {$installment_amount} yameshindikana. Tafadhali weka pesa kwenye akaunti yako ya benki kwa ajili ya makato.";
-
-                        //send sms
-                        $data = ["phone" => $phone, "message" => $message];
-                        dispatch(new SendSMSJob($data));
-                    }
-                } else if ($status == "success") {
-                    //updated status of installment
-                    $installment->status = "SUCCESS";
-                    $installment->last_paid_amount = $amount;
-                    $installment->save();
-
-                    //increment success count
-                    $success_installments += 1;
-
-                    //process calculation for installment and debit order.
-                    $this->deduction_service->processInstallment($installment, $amount, $collection_reference);
-                } else {
-                    //updated status of installment
-                    $installment->status = $status;
-                    $installment->save();
-                }
-            }
-        }
-
-        return [$success_installments, $failed_installments];
     }
 }

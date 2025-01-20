@@ -187,7 +187,7 @@ Route::get('payment-mandate/send-remainder/{do_uuid}', [PaymentMandateController
 
 //collection batches
 Route::any('collections/batches', [CollectionController::class, 'batches'])->name('collections.batches');
-Route::get('collections/create', [CollectionController::class, 'create'])->name('collections.create');
+Route::any('collections/create', [CollectionController::class, 'create'])->name('collections.create');
 Route::post('collections/store', [CollectionController::class, 'store'])->name('collections.store');
 Route::get('collections/show/{id}', [CollectionController::class, 'show'])->name('collections.show');
 Route::post('collections/fetch-status', [CollectionController::class, 'fetch_status'])->name('collections.fetch-status');
@@ -211,6 +211,7 @@ Route::post('roles/{id}/store-perms', [RoleController::class, 'store_perms'])->n
 
 //charts
 Route::get('api/dashboard/mandate-values', [DashboardChartController::class, 'mandate_values']);
-Route::get('api/dashboard/collected-mandate', [DashboardChartController::class, 'collected_mandates']);
 Route::get('api/dashboard/mandate-percentages', [DashboardChartController::class, 'mandate_percentages']);
 Route::get('api/dashboard/mandate-channel', [DashboardChartController::class, 'mandate_channel']);
+Route::get('api/dashboard/collected-mandate', [DashboardChartController::class, 'collected_mandates']);
+Route::get('api/dashboard/weekly-collected-mandate', [DashboardChartController::class, 'weekly_collected_mandates']);
