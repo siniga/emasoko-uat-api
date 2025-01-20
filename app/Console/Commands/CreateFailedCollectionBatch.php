@@ -53,6 +53,7 @@ class CreateFailedCollectionBatch extends Command
             foreach ($collection_batches as $batch) {
                 //1. Create new collection batch
                 $new_batch = CollectionBatch::create([
+                    'partner_id' => $batch->partner_id,
                     "collectionReference" => $deductionService->getCollectionReference(),
                     "corporateReference" => $batch->corporateReference,
                     "selectedPostingDate" => Carbon::now(),
@@ -66,8 +67,7 @@ class CreateFailedCollectionBatch extends Command
                     //3. Create CSV file based installment
                     $csv = "SERIAL No.;BANK CODE;BRANCH NAME;EMPLOYEE NUMBER;CUSTOMER NAME;ACCOUNT NO;AMOUNT\n";
 
-                    //2820;016;NMB;231220242630;YUNICE MARWA THOBIAS;50810011811;225000
-
+                    //response
                     $response_csv = $batch->request_csv;
 
                     // Convert the data into an array of rows
