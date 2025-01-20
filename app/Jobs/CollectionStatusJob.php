@@ -100,7 +100,7 @@ class CollectionStatusJob implements ShouldQueue
                     $data = base64_to_content($response['data']['file']['fileData']);
                     $collection_batch->response_csv = $data;
 
-                    Log::debug("== Collection CSV ==");
+                    Log::debug("== Complete Collection CSV ==");
                     Log::debug($data);
 
                     $response = $deduction_service->updateInstallments($data, $collection_reference);
@@ -115,7 +115,7 @@ class CollectionStatusJob implements ShouldQueue
                     $data = base64_to_content($response['data']['file']['fileData']);
                     $collection_batch->response_csv = $data;
 
-                    Log::debug("== Collection CSV ==");
+                    Log::debug("== Failed Collection CSV ==");
                     Log::debug($data);
 
                     $response = $deduction_service->updateInstallments($data, $collection_reference);
@@ -131,7 +131,7 @@ class CollectionStatusJob implements ShouldQueue
                     $data = base64_to_content($response['data']['file']['fileData']);
                     $collection_batch->response_csv = $data;
 
-                    Log::debug("== Collection CSV ==");
+                    Log::debug("== Processing Collection CSV ==");
                     Log::debug($data);
 
                     //response
