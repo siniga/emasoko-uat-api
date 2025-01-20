@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Classes\Messaging;
 use App\Http\Requests\CollectionRequest;
+use App\Jobs\CollectionStatusJob;
 use App\Jobs\PushCollectionJob;
 use App\Models\CollectionBatch;
 use App\Models\DebitOrder;
@@ -265,8 +266,8 @@ class CollectionController extends Controller
         //create payload
         $payload = $this->payloadService->collectionStatusPayload($collection_batch);
 
-        //send request
-        $response = $this->bankApi->collectionStatus($payload);
+        //3. BackgroundJob for creating collection batches
+        dispatch(new CollectionStatusJob($payload));
 
         //response
         return response()->json(['success' => true, 'success_msg' => "Collection status successful fetched."], 200);
