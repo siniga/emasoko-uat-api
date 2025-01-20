@@ -40,11 +40,10 @@
                             <div></div>
 
                             <div class="text-sm-end d-none d-sm-block">
-
-                                <template x-if="failed > 0">
-                                    <button x-html="btnStatus" title="Collection Status" class="btn btn-outline-success btn-sm"
-                                        x-on:click="fetchCollectionStatus();"></button>
-                                </template>
+                                @if (Auth::user()->hasRole(['admin']))
+                                <button x-html="btnStatus" title="Collection Status" class="btn btn-outline-success btn-sm"
+                                    x-on:click="fetchCollectionStatus();"></button>
+                                @endif    
                             </div>
                         </div>
 
