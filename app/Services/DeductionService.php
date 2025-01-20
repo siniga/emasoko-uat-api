@@ -238,8 +238,11 @@ class DeductionService
     //process installment
     public function processInstallment(Installment $installment, $amount, $reference)
     {
+        Log::debug("Installment => Process 1");
         //0. Check if installment status is not CLOSED
-        if ($installment->status == 'OPEN' || $installment->status == 'PARTIAL_PAID' || $installment->status == 'SUCCESS') {
+        if ($installment->status == 'OPEN' || $installment->status == 'PARTIAL_PAID') {
+            Log::debug("Installment => Process 2");
+
             //1. Update installment => outstanding amount, current balance
             $outstanding_amount = $installment->outstanding_amount - $amount;
             $current_balance = $installment->current_balance + $amount;
@@ -255,11 +258,9 @@ class DeductionService
             //3. Save installment
             $installment->save();
 
-            //4. Insert payment in installment amount
-            $payment = new InstallmentPayment();
-            $payment->installment_id = $installment->id;
+            //4. Insert or Create payment in installment amount
+            $payment = InstallmentPayment::firstOrNew(['reference' => $reference, 'installment_id' => $installment->id]);
             $payment->amount = $amount;
-            $payment->reference = $reference;
             $payment->save();
 
             //5. Update debit order => outstanding amount, current balance
@@ -290,6 +291,7 @@ class DeductionService
             // $data = ["phone" => $phone, "message" => $message];
             // dispatch(new SendSMSJob($data));
 
+            Log::debug("Installment => Process 3");
             //update next debit date
             $this->updateNextDebitDate($debit_order->id, $payment_date);
 
