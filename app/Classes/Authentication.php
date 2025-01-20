@@ -6,6 +6,7 @@ use Exception;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Firebase\JWT\JWT;
+use InvalidArgumentException;
 
 class Authentication
 {
@@ -34,6 +35,12 @@ class Authentication
 
         // Your secret key
         $secretKey = env('JWT_SECRET');
+
+        // Check the key type
+        if (!is_string($secretKey)) {
+            Log::debug("eMakato Log: The key must be a string.");
+            throw new InvalidArgumentException('The key must be a string.');
+        }
 
         // Encode the payload to generate the token
         $jwtToken = JWT::encode($payload, $secretKey, 'HS256');
