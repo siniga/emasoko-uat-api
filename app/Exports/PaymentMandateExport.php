@@ -84,6 +84,7 @@ class PaymentMandateExport implements FromQuery, WithHeadings, ShouldAutoSize, W
         return [
             'Account Name',
             'NIDA Number',
+            'Address',
             'Payment Channel',
             'Bank Name/MNO',
             'Account Number',
@@ -117,7 +118,8 @@ class PaymentMandateExport implements FromQuery, WithHeadings, ShouldAutoSize, W
 
         return [
             strtoupper($debit_orders->customerAccount->account_name ?? ''),
-            $debit_orders->customerAccount->customer->id_number ?? 'NIL',
+            $debit_orders->customerAccount->customer->id_number ?? '',
+            $debit_orders->customerAccount->customer->address ?? '',
             $debit_orders->customerAccount->accountType->name ?? '',
             $debit_orders->customerAccount->account->name ?? '',
             $debit_orders->customerAccount->account_number ?? '',
