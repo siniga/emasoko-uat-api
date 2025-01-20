@@ -254,20 +254,36 @@ class CollectionController extends Controller
 
         //collection batch
         $collection_batch = CollectionBatch::where(['id' => $request->batch_id])->firstOrFail();
+
+        if (!empty($collection_batch->request_csv)) {
+            //1. Create parameters
+            $csv = $collection_batch->request_csv;
+            $arr_installments = explode(",", $collection_batch->installment_ids);
+            Log::debug($arr_installments);
+
+            //2. Create payload for collection 
+            $payload = $this->payloadService->collectionPayload($collection_batch, $csv);
+
+            //3. BackgroundJob for creating collection batches
+            dispatch(new PushCollectionJob($payload, $arr_installments));
+        }
+
+        //response
+        return response()->json(['success' => true, 'success_msg' => "Collection batch pushed."], 200);
     }
 
     public function fetch_status(Request $request)
     {
         $title = "Fetch Collection Status";
 
-        //collection batch
+        //Collection batch
         $collection_batch = CollectionBatch::where(['id' => $request->batch_id])->firstOrFail();
 
-        //create payload
+        //Create payload
         $payload = $this->payloadService->collectionStatusPayload($collection_batch);
 
-        //3. BackgroundJob for creating collection batches
-        $response = $this->bankApi->collectionStatus($payload);
+        //BackgroundJob for creating collection batches
+        dispatch(new CollectionStatusJob($payload));
 
         //response
         return response()->json(['success' => true, 'success_msg' => "Collection status successful fetched."], 200);

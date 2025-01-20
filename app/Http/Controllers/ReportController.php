@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\CollectionExport;
 use App\Models\Account;
 use App\Models\AccountType;
 use Illuminate\Http\Request;
@@ -31,7 +32,10 @@ class ReportController extends Controller
             $account_id = $request->account_id;
 
             if ($report_type == "MANDATE") {
-                return Excel::download(new PaymentMandateExport($request->start_at, $request->end_at, $request->account_type_id, $request->account_id, null, null), date('YmdHis') . '-PaymentMandate.xlsx');
+                return Excel::download(new PaymentMandateExport($request->start_at, $request->end_at, $request->account_type_id, $request->account_id, null, null), date('YmdHis') . '_DebitMandate.xlsx');
+            }elseif($report_type == "COLLECTION"){
+                return Excel::download(new CollectionExport($request->start_at, $request->end_at), date('YmdHis') . '_DebitMandate.xlsx');
+
             }
         }
 

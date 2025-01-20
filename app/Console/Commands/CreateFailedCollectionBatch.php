@@ -53,7 +53,7 @@ class CreateFailedCollectionBatch extends Command
             foreach ($collection_batches as $batch) {
                 //1. Create new collection batch
                 $new_batch = CollectionBatch::create([
-                    'partner_id' => $batch->partner_id,
+                    "partner_id" => $batch->partner_id,
                     "collectionReference" => $deductionService->getCollectionReference(),
                     "corporateReference" => $batch->corporateReference,
                     "selectedPostingDate" => Carbon::now(),
