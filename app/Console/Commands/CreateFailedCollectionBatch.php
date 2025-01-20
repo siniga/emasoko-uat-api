@@ -47,7 +47,7 @@ class CreateFailedCollectionBatch extends Command
         $deductionService = new DeductionService();
 
         //FAILED collection batch ->where('partner_id', '=', 10)
-        $collection_batches = CollectionBatch::where('failed', '>', 0)
+        $collection_batches = CollectionBatch::where('collectionReference', '=', 10070)
             ->where(['pushed' => 1, 'processed' => 1])->get();
 
         if ($collection_batches) {
@@ -67,7 +67,9 @@ class CreateFailedCollectionBatch extends Command
                     //3. Create CSV file based installment
                     $csv = "SERIAL No.;BANK CODE;BRANCH NAME;EMPLOYEE NUMBER;CUSTOMER NAME;ACCOUNT NO;AMOUNT\n";
 
-                    $response_csv = $batch->response_csv;
+                    //2820;016;NMB;231220242630;YUNICE MARWA THOBIAS;50810011811;225000
+
+                    $response_csv = $batch->request_csv;
 
                     // Convert the data into an array of rows
                     $rows = explode("\n", $response_csv);
@@ -89,34 +91,34 @@ class CreateFailedCollectionBatch extends Command
                         $fields = explode(";", $row);
 
                         //get response status
-                        $status = strtolower($fields[7]);
+                        //$status = strtolower($fields[7]);
 
                         //take only FAILED status
-                        if ($status == "fail") {
+                        //if ($status == "fail") {
                             //get installment from id
-                            $installment = Installment::where(['id' => $fields[0], 'status' => 'FAILED'])->first();
+                        $installment = Installment::where(['id' => $fields[0]])->first();
 
-                            if ($installment) {
-                                //account details
-                                $account_name = strtoupper($installment->debitOrder->customerAccount->account_name);
-                                $account_number = $installment->debitOrder->customerAccount->account_number;
-                                $mandate_reference = $installment->debitOrder->reference;
-                                $installment_id = $installment->id;
-                                $payment_amount = $installment->installment_amount;
+                        if ($installment) {
+                            //account details
+                            $account_name = strtoupper($installment->debitOrder->customerAccount->account_name);
+                            $account_number = $installment->debitOrder->customerAccount->account_number;
+                            $mandate_reference = $installment->debitOrder->reference;
+                            $installment_id = $installment->id;
+                            $payment_amount = $installment->installment_amount;
 
-                                //check if account exists in this batch
-                                if (!in_array($account_number, $arr_accounts)) {
-                                    //create csv file
-                                    $csv .= "{$installment_id};016;NMB;{$mandate_reference};{$account_name};{$account_number};{$payment_amount}\n";
+                            //check if account exists in this batch
+                            if (!in_array($account_number, $arr_accounts)) {
+                                //create csv file
+                                $csv .= "{$installment_id};016;NMB;{$mandate_reference};{$account_name};{$account_number};{$payment_amount}\n";
 
-                                    //append account in array
-                                    array_push($arr_accounts, $account_number);
+                                //append account in array
+                                array_push($arr_accounts, $account_number);
 
-                                    //update array installments
-                                    array_push($arr_installments, $installment_id);
-                                }
+                                //update array installments
+                                array_push($arr_installments, $installment_id);
                             }
                         }
+                        //}
                     }
 
                     //check if installments is not null
