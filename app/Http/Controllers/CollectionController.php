@@ -267,7 +267,7 @@ class CollectionController extends Controller
         $payload = $this->payloadService->collectionStatusPayload($collection_batch);
 
         //3. BackgroundJob for creating collection batches
-        dispatch(new CollectionStatusJob($payload));
+        $response = $this->bankApi->collectionStatus($payload);
 
         //response
         return response()->json(['success' => true, 'success_msg' => "Collection status are processed, Wait for 2-5 minutes and refresh the page."], 200);

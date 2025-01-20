@@ -124,7 +124,6 @@ class CollectionStatusJob implements ShouldQueue
                     $collection_batch->success = $response[0];
                     $collection_batch->failed = $response[1];
                     $collection_batch->save();
-
                 } else if ($response_code == 239) {
                     //3.Batch Processing
                     //3.1: read csv file
