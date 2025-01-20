@@ -72,7 +72,7 @@ class CollectionController extends Controller
             $requests = $request->all();
             $partner_id =  $requests['partner_id'];
 
-            $debit_orders = DebitOrder::where(['contract_status' => 'OPEN', 'approved' => 1])
+            $debit_orders = DebitOrder::where(['contract_status' => 'OPEN', 'approved' => 1, 'status' => 240])
                 ->where('partner_id', '=', $requests['partner_id'])
                 ->where('deleted', '=', 0)
                 ->whereDate('next_debit_date', "=", $requests['debit_date']);
