@@ -588,55 +588,77 @@ class BankApiService
         Log::debug('== CollectionStatus Response ==');
         Log::debug($response);
 
-        if (strtolower($response['status']) == "success") {
-            $batch_status = $response['data']['response'][0]['responseCode'];
+        if ($response) {
+            if (strtolower($response['status']) == "success") {
+                $response_code = $response['data']['response'][0]['responseCode'];
+                $remarks = $response['data']['response'][0]['responseDescription'];
 
-            //update batch status
-            $collection_batch->status = $response['data']['response'][0]['responseCode'];
-            $collection_batch->http_response_code = $response['data']['response'][0]['responseCode'];
-            $collection_batch->remarks = $response['data']['response'][0]['responseDescription'];
-            $collection_batch->processed = 1;
+                //update batch status
+                $collection_batch->status = $response_code;
+                $collection_batch->http_response_code = $response_code;
+                $collection_batch->remarks = $remarks;
+                $collection_batch->processed = 1;
 
-            //check for batch processing or batch complete
-            if ($batch_status == 230) {
-                //1. Batch Complete
-                //1.1: read csv file
-                $data = base64_to_content($response['data']['file']['fileData']);
-                $collection_batch->response_csv = $data;
+                //check for batch processing or batch complete
+                if ($response_code == 230) {
+                    //1. Batch Complete
+                    //1.1: read csv file
+                    $data = base64_to_content($response['data']['file']['fileData']);
+                    $collection_batch->response_csv = $data;
 
-                Log::debug("== Collection CSV ==");
-                Log::debug($data);
+                    Log::debug("== Complete Collection CSV ==");
+                    Log::debug($data);
 
-                $response = $this->deduction_service->updateInstallments($data, $collection_reference);
+                    $response = $this->deduction_service->updateInstallments($data, $collection_reference);
 
-                //3. process batch
-                $collection_batch->success = $response[0];
-                $collection_batch->failed = $response[1];
-                $collection_batch->save();
-            } else if ($batch_status == 239) {
-                //3.Batch Processing
-                //3.1: read csv file
-                $data = base64_to_content($response['data']['file']['fileData']);
-                $collection_batch->response_csv = $data;
+                    //3. process batch
+                    $collection_batch->success = $response[0];
+                    $collection_batch->failed = $response[1];
+                    $collection_batch->save();
+                } else if ($response_code == 235) {
+                    //1. Batch Complete
+                    //1.1: read csv file
+                    $data = base64_to_content($response['data']['file']['fileData']);
+                    $collection_batch->response_csv = $data;
 
-                Log::debug("== Collection CSV ==");
-                Log::debug($data);
+                    Log::debug("== Failed Collection CSV ==");
+                    Log::debug($data);
 
-                //response
-                $response = $this->deduction_service->updateInstallments($data, $collection_reference);
+                    $response = $this->deduction_service->updateInstallments($data, $collection_reference);
 
-                //3. process batch
-                $collection_batch->success = $response[0];
-                $collection_batch->failed = $response[1];
-                $collection_batch->save();
+                    //3. process batch
+                    $collection_batch->success = $response[0];
+                    $collection_batch->failed = $response[1];
+                    $collection_batch->save();
+                } else if ($response_code == 239) {
+                    //3.Batch Processing
+                    //3.1: read csv file
+                    $data = base64_to_content($response['data']['file']['fileData']);
+                    $collection_batch->response_csv = $data;
+
+                    Log::debug("== Processing Collection CSV ==");
+                    Log::debug($data);
+
+                    //response
+                    $response = $this->deduction_service->updateInstallments($data, $collection_reference);
+
+                    //3. process batch
+                    $collection_batch->success = $response[0];
+                    $collection_batch->failed = $response[1];
+                    $collection_batch->save();
+                }
+            } else if (strtolower($response['status']) == "fail") {
+                $response_code = $response['data']['response'][0]['responseCode'];
+                $remarks = $response['data']['response'][0]['responseDescription'];
+
+                //update collection status
+                $collection_batch->status = 501;
+                $collection_batch->http_response_code = $response_code;
+                $collection_batch->remarks = $remarks;
+
+                if ($response_code == 235 || $response_code == 404)
+                    $collection_batch->processed = 1; //batch processed and failed
             }
-        } else if (strtolower($response['status']) == "fail") {
-            //update status
-            $collection_batch->status = $response['data']['response'][0]['responseCode'];
-            $collection_batch->http_response_code = $response['data']['response'][0]['responseCode'];
-            $collection_batch->remarks = $response['data']['response'][0]['responseDescription'];
-            $collection_batch->processed = 1;
-            $collection_batch->save();
         }
 
         return 200;

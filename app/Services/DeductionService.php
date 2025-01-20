@@ -206,9 +206,12 @@ class DeductionService
                     $failed_installments += 1;
 
                     if ($message == 'insufficient funds') {
+                        //format amount
+                        $installmentAmt = number_format($installment_amount);
+
                         //send sms to FAILED mandate
                         $phone = $installment->debitOrder->customerAccount->phone;
-                        $message = "Makato ya tarehe {$payment_date} ya kiasi cha shilingi {$installment_amount} yameshindikana. Tafadhali weka pesa kwenye akaunti yako ya benki kwa ajili ya makato.";
+                        $message = "Makato ya tarehe {$payment_date} ya kiasi cha shilingi {$installmentAmt} yameshindikana. Tafadhali weka pesa kwenye akaunti yako ya benki kwa ajili ya makato.";
 
                         //send sms
                         $data = ["phone" => $phone, "message" => $message];
@@ -283,13 +286,17 @@ class DeductionService
             //payment date
             $payment_date = $installment->payment_date;
 
-            //send message for outstanding amount and current balance from eMakato.
-            // $phone = $installment->debitOrder->customerAccount->phone;
-            // $message = "Makato ya tarehe {$payment_date} ya kiasi cha shilingi {$installment_amount} yamekamilishwa na kiasi kilichobaki ni Tsh {$outstanding_amount}. Asante kwa kutumia eMakato.";
+            //format amount
+            $outstandingAmt = number_format($outstanding_amount);
+            $installmentAmt = number_format($installment_amount);
 
-            // //Send SMS
-            // $data = ["phone" => $phone, "message" => $message];
-            // dispatch(new SendSMSJob($data));
+            //send message for outstanding amount and current balance from eMakato.
+            $phone = $installment->debitOrder->customerAccount->phone;
+            $message = "Makato ya tarehe {$payment_date} ya kiasi cha shilingi {$installmentAmt} yamekamilishwa na kiasi kilichobaki ni Tsh {$outstandingAmt}. Asante kwa kutumia eMakato.";
+
+            //Send SMS
+            $data = ["phone" => $phone, "message" => $message];
+            dispatch(new SendSMSJob($data));
 
             //update next debit date
             $this->updateNextDebitDate($debit_order->id, $payment_date);
