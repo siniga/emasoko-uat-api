@@ -17,7 +17,7 @@ class CreateFailedCollectionBatch extends Command
      *
      * @var string
      */
-    protected $signature = 'send:failed-batches';
+    protected $signature = 'create:failed-batches';
 
     /**
      * The console command description.
@@ -47,8 +47,7 @@ class CreateFailedCollectionBatch extends Command
         $deductionService = new DeductionService();
 
         //FAILED collection batch ->where('partner_id', '=', 10)
-        $collection_batches = CollectionBatch::where('collectionReference', '=', 10070)
-            ->where(['pushed' => 1, 'processed' => 1])->get();
+        $collection_batches = CollectionBatch::where('collectionReference', '=', 10070)->get();
 
         if ($collection_batches) {
             foreach ($collection_batches as $batch) {
