@@ -238,11 +238,8 @@ class DeductionService
     //process installment
     public function processInstallment(Installment $installment, $amount, $reference)
     {
-        Log::debug("Installment => Process 1");
         //0. Check if installment status is not CLOSED
-        if ($installment->status == 'OPEN' || $installment->status == 'PARTIAL_PAID') {
-            Log::debug("Installment => Process 2");
-
+        if ($installment->status == 'OPEN') {
             //1. Update installment => outstanding amount, current balance
             $outstanding_amount = $installment->outstanding_amount - $amount;
             $current_balance = $installment->current_balance + $amount;
@@ -284,14 +281,13 @@ class DeductionService
             $payment_date = $installment->payment_date;
 
             //send message for outstanding amount and current balance from eMakato.
-            // $phone = $installment->debitOrder->customerAccount->phone;
-            // $message = "Makato ya tarehe {$payment_date} ya kiasi cha shilingi {$installment_amount} yamekamilishwa na kiasi kilichobaki ni Tsh {$outstanding_amount}. Asante kwa kutumia eMakato.";
+            $phone = $installment->debitOrder->customerAccount->phone;
+            $message = "Makato ya tarehe {$payment_date} ya kiasi cha shilingi {$installment_amount} yamekamilishwa na kiasi kilichobaki ni Tsh {$outstanding_amount}. Asante kwa kutumia eMakato.";
 
-            // //Send SMS
-            // $data = ["phone" => $phone, "message" => $message];
-            // dispatch(new SendSMSJob($data));
+            //Send SMS
+            $data = ["phone" => $phone, "message" => $message];
+            dispatch(new SendSMSJob($data));
 
-            Log::debug("Installment => Process 3");
             //update next debit date
             $this->updateNextDebitDate($debit_order->id, $payment_date);
 
@@ -316,7 +312,7 @@ class DeductionService
             $next_installment = $next_installment->first();
 
             //update next debit date
-            $debit_order = DebitOrder::where(['id' => $debit_id])->firstOrFail();
+            $debit_order = DebitOrder::findOrFail($debit_id);
             $debit_order->next_debit_date = $next_installment->payment_date;
             $debit_order->save();
         }
