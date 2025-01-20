@@ -137,11 +137,11 @@ class CollectionController extends Controller
             if ($batch->wasRecentlyCreated) {
                 //2.1 Declare variables
                 $arr_installments = [];
+                $arr_accounts = []; //declare array accounts
 
                 //3. Create CSV file based installment
                 $csv = "SERIAL No.;BANK CODE;BRANCH NAME;EMPLOYEE NUMBER;CUSTOMER NAME;ACCOUNT NO;AMOUNT\n";
 
-                $arr_accounts = []; //declare array accounts
                 foreach ($request->installment_ids as $id) {
                     //installment
                     $installment = Installment::findOrFail($id);
@@ -248,28 +248,46 @@ class CollectionController extends Controller
         return view('collections.show', compact('title', 'batch', 'arr_data'));
     }
 
-    public function push(Request $request)
+    public function push($id)
     {
         $title = "Push Collection Batch";
 
         //collection batch
-        $collection_batch = CollectionBatch::where(['id' => $request->batch_id])->firstOrFail();
+        $collection_batch = CollectionBatch::where(['id' => $id])->firstOrFail();
+
+        if (!empty($collection_batch->request_csv)) {
+            //1. Create parameters
+            $csv = $collection_batch->request_csv;
+            $arr_installments = explode(",", $collection_batch->installment_ids);
+            Log::debug($arr_installments);
+
+            //2. Create payload for collection 
+            $payload = $this->payloadService->collectionPayload($collection_batch, $csv);
+            Log::debug("== payload ==");
+            Log::debug($payload);
+
+            //3. BackgroundJob for creating collection batches
+            dispatch(new PushCollectionJob($payload, $arr_installments));
+        }
+
+        //response
+        return response()->json(['success' => true, 'success_msg' => "Collection batch pushed."], 200);
     }
 
     public function fetch_status(Request $request)
     {
         $title = "Fetch Collection Status";
 
-        //collection batch
+        //Collection batch
         $collection_batch = CollectionBatch::where(['id' => $request->batch_id])->firstOrFail();
 
-        //create payload
+        //Create payload
         $payload = $this->payloadService->collectionStatusPayload($collection_batch);
 
-        //3. BackgroundJob for creating collection batches
-        $response = $this->bankApi->collectionStatus($payload);
+        //BackgroundJob for creating collection batches
+        dispatch(new CollectionStatusJob($payload));
 
         //response
-        return response()->json(['success' => true, 'success_msg' => "Collection status are processed, Wait for 2-5 minutes and refresh the page."], 200);
+        return response()->json(['success' => true, 'success_msg' => "Collection status successful fetched."], 200);
     }
 }

@@ -47,12 +47,13 @@ class CreateFailedCollectionBatch extends Command
         $deductionService = new DeductionService();
 
         //FAILED collection batch ->where('partner_id', '=', 10)
-        $collection_batches = CollectionBatch::where('collectionReference', '=', 10070)->get();
+        $collection_batches = CollectionBatch::where('collectionReference', '=', 10065)->get();
 
         if ($collection_batches) {
             foreach ($collection_batches as $batch) {
                 //1. Create new collection batch
                 $new_batch = CollectionBatch::create([
+                    "partner_id" => $batch->partner_id,
                     "collectionReference" => $deductionService->getCollectionReference(),
                     "corporateReference" => $batch->corporateReference,
                     "selectedPostingDate" => Carbon::now(),

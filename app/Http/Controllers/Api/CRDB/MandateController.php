@@ -63,7 +63,7 @@ class MandateController extends Controller
             "DebitAccount" =>  $debitAccount,
             "TotalAmount" =>  "1000",
             "InstallmentAmount" => "100",
-            "StartDate" => "17-01-2025",
+            "StartDate" => "20-01-2025",
             "EndDate" => "10-10-2025",
             "FrequencyType" => "WEEKLY",
             "Frequency" => "1",
