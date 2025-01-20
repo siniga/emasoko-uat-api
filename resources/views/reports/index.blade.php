@@ -28,7 +28,8 @@
                                     <div class="mb-3">
                                         @php
                                             $options = [
-                                                'MANDATE' => 'Payment Mandate',
+                                                'MANDATE' => 'Debit Mandate',
+                                                'COLLECTION' => 'Payment Collections',
                                                
                                             ];
                                             $options = ['' => '-- Report Type --'] + $options;

@@ -16,6 +16,7 @@ class Kernel extends ConsoleKernel
         Commands\CreateCollectionBatch::class,
         Commands\PushCollectionBatch::class,
         Commands\CollectionStatusBatch::class,
+        Commands\SendMessage::class,
     ];
 
     /**
@@ -30,6 +31,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('create:batches')->dailyAt('04:00');
         $schedule->command('push:batches')->everyTwoHours();
         $schedule->command('collection:status')->everyThreeHours();
+        $schedule->command('send:message')->everyFiveMinutes();
     }
 
     /**

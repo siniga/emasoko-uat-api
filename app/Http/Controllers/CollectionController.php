@@ -253,7 +253,7 @@ class CollectionController extends Controller
         $title = "Push Collection Batch";
 
         //collection batch
-        $collection_batch = CollectionBatch::where(['id' => $id])->firstOrFail();
+        $collection_batch = CollectionBatch::where(['id' => $request->batch_id])->firstOrFail();
 
         if (!empty($collection_batch->request_csv)) {
             //1. Create parameters
@@ -263,8 +263,6 @@ class CollectionController extends Controller
 
             //2. Create payload for collection 
             $payload = $this->payloadService->collectionPayload($collection_batch, $csv);
-            Log::debug("== payload ==");
-            Log::debug($payload);
 
             //3. BackgroundJob for creating collection batches
             dispatch(new PushCollectionJob($payload, $arr_installments));
