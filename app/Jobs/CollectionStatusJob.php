@@ -73,7 +73,7 @@ class CollectionStatusJob implements ShouldQueue
 
         //update collection batch 
         $collection_batch = CollectionBatch::where('collectionReference', '=', $collection_reference)->first();
-        $collection_batch->http_response_json = $response;
+        //$collection_batch->http_response_json = $response;
 
         //decode the response 
         $response = json_decode($response, true);
