@@ -55,7 +55,7 @@ class CreateCollectionBatch extends Command
         // ->where("partners.id", "!=", 10)
         $partners = Partner::whereHas('debitOrders', function ($query) {
             return $query->where(['contract_status' => 'OPEN', 'channel' => 'NMB', 'approved' => 1, 'deleted' => 0])
-                ->whereDate('next_debit_date', "=", "2025-01-18");
+                ->whereDate('next_debit_date', "=", Carbon::now());
         })->get();
 
         foreach ($partners as $partner) {
@@ -63,7 +63,7 @@ class CreateCollectionBatch extends Command
             $debit_orders = DebitOrder::where(['contract_status' => 'OPEN', 'approved' => 1])
                 ->where('partner_id', '=', $partner->id)
                 ->where('deleted', '=', 0)
-                ->whereDate('next_debit_date', "=", "2025-01-18");
+                ->whereDate('next_debit_date', "=", Carbon::now());
 
             if ($debit_orders->count() > 0) {
                 //2.0 Create collection batch based on partner 
