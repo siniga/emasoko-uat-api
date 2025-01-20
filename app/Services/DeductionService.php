@@ -316,7 +316,7 @@ class DeductionService
             $next_installment = $next_installment->first();
 
             //update next debit date
-            $debit_order = DebitOrder::where(['id' => $debit_id])->firstOrFail();
+            $debit_order = DebitOrder::findOrFail($debit_id);
             $debit_order->next_debit_date = $next_installment->payment_date;
             $debit_order->save();
         }
