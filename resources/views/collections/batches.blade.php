@@ -99,7 +99,6 @@
                                             <th width="20%">Service Provider</th>
                                             <th>Reference</th>
                                             <th>Pushed</th>
-                                            <th>Pushed</th>
                                             <th>Processed</th>
                                             <th>No. of Success</th>
                                             <th>No. of Failed</th>
