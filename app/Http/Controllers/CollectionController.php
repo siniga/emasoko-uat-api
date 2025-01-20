@@ -270,6 +270,6 @@ class CollectionController extends Controller
         dispatch(new CollectionStatusJob($payload));
 
         //response
-        return response()->json(['success' => true, 'success_msg' => "Collection status successful fetched."], 200);
+        return response()->json(['success' => true, 'success_msg' => "Collection status are processed, Wait for 5 minutes and refresh the page."], 200);
     }
 }

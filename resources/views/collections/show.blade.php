@@ -234,14 +234,8 @@
                         }).then(response => response.json())
                         .then(responseJson => {
                             $('#message_wrp').html(
-                                "<div class='alert alert-success rounded-sm'>Collection status fetched</div>"
+                                "<div class='alert alert-success rounded-sm'>Collection status are processed, Wait for 2-5 minutes and refresh the page.</div>"
                             );
-
-                            setTimeout(function () {
-                                location.reload();
-                            }, 2000);
-
-
                         }).catch(() => {
                             //display message
                             $('#message_wrp').html(
