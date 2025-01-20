@@ -192,6 +192,10 @@
                                             <template x-if="status==501">
                                                 <span class="badge bg-danger">Inactive</span>
                                             </template>
+
+                                            <template x-if="status==999">
+                                                <span class="badge bg-danger">Canceled</span>
+                                            </template>
                                         </td>
                                     </tr>
 
