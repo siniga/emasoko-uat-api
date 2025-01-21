@@ -194,7 +194,7 @@
                                             </template>
 
                                             <template x-if="status==999">
-                                                <span class="badge bg-danger">Canceled</span>
+                                                <span class="badge bg-danger">Cancelled</span>
                                             </template>
                                         </td>
                                     </tr>
@@ -310,7 +310,7 @@
                                              <tr>
                                                 @foreach($debit_order->installments as $val)
                                                     <td class="text-center">
-                                                        @if($val->status == "OPEN")
+                                                        @if($val->status == "OPEN" || $val->status == "FAILED")
                                                             <i class='bx bxs-x-square bx-sm text-danger'></i>
                                                         @elseif($val->status == "CLOSED" || $val->status == "SUCCESS")
                                                             <i class='bx bxs-check-square bx-sm text-success'></i>
