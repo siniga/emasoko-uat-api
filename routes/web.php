@@ -190,7 +190,7 @@ Route::any('collections/batches', [CollectionController::class, 'batches'])->nam
 Route::any('collections/create', [CollectionController::class, 'create'])->name('collections.create');
 Route::post('collections/store', [CollectionController::class, 'store'])->name('collections.store');
 Route::get('collections/show/{id}', [CollectionController::class, 'show'])->name('collections.show');
-Route::post('collections/push', [CollectionController::class, 'push'])->name('collections.push');
+Route::get('collections/push/{id}', [CollectionController::class, 'push'])->name('collections.push');
 Route::post('collections/fetch-status', [CollectionController::class, 'fetch_status'])->name('collections.fetch-status');
 
 //reports

@@ -253,7 +253,7 @@ class CollectionController extends Controller
         $title = "Push Collection Batch";
 
         //collection batch
-        $collection_batch = CollectionBatch::where(['id' => $request->batch_id])->firstOrFail();
+        $collection_batch = CollectionBatch::where(['id' => $id])->firstOrFail();
 
         if (!empty($collection_batch->request_csv)) {
             //1. Create parameters
