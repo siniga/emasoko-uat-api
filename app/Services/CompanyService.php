@@ -173,7 +173,8 @@ class CompanyService
             foreach ($users as $user) {
                 //send email in background
                 $data = [
-                    "email" => $user->email,
+                    "to_email" => $user->email,
+                    "from_email" => "support@solocodes.io",
                     "name" => $user->name,
                     "subject" => "Corporate Registration",
                     "body" => $message
@@ -201,7 +202,8 @@ class CompanyService
 
             //send email
             $data = [
-                "email" => $partner->email,
+                "to_email" => $partner->email,
+                "from_email" => "support@solocodes.io",
                 "name" => $partner->business_name,
                 "subject" => "eMakato Corporate Registration",
                 "body" => $message

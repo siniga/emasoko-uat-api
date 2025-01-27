@@ -44,6 +44,7 @@ use Illuminate\Support\Facades\Route;
 Route::controller(AuthOtpController::class)->group(function () {
     Route::get('/', 'login')->name('otp.login');
     Route::get('/login', 'login')->name('otp.login');
+    Route::get('/send-email', 'sendEmail')->name('otp.send-email');
     Route::post('/otp/generate', 'generate')->name('otp.generate');
     Route::get('/otp/verification/{uuid}', 'verification')->name('otp.verification');
     Route::post('/otp/login', 'loginWithOtp')->name('otp.getlogin');

@@ -50,20 +50,21 @@ class AuthOtpController extends Controller
         $phone =  casting_phone($user->phone);
 
         //construct message
-        $message = "Your Emakato One Time Password(OTP) to Login is - " . $verificationCode->otp;
+        $message = "Your Emakato One Time Password(OTP) to Login is " . $verificationCode->otp;
 
         //send sms
         $data = ["phone" => $phone, "message" => $message];
         dispatch(new SendSMSJob($data));
 
         //send email
-        // $data = [
-        //     "email" => $user->email,
-        //     "name" => $user->name,
-        //     "subject" => "eMakato OTP Verification",
-        //     "body" => $message
-        // ];
-        // dispatch(new SendEmailJob($data));
+        $data = [
+            "to_email" => $user->email,
+            "from_email" => "support@solocodes.io",
+            "name" => $user->name,
+            "subject" => "eMakato OTP Verification",
+            "body" => $message
+        ];
+        dispatch(new SendEmailJob($data));
 
         //redirect
         return Redirect::route('otp.verification', ['uuid' => $user->uuid])->with('success', $user->name . ', Welcome at eMakato. Enter OTP Pin sent to your phone and email.');
@@ -148,5 +149,20 @@ class AuthOtpController extends Controller
             return Redirect::route('dashboard')->with('success', 'Logged in successful');
         else
             return Redirect::route('payment-mandate.create-account')->with('success', 'Logged in successful');
+    }
+
+    public function sendEmail()
+    {
+        //send email
+        $data = [
+            "to_email" => "renfridfrancis@gmail.com",
+            "from_email" => "support@solocodes.io",
+            "name" => "Renfrid William",
+            "subject" => "eMakato OTP Verification",
+            "body" => "Hello message"
+        ];
+        dispatch(new SendEmailJob($data));
+
+        return response()->json(['error' => false, 'success_msg' => 'Message sent']);
     }
 }
