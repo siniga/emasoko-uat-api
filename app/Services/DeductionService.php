@@ -117,6 +117,15 @@ class DeductionService
                 } else {
                     $installment_date = date('Y-m-d', strtotime($last_installment_date . $number_of_days));
 
+                    //formating all the dates if periodicity = "MONTHLY"
+                    if ($periodicity == "MONTHLY") {
+                        $year = date('Y', strtotime($installment_date));
+                        $month = date('m', strtotime($installment_date));
+
+                        $date = Carbon::createFromDate($year, $month, $dayOfMonth);
+                        $installment_date = $date->format('Y-m-d'); // Format as dd-mm-yyyy
+                    }
+
                     //SUMMATION installment Amount
                     $sum_installment_amount += $debitOrder->max_installment_amount;
 
@@ -151,7 +160,8 @@ class DeductionService
             }
         }
 
-        //5. Ppdate debit order end_date
+        //5. Update debit order end_date
+        $last_installment_date = date('Y-m-d', strtotime($last_installment_date . $number_of_days));
         $debitOrder->end_date = $last_installment_date;
         $debitOrder->save();
 
