@@ -112,8 +112,8 @@
                             </tr>
 
                             <tr>
-                                <th>Status</th>
-                                <td colspan="3" id="company-status">
+                                <th>Registration Status</th>
+                                <td id="company-status">
                                     <template x-if="status==0">
                                         <span class="badge bg-warning text-uppercase">Registration Process</span>
                                     </template>
@@ -141,6 +141,16 @@
                                     <template x-if="status==500">
                                         <span class="badge bg-danger text-uppercase">Rejected</span>
                                     </template>
+                                </td>
+
+                                <th>Created On</th>
+                                <td>{{ date('d,M-Y', strtotime($company->created_at)) }}</td>
+                            </tr>
+
+                            <tr>
+                                <th width="25%">Remarks</th>
+                                <td colspan="3">
+                                    <span x-text="remarks"></span>
                                 </td>
                             </tr>
 
