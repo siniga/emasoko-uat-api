@@ -184,7 +184,7 @@ class CompanyService
     }
 
     //process company assessment
-    function processAssessment(Partner $partner, $data)
+    public function processAssessment(Partner $partner, $data)
     {
         if ($data['action'] == "REJECT") {
             //update company registration status
@@ -260,8 +260,8 @@ class CompanyService
         $partner_user->save();
     }
 
-    //get Customer Code
-    function getCustomerCode()
+    //get customer code
+    public function getCustomerCode()
     {
         //app variable
         $app_variable = AppVariable::first();
