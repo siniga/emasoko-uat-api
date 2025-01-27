@@ -145,7 +145,7 @@
 
                                     <tr>
                                         <th width="25%">Application Date</th>
-                                        <td width="25%">{{ date('d,M-Y', strtotime($debit_order->created_at)) }}</td>
+                                        <td width="25%">{{ date('M d, Y H:i', strtotime($debit_order->created_at)) }}</td>
 
                                         <th width="25%">Mandate Status</th>
                                         <td width="25%">

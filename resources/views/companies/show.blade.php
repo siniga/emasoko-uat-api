@@ -115,36 +115,36 @@
                                 <th>Registration Status</th>
                                 <td id="company-status">
                                     <template x-if="status==0">
-                                        <span class="badge bg-warning text-uppercase">Registration Process</span>
+                                        <span class="badge bg-warning">Registration Process</span>
                                     </template>
 
                                     <template x-if="status==100">
-                                        <span class="badge bg-warning text-uppercase">Pending Review</span>
+                                        <span class="badge bg-warning">Pending Review</span>
                                     </template>
 
                                     <template x-if="status==200">
-                                        <span class="badge bg-info text-uppercase">Pending Approval</span>
+                                        <span class="badge bg-info">Pending Approval</span>
                                     </template>
 
                                     <template x-if="status==201">
-                                        <span class="badge bg-info text-uppercase">Pending Verification</span>
+                                        <span class="badge bg-info">Pending Verification</span>
                                     </template>
 
                                     <template x-if="status==202">
-                                        <span class="badge bg-success text-uppercase">Company Verified</span>
+                                        <span class="badge bg-success">Company Verified</span>
                                     </template>
 
                                     <template x-if="status==403">
-                                        <span class="badge bg-danger text-uppercase">Failed</span>
+                                        <span class="badge bg-danger">Failed</span>
                                     </template>
 
                                     <template x-if="status==500">
-                                        <span class="badge bg-danger text-uppercase">Rejected</span>
+                                        <span class="badge bg-danger">Rejected</span>
                                     </template>
                                 </td>
 
                                 <th>Created On</th>
-                                <td>{{ date('d,M-Y', strtotime($company->created_at)) }}</td>
+                                <td>{{ date('M d, Y H:i', strtotime($company->created_at)) }}</td>
                             </tr>
 
                             <tr>
