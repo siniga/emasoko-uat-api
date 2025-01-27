@@ -230,13 +230,16 @@ class CompanyService
     {
         //token and password
         $token = Str::random(64);
+        $password = "12345678";
 
         //create user to store data
         $user = User::firstOrNew(['email' => $partner->email, 'TIN_number' => $partner->tin_number]);
+        $user->uuid = Str::uuid();
         $user->name = $partner->business_name;
         $user->phone = $partner->phone;
         $user->verify_token = $token;
-        $user->password = Hash::make("12345678");
+        $user->password = Hash::make($password);
+        $user->otp_password = base64_encode($password);
         $user->active = 1;
         $user->save();
 
