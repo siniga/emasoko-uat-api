@@ -79,6 +79,9 @@ class PaymentMandateController extends Controller
             //all request
             $requests = $request->all();
 
+            Log::debug("== all requests ==");
+            Log::debug($requests);
+
             $debit_orders = $debit_orders->when($requests, function ($query) use ($requests) {
                 $query->withFilters($requests);
             });

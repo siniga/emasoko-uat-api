@@ -4,6 +4,7 @@ namespace App\Exports;
 
 use App\Models\DebitOrder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
@@ -29,6 +30,9 @@ class PaymentMandateExport implements FromQuery, WithHeadings, ShouldAutoSize, W
 
     public function query()
     {
+        Log::debug("== this status ==");
+        Log::debug($this->status);
+
         //debit orders
         $debit_orders = DebitOrder::filterCondition();
 
@@ -60,8 +64,15 @@ class PaymentMandateExport implements FromQuery, WithHeadings, ShouldAutoSize, W
             });
         }
 
-        if ($this->status != null)
-            $debit_orders = $debit_orders->where('debit_orders.approved', $this->status);
+        if ($this->status != null) {
+            if ($this->status == 'pending')
+                $debit_orders = $debit_orders->where('debit_orders.approved', 0);
+            else if ($this->status == 'approved')
+                $debit_orders = $debit_orders->where('debit_orders.approved', 1)->where('debit_orders.status', 240);
+            else if ($this->status == 'failed')
+                $debit_orders = $debit_orders->where('debit_orders.approved', 2);
+        }
+        //$debit_orders = $debit_orders->where('debit_orders.approved', $this->status);
 
         if ($this->keyword != null) {
             $keyword = $this->keyword;
@@ -100,6 +111,7 @@ class PaymentMandateExport implements FromQuery, WithHeadings, ShouldAutoSize, W
             'Deduction Start Date',
             'Deduction End Date',
             'Contract Status',
+            'Remarks',
             'Created Date',
             'Created By',
         ];
@@ -109,11 +121,11 @@ class PaymentMandateExport implements FromQuery, WithHeadings, ShouldAutoSize, W
     public function map($debit_orders): array
     {
         //format status
-        if ($debit_orders->approved == 0)
+        if (intval($debit_orders->approved) == 0)
             $consent_status = "PENDING";
-        else if($debit_orders->approved == 1)
+        else if (intval($debit_orders->approved) == 1)
             $consent_status = "APPROVED";
-        else if($debit_orders->approved == 1)
+        else if (intval($debit_orders->approved) == 2)
             $consent_status = "FAILED";
 
         return [
@@ -135,6 +147,7 @@ class PaymentMandateExport implements FromQuery, WithHeadings, ShouldAutoSize, W
             $debit_orders->start_date,
             $debit_orders->end_date,
             $debit_orders->contract_status,
+            $debit_orders->remarks,
             $debit_orders->created_at,
             $debit_orders->userCreated->name,
         ];
@@ -145,7 +158,7 @@ class PaymentMandateExport implements FromQuery, WithHeadings, ShouldAutoSize, W
     {
         return [
             AfterSheet::class    => function (AfterSheet $event) {
-                $cellRange = 'A1:R1'; // All headers
+                $cellRange = 'A1:U1'; // All headers
                 $event->sheet->getDelegate()->getStyle($cellRange)->getFont()->setSize(12);
                 $event->sheet->getDelegate()->getStyle($cellRange)->getFont()->setBold(true);
             },
