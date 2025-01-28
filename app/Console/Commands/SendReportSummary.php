@@ -4,6 +4,8 @@ namespace App\Console\Commands;
 
 use App\Jobs\SendEmailJob;
 use App\Models\DebitOrder;
+use App\Models\Installment;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -62,37 +64,63 @@ class SendReportSummary extends Command
             ];
         });
 
-        $table = '<table border=1>';
+        //total number of mandates
+        $total_number_of_mandate = $mandates[0]['number_of_mandate'] + $mandates[1]['number_of_mandate'] + $mandates[2]['number_of_mandate'];
+
+        //summation of mandate values
+        $total_mandate_value = $mandates[0]['total_amount'] + $mandates[1]['total_amount'] + $mandates[2]['total_amount'];
+
+
+        //collection stats
+        $installments = Installment::whereHas('debitOrder')->select(DB::raw('COALESCE(SUM(installments.installment_amount), 0) as total_amount'), DB::raw('COALESCE(SUM(installments.current_balance), 0) as paid_amount'))->toBase();
+
+        //today collection
+        $today = $installments->whereDate('payment_date', Carbon::now())->get();
+
+        $table = '<table>';
         $table .= '<tr><td>Registered Mandate</td>';
-        $table .= '<td>' . $mandates[0]['number_of_mandate'] . '</td></tr>';
+        $table .= '<td>' . number_format($total_mandate_value) . ' (' . number_format($total_number_of_mandate) . ')</td></tr>';
 
         $table .= '<tr><td>Approved Mandate</td>';
-        $table .= '<td>' . $mandates[1]['number_of_mandate'] . '</td></tr>';
+        $table .= '<td>' . number_format($mandates[1]['total_amount']) . ' (' . number_format($mandates[1]['number_of_mandate']) . ')</td></tr>';
 
         $table .= '<tr><td>Pending Mandate</td>';
-        $table .= '<td>' . $mandates[0]['number_of_mandate'] . '</td></tr>';
+        $table .= '<td>' . number_format($mandates[0]['total_amount']) . ' (' . number_format($mandates[0]['number_of_mandate']) . ')</td></tr>';
 
         $table .= '<tr><td>Failed Mandate</td>';
-        $table .= '<td>' . $mandates[2]['number_of_mandate'] . '</td></tr>';
+        $table .= '<td>' . number_format($mandates[2]['total_amount']) . ' (' . number_format($mandates[2]['number_of_mandate']) . ')</td></tr>';
 
         $table .= '<tr><td>Expected Collection</td>';
-        $table .= '<td>0</td></tr>';
+        $table .= '<td>' . number_format($today[0]->total_amount) . '</td></tr>';
 
         $table .= '<tr><td>Actual Collection</td>';
-        $table .= '<td>0</td></tr>';
+        $table .= '<td>' . number_format($today[0]->paid_amount) . '</td></tr>';
 
         $table .= '</table>';
 
         //construct message
-        $message = '<h3>Daily Report Summary - ' . Carbon::now()->format('d-m-Y') . '</h3>';
+        $message = '<h4>Daily Summary Report - ' . Carbon::now()->format('d-m-Y') . '</h4>';
         $message .= $table;
 
-        //send email
+        //users 
+        // $users = User::whereIn('id', [37, 38])->get();
+
+        // foreach ($users as $value) {
+        //     $data = [
+        //         "to_email" => $value->email,
+        //         "from_email" => "support@solocodes.io",
+        //         "name" => $value->name,
+        //         "subject" => "Daily Summary Report - " . Carbon::now()->format('d-m-Y'),
+        //         "body" => $message
+        //     ];
+        //     dispatch(new SendEmailJob($data));
+        // }
+
         $data = [
             "to_email" => "renfridfrancis@gmail.com",
             "from_email" => "support@solocodes.io",
             "name" => "Renfrid",
-            "subject" => "Daily Report Summary",
+            "subject" => "Daily Summary Report - " . Carbon::now()->format('d-m-Y'),
             "body" => $message
         ];
         dispatch(new SendEmailJob($data));
