@@ -27,16 +27,18 @@ class Installment extends Model
             $partners = $user->partners->where('authorize', '=', 1);
 
             foreach ($partners as $val)
-                array_push($arr_partners, $val->partner_id);   
+                array_push($arr_partners, $val->partner_id);
 
             if ($arr_partners) {
                 $installments = $installments->whereHas('debitOrder', function ($query) use ($arr_partners) {
-                    $query->whereIn('debit_orders.partner_id', $arr_partners);
+                    $query->whereIn('debit_orders.partner_id', $arr_partners)
+                        ->where('debit_orders.approved', '=', 1);
                 });
             }
         } else if ($user->hasRole('Company_User')) {
             $installments = $installments->whereHas('debitOrder', function ($query) use ($user) {
-                $query->where('debit_orders.created_by', '=', $user->id);
+                $query->where('debit_orders.created_by', '=', $user->id)
+                    ->where('debit_orders.approved', '=', 1);
             });
         }
 
