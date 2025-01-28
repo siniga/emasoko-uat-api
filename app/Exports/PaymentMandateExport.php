@@ -30,9 +30,6 @@ class PaymentMandateExport implements FromQuery, WithHeadings, ShouldAutoSize, W
 
     public function query()
     {
-        Log::debug("== this status ==");
-        Log::debug($this->status);
-
         //debit orders
         $debit_orders = DebitOrder::filterCondition();
 
@@ -72,7 +69,6 @@ class PaymentMandateExport implements FromQuery, WithHeadings, ShouldAutoSize, W
             else if ($this->status == 'failed')
                 $debit_orders = $debit_orders->where('debit_orders.approved', 2);
         }
-        //$debit_orders = $debit_orders->where('debit_orders.approved', $this->status);
 
         if ($this->keyword != null) {
             $keyword = $this->keyword;
