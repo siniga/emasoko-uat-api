@@ -31,7 +31,7 @@ class DebitOrder extends Model
             if ($arr_partners)
                 $debit_orders = $debit_orders->whereIn('debit_orders.partner_id', $arr_partners);
         } else if ($user->hasRole('Company_User')) {
-            $debit_orders = $debit_orders->where('debit_orders.created_by', '=' ,$user->id);
+            $debit_orders = $debit_orders->where('debit_orders.created_by', '=', $user->id);
         }
 
         return $debit_orders;
@@ -99,6 +99,9 @@ class DebitOrder extends Model
         $status            = $request['status'] ?? null;
         $keyword           = $request['keyword'] ?? null;
 
+        Log::debug("== status 1 ==");
+        Log::debug($status);
+
         return $query->when($start_date, function ($query) use ($start_date, $end_date) {
             if ($start_date != null || $end_date != null) {
                 if ($start_date != null && $end_date != null)
@@ -112,7 +115,12 @@ class DebitOrder extends Model
             }
         })
             ->when($status, function ($query) use ($status) {
-                $query->where('debit_orders.approved', $status);
+                if ($status == 'pending')
+                    $query->where('debit_orders.approved', 0);
+                else if ($status == 'approved')
+                    $query->where('debit_orders.approved', 1)->where('debit_orders.status', 240);
+                else if ($status == 'failed')
+                    $query->where('debit_orders.approved', 2);
             })
             ->when($account_type_id, function ($query) use ($account_type_id) {
                 $query->whereHas("customerAccount", function ($q) use ($account_type_id) {

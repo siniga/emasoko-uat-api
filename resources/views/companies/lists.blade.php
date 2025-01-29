@@ -121,7 +121,7 @@
                                         {{ Form::select('account_status', $options, old('account_status', request()->account_status), ['class' => 'form-control']) }}
                                     </div>
                                 </div>
-                                <!--./col -->
+
                                 <div class="col-lg-3">
                                     <div class="mb-3">
                                         <div class="text-sm-end d-none d-sm-block">
@@ -131,14 +131,10 @@
                                         </div>
                                     </div>
                                 </div>
-                                <!--./col -->
                             </div>
-                            <!--./row -->
                             {{ Form::close() }}
                         </div>
-                        <!--./col-lg-12 -->
                     </div>
-                    <!--./row -->
                 </div>
             </div>
 
@@ -209,22 +205,22 @@
                                             <td>{{ $company->tin_number }}</td>
                                             <td>{{ $company->year_of_incorporation }}</td>
                                             <td>{{ $company->phone }}</td>
-                                            <td>{{ $company->region->name ?? '' }}</td>
+                                            <td>{{ $company->region ? ucfirst(strtolower($company->region->name)) : '' }}</td>
                                             <td>
                                                 @if ($company->status == 0)
-                                                    <span class="badge bg-warning font-size-10 ">Registration Process</span>
+                                                    <span class="badge bg-warning">Registration Process</span>
                                                 @elseif($company->status == 100)
-                                                    <span class="badge bg-info font-size-10">Pending Review</span>
+                                                    <span class="badge bg-info">Pending Review</span>
                                                 @elseif($company->status == 200)
-                                                    <span class="badge bg-info font-size-10">Pending Approval</span>
+                                                    <span class="badge bg-info">Pending Approval</span>
                                                 @elseif($company->status == 201)
-                                                    <span class="badge bg-info font-size-10">Pending Verification</span>
+                                                    <span class="badge bg-info">Pending Verification</span>
                                                 @elseif($company->status == 202)
-                                                    <span class="badge bg-success-1 font-size-10">Verified</span>
+                                                    <span class="badge bg-success-1">Verified</span>
                                                 @elseif($company->status == 403) 
-                                                    <span class="badge bg-danger font-size-10">Failed</span>   
+                                                    <span class="badge bg-danger">Failed</span>   
                                                 @elseif($company->status == 500)
-                                                    <span class="badge bg-danger font-size-10">Rejected</span>
+                                                    <span class="badge bg-danger">Rejected</span>
                                                 @endif
                                             </td>
                                             <td>

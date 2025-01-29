@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class Installment extends Model
 {
@@ -29,13 +30,15 @@ class Installment extends Model
                 array_push($arr_partners, $val->partner_id);
 
             if ($arr_partners) {
-                $installments = $installments->with('debitOrder', function ($query) use ($arr_partners) {
-                    $query->whereIn('debit_orders.partner_id', $arr_partners);
+                $installments = $installments->whereHas('debitOrder', function ($query) use ($arr_partners) {
+                    $query->whereIn('debit_orders.partner_id', $arr_partners)
+                        ->where('debit_orders.approved', '=', 1);
                 });
             }
         } else if ($user->hasRole('Company_User')) {
-            $installments = $installments->with('debitOrder', function ($query) use ($user) {
-                $query->where('debit_orders.created_by', '=', $user->id);
+            $installments = $installments->whereHas('debitOrder', function ($query) use ($user) {
+                $query->where('debit_orders.created_by', '=', $user->id)
+                    ->where('debit_orders.approved', '=', 1);
             });
         }
 

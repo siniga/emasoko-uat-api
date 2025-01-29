@@ -17,7 +17,7 @@
         }
 
         h2 {
-            font-size: 20px;
+            font-size: 16px;
             margin-top: 0px;
             padding-top: 0px;
         }
@@ -87,7 +87,7 @@
 
         .note-text {
             text-align: justify;
-            font-size: 17px;
+            font-size: 15px;
             font-weight: 900;
         }
 
@@ -96,7 +96,7 @@
         }
 
         .contract-desc {
-            font-size: 16px;
+            font-size: 13px;
             text-align: justify;
             /* font-weight: 300; */
         }

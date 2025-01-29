@@ -160,7 +160,8 @@ class DeductionService
             }
         }
 
-        //5. Ppdate debit order end_date
+        //5. Update debit order end_date
+        $last_installment_date = date('Y-m-d', strtotime($last_installment_date . $number_of_days));
         $debitOrder->end_date = $last_installment_date;
         $debitOrder->save();
 

@@ -165,14 +165,14 @@ class DashboardChartController extends Controller
     {
         //current date
         $current_date = date('Y-m-d');
-        if ($request->has('input_week')) {
-            if ($request->input_week == "Last_Week")
-                $current_date = date('Y-m-d', strtotime($current_date . ' - 7 days'));
-            else if ($request->input_week == "Next_Week")
-                $current_date = date('Y-m-d', strtotime($current_date . ' + 7 days'));
-            else
-                $current_date = $current_date;
-        }
+        if ($request->has('curr_date'))
+            $current_date = date('Y-m-d', strtotime($request->input('curr_date')));
+        else
+            $current_date = $current_date;
+
+        Log::debug("current date");
+        Log::debug($current_date);    
+
 
         //get dates
         $dates = $this->get_dates($current_date);
@@ -183,7 +183,7 @@ class DashboardChartController extends Controller
         foreach ($dates as $key => $v) {
             //installments
             $installments = Installment::filterCondition()->select(DB::raw('COALESCE(SUM(installments.installment_amount), 0) as total_amount'), DB::raw('COALESCE(SUM(installments.current_balance), 0) as paid_amount'))->toBase();
-            $installments = $installments->whereDate('payment_date', Carbon::now())->get();
+            $installments = $installments->whereDate('payment_date', $v)->get();
 
             //total amount
             $total_amount = $installments[0]->total_amount;
@@ -260,23 +260,13 @@ class DashboardChartController extends Controller
 
     public function get_dates($currentDate)
     {
-        //convert date to string
-        $currentDate = Carbon::parse($currentDate);
-
-        // Determine the start of the week (Monday)
-        $startOfWeek = $currentDate->startOfWeek(Carbon::MONDAY);
-
-        // Determine the end of the week (Sunday)
-        $endOfWeek = $currentDate->endOfWeek(Carbon::SUNDAY);
-
-
-        // Collect all dates for the week
-        $datesForWeek = [];
-        for ($date = $startOfWeek->copy(); $date->lte($endOfWeek); $date->addDay()) {
-            $datesForWeek[] = $date->toDateString(); // Format as 'YYYY-MM-DD'
+        $arr_dates = [];
+        for ($i = 0; $i < 7; $i++) {
+            $installment_date = date('Y-m-d', strtotime($currentDate . "-{$i} day"));
+            array_push($arr_dates, $installment_date);
         }
 
-        // Output the week dates
-        return $datesForWeek;
+        // Output the dates
+        return array_reverse($arr_dates);
     }
 }

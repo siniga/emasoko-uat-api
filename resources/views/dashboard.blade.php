@@ -311,21 +311,10 @@
                     <div class="clearfix">
                         <div class="float-end">
                             <div class="input-group input-group-sm">
-                                <select class="form-select form-select-sm" id="collected-mandate-value-select-week">
-                                    @php
-                                        $year_options = [];
-                                        $current_year = date('Y');
-                                    @endphp
-
-                                    <option value="">Select</option>
-                                    <option value="Last_Week">Last Week</option>
-                                    <option value="This_Week">This Week</option>
-                                    <option value="Next_Week">Next Week</option>
-                                </select>
-                                <label class="input-group-text">Weekly</label>
+                                <input type="date" name="start_at" class="form-control" id="collected-mandate-value-weekly-date" /> 
                             </div>
                         </div>
-                        <h4 class="card-title mb-3">Collections</h4>
+                        <h4 class="card-title mb-3">Weekly Collections</h4>
                     </div>
 
                     <div class="row">

@@ -86,18 +86,6 @@
                                     </tr>
 
                                     <tr>
-                                        <th>Mandate Reference</th>
-                                        <td>
-                                            <span>{{ $debit_order->reference ?? '' }}</span>
-                                        </td>
-
-                                        <th>Service Provider</th>
-                                        <td>
-                                            <span>{{ $debit_order->partner->business_name ?? '' }}</span>
-                                        </td>
-                                    </tr>
-
-                                    <tr>
                                         <th width=25%>Payment Channel</th>
                                         <td width=25%>
                                             <span>{{ $debit_order->customerAccount->accountType->name ?? '' }}</span>
@@ -144,57 +132,73 @@
                                     </tr>
 
                                     <tr>
+                                        <th>Service Provider</th>
+                                        <td>
+                                            <span>{{ $debit_order->partner->business_name ?? '' }}</span>
+                                        </td>
+
+                                        <th>Mandate Reference</th>
+                                        <td>
+                                            <span>{{ $debit_order->reference ?? '' }}</span>
+                                        </td>
+                                    </tr>
+
+                                    <tr>
                                         <th width="25%">Application Date</th>
-                                        <td width="25%">{{ date('d,M-Y', strtotime($debit_order->created_at)) }}</td>
+                                        <td width="25%">{{ date('M d, Y H:i', strtotime($debit_order->created_at)) }}</td>
 
                                         <th width="25%">Mandate Status</th>
                                         <td width="25%">
                                             <template x-if="status==0">
-                                                <span class="badge bg-warning">Registration Process</span>
+                                                <span class="badge badge-pill badge-soft-warning">Registration Process</span>
                                             </template>
 
                                             <template x-if="status==100">
-                                                <span class="badge bg-warning">Pending Registration</span>
+                                                <span class="badge badge-pill badge-soft-warning">Pending Registration</span>
                                             </template>
 
                                             <template x-if="status==200">
-                                                <span class="badge bg-info">Under Review</span>
+                                                <span class="badge badge-pill badge-soft-info">Under Review</span>
                                             </template>
 
                                             <template x-if="status==201">
-                                                <span class="badge bg-info">Pending Verification</span>
+                                                <span class="badge badge-pill badge-soft-info">Pending Verification</span>
                                             </template>
 
                                             <template x-if="status==202">
-                                                <span class="badge bg-success-1">Verified</span>
+                                                <span class="badge badge-pill badge-soft-success">Verified</span>
                                             </template>
 
                                             <template x-if="status==240">
-                                                <span class="badge bg-success-1">Active</span>
+                                                <span class="badge badge-pill badge-soft-success">Active</span>
                                             </template>
 
                                             <template x-if="status==249">
-                                                <span class="badge bg-warning">Processing</span>
+                                                <span class="badge badge-pill badge-soft-warning">Processing</span>
                                             </template>
 
                                             <template x-if="status==403">
-                                                <span class="badge bg-danger">Failed</span>
+                                                <span class="badge badge-pill badge-soft-danger">Pending Registration</span>
+                                            </template>
+
+                                            <template x-if="status==404">
+                                                <span class="badge badge-pill badge-soft-danger">Pending Registration</span>
                                             </template>
 
                                              <template x-if="status==405">
-                                                <span class="badge bg-danger">Cancelled</span>
+                                                <span class="badge badge-pill badge-soft-danger">Cancelled</span>
                                             </template>
 
                                             <template x-if="status==500">
-                                                <span class="badge bg-danger">Failed Verification</span>
+                                                <span class="badge badge-pill badge-soft-danger">Failed Verification</span>
                                             </template>
 
                                             <template x-if="status==501">
-                                                <span class="badge bg-danger">Inactive</span>
+                                                <span class="badge badge-pill badge-soft-danger">Inactive</span>
                                             </template>
 
                                             <template x-if="status==999">
-                                                <span class="badge bg-danger">Cancelled</span>
+                                                <span class="badge badge-pill badge-soft-danger">Canceled</span>
                                             </template>
                                         </td>
                                     </tr>

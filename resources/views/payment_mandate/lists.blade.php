@@ -41,9 +41,9 @@
                                     <div class="mb-3">
                                         @php
                                             $options = [
-                                                0 => 'Pending',
-                                                1 => 'Approved',
-                                                2 => 'Failed',
+                                                'pending' => 'Pending',
+                                                'approved' => 'Approved',
+                                                'failed' => 'Failed',
                                             ];
                                             $options = ['' => '-- Mandate Status --'] + $options;
                                         @endphp
@@ -207,10 +207,12 @@
                                                     @elseif($values->status == 249)
                                                         <span class="badge badge-pill badge-soft-warning">Processing</span>
                                                     @elseif($values->status == 403) 
-                                                        <span class="badge badge-pill badge-soft-danger">Failed</span>
+                                                        <span class="badge badge-pill badge-soft-danger">Pending Registration</span>
+                                                    @elseif($values->status == 404) 
+                                                        <span class="badge badge-pill badge-soft-danger">Pending Registration</span>    
                                                     @elseif($values->status == 405) 
                                                         <span class="badge badge-pill badge-soft-danger">Cancelled</span>  
-                                                    @elseif($values->status == 500 || $values->status == 430)
+                                                    @elseif($values->status == 430 || $values->status == 500)
                                                         <span class="badge badge-pill badge-soft-danger">Failed Verification</span>
                                                     @elseif($values->status == 501)
                                                         <span class="badge badge-pill badge-soft-danger">Inactive</span>
@@ -218,11 +220,7 @@
                                                         <span class="badge badge-pill badge-soft-danger">Cancelled</span>
                                                     @endif
                                                 </td>
-
-                                                <td>
-                                                    {{ date('d-m-Y H:i', strtotime($values->updated_at)) }}
-                                                </td>
-
+                                                <td>{{ date('d-m-Y H:i', strtotime($values->updated_at)) }}</td>
                                                 <td>
                                                     @if ($values->status == 100)
                                                         <a href="{{ route('payment-mandate.preview', $values->uuid) }}"

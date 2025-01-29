@@ -82,23 +82,20 @@
                     <td>
                         {{ $values->customerAccount->account_number ?? $values->customerAccount->phone }}
                     </td>
-                    <td>
-                        {{ $values->reference }}
-                    </td>
+                    <td>{{ $values->reference }}</td>
                     <td>{{ $values->customerAccount->phone ?? '' }}</td>
 
                     <td>
-                        @if ($values->approved == 0)
+                        @if (intval($values->approved) == 0)
                             <span>PENDING</span>
-                        @elseif($values->approved == 1)
+                        @elseif(intval($values->approved) == 1)
                             <span>APPROVED</span>
-                        @elseif($values->approved == 2)
+                        @elseif(intval($values->approved) == 2)
                             <span>FAILED</span>
                         @endif
                     </td>
-
                     <td>{{ date('d-m-Y H:i', strtotime($values->updated_at)) }}</td>
-                    <td>{{ $values->userCreated->name, }}</td>
+                    <td>{{ $values->userCreated->name }}</td>
                 </tr>
                 @php $serial++; @endphp
             @endforeach
