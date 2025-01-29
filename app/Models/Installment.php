@@ -32,13 +32,15 @@ class Installment extends Model
             if ($arr_partners) {
                 $installments = $installments->whereHas('debitOrder', function ($query) use ($arr_partners) {
                     $query->whereIn('debit_orders.partner_id', $arr_partners)
-                        ->where('debit_orders.approved', '=', 1);
+                        ->where('debit_orders.approved', '=', 1)
+                        ->where('debit_orders.status', '=', 240);
                 });
             }
         } else if ($user->hasRole('Company_User')) {
             $installments = $installments->whereHas('debitOrder', function ($query) use ($user) {
                 $query->where('debit_orders.created_by', '=', $user->id)
-                    ->where('debit_orders.approved', '=', 1);
+                    ->where('debit_orders.approved', '=', 1)
+                    ->where('debit_orders.status', '=', 240);
             });
         }
 
