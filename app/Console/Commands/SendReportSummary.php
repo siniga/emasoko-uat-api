@@ -72,7 +72,10 @@ class SendReportSummary extends Command
 
 
         //collection stats
-        $installments = Installment::whereHas('debitOrder')->select(DB::raw('COALESCE(SUM(installments.installment_amount), 0) as total_amount'), DB::raw('COALESCE(SUM(installments.current_balance), 0) as paid_amount'))->toBase();
+        $installments = Installment::whereHas('debitOrder', function ($query) {
+            $query->where('debit_orders.approved', '=', 1)
+                ->where('debit_orders.status', '=', 240);
+        })->select(DB::raw('COALESCE(SUM(installments.installment_amount), 0) as total_amount'), DB::raw('COALESCE(SUM(installments.current_balance), 0) as paid_amount'))->toBase();
 
         //today collection
         $today = $installments->whereDate('payment_date', Carbon::now())->get();
