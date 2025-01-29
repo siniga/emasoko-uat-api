@@ -108,89 +108,87 @@
         </div>
     </div>
 
-    @if (Auth::user()->hasRole(['admin']))
-        <div class="row">
-            <div class="col-md-3">
-                <a href="#">
-                    <div class="card border-left-info bg-primary shadow h-96 py-2">
-                        <div class="card-body">
-                            <div class="row no-gutters align-items-center">
-                                <div class="col mr-2">
-                                    <div class="text-xss font-weight-600 text-white mb-1">
-                                        Expected Collection ({{ $stats['month'] }})
-                                    </div>
+    <div class="row">
+        <div class="col-md-3">
+            <a href="#">
+                <div class="card border-left-info bg-primary shadow h-96 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xss font-weight-600 text-white mb-1">
+                                    Expected Collection ({{ $stats['month'] }})
+                                </div>
 
-                                    <div class="h5 mb-0 font-weight-700 text-white">
-                                        {{ number_format($stats['this_month_expected']) }}
-                                    </div>
+                                <div class="h5 mb-0 font-weight-700 text-white">
+                                    {{ number_format($stats['this_month_expected']) }}
                                 </div>
                             </div>
                         </div>
                     </div>
-                </a>
-            </div>
-
-            <div class="col-md-3">
-                <a href="#">
-                    <div class="card border-left-info bg-success-1 shadow h-96 py-2">
-                        <div class="card-body">
-                            <div class="row no-gutters align-items-center">
-                                <div class="col mr-2">
-                                    <div class="text-xss font-weight-600 text-white mb-1">
-                                        Actual Collection ({{ $stats['month'] }})
-                                    </div>
-
-                                    <div class="h5 mb-0 font-weight-700 text-white">
-                                        {{ number_format($stats['this_month_paid']) }}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </a>
-            </div>
-
-            <div class="col-md-3">
-                <a href="#">
-                    <div class="card border-left-info bg-primary shadow h-96 py-2">
-                        <div class="card-body">
-                            <div class="row no-gutters align-items-center">
-                                <div class="col mr-2">
-                                    <div class="text-xss font-weight-600 text-white mb-1">
-                                        Expected Collection (Today)
-                                    </div>
-
-                                    <div class="h5 mb-0 font-weight-700 text-white">
-                                        {{ number_format($stats['today_expected']) }}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </a>
-            </div>  
-
-            <div class="col-md-3">
-                <a href="#">
-                    <div class="card border-left-info bg-success-1 shadow h-96 py-2">
-                        <div class="card-body">
-                            <div class="row no-gutters align-items-center">
-                                <div class="col mr-2">
-                                    <div class="text-xss font-weight-600 text-white mb-1">
-                                        Actual Collection (Today)
-                                    </div>
-
-                                    <div class="h5 mb-0 font-weight-700 text-white">
-                                        {{ number_format($stats['today_paid']) }}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </a>
-            </div>              
+                </div>
+            </a>
         </div>
-    @endif
+
+        <div class="col-md-3">
+            <a href="#">
+                <div class="card border-left-info bg-success-1 shadow h-96 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xss font-weight-600 text-white mb-1">
+                                    Actual Collection ({{ $stats['month'] }})
+                                </div>
+
+                                <div class="h5 mb-0 font-weight-700 text-white">
+                                    {{ number_format($stats['this_month_paid']) }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-3">
+            <a href="#">
+                <div class="card border-left-info bg-primary shadow h-96 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xss font-weight-600 text-white mb-1">
+                                    Expected Collection (Today)
+                                </div>
+
+                                <div class="h5 mb-0 font-weight-700 text-white">
+                                    {{ number_format($stats['today_expected']) }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>  
+
+        <div class="col-md-3">
+            <a href="#">
+                <div class="card border-left-info bg-success-1 shadow h-96 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xss font-weight-600 text-white mb-1">
+                                    Actual Collection (Today)
+                                </div>
+
+                                <div class="h5 mb-0 font-weight-700 text-white">
+                                    {{ number_format($stats['today_paid']) }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>              
+    </div>
 
     <div class="row">
         <div class="col-xl-8">
@@ -293,13 +291,11 @@
                         <h4 class="card-title mb-3">Expected vs Collected</h4>
                     </div>
 
-                    @if (Auth::user()->hasRole(['admin']))
-                        <div class="row">
-                            <div class="col-lg-12">
-                                <div id="collected-mandate-value-chart"></div>
-                            </div>
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div id="collected-mandate-value-chart"></div>
                         </div>
-                    @endif
+                    </div>
                 </div>
             </div>
         </div>
@@ -322,7 +318,6 @@
                             <div id="collected-mandate-value-weekly-chart"></div>
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
