@@ -42,6 +42,11 @@ class Installment extends Model
                     ->where('debit_orders.approved', '=', 1)
                     ->where('debit_orders.status', '=', 240);
             });
+        } else {
+            $installments = $installments->whereHas('debitOrder', function ($query) {
+                $query->where('debit_orders.approved', '=', 1)
+                    ->where('debit_orders.status', '=', 240);
+            });
         }
 
         return $installments;
