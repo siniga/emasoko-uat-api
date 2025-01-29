@@ -81,51 +81,51 @@ class SendReportSummary extends Command
         $today = $installments->whereDate('payment_date', Carbon::now())->get();
 
         $table = '<table>';
-        $table .= '<tr><td>Registered Mandate</td>';
+        $table .= '<tr><td>Registered Mandate: </td>';
         $table .= '<td>' . number_format($total_mandate_value) . ' (' . number_format($total_number_of_mandate) . ')</td></tr>';
 
-        $table .= '<tr><td>Approved Mandate</td>';
+        $table .= '<tr><td>Approved Mandate: </td>';
         $table .= '<td>' . number_format($mandates[1]['total_amount']) . ' (' . number_format($mandates[1]['number_of_mandate']) . ')</td></tr>';
 
-        $table .= '<tr><td>Pending Mandate</td>';
+        $table .= '<tr><td>Pending Mandate: </td>';
         $table .= '<td>' . number_format($mandates[0]['total_amount']) . ' (' . number_format($mandates[0]['number_of_mandate']) . ')</td></tr>';
 
-        $table .= '<tr><td>Failed Mandate</td>';
+        $table .= '<tr><td>Failed Mandate: </td>';
         $table .= '<td>' . number_format($mandates[2]['total_amount']) . ' (' . number_format($mandates[2]['number_of_mandate']) . ')</td></tr>';
 
-        $table .= '<tr><td>Expected Collection</td>';
+        $table .= '<tr><td>Expected Collection: </td>';
         $table .= '<td>' . number_format($today[0]->total_amount) . '</td></tr>';
 
-        $table .= '<tr><td>Actual Collection</td>';
+        $table .= '<tr><td>Actual Collection: </td>';
         $table .= '<td>' . number_format($today[0]->paid_amount) . '</td></tr>';
 
         $table .= '</table>';
 
         //construct message
-        $message = '<h4>Daily Summary Report - ' . Carbon::now()->format('d-m-Y') . '</h4>';
+        $message = '<h4>Daily Summary Report (' . Carbon::now()->format('d-m-Y') . ')</h4>';
         $message .= $table;
 
         //users 
-        // $users = User::whereIn('id', [37, 38])->get();
+        $users = User::whereIn('id', [37, 38])->get();
 
-        // foreach ($users as $value) {
-        //     $data = [
-        //         "to_email" => $value->email,
-        //         "from_email" => "support@solocodes.io",
-        //         "name" => $value->name,
-        //         "subject" => "Daily Summary Report - " . Carbon::now()->format('d-m-Y'),
-        //         "body" => $message
-        //     ];
-        //     dispatch(new SendEmailJob($data));
-        // }
+        foreach ($users as $value) {
+            $data = [
+                "to_email" => $value->email,
+                "from_email" => "support@solocodes.io",
+                "name" => $value->name,
+                "subject" => "Daily Summary Report " . Carbon::now()->format('d-m-Y'),
+                "body" => $message
+            ];
+            dispatch(new SendEmailJob($data));
+        }
 
-        $data = [
-            "to_email" => "renfridfrancis@gmail.com",
-            "from_email" => "support@solocodes.io",
-            "name" => "Renfrid",
-            "subject" => "Daily Summary Report - " . Carbon::now()->format('d-m-Y'),
-            "body" => $message
-        ];
+        // $data = [
+        //     "to_email" => "renfridfrancis@gmail.com",
+        //     "from_email" => "support@solocodes.io",
+        //     "name" => "Renfrid",
+        //     "subject" => "Daily Summary Report - " . Carbon::now()->format('d-m-Y'),
+        //     "body" => $message
+        // ];
         dispatch(new SendEmailJob($data));
     }
 }
