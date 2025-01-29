@@ -63,7 +63,7 @@ class BankApiService
             if ($response) {
                 //update the corporate
                 $partner = Partner::where('reference', '=', $payload['data']['corporateReference'])->first();
-                $partner->http_response_json = $response;
+                //$partner->http_response_json = $response;
 
                 //decode the response 
                 $response = json_decode($response, true);
@@ -131,7 +131,7 @@ class BankApiService
 
         //update the corporate
         $partner = Partner::where('reference', '=', $payload['data']['corporateReference'])->first();
-        $partner->http_response_status_json = $response;
+        //$partner->http_response_status_json = $response;
 
         //decode the response 
         $response = json_decode($response, true);
@@ -234,7 +234,7 @@ class BankApiService
 
         //update the debit order
         $debit_order = DebitOrder::where('reference', '=', $payload['data']['mandateReferenceNumber'])->first();
-        $debit_order->http_response_status_json = $response;
+        //$debit_order->http_response_status_json = $response;
 
         //decode the response 
         $response = json_decode($response, true);
@@ -308,7 +308,7 @@ class BankApiService
 
         //update the debit order
         $debit_order = DebitOrder::where('reference', '=', $payload['data']['mandateReferenceNumber'])->first();
-        $debit_order->http_response_status_json = $response;
+        //$debit_order->http_response_status_json = $response;
 
         //decode the response 
         $response = json_decode($response, true);
@@ -376,7 +376,7 @@ class BankApiService
 
         if ($otp_request->count() > 0) {
             $otp_request = $otp_request->first();
-            $otp_request->http_response_json = $response;
+            //$otp_request->http_response_json = $response;
             $otp_request->save();
         }
 
@@ -448,7 +448,7 @@ class BankApiService
 
         if ($otp_request->count() > 0) {
             $otp_request = $otp_request->first();
-            $otp_request->http_response_json = $response;
+            //$otp_request->http_response_json = $response;
             $otp_request->save();
         }
 
@@ -522,7 +522,7 @@ class BankApiService
 
         //update collection batch 
         $collection_batch = CollectionBatch::where('collectionReference', '=', $payload['data']['collectionReference'])->first();
-        $collection_batch->http_response_json = $response;
+        //$collection_batch->http_response_json = $response;
 
         //decode the response 
         $response = json_decode($response, true);

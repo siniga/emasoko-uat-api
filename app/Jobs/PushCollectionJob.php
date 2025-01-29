@@ -70,7 +70,7 @@ class PushCollectionJob implements ShouldQueue
 
         //update collection batch 
         $collection_batch = CollectionBatch::where('collectionReference', '=', $payload['data']['collectionReference'])->first();
-        $collection_batch->http_response_json = $response;
+        //$collection_batch->http_response_json = $response;
 
         //decode the response 
         $response = json_decode($response, true);

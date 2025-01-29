@@ -186,7 +186,6 @@ class CollectionController extends Controller
         }
     }
 
-
     public function show($id)
     {
         $title = "Collection Batch Information";

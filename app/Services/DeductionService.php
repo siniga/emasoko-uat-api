@@ -117,6 +117,15 @@ class DeductionService
                 } else {
                     $installment_date = date('Y-m-d', strtotime($last_installment_date . $number_of_days));
 
+                    //formating all the dates if periodicity = "MONTHLY"
+                    if ($periodicity == "MONTHLY") {
+                        $year = date('Y', strtotime($installment_date));
+                        $month = date('m', strtotime($installment_date));
+
+                        $date = Carbon::createFromDate($year, $month, $dayOfMonth);
+                        $installment_date = $date->format('Y-m-d'); // Format as dd-mm-yyyy
+                    }
+
                     //SUMMATION installment Amount
                     $sum_installment_amount += $debitOrder->max_installment_amount;
 
@@ -210,22 +219,24 @@ class DeductionService
                         $installmentAmt = number_format($installment_amount);
 
                         //send sms to FAILED mandate
-                        $phone = $installment->debitOrder->customerAccount->phone;
-                        $message = "Makato ya tarehe {$payment_date} ya kiasi cha shilingi {$installmentAmt} yameshindikana. Tafadhali weka pesa kwenye akaunti yako ya benki kwa ajili ya makato.";
+                        // $phone = $installment->debitOrder->customerAccount->phone;
+                        // $message = "Makato ya tarehe {$payment_date} ya kiasi cha shilingi {$installmentAmt} yameshindikana. Tafadhali weka pesa kwenye akaunti yako ya benki kwa ajili ya makato.";
 
-                        //send sms
-                        $data = ["phone" => $phone, "message" => $message];
-                        dispatch(new SendSMSJob($data));
+                        // //send sms
+                        // $data = ["phone" => $phone, "message" => $message];
+                        // dispatch(new SendSMSJob($data));
                     }
                 } else if ($status == "success") {
                     //updated status of installment
                     $installment->last_paid_amount = $amount;
+                    $installment->remarks = $message;
                     $installment->save();
 
                     //increment success count
                     $success_installments += 1;
 
                     //process calculation for installment and debit order.
+                    Log::debug("== Process Installments ==");
                     $this->processInstallment($installment, $amount, $collection_reference);
                 } else {
                     //updated status of installment
@@ -241,8 +252,11 @@ class DeductionService
     //process installment
     public function processInstallment(Installment $installment, $amount, $reference)
     {
+        Log::debug("== Installment ==");
+        Log::debug($installment);
+
         //0. Check if installment status is not CLOSED
-        if ($installment->status == 'OPEN') {
+        if ($installment->status == 'OPEN' || $installment->status == 'FAILED') {
             //1. Update installment => outstanding amount, current balance
             $outstanding_amount = $installment->outstanding_amount - $amount;
             $current_balance = $installment->current_balance + $amount;
@@ -288,12 +302,12 @@ class DeductionService
             $installmentAmt = number_format($installment_amount);
 
             //send message for outstanding amount and current balance from eMakato.
-            $phone = $installment->debitOrder->customerAccount->phone;
-            $message = "Makato ya tarehe {$payment_date} ya kiasi cha shilingi {$installmentAmt} yamekamilishwa na kiasi kilichobaki ni Tsh {$outstandingAmt}. Asante kwa kutumia eMakato.";
+            // $phone = $installment->debitOrder->customerAccount->phone;
+            // $message = "Makato ya tarehe {$payment_date} ya kiasi cha shilingi {$installmentAmt} yamekamilishwa na kiasi kilichobaki ni Tsh {$outstandingAmt}. Asante kwa kutumia eMakato.";
 
-            //Send SMS
-            $data = ["phone" => $phone, "message" => $message];
-            dispatch(new SendSMSJob($data));
+            // //Send SMS
+            // $data = ["phone" => $phone, "message" => $message];
+            // dispatch(new SendSMSJob($data));
 
             //update next debit date
             $this->updateNextDebitDate($debit_order->id, $payment_date);

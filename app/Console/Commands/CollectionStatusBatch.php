@@ -51,7 +51,6 @@ class CollectionStatusBatch extends Command
 
         $collection_batches = CollectionBatch::where(['pushed' => 1, 'processed' => 0])->orderBy('collectionReference', 'ASC');
 
-
         if ($collection_batches->count() > 0) {
             //take the first 10 collection batches
             $collection_batches = $collection_batches->take(10)->get();
