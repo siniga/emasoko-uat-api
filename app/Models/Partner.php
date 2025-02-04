@@ -6,6 +6,7 @@ use App\Models\Traits\DocumentNumberTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class Partner extends Model
 {
@@ -32,9 +33,9 @@ class Partner extends Model
         if ($user->hasRole('Partner')) {
             $company_user = CompanyUser::where(['user_id' => $user->id])->first();
 
-            if ($company_user)
+            if ($company_user) {
                 $partners = $partners->where('partners.company_id', '=', $company_user->company_id);
-
+            }
         } else if ($user->hasRole('Company_Approver') || $user->hasRole('Company_User')) {
             $arr_partners = [];
 
@@ -112,7 +113,7 @@ class Partner extends Model
         $category_id       = $request['category_id'] ?? null;
         $region_id         = $request['region_id'] ?? null;
         $keyword           = $request['keyword'] ?? null;
-        
+
         return $query->when($start_date, function ($query) use ($start_date, $end_date) {
             if ($start_date != null || $end_date != null) {
                 if ($start_date != null && $end_date != null)
