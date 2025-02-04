@@ -59,7 +59,7 @@ class CompanyController extends Controller
         //has_allowed('roles', 'lists');
 
         //companies
-        $companies = Partner::orderBy('created_at', 'desc');
+        $companies = Partner::filterCondition();
 
         if (isset($_POST['filter'])) {
             //all request
