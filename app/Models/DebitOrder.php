@@ -21,7 +21,15 @@ class DebitOrder extends Model
         //debit orders
         $debit_orders = static::query();
 
-        if ($user->hasRole('Company_Approver')) {
+        if ($user->hasRole('Partner')) {
+            $company_user = CompanyUser::where(['user_id' => $user->id])->first();
+
+            if ($company_user) {
+                $debit_orders = $debit_orders->whereHas('partner', function ($query) use ($company_user) {
+                    $query->where('partners.company_id', '=', $company_user->company_id);
+                });
+            }
+        } else if ($user->hasRole('Company_Approver')) {
             $arr_partners = [];
 
             $partners = $user->partners->where('authorize', '=', 1);
@@ -47,17 +55,17 @@ class DebitOrder extends Model
         return $query->where('status', '=', 'active');
     }
 
-    function installments()
+    public function installments()
     {
         return $this->hasMany(Installment::class, 'debit_order_id');
     }
 
-    function customerAccount()
+    public function customerAccount()
     {
         return $this->belongsTo(CustomerAccount::class, 'customer_account_id');
     }
 
-    function loanPurpose()
+    public function loanPurpose()
     {
         return $this->belongsTo(LoanPurpose::class, 'loan_purpose_id');
     }
@@ -98,9 +106,6 @@ class DebitOrder extends Model
         $account_id        = $request['account_id'] ?? null;
         $status            = $request['status'] ?? null;
         $keyword           = $request['keyword'] ?? null;
-
-        Log::debug("== status 1 ==");
-        Log::debug($status);
 
         return $query->when($start_date, function ($query) use ($start_date, $end_date) {
             if ($start_date != null || $end_date != null) {

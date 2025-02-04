@@ -99,7 +99,7 @@ class CompanyController extends Controller
     }
 
     //export xls
-    function exportXLS(Request $request)
+    public function exportXLS(Request $request)
     {
         return Excel::download(new CompanyExport($request->all()), date('YmdHis') . '-Companies.xlsx');
     }
