@@ -35,6 +35,8 @@ class Partner extends Model
 
             if ($company_user) {
                 $partners = $partners->where('partners.company_id', '=', $company_user->company_id);
+            }else{
+                Log::debug("== no company user ==");
             }
         } else if ($user->hasRole('Company_Approver') || $user->hasRole('Company_User')) {
             $arr_partners = [];
