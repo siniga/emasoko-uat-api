@@ -49,57 +49,57 @@ class Partner extends Model
         return $partners;
     }
 
-    function partnerAuthorizeUser()
+    public function partnerAuthorizeUser()
     {
         return $this->hasOne(PartnerUser::class, 'partner_id')->where('authorize', '=', 1);
     }
 
-    function users()
+    public function users()
     {
         return $this->hasMany(PartnerUser::class, 'partner_id');
     }
 
-    function partnerCategory()
+    public function partnerCategory()
     {
         return $this->belongsTo(PartnerCategory::class, 'partner_category_id');
     }
 
-    function partnerDocuments()
+    public function partnerDocuments()
     {
         return $this->hasMany(PartnerDocument::class, 'partner_id');
     }
 
-    function partnerAccounts()
+    public function partnerAccounts()
     {
         return $this->hasMany(PartnerAccount::class, 'partner_id');
     }
 
-    function partnerStaff()
+    public function partnerStaff()
     {
         return $this->hasMany(PartnerStaff::class, 'partner_id');
     }
 
-    function partnerApprovals()
+    public function partnerApprovals()
     {
         return $this->hasMany(PartnerApproval::class, 'partner_id');
     }
 
-    function region()
+    public function region()
     {
         return $this->belongsTo(Region::class, 'region_id');
     }
 
-    function debitOrders()
+    public function debitOrders()
     {
         return $this->hasMany(DebitOrder::class, 'partner_id');
     }
 
-    function verifiedBy()
+    public function verifiedBy()
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
 
-    function createdBy()
+    public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by');
     }
@@ -112,6 +112,7 @@ class Partner extends Model
         $category_id       = $request['category_id'] ?? null;
         $region_id         = $request['region_id'] ?? null;
         $keyword           = $request['keyword'] ?? null;
+        
         return $query->when($start_date, function ($query) use ($start_date, $end_date) {
             if ($start_date != null || $end_date != null) {
                 if ($start_date != null && $end_date != null)

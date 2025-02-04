@@ -20,7 +20,18 @@ class Installment extends Model
         //installments
         $installments = static::query();
 
-        if ($user->hasRole('Company_Approver')) {
+        if ($user->hasRole('Partner')) {
+            $company_user = CompanyUser::where(['user_id' => $user->id])->first();
+
+            if ($company_user) {
+                $installments = $installments->with('debitOrder', function ($query) {
+                    $query->where('debit_orders.approved', '=', 1)
+                        ->where('debit_orders.status', '=', 240);
+                })->whereHas('partner', function ($query) use ($company_user) {
+                    $query->where('partners.company_id', '=', $company_user->company_id);
+                });
+            }
+        } else if ($user->hasRole('Company_Approver')) {
             $arr_partners = [];
 
             //partners
