@@ -828,7 +828,7 @@ class PaymentMandateController extends Controller
 
     public function update_installments()
     {
-        $debit_orders = DebitOrder::where(['periodicity' => 'MONTHLY'])->get();
+        $debit_orders = DebitOrder::where(['periodicity' => 'MONTHLY', 'debit_type' => 'DYNAMIC'])->get();
 
         foreach ($debit_orders as $val) {
             $dayOfMonth = date('d', strtotime($val->start_date));
