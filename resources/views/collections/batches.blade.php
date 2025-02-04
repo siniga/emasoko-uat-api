@@ -74,23 +74,23 @@
                             </div>
                         </div>
 
-                        @if (isset($batches) && $batches->isNotEmpty())
-                            <div class="row mb-2">
-                                <div class="col-md-6">
-                                    <span class="font-weight-500">No. of collection batches:
-                                        {{ number_format($number_of_batches) }}</span>
-                                </div>
-
-                                <div class="col-md-6">
-                                    <div class="text-sm-end d-none d-sm-block">
-                                        <a class="btn btn-primary btn-sm"
-                                            href="{{ route('collections.create') }}">
-                                            <i class="fas fa-plus"></i> Create Batch
-                                        </a>
-                                    </div>
-                                </div>
+                        <div class="row mb-2">
+                            <div class="col-md-6">
+                                <span class="font-weight-500">No. of collection batches:
+                                    {{ number_format($number_of_batches) }}</span>
                             </div>
 
+                            <div class="col-md-6">
+                                <div class="text-sm-end d-none d-sm-block">
+                                    <a class="btn btn-primary btn-sm"
+                                        href="{{ route('collections.create') }}">
+                                        <i class="fas fa-plus"></i> Create Batch
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        @if (isset($batches) && $batches->isNotEmpty())
                             <div class="table-responsive">
                                 <table class="table table-bordered dt-responsive  nowrap w-100" id="dynamicTable">
                                     <thead>
@@ -154,7 +154,6 @@
                                     @endif
                                 </div>
                             </div>
-                            <!--./d-flex -->
                         @else
                             <div class="alert alert-danger"> No any collection batches at the moment!</div>
                         @endif

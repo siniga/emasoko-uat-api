@@ -133,20 +133,21 @@
                             </div>
                         </div>
 
-                        @if (isset($debit_orders) && $debit_orders->isNotEmpty())
-                            <div class="row mb-2">
-                                <div class="col-md-6">
-                                    <span class="font-weight-500">No. of payment mandate:
-                                        {{ number_format($number_of_debit_orders) }}</span>
-                                </div>
+                        
+                        <div class="row mb-2">
+                            <div class="col-md-6">
+                                <span class="font-weight-500">No. of payment mandate:
+                                    {{ number_format($number_of_debit_orders) }}</span>
+                            </div>
 
-                                <div class="col-md-6">
-                                    <div class="text-sm-end d-none d-sm-block">
-                                        <a class="btn btn-primary btn-sm"
-                                            href="{{ route('payment-mandate.create-account') }}">
-                                            <i class="fas fa-plus"></i> Create New
-                                        </a>
-
+                            <div class="col-md-6">
+                                <div class="text-sm-end d-none d-sm-block">
+                                    <a class="btn btn-primary btn-sm"
+                                        href="{{ route('payment-mandate.create-account') }}">
+                                        <i class="fas fa-plus"></i> Create New
+                                    </a>
+                                    
+                                    @if (isset($debit_orders) && $debit_orders->isNotEmpty())
                                         <a title="Export" class="btn btn-outline-success btn-sm"
                                             href="{{ route('payment-mandate.export-xls', ['start_at' => $post_data['start_at'], 'end_at' => $post_data['end_at'], 'account_type_id' => $post_data['account_type_id'], 'account_id' => $post_data['account_id'], 'status' => $post_data['status'], 'keyword' => $post_data['keyword']]) }}">
                                             <i class="bx bx-export"></i> Export XLS
@@ -156,10 +157,12 @@
                                             href="{{ route('payment-mandate.export-pdf', ['start_at' => $post_data['start_at'], 'end_at' => $post_data['end_at'], 'account_type_id' => $post_data['account_type_id'], 'account_id' => $post_data['account_id'], 'status' => $post_data['status'], 'keyword' => $post_data['keyword']]) }}">
                                             <i class="fas fa-file-pdf"></i> Export PDF
                                         </a>
-                                    </div>
+                                    @endif
                                 </div>
                             </div>
+                        </div>
 
+                        @if (isset($debit_orders) && $debit_orders->isNotEmpty())
                             <div class="table-responsive">
                                 <table class="table table-bordered dt-responsive  nowrap w-100" id="dynamicTable">
                                     <thead>

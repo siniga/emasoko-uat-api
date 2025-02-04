@@ -40,7 +40,15 @@ class CollectionBatch extends Model
 
         $batches = static::orderBy('collection_batches.created_at', 'DESC');
 
-        if ($user->hasRole('Company_Approver') || $user->hasRole('Company_User')) {
+        if ($user->hasRole('Partner')) {
+            $company_user = CompanyUser::where(['user_id' => $user->id])->first();
+
+            if ($company_user) {
+                $batches = $batches->whereHas('partner', function ($query) use ($company_user) {
+                    $query->where('partners.company_id', '=', $company_user->company_id);
+                });
+            }
+        } else if ($user->hasRole('Company_Approver') || $user->hasRole('Company_User')) {
             $arr_partners = [];
 
             $partners = $user->partners->where('authorize', '=', 1);
