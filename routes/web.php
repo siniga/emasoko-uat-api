@@ -184,7 +184,7 @@ Route::get('payment-mandate/delete/{do_uuid}', [PaymentMandateController::class,
 Route::post('payment-mandate/fetch-status', [PaymentMandateController::class, 'fetch_status'])->name('payment-mandate.fetch-status');
 Route::post('payment-mandate/cancel-mandate', [PaymentMandateController::class, 'cancel_mandate'])->name('payment-mandate.cancel-mandate');
 Route::get('payment-mandate/send-remainder/{do_uuid}', [PaymentMandateController::class, 'sendRemainder'])->name('payment-mandate.send-remainder');
-Route::get('payment-mandate/update-installments', [PaymentMandateController::class, 'update_installments'])->name('payment-mandate.update-installments');
+//Route::get('payment-mandate/update-installments', [PaymentMandateController::class, 'update_installments'])->name('payment-mandate.update-installments');
 
 //collection batches
 Route::any('collections/batches', [CollectionController::class, 'batches'])->name('collections.batches');
