@@ -47,58 +47,56 @@ class CreateCollectionBatch extends Command
      */
     public function handle()
     {
+        //Limit
+        $limit = 250;
+        $current_date = Carbon::now();
+
         //initialize deduction service
         $deductionService = new DeductionService();
-        $bankPayload = new BankPayloadService();
 
-        //debit orders => status=OPEN and NEXT_DEBIT_DATE = today()
         // ->where("partners.id", "!=", 10)
-        $partners = Partner::whereHas('debitOrders', function ($query) {
+        $partners = Partner::whereHas('debitOrders', function ($query) use ($current_date) {
             return $query->where(['contract_status' => 'OPEN', 'channel' => 'NMB', 'approved' => 1, 'status' => 240, 'deleted' => 0])
-                ->whereDate('next_debit_date', "=", Carbon::now());
+                ->whereDate('next_debit_date', "=", $current_date);
         })->get();
 
         foreach ($partners as $partner) {
-            //1.0 Select debit orders based of partner
-            $debit_orders = DebitOrder::where(['contract_status' => 'OPEN', 'approved' => 1, 'status' => 240,])
-                ->where('partner_id', '=', $partner->id)
-                ->where('deleted', '=', 0)
-                ->whereDate('next_debit_date', "=", Carbon::now());
+            //1.0: Number of installment
+            $number_installments = Installment::getCreated($partner, $current_date)->count();
+            Log::debug("No. installments => " . $number_installments);
 
-            if ($debit_orders->count() > 0) {
-                //2.0 Create collection batch based on partner 
-                $batch = CollectionBatch::create([
-                    'partner_id' => $partner->id,
-                    "collectionReference" => $deductionService->getCollectionReference(),
-                    "corporateReference" => $partner->reference,
-                    "selectedPostingDate" => Carbon::now(),
-                    "createdBy" => 1,
-                    "verifiedBy" => 1,
-                    "createdDate" => Carbon::now(),
-                    "verifyDate" => Carbon::now(),
-                ]);
+            if ($number_installments > 0) {
+                //looping
+                $looping = $number_installments / $limit;
 
-                if ($batch->wasRecentlyCreated) {
-                    //2.1 Declare variables
-                    $arr_installments = [];
+                //iterate looping
+                for ($i = 1; $i <= ceil($looping); $i++) {
+                    //2.0 Create collection batch based on partner 
+                    $batch = CollectionBatch::create([
+                        'partner_id' => $partner->id,
+                        "collectionReference" => $deductionService->getCollectionReference(),
+                        "corporateReference" => $partner->reference,
+                        "selectedPostingDate" => Carbon::now(),
+                        "createdBy" => 1,
+                        "verifiedBy" => 1,
+                        "createdDate" => Carbon::now(),
+                        "verifyDate" => Carbon::now(),
+                    ]);
 
-                    //debit orders
-                    $debit_orders = $debit_orders->get();
-
-                    //3. Create CSV file based installment
-                    $csv = "SERIAL No.;BANK CODE;BRANCH NAME;EMPLOYEE NUMBER;CUSTOMER NAME;ACCOUNT NO;AMOUNT\n";
-
-                    foreach ($debit_orders as $val) {
-                        // Your Eloquent query executed by using get()
-                        $installments = Installment::where(['debit_order_id' => $val->id, 'status' => 'OPEN', 'pushed' => 0])
-                            ->whereDate('payment_date', '=', $val->next_debit_date)->get();
-
+                    if ($batch->wasRecentlyCreated) {
+                        //2.1 Declare variables
+                        $arr_installments = [];
                         $arr_accounts = [];
+                        $csv = "SERIAL No.;BANK CODE;BRANCH NAME;EMPLOYEE NUMBER;CUSTOMER NAME;ACCOUNT NO;AMOUNT\n";
+
+                        //installments
+                        $installments = Installment::getCreated($partner, $current_date)->take($limit)->get();
+
                         foreach ($installments as $installment) {
                             //account details
-                            $account_name = strtoupper($val->customerAccount->account_name);
-                            $account_number = $val->customerAccount->account_number;
-                            $mandate_reference = $val->reference;
+                            $account_name = strtoupper($installment->debitOrder->customerAccount->account_name);
+                            $account_number = $installment->debitOrder->customerAccount->account_number;
+                            $mandate_reference = $installment->debitOrder->reference;
                             $installment_id = $installment->id;
                             $payment_amount = $installment->installment_amount;
 
@@ -111,20 +109,23 @@ class CreateCollectionBatch extends Command
                                 array_push($arr_accounts, $account_number);
 
                                 //update array installments
-                                array_push($arr_installments, $installment->id);
+                                array_push($arr_installments, $installment_id);
+
+                                //update installment status => created = 1
+                                $up_installment = Installment::findOrFail($installment_id);
+                                $up_installment->created = 1;
+                                $up_installment->save();
                             }
                         }
-                    }
 
-                    //check if installments is not null
-                    if ($arr_installments) {
-                        //4. Save csv payload in database
-                        $batch->request_csv = $csv;
-                        $batch->installment_ids = implode(",", $arr_installments);
-                        $batch->save();
-                    } else {
-                        //Delete the batch
-                        $batch->delete();
+                        //check if installments is not null
+                        if ($arr_installments) {
+                            $batch->request_csv = $csv;
+                            $batch->installment_ids = implode(",", $arr_installments);
+                            $batch->save();
+                        } else {
+                            $batch->delete();
+                        }
                     }
                 }
             }

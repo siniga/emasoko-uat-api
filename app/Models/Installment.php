@@ -68,4 +68,24 @@ class Installment extends Model
     {
         return $this->belongsTo(DebitOrder::class, "debit_order_id");
     }
+
+
+    public static function getCreated(Partner $partner, $current_date)
+    {
+        //installments
+        $installments = static::query();
+
+        $installments = $installments->whereHas('debitOrder',  function ($query) use ($partner) {
+            $query->where('debit_orders.approved', '=', 1)
+                ->where('debit_orders.status', '=', 240)
+                ->where('contract_status', '=', 'OPEN')
+                ->whereHas('partner', function ($query) use ($partner) {
+                    $query->where('partners.id', '=', $partner->id);
+                });
+        })->where('installments.status', '=', 'OPEN')
+            ->where('installments.created', '=', 0)
+            ->whereDate('installments.payment_date', '=', $current_date);
+
+        return $installments;
+    }
 }
