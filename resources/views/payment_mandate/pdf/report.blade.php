@@ -94,8 +94,8 @@
                             <span>FAILED</span>
                         @endif
                     </td>
-                    <td>{{ date('d-m-Y H:i', strtotime($values->updated_at)) }}</td>
-                    <td>{{ $values->userCreated->name }}</td>
+                    <td>{{ date('d-m-Y H:i', strtotime($values->created_at)) }}</td>
+                    <td>{{ strtoupper($values->userCreated->name) }}</td>
                 </tr>
                 @php $serial++; @endphp
             @endforeach
