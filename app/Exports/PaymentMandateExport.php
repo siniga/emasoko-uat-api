@@ -117,6 +117,7 @@ class PaymentMandateExport implements FromQuery, WithHeadings, ShouldAutoSize, W
     public function map($debit_orders): array
     {
         //format status
+        $consent_status = "UNKNOWN";
         if (intval($debit_orders->approved) == 0)
             $consent_status = "PENDING";
         else if (intval($debit_orders->approved) == 1)
