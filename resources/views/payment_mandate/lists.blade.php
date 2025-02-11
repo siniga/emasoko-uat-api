@@ -223,7 +223,7 @@
                                                         <span class="badge badge-pill badge-soft-danger">Cancelled</span>
                                                     @endif
                                                 </td>
-                                                <td>{{ date('d-m-Y H:i', strtotime($values->updated_at)) }}</td>
+                                                <td>{{ date('d-m-Y H:i', strtotime($values->created_at)) }}</td>
                                                 <td>
                                                     @if ($values->status == 100)
                                                         <a href="{{ route('payment-mandate.preview', $values->uuid) }}"

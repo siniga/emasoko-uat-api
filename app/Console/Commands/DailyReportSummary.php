@@ -11,21 +11,21 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-class SendReportSummary extends Command
+class DailyReportSummary extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'send:report-summary';
+    protected $signature = 'send:daily-report-summary';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Send report summary to eMakato Managers';
+    protected $description = 'Send daily report summary to eMakato Managers';
 
     /**
      * Create a new command instance.
@@ -101,8 +101,11 @@ class SendReportSummary extends Command
 
         $table .= '</table>';
 
+        //format date
+        $day_month_year = date('F d, Y');
+
         //construct message
-        $message = '<h4>Daily Summary Report (' . Carbon::now()->format('d-m-Y') . ')</h4>';
+        $message = '<h4>Daily Summary Report: ' . $day_month_year . '</h4>';
         $message .= $table;
 
         //users 
@@ -113,19 +116,10 @@ class SendReportSummary extends Command
                 "to_email" => $value->email,
                 "from_email" => "support@solocodes.io",
                 "name" => $value->name,
-                "subject" => "Daily Summary Report " . Carbon::now()->format('d-m-Y'),
+                "subject" => "Daily Summary Report: " . $day_month_year,
                 "body" => $message
             ];
             dispatch(new SendEmailJob($data));
         }
-
-        // $data = [
-        //     "to_email" => "renfridfrancis@gmail.com",
-        //     "from_email" => "support@solocodes.io",
-        //     "name" => "Renfrid",
-        //     "subject" => "Daily Summary Report - " . Carbon::now()->format('d-m-Y'),
-        //     "body" => $message
-        // ];
-        dispatch(new SendEmailJob($data));
     }
 }
