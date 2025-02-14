@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Airtel\MandateController as AirtelMandateController;
 use App\Http\Controllers\Api\CollectionController;
 use App\Http\Controllers\Api\PaymentMandateController;
 use App\Http\Controllers\Api\CompanyController;
@@ -74,3 +75,7 @@ Route::post('collection/status', [CollectionController::class, 'status']);
 //CRDB apis
 Route::post('mandate/crdb', [CRDBMandateController::class, 'create']);
 Route::post('mandate/crdb/callback', [CRDBMandateController::class, 'callback']);
+
+//Airtel apis
+Route::post('mandate/airtel', [AirtelMandateController::class, 'create']);
+Route::post('mandate/airtel/callback', [AirtelMandateController::class, 'callback']);
