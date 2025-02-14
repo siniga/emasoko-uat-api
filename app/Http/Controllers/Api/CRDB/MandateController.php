@@ -14,7 +14,7 @@ class MandateController extends Controller
 {
     private $auth;
 
-    function __construct()
+    public function __construct()
     {
         $this->auth = new Checksum();
     }
