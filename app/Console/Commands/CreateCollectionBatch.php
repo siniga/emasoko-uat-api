@@ -47,6 +47,8 @@ class CreateCollectionBatch extends Command
      */
     public function handle()
     {
+        Log::debug("== Creating collection Batch ==");
+
         //Limit
         $limit = 250;
         $current_date = Carbon::now();
@@ -130,6 +132,7 @@ class CreateCollectionBatch extends Command
                 }
             }
         }
+        Log::debug("== Success on creating collection batch ==");
 
         return 200;
     }

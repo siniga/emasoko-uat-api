@@ -45,6 +45,8 @@ class CollectionStatusBatch extends Command
      */
     public function handle()
     {
+        Log::debug("== Creating collection Batch ==");
+        
         //initialize deduction service
         $bankPayload = new BankPayloadService();
         $bankApi =  new BankApiService();
@@ -67,6 +69,7 @@ class CollectionStatusBatch extends Command
                 sleep(5); // sleep for 5 seconds
             }
         }
+        Log::debug("== Success on creating collection batch status ==");
 
         return 200;
     }
