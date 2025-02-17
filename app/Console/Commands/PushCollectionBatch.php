@@ -42,6 +42,8 @@ class PushCollectionBatch extends Command
      */
     public function handle()
     {
+        Log::debug("== Pushing collection batch ==");
+        
         $bankPayload = new BankPayloadService();
         $bankApi =  new BankApiService();
 
@@ -70,6 +72,7 @@ class PushCollectionBatch extends Command
                 sleep(5); //sleep for 5 seconds
             }
         }
+        Log::debug("== Success on pushing collection batch ==");
 
         return 0;
     }
