@@ -64,6 +64,7 @@ class CollectionController extends Controller
     {
         $title = 'Create Mandate Collection';
 
+        $limit = 250; //batch limit
         $partner_id = null;
         $arr_installments = [];
 
@@ -72,15 +73,15 @@ class CollectionController extends Controller
             $requests = $request->all();
             $partner_id =  $requests['partner_id'];
 
-            $debit_orders = DebitOrder::where(['contract_status' => 'OPEN', 'approved' => 1, 'status' => 240])
+            $debit_orders = DebitOrder::where(['contract_status' => 'OPEN', 'channel' => 'NMB', 'approved' => 1, 'status' => 240, 'deleted' => 0])
                 ->where('partner_id', '=', $requests['partner_id'])
                 ->where('deleted', '=', 0)
                 ->whereDate('next_debit_date', "=", $requests['debit_date']);
 
             if ($debit_orders->count() > 0) {
                 foreach ($debit_orders->get() as $val) {
-                    $installments = Installment::where(['debit_order_id' => $val->id, 'status' => 'OPEN', 'pushed' => 0])
-                        ->whereDate('payment_date', '=', $val->next_debit_date)->get();
+                    $installments = Installment::where(['debit_order_id' => $val->id, 'status' => 'OPEN', 'created' => 0 , 'pushed' => 0])
+                        ->whereDate('payment_date', '=', $val->next_debit_date)->take($limit)->get();
 
                     foreach ($installments as $v) {
                         $arr_installments[] = [
