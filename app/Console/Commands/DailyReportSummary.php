@@ -44,6 +44,10 @@ class DailyReportSummary extends Command
      */
     public function handle()
     {
+        $current_date = Carbon::now();
+        Log::debug("== Send daily summary report: '{$current_date}' ==");
+        
+        //approved status
         $approvedStatuses = [0, 1, 2];
 
         //query
@@ -69,7 +73,6 @@ class DailyReportSummary extends Command
 
         //summation of mandate values
         $total_mandate_value = $mandates[0]['total_amount'] + $mandates[1]['total_amount'] + $mandates[2]['total_amount'];
-
 
         //collection stats
         $installments = Installment::whereHas('debitOrder', function ($query) {

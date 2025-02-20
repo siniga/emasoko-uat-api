@@ -59,6 +59,9 @@ class CollectionBatch extends Model
                 $batches = $batches->whereIn('collection_batches.partner_id', $arr_partners);
         }
 
+        //filter where deleted = 0
+        $batches = $batches->where('collection_batches.deleted', '=', 0);
+
         return $batches;
     }
 
