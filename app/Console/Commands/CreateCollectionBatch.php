@@ -49,7 +49,7 @@ class CreateCollectionBatch extends Command
     {
         //Limit
         $limit = 250;
-        $current_date = "2025-02-16";
+        $current_date = "2025-02-11";
         //$current_date = Carbon::now();
         Log::debug("== Creating collection batch: '{$current_date}' ==");
 
@@ -67,70 +67,70 @@ class CreateCollectionBatch extends Command
             $number_installments = Installment::getCreated($partner, $current_date)->count();
             Log::debug("No. installments => " . $number_installments);
 
-            // if ($number_installments > 0) {
-            //     //looping
-            //     $looping = $number_installments / $limit;
+            if ($number_installments > 0) {
+                //looping
+                $looping = $number_installments / $limit;
 
-            //     //iterate looping
-            //     for ($i = 1; $i <= ceil($looping); $i++) {
-            //         //2.0 Create collection batch based on partner 
-            //         $batch = CollectionBatch::create([
-            //             'partner_id' => $partner->id,
-            //             "collectionReference" => $deductionService->getCollectionReference(),
-            //             "corporateReference" => $partner->reference,
-            //             "selectedPostingDate" => Carbon::now(),
-            //             "createdBy" => 1,
-            //             "verifiedBy" => 1,
-            //             "createdDate" => Carbon::now(),
-            //             "verifyDate" => Carbon::now(),
-            //         ]);
+                //iterate looping
+                for ($i = 1; $i <= ceil($looping); $i++) {
+                    //2.0 Create collection batch based on partner 
+                    $batch = CollectionBatch::create([
+                        'partner_id' => $partner->id,
+                        "collectionReference" => $deductionService->getCollectionReference(),
+                        "corporateReference" => $partner->reference,
+                        "selectedPostingDate" => Carbon::now(),
+                        "createdBy" => 1,
+                        "verifiedBy" => 1,
+                        "createdDate" => Carbon::now(),
+                        "verifyDate" => Carbon::now(),
+                    ]);
 
-            //         if ($batch->wasRecentlyCreated) {
-            //             //2.1 Declare variables
-            //             $arr_installments = [];
-            //             $arr_accounts = [];
-            //             $csv = "SERIAL No.;BANK CODE;BRANCH NAME;EMPLOYEE NUMBER;CUSTOMER NAME;ACCOUNT NO;AMOUNT\n";
+                    if ($batch->wasRecentlyCreated) {
+                        //2.1 Declare variables
+                        $arr_installments = [];
+                        $arr_accounts = [];
+                        $csv = "SERIAL No.;BANK CODE;BRANCH NAME;EMPLOYEE NUMBER;CUSTOMER NAME;ACCOUNT NO;AMOUNT\n";
 
-            //             //installments
-            //             $installments = Installment::getCreated($partner, $current_date)->take($limit)->get();
+                        //installments
+                        $installments = Installment::getCreated($partner, $current_date)->take($limit)->get();
 
-            //             foreach ($installments as $installment) {
-            //                 //account details
-            //                 $account_name = strtoupper($installment->debitOrder->customerAccount->account_name);
-            //                 $account_number = $installment->debitOrder->customerAccount->account_number;
-            //                 $mandate_reference = $installment->debitOrder->reference;
-            //                 $installment_id = $installment->id;
-            //                 $payment_amount = $installment->installment_amount;
+                        foreach ($installments as $installment) {
+                            //account details
+                            $account_name = strtoupper($installment->debitOrder->customerAccount->account_name);
+                            $account_number = $installment->debitOrder->customerAccount->account_number;
+                            $mandate_reference = $installment->debitOrder->reference;
+                            $installment_id = $installment->id;
+                            $payment_amount = $installment->installment_amount;
 
-            //                 //check if account exists in this batch
-            //                 if (!in_array($account_number, $arr_accounts)) {
-            //                     //create csv file
-            //                     $csv .= "{$installment_id};016;NMB;{$mandate_reference};{$account_name};{$account_number};{$payment_amount}\n";
+                            //check if account exists in this batch
+                            if (!in_array($account_number, $arr_accounts)) {
+                                //create csv file
+                                $csv .= "{$installment_id};016;NMB;{$mandate_reference};{$account_name};{$account_number};{$payment_amount}\n";
 
-            //                     //append account in array
-            //                     array_push($arr_accounts, $account_number);
+                                //append account in array
+                                array_push($arr_accounts, $account_number);
 
-            //                     //update array installments
-            //                     array_push($arr_installments, $installment_id);
+                                //update array installments
+                                array_push($arr_installments, $installment_id);
 
-            //                     //update installment status => created = 1
-            //                     $up_installment = Installment::findOrFail($installment_id);
-            //                     $up_installment->created = 1;
-            //                     $up_installment->save();
-            //                 }
-            //             }
+                                //update installment status => created = 1
+                                $up_installment = Installment::findOrFail($installment_id);
+                                $up_installment->created = 1;
+                                $up_installment->save();
+                            }
+                        }
 
-            //             //check if installments is not null
-            //             if ($arr_installments) {
-            //                 $batch->request_csv = $csv;
-            //                 $batch->installment_ids = implode(",", $arr_installments);
-            //                 $batch->save();
-            //             } else {
-            //                 $batch->delete();
-            //             }
-            //         }
-            //     }
-            // }
+                        //check if installments is not null
+                        if ($arr_installments) {
+                            $batch->request_csv = $csv;
+                            $batch->installment_ids = implode(",", $arr_installments);
+                            $batch->save();
+                        } else {
+                            $batch->delete();
+                        }
+                    }
+                }
+            }
         }
         Log::debug("== Success on creating collection batch ==");
 
