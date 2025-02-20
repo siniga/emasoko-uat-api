@@ -44,6 +44,9 @@ class MonthlyReportSummary extends Command
      */
     public function handle()
     {
+        $current_date = Carbon::now();
+        Log::debug("== Send monthly summary report: '{$current_date}' ==");
+
         //current month and year
         $month = date('m');
         $year = date('Y');

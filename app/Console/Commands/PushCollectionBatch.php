@@ -6,6 +6,7 @@ use App\Jobs\PushCollectionJob;
 use App\Models\CollectionBatch;
 use App\Services\BankApiService;
 use App\Services\BankPayloadService;
+use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
@@ -42,7 +43,8 @@ class PushCollectionBatch extends Command
      */
     public function handle()
     {
-        Log::debug("== Pushing collection batch ==");
+        $current_date = Carbon::now();
+        Log::debug("== Push collection batch: '{$current_date}' ==");
         
         $bankPayload = new BankPayloadService();
         $bankApi =  new BankApiService();

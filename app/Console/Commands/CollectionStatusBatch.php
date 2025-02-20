@@ -10,6 +10,7 @@ use App\Models\DebitOrder;
 use App\Services\BankPayloadService;
 use App\Services\BankApiService;
 use App\Services\DeductionService;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
 class CollectionStatusBatch extends Command
@@ -45,7 +46,8 @@ class CollectionStatusBatch extends Command
      */
     public function handle()
     {
-        Log::debug("== Creating collection Batch ==");
+        $current_date = Carbon::now();
+        Log::debug("== Creating collection status: '{$current_date}' ==");
         
         //initialize deduction service
         $bankPayload = new BankPayloadService();

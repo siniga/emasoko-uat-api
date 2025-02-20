@@ -206,7 +206,7 @@ class DeductionService
                 $amount = floatval($fields[6]);
 
                 //check for status
-                if ($status == "fail") {
+                if ($status == "fail" || $status == "fundscheck") {
                     //updated status of installment
                     $installment->status = "FAILED";
                     $installment->remarks = $message;
