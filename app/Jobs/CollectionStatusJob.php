@@ -101,7 +101,7 @@ class CollectionStatusJob implements ShouldQueue
                     //1. Batch Complete
                     //1.1: read csv file
                     $data = base64_to_content($response['data']['file']['fileData']);
-                    $collection_batch->response_csv = $data;
+                    //$collection_batch->response_csv = $data;
 
                     Log::debug("== Complete Collection CSV ==");
                     Log::debug($data);
@@ -116,7 +116,7 @@ class CollectionStatusJob implements ShouldQueue
                     //1. Batch Complete
                     //1.1: read csv file
                     $data = base64_to_content($response['data']['file']['fileData']);
-                    $collection_batch->response_csv = $data;
+                    //$collection_batch->response_csv = $data;
 
                     Log::debug("== Failed Collection CSV ==");
                     Log::debug($data);
@@ -131,7 +131,7 @@ class CollectionStatusJob implements ShouldQueue
                     //3.Batch Processing
                     //3.1: read csv file
                     $data = base64_to_content($response['data']['file']['fileData']);
-                    $collection_batch->response_csv = $data;
+                    //$collection_batch->response_csv = $data;
 
                     Log::debug("== Processing Collection CSV ==");
                     Log::debug($data);
