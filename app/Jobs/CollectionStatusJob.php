@@ -108,9 +108,6 @@ class CollectionStatusJob implements ShouldQueue
                     $collection_batch->success = $response[0];
                     $collection_batch->failed = $response[1];
                     $collection_batch->save();
-
-                    //1.3: response
-                    $response = $deduction_service->updateInstallments($data, $collection_reference);
                 } else if ($response_code == 235) {
                     //1. Batch Complete
                     //1.1: read csv file
