@@ -76,7 +76,6 @@ class CollectionStatusJob implements ShouldQueue
 
         //update collection batch 
         $collection_batch = CollectionBatch::where('collectionReference', '=', $collection_reference)->first();
-        //$collection_batch->http_response_json = $response;
 
         //decode the response 
         $response = json_decode($response, true);
@@ -105,7 +104,7 @@ class CollectionStatusJob implements ShouldQueue
                     Log::debug($data);
 
                     //1.2: process batch
-                    $collection_batch->response_csv = $data;
+                    //$collection_batch->response_csv = $data;
                     $collection_batch->success = $response[0];
                     $collection_batch->failed = $response[1];
                     $collection_batch->save();
@@ -120,7 +119,7 @@ class CollectionStatusJob implements ShouldQueue
                     Log::debug($data);
 
                     //1.2: process batch
-                    $collection_batch->response_csv = $data;
+                    //$collection_batch->response_csv = $data;
                     $collection_batch->success = $response[0];
                     $collection_batch->failed = $response[1];
                     $collection_batch->save();
@@ -135,7 +134,7 @@ class CollectionStatusJob implements ShouldQueue
                     Log::debug($data);
 
                     //1.2: process batch
-                    $collection_batch->response_csv = $data;
+                    //$collection_batch->response_csv = $data;
                     $collection_batch->success = $response[0];
                     $collection_batch->failed = $response[1];
                     $collection_batch->save();
