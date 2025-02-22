@@ -100,22 +100,26 @@ class CreateCollectionBatch extends Command
                             $mandate_reference = $installment->debitOrder->reference;
                             $installment_id = $installment->id;
                             $payment_amount = $installment->installment_amount;
+                            $debit_end_date = Carbon::parse($installment->debitOrder->end_date);
 
-                            //check if account exists in this batch
-                            if (!in_array($account_number, $arr_accounts)) {
-                                //create csv file
-                                $csv .= "{$installment_id};016;NMB;{$mandate_reference};{$account_name};{$account_number};{$payment_amount}\n";
+                            //check if debit mandate expire
+                            if ($debit_end_date->gte(Carbon::now())) {
+                                //check if account exists in this batch
+                                if (!in_array($account_number, $arr_accounts)) {
+                                    //create csv file
+                                    $csv .= "{$installment_id};016;NMB;{$mandate_reference};{$account_name};{$account_number};{$payment_amount}\n";
 
-                                //append account in array
-                                array_push($arr_accounts, $account_number);
+                                    //append account in array
+                                    array_push($arr_accounts, $account_number);
 
-                                //update array installments
-                                array_push($arr_installments, $installment_id);
+                                    //update array installments
+                                    array_push($arr_installments, $installment_id);
 
-                                //update installment status => created = 1
-                                $up_installment = Installment::findOrFail($installment_id);
-                                $up_installment->created = 1;
-                                $up_installment->save();
+                                    //update installment status => created = 1
+                                    $up_installment = Installment::findOrFail($installment_id);
+                                    $up_installment->created = 1;
+                                    $up_installment->save();
+                                }
                             }
                         }
 

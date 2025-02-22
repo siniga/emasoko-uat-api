@@ -98,48 +98,47 @@ class CollectionStatusJob implements ShouldQueue
                     //1. Batch Complete
                     //1.1: read csv file
                     $data = base64_to_content($response['data']['file']['fileData']);
-                    $collection_batch->response_csv = $data;
-
                     Log::debug("== Complete Collection CSV ==");
                     Log::debug($data);
 
-                    $response = $deduction_service->updateInstallments($data, $collection_reference);
-
-                    //3. process batch
+                    //1.2: process batch
+                    $collection_batch->response_csv = $data;
                     $collection_batch->success = $response[0];
                     $collection_batch->failed = $response[1];
                     $collection_batch->save();
+
+                    //1.3: response
+                    $response = $deduction_service->updateInstallments($data, $collection_reference);
                 } else if ($response_code == 235) {
                     //1. Batch Complete
                     //1.1: read csv file
                     $data = base64_to_content($response['data']['file']['fileData']);
-                    $collection_batch->response_csv = $data;
-
                     Log::debug("== Failed Collection CSV ==");
                     Log::debug($data);
 
-                    $response = $deduction_service->updateInstallments($data, $collection_reference);
-
-                    //3. process batch
+                    //1.2: process batch
+                    $collection_batch->response_csv = $data;
                     $collection_batch->success = $response[0];
                     $collection_batch->failed = $response[1];
                     $collection_batch->save();
+
+                    //1.3: response
+                    $response = $deduction_service->updateInstallments($data, $collection_reference);
                 } else if ($response_code == 239) {
                     //3.Batch Processing
-                    //3.1: read csv file
+                    //1.1: read csv file
                     $data = base64_to_content($response['data']['file']['fileData']);
-                    $collection_batch->response_csv = $data;
-
                     Log::debug("== Processing Collection CSV ==");
                     Log::debug($data);
 
-                    //response
-                    $response = $deduction_service->updateInstallments($data, $collection_reference);
-
-                    //3. process batch
+                    //1.2: process batch
+                    $collection_batch->response_csv = $data;
                     $collection_batch->success = $response[0];
                     $collection_batch->failed = $response[1];
                     $collection_batch->save();
+
+                    //1.3: response
+                    $response = $deduction_service->updateInstallments($data, $collection_reference);
                 }
             } else if (strtolower($response['status']) == "fail") {
                 $response_code = $response['data']['response'][0]['responseCode'];

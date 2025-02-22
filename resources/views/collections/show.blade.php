@@ -146,33 +146,37 @@
                                                     $sum_outstanding_amount = 0;
                                                 @endphp
 
-                                                @foreach ($arr_data as $val)
+                                                @foreach ($installments as $val)
+                        
                                                     <tr>
                                                         <td>{{ $loop->iteration }}</td>
-                                                        <td>{{ $val['reference'] }}</td>
-                                                        <td>{{ $val['account_name'] }}</td>
-                                                        <td>{{ $val['account_number'] }}</td>
-                                                        <td class="text-sm-end">{{ number_format($val['expected_amount']) }}</td>
-                                                        <td class="text-sm-end">{{ number_format($val['paid_amount']) }}</td>
-                                                        <td class="text-sm-end">{{ number_format($val['current_balance']) }}</td>
-                                                        <td class="text-sm-end">{{ number_format($val['outstanding_amount']) }}</td>
+                                                        <td>{{ $val->debitOrder->reference }}</td>
+                                                        <td>{{ $val->debitOrder->customerAccount->account_name }}</td>
+                                                        <td>{{ $val->debitOrder->customerAccount->account_number }}</td>
+                                                        <td class="text-sm-end">
+                                                            {{ ($val->debitOrder->debit_type == 'FIXED') ? $val->debitOrder->installment_amount : $val->debitOrder->max_installment_amount }}
+                                                        </td>
+                                                        <td class="text-sm-end">{{ number_format($val->last_paid_amount) }}</td>
+                                                        <td class="text-sm-end">{{ number_format($val->current_balance) }}</td>
+                                                        <td class="text-sm-end">{{ number_format($val->outstanding_amount) }}</td>
                                                         <td>
-                                                            @if($val['payment_status'] == "SUCCESS")
+                                                            @if(strtoupper($val->status) == "CLOSED")
                                                                 <span class="badge bg-success-1">Paid</span>
-                                                            @elseif($val['payment_status'] == "FAIL")  
+                                                            @elseif(strtoupper($val->status) == "FAILED")  
                                                                 <span class="badge bg-danger">Unpaid</span>    
                                                             @else
-                                                                <span class="badge bg-warning">Processing</span>  
+                                                                <span class="badge bg-warning">{{ strtoupper($val->status) }}</span>  
                                                             @endif
                                                         </td>
-                                                        <td>{{ $val['message'] }}</td>
+                                                        <td>{{ $val->remarks }}</td>
                                                     </tr>
 
                                                     @php
-                                                        $sum_expected_amount += $val['expected_amount'];
-                                                        $sum_paid_amount += $val['paid_amount'];
-                                                        $sum_current_balance += $val['current_balance'];
-                                                        $sum_outstanding_amount += $val['outstanding_amount'];
+                                                        $expected_amount = ($val->debitOrder->debit_type == 'FIXED') ? $val->debitOrder->installment_amount : $val->debitOrder->max_installment_amount;
+                                                        $sum_expected_amount += $expected_amount;
+                                                        $sum_paid_amount += $val->last_paid_amount;
+                                                        $sum_current_balance += $val->current_balance;
+                                                        $sum_outstanding_amount += $val->outstanding_amount;
                                                     @endphp
                                                 @endforeach
                                                 <tr>
