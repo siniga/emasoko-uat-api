@@ -194,58 +194,12 @@ class CollectionController extends Controller
         //batch
         $batch = CollectionBatch::where(['id' => $id])->firstOrFail();
 
-        //Convert the data into an array of rows
-        $rows = explode("\n", $batch->response_csv);
-
-        //remove empty rows
-        $rows = array_filter($rows);
-
-        //create arrray
-        $arr_data = [];
-
-        //2. process installment
-        foreach ($rows as $index => $row) {
-            // Skip the first row as it contains headers
-            if ($index === 0) {
-                continue;
-            }
-
-            // Split the row into individual fields using semicolon as delimiter
-            $fields = explode(";", $row);
-            $payment_status = $fields[7];
-            $paid_amount = floatval($fields[6]);
-
-            //get debit mandate 
-            $debit_order = DebitOrder::where(['reference' => $fields[3]]);
-
-            if ($debit_order->count() > 0) {
-                $debit_order = $debit_order->first();
-
-                //get installment from id
-                $installment = Installment::where('id', '=', $fields[0])->first();
-
-                if ($installment) {
-                    //create array data
-                    $arr_data[] = [
-                        'id' => $fields[0],
-                        'reference' => $debit_order->reference,
-                        'account_name' => $fields[4],
-                        'account_number' => $fields[5],
-                        'debit_type' => $debit_order->debit_type,
-                        'expected_amount' => ($debit_order->debit_type == 'FIXED') ? $debit_order->installment_amount : $debit_order->max_installment_amount,
-                        'paid_amount' => ($payment_status == 'SUCCESS') ? $paid_amount : 0,
-                        'current_balance' => $installment->current_balance,
-                        'outstanding_amount' => $installment->outstanding_amount,
-                        'payment_date' => $installment->payment_date,
-                        'payment_status' => $payment_status,
-                        'message' => $fields[8]
-                    ];
-                }
-            }
-        }
+        //installments
+        $installment_ids = explode(',', $batch->installment_ids);
+        $installments = Installment::whereIn('id', $installment_ids)->get();
 
         //render view
-        return view('collections.show', compact('title', 'batch', 'arr_data'));
+        return view('collections.show', compact('title', 'batch', 'installments'));
     }
 
     public function push($id)
