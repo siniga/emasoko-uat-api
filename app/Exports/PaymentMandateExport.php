@@ -110,6 +110,7 @@ class PaymentMandateExport implements FromQuery, WithHeadings, ShouldAutoSize, W
             'Remarks',
             'Created Date',
             'Created By',
+            'Service Provider',
         ];
     }
 
@@ -147,6 +148,7 @@ class PaymentMandateExport implements FromQuery, WithHeadings, ShouldAutoSize, W
             $debit_orders->remarks,
             $debit_orders->created_at,
             strtoupper($debit_orders->userCreated->name),
+            strtoupper($debit_orders->partner->business_name),
         ];
     }
 
