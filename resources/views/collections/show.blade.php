@@ -159,7 +159,7 @@
                                                         <td>
                                                             @if($val['payment_status'] == "SUCCESS")
                                                                 <span class="badge bg-success-1">Paid</span>
-                                                            @elseif($val['payment_status'] == "FAIL")  
+                                                            @elseif($val['payment_status'] == "FAIL" || $val['payment_status'] == "FUNDSCHECK")  
                                                                 <span class="badge bg-danger">Unpaid</span>    
                                                             @else
                                                                 <span class="badge bg-warning">Processing</span>  

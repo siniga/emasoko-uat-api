@@ -122,6 +122,18 @@
                                             </tr>
 
                                             <tr>
+                                                <th>Service Provider</th>
+                                                <td>
+                                                    <span>{{ $debit_order->partner->business_name ?? '' }}</span>
+                                                </td>
+
+                                                <th>Mandate Reference</th>
+                                                <td>
+                                                    <span>{{ $debit_order->reference ?? '' }}</span>
+                                                </td>
+                                            </tr>
+
+                                            <tr>
                                                 <th width=25%>Total Amount</th>
                                                 <td width=25%>
                                                     <span>{{ number_format($debit_order->total_amount) ?? '' }}</span>
