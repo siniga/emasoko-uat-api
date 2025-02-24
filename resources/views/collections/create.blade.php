@@ -43,7 +43,7 @@
 
                             <div class="col-lg-5 col-md-5 col-12">
                                 <div class="mb-0">
-                                    {{ Form::date('debit_date', old('debit_date', date('Y-m-d')), ['class="form-control"', 'placeholder="Enter collection date..."', 'max' => date('Y-m-d'), 'required' => '']) }}
+                                    {{ Form::date('debit_date', old('debit_date', date('Y-m-d')), ['class="form-control"', 'placeholder="Enter collection date..."', 'required' => '']) }}
                                 </div>
                             </div>
 
