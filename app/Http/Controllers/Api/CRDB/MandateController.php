@@ -70,7 +70,7 @@ class MandateController extends Controller
             "BillDetails" => "Recurring payment"
         ];
 
-        Log::debug("== Payload ==");
+        Log::debug("== CRDB Payload ==");
         Log::debug($payload);
 
         //API URL
@@ -79,7 +79,7 @@ class MandateController extends Controller
         //push payload => NMB Direct Debits
         $response = Http::withHeaders($headers)->post($API_URL, $payload);
 
-        Log::debug('== MandateRegistration Response ==');
+        Log::debug('== CRDB MandateRegistration Response ==');
         Log::debug($response);
 
         return $response;
