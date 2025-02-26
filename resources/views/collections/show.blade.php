@@ -40,6 +40,15 @@
                             <div></div>
 
                             <div class="text-sm-end d-none d-sm-block">
+                                <template x-if="deleted==0">
+                                    <template x-if="status==100 || status ==235 || status==249 || status==403 || status==405 || status==500 || status==501">
+                                        <a href="{{ route('collections.archive', $batch->id) }}" title="Archive"
+                                            class="btn btn-warning text-medium btn-sm archive">
+                                            <i class="bx bx-archive-in font-size-12"></i> Archive Batch
+                                        </a>
+                                    </template>
+                                </template>
+
                                 @if (Auth::user()->hasRole(['admin']))
                                 <button x-html="btnStatus" title="Collection Status" class="btn btn-outline-success btn-sm"
                                     x-on:click="fetchCollectionStatus();"></button>
@@ -212,6 +221,8 @@
             return {
                 sidebarOpen: false,
                 eModal: "Collection_Information",
+                status: "{{ $batch->status }}",
+                deleted: "{{ $batch->deleted }}",
                 failed: "{{ $batch->failed }}",
 
                 formData: {
@@ -257,7 +268,6 @@
                             this.btnStatus = '<i class="fa fa-check"></i> Collection Status';
                         });
                 },
-
             }
         }
     </script>

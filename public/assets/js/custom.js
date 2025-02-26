@@ -4,7 +4,7 @@ $(document).ready(function () {
         event.preventDefault();
         const url = $(this).attr('href');
         swal({
-            title: 'Cancel Mandate',
+            title: 'Cancel',
             text: 'Once cancel it, you will not be able to revert back.',
             icon: 'error',
             buttons: {
@@ -22,8 +22,8 @@ $(document).ready(function () {
         event.preventDefault();
         const url = $(this).attr('href');
         swal({
-            title: 'Archive Mandate',
-            text: 'Are you sure you want to archive mandate?',
+            title: 'Archive',
+            text: 'Are you sure you want to archive?',
             icon: 'warning',
             buttons: {
                 cancel: 'No',
@@ -41,7 +41,7 @@ $(document).ready(function () {
         event.preventDefault();
         const url = $(this).attr('href');
         swal({
-            title: 'Delete Mandate',
+            title: 'Delete',
             text: 'Once deleted, you will not be able to revert back.',
             icon: 'error',
             buttons: {

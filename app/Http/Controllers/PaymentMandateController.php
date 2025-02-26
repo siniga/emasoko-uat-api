@@ -813,7 +813,7 @@ class PaymentMandateController extends Controller
         $title = 'Archive payment mandate';
 
         //debit order
-        $debit_order = DebitOrder::where(['uuid' => $id])->first();
+        $debit_order = DebitOrder::where(['uuid' => $id])->firstOrFail();
         $debit_order->deleted = 1;
         $debit_order->save();
 

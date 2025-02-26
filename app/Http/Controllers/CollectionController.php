@@ -230,6 +230,19 @@ class CollectionController extends Controller
         return response()->json(['success' => true, 'success_msg' => "Collection batch pushed."], 200);
     }
 
+    public function archive($id)
+    {
+        $title = 'Archive collection batch';
+
+        //batch
+        $batch = CollectionBatch::where(['id' => $id])->firstOrFail();
+        $batch->deleted = 1;
+        $batch->save();
+
+        //redirect
+        return Redirect::route('collections.batches')->with('success', 'Collection batch archived');
+    }
+
     public function fetch_status(Request $request)
     {
         $title = "Fetch Collection Status";
