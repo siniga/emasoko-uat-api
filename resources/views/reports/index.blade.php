@@ -24,7 +24,7 @@
                             {{ Form::token() }}
 
                             <div class="row">
-                                <div class="col-lg-3">
+                                <div class="col-lg-3 col-md-3 col-12">
                                     <div class="mb-3">
                                         @php
                                             $options = [
@@ -39,12 +39,11 @@
                                     </div>
                                 </div>
 
-                                <div class="col-lg-3">
+                                <div class="col-lg-3 col-md-3 col-12">
                                     <div class="mb-3">
                                         @php
                                             $options = [
                                                 'EXCEL' => 'Excel',
-                                                'PDF' => 'PDF',
                                             ];
                                             $options = ['' => '-- Report Format --'] + $options;
                                         @endphp
@@ -53,24 +52,22 @@
                                     </div>
                                 </div>
 
-                                <div class="col-lg-3">
+                                <div class="col-lg-3 col-md-3 col-12">
                                     <div class="mb-3">
                                         {{ Form::date('start_at', old('start_at'), ['placeholder="Start Date..."', 'class="form-control"']) }}
                                     </div>
                                 </div>
-                                <!--./col -->
 
-                                <div class="col-lg-3">
+                                <div class="col-lg-3 col-md-3 col-12">
                                     <div class="mb-3">
                                         {{ Form::date('end_at', old('end_at'), ['placeholder="End Date..."', 'class="form-control"']) }}
                                     </div>
                                 </div>
-                                <!--./col -->
                             </div>
                             <!--./row -->
 
                             <div class="row">
-                                <div class="col-lg-3">
+                                <div class="col-lg-3 col-md-3 col-12">
                                     <div class="mb-3">
                                         @php
                                             $account_type_options = [];
@@ -90,7 +87,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-lg-3">
+                                <div class="col-lg-3 col-md-3 col-12">
                                     <div class="mb-3">
                                         @php $options = []; @endphp
                                         @foreach ($accounts as $val)
@@ -106,7 +103,27 @@
                                     </div>
                                 </div>
 
-                                <div class="col-lg-6">
+                                <div class="col-lg-6 col-md-6 col-12">
+                                    <div class="mb-3">
+                                        @php
+                                        $options = [];
+                                    @endphp
+                                    @foreach ($partners as $val)
+                                        @php
+                                            $options[$val->id] = $val->business_name;
+                                        @endphp
+                                    @endforeach
+                                    @php
+                                        $options = ['' => '-- Service Provider --'] + $options;
+                                    @endphp
+
+                                    {{ Form::select('partner_id', $options, old('partner_id'), ['class' => 'form-control select2', 'id' => 'partner_id']) }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-12 col-md-12 col-12">
                                     <div class="mb-3">
                                         <div class="text-sm-end d-none d-sm-block">
                                             <button type="submit" name="generate" class="btn btn-secondary">
