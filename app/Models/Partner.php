@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class Partner extends Model
 {
@@ -17,9 +18,12 @@ class Partner extends Model
     {
         parent::boot();
         static::creating(function ($model) {
+            //create short code
+            $short_code = strtoupper(Str::random(3));
+
             $model->reference = Partner::document_number("reference", "CO", 4, true, false);
-            $model->short_code = strtoupper(substr($model->business_name, 0, 3));
-            $model->client_code = strtoupper(substr($model->business_name, 0, 2));
+            $model->short_code = $short_code;
+            $model->client_code = substr($short_code, 0, 2);
         });
     }
 
