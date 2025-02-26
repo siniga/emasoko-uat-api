@@ -64,7 +64,6 @@ class CreateCollectionBatch extends Command
         foreach ($partners as $partner) {
             //1.0: Number of installment
             $number_installments = Installment::getCreated($partner, $current_date)->count();
-            Log::debug("No. installments => " . $number_installments);
 
             if ($number_installments > 0) {
                 //looping
@@ -101,9 +100,10 @@ class CreateCollectionBatch extends Command
                             $installment_id = $installment->id;
                             $payment_amount = $installment->installment_amount;
                             $debit_end_date = Carbon::parse($installment->debitOrder->end_date);
+                            $deleted = $installment->debitOrder->deleted;
 
                             //check if debit mandate expire
-                            if ($debit_end_date->gte(Carbon::now())) {
+                            if ($debit_end_date->gte(Carbon::now()) && $deleted == 0) {
                                 //check if account exists in this batch
                                 if (!in_array($account_number, $arr_accounts)) {
                                     //create csv file

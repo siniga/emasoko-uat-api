@@ -29,9 +29,6 @@ class PaymentMandateExport implements FromQuery, WithHeadings, ShouldAutoSize, W
         //debit orders
         $debit_orders = DebitOrder::filterCondition();
 
-        Log::debug("==  request data ==");
-        Log::debug($this->request->all());
-
         //start data and end date
         if ($this->request->has('start_at') != null && $this->request->has('end_at') != null) {
             if ($this->request->input('start_at') != null && $this->request->input('end_at') != null)

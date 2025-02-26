@@ -71,6 +71,7 @@ class CollectionStatusBatch extends Command
                 sleep(5); // sleep for 5 seconds
             }
         }
+        //logging successiong
         Log::debug("== Success on creating collection batch status ==");
 
         return 200;
