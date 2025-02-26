@@ -808,6 +808,32 @@ class PaymentMandateController extends Controller
         return Redirect::route('payment-mandate.lists')->with('danger', 'Payment mandate deleted!');
     }
 
+    public function archive($id)
+    {
+        $title = 'Archive payment mandate';
+
+        //debit order
+        $debit_order = DebitOrder::where(['uuid' => $id])->first();
+        $debit_order->deleted = 1;
+        $debit_order->save();
+
+        //redirect
+        return Redirect::route('payment-mandate.lists')->with('success', 'Payment mandate archived');
+    }
+
+    public function unarchieve($id)
+    {
+        $title = 'Unarchive payment mandate';
+
+        //debit order
+        $debit_order = DebitOrder::where(['uuid' => $id])->first();
+        $debit_order->deleted = 0;
+        $debit_order->save();
+
+        //redirect
+        return Redirect::route('payment-mandate.lists')->with('danger', 'Payment mandate unarchived');
+    }
+
     public function createEvidence(DebitOrder $debit_order)
     {
         //Create Evidence of Agreement

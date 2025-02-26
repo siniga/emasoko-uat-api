@@ -47,9 +47,18 @@
 
                                 <template x-if="status==100 || status==200 || status==403 || status==430 || status==500 || status==501">
                                     <a href="{{ route('payment-mandate.create-account', [$debit_order->customerAccount->uuid, $debit_order->uuid] ) }}" title="Edit"
-                                        class="btn btn-outline-secondary text-medium btn-sm">
+                                        class="btn btn-secondary text-medium btn-sm">
                                         <i class="bx bx-edit font-size-12"></i> Edit Mandate
                                     </a>
+                                </template>
+
+                                <template x-if="deleted==0">
+                                    <template x-if="status==100 || status==200 || status==201 || status==249 || status==403 || status==405 || status==500 || status==501">
+                                        <a href="{{ route('payment-mandate.archive', $debit_order->uuid) }}" title="Archive"
+                                            class="btn btn-warning text-medium btn-sm archive">
+                                            <i class="bx bx-archive-in font-size-12"></i> Archive Mandate
+                                        </a>
+                                    </template>
                                 </template>
 
                                 <template x-if="status==100 || status==200">
@@ -347,6 +356,7 @@
                 sidebarOpen: false,
                 eModal: "Mandate_Information",
                 status: "{{ $debit_order->status }}",
+                deleted: "{{ $debit_order->deleted }}",
                 remarks: "{{ $debit_order->remarks }}",
                 approved: "{{ $debit_order->approved }}",
                 verifyTXT: "<i class='bx bx-check-square'></i> Verify OTP",

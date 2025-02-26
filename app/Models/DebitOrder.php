@@ -19,7 +19,7 @@ class DebitOrder extends Model
         $user = User::findOrFail(Auth::user()->id);
 
         //debit orders
-        $debit_orders = static::query();
+        $debit_orders = static::query()->where('deleted', '=', 0);
 
         if ($user->hasRole('Partner')) {
             $company_user = CompanyUser::where(['user_id' => $user->id])->first();
