@@ -834,8 +834,11 @@ class PaymentMandateController extends Controller
         return Redirect::route('payment-mandate.lists')->with('danger', 'Payment mandate unarchived');
     }
 
-    public function createEvidence(DebitOrder $debit_order)
+    public function createEvidence($id)
     {
+
+        $debit_order = DebitOrder::where(['uuid' => $id])->first();
+
         //Create Evidence of Agreement
         view()->share('debit_order', $debit_order);
 
