@@ -20,8 +20,8 @@ class AirtelToken
     {
         //headers
         $headers = [
+            'Accept' => '*/*',
             'Content-Type' => 'application/json',
-            'Accept' => '*/*'
         ];
 
         //API URL

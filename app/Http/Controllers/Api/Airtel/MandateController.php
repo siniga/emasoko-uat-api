@@ -24,9 +24,13 @@ class MandateController extends Controller
 
         //headers
         $headers = [
-            'Authorization' => 'Bearer ' . $AUTH_BEARER_TOKEN,
+            'Accept' => '*/*',
             'Content-Type' => 'application/json',
-            'Accept' => '*/*'
+            'X-Country' => 'UG',
+            'X-Currency' => 'UGX',
+            'Authorization' => 'Bearer ' . $AUTH_BEARER_TOKEN,
+            'x-signature' => 'MGsp*****************Ag==',
+            'x-key' => 'DVZC*******************NM='
         ];
 
         //create payload

@@ -96,7 +96,25 @@
                                     </div>
                                 </div>
 
-                                <div class="col-lg-6">
+                                <div class="col-lg-4">
+                                    <div class="mb-3">
+                                        @php
+                                        $options = [];
+                                    @endphp
+                                    @foreach ($partners as $val)
+                                        @php
+                                            $options[$val->id] = $val->business_name;
+                                        @endphp
+                                    @endforeach
+                                    @php
+                                        $options = ['' => '-- Service Provider --'] + $options;
+                                    @endphp
+
+                                    {{ Form::select('partner_id', $options, old('partner_id', $post_data['partner_id']), ['class' => 'form-control select2', 'id' => 'partner_id']) }}
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-2">
                                     <div class="mb-3">
                                         <div class="text-sm-end d-none d-sm-block">
                                             <button type="submit" name="filter" class="btn btn-secondary">
@@ -149,12 +167,12 @@
                                     
                                     @if (isset($debit_orders) && $debit_orders->isNotEmpty())
                                         <a title="Export" class="btn btn-outline-success btn-sm"
-                                            href="{{ route('payment-mandate.export-xls', ['start_at' => $post_data['start_at'], 'end_at' => $post_data['end_at'], 'account_type_id' => $post_data['account_type_id'], 'account_id' => $post_data['account_id'], 'status' => $post_data['status'], 'keyword' => $post_data['keyword']]) }}">
+                                            href="{{ route('payment-mandate.export-xls', ['start_at' => $post_data['start_at'], 'end_at' => $post_data['end_at'], 'account_type_id' => $post_data['account_type_id'], 'account_id' => $post_data['account_id'], 'partner_id' => $post_data['partner_id'], 'status' => $post_data['status'], 'keyword' => $post_data['keyword']]) }}">
                                             <i class="bx bx-export"></i> Export XLS
                                         </a>
 
                                         <a title="Export" class="btn btn-outline-danger btn-sm"
-                                            href="{{ route('payment-mandate.export-pdf', ['start_at' => $post_data['start_at'], 'end_at' => $post_data['end_at'], 'account_type_id' => $post_data['account_type_id'], 'account_id' => $post_data['account_id'], 'status' => $post_data['status'], 'keyword' => $post_data['keyword']]) }}">
+                                            href="{{ route('payment-mandate.export-pdf', ['start_at' => $post_data['start_at'], 'end_at' => $post_data['end_at'], 'account_type_id' => $post_data['account_type_id'], 'account_id' => $post_data['account_id'], 'partner_id' => $post_data['partner_id'], 'status' => $post_data['status'], 'keyword' => $post_data['keyword']]) }}">
                                             <i class="fas fa-file-pdf"></i> Export PDF
                                         </a>
                                     @endif

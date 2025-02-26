@@ -79,9 +79,6 @@ class PaymentMandateController extends Controller
             //all request
             $requests = $request->all();
 
-            Log::debug("== all requests ==");
-            Log::debug($requests);
-
             $debit_orders = $debit_orders->when($requests, function ($query) use ($requests) {
                 $query->withFilters($requests);
             });
@@ -100,6 +97,7 @@ class PaymentMandateController extends Controller
             'end_at' => $request->end_at ?? null,
             'account_type_id' => $request->account_type_id ?? null,
             'account_id' => $request->account_id ?? null,
+            'partner_id' => $request->partner_id ?? null,
             'status' => $request->status ?? null,
             'keyword' => $request->keyword ?? null
         ];
@@ -107,15 +105,16 @@ class PaymentMandateController extends Controller
         //populate data
         $account_types = AccountType::all();
         $accounts = Account::all();
+        $partners = Partner::filterCondition()->where('status', '=', 202)->get();
 
         //render view
-        return view('payment_mandate.lists', compact('title', 'account_types', 'accounts', 'debit_orders', 'number_of_debit_orders', 'post_data'));
+        return view('payment_mandate.lists', compact('title', 'account_types', 'accounts', 'partners' ,'debit_orders', 'number_of_debit_orders', 'post_data'));
     }
 
     //export xls
     public function export_xls(Request $request)
     {
-        return Excel::download(new PaymentMandateExport($request->start_at, $request->end_at, $request->account_type_id, $request->account_id, $request->status, $request->keyword), date('YmdHis') . '-PaymentMandate.xlsx');
+        return Excel::download(new PaymentMandateExport($request), date('YmdHis') . '-PaymentMandate.xlsx');
     }
 
     //export xls

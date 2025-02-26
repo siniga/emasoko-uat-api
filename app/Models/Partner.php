@@ -27,7 +27,9 @@ class Partner extends Model
     public static function filterCondition()
     {
         $user = User::findOrFail(Auth::user()->id);
-        $partners = static::orderBy('partners.created_at', 'DESC');
+
+        //Partners
+        $partners = static::orderBy('partners.business_name', 'ASC');
 
         if ($user->hasRole('Partner')) {
             $company_user = CompanyUser::where(['user_id' => $user->id])->first();

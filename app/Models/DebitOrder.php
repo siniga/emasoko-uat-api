@@ -104,6 +104,7 @@ class DebitOrder extends Model
         $end_date          = $request['end_at'] ?? null;
         $account_type_id   = $request['account_type_id'] ?? null;
         $account_id        = $request['account_id'] ?? null;
+        $partner_id        = $request['partner_id'] ?? null;
         $status            = $request['status'] ?? null;
         $keyword           = $request['keyword'] ?? null;
 
@@ -119,6 +120,9 @@ class DebitOrder extends Model
                     $query->where('debit_orders.created_at', '<=', $end_date);
             }
         })
+            ->when($partner_id, function($query) use ($partner_id){
+                $query->where('debit_orders.partner_id', '=', $partner_id);
+            })
             ->when($status, function ($query) use ($status) {
                 if ($status == 'pending')
                     $query->where('debit_orders.approved', 0);
