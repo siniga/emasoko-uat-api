@@ -108,7 +108,7 @@ class PaymentMandateController extends Controller
         $partners = Partner::filterCondition()->where('status', '=', 202)->get();
 
         //render view
-        return view('payment_mandate.lists', compact('title', 'account_types', 'accounts', 'partners' ,'debit_orders', 'number_of_debit_orders', 'post_data'));
+        return view('payment_mandate.lists', compact('title', 'account_types', 'accounts', 'partners', 'debit_orders', 'number_of_debit_orders', 'post_data'));
     }
 
     //export xls
@@ -502,10 +502,12 @@ class PaymentMandateController extends Controller
             return response()->json(['success' => true, 'success_msg' => "Mandate not found, Edit mandate and process again.", "http_response_code" => $http_response_code], 200);
         } else if ($http_response_code == 410) {
             return response()->json(['success' => true, 'success_msg' => "Duplicate request found, wait for first request to process.", "http_response_code" => $http_response_code], 200);
+        } else if ($http_response_code == 500) {
+            return response()->json(['success' => true, 'success_msg' => "Internal Server, resend otp again", "http_response_code" => $http_response_code], 200);
         } else if ($http_response_code == 510) {
-            return response()->json(['success' => true, 'success_msg' => "Users mobile number is missing, edit mandate and process again", "http_response_code" => $http_response_code], 200);
+            return response()->json(['success' => true, 'success_msg' => "Users mobile number is missing, edit mandate and process again.", "http_response_code" => $http_response_code], 200);
         } else if ($http_response_code == 520) {
-            return response()->json(['success' => true, 'success_msg' => "SMS failed to send, contact eMakato support team.", "http_response_code" => $http_response_code], 200);
+            return response()->json(['success' => true, 'success_msg' => "SMS failed to send, resend otp request.", "http_response_code" => $http_response_code], 200);
         } else {
             return response()->json(['success' => true, 'success_msg' => "System error, contact eMakato support team.", "http_response_code" => $http_response_code], 200);
         }
