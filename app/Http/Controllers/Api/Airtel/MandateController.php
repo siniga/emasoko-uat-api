@@ -26,11 +26,11 @@ class MandateController extends Controller
         $headers = [
             'Accept' => '*/*',
             'Content-Type' => 'application/json',
-            'X-Country' => 'UG',
-            'X-Currency' => 'UGX',
+            'X-Country' => 'TZ',
+            'X-Currency' => 'TZS',
             'Authorization' => 'Bearer ' . $AUTH_BEARER_TOKEN,
-            'x-signature' => 'MGsp*****************Ag==',
-            'x-key' => 'DVZC*******************NM='
+            // 'x-signature' => 'MGsp*****************Ag==',
+            // 'x-key' => 'DVZC*******************NM='
         ];
 
         //create payload
@@ -42,10 +42,10 @@ class MandateController extends Controller
                 "msisdn" => 785670229
             ],
             "transaction" => [
-                "amount" => 1000,
+                "amount" => 5000009,
                 "country" => "TZ",
                 "currency" => "TZS",
-                "id" => "ANN011891009781"
+                "id" => "SOLOCODES113"
             ]
         ];
 
@@ -59,6 +59,52 @@ class MandateController extends Controller
         $response = Http::withHeaders($headers)->post($API_URL, $payload);
 
         Log::debug('== AIRTEL MandateRegistration Response ==');
+        Log::debug($response);
+
+        return $response;
+    }
+
+    //disbursment api
+    public function disbursment(Request $request)
+    {
+        $AUTH_BEARER_TOKEN = $this->auth->generate();
+
+        //headers
+        $headers = [
+            'Accept' => '*/*',
+            'Content-Type' => 'application/json',
+            'X-Country' => 'TZ',
+            'X-Currency' => 'TZS',
+            'Authorization' => 'Bearer ' . $AUTH_BEARER_TOKEN,
+        ];
+
+        //create payload
+        $payload = array(
+            'payee' => array(
+                "currency" => "TZS",
+                "msisdn" => "785670229",
+                "name" => "JOSE"
+            ),
+            "reference" => "Testing transaction",
+            'pin' => 'hus/I3gBrEAaGHhW34UBB/mOsQSnS4fzNZCDOwI9ciDHJ/RuOtwN+ZoJc31TrHVkl8pKjh4Gf4ENjcXHy8gFmU2g4NtV0gG9Q5oBhktupBPhcqjdVhvORMxZELtmu9fpZ1vivJ+HzUiaiBPUFQrwBkHUhG8KO4m/CXhCE2IVErg=',
+            'transaction' => array(
+                'amount' => 1000,
+                'id' => 'SOLOCODE6930037',
+                'type' => 'B2C',
+            )
+        );
+
+        Log::debug("== AIRTEL Disbursment Payload ==");
+        Log::debug($payload);
+
+        //API URL
+        //$API_URL = 'https://openapiuat.airtel.africa/standard/v1/disbursements/';
+        $API_URL = 'https://openapiuat.airtel.africa/standard/v2/disbursements/';
+
+        //push payload => NMB Direct Debits
+        $response = Http::withHeaders($headers)->post($API_URL, $payload);
+
+        Log::debug('== AIRTEL Disbursment Response ==');
         Log::debug($response);
 
         return $response;
