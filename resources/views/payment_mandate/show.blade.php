@@ -53,7 +53,7 @@
                                 </template>
 
                                 <template x-if="deleted==0">
-                                    <template x-if="status==100 || status==200 || status==201 || status==249 || status==403 || status==405 || status==430 || status==500 || status==501">
+                                    <template x-if="status==100 || status==200 || status==201 || status==240 || status==249 || status==403 || status==405 || status==430 || status==500 || status==501">
                                         <a href="{{ route('payment-mandate.archive', $debit_order->uuid) }}" title="Archive"
                                             class="btn btn-warning text-medium btn-sm archive">
                                             <i class="bx bx-archive-in font-size-12"></i> Archive Mandate
