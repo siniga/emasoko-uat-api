@@ -4,6 +4,7 @@ namespace App\Exports;
 
 use App\Models\Installment;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -16,12 +17,11 @@ use Maatwebsite\Excel\Concerns\FromArray;
 
 class CollectionExport implements FromQuery, WithHeadings, ShouldAutoSize, WithEvents, WithMapping
 {
-    protected $start_at, $end_at;
+    protected $request;
 
-    public function __construct($start_at, $end_at)
+    public function __construct(Request $request)
     {
-        $this->start_at = $start_at;
-        $this->end_at = $end_at;
+        $this->request = $request;
     }
 
     public function query()
@@ -29,14 +29,22 @@ class CollectionExport implements FromQuery, WithHeadings, ShouldAutoSize, WithE
         //installments
         $installments = Installment::filterCondition();
 
-        if ($this->start_at == null && $this->end_at == null) {
-            $installments = $installments->whereDate('installments.payment_date', '<=', Carbon::now());
-        } else {
-            if ($this->start_at != null && $this->end_at == null) {
-                $installments = $installments->whereDate('installments.payment_date', '=', $this->start_at);
-            } else if ($this->start_at != null && $this->end_at != null) {
-                $installments = $installments->whereBetween('installments.payment_date', [$this->start_at, $this->end_at]);
+        if ($this->request->has('start_at') != null && $this->request->has('end_at') != null) {
+            if ($this->request->input('start_at') != null && $this->request->input('end_at') == null) {
+                $installments = $installments->whereDate('installments.payment_date', '=', $this->request->input('start_at'));
+            } else if ($this->request->input('start_at') != null && $this->request->input('end_at') != null) {
+                $installments = $installments->whereBetween('installments.payment_date', [$this->request->input('start_at'), $this->request->input('end_at')]);
             }
+        } else {
+            $installments = $installments->whereDate('installments.payment_date', '<=', Carbon::now());
+        }
+
+        if ($this->request->has('partner_id') != null) {
+            $partner_id = $this->request->input('partner_id');
+
+            $installments = $installments->whereHas("debitOrder", function ($q) use ($partner_id) {
+                $q->where('partner_id', $partner_id);
+            });
         }
 
         //status
@@ -53,6 +61,7 @@ class CollectionExport implements FromQuery, WithHeadings, ShouldAutoSize, WithE
     public function headings(): array
     {
         return [
+            'Service Provider',
             'Mandate Reference',
             'Account Name',
             'Bank Name/MNO',
@@ -79,6 +88,7 @@ class CollectionExport implements FromQuery, WithHeadings, ShouldAutoSize, WithE
             $paid = "PARTIAL PAID";
 
         return [
+            strtoupper($installments->debitOrder->partner->business_name),
             $installments->debitOrder->reference ?? '',
             strtoupper($installments->debitOrder->customerAccount->account_name ?? ''),
             $installments->debitOrder->customerAccount->account->name ?? '',
@@ -97,7 +107,7 @@ class CollectionExport implements FromQuery, WithHeadings, ShouldAutoSize, WithE
     {
         return [
             AfterSheet::class    => function (AfterSheet $event) {
-                $cellRange = 'A1:K1'; // All headers
+                $cellRange = 'A1:L1'; // All headers
                 $event->sheet->getDelegate()->getStyle($cellRange)->getFont()->setSize(12);
                 $event->sheet->getDelegate()->getStyle($cellRange)->getFont()->setBold(true);
             },

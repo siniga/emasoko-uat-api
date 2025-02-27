@@ -75,12 +75,12 @@ class CollectionController extends Controller
 
             $debit_orders = DebitOrder::where(['contract_status' => 'OPEN', 'channel' => 'NMB', 'approved' => 1, 'status' => 240, 'deleted' => 0])
                 ->where('partner_id', '=', $requests['partner_id'])
-                ->where('deleted', '=', 0)
-                ->whereDate('next_debit_date', "=", $requests['debit_date']);
+                ->whereDate('next_debit_date', "=", $requests['debit_date'])
+                ->whereDate('end_date', '>=', Carbon::now());
 
             if ($debit_orders->count() > 0) {
                 foreach ($debit_orders->get() as $val) {
-                    $installments = Installment::where(['debit_order_id' => $val->id, 'status' => 'OPEN', 'created' => 0 , 'pushed' => 0])
+                    $installments = Installment::where(['debit_order_id' => $val->id, 'status' => 'OPEN', 'created' => 0, 'pushed' => 0])
                         ->whereDate('payment_date', '=', $val->next_debit_date)->take($limit)->get();
 
                     foreach ($installments as $v) {
@@ -113,8 +113,11 @@ class CollectionController extends Controller
         $providers = Partner::filterCondition();
         $providers = $providers->get();
 
+        //maximum date
+        $max_date = Carbon::now()->addDays(5)->format('Y-m-d');
+
         //render view
-        return view('collections.create', compact('title', 'providers', 'provider', 'partner_id', 'arr_installments'));
+        return view('collections.create', compact('title', 'max_date' ,'providers', 'provider', 'partner_id', 'arr_installments'));
     }
 
     public function store(Request $request)
@@ -224,6 +227,19 @@ class CollectionController extends Controller
 
         //response
         return response()->json(['success' => true, 'success_msg' => "Collection batch pushed."], 200);
+    }
+
+    public function archive($id)
+    {
+        $title = 'Archive collection batch';
+
+        //batch
+        $batch = CollectionBatch::where(['id' => $id])->firstOrFail();
+        $batch->deleted = 1;
+        $batch->save();
+
+        //redirect
+        return Redirect::route('collections.batches')->with('success', 'Collection batch archived');
     }
 
     public function fetch_status(Request $request)

@@ -15,7 +15,7 @@
     @endcomponent
 
     <div class="row">
-        <div class="col-lg-8 col-md-8 col-12">
+        <div class="col-lg-10 col-md-10 col-12">
             <div class="card">
                 <div class="card-body">
                     {{ Form::open(['url' => route('collections.create'), 'method' => 'POST', 'class' => 'form-horizontal needs-validation', 'novalidate']) }}
@@ -33,7 +33,7 @@
                                         @endphp
                                     @endforeach
                                     @php
-                                        $options = ['' => 'Service Provider'] + $options;
+                                        $options = ['' => '-- Service Provider --'] + $options;
                                     @endphp
 
                                     {{ Form::select('partner_id', $options, old('partner_id', $provider->partner->id ?? ''), ['class' => 'form-control select2', 'id' => 'partner_id', 'required' => '']) }}
@@ -43,7 +43,7 @@
 
                             <div class="col-lg-5 col-md-5 col-12">
                                 <div class="mb-0">
-                                    {{ Form::date('debit_date', old('debit_date', date('Y-m-d')), ['class="form-control"', 'placeholder="Enter collection date..."', 'required' => '']) }}
+                                    {{ Form::date('debit_date', old('debit_date', date('Y-m-d')), ['class="form-control"', 'placeholder="Enter collection date..."', 'required' => '', 'max' => $max_date]) }}
                                 </div>
                             </div>
 

@@ -79,6 +79,7 @@ class Installment extends Model
             $query->where('debit_orders.approved', '=', 1)
                 ->where('debit_orders.status', '=', 240)
                 ->where('contract_status', '=', 'OPEN')
+                ->where('deleted', '=', 0)
                 ->whereHas('partner', function ($query) use ($partner) {
                     $query->where('partners.id', '=', $partner->id);
                 });

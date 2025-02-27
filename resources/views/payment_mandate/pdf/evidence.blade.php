@@ -16,19 +16,13 @@
             width: 100%;
         }
 
-        h2 {
-            font-size: 16px;
-            margin-top: 0px;
-            padding-top: 0px;
-        }
-
         header {
             position: fixed;
             top: -40px;
             left: 0px;
             right: 0px;
-            height: 70px;
-            font-size: 20px !important;
+            height: 80px;
+            font-size: 16px !important;
         }
 
         .header-container {
@@ -38,41 +32,29 @@
         .table-header {
             width: 100%;
             padding: 5px 2px 5px 2px;
-            margin-bottom: 10px;
         }
 
         .table-header span {
-            font-size: 14px;
-            font-weight: bold;
+            font-size: 12px;
+            font-weight: medium;
             color: #0D47A1;
         }
 
-        footer {
-            position: fixed;
-            bottom: 0px;
-            left: 0px;
-            right: 0px;
-            height: 70px;
-            font-size: 20px !important;
-        }
-
         .main-body {
-            margin-top: 80px;
+            margin-top: 60px;
         }
 
         .border-div {
             margin-top: 10px;
-            border: 3px solid #0D47A1;
+            border: 2px solid #0D47A1;
         }
 
         .header-text {
-            font-size: 15px;
-            font-weight: bold;
+            font-size: 12px;
         }
 
         .sub-header-text {
-            font-size: 14px;
-            font-weight: 400;
+            font-size: 12px;
         }
 
         .detail-table td,
@@ -87,8 +69,7 @@
 
         .note-text {
             text-align: justify;
-            font-size: 15px;
-            font-weight: 900;
+            font-size: 12px;
         }
 
         .page-break {
@@ -96,9 +77,8 @@
         }
 
         .contract-desc {
-            font-size: 13px;
+            font-size: 10px;
             text-align: justify;
-            /* font-weight: 300; */
         }
     </style>
 </head>
@@ -109,9 +89,13 @@
             <tbody>
                 <tr>
                     <td>
-                        <img src="{{ public_path('assets/images/emakato_logo_colored.png') }}" width="150px"
-                            alt="Emakato">
+                        <img src="{{ public_path('assets/images/solocode_logo.png') }}" height="60" alt="Emakato">
                     </td>
+
+                    <td>
+                        <span>Solocodes Limited|15th Floor Victoria Noble Center |P.O. Box 77499 | Dar es salaam.</span> <br>
+                        <span>Mob: +255 684 512 512 | www.emakato.co.tz</span>
+                    </td>      
                 </tr>
             </tbody>
 
@@ -119,48 +103,32 @@
         <div class="border-div"></div>
     </header>
 
-    <footer>
-        <div class="border-div"></div>
-        <table class="table-header">
-            <tbody>
-                <tr>
-                    <td class="text-center">
-                        <span>Solocodes Limited|15th Floor Victoria Noble Center |P.O. Box 77499 | Dar es salaam.</span> <br>
-                        <span>Mob: +255 684 512 512 | www.emakato.co.tz</span>
-                    </td>
-                </tr>
-            </tbody>
-
-        </table>
-    </footer>
-
     <div class="main-body">
-        <h2 class="text-center">
-            Hii inasimama kama fomu ya ridhaa kati ya Mteja , Emakato, na {{ $debit_order->partner->business_name }}.
-        </h2>
+        <span class="text-center note-text">
+            Hii inasimama kama fomu ya ridhaa kati ya Mteja , eMakato, na {{ $debit_order->partner->business_name }}.
+        </span>
 
         <p class="contract-desc">
-            Mimi Mteja nina Ridhia malipo yafanyike kutoka kwenye akaunti yangu kulingana na ombi/maelekezo nitakayotuma kupitia kwa {{ $debit_order->partner->business_name }} kwa kutumia mfumo wa EMakato.
+            Mimi mteja ninaridhia malipo yafanyike kutoka kwenye akaunti yangu kulingana na ombi/maelekezo nitakayotuma kupitia kwa {{ $debit_order->partner->business_name }} kwa kutumia mfumo wa EMakato.
         </p>
 
         <p class="contract-desc">
-            Mimi mteja Nina Ridhia kuwa fedha zitakazokatwa kutoka kwenye akaunti yangu inaweza kutolewa tarehe tofauti kila mwezi kulingana na muda na
+            Mimi mteja ninaridhia kuwa fedha zitakazokatwa kutoka kwenye akaunti yangu inaweza kutolewa tarehe tofauti kila mwezi kulingana na muda na
             aina ya njia za kutoa.
         </p>
 
         <p class="contract-desc">
-            Mimi mteja Nitawataarifu {{ $debit_order->customerAccount->account->name }} na {{ $debit_order->partner->business_name }} kwa maandishi iwapo nitataka kukatisha
+            Mimi mteja nitawataarifu {{ $debit_order->customerAccount->account->name }} na {{ $debit_order->partner->business_name }} kwa maandishi iwapo nitataka kukatisha
             maagizo haya.
         </p>
 
         <p class="contract-desc">
-            Mimi mteja nina ridhia kwa Solocodes kukusanya na kuchakata taarifa zangu kutoka kwenye Taasisi za mikopo mbalimbali ili
-            kuweza kuboresha Mfumo wa emakato.
+            Mimi mteja ninaridhia kwa Solocodes kukusanya na kuchakata taarifa zangu kutoka kwenye Taasisi za mikopo mbalimbali ili
+            kuweza kuboresha mfumo wa eMakato.
         </p>
 
         <p class="contract-desc">
-            Mimi mteja nina ridhia kwamba
-            number ya makubaliano (otp) kutumika kama sahihi yangu.
+            Mimi mteja ninaridhia kwamba number ya makubaliano (otp) kutumika kama sahihi yangu.
         </p>
 
         <p class="contract-desc">
@@ -171,7 +139,7 @@
 
         <p class="contract-desc">
             Jina kamili: {{ $debit_order->customerAccount->account_name }}<br /><br />
-            Sahihi Iliyoidhinishwa: {{ $debit_order->otp_code }}
+            Sahihi iliyoidhinishwa: {{ $debit_order->otp_code }}
         </p>
     </div>
 

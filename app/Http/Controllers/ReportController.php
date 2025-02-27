@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Log;
 
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\PaymentMandateExport;
+use App\Models\Partner;
 
 class ReportController extends Controller
 {
@@ -24,26 +25,22 @@ class ReportController extends Controller
 
         if (isset($_POST['generate'])) {
             //all request
-            $report_type = $request->report_type;
-            $report_format = $request->report_format;
-            $start_date = $request->start_at;
-            $end_date = $request->end_at;
-            $account_type_id = $request->account_type_id;
-            $account_id = $request->account_id;
+            Log::debug("== request ==");
+            Log::debug($request->all());
 
-            if ($report_type == "MANDATE") {
-                return Excel::download(new PaymentMandateExport($request->start_at, $request->end_at, $request->account_type_id, $request->account_id, null, null), date('YmdHis') . '_DebitMandate.xlsx');
-            }elseif($report_type == "COLLECTION"){
-                return Excel::download(new CollectionExport($request->start_at, $request->end_at), date('YmdHis') . '_DebitMandate.xlsx');
-
+            if ($request->report_type == "MANDATE") {
+                return Excel::download(new PaymentMandateExport($request), date('YmdHis') . '_DebitMandate.xlsx');
+            } else if ($request->report_type == "COLLECTION") {
+                return Excel::download(new CollectionExport($request), date('YmdHis') . '_Collection.xlsx');
             }
         }
 
         //populate data
         $account_types = AccountType::all();
         $accounts = Account::all();
+        $partners = Partner::filterCondition()->where('status', '=', 202)->get();
 
         //render view
-        return view("reports.index", compact('title', 'account_types', 'accounts'));
+        return view("reports.index", compact('title', 'account_types', 'accounts', 'partners'));
     }
 }

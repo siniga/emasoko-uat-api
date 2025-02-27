@@ -4,12 +4,30 @@ $(document).ready(function () {
         event.preventDefault();
         const url = $(this).attr('href');
         swal({
-            title: 'Are you sure?',
-            text: 'Once cancel it, you will not be able to revert back!',
+            title: 'Cancel',
+            text: 'Once cancel it, you will not be able to revert back.',
             icon: 'error',
             buttons: {
                 cancel: 'No',
-                confirm: { text: 'Yes, cancel it!', className: 'btn-danger' },
+                confirm: { text: 'Yes, Cancel', className: 'btn-danger' },
+            },
+        }).then(function (value) {
+            if (value) {
+                window.location.href = url;
+            }
+        });
+    });
+
+    $('.archive').on('click', function (event) {
+        event.preventDefault();
+        const url = $(this).attr('href');
+        swal({
+            title: 'Archive',
+            text: 'Are you sure you want to archive?',
+            icon: 'warning',
+            buttons: {
+                cancel: 'No',
+                confirm: { text: 'Yes, Archive', className: 'btn-success' },
             },
         }).then(function (value) {
             if (value) {
@@ -23,12 +41,12 @@ $(document).ready(function () {
         event.preventDefault();
         const url = $(this).attr('href');
         swal({
-            title: 'Are you sure?',
-            text: 'Once deleted, you will not be able to revert back!',
+            title: 'Delete',
+            text: 'Once deleted, you will not be able to revert back.',
             icon: 'error',
             buttons: {
-                cancel: 'No, Cancel!',
-                confirm: { text: 'Yes, delete it!', className: 'btn-danger' },
+                cancel: 'No',
+                confirm: { text: 'Yes, Delete', className: 'btn-danger' },
             },
         }).then(function (value) {
             if (value) {

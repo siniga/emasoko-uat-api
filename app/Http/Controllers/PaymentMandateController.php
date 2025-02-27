@@ -79,9 +79,6 @@ class PaymentMandateController extends Controller
             //all request
             $requests = $request->all();
 
-            Log::debug("== all requests ==");
-            Log::debug($requests);
-
             $debit_orders = $debit_orders->when($requests, function ($query) use ($requests) {
                 $query->withFilters($requests);
             });
@@ -100,6 +97,7 @@ class PaymentMandateController extends Controller
             'end_at' => $request->end_at ?? null,
             'account_type_id' => $request->account_type_id ?? null,
             'account_id' => $request->account_id ?? null,
+            'partner_id' => $request->partner_id ?? null,
             'status' => $request->status ?? null,
             'keyword' => $request->keyword ?? null
         ];
@@ -107,15 +105,16 @@ class PaymentMandateController extends Controller
         //populate data
         $account_types = AccountType::all();
         $accounts = Account::all();
+        $partners = Partner::filterCondition()->where('status', '=', 202)->get();
 
         //render view
-        return view('payment_mandate.lists', compact('title', 'account_types', 'accounts', 'debit_orders', 'number_of_debit_orders', 'post_data'));
+        return view('payment_mandate.lists', compact('title', 'account_types', 'accounts', 'partners', 'debit_orders', 'number_of_debit_orders', 'post_data'));
     }
 
     //export xls
     public function export_xls(Request $request)
     {
-        return Excel::download(new PaymentMandateExport($request->start_at, $request->end_at, $request->account_type_id, $request->account_id, $request->status, $request->keyword), date('YmdHis') . '-PaymentMandate.xlsx');
+        return Excel::download(new PaymentMandateExport($request), date('YmdHis') . '-PaymentMandate.xlsx');
     }
 
     //export xls
@@ -503,10 +502,12 @@ class PaymentMandateController extends Controller
             return response()->json(['success' => true, 'success_msg' => "Mandate not found, Edit mandate and process again.", "http_response_code" => $http_response_code], 200);
         } else if ($http_response_code == 410) {
             return response()->json(['success' => true, 'success_msg' => "Duplicate request found, wait for first request to process.", "http_response_code" => $http_response_code], 200);
+        } else if ($http_response_code == 500) {
+            return response()->json(['success' => true, 'success_msg' => "Internal Server, resend otp again", "http_response_code" => $http_response_code], 200);
         } else if ($http_response_code == 510) {
-            return response()->json(['success' => true, 'success_msg' => "Users mobile number is missing, edit mandate and process again", "http_response_code" => $http_response_code], 200);
+            return response()->json(['success' => true, 'success_msg' => "Users mobile number is missing, edit mandate and process again.", "http_response_code" => $http_response_code], 200);
         } else if ($http_response_code == 520) {
-            return response()->json(['success' => true, 'success_msg' => "SMS failed to send, contact eMakato support team.", "http_response_code" => $http_response_code], 200);
+            return response()->json(['success' => true, 'success_msg' => "SMS failed to send, resend otp request.", "http_response_code" => $http_response_code], 200);
         } else {
             return response()->json(['success' => true, 'success_msg' => "System error, contact eMakato support team.", "http_response_code" => $http_response_code], 200);
         }
@@ -809,8 +810,37 @@ class PaymentMandateController extends Controller
         return Redirect::route('payment-mandate.lists')->with('danger', 'Payment mandate deleted!');
     }
 
-    public function createEvidence(DebitOrder $debit_order)
+    public function archive($id)
     {
+        $title = 'Archive payment mandate';
+
+        //debit order
+        $debit_order = DebitOrder::where(['uuid' => $id])->firstOrFail();
+        $debit_order->deleted = 1;
+        $debit_order->save();
+
+        //redirect
+        return Redirect::route('payment-mandate.lists')->with('success', 'Payment mandate archived');
+    }
+
+    public function unarchieve($id)
+    {
+        $title = 'Unarchive payment mandate';
+
+        //debit order
+        $debit_order = DebitOrder::where(['uuid' => $id])->first();
+        $debit_order->deleted = 0;
+        $debit_order->save();
+
+        //redirect
+        return Redirect::route('payment-mandate.lists')->with('danger', 'Payment mandate unarchived');
+    }
+
+    public function createEvidence($id)
+    {
+
+        $debit_order = DebitOrder::where(['uuid' => $id])->first();
+
         //Create Evidence of Agreement
         view()->share('debit_order', $debit_order);
 

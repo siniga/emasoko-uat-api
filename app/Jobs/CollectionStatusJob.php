@@ -111,7 +111,6 @@ class CollectionStatusJob implements ShouldQueue
                     $collection_batch->success = $response[0];
                     $collection_batch->failed = $response[1];
                     $collection_batch->save();
-
                 } else if ($response_code == 235) {
                     //1. Batch Complete
                     //1.1: read csv file
@@ -127,7 +126,6 @@ class CollectionStatusJob implements ShouldQueue
                     $collection_batch->success = $response[0];
                     $collection_batch->failed = $response[1];
                     $collection_batch->save();
-
                 } else if ($response_code == 239) {
                     //3.Batch Processing
                     //1.1: read csv file
@@ -158,6 +156,13 @@ class CollectionStatusJob implements ShouldQueue
 
                 //save batch    
                 $collection_batch->save();
+
+                //send SMS when batch failed
+                $message = "Collection batch number " . $collection_reference . " failed from NMB end. Review and resend the batch.";
+
+                //send sms
+                $data = ["phone" => 255717705746, "message" => $message];
+                dispatch(new SendSMSJob($data));
             }
         }
     }

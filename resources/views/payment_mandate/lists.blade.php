@@ -25,19 +25,19 @@
                             {{ Form::token() }}
 
                             <div class="row">
-                                <div class="col-lg-2">
+                                <div class="col-lg-2 col-md-2 col-12">
                                     <div class="mb-3">
                                         {{ Form::date('start_at', old('start_at', $post_data['start_at']), ['placeholder="Start Date..."', 'class="form-control"']) }}
                                     </div>
                                 </div>
 
-                                <div class="col-lg-2">
+                                <div class="col-lg-2 col-md-2 col-12">
                                     <div class="mb-3">
                                         {{ Form::date('end_at', old('end_at', $post_data['end_at']), ['placeholder="End Date..."', 'class="form-control"']) }}
                                     </div>
                                 </div>
 
-                                <div class="col-lg-2">
+                                <div class="col-lg-2 col-md-2 col-12">
                                     <div class="mb-3">
                                         @php
                                             $options = [
@@ -52,7 +52,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-lg-3">
+                                <div class="col-lg-3 col-md-3 col-12">
                                     <div class="mb-3">
                                         @php
                                             $account_type_options = [];
@@ -72,7 +72,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-lg-3">
+                                <div class="col-lg-3 col-md-3 col-12">
                                     <div class="mb-3">
                                         @php $options = []; @endphp
                                         @foreach ($accounts as $val)
@@ -90,13 +90,31 @@
                             </div>
 
                             <div class="row">
-                                <div class="col-lg-6">
+                                <div class="col-lg-4 col-md-4 col-12">
+                                    <div class="mb-3">
+                                        @php
+                                        $options = [];
+                                    @endphp
+                                    @foreach ($partners as $val)
+                                        @php
+                                            $options[$val->id] = $val->business_name;
+                                        @endphp
+                                    @endforeach
+                                    @php
+                                        $options = ['' => '-- Service Provider --'] + $options;
+                                    @endphp
+
+                                    {{ Form::select('partner_id', $options, old('partner_id', $post_data['partner_id']), ['class' => 'form-control select2', 'id' => 'partner_id']) }}
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6 col-md-6 col-12">
                                     <div class="mb-3">
                                         {{ Form::text('keyword', old('keyword'), ['class="form-control"', 'placeholder="Search by name of account holder or number..."']) }}
                                     </div>
                                 </div>
 
-                                <div class="col-lg-6">
+                                <div class="col-lg-2 col-md-2 col-12">
                                     <div class="mb-3">
                                         <div class="text-sm-end d-none d-sm-block">
                                             <button type="submit" name="filter" class="btn btn-secondary">
@@ -149,12 +167,12 @@
                                     
                                     @if (isset($debit_orders) && $debit_orders->isNotEmpty())
                                         <a title="Export" class="btn btn-outline-success btn-sm"
-                                            href="{{ route('payment-mandate.export-xls', ['start_at' => $post_data['start_at'], 'end_at' => $post_data['end_at'], 'account_type_id' => $post_data['account_type_id'], 'account_id' => $post_data['account_id'], 'status' => $post_data['status'], 'keyword' => $post_data['keyword']]) }}">
+                                            href="{{ route('payment-mandate.export-xls', ['start_at' => $post_data['start_at'], 'end_at' => $post_data['end_at'], 'account_type_id' => $post_data['account_type_id'], 'account_id' => $post_data['account_id'], 'partner_id' => $post_data['partner_id'], 'status' => $post_data['status'], 'keyword' => $post_data['keyword']]) }}">
                                             <i class="bx bx-export"></i> Export XLS
                                         </a>
 
                                         <a title="Export" class="btn btn-outline-danger btn-sm"
-                                            href="{{ route('payment-mandate.export-pdf', ['start_at' => $post_data['start_at'], 'end_at' => $post_data['end_at'], 'account_type_id' => $post_data['account_type_id'], 'account_id' => $post_data['account_id'], 'status' => $post_data['status'], 'keyword' => $post_data['keyword']]) }}">
+                                            href="{{ route('payment-mandate.export-pdf', ['start_at' => $post_data['start_at'], 'end_at' => $post_data['end_at'], 'account_type_id' => $post_data['account_type_id'], 'account_id' => $post_data['account_id'], 'partner_id' => $post_data['partner_id'], 'status' => $post_data['status'], 'keyword' => $post_data['keyword']]) }}">
                                             <i class="fas fa-file-pdf"></i> Export PDF
                                         </a>
                                     @endif

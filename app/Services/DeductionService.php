@@ -193,7 +193,8 @@ class DeductionService
             //get installment from id
             $installment = Installment::where('id', '=', $fields[0])->first();
 
-            if ($installment) {
+            //check if installment exists AND status != CLOSED
+            if ($installment && $installment->status != "CLOSED") {
                 //installment amount
                 $installment_amount = $installment->installment_amount;
 

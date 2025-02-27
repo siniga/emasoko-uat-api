@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\DebitOrder;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Concerns\FromQuery;
@@ -16,16 +17,11 @@ use Maatwebsite\Excel\Concerns\FromArray;
 
 class PaymentMandateExport implements FromQuery, WithHeadings, ShouldAutoSize, WithEvents, WithMapping
 {
-    protected $start_at, $end_at, $account_type_id, $account_id, $status, $keyword;
+    protected $request;
 
-    public function __construct($start_at, $end_at, $account_type_id, $account_id, $status = null, $keyword = null)
+    public function __construct(Request $request)
     {
-        $this->start_at = $start_at;
-        $this->end_at = $end_at;
-        $this->account_type_id = $account_type_id;
-        $this->account_id = $account_id;
-        $this->status = $status;
-        $this->keyword = $keyword;
+        $this->request = $request;
     }
 
     public function query()
@@ -34,44 +30,48 @@ class PaymentMandateExport implements FromQuery, WithHeadings, ShouldAutoSize, W
         $debit_orders = DebitOrder::filterCondition();
 
         //start data and end date
-        if ($this->start_at != null && $this->end_at != null) {
-            if ($this->start_at != null && $this->end_at != null)
-                $debit_orders = $debit_orders->whereBetween('debit_orders.created_at', [$this->start_at, $this->end_at]);
+        if ($this->request->has('start_at') != null && $this->request->has('end_at') != null) {
+            if ($this->request->input('start_at') != null && $this->request->input('end_at') != null)
+                $debit_orders = $debit_orders->whereBetween('debit_orders.created_at', [$this->request->input('start_at'), $this->request->input('end_at')]);
 
-            else if ($this->start_at != null)
-                $debit_orders = $debit_orders->where('debit_orders.created_at', '>=', $this->start_at);
+            else if ($this->request->input('start_at') != null)
+                $debit_orders = $debit_orders->where('debit_orders.created_at', '>=', $this->request->input('start_at'));
 
-            else if ($this->end_at != null)
-                $debit_orders = $debit_orders->where('debit_orders.created_at', '<=', $this->end_at);
+            else if ($this->request->input('end_at') != null)
+                $debit_orders = $debit_orders->where('debit_orders.created_at', '<=', $this->request->input('end_at'));
         }
 
-        if ($this->account_type_id != null) {
-            $account_type_id = $this->account_type_id;
+        if ($this->request->has('account_type_id') != null) {
+            $account_type_id = $this->request->input('account_type_id');
 
             $debit_orders = $debit_orders->whereHas("customerAccount", function ($q) use ($account_type_id) {
                 $q->where('customer_accounts.account_type_id', $account_type_id);
             });
         }
 
-        if ($this->account_id != null) {
-            $account_id = $this->account_id;
+        if ($this->request->has('partner_id') != null) {
+            $debit_orders = $debit_orders->where('debit_orders.partner_id', $this->request->input('partner_id'));
+        }
+
+        if ($this->request->has('account_id') != null) {
+            $account_id = $this->request->input('account_id');
 
             $debit_orders = $debit_orders->whereHas("customerAccount", function ($q) use ($account_id) {
                 $q->where('customer_accounts.account_id', $account_id);
             });
         }
 
-        if ($this->status != null) {
-            if ($this->status == 'pending')
+        if ($this->request->has('status') != null) {
+            if ($this->request->input('status') == 'pending')
                 $debit_orders = $debit_orders->where('debit_orders.approved', 0);
-            else if ($this->status == 'approved')
+            else if ($this->request->input('status') == 'approved')
                 $debit_orders = $debit_orders->where('debit_orders.approved', 1)->where('debit_orders.status', 240);
-            else if ($this->status == 'failed')
+            else if ($this->request->input('status') == 'failed')
                 $debit_orders = $debit_orders->where('debit_orders.approved', 2);
         }
 
-        if ($this->keyword != null) {
-            $keyword = $this->keyword;
+        if ($this->request->has('keyword') != null) {
+            $keyword = $this->request->input('keyword');
 
             $debit_orders = $debit_orders->whereHas("customerAccount", function ($q) use ($keyword) {
                 $q->where(DB::raw('LOWER(account_name)'), 'like', "%" . strtolower($keyword) . "%")
@@ -157,7 +157,7 @@ class PaymentMandateExport implements FromQuery, WithHeadings, ShouldAutoSize, W
     {
         return [
             AfterSheet::class    => function (AfterSheet $event) {
-                $cellRange = 'A1:U1'; // All headers
+                $cellRange = 'A1:V1'; // All headers
                 $event->sheet->getDelegate()->getStyle($cellRange)->getFont()->setSize(12);
                 $event->sheet->getDelegate()->getStyle($cellRange)->getFont()->setBold(true);
             },

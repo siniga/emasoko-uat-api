@@ -165,7 +165,7 @@ Route::get('payment-mandate/create-deduction/{ca_uuid}/{do_uuid?}', [PaymentMand
 Route::post('payment-mandate/store-deduction', [PaymentMandateController::class, 'store_deduction'])->name('payment-mandate.store-deduction');
 
 //create evidennce
-// Route::get('payment-mandate/create-evidence/{do_uuid}', [PaymentMandateController::class, 'create_evidence'])->name('payment-mandate.create-evidence');
+//Route::get('payment-mandate/create-evidence/{do_uuid}', [PaymentMandateController::class, 'createEvidence'])->name('payment-mandate.create-evidence');
 // Route::post('payment-mandate/verify-evidence', [PaymentMandateController::class, 'verify_evidence'])->name('payment-mandate.verify-evidence');
 
 //preview 
@@ -183,6 +183,8 @@ Route::put('payment-mandate/{id}/update', [PaymentMandateController::class, 'upd
 Route::get('payment-mandate/delete/{do_uuid}', [PaymentMandateController::class, 'destroy'])->name('payment-mandate.delete');
 Route::post('payment-mandate/fetch-status', [PaymentMandateController::class, 'fetch_status'])->name('payment-mandate.fetch-status');
 Route::post('payment-mandate/cancel-mandate', [PaymentMandateController::class, 'cancel_mandate'])->name('payment-mandate.cancel-mandate');
+Route::get('payment-mandate/archive/{do_uuid}', [PaymentMandateController::class, 'archive'])->name('payment-mandate.archive');
+Route::get('payment-mandate/unarchieve/{do_uuid}', [PaymentMandateController::class, 'unarchieve'])->name('payment-mandate.unarchieve');
 Route::get('payment-mandate/send-remainder/{do_uuid}', [PaymentMandateController::class, 'sendRemainder'])->name('payment-mandate.send-remainder');
 //Route::get('payment-mandate/update-installments', [PaymentMandateController::class, 'update_installments'])->name('payment-mandate.update-installments');
 
@@ -191,7 +193,12 @@ Route::any('collections/batches', [CollectionController::class, 'batches'])->nam
 Route::any('collections/create', [CollectionController::class, 'create'])->name('collections.create');
 Route::post('collections/store', [CollectionController::class, 'store'])->name('collections.store');
 Route::get('collections/show/{id}', [CollectionController::class, 'show'])->name('collections.show');
+<<<<<<< HEAD
 Route::get('collections/push/{id}', [CollectionController::class, 'push'])->name('collections.push');
+=======
+Route::get('collections/archive/{id}', [CollectionController::class, 'archive'])->name('collections.archive');
+Route::post('collections/push', [CollectionController::class, 'push'])->name('collections.push');
+>>>>>>> 7e7345a9fb4ca73b83737273d79c764875d0992b
 Route::post('collections/fetch-status', [CollectionController::class, 'fetch_status'])->name('collections.fetch-status');
 
 //reports
