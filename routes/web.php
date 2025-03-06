@@ -197,6 +197,8 @@ Route::get('collections/archive/{id}', [CollectionController::class, 'archive'])
 Route::post('collections/push', [CollectionController::class, 'push'])->name('collections.push');
 Route::post('collections/fetch-status', [CollectionController::class, 'fetch_status'])->name('collections.fetch-status');
 
+Route::get('collections/reconciliation', [CollectionController::class, 'reconciliation'])->name('collections.reconciliation');
+
 //reports
 Route::any('reports/lists', [ReportController::class, 'lists'])->name('reports.lists');
 

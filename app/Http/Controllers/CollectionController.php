@@ -117,7 +117,7 @@ class CollectionController extends Controller
         $max_date = Carbon::now()->addDays(5)->format('Y-m-d');
 
         //render view
-        return view('collections.create', compact('title', 'max_date' ,'providers', 'provider', 'partner_id', 'arr_installments'));
+        return view('collections.create', compact('title', 'max_date', 'providers', 'provider', 'partner_id', 'arr_installments'));
     }
 
     public function store(Request $request)
@@ -257,5 +257,58 @@ class CollectionController extends Controller
 
         //response
         return response()->json(['success' => true, 'success_msg' => "Collection status successful fetched."], 200);
+    }
+
+    public function reconciliation(Request $request)
+    {
+        //read file
+        $file = fopen(public_path('assets/NMB_file.csv'), 'r');
+        fgetcsv($file); // Skip the first row
+
+        //array of installments
+        $arr_installments = [];
+
+        //iterarate file
+        while (($row = fgetcsv($file, 1000, ',')) !== false) {
+            $mandate_ref = substr($row[4], -12);
+            $paid_amount = $row[8];
+
+            //mandate 
+            $debit_order = DebitOrder::where(["reference" => $mandate_ref])->first();
+
+            //query installment which are failed
+            $installment = Installment::where(['debit_order_id' => $debit_order->id])
+                ->whereMonth('payment_date', '02')->first();
+
+            //installmentAmount
+            $installmentAmount = $installment->installment_amount ?? $installment->max_installment_amount;
+
+            // echo $mandate_ref . " - " . $paid_amount;
+            // echo " === " . $installment->id . " - " . $installment->payment_date . " - " . $installment->status;
+            // echo "<br>";
+            $arr_installments[] = [
+                'installmentId' => $installment->id,
+                'mandateReference' => $mandate_ref,
+                'paymentDate' => $installment->payment_date,
+                'paidAmount' => $paid_amount,
+                'installmentAmount' => $installmentAmount,
+                'NMB Status' => "PAID",
+                "Status" => $installment->status
+            ];
+
+            //process calculation for installment and debit order.
+            // if ($installment && $installment->status != "CLOSED"){
+            //     $process_data = $this->deductionService->processInstallment($installment, $paid_amount, $mandate_ref);
+            // }
+        }
+        fclose($file);
+
+        echo "<pre>";
+        print_r($arr_installments);
+
+        
+
+        //create new file
+        $new_file = fopen(public_path("assets/NMB_New_File.csv"), "w");
     }
 }
