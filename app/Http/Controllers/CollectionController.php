@@ -283,9 +283,7 @@ class CollectionController extends Controller
             //installmentAmount
             $installmentAmount = $installment->installment_amount ?? $installment->max_installment_amount;
 
-            // echo $mandate_ref . " - " . $paid_amount;
-            // echo " === " . $installment->id . " - " . $installment->payment_date . " - " . $installment->status;
-            // echo "<br>";
+            //create array
             $arr_installments[] = [
                 'installmentId' => $installment->id,
                 'mandateReference' => $mandate_ref,
@@ -303,8 +301,6 @@ class CollectionController extends Controller
         }
         fclose($file);
 
-        //return response()->json(['success' => false, 'success_msg' => "Processed"]);
-
         echo "<pre>";
         print_r($arr_installments);
 
@@ -316,5 +312,7 @@ class CollectionController extends Controller
         // }
           
         // fclose($new_file);
+
+        //return response()->json(['success' => false, 'success_msg' => "Processed"]);
     }
 }
