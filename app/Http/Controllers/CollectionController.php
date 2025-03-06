@@ -117,7 +117,7 @@ class CollectionController extends Controller
         $max_date = Carbon::now()->addDays(5)->format('Y-m-d');
 
         //render view
-        return view('collections.create', compact('title', 'max_date' ,'providers', 'provider', 'partner_id', 'arr_installments'));
+        return view('collections.create', compact('title', 'max_date', 'providers', 'provider', 'partner_id', 'arr_installments'));
     }
 
     public function store(Request $request)
@@ -190,7 +190,6 @@ class CollectionController extends Controller
         }
     }
 
-
     public function show($id)
     {
         $title = "Collection Batch Information";
@@ -258,5 +257,33 @@ class CollectionController extends Controller
 
         //response
         return response()->json(['success' => true, 'success_msg' => "Collection status successful fetched."], 200);
+    }
+
+    public function reconciliation(Request $request)
+    {
+        //read file
+        $file = fopen(public_path('assets/NMB_file.csv'), 'r');
+
+        fgetcsv($file); // Skip the first row
+
+        while (($row = fgetcsv($file, 1000, ',')) !== false) {
+            $mandate_ref = substr($row[4], -12);
+            echo $mandate_ref;
+            echo " = " . $row[8];
+
+            //mandate 
+            $debit_order = DebitOrder::where(["reference" => $mandate_ref])->first();
+            echo " => " . $debit_order->reference . " - " . $debit_order->installment_amount . ' - ' . $debit_order->max_installment_amount;
+
+            //query installment which are failed
+            $installment = Installment::where(['debit_order_id' => $debit_order->id])
+                ->whereMonth('payment_date', '02')->first();
+
+            echo " => " .$installment->id . " => ".$installment->status;    
+
+            echo "<br>";
+        }
+
+        fclose($file);
     }
 }
