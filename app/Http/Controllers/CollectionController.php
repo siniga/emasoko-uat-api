@@ -303,12 +303,18 @@ class CollectionController extends Controller
         }
         fclose($file);
 
+        //return response()->json(['success' => false, 'success_msg' => "Processed"]);
+
         echo "<pre>";
         print_r($arr_installments);
 
-        
+        // //create new file
+        // $new_file = fopen(public_path("assets/NMB_New_File1.csv"), "w");
 
-        //create new file
-        $new_file = fopen(public_path("assets/NMB_New_File.csv"), "w");
+        // foreach ($arr_installments as $line) {
+        //     fputcsv($new_file, $line);
+        // }
+          
+        // fclose($new_file);
     }
 }
