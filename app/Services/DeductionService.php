@@ -198,16 +198,13 @@ class DeductionService
                 //installment amount
                 $installment_amount = $installment->installment_amount;
 
-                //payment date
-                $payment_date = $installment->payment_date;
-
                 //status and paid amount
-                $message = strtolower($fields[8]);
-                $status = strtolower($fields[7]);
+                $message = ucwords(strtolower($fields[8]));
+                $status = strtoupper($fields[7]);
                 $amount = floatval($fields[6]);
 
                 //check for status
-                if ($status == "fail" || $status == "fundscheck") {
+                if ($status == "FAIL" || $status == "FUNDSCHECK") {
                     //updated status of installment
                     $installment->status = "FAILED";
                     $installment->remarks = $message;
@@ -216,19 +213,22 @@ class DeductionService
                     //increment failed count
                     $failed_installments += 1;
 
-                    if ($message == 'insufficient funds') {
+                    if ($message == 'Insufficient Funds') {
                         //format amount
                         $installmentAmt = number_format($installment_amount);
 
-                        //send sms to FAILED mandate
-                        // $phone = $installment->debitOrder->customerAccount->phone;
-                        // $message = "Makato ya tarehe {$payment_date} ya kiasi cha shilingi {$installmentAmt} yameshindikana. Tafadhali weka pesa kwenye akaunti yako ya benki kwa ajili ya makato.";
+                        //payment date
+                        $paymentDate = $installment->payment_date;
+
+                        //send sms => Insufficient Funds
+                        $phone = $installment->debitOrder->customerAccount->phone;
+                        $message = "Makato ya tarehe {$paymentDate} ya kiasi cha shilingi {$installmentAmt} yameshindikana. Tafadhali weka pesa kwenye akaunti yako ya benki kwa ajili ya makato.";
 
                         // //send sms
                         // $data = ["phone" => $phone, "message" => $message];
                         // dispatch(new SendSMSJob($data));
                     }
-                } else if ($status == "success") {
+                } else if ($status == "SUCCESS") {
                     //updated status of installment
                     $installment->last_paid_amount = $amount;
                     $installment->save();
@@ -317,8 +317,8 @@ class DeductionService
                 $message = "Makato ya tarehe {$payment_date} ya kiasi cha shilingi {$installmentAmt} yamekamilishwa na kiasi kilichobaki ni Tsh {$outstandingAmt}. Asante kwa kutumia eMakato.";
 
                 //Send SMS
-                $data = ["phone" => $phone, "message" => $message];
-                dispatch(new SendSMSJob($data));
+                // $data = ["phone" => $phone, "message" => $message];
+                // dispatch(new SendSMSJob($data));
 
                 //update next debit date
                 $this->updateNextDebitDate($debit_order->id, $payment_date);

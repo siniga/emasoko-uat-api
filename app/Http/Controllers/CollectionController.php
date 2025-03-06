@@ -263,27 +263,52 @@ class CollectionController extends Controller
     {
         //read file
         $file = fopen(public_path('assets/NMB_file.csv'), 'r');
-
         fgetcsv($file); // Skip the first row
 
+        //array of installments
+        $arr_installments = [];
+
+        //iterarate file
         while (($row = fgetcsv($file, 1000, ',')) !== false) {
             $mandate_ref = substr($row[4], -12);
-            echo $mandate_ref;
-            echo " = " . $row[8];
+            $paid_amount = $row[8];
 
             //mandate 
             $debit_order = DebitOrder::where(["reference" => $mandate_ref])->first();
-            echo " => " . $debit_order->reference . " - " . $debit_order->installment_amount . ' - ' . $debit_order->max_installment_amount;
 
             //query installment which are failed
             $installment = Installment::where(['debit_order_id' => $debit_order->id])
                 ->whereMonth('payment_date', '02')->first();
 
-            echo " => " .$installment->id . " => ".$installment->status;    
+            //installmentAmount
+            $installmentAmount = $installment->installment_amount ?? $installment->max_installment_amount;
 
-            echo "<br>";
+            // echo $mandate_ref . " - " . $paid_amount;
+            // echo " === " . $installment->id . " - " . $installment->payment_date . " - " . $installment->status;
+            // echo "<br>";
+            $arr_installments[] = [
+                'installmentId' => $installment->id,
+                'mandateReference' => $mandate_ref,
+                'paymentDate' => $installment->payment_date,
+                'paidAmount' => $paid_amount,
+                'installmentAmount' => $installmentAmount,
+                'NMB Status' => "PAID",
+                "Status" => $installment->status
+            ];
+
+            //process calculation for installment and debit order.
+            // if ($installment && $installment->status != "CLOSED"){
+            //     $process_data = $this->deductionService->processInstallment($installment, $paid_amount, $mandate_ref);
+            // }
         }
-
         fclose($file);
+
+        echo "<pre>";
+        print_r($arr_installments);
+
+        
+
+        //create new file
+        $new_file = fopen(public_path("assets/NMB_New_File.csv"), "w");
     }
 }
