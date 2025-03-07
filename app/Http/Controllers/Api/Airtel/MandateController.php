@@ -110,6 +110,153 @@ class MandateController extends Controller
         return $response;
     }
 
+    //create mandate
+    public function create_mandate(Request $request)
+    {
+        $AUTH_BEARER_TOKEN = $this->auth->generate();
+
+        //headers
+        $headers = [
+            'Accept' => '*/*',
+            'Content-Type' => 'application/json',
+            'X-Country' => 'TZ',
+            'X-Currency' => 'TZS',
+            'Authorization' => 'Bearer ' . $AUTH_BEARER_TOKEN,
+        ];
+
+        //create payload
+        $payload = [
+            "payer" => [
+                "msisdn" => "685466727",
+                "wallet_types" => ["NORMAL"]
+            ],
+            "txn" => [
+                "amount" => 1000,
+                "total_amount" => 12000,
+                "total_number_of_payments" => 12,
+                "start_date" => "2023-04-30",
+                "end_date" => "2024-04-31",
+                "frequency" =>  "MONTHLY"
+
+            ]
+        ];
+
+        Log::debug("== AIRTEL Mandate Payload ==");
+        Log::debug($payload);
+
+        //API URL
+        $API_URL = 'https://openapiuat.airtel.africa/pc/{product}/v1/consent';
+
+        //push payload => NMB Direct Debits
+        $response = Http::withHeaders($headers)->post($API_URL, $payload);
+
+        Log::debug('== AIRTEL MandateRegistration Response ==');
+        Log::debug($response);
+
+        return $response;
+    }
+
+    //get mandate status
+    public function get_mandate_status(Request $request)
+    {
+        $AUTH_BEARER_TOKEN = $this->auth->generate();
+
+        //headers
+        $headers = [
+            'Accept' => '*/*',
+            'Content-Type' => 'application/json',
+            'X-Country' => 'TZ',
+            'X-Currency' => 'TZS',
+            'Authorization' => 'Bearer ' . $AUTH_BEARER_TOKEN,
+            // 'x-signature' => 'MGsp*****************Ag==',
+            // 'x-key' => 'DVZC*******************NM='
+        ];
+
+        //API URL
+        $API_URL = 'https://openapiuat.airtel.africa/pc/{product}/v1/consent/CON1679991960033';
+
+        //push payload => Airtel Direct Debits
+        $response = Http::withHeaders($headers)->get($API_URL);
+
+        Log::debug('== AIRTEL MandateStatus Response ==');
+        Log::debug($response);
+
+        return $response;
+    }
+
+    //cancel mandate
+    public function cancel_mandate(Request $request)
+    {
+        $AUTH_BEARER_TOKEN = $this->auth->generate();
+
+        //headers
+        $headers = [
+            'Accept' => '*/*',
+            'Content-Type' => 'application/json',
+            'X-Country' => 'TZ',
+            'X-Currency' => 'TZS',
+            'Authorization' => 'Bearer ' . $AUTH_BEARER_TOKEN,
+        ];
+
+        //create payload
+        $payload = [];
+
+        Log::debug("== AIRTEL Cancel Mandate Payload ==");
+        Log::debug($payload);
+
+        //API URL
+        $API_URL = 'https://openapiuat.airtel.africa/pc/{product}/v1/consent/CON1679991960033/stop';
+
+        //push payload => NMB Direct Debits
+        $response = Http::withHeaders($headers)->post($API_URL, $payload);
+
+        Log::debug('== AIRTEL Cancel Mandate Response ==');
+        Log::debug($response);
+
+        return $response;
+    }
+
+    //collection
+    public function create_collection(Request $request)
+    {
+        $AUTH_BEARER_TOKEN = $this->auth->generate();
+
+        //headers
+        $headers = [
+            'Accept' => '*/*',
+            'Content-Type' => 'application/json',
+            'X-Country' => 'TZ',
+            'X-Currency' => 'TZS',
+            'Authorization' => 'Bearer ' . $AUTH_BEARER_TOKEN,
+        ];
+
+        //create payload
+        $payload = [
+            "consent_number" => "CON1679991960033",
+            "payer" => [
+                "wallet_type" => "NORMAL"
+            ],
+            "transaction" => [
+                "id" =>  "RAKESH-pinless155",
+                "amount" => "1000"
+            ]
+        ];
+
+        Log::debug("== AIRTEL Collection Payload ==");
+        Log::debug($payload);
+
+        //API URL
+        $API_URL = 'https://openapiuat.airtel.africa/pc/{product}/v1/payment';
+
+        //push payload => NMB Direct Debits
+        $response = Http::withHeaders($headers)->post($API_URL, $payload);
+
+        Log::debug('== AIRTEL Collection Response ==');
+        Log::debug($response);
+
+        return $response;
+    }
+
     //callback function from Airtel
     public function callback(Request $request)
     {
