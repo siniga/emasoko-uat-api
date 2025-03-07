@@ -295,23 +295,23 @@ class CollectionController extends Controller
             ];
 
             //process calculation for installment and debit order.
-            // if ($installment && $installment->status != "CLOSED"){
-            //     $process_data = $this->deductionService->processInstallment($installment, $paid_amount, $mandate_ref);
-            // }
+            if ($installment && $installment->status != "CLOSED"){
+                $process_data = $this->deductionService->processInstallment($installment, $paid_amount, $mandate_ref);
+            }
         }
         fclose($file);
 
         // echo "<pre>";
         // print_r($arr_installments);
 
-        //create new file
-        $new_file = fopen(public_path("assets/NMB_New_File1.csv"), "w");
+        // //create new file
+        // $new_file = fopen(public_path("assets/NMB_New_File1.csv"), "w");
 
-        foreach ($arr_installments as $line) {
-            fputcsv($new_file, $line);
-        }
+        // foreach ($arr_installments as $line) {
+        //     fputcsv($new_file, $line);
+        // }
           
-        fclose($new_file);
+        // fclose($new_file);
 
         return response()->json(['success' => false, 'success_msg' => "File Processed"]);
     }
