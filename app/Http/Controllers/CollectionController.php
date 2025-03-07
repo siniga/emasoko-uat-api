@@ -283,9 +283,7 @@ class CollectionController extends Controller
             //installmentAmount
             $installmentAmount = $installment->installment_amount ?? $installment->max_installment_amount;
 
-            // echo $mandate_ref . " - " . $paid_amount;
-            // echo " === " . $installment->id . " - " . $installment->payment_date . " - " . $installment->status;
-            // echo "<br>";
+            //create array
             $arr_installments[] = [
                 'installmentId' => $installment->id,
                 'mandateReference' => $mandate_ref,
@@ -306,9 +304,15 @@ class CollectionController extends Controller
         echo "<pre>";
         print_r($arr_installments);
 
-        
+        // //create new file
+        // $new_file = fopen(public_path("assets/NMB_New_File1.csv"), "w");
 
-        //create new file
-        $new_file = fopen(public_path("assets/NMB_New_File.csv"), "w");
+        // foreach ($arr_installments as $line) {
+        //     fputcsv($new_file, $line);
+        // }
+          
+        // fclose($new_file);
+
+        //return response()->json(['success' => false, 'success_msg' => "Processed"]);
     }
 }

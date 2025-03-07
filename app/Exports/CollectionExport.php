@@ -72,7 +72,7 @@ class CollectionExport implements FromQuery, WithHeadings, ShouldAutoSize, WithE
             'Outstanding Amount',
             'Payment Status',
             'Collection Date',
-            'Updated Date',
+            'Month',
         ];
     }
 
@@ -99,7 +99,7 @@ class CollectionExport implements FromQuery, WithHeadings, ShouldAutoSize, WithE
             number_format($installments->outstanding_amount),
             $paid,
             $installments->payment_date,
-            $installments->updated_at
+            date('M', strtotime($installments->payment_date))
         ];
     }
 
