@@ -313,6 +313,6 @@ class CollectionController extends Controller
           
         // fclose($new_file);
 
-        return response()->json(['success' => false, 'success_msg' => "File Processed"]);
+        //return response()->json(['success' => false, 'success_msg' => "File Processed"]);
     }
 }
