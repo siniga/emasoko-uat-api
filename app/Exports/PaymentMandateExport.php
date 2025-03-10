@@ -42,44 +42,59 @@ class PaymentMandateExport implements FromQuery, WithHeadings, ShouldAutoSize, W
         }
 
         if ($this->request->has('account_type_id') != null) {
-            $account_type_id = $this->request->input('account_type_id');
+            if ($this->request->input('account_type_id') != null) {
+                $account_type_id = $this->request->input('account_type_id');
 
-            $debit_orders = $debit_orders->whereHas("customerAccount", function ($q) use ($account_type_id) {
-                $q->where('customer_accounts.account_type_id', $account_type_id);
-            });
+                $debit_orders = $debit_orders->whereHas("customerAccount", function ($q) use ($account_type_id) {
+                    $q->where('customer_accounts.account_type_id', $account_type_id);
+                });
+            }
         }
 
         if ($this->request->has('partner_id') != null) {
-            $debit_orders = $debit_orders->where('debit_orders.partner_id', $this->request->input('partner_id'));
+            if ($this->request->input('partner_id') != null) {
+                $debit_orders = $debit_orders->where('debit_orders.partner_id', $this->request->input('partner_id'));
+            }
         }
 
         if ($this->request->has('account_id') != null) {
-            $account_id = $this->request->input('account_id');
+            if ($this->request->input('account_id') != null) {
+                $account_id = $this->request->input('account_id');
 
-            $debit_orders = $debit_orders->whereHas("customerAccount", function ($q) use ($account_id) {
-                $q->where('customer_accounts.account_id', $account_id);
-            });
+                $debit_orders = $debit_orders->whereHas("customerAccount", function ($q) use ($account_id) {
+                    $q->where('customer_accounts.account_id', $account_id);
+                });
+            }
         }
 
         if ($this->request->has('status') != null) {
-            if ($this->request->input('status') == 'pending')
-                $debit_orders = $debit_orders->where('debit_orders.approved', 0);
-            else if ($this->request->input('status') == 'approved')
-                $debit_orders = $debit_orders->where('debit_orders.approved', 1)->where('debit_orders.status', 240);
-            else if ($this->request->input('status') == 'failed')
-                $debit_orders = $debit_orders->where('debit_orders.approved', 2);
+            if ($this->request->input('status') != null) {
+                if ($this->request->input('status') == 'pending')
+                    $debit_orders = $debit_orders->where('debit_orders.approved', 0);
+                else if ($this->request->input('status') == 'approved')
+                    $debit_orders = $debit_orders->where('debit_orders.approved', 1)->where('debit_orders.status', 240);
+                else if ($this->request->input('status') == 'failed')
+                    $debit_orders = $debit_orders->where('debit_orders.approved', 2);
+            }
         }
 
         if ($this->request->has('keyword') != null) {
-            $keyword = $this->request->input('keyword');
+            if ($this->request->input('keyword') != null) {
+                $keyword = $this->request->input('keyword');
 
-            $debit_orders = $debit_orders->whereHas("customerAccount", function ($q) use ($keyword) {
-                $q->where(DB::raw('LOWER(account_name)'), 'like', "%" . strtolower($keyword) . "%")
-                    ->orWhere(DB::raw('LOWER(account_number)'), 'like', "%" . strtolower($keyword) . "%");
-            });
+                $debit_orders = $debit_orders->whereHas("customerAccount", function ($q) use ($keyword) {
+                    $q->where(DB::raw('LOWER(account_name)'), 'like', "%" . strtolower($keyword) . "%")
+                        ->orWhere(DB::raw('LOWER(account_number)'), 'like', "%" . strtolower($keyword) . "%");
+                });
+            }
         }
 
         $debit_orders = $debit_orders->orderBy('debit_orders.created_at', 'DESC');
+
+        //Log::debug(DB::getQueryLog());
+
+        // Log::debug("== debit orders 1 ==");
+        // Log::debug($debit_orders->get());
 
         //return
         return $debit_orders;
