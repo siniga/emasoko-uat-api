@@ -40,18 +40,20 @@ class CollectionExport implements FromQuery, WithHeadings, ShouldAutoSize, WithE
         }
 
         if ($this->request->has('partner_id') != null) {
-            $partner_id = $this->request->input('partner_id');
+            if ($this->request->input('partner_id') != null) {
+                $partner_id = $this->request->input('partner_id');
 
-            $installments = $installments->whereHas("debitOrder", function ($q) use ($partner_id) {
-                $q->where('partner_id', $partner_id);
-            });
+                $installments = $installments->whereHas("debitOrder", function ($q) use ($partner_id) {
+                    $q->where('partner_id', $partner_id);
+                });
+            }
         }
 
         //status
         $installments = $installments->where(['pushed' => 1]);
 
         //order installments
-        $installments = $installments->orderBy('installments.created_at', 'ASC');
+        $installments = $installments->orderBy('installments.payment_date', 'ASC');
 
         //return
         return $installments;

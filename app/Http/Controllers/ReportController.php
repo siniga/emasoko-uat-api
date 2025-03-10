@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Exports\CollectionExport;
 use App\Models\Account;
 use App\Models\AccountType;
 use Illuminate\Http\Request;
@@ -10,6 +9,7 @@ use Illuminate\Support\Facades\Log;
 
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\PaymentMandateExport;
+use App\Exports\CollectionExport;
 use App\Models\Partner;
 
 class ReportController extends Controller
@@ -24,10 +24,6 @@ class ReportController extends Controller
         $title = "System Reports";
 
         if (isset($_POST['generate'])) {
-            //all request
-            Log::debug("== request ==");
-            Log::debug($request->all());
-
             if ($request->report_type == "MANDATE") {
                 return Excel::download(new PaymentMandateExport($request), date('YmdHis') . '_DebitMandate.xlsx');
             } else if ($request->report_type == "COLLECTION") {
