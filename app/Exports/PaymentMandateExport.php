@@ -26,10 +26,6 @@ class PaymentMandateExport implements FromQuery, WithHeadings, ShouldAutoSize, W
 
     public function query()
     {
-        //all request
-        Log::debug("== request hapa ==");
-        Log::debug($this->request->all());
-
         //debit orders
         $debit_orders = DebitOrder::filterCondition();
 
