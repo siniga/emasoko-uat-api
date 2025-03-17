@@ -885,6 +885,37 @@ class PaymentMandateController extends Controller
         );
     }
 
+    public function update_mandates()
+    {
+        $debit_orders = DebitOrder::all();
+
+        foreach ($debit_orders as $debit_order) {
+
+            //Find summation of installments
+            $installments = Installment::select(DB::raw('COUNT(installments.id) as number_of_installments') ,DB::raw('COALESCE(SUM(installments.installment_amount), 0) as paid_amount'))->where(['debit_order_id' => $debit_order->id, 'status' => 'CLOSED'])->get();
+
+            $amount = $installments[0]->paid_amount;
+            $outstanding_amount = $debit_order->total_amount - $amount;
+            $current_balance = $amount;
+            $paid_amount = $amount;
+
+            $debit_order->outstanding_amount = $outstanding_amount;
+            $debit_order->current_balance = $current_balance;
+            $debit_order->paid_amount = $paid_amount;
+            $debit_order->paid_installment = $installments[0]->number_of_installments;
+
+            //6. Update contract status = outstanding amount <= 0
+            if ($outstanding_amount <= 0)
+                $debit_order->contract_status = "CLOSED";
+            else
+                $debit_order->contract_status = "OPEN";
+
+            $debit_order->save();
+        }
+
+        return response()->json(['success' => true, 'message' => 'DD updated']);
+    }
+
     //send remainder for payment mandate
     public function sendRemainder($id)
     {
