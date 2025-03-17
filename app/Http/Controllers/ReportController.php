@@ -39,4 +39,8 @@ class ReportController extends Controller
         //render view
         return view("reports.index", compact('title', 'account_types', 'accounts', 'partners'));
     }
+
+
+    
+
 }

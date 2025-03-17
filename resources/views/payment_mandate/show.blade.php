@@ -273,9 +273,9 @@
 
                                     <tr>
                                         <th>Paid Installment</th>
-                                        <td>0</td>
+                                        <td>{{ $debit_order->paid_installment ?? '' }}</td>
                                         <th>UnPaid Installment</th>
-                                        <td>{{ $debit_order->installment_number ?? '' }}</td>
+                                        <td>{{ $debit_order->installment_number - $debit_order->paid_installment }}</td>
                                     </tr>
 
                                     <tr>
