@@ -194,7 +194,7 @@ Route::any('collections/create', [CollectionController::class, 'create'])->name(
 Route::post('collections/store', [CollectionController::class, 'store'])->name('collections.store');
 Route::get('collections/show/{id}', [CollectionController::class, 'show'])->name('collections.show');
 Route::get('collections/archive/{id}', [CollectionController::class, 'archive'])->name('collections.archive');
-Route::post('collections/push', [CollectionController::class, 'push'])->name('collections.push');
+Route::get('collections/push/{id}', [CollectionController::class, 'push'])->name('collections.push');
 Route::post('collections/fetch-status', [CollectionController::class, 'fetch_status'])->name('collections.fetch-status');
 
 Route::get('collections/reconciliation', [CollectionController::class, 'reconciliation'])->name('collections.reconciliation');
