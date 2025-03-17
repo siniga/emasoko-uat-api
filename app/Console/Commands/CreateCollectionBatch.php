@@ -49,13 +49,13 @@ class CreateCollectionBatch extends Command
     {
         //Limit
         $limit = 250;
-        $current_date = Carbon::now();
+        //$current_date = Carbon::now(); //today batch
+        $current_date = Carbon::now()->addDays(2); //2 days from today
         Log::debug("== Creating collection batch: '{$current_date}' ==");
 
         //initialize deduction service
         $deductionService = new DeductionService();
 
-        // ->where("partners.id", "!=", 10)
         $partners = Partner::whereHas('debitOrders', function ($query) use ($current_date) {
             return $query->where(['contract_status' => 'OPEN', 'channel' => 'NMB', 'approved' => 1, 'status' => 240, 'deleted' => 0])
                 ->whereDate('next_debit_date', "=", $current_date);

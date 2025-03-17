@@ -20,16 +20,22 @@ class Installment extends Model
         //installments
         $installments = static::query();
 
+        //filter installments
+        $installments = $installments->whereHas('debitOrder', function ($query) {
+            $query->where('debit_orders.approved', '=', 1)
+                ->where('debit_orders.deleted', '=', 0)
+                ->where('debit_orders.status', '=', 240)
+                ->where('debit_orders.contract_status', '=', "OPEN");
+        });
+
         if ($user->hasRole('Partner')) {
             $company_user = CompanyUser::where(['user_id' => $user->id])->first();
 
             if ($company_user) {
                 $installments = $installments->whereHas('debitOrder',  function ($query) use ($company_user) {
-                    $query->where('debit_orders.approved', '=', 1)
-                        ->where('debit_orders.status', '=', 240)
-                        ->whereHas('partner', function ($query) use ($company_user) {
-                            $query->where('partners.company_id', '=', $company_user->company_id);
-                        });
+                    $query->whereHas('partner', function ($query) use ($company_user) {
+                        $query->where('partners.company_id', '=', $company_user->company_id);
+                    });
                 });
             }
         } else if ($user->hasRole('Company_Approver')) {
@@ -43,21 +49,12 @@ class Installment extends Model
 
             if ($arr_partners) {
                 $installments = $installments->whereHas('debitOrder', function ($query) use ($arr_partners) {
-                    $query->whereIn('debit_orders.partner_id', $arr_partners)
-                        ->where('debit_orders.approved', '=', 1)
-                        ->where('debit_orders.status', '=', 240);
+                    $query->whereIn('debit_orders.partner_id', $arr_partners);
                 });
             }
         } else if ($user->hasRole('Company_User')) {
             $installments = $installments->whereHas('debitOrder', function ($query) use ($user) {
-                $query->where('debit_orders.created_by', '=', $user->id)
-                    ->where('debit_orders.approved', '=', 1)
-                    ->where('debit_orders.status', '=', 240);
-            });
-        } else {
-            $installments = $installments->whereHas('debitOrder', function ($query) {
-                $query->where('debit_orders.approved', '=', 1)
-                    ->where('debit_orders.status', '=', 240);
+                $query->where('debit_orders.created_by', '=', $user->id);
             });
         }
 
