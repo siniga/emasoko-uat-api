@@ -201,6 +201,7 @@ Route::post('collections/upload', [CollectionController::class, 'upload'])->name
 Route::post('collections/fetch-status', [CollectionController::class, 'fetch_status'])->name('collections.fetch-status');
 
 Route::get('collections/create-debit-orders', [CollectionController::class, 'create_debit_orders'])->name('collections.create-debit-orders');
+Route::get('collections/update-debit-orders', [CollectionController::class, 'update_debit_orders'])->name('collections.update-debit-orders');
 //Route::get('collections/reconciliation', [CollectionController::class, 'reconciliation'])->name('collections.reconciliation');
 
 //reports
