@@ -120,10 +120,10 @@
                                             <th>Uploaded</th>
                                             <th>Processed</th>
                                             <th>Status</th>
-                                            <th>No. of Success</th>
-                                            <th>No. of Failed</th>
+                                            <th>Collections</th>
+                                            <th>No. Success</th>
+                                            <th>No.Failed</th>
                                             <th>Created Date</th>
-                                            <th>Updated Date</th>
                                             <th style="width: 20px; !important">Actions</th>
                                         </tr>
                                     </thead>
@@ -153,13 +153,18 @@
                                                     @endif
                                                 </td>
                                                 <td>
-                                                    gg
+                                                    @if($values->pushed == 0 && $values->failed == 0)
+                                                        <span class="badge badge-pill badge-soft-warning">On Progress</span>
+                                                    @elseif($values->processed == 1 && $values->failed == 0)
+                                                        <span class="badge badge-pill badge-soft-success">Pass</span>
+                                                    @elseif($values->processed == 1  && $values->failed == 1)
+                                                        <span class="badge badge-pill badge-soft-danger">Failed</span>
+                                                    @endif
                                                 </td>
-                                                <td class="text-sm-end">{{ $values->success }}</td>
-                                                <td class="text-sm-end">{{ $values->failed }}</td>
+                                                <td class="text-sm-end">{{ $values->number_of_collections }}</td>
+                                                <td class="text-sm-end">{{ $values->number_of_success }}</td>
+                                                <td class="text-sm-end">{{ $values->number_of_failed }}</td>
                                                 <td>{{ date('d-m-Y', strtotime($values->created_at)) }}</td>
-                                                <td>{{ date('d-m-Y', strtotime($values->updated_at)) }}</td>
-
                                                 <td>
                                                    <a href="{{ route('collections.show', $values->id) }}" title="View Batch"
                                                         class="btn btn-xss">

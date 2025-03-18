@@ -26,6 +26,7 @@ class CollectionCreatedExport implements FromArray, WithHeadings, ShouldAutoSize
     {
         return [
             'Mandate Reference',
+            'Periodicity',
             'Account Name',
             'Account Number',
             'Collection Amount',
@@ -45,7 +46,7 @@ class CollectionCreatedExport implements FromArray, WithHeadings, ShouldAutoSize
     {
         return [
             AfterSheet::class    => function (AfterSheet $event) {
-                $cellRange = 'A1:F1'; // All headers
+                $cellRange = 'A1:G1'; // All headers
                 $event->sheet->getDelegate()->getStyle($cellRange)->getFont()->setSize(12);
                 $event->sheet->getDelegate()->getStyle($cellRange)->getFont()->setBold(true);
             },

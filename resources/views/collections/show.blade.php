@@ -92,6 +92,17 @@
                                             <span>{{ $batch->collectionReference }}</span>
                                         </td>
 
+                                        <th width=25%>Uploaded</th>
+                                        <td width=25%>
+                                            @if($batch->pushed == 0)
+                                                <span class="badge bg-danger">No</span>
+                                            @elseif($batch->pushed == 1)
+                                                <span class="badge bg-success-1">Yes</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+
+                                    <tr>
                                         <th>Processed</th>
                                         <td>
                                             @if($batch->processed == 0)
@@ -99,6 +110,29 @@
                                             @elseif($batch->processed == 1)
                                                 <span class="badge bg-success-1">Yes</span>
                                             @endif
+                                        </td>
+
+                                        <th width=25%>Status</th>
+                                        <td width=25%>
+                                            @if($batch->pushed == 0 && $batch->failed == 0)
+                                                <span class="badge badge-pill badge-soft-warning">On Progress</span>
+                                            @elseif($batch->processed == 1 && $batch->failed == 0)
+                                                <span class="badge badge-pill badge-soft-success">Pass</span>
+                                            @elseif($batch->processed == 1  && $batch->failed == 1)
+                                                <span class="badge badge-pill badge-soft-danger">Failed</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <th width=25%>Number of Collections</th>
+                                        <td width=25%>
+                                            <span>{{ $batch->number_of_collections }}</span>
+                                        </td>
+
+                                        <th>Number of Success</th>
+                                        <td>
+                                            <span>{{ $batch->number_of_success }}</span>
                                         </td>
                                     </tr>
 
@@ -133,7 +167,7 @@
                                         <table class="table table-nowrap align-middle table-bordered">
                                             <thead>
                                                 <tr>
-                                                    <td colspan="6" class="font-weight-600 text-uppercase">
+                                                    <td colspan="7" class="font-weight-600 text-uppercase">
                                                         Created Collection Debit Mandates
                                                     </td>
 
@@ -149,6 +183,7 @@
                                                 <tr>
                                                     <th width="3%">#</th>
                                                     <th width="8%">Mandate Ref</th>
+                                                    <th width="8%">Periodicity</th>
                                                     <th width="12%">Account Name</th>
                                                     <th width="10%">Account No.</th>
                                                     <th width="8%">Collection Amt</th>
@@ -160,6 +195,7 @@
                                                     <tr>
                                                         <td>{{ $loop->iteration }}</td>
                                                         <td>{{ $val['reference'] }}</td>
+                                                        <td>{{ $val['periodicity'] }}</td>
                                                         <td>{{ $val['account_name'] }}</td>
                                                         <td>{{ $val['account_number'] }}</td>
                                                         <td class="text-sm-end">{{ number_format($val['amount']) }}</td>
