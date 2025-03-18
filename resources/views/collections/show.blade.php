@@ -52,7 +52,7 @@
                                 @if (Auth::user()->hasRole(['admin']))
                                    <template x-if="pushed==0"> 
                                         <button x-html="btnPush" title="Upload Collection" class="btn btn-outline-success btn-sm"
-                                            x-on:click="pushCollectionStatus();"></button>
+                                            x-on:click="pushCollectionBatch();"></button>
                                     </template>
                                 @endif 
 
@@ -343,15 +343,9 @@
                         }).then(response => response.json())
                         .then(responseJson => {
                             $('#message_wrp').html(
-                                "<div class='alert alert-success rounded-sm'>Collection batch uploaded</div>"
+                                "<div class='alert alert-success rounded-sm'>Collection batch uploaded, Wait for 10 minutes before query status.</div>"
                             );
-
                             this.pushed = 1
-
-                            setTimeout(function () {
-                                location.reload();
-                            }, 2000);
-
 
                         }).catch(() => {
                             //display message
