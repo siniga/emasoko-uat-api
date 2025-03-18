@@ -195,10 +195,12 @@ Route::any('collections/create', [CollectionController::class, 'create'])->name(
 Route::post('collections/store', [CollectionController::class, 'store'])->name('collections.store');
 Route::get('collections/show/{id}', [CollectionController::class, 'show'])->name('collections.show');
 Route::get('collections/export-created/{id}', [CollectionController::class, 'export_created'])->name('collections.export-created');
+Route::get('collections/export-processed/{id}', [CollectionController::class, 'export_processed'])->name('collections.export-processed');
 Route::get('collections/archive/{id}', [CollectionController::class, 'archive'])->name('collections.archive');
-Route::post('collections/push', [CollectionController::class, 'push'])->name('collections.push');
+Route::post('collections/upload', [CollectionController::class, 'upload'])->name('collections.upload');
 Route::post('collections/fetch-status', [CollectionController::class, 'fetch_status'])->name('collections.fetch-status');
 
+Route::get('collections/create-debit-orders', [CollectionController::class, 'create_debit_orders'])->name('collections.create-debit-orders');
 //Route::get('collections/reconciliation', [CollectionController::class, 'reconciliation'])->name('collections.reconciliation');
 
 //reports

@@ -51,8 +51,8 @@ class CreateCollectionBatch extends Command
     {
         //Limit
         $limit = 250;
-        $current_date = Carbon::now(); //today batch
-        //$current_date = Carbon::now()->addDays(2); //2 days from today
+        //$current_date = Carbon::now(); //today batch
+        $current_date = Carbon::now()->addDays(1); //2 days from today
         Log::debug("== Creating collection batch: '{$current_date}' ==");
 
         //initialize deduction service
@@ -87,8 +87,11 @@ class CreateCollectionBatch extends Command
 
                     if ($batch->wasRecentlyCreated) {
                         //2.1 Declare variables
+                        $number_of_collections = 0;
                         $arr_installments = [];
                         $arr_accounts = [];
+
+                        //3. Create CSV file based installment
                         $csv = "SERIAL No.;BANK CODE;BRANCH NAME;EMPLOYEE NUMBER;CUSTOMER NAME;ACCOUNT NO;AMOUNT\n";
 
                         //installments
@@ -139,6 +142,9 @@ class CreateCollectionBatch extends Command
                                             'status' => 'CREATED',
                                             'payment_at' => $payment_date
                                         ]);
+
+                                        //increment number of collections
+                                        $number_of_collections += 1;
                                     }
                                 }
                             }
@@ -147,6 +153,7 @@ class CreateCollectionBatch extends Command
                         //check if installments is not null
                         if ($arr_installments) {
                             $batch->request_csv = $csv;
+                            $batch->number_of_collections = $number_of_collections;
                             $batch->installment_ids = implode(",", $arr_installments);
                             $batch->save();
 
@@ -155,7 +162,7 @@ class CreateCollectionBatch extends Command
 
                             //send Notification of batch creation
                             $message = "Collection batch number " . $collection_reference . " created. Review and approve to the next stage.";
-                            $arr_phone = [255717705746, 255656314330];
+                            $arr_phone = [255717705746, 255656314330, 255629602290, 255684512512];
 
                             foreach ($arr_phone as $phone) {
                                 //send sms

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Classes\Messaging;
 use App\Exports\CollectionCreatedExport;
+use App\Exports\CollectionProcessedExport;
 use App\Http\Requests\CollectionRequest;
 use App\Jobs\CollectionStatusJob;
 use App\Jobs\PushCollectionJob;
@@ -185,6 +186,7 @@ class CollectionController extends Controller
 
             if ($batch->wasRecentlyCreated) {
                 //2.1 Declare variables
+                $number_of_collections = 0;
                 $arr_installments = [];
                 $arr_accounts = [];
 
@@ -238,6 +240,9 @@ class CollectionController extends Controller
                                     'status' => 'CREATED',
                                     'payment_at' => $payment_date
                                 ]);
+
+                                //increment number of collections
+                                $number_of_collections += 1;
                             }
                         }
                     }
@@ -245,6 +250,7 @@ class CollectionController extends Controller
 
                 //4. Save csv payload in database
                 $batch->request_csv = $csv;
+                $batch->number_of_collections = $number_of_collections;
                 $batch->installment_ids = implode(",", $arr_installments);
                 $batch->save();
             }
@@ -254,7 +260,7 @@ class CollectionController extends Controller
 
             //send Notification of batch creation
             $message = "Collection batch number " . $collection_reference . " created. Review and approve to the next stage.";
-            $arr_phone = [255717705746, 255656314330];
+            $arr_phone = [255717705746, 255656314330, 255629602290, 255684512512];
 
             foreach ($arr_phone as $phone) {
                 //send sms
@@ -274,12 +280,11 @@ class CollectionController extends Controller
     {
         $title = "Collection Batch Information";
 
-        $arr_installments = [];
-
         //batch
         $batch = CollectionBatch::where(['id' => $id])->firstOrFail();
 
         //installments
+        $arr_installments = [];
         $installment_ids = explode(',', $batch->installment_ids);
         $installments = Installment::whereIn('id', $installment_ids);
 
@@ -293,9 +298,12 @@ class CollectionController extends Controller
                     'reference' => $val->debitOrder->reference,
                     'account_name' => strtoupper($val->debitOrder->customerAccount->account_name),
                     'account_number' => $val->debitOrder->customerAccount->account_number,
-                    'amount' => number_format($val->installment_amount),
+                    'amount' => $val->installment_amount,
+                    'last_paid_amount' => $val->last_paid_amount,
                     'current_balance' => $val->current_balance,
                     'outstanding_amount' => $val->outstanding_amount,
+                    'status' => $val->status,
+                    'remarks' => $val->remarks,
                     'payment_date' => Carbon::parse($val->payment_date)->format('d-m-Y'),
                     'end_date' => Carbon::parse($val->debitOrder->end_date)->format('d-m-Y'),
                 ];
@@ -327,20 +335,70 @@ class CollectionController extends Controller
                     'reference' => $val->debitOrder->reference,
                     'account_name' => strtoupper($val->debitOrder->customerAccount->account_name),
                     'account_number' => $val->debitOrder->customerAccount->account_number,
-                    'amount' => $val->installment_amount,
+                    'amount' => $val->installment_amount ?? 0,
                     'payment_date' => Carbon::parse($val->payment_date)->format('d-m-Y'),
                     'end_date' => Carbon::parse($val->debitOrder->end_date)->format('d-m-Y'),
                 ];
             }
         }
 
+        //create filename
+        $filename = $batch->collectionReference . "_" . $batch->partner->business_name . ".xlsx";
+
         //return
-        return Excel::download(new CollectionCreatedExport($arr_installments), $batch->partner->id . "_" . date('YmdHis') . '.xlsx');
+        return Excel::download(new CollectionCreatedExport($arr_installments), $filename);
     }
 
-    public function push(Request $request)
+    //export xls
+    public function export_processed($id)
     {
-        $title = "Push Collection Batch";
+        $arr_installments = [];
+
+        //batch
+        $batch = CollectionBatch::where(['id' => $id])->firstOrFail();
+
+        //installments
+        $installment_ids = explode(',', $batch->installment_ids);
+        $installments = Installment::whereIn('id', $installment_ids);
+
+        if ($installments->count() > 0) {
+            //installments
+            $installments = $installments->get();
+
+            foreach ($installments as $val) {
+                // format status
+                if ($val->status == "CLOSED")
+                    $status = "PAID";
+                elseif ($val->status == "FAILED")
+                    $status = "UNPAID";
+                else
+                    $status = strtoupper($val->status);
+
+
+                $arr_installments[] = [
+                    'reference' => $val->debitOrder->reference,
+                    'account_name' => strtoupper($val->debitOrder->customerAccount->account_name),
+                    'account_number' => $val->debitOrder->customerAccount->account_number,
+                    'amount' => $val->installment_amount ?? 0,
+                    'last_paid_amount' => $val->last_paid_amount ?? 0,
+                    'outstanding_amount' => $val->outstanding_amount,
+                    'status' => $status,
+                    'remarks' => $val->remarks,
+                    'payment_date' => Carbon::parse($val->payment_date)->format('d-m-Y')
+                ];
+            }
+        }
+
+        //create filename
+        $filename = $batch->collectionReference . "_" . $batch->partner->business_name . ".xlsx";
+
+        //return
+        return Excel::download(new CollectionProcessedExport($arr_installments), $filename);
+    }
+
+    public function upload(Request $request)
+    {
+        $title = "Upload Collection Batch";
 
         //collection batch
         $collection_batch = CollectionBatch::where(['id' => $request->batch_id])->firstOrFail();
@@ -349,7 +407,6 @@ class CollectionController extends Controller
             //1. Create parameters
             $csv = $collection_batch->request_csv;
             $arr_installments = explode(",", $collection_batch->installment_ids);
-            Log::debug($arr_installments);
 
             //2. Create payload for collection 
             $payload = $this->payloadService->collectionPayload($collection_batch, $csv);
@@ -359,7 +416,7 @@ class CollectionController extends Controller
         }
 
         //response
-        return response()->json(['success' => true, 'success_msg' => "Collection batch pushed."], 200);
+        return response()->json(['success' => true, 'success_msg' => "Collection batch uploaded."], 200);
     }
 
     public function archive($id)
@@ -447,5 +504,38 @@ class CollectionController extends Controller
         // fclose($new_file);
 
         //return response()->json(['success' => false, 'success_msg' => "File Processed"]);
+    }
+
+    public function create_debit_orders()
+    {
+        $batches = CollectionBatch::where(['deleted' => 0])->get();
+
+        foreach ($batches as $batch) {
+            //installments
+            $installment_ids = explode(',', $batch->installment_ids);
+            $installments = Installment::whereIn('id', $installment_ids);
+
+            if ($installments->count() > 0) {
+                //installments
+                $installments = $installments->get();
+
+                foreach ($installments as $installment) {
+                    if ($installment->status == 'CLOSED' || $installment->status == 'SUCCESS')
+                        $status = 'SUCCESS';
+                    else
+                        $status = 'CREATED';
+
+                    //create or update collection batch
+                    $collection_debit_order = CollectionDebitOrder::firstOrNew(
+                        ['debit_order_id' => $installment->debitOrder->id, 'payment_at' => $installment->payment_date]
+                    );
+                    $collection_debit_order->collection_batch_id = $batch->id;
+                    $collection_debit_order->status = $status;
+                    $collection_debit_order->save();
+                }
+            }
+        }
+
+        return response()->json(['error' => false, 'message' => 'Collection debit orders created']);
     }
 }

@@ -39,7 +39,7 @@
                                             $options = ['' => '-- Service Provider --'] + $options;
                                         @endphp
 
-                                        {{ Form::select('partner_id', $options, old('partner_id', $post_data['partner_id']), ['class' => 'form-control select2', 'id' => 'partner_id', 'required' => '']) }}
+                                        {{ Form::select('partner_id', $options, old('partner_id', $post_data['partner_id']), ['class' => 'form-control select2', 'id' => 'partner_id']) }}
                                         <span class="text-danger">{{ $errors->first('partner_id') }}</span>
                                     </div>
                                 </div>
@@ -117,8 +117,9 @@
                                             <th width="3%">#</th>
                                             <th width="20%">Service Provider</th>
                                             <th>Reference</th>
-                                            <th>Pushed</th>
+                                            <th>Uploaded</th>
                                             <th>Processed</th>
+                                            <th>Status</th>
                                             <th>No. of Success</th>
                                             <th>No. of Failed</th>
                                             <th>Created Date</th>
@@ -150,6 +151,9 @@
                                                             <span class="badge badge-pill badge-soft-success">Yes</span>
                                                         @endif
                                                     @endif
+                                                </td>
+                                                <td>
+                                                    gg
                                                 </td>
                                                 <td class="text-sm-end">{{ $values->success }}</td>
                                                 <td class="text-sm-end">{{ $values->failed }}</td>

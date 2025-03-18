@@ -104,7 +104,6 @@ class CollectionStatusJob implements ShouldQueue
                     $response = $deduction_service->updateInstallments($data, $collection_reference);
 
                     //1.3: process batch
-                    //$collection_batch->response_csv = $data;
                     $collection_batch->success = $response[0];
                     $collection_batch->failed = $response[1];
                     $collection_batch->save();
@@ -116,12 +115,12 @@ class CollectionStatusJob implements ShouldQueue
                     Log::debug($data);
 
                     //1.2: response
-                    $response = $deduction_service->updateInstallments($data, $collection_reference);
+                    //$response = $deduction_service->updateInstallments($data, $collection_reference);
 
                     //1.3: process batch
                     //$collection_batch->response_csv = $data;
-                    $collection_batch->success = $response[0];
-                    $collection_batch->failed = $response[1];
+                    //$collection_batch->success = $response[0];
+                    //$collection_batch->failed = $response[1];
                     $collection_batch->save();
                 } else if ($response_code == 239) {
                     //3.Batch Processing
@@ -134,7 +133,6 @@ class CollectionStatusJob implements ShouldQueue
                     $response = $deduction_service->updateInstallments($data, $collection_reference);
 
                     //1.3: process batch
-                    //$collection_batch->response_csv = $data;
                     $collection_batch->success = $response[0];
                     $collection_batch->failed = $response[1];
                     $collection_batch->save();
