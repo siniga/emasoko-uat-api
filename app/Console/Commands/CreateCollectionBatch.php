@@ -51,8 +51,8 @@ class CreateCollectionBatch extends Command
     {
         //Limit
         $limit = 250;
-        //$current_date = Carbon::now(); //today batch
-        $current_date = Carbon::now()->addDays(2); //2 days from today
+        $current_date = Carbon::now(); //today batch
+        //$current_date = Carbon::now()->addDays(3); //2 days from today
         Log::debug("== Creating collection batch: '{$current_date}' ==");
 
         //initialize deduction service
@@ -61,7 +61,7 @@ class CreateCollectionBatch extends Command
         $partners = Partner::whereHas('debitOrders', function ($query) use ($current_date) {
             return $query->where(['contract_status' => 'OPEN', 'channel' => 'NMB', 'approved' => 1, 'status' => 240, 'deleted' => 0])
                 ->whereDate('next_debit_date', "=", $current_date);
-        })->get();
+        })->where('partners.status', '=', 202)->get();
 
         foreach ($partners as $partner) {
             //1.0: Number of installment
@@ -107,47 +107,48 @@ class CreateCollectionBatch extends Command
                             $installment_id = $installment->id;
                             $payment_amount = $installment->installment_amount;
                             $payment_date = $installment->payment_date;
+                            $debit_start_date = Carbon::parse($installment->debitOrder->start_date);
                             $debit_end_date = Carbon::parse($installment->debitOrder->end_date);
                             $deleted = $installment->debitOrder->deleted;
 
-                            //1.0: check if periodicity == MONTHLY
-                            if ($periodicity == "MONTHLY") {
-                                //2.0: check if debit mandate expire
-                                if ($debit_end_date->gte(Carbon::now()) && $deleted == 0) {
-                                    //3.0: check if account exists in this batch
-                                    if (!in_array($account_number, $arr_accounts)) {
-                                        //3.0: check if the mandate reference debited this month
-                                        $collection_debit_order = CollectionDebitOrder::where(['debit_order_id' => $debit_order_id])
-                                            ->where(function ($query) {
-                                                $query->where('status', 'CREATED')
-                                                    ->orWhere('status', 'SUCCESS');
-                                            })->whereMonth('payment_at', Carbon::parse($payment_date)->format('m'));
+                            //1.0: check if periodicity == MONTHLY and deleted = 0
+                            if ($periodicity == "MONTHLY" && $deleted == 0) {
+                                //2.0: Check if mandate start date <= today
+                                if ($debit_start_date->lte(Carbon::now())) {
+                                    //2.1: check if debit mandate expire
+                                    if ($debit_end_date->gte(Carbon::now())) {
+                                        //3.0: check if account exists in this batch
+                                        if (!in_array($account_number, $arr_accounts)) {
+                                            //4.0: check if the mandate reference debited this month
+                                            $collection_debit_order = CollectionDebitOrder::where(['debit_order_id' => $debit_order_id])
+                                                ->whereMonth('payment_at', Carbon::parse($payment_date)->format('m'));
 
-                                        if ($collection_debit_order->count() == 0) {
-                                            //create csv file
-                                            $csv .= "{$installment_id};016;NMB;{$mandate_reference};{$account_name};{$account_number};{$payment_amount}\n";
+                                            if ($collection_debit_order->count() == 0) {
+                                                //create csv file
+                                                $csv .= "{$installment_id};016;NMB;{$mandate_reference};{$account_name};{$account_number};{$payment_amount}\n";
 
-                                            //append account in array
-                                            array_push($arr_accounts, $account_number);
+                                                //append account in array
+                                                array_push($arr_accounts, $account_number);
 
-                                            //update array installments
-                                            array_push($arr_installments, $installment_id);
+                                                //update array installments
+                                                array_push($arr_installments, $installment_id);
 
-                                            //update installment status => created = 1
-                                            $up_installment = Installment::findOrFail($installment_id);
-                                            $up_installment->created = 1;
-                                            $up_installment->save();
+                                                //update installment status => created = 1
+                                                $up_installment = Installment::findOrFail($installment_id);
+                                                $up_installment->created = 1;
+                                                $up_installment->save();
 
-                                            // create collection debit order
-                                            $create_collection_debit_order = CollectionDebitOrder::create([
-                                                'collection_batch_id' => $batch->id,
-                                                'debit_order_id' => $debit_order_id,
-                                                'status' => 'CREATED',
-                                                'payment_at' => $payment_date
-                                            ]);
+                                                // create collection debit order
+                                                $create_collection_debit_order = CollectionDebitOrder::create([
+                                                    'collection_batch_id' => $batch->id,
+                                                    'debit_order_id' => $debit_order_id,
+                                                    'status' => 'CREATED',
+                                                    'payment_at' => $payment_date
+                                                ]);
 
-                                            //increment number of collections
-                                            $number_of_collections += 1;
+                                                //increment number of collections
+                                                $number_of_collections += 1;
+                                            }
                                         }
                                     }
                                 }
