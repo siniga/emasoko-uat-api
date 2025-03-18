@@ -382,7 +382,6 @@
                                 location.reload();
                             }, 2000);
 
-
                         }).catch(() => {
                             //display message
                             $('#message_wrp').html(
