@@ -41,7 +41,7 @@
 
                             <div class="text-sm-end d-none d-sm-block">
                                 <template x-if="deleted==0">
-                                    <template x-if="status==100 || status ==235 || status ==239 || status==249 || status==403 || status==405 || status==500 || status==501">
+                                    <template x-if="status==100 || status ==200 || status ==230 || status ==235 || status ==239 || status==249 || status==403 || status==405 || status==500 || status==501">
                                         <a href="{{ route('collections.archive', $batch->id) }}" title="Archive"
                                             class="btn btn-warning text-medium btn-sm archive">
                                             <i class="bx bx-archive-in font-size-12"></i> Archive Batch
@@ -52,7 +52,7 @@
                                 @if (Auth::user()->hasRole(['admin']))
                                    <template x-if="pushed==0"> 
                                         <button x-html="btnPush" title="Upload Collection" class="btn btn-outline-success btn-sm"
-                                            x-on:click="pushCollectionStatus();"></button>
+                                            x-on:click="pushCollectionBatch();"></button>
                                     </template>
                                 @endif 
 
