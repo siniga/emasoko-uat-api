@@ -3,7 +3,9 @@
 namespace App\Console\Commands;
 
 use App\Jobs\PushCollectionJob;
+use App\Jobs\SendSMSJob;
 use App\Models\CollectionBatch;
+use App\Models\CollectionDebitOrder;
 use App\Models\Installment;
 use App\Models\Partner;
 use App\Models\DebitOrder;
@@ -49,8 +51,8 @@ class CreateCollectionBatch extends Command
     {
         //Limit
         $limit = 250;
-        //$current_date = Carbon::now(); //today batch
-        $current_date = Carbon::now()->addDays(2); //2 days from today
+        $current_date = Carbon::now(); //today batch
+        //$current_date = Carbon::now()->addDays(2); //2 days from today
         Log::debug("== Creating collection batch: '{$current_date}' ==");
 
         //initialize deduction service
@@ -97,28 +99,47 @@ class CreateCollectionBatch extends Command
                             $account_name = strtoupper($installment->debitOrder->customerAccount->account_name);
                             $account_number = $installment->debitOrder->customerAccount->account_number;
                             $mandate_reference = $installment->debitOrder->reference;
+                            $debit_order_id = $installment->debitOrder->id;
                             $installment_id = $installment->id;
                             $payment_amount = $installment->installment_amount;
+                            $payment_date = $installment->payment_date;
                             $debit_end_date = Carbon::parse($installment->debitOrder->end_date);
                             $deleted = $installment->debitOrder->deleted;
 
-                            //check if debit mandate expire
+                            //1.0: check if debit mandate expire
                             if ($debit_end_date->gte(Carbon::now()) && $deleted == 0) {
-                                //check if account exists in this batch
+                                //2.0: check if account exists in this batch
                                 if (!in_array($account_number, $arr_accounts)) {
-                                    //create csv file
-                                    $csv .= "{$installment_id};016;NMB;{$mandate_reference};{$account_name};{$account_number};{$payment_amount}\n";
+                                    //3.0: check if the mandate reference debited this month
+                                    $collection_debit_order = CollectionDebitOrder::where(['debit_order_id' => $debit_order_id])
+                                        ->where(function ($query) {
+                                            $query->where('status', 'CREATED')
+                                                ->orWhere('status', 'SUCCESS');
+                                        })->whereMonth('payment_at', Carbon::parse($payment_date)->format('m'));
 
-                                    //append account in array
-                                    array_push($arr_accounts, $account_number);
+                                    if ($collection_debit_order->count() == 0) {
+                                        //create csv file
+                                        $csv .= "{$installment_id};016;NMB;{$mandate_reference};{$account_name};{$account_number};{$payment_amount}\n";
 
-                                    //update array installments
-                                    array_push($arr_installments, $installment_id);
+                                        //append account in array
+                                        array_push($arr_accounts, $account_number);
 
-                                    //update installment status => created = 1
-                                    $up_installment = Installment::findOrFail($installment_id);
-                                    $up_installment->created = 1;
-                                    $up_installment->save();
+                                        //update array installments
+                                        array_push($arr_installments, $installment_id);
+
+                                        //update installment status => created = 1
+                                        $up_installment = Installment::findOrFail($installment_id);
+                                        $up_installment->created = 1;
+                                        $up_installment->save();
+
+                                        // create collection debit order
+                                        $create_collection_debit_order = CollectionDebitOrder::create([
+                                            'collection_batch_id' => $batch->id,
+                                            'debit_order_id' => $debit_order_id,
+                                            'status' => 'CREATED',
+                                            'payment_at' => $payment_date
+                                        ]);
+                                    }
                                 }
                             }
                         }
@@ -128,6 +149,19 @@ class CreateCollectionBatch extends Command
                             $batch->request_csv = $csv;
                             $batch->installment_ids = implode(",", $arr_installments);
                             $batch->save();
+
+                            //Batch Information
+                            $collection_reference = $batch->collectionReference;
+
+                            //send Notification of batch creation
+                            $message = "Collection batch number " . $collection_reference . " created. Review and approve to the next stage.";
+                            $arr_phone = [255717705746, 255656314330];
+
+                            foreach ($arr_phone as $phone) {
+                                //send sms
+                                $data = ["phone" => $phone, "message" => $message];
+                                dispatch(new SendSMSJob($data));
+                            }
                         } else {
                             $batch->delete();
                         }
@@ -136,7 +170,6 @@ class CreateCollectionBatch extends Command
             }
         }
         Log::debug("== Success on creating collection batch ==");
-
         return 200;
     }
 }

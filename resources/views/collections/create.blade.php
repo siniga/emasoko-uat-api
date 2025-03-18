@@ -139,11 +139,15 @@
                                     <a href="{{ route('collections.batches') }}"
                                         class="btn btn-outline-danger text-medium">Cancel</a>
 
-                                    <button type="submit" class="btn btn-primary px-3">Submit</button>
+                                    <button type="submit" class="btn btn-primary px-3">Create</button>
                                 </div>
                             </div>
                         </div>
                         {{ Form::close() }}
+                    @else
+                        <div class="alert alert-danger mb-2">
+                            No any pending collection debit order
+                        </div>
                     @endif
                 </div>
             </div>

@@ -25,13 +25,32 @@
                             {{ Form::token() }}
 
                             <div class="row">
-                                <div class="col-lg-5 col-md-5 col-12">
+                                <div class="col-lg-4 col-md-4 col-12">
+                                    <div class="mb-0">
+                                        @php
+                                            $options = [];
+                                        @endphp
+                                        @foreach ($providers as $val)
+                                            @php
+                                                $options[$val->id] = $val->business_name;
+                                            @endphp
+                                        @endforeach
+                                        @php
+                                            $options = ['' => '-- Service Provider --'] + $options;
+                                        @endphp
+
+                                        {{ Form::select('partner_id', $options, old('partner_id', $post_data['partner_id']), ['class' => 'form-control select2', 'id' => 'partner_id', 'required' => '']) }}
+                                        <span class="text-danger">{{ $errors->first('partner_id') }}</span>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-3 col-md-3 col-12">
                                     <div class="mb-3">
                                         {{ Form::date('start_at', old('start_at', $post_data['start_at']), ['placeholder="Start Date..."', 'class="form-control"']) }}
                                     </div>
                                 </div>
 
-                                <div class="col-lg-5 col-md-5 col-12">
+                                <div class="col-lg-3 col-md-3 col-12">
                                     <div class="mb-3">
                                         {{ Form::date('end_at', old('end_at', $post_data['end_at']), ['placeholder="End Date..."', 'class="form-control"']) }}
                                     </div>

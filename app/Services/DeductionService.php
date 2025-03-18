@@ -386,4 +386,10 @@ class DeductionService
 
         return $cur_collection_reference;
     }
+
+    //check for duplicate
+
+    //check if mandate end date pass
+
+    //check if collected this month
 }

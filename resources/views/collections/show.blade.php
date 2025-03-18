@@ -117,11 +117,55 @@
                             </div>
                         </div>
 
-                        @if($batch->pushed == 0)
+                        @if($batch->created = 1 && $batch->pushed == 0)
+                             <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="table-responsive">
+                                        <table class="table table-nowrap align-middle table-bordered">
+                                            <thead>
+                                                <tr>
+                                                    <td colspan="6" class="font-weight-600 text-uppercase">
+                                                        Created Collection Debit Mandates
+                                                    </td>
 
+                                                    <td>
+                                                        <a title="Export" class="btn btn-outline-success btn-sm"
+                                                            href="{{ route('collections.export-created', $batch->id) }}"><i class="bx bx-export"></i> Export XLS
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            </thead>
+
+                                            <tbody>
+                                                <tr>
+                                                    <th width="3%">#</th>
+                                                    <th width="8%">Mandate Ref</th>
+                                                    <th width="12%">Account Name</th>
+                                                    <th width="10%">Account No.</th>
+                                                    <th width="8%">Collection Amt</th>
+                                                    <th width="8%">Payment Date</th>
+                                                    <th width="8%">Debit End Date</th>
+                                                </tr>
+
+                                                @foreach ($arr_installments as $val)
+                                                    <tr>
+                                                        <td>{{ $loop->iteration }}</td>
+                                                        <td>{{ $val['reference'] }}</td>
+                                                        <td>{{ $val['account_name'] }}</td>
+                                                        <td>{{ $val['account_number'] }}</td>
+                                                        <td>{{ $val['amount'] }}</td>
+                                                        <td>{{ $val['payment_date'] }}</td>
+                                                        <td>{{ $val['end_date'] }}</td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
                         @endif
 
-                        @if($batch->processed == 1)
+                        {{-- @if($batch->processed == 1)
                             <div class="row">
                                 <div class="col-lg-12">
                                     <div class="table-responsive">
@@ -201,7 +245,7 @@
                                     </div>
                                 </div>
                             </div>
-                        @endif
+                        @endif --}}
                     </div>
                 </div>
             </div>
