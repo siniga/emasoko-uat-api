@@ -104,8 +104,8 @@ class CollectionStatusJob implements ShouldQueue
                     $response = $deduction_service->updateInstallments($data, $collection_reference);
 
                     //1.3: process batch
-                    $collection_batch->success = $response[0];
-                    $collection_batch->failed = $response[1];
+                    $collection_batch->number_of_success = $response[0];
+                    $collection_batch->number_of_failed = $response[1];
                     $collection_batch->save();
                 } else if ($response_code == 235) {
                     //1. Batch Complete
@@ -114,13 +114,18 @@ class CollectionStatusJob implements ShouldQueue
                     Log::debug("== Failed Collection CSV ==");
                     Log::debug($data);
 
-                    //1.2: response
-                    //$response = $deduction_service->updateInstallments($data, $collection_reference);
+                    //send SMS when batch failed
+                    $message = "Collection batch number " . $collection_reference . " failed from NMB end. Review and resend the batch.";
+                    $arr_phone = [255717705746, 255656314330, 255629602290, 255684512512];
+
+                    foreach ($arr_phone as $phone) {
+                        //send sms
+                        $data = ["phone" => $phone, "message" => $message];
+                        dispatch(new SendSMSJob($data));
+                    }
 
                     //1.3: process batch
-                    //$collection_batch->response_csv = $data;
-                    //$collection_batch->success = $response[0];
-                    //$collection_batch->failed = $response[1];
+                    $collection_batch->failed = 1;
                     $collection_batch->save();
                 } else if ($response_code == 239) {
                     //3.Batch Processing
@@ -133,8 +138,8 @@ class CollectionStatusJob implements ShouldQueue
                     $response = $deduction_service->updateInstallments($data, $collection_reference);
 
                     //1.3: process batch
-                    $collection_batch->success = $response[0];
-                    $collection_batch->failed = $response[1];
+                    $collection_batch->number_of_success = $response[0];
+                    $collection_batch->number_of_failed = $response[1];
                     $collection_batch->save();
                 }
             } else if (strtolower($response['status']) == "fail") {
@@ -154,7 +159,7 @@ class CollectionStatusJob implements ShouldQueue
 
                 //send SMS when batch failed
                 $message = "Collection batch number " . $collection_reference . " failed from NMB end. Review and resend the batch.";
-                $arr_phone = [255717705746, 255656314330];
+                $arr_phone = [255717705746, 255656314330, 255629602290, 255684512512];
 
                 foreach ($arr_phone as $phone) {
                     //send sms
