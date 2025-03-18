@@ -25,13 +25,32 @@
                             {{ Form::token() }}
 
                             <div class="row">
-                                <div class="col-lg-5 col-md-5 col-12">
+                                <div class="col-lg-4 col-md-4 col-12">
+                                    <div class="mb-0">
+                                        @php
+                                            $options = [];
+                                        @endphp
+                                        @foreach ($providers as $val)
+                                            @php
+                                                $options[$val->id] = $val->business_name;
+                                            @endphp
+                                        @endforeach
+                                        @php
+                                            $options = ['' => '-- Service Provider --'] + $options;
+                                        @endphp
+
+                                        {{ Form::select('partner_id', $options, old('partner_id', $post_data['partner_id']), ['class' => 'form-control select2', 'id' => 'partner_id']) }}
+                                        <span class="text-danger">{{ $errors->first('partner_id') }}</span>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-3 col-md-3 col-12">
                                     <div class="mb-3">
                                         {{ Form::date('start_at', old('start_at', $post_data['start_at']), ['placeholder="Start Date..."', 'class="form-control"']) }}
                                     </div>
                                 </div>
 
-                                <div class="col-lg-5 col-md-5 col-12">
+                                <div class="col-lg-3 col-md-3 col-12">
                                     <div class="mb-3">
                                         {{ Form::date('end_at', old('end_at', $post_data['end_at']), ['placeholder="End Date..."', 'class="form-control"']) }}
                                     </div>
@@ -98,12 +117,13 @@
                                             <th width="3%">#</th>
                                             <th width="20%">Service Provider</th>
                                             <th>Reference</th>
-                                            <th>Pushed</th>
+                                            <th>Uploaded</th>
                                             <th>Processed</th>
-                                            <th>No. of Success</th>
-                                            <th>No. of Failed</th>
+                                            <th>Status</th>
+                                            <th>Collections</th>
+                                            <th>No. Success</th>
+                                            <th>No.Failed</th>
                                             <th>Created Date</th>
-                                            <th>Updated Date</th>
                                             <th style="width: 20px; !important">Actions</th>
                                         </tr>
                                     </thead>
@@ -132,11 +152,19 @@
                                                         @endif
                                                     @endif
                                                 </td>
-                                                <td class="text-sm-end">{{ $values->success }}</td>
-                                                <td class="text-sm-end">{{ $values->failed }}</td>
+                                                <td>
+                                                    @if($values->pushed == 0 && $values->failed == 0)
+                                                        <span class="badge badge-pill badge-soft-warning">On Progress</span>
+                                                    @elseif($values->processed == 1 && $values->failed == 0)
+                                                        <span class="badge badge-pill badge-soft-success">Pass</span>
+                                                    @elseif($values->processed == 1  && $values->failed == 1)
+                                                        <span class="badge badge-pill badge-soft-danger">Failed</span>
+                                                    @endif
+                                                </td>
+                                                <td class="text-sm-end">{{ $values->number_of_collections }}</td>
+                                                <td class="text-sm-end">{{ $values->number_of_success }}</td>
+                                                <td class="text-sm-end">{{ $values->number_of_failed }}</td>
                                                 <td>{{ date('d-m-Y', strtotime($values->created_at)) }}</td>
-                                                <td>{{ date('d-m-Y', strtotime($values->updated_at)) }}</td>
-
                                                 <td>
                                                    <a href="{{ route('collections.show', $values->id) }}" title="View Batch"
                                                         class="btn btn-xss">

@@ -162,7 +162,7 @@ class DeductionService
 
         //5. Update debit order end_date
         $last_installment_date = date('Y-m-d', strtotime($last_installment_date . $number_of_days));
-        $debitOrder->end_date = $last_installment_date;
+        $debitOrder->end_date = date('Y-m-d', strtotime($last_installment_date . " +1 year")); //add cap of 1 year
         $debitOrder->save();
 
         return 200;
@@ -388,4 +388,10 @@ class DeductionService
 
         return $cur_collection_reference;
     }
+
+    //check for duplicate
+
+    //check if mandate end date pass
+
+    //check if collected this month
 }

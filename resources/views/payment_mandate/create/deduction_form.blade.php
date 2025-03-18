@@ -151,7 +151,6 @@
                                 @php
                                     $options = [
                                         'MONTHLY' => 'Monthly',
-                                        'WEEKLY' => 'Weekly',
                                     ];
                                     $options = ['' => 'Select'] + $options;
                                 @endphp

@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\CollectionBatch;
+use App\Models\CollectionDebitOrder;
 use App\Models\Installment;
 use App\Services\BankApiService;
 use App\Services\BankPayloadService;
@@ -48,7 +49,7 @@ class CreateFailedCollectionBatch extends Command
         $deductionService = new DeductionService();
 
         //FAILED collection batch
-        $collection_batches = CollectionBatch::where('collectionReference', '=', 10091)->get();
+        $collection_batches = CollectionBatch::where('collectionReference', '=', 10156)->get();
 
         if ($collection_batches) {
             foreach ($collection_batches as $batch) {
@@ -70,8 +71,6 @@ class CreateFailedCollectionBatch extends Command
 
                     //response
                     $response_csv = $batch->request_csv;
-                    Log::debug("Batch");
-                    Log::debug($response_csv);
 
                     // Convert the data into an array of rows
                     $rows = explode("\n", $response_csv);
@@ -80,6 +79,7 @@ class CreateFailedCollectionBatch extends Command
                     $rows = array_filter($rows);
 
                     //Declare variables
+                    $number_of_collections = 0;
                     $arr_installments = [];
                     $arr_accounts = [];
 
@@ -100,25 +100,55 @@ class CreateFailedCollectionBatch extends Command
                             $account_name = strtoupper($installment->debitOrder->customerAccount->account_name);
                             $account_number = $installment->debitOrder->customerAccount->account_number;
                             $mandate_reference = $installment->debitOrder->reference;
+                            $debit_order_id = $installment->debitOrder->id;
+                            $periodicity = $installment->debitOrder->periodicity;
                             $installment_id = $installment->id;
                             $payment_amount = $installment->installment_amount;
+                            $payment_date = $installment->payment_date;
                             $debit_end_date = Carbon::parse($installment->debitOrder->end_date);
                             $deleted = $installment->debitOrder->deleted;
 
-                            //check if debit mandate expire
-                            if ($debit_end_date->gte(Carbon::now()) && $deleted == 0) {
-                                //check if account exists in this batch
-                                if (!in_array($account_number, $arr_accounts)) {
-                                    //create csv file
-                                    $csv .= "{$installment_id};016;NMB;{$mandate_reference};{$account_name};{$account_number};{$payment_amount}\n";
+                            //1.0: Delete the collection_debit_order where payment_date and debit_order_id
+                            $delete_cdo = CollectionDebitOrder::where(['debit_order_id' => $debit_order_id])
+                                ->whereMonth('payment_at', Carbon::parse($payment_date)->format('m'))->delete();
 
-                                    //append account in array
-                                    array_push($arr_accounts, $account_number);
+                            //2.0: check if periodicity == MONTHLY
+                            if ($periodicity == "MONTHLY") {
+                                //3.0: check if debit mandate expire
+                                if ($debit_end_date->gte(Carbon::now()) && $deleted == 0) {
+                                    //4.0: check if account exists in this batch
+                                    if (!in_array($account_number, $arr_accounts)) {
+                                        //5.0: check if the mandate reference debited this month
+                                        $collection_debit_order = CollectionDebitOrder::where(['debit_order_id' => $debit_order_id])
+                                            ->where(function ($query) {
+                                                $query->where('status', 'CREATED')
+                                                    ->orWhere('status', 'SUCCESS');
+                                            })->whereMonth('payment_at', Carbon::parse($payment_date)->format('m'));
 
-                                    //update array installments
-                                    array_push($arr_installments, $installment_id);
+                                        if ($collection_debit_order->count() == 0) {
+                                            //create csv file
+                                            $csv .= "{$installment_id};016;NMB;{$mandate_reference};{$account_name};{$account_number};{$payment_amount}\n";
+
+                                            //append account in array
+                                            array_push($arr_accounts, $account_number);
+
+                                            //update array installments
+                                            array_push($arr_installments, $installment_id);
+
+                                            // create collection debit order
+                                            $create_collection_debit_order = CollectionDebitOrder::create([
+                                                'collection_batch_id' => $batch->id,
+                                                'debit_order_id' => $debit_order_id,
+                                                'status' => 'CREATED',
+                                                'payment_at' => $payment_date
+                                            ]);
+
+                                            //increment number of collections
+                                            $number_of_collections += 1;
+                                        }
+                                    }
                                 }
-                            } 
+                            }
                         }
                     }
 
@@ -128,6 +158,7 @@ class CreateFailedCollectionBatch extends Command
                     //check if installments is not null
                     if ($arr_installments) {
                         $new_batch->request_csv = $csv;
+                        $new_batch->number_of_collections = $number_of_collections;
                         $new_batch->installment_ids = implode(",", $arr_installments);
                         $new_batch->save();
                     } else {
