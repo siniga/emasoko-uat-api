@@ -117,6 +117,8 @@ class CollectionStatusJob implements ShouldQueue
                     Log::debug("== Failed Collection CSV ==");
                     Log::debug($data);
 
+                    $response = $deduction_service->updateFailedInstallments($data);
+
                     //send SMS when batch failed
                     $message = "Collection batch number " . $collection_reference . " failed from NMB end. Review and resend the batch.";
                     $arr_phone = [255717705746, 255656314330];
@@ -128,6 +130,7 @@ class CollectionStatusJob implements ShouldQueue
                     }
 
                     //1.3: process batch
+                    $collection_batch->number_of_failed = $response[0];
                     $collection_batch->failed = 1;
                     $collection_batch->save();
                 } else if ($response_code == 239) {

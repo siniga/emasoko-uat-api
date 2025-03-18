@@ -251,6 +251,49 @@ class DeductionService
         return [$success_installments, $failed_installments];
     }
 
+    public function updateFailedInstallments($data)
+    {
+        //Convert the data into an array of rows
+        $rows = explode("\n", $data);
+
+        //remove empty rows
+        $rows = array_filter($rows);
+
+        //count success and failed installments
+        $success_installments = 0;
+        $failed_installments = 0;
+
+        //2. process installment
+        foreach ($rows as $index => $row) {
+            // Skip the first row as it contains headers
+            if ($index === 0) {
+                continue;
+            }
+
+            // Split the row into individual fields using semicolon as delimiter
+            $fields = explode(";", $row);
+
+            //get installment from id
+            $installment = Installment::where('id', '=', $fields[0])->first();
+
+            //check if installment exists AND status != CLOSED
+            if ($installment && $installment->status != "CLOSED") {
+                //status and paid amount
+                $message = ucwords(strtolower($fields[8]));
+
+                //updated status of installment
+                $installment->status = "FAILED";
+                $installment->remarks = $message;
+                $installment->save();
+
+                //increment failed count
+                $failed_installments += 1;
+            }
+        }
+
+        return [$failed_installments];
+    }
+
     //process installment
     public function processInstallment(Installment $installment, $amount, $reference)
     {
