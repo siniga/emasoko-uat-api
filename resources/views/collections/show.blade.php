@@ -115,11 +115,11 @@
                                         <th width=25%>Status</th>
                                         <td width=25%>
                                             @if($batch->pushed == 0 && $batch->failed == 0)
-                                                <span class="badge badge-pill badge-soft-warning">On Progress</span>
+                                                <span class="badge bg-warning">On Progress</span>
                                             @elseif($batch->processed == 1 && $batch->failed == 0)
-                                                <span class="badge badge-pill badge-soft-success">Pass</span>
+                                                <span class="badge badge-success">Pass</span>
                                             @elseif($batch->processed == 1  && $batch->failed == 1)
-                                                <span class="badge badge-pill badge-soft-danger">Failed</span>
+                                                <span class="badge badge-danger">Failed</span>
                                             @endif
                                         </td>
                                     </tr>
@@ -391,7 +391,7 @@
 
                         }).finally(() => {
                             this.formLoading = false;
-                            this.btnStatus = '<i class="fa fa-check"></i> Collection Status';
+                            this.btnStatus = '<i class="fa fa-check"></i> Query Status';
                         });
                 },
             }
