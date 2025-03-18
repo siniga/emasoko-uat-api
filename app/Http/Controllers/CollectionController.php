@@ -557,12 +557,12 @@ class CollectionController extends Controller
             $collection_debit_order = CollectionDebitOrder::where(['collection_batch_id' => $val->id]);
 
             if($collection_debit_order->count() > 0){
-                $number_of_collection = $collection_debit_order->count();
+                $number_of_collections = $collection_debit_order->count();
 
-                //update 
-                $collection_debit_order = $collection_debit_order->first();
-                $collection_debit_order->number_of_collection = $number_of_collection;
-                $collection_debit_order->save();
+                //update collection batch
+                $collection_batch = CollectionBatch::where(['id' => $val->id])->first();
+                $collection_batch->number_of_collections = $number_of_collections;
+                $collection_batch->save();
             }
         }
 
