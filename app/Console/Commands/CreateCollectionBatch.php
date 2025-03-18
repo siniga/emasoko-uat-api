@@ -51,8 +51,8 @@ class CreateCollectionBatch extends Command
     {
         //Limit
         $limit = 250;
-        //$current_date = Carbon::now(); //today batch
-        $current_date = Carbon::now()->addDays(1); //2 days from today
+        $current_date = Carbon::now(); //today batch
+        //$current_date = Carbon::now()->addDays(7); //2 days from today 25/03
         Log::debug("== Creating collection batch: '{$current_date}' ==");
 
         //initialize deduction service
@@ -61,7 +61,7 @@ class CreateCollectionBatch extends Command
         $partners = Partner::whereHas('debitOrders', function ($query) use ($current_date) {
             return $query->where(['contract_status' => 'OPEN', 'channel' => 'NMB', 'approved' => 1, 'status' => 240, 'deleted' => 0])
                 ->whereDate('next_debit_date', "=", $current_date);
-        })->get();
+        })->where('partners.status', '=', 202)->get();
 
         foreach ($partners as $partner) {
             //1.0: Number of installment
@@ -166,7 +166,8 @@ class CreateCollectionBatch extends Command
 
                             //send Notification of batch creation
                             $message = "Collection batch number " . $collection_reference . " created. Review and approve to the next stage.";
-                            $arr_phone = [255717705746, 255656314330, 255629602290, 255684512512];
+                            $arr_phone = [255717705746, 255656314330];
+                            //$arr_phone = [255717705746, 255656314330, 255629602290, 255684512512];
 
                             foreach ($arr_phone as $phone) {
                                 //send sms

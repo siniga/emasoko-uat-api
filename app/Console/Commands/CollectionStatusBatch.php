@@ -53,7 +53,7 @@ class CollectionStatusBatch extends Command
         $bankPayload = new BankPayloadService();
         $bankApi =  new BankApiService();
 
-        $collection_batches = CollectionBatch::where('collectionReference', '>', 10100)->orderBy('collectionReference', 'ASC');
+        $collection_batches = CollectionBatch::where('collectionReference', '>', 10160)->orderBy('collectionReference', 'ASC');
 
         if ($collection_batches->count() > 0) {
             //take the first 10 collection batches

@@ -411,20 +411,21 @@ class CollectionController extends Controller
         $title = "Upload Collection Batch";
         Log::debug($request->all());
 
-        // //collection batch
-        // $collection_batch = CollectionBatch::where(['id' => $request->batch_id])->firstOrFail();
+        //collection batch
+        $collection_batch = CollectionBatch::where(['id' => $request->batch_id])->firstOrFail();
+        //Log::debug($collection_batch);
 
-        // if (!empty($collection_batch->request_csv)) {
-        //     //1. Create parameters
-        //     $csv = $collection_batch->request_csv;
-        //     $arr_installments = explode(",", $collection_batch->installment_ids);
+        if (!empty($collection_batch->request_csv)) {
+            //1. Create parameters
+            $csv = $collection_batch->request_csv;
+            $arr_installments = explode(",", $collection_batch->installment_ids);
 
-        //     //2. Create payload for collection 
-        //     $payload = $this->payloadService->collectionPayload($collection_batch, $csv);
+            //2. Create payload for collection 
+            $payload = $this->payloadService->collectionPayload($collection_batch, $csv);
 
-        //     //3. BackgroundJob for creating collection batches
-        //     dispatch(new PushCollectionJob($payload, $arr_installments));
-        // }
+            //3. BackgroundJob for creating collection batches
+            dispatch(new PushCollectionJob($payload, $arr_installments));
+        }
 
         //response
         return response()->json(['success' => true, 'success_msg' => "Collection batch uploaded."], 200);
