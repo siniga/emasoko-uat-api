@@ -548,4 +548,24 @@ class CollectionController extends Controller
 
         return response()->json(['error' => false, 'message' => 'Collection debit orders created']);
     }
+
+    public function update_debit_orders()
+    {
+        $batches = CollectionBatch::where(['deleted' => 0])->get();
+
+        foreach($batches as $val){
+            $collection_debit_order = CollectionDebitOrder::where(['collection_batch_id' => $val->id]);
+
+            if($collection_debit_order->count() > 0){
+                $number_of_collection = $collection_debit_order->count();
+
+                //update 
+                $collection_debit_order = $collection_debit_order->first();
+                $collection_debit_order->number_of_collection = $number_of_collection;
+                $collection_debit_order->save();
+            }
+        }
+
+        return response()->json(['error' => false, 'success' => 'Debit order updated']);
+    }
 }
