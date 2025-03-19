@@ -49,7 +49,7 @@ class CreateFailedCollectionBatch extends Command
         $deductionService = new DeductionService();
 
         //FAILED collection batch
-        $collection_batches = CollectionBatch::where('collectionReference', '=', 10159)->get();
+        $collection_batches = CollectionBatch::where('collectionReference', '=', 10167)->get();
 
         if ($collection_batches) {
             foreach ($collection_batches as $batch) {
