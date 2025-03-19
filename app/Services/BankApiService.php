@@ -133,24 +133,24 @@ class BankApiService
         $partner = Partner::where('reference', '=', $payload['data']['corporateReference'])->first();
         //$partner->http_response_status_json = $response;
 
-        //decode the response 
+        //Decode the response 
         $response = json_decode($response, true);
 
-        //logging response
+        //Logging response
         Log::debug('== CorporateStatus Response  ==');
         Log::debug($response);
 
         if (strtolower($response['status']) == "success") {
             $response_code = $response['data']['response'][0]['responseCode'];
-
-            if ($response_code == 240)
-                $partner->status = 202;
-            else
-                $partner->status = 201;
-
-            $response_code = 202; //response code
             $remarks = $response['data']['response'][0]['responseDescription'];
 
+            // check for response code
+            if ($response_code == 240)
+                $response_code = 202;
+            else
+                $response_code = 203;
+
+            $partner->status = $response_code;
             $partner->http_response_code = $response['data']['response'][0]['responseCode'];
             $partner->remarks = $response['data']['response'][0]['responseDescription'];
             $partner->save();

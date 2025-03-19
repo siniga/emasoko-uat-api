@@ -772,7 +772,7 @@ class CompanyController extends Controller
                 //check for CRDB partner accounts
                 $crdb_partner_account = PartnerAccount::where(['partner_id' => $partner->id, 'account_type_id' => 1, 'account_id' => 2]);
 
-                if($nmb_partner_account->count() > 0) {
+                if ($nmb_partner_account->count() > 0) {
                     $nmb_partner_account = $nmb_partner_account->first();
 
                     //create payload
@@ -785,7 +785,7 @@ class CompanyController extends Controller
                     $success_msg = "Service provider approved and pending approval from NMB.";
                 }
 
-                if($crdb_partner_account->count() > 0) {
+                if ($crdb_partner_account->count() > 0) {
                     $crdb_partner_account = $crdb_partner_account->first();
 
                     //approve partner account
@@ -799,7 +799,7 @@ class CompanyController extends Controller
                     //create success msg
                     $success_msg = "Service provider approved.";
                     $http_status_code = 202;
-                } 
+                }
             }
 
             //response
@@ -828,7 +828,7 @@ class CompanyController extends Controller
             $http_response_code = $arr_response[0];
             $remarks = $arr_response[1];
 
-            if ($http_response_code == 202) {
+            if ($http_response_code == 202 || $http_response_code == 203) {
                 return response()->json(
                     [
                         "success" => true,
