@@ -141,10 +141,16 @@ class BankApiService
         Log::debug($response);
 
         if (strtolower($response['status']) == "success") {
+            $response_code = $response['data']['response'][0]['responseCode'];
+
+            if ($response_code == 240)
+                $partner->status = 202;
+            else
+                $partner->status = 201;
+
             $response_code = 202; //response code
             $remarks = $response['data']['response'][0]['responseDescription'];
 
-            $partner->status = 202;
             $partner->http_response_code = $response['data']['response'][0]['responseCode'];
             $partner->remarks = $response['data']['response'][0]['responseDescription'];
             $partner->save();
