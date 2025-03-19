@@ -16,7 +16,6 @@ class Kernel extends ConsoleKernel
         Commands\CreateCollectionBatch::class,
         Commands\PushCollectionBatch::class,
         Commands\CollectionStatusBatch::class,
-        Commands\SendMessage::class,
     ];
 
     /**
@@ -28,13 +27,13 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         // collection batches 
-        $schedule->command('create:batches')->dailyAt('04:00');
-        $schedule->command('push:batches')->everyTwoHours();
-        $schedule->command('collection:status')->dailyAt('21:00');
+        $schedule->command('create:batches')->dailyAt('01:00');
+        //$schedule->command('push:batches')->everyTwoHours();
+        $schedule->command('collection:status')->everyTwoHours();
 
         //summary reports
         $schedule->command('send:daily-report-summary')->dailyAt('23:50');
-        $schedule->command('send:monthly-report-summary')->lastDayOfMonth('23:30');
+        //$schedule->command('send:monthly-report-summary')->lastDayOfMonth('23:30');
     }
 
     /**
