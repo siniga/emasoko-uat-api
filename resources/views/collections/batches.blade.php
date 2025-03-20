@@ -121,8 +121,8 @@
                                             <th>Processed</th>
                                             <th>Status</th>
                                             <th>Collections</th>
-                                            <th>No. Success</th>
-                                            <th>No.Failed</th>
+                                            {{-- <th>No. Success</th>
+                                            <th>No.Failed</th> --}}
                                             <th>Created Date</th>
                                             <th style="width: 20px; !important">Actions</th>
                                         </tr>
@@ -162,8 +162,8 @@
                                                     @endif
                                                 </td>
                                                 <td class="text-sm-end">{{ $values->number_of_collections }}</td>
-                                                <td class="text-sm-end">{{ $values->number_of_success }}</td>
-                                                <td class="text-sm-end">{{ $values->number_of_failed }}</td>
+                                                {{-- <td class="text-sm-end">{{ $values->number_of_success }}</td>
+                                                <td class="text-sm-end">{{ $values->number_of_failed }}</td> --}}
                                                 <td>{{ date('d-m-Y', strtotime($values->created_at)) }}</td>
                                                 <td>
                                                    <a href="{{ route('collections.show', $values->id) }}" title="View Batch"

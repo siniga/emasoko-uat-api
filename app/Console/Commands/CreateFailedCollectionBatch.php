@@ -112,6 +112,7 @@ class CreateFailedCollectionBatch extends Command
                             //updated installment set created = 0 and pushed = 0
                             $installment->created = 0;
                             $installment->pushed = 0;
+                            $installment->status = "OPEN";
                             $installment->save();
 
                             //1.0: Delete the collection_debit_order where payment_date and debit_order_id

@@ -24,8 +24,7 @@ class Installment extends Model
         $installments = $installments->whereHas('debitOrder', function ($query) {
             $query->where('debit_orders.approved', '=', 1)
                 ->where('debit_orders.deleted', '=', 0)
-                ->where('debit_orders.status', '=', 240)
-                ->where('debit_orders.contract_status', '=', "OPEN");
+                ->where('debit_orders.status', '=', 240);
         });
 
         if ($user->hasRole('Partner')) {

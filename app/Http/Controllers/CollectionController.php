@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Classes\Messaging;
 use App\Exports\CollectionCreatedExport;
+use App\Exports\CollectionMonthly;
 use App\Exports\CollectionProcessedExport;
 use App\Http\Requests\CollectionRequest;
 use App\Jobs\CollectionStatusJob;
@@ -21,9 +22,11 @@ use App\Services\DeductionService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 use Maatwebsite\Excel\Facades\Excel;
+use Psy\VersionUpdater\Installer;
 
 class CollectionController extends Controller
 {
@@ -461,6 +464,375 @@ class CollectionController extends Controller
         //response
         return response()->json(['success' => true, 'success_msg' => "Collection status successful fetched."], 200);
     }
+
+    public function expected_monthly(Request $request)
+    {
+        //current date
+        $current_year = date('Y');
+        $current_month = date('m');
+
+        //partners
+        $partners = Partner::filterCondition()->where('status', 202)->get();
+
+        $arr_data = [];
+        foreach ($partners as $partner) {
+            //collection stats
+            $installments = Installment::select(
+                DB::raw('COALESCE(COUNT(installments.id), 0) as number_of_collection'),
+                DB::raw('COALESCE(SUM(installments.installment_amount), 0) as total_amount'),
+                DB::raw('COALESCE(SUM(installments.outstanding_amount), 0) as outstanding_amount'),
+                DB::raw('COALESCE(SUM(installments.current_balance), 0) as paid_amount')
+            )->whereHas('debitOrder', function ($query) use ($partner) {
+                $query->where('debit_orders.partner_id', '=', $partner->id)
+                    ->where('debit_orders.approved', '=', 1)
+                    ->where('debit_orders.deleted', '=', 0)
+                    ->where('debit_orders.status', '=', 240);
+            })->toBase();
+
+            //this month collection
+            $this_month = $installments->whereMonth('payment_date', $current_month)
+                ->whereYear('payment_date', $current_year)->get();
+
+            //create dictionary
+            if ($this_month[0]->number_of_collection > 0) {
+                $arr_data[] = [
+                    'uuid' => $partner->uuid,
+                    'partner_name' => $partner->business_name,
+                    'number_of_collection' => $this_month[0]->number_of_collection,
+                    'total_amount' => $this_month[0]->total_amount,
+                    'outstanding_amount' => $this_month[0]->outstanding_amount,
+                    'paid_amount' => $this_month[0]->paid_amount,
+                    'percent' => round(($this_month[0]->paid_amount / $this_month[0]->total_amount) * 100, 2)
+                ];
+            }
+        }
+
+        //sort array
+        $arr_data = collect($arr_data)->sortBy('number_of_collection')->reverse()->toArray();
+
+        //title
+        $display_current_month = date('F');
+        $title = "Expected Monthly Collection - $display_current_month, $current_year";
+
+        //render view
+        return view('collections.expected_collection_monthly', compact('title', 'arr_data'));
+    }
+
+    public function expected_monthly_by_partner($uuid)
+    {
+        //current date
+        $current_year = date('Y');
+        $current_month = date('m');
+
+        //partner
+        $partner = Partner::where(['uuid' => $uuid])->firstOrfail();
+
+        //arr installments
+        $arr_installments = [];
+
+        //installment this month
+        $installments = Installment::filterCondition()
+            ->whereHas('debitOrder', function ($query) use ($partner) {
+                $query->where('debit_orders.partner_id', '=', $partner->id)
+                    ->where('debit_orders.approved', '=', 1)
+                    ->where('debit_orders.deleted', '=', 0)
+                    ->where('debit_orders.status', '=', 240);
+            })
+            ->whereMonth('payment_date', $current_month)
+            ->whereYear('payment_date', $current_year)
+            ->orderBy('payment_date')
+            ->get();
+
+        foreach ($installments as $val) {
+            $arr_installments[] = [
+                'id' => $val->id,
+                'reference' => $val->debitOrder->reference,
+                'periodicity' => $val->debitOrder->periodicity,
+                'account_name' => strtoupper($val->debitOrder->customerAccount->account_name),
+                'account_number' => $val->debitOrder->customerAccount->account_number,
+                'amount' => $val->installment_amount,
+                'last_paid_amount' => $val->last_paid_amount,
+                'current_balance' => $val->current_balance,
+                'outstanding_amount' => $val->outstanding_amount,
+                'status' => $val->status,
+                'remarks' => $val->remarks,
+                'payment_date' => Carbon::parse($val->payment_date)->format('d-m-Y'),
+                'start_date' => Carbon::parse($val->debitOrder->start_date)->format('d-m-Y'),
+                'end_date' => Carbon::parse($val->debitOrder->end_date)->format('d-m-Y'),
+            ];
+        }
+
+        //title
+        $display_current_month = date('F');
+        $title = "Monthly Collection - $display_current_month, $current_year";
+
+        //render view
+        return view('collections.expected_collection_monthly_by_partner', compact('title', 'partner', 'arr_installments'));
+    }
+
+    public function export_expected_monthly($uuid)
+    {
+        //current date
+        $current_year = date('Y');
+        $current_month = date('m');
+
+        //partner
+        $partner = Partner::where(['uuid' => $uuid])->firstOrfail();
+
+        //arr installments
+        $arr_installments = [];
+
+        //installment this month
+        $installments = Installment::filterCondition()
+            ->whereHas('debitOrder', function ($query) use ($partner) {
+                $query->where('debit_orders.partner_id', '=', $partner->id)
+                    ->where('debit_orders.approved', '=', 1)
+                    ->where('debit_orders.deleted', '=', 0)
+                    ->where('debit_orders.status', '=', 240);
+            })
+            ->whereMonth('payment_date', $current_month)
+            ->whereYear('payment_date', $current_year)
+            ->orderBy('payment_date')
+            ->get();
+
+        foreach ($installments as $val) {
+            $arr_installments[] = [
+                'reference' => $val->debitOrder->reference,
+                'periodicity' => $val->debitOrder->periodicity,
+                'account_name' => strtoupper($val->debitOrder->customerAccount->account_name),
+                'account_number' => $val->debitOrder->customerAccount->account_number,
+                'amount' => $val->installment_amount,
+                'last_paid_amount' => $val->last_paid_amount,
+                'current_balance' => $val->current_balance,
+                'outstanding_amount' => $val->outstanding_amount,
+                'status' => $val->status,
+                'remarks' => $val->remarks,
+                'payment_date' => Carbon::parse($val->payment_date)->format('d-m-Y'),
+                'start_date' => Carbon::parse($val->debitOrder->start_date)->format('d-m-Y'),
+                'end_date' => Carbon::parse($val->debitOrder->end_date)->format('d-m-Y'),
+            ];
+        }
+
+        //create filename
+        $filename = "Expected_Collection_" . date('F') . "_" . $partner->business_name . ".xlsx";
+
+        //return
+        return Excel::download(new CollectionMonthly($arr_installments), $filename);
+    }
+
+    public function actual_monthly(Request $request)
+    {
+        //current date
+        $current_year = date('Y');
+        $current_month = date('m');
+
+        //partners
+        $partners = Partner::filterCondition()->where('status', 202)->get();
+
+        $arr_data = [];
+        foreach ($partners as $partner) {
+            //collection stats
+            $installments = Installment::select(
+                DB::raw('COALESCE(COUNT(installments.id), 0) as number_of_collection'),
+                DB::raw('COALESCE(SUM(installments.installment_amount), 0) as total_amount'),
+                DB::raw('COALESCE(SUM(installments.outstanding_amount), 0) as outstanding_amount'),
+                DB::raw('COALESCE(SUM(installments.current_balance), 0) as paid_amount')
+            )->whereHas('debitOrder', function ($query) use ($partner) {
+                $query->where('debit_orders.partner_id', '=', $partner->id)
+                    ->where('debit_orders.approved', '=', 1)
+                    ->where('debit_orders.deleted', '=', 0)
+                    ->where('debit_orders.status', '=', 240);
+            })->toBase();
+
+            //this month collection
+            $this_month = $installments
+                ->whereMonth('payment_date', $current_month)
+                ->whereYear('payment_date', $current_year)->get();
+
+            //create dictionary
+            if ($this_month[0]->paid_amount > 0) {
+                $arr_data[] = [
+                    'uuid' => $partner->uuid,
+                    'partner_name' => $partner->business_name,
+                    'number_of_collection' => $this_month[0]->number_of_collection,
+                    'total_amount' => $this_month[0]->total_amount,
+                    'outstanding_amount' => $this_month[0]->outstanding_amount,
+                    'paid_amount' => $this_month[0]->paid_amount,
+                    'percent' => round(($this_month[0]->paid_amount / $this_month[0]->total_amount) * 100, 2)
+                ];
+            }
+        }
+
+        //sort array
+        $arr_data = collect($arr_data)->sortBy('number_of_collection')->reverse()->toArray();
+
+        //title
+        $display_current_month = date('F');
+        $title = "Actual Monthly Collection - $display_current_month, $current_year";
+
+        //render view
+        return view('collections.actual_collection_monthly', compact('title', 'arr_data'));
+    }
+
+    public function actual_monthly_by_partner($uuid)
+    {
+        //current date
+        $current_year = date('Y');
+        $current_month = date('m');
+
+        //partner
+        $partner = Partner::where(['uuid' => $uuid])->firstOrfail();
+
+        //arr installments
+        $arr_installments = [];
+
+        //installment this month
+        $installments = Installment::filterCondition()
+            ->whereHas('debitOrder', function ($query) use ($partner) {
+                $query->where('debit_orders.partner_id', '=', $partner->id)
+                    ->where('debit_orders.approved', '=', 1)
+                    ->where('debit_orders.deleted', '=', 0)
+                    ->where('debit_orders.status', '=', 240);
+            })
+            ->where('status', 'CLOSED')
+            ->whereMonth('payment_date', $current_month)
+            ->whereYear('payment_date', $current_year)
+            ->orderBy('payment_date')
+            ->get();
+
+        foreach ($installments as $val) {
+            $arr_installments[] = [
+                'id' => $val->id,
+                'reference' => $val->debitOrder->reference,
+                'periodicity' => $val->debitOrder->periodicity,
+                'account_name' => strtoupper($val->debitOrder->customerAccount->account_name),
+                'account_number' => $val->debitOrder->customerAccount->account_number,
+                'amount' => $val->installment_amount,
+                'last_paid_amount' => $val->last_paid_amount,
+                'current_balance' => $val->current_balance,
+                'outstanding_amount' => $val->outstanding_amount,
+                'status' => $val->status,
+                'remarks' => $val->remarks,
+                'payment_date' => Carbon::parse($val->payment_date)->format('d-m-Y'),
+                'start_date' => Carbon::parse($val->debitOrder->start_date)->format('d-m-Y'),
+                'end_date' => Carbon::parse($val->debitOrder->end_date)->format('d-m-Y'),
+            ];
+        }
+
+        //title
+        $display_current_month = date('F');
+        $title = "Monthly Collection - $display_current_month, $current_year";
+
+        //render view
+        return view('collections.actual_collection_monthly_by_partner', compact('title', 'partner', 'arr_installments'));
+    }
+
+    public function export_actual_monthly($uuid)
+    {
+        //current date
+        $current_year = date('Y');
+        $current_month = date('m');
+
+        //partner
+        $partner = Partner::where(['uuid' => $uuid])->firstOrfail();
+
+        //arr installments
+        $arr_installments = [];
+
+        //installment this month
+        $installments = Installment::filterCondition()
+            ->whereHas('debitOrder', function ($query) use ($partner) {
+                $query->where('debit_orders.partner_id', '=', $partner->id)
+                    ->where('debit_orders.approved', '=', 1)
+                    ->where('debit_orders.deleted', '=', 0)
+                    ->where('debit_orders.status', '=', 240);
+            })
+            ->where('status', 'CLOSED')
+            ->whereMonth('payment_date', $current_month)
+            ->whereYear('payment_date', $current_year)
+            ->orderBy('payment_date')
+            ->get();
+
+        foreach ($installments as $val) {
+            $arr_installments[] = [
+                'reference' => $val->debitOrder->reference,
+                'periodicity' => $val->debitOrder->periodicity,
+                'account_name' => strtoupper($val->debitOrder->customerAccount->account_name),
+                'account_number' => $val->debitOrder->customerAccount->account_number,
+                'amount' => $val->installment_amount,
+                'last_paid_amount' => $val->last_paid_amount,
+                'current_balance' => $val->current_balance,
+                'outstanding_amount' => $val->outstanding_amount,
+                'status' => $val->status,
+                'remarks' => $val->remarks,
+                'payment_date' => Carbon::parse($val->payment_date)->format('d-m-Y'),
+                'start_date' => Carbon::parse($val->debitOrder->start_date)->format('d-m-Y'),
+                'end_date' => Carbon::parse($val->debitOrder->end_date)->format('d-m-Y'),
+            ];
+        }
+
+        //create filename
+        $filename = "Actual_Collection_" . date('F') . "_" . $partner->business_name . ".xlsx";
+
+        //return
+        return Excel::download(new CollectionMonthly($arr_installments), $filename);
+    }
+
+    public function expected_daily(Request $request)
+    {
+        //current date
+        $current_date = Carbon::now();
+
+        if ($request->has('payment_at'))
+            $current_date = date('Y-m-d', strtotime($request->input('payment_at')));
+
+        //partners
+        $partners = Partner::filterCondition()->where('status', 202)->get();
+
+        $arr_data = [];
+        foreach ($partners as $partner) {
+            //collection stats
+            $installments = Installment::select(
+                DB::raw('COALESCE(COUNT(installments.id), 0) as number_of_collection'),
+                DB::raw('COALESCE(SUM(installments.installment_amount), 0) as total_amount'),
+                DB::raw('COALESCE(SUM(installments.outstanding_amount), 0) as outstanding_amount'),
+                DB::raw('COALESCE(SUM(installments.current_balance), 0) as paid_amount')
+            )->whereHas('debitOrder', function ($query) use ($partner) {
+                $query->where('debit_orders.partner_id', '=', $partner->id)
+                    ->where('debit_orders.approved', '=', 1)
+                    ->where('debit_orders.deleted', '=', 0)
+                    ->where('debit_orders.status', '=', 240);
+            })->toBase();
+
+            //this month collection
+            $this_month = $installments->whereDate('payment_date', $current_date)->get();
+
+            //create dictionary
+            if ($this_month[0]->number_of_collection > 0) {
+                $arr_data[] = [
+                    'partner_uuid' => $partner->uuid,
+                    'partner_name' => $partner->business_name,
+                    'number_of_collection' => $this_month[0]->number_of_collection,
+                    'total_amount' => $this_month[0]->total_amount,
+                    'outstanding_amount' => $this_month[0]->outstanding_amount,
+                    'paid_amount' => $this_month[0]->paid_amount,
+                    'percent' => round(($this_month[0]->paid_amount / $this_month[0]->total_amount) * 100, 2)
+                ];
+            }
+        }
+
+        //sort array
+        $arr_data = collect($arr_data)->sortBy('number_of_collection')->reverse()->toArray();
+
+        //title
+        $current_date = Carbon::parse($current_date)->format("d F, Y");
+        $title = "Expected Daily Collection - $current_date";
+
+        //render view
+        return view('collections.expected_daily', compact('title', 'arr_data'));
+    }
+
+    public function actual_daily() {}
 
     public function reconciliation(Request $request)
     {

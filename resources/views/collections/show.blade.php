@@ -41,7 +41,8 @@
 
                             <div class="text-sm-end d-none d-sm-block">
                                 <template x-if="deleted==0">
-                                    <template x-if="status==100 || status ==235 || status ==239 || status==249 || status==403 || status==405 || status==500 || status==501">
+                                    <template
+                                        x-if="status==100 || status ==235 || status ==239 || status==249 || status==403 || status==405 || status==500 || status==501">
                                         <a href="{{ route('collections.archive', $batch->id) }}" title="Archive"
                                             class="btn btn-warning text-medium btn-sm archive">
                                             <i class="bx bx-archive-in font-size-12"></i> Archive Batch
@@ -50,18 +51,20 @@
                                 </template>
 
                                 @if (Auth::user()->hasRole(['admin']))
-                                   <template x-if="pushed==0"> 
-                                        <button x-html="btnPush" title="Upload Collection" class="btn btn-outline-success btn-sm"
+                                    <template x-if="pushed==0">
+                                        <button x-html="btnPush" title="Upload Collection"
+                                            class="btn btn-outline-success btn-sm"
                                             x-on:click="pushCollectionBatch();"></button>
                                     </template>
-                                @endif 
+                                @endif
 
                                 @if (Auth::user()->hasRole(['admin']))
-                                   <template x-if="pushed==1"> 
-                                        <button x-html="btnStatus" title="Query Status" class="btn btn-outline-success btn-sm"
+                                    <template x-if="pushed==1">
+                                        <button x-html="btnStatus" title="Query Status"
+                                            class="btn btn-outline-success btn-sm"
                                             x-on:click="fetchCollectionStatus();"></button>
                                     </template>
-                                @endif    
+                                @endif
                             </div>
                         </div>
 
@@ -94,7 +97,7 @@
 
                                         <th width=25%>Uploaded</th>
                                         <td width=25%>
-                                            @if($batch->pushed == 0)
+                                            @if ($batch->pushed == 0)
                                                 <span class="badge bg-danger">No</span>
                                             @elseif($batch->pushed == 1)
                                                 <span class="badge bg-success-1">Yes</span>
@@ -105,7 +108,7 @@
                                     <tr>
                                         <th>Processed</th>
                                         <td>
-                                            @if($batch->processed == 0)
+                                            @if ($batch->processed == 0)
                                                 <span class="badge bg-danger">No</span>
                                             @elseif($batch->processed == 1)
                                                 <span class="badge bg-success-1">Yes</span>
@@ -114,11 +117,11 @@
 
                                         <th width=25%>Status</th>
                                         <td width=25%>
-                                            @if($batch->pushed == 0 && $batch->failed == 0)
+                                            @if ($batch->pushed == 0 && $batch->failed == 0)
                                                 <span class="badge badge-pill badge-soft-warning">On Progress</span>
                                             @elseif($batch->processed == 1 && $batch->failed == 0)
                                                 <span class="badge badge-pill badge-soft-success">Pass</span>
-                                            @elseif($batch->processed == 1  && $batch->failed == 1)
+                                            @elseif($batch->processed == 1 && $batch->failed == 1)
                                                 <span class="badge badge-pill badge-soft-danger">Failed</span>
                                             @endif
                                         </td>
@@ -160,8 +163,8 @@
                             </div>
                         </div>
 
-                        @if(($batch->created = 1 && $batch->pushed == 0) || ($batch->pushed == 1 && $batch->processed == 0))
-                             <div class="row">
+                        @if (($batch->created = 1 && $batch->pushed == 0) || ($batch->pushed == 1 && $batch->processed == 0))
+                            <div class="row">
                                 <div class="col-lg-12">
                                     <div class="table-responsive">
                                         <table class="table table-nowrap align-middle table-bordered">
@@ -173,7 +176,8 @@
 
                                                     <td>
                                                         <a title="Export" class="btn btn-outline-success btn-sm"
-                                                            href="{{ route('collections.export-created', $batch->id) }}"><i class="bx bx-export"></i> Export XLS
+                                                            href="{{ route('collections.export-created', $batch->id) }}"><i
+                                                                class="bx bx-export"></i> Export XLS
                                                         </a>
                                                     </td>
                                                 </tr>
@@ -210,7 +214,7 @@
                             </div>
                         @endif
 
-                        @if($batch->pushed == 1 && $batch->processed == 1)
+                        @if ($batch->pushed == 1 && $batch->processed == 1)
                             <div class="row">
                                 <div class="col-lg-12">
                                     <div class="table-responsive">
@@ -223,14 +227,15 @@
 
                                                     <td>
                                                         <a title="Export" class="btn btn-outline-success btn-sm"
-                                                            href="{{ route('collections.export-processed', $batch->id) }}"><i class="bx bx-export"></i> Export XLS
+                                                            href="{{ route('collections.export-processed', $batch->id) }}"><i
+                                                                class="bx bx-export"></i> Export XLS
                                                         </a>
                                                     </td>
                                                 </tr>
                                             </thead>
 
                                             <tbody>
-                                            <tr>
+                                                <tr>
                                                     <th width="3%">#</th>
                                                     <th width="8%">Mandate Ref</th>
                                                     <th width="12%">Account Name</th>
@@ -250,23 +255,25 @@
                                                 @endphp
 
                                                 @foreach ($arr_installments as $val)
-                        
                                                     <tr>
                                                         <td>{{ $loop->iteration }}</td>
                                                         <td>{{ $val['reference'] }}</td>
                                                         <td>{{ $val['account_name'] }}</td>
                                                         <td>{{ $val['account_number'] }}</td>
                                                         <td class="text-sm-end">{{ number_format($val['amount']) }}</td>
-                                                        
-                                                        <td class="text-sm-end">{{ number_format($val['last_paid_amount']) }}</td>
-                                                        <td class="text-sm-end">{{ number_format($val['outstanding_amount']) }}</td>
+
+                                                        <td class="text-sm-end">
+                                                            {{ number_format($val['last_paid_amount']) }}</td>
+                                                        <td class="text-sm-end">
+                                                            {{ number_format($val['outstanding_amount']) }}</td>
                                                         <td>
-                                                            @if(strtoupper($val['status']) == "CLOSED")
+                                                            @if (strtoupper($val['status']) == 'CLOSED')
                                                                 <span class="badge bg-success-1">PAID</span>
-                                                            @elseif(strtoupper($val['status']) == "FAILED")  
-                                                                <span class="badge bg-danger">UNPAID</span>    
+                                                            @elseif(strtoupper($val['status']) == 'FAILED')
+                                                                <span class="badge bg-danger">UNPAID</span>
                                                             @else
-                                                                <span class="badge bg-warning">{{ strtoupper($val['status']) }}</span>  
+                                                                <span
+                                                                    class="badge bg-warning">{{ strtoupper($val['status']) }}</span>
                                                             @endif
                                                         </td>
                                                         <td>{{ $val['remarks'] }}</td>
@@ -284,7 +291,8 @@
                                                     <td class="text-sm-end">{{ number_format($sum_expected_amount) }}</td>
                                                     <td class="text-sm-end">{{ number_format($sum_paid_amount) }}</td>
                                                     <td class="text-sm-end">{{ number_format($sum_current_balance) }}</td>
-                                                    <td class="text-sm-end">{{ number_format($sum_outstanding_amount) }}</td>
+                                                    <td class="text-sm-end">{{ number_format($sum_outstanding_amount) }}
+                                                    </td>
                                                     <td colspan="2"></td>
                                                 </tr>
                                             </tbody>
@@ -321,7 +329,7 @@
                 formData: {
                     batch_id: "{{ $batch->id }}",
                 },
-               
+
                 formLoading: false,
                 formMessage: "",
                 btnPush: '<i class="fa fa-file-import"></i> Upload Collection',
@@ -378,7 +386,7 @@
                                 "<div class='alert alert-success rounded-sm'>Collection status fetched</div>"
                             );
 
-                            setTimeout(function () {
+                            setTimeout(function() {
                                 location.reload();
                             }, 2000);
 
