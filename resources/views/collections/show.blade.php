@@ -132,10 +132,10 @@
                                             <span>{{ $batch->number_of_collections }}</span>
                                         </td>
 
-                                        <th>Number of Success</th>
+                                        {{-- <th>Number of Success</th>
                                         <td>
-                                            <span>{{ $batch->number_of_collections - $batch->number_of_failed }}</span>
-                                        </td>
+                                            <span>{{ $batch->number_of_collections }}</span>
+                                        </td> --}}
                                     </tr>
 
                                     <tr>
