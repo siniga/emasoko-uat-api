@@ -134,7 +134,7 @@
 
                                         <th>Number of Success</th>
                                         <td>
-                                            <span>{{ $batch->number_of_success }}</span>
+                                            <span>{{ $batch->number_of_collections - $batch->number_of_failed }}</span>
                                         </td>
                                     </tr>
 
