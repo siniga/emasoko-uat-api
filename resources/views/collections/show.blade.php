@@ -270,10 +270,11 @@
                                                             @if (strtoupper($val['status']) == 'CLOSED')
                                                                 <span class="badge bg-success-1">PAID</span>
                                                             @elseif(strtoupper($val['status']) == 'FAILED')
-                                                                <span class="badge bg-danger">UNPAID</span>
+                                                                <span class="badge bg-danger">FAILED</span>
+                                                            @elseif(strtoupper($val['status']) == 'FUNDSCHECK')
+                                                                <span class="badge bg-danger">FUNDSCHECK</span>
                                                             @else
-                                                                <span
-                                                                    class="badge bg-warning">{{ strtoupper($val['status']) }}</span>
+                                                                <span class="badge bg-warning">{{ strtoupper($val['status']) }}</span>
                                                             @endif
                                                         </td>
                                                         <td>{{ $val['remarks'] }}</td>
