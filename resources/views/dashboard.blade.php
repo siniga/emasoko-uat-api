@@ -110,7 +110,7 @@
 
     <div class="row">
         <div class="col-md-3">
-            <a href="#">
+            <a href="{{ route('collections.expected-monthly') }}">
                 <div class="card border-left-info bg-primary shadow h-96 py-2">
                     <div class="card-body">
                         <div class="row no-gutters align-items-center">
@@ -130,7 +130,7 @@
         </div>
 
         <div class="col-md-3">
-            <a href="#">
+            <a href="{{ route('collections.actual-monthly') }}">
                 <div class="card border-left-info bg-success-1 shadow h-96 py-2">
                     <div class="card-body">
                         <div class="row no-gutters align-items-center">
