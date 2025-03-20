@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\DebitOrder;
 use App\Models\Installment;
+use App\Models\Partner;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -65,7 +66,7 @@ class DashboardController extends Controller
 
         //today collection
         $today = $installments->whereDate('payment_date', Carbon::now())->get();
-       
+
         //stats
         $stats  = [
             //number of mandates
@@ -88,16 +89,55 @@ class DashboardController extends Controller
             'today_paid' => $today[0]->paid_amount
         ];
 
-        //pending debit orders
-        $pending_debit_orders = DebitOrder::filterCondition()->where(['approved' => 0])->take(10)->get();
+        //current date
+        $current_year = date('Y');
+        $current_month = date('m');
 
-        //approved debit orders
-        $approved_debit_orders = DebitOrder::filterCondition()->where(['approved' => 1])->take(10)->get();
+        //partners
+        $partners = Partner::filterCondition()->where('status', 202)->get();
 
-        //failed debit orders
-        $failed_debit_orders = DebitOrder::filterCondition()->where(['approved' => 2])->take(10)->get();
+        $arr_data = [];
+        foreach ($partners as $partner) {
+            //collection stats
+            $installments = Installment::select(
+                DB::raw('COALESCE(COUNT(installments.id), 0) as number_of_collection'),
+                DB::raw('COALESCE(SUM(installments.installment_amount), 0) as total_amount'),
+                DB::raw('COALESCE(SUM(installments.outstanding_amount), 0) as outstanding_amount'),
+                DB::raw('COALESCE(SUM(installments.current_balance), 0) as paid_amount')
+            )->whereHas('debitOrder', function ($query) use ($partner) {
+                $query->where('debit_orders.partner_id', '=', $partner->id)
+                    ->where('debit_orders.approved', '=', 1)
+                    ->where('debit_orders.deleted', '=', 0)
+                    ->where('debit_orders.status', '=', 240);
+            })->toBase();
+
+            //this month collection
+            $this_month = $installments
+                ->whereMonth('payment_date', $current_month)
+                ->whereYear('payment_date', $current_year)->get();
+
+            //create dictionary
+            if ($this_month[0]->paid_amount > 0) {
+                $arr_data[] = [
+                    'uuid' => $partner->uuid,
+                    'partner_name' => $partner->business_name,
+                    'number_of_collection' => $this_month[0]->number_of_collection,
+                    'total_amount' => $this_month[0]->total_amount,
+                    'outstanding_amount' => $this_month[0]->outstanding_amount,
+                    'paid_amount' => $this_month[0]->paid_amount,
+                    'percent' => round(($this_month[0]->paid_amount / $this_month[0]->total_amount) * 100, 2)
+                ];
+            }
+        }
+
+        //sort array
+        $arr_data = collect($arr_data)->sortBy('number_of_collection')->reverse()->toArray();
+
+        //title
+        $display_current_month = date('F');
+        $collection_title = "Actual Monthly Collection - $display_current_month, $current_year";
 
         //render view
-        return view('dashboard', compact('title', 'pending_debit_orders', 'approved_debit_orders', 'failed_debit_orders', 'stats'));
+        return view('dashboard', compact('title', 'collection_title' ,'arr_data', 'stats'));
     }
 }
