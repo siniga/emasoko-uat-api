@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Account;
 use App\Models\DebitOrder;
 use App\Models\Installment;
+use App\Models\Partner;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use DateInterval;
@@ -168,7 +169,7 @@ class DashboardChartController extends Controller
             $current_date = $current_date;
 
         Log::debug("current date");
-        Log::debug($current_date);    
+        Log::debug($current_date);
 
 
         //get dates
@@ -253,6 +254,21 @@ class DashboardChartController extends Controller
 
         //response
         return response()->json(['error' => FALSE, 'chart' => $data_array], 200);
+    }
+
+    //collection success rate
+    public function monthly_collection_rate($uuid)
+    {
+        //current date
+        $current_year = date('Y');
+        $current_month = date('m');
+
+        //partner
+        $partner = Partner::where(['uuid' => $uuid])->firstOrfail();
+
+        
+
+
     }
 
     public function get_dates($currentDate)
