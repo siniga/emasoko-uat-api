@@ -215,7 +215,6 @@ class MandateController extends Controller
         return $response;
     }
 
-
     //callback function from Airtel
     public function callback(Request $request)
     {

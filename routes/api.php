@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Airtel\CollectionController as AirtelCollectionController;
 use App\Http\Controllers\Api\Airtel\MandateController as AirtelMandateController;
 use App\Http\Controllers\Api\CollectionController;
 use App\Http\Controllers\Api\PaymentMandateController;
@@ -78,4 +79,13 @@ Route::post('mandate/crdb/callback', [CRDBMandateController::class, 'callback'])
 
 //Airtel apis
 Route::post('mandate/airtel', [AirtelMandateController::class, 'create']);
+Route::post('mandate/airtel/status', [AirtelMandateController::class, 'query_status']);
+Route::post('mandate/airtel/cancel', [AirtelMandateController::class, 'cancel']);
 Route::post('mandate/airtel/callback', [AirtelMandateController::class, 'callback']);
+
+Route::post('collection/airtel', [AirtelCollectionController::class, 'create']);
+Route::post('collection/airtel/inquiry', [AirtelCollectionController::class, 'inquiry']);
+Route::post('collection/airtel/refund-inquiry', [AirtelCollectionController::class, 'refund_inquiry']);
+Route::post('collection/airtel/recovery', [AirtelCollectionController::class, 'recovery']);
+Route::post('collection/airtel/recovery-inquiry', [AirtelCollectionController::class, 'recovery_inquiry']);
+Route::post('collection/airtel/recovery-refund', [AirtelCollectionController::class, 'recovery_refund']);

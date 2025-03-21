@@ -86,7 +86,6 @@ class CollectionController extends Controller
 
     public function refund() {}
 
-
     public function refund_inquiry(Request $request)
     {
         $AUTH_BEARER_TOKEN = $this->auth->generate();
