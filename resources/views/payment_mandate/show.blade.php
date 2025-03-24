@@ -45,7 +45,7 @@
                                     <i class="bx bx-plus font-size-12"></i> Create Mandate
                                 </a>
 
-                                <template x-if="status==100 || status==200 || status==403 || status==430 || status==500 || status==501">
+                                <template x-if="status==100 || status==200 || status==249 || status==403 || status==430 || status==500 || status==501">
                                     <a href="{{ route('payment-mandate.create-account', [$debit_order->customerAccount->uuid, $debit_order->uuid] ) }}" title="Edit"
                                         class="btn btn-secondary text-medium btn-sm">
                                         <i class="bx bx-edit font-size-12"></i> Edit Mandate
