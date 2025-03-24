@@ -417,4 +417,75 @@ class MandateRegistrationController extends Controller
 
         return $filename;
     }
+
+
+
+    //APP Filter Mandates
+    protected function filter_mandates(Request $request)
+    {
+
+        // start_date           2025-03-26
+        // end_date             2025-03-26
+        // account_holder       Brayson
+        // mandate_status       APPROVED
+        // channel              CRDB
+        $mandates = DebitOrder::orderBy('id', 'desc')->take(10)->get();
+
+
+        return response()->json([
+            'success' => true,
+            'response_code' => 200,
+            'mandates' => $mandates,
+        ]);
+    }
+
+    //APP
+    protected function get_mandate_by_id(Request $request)
+    {
+
+        // uuid           mandate_uuid
+        $mandate = DebitOrder::orderBy('id', 'desc')->first();
+
+        return response()->json([
+            'success' => true,
+            'response_code' => 200,
+            'mandate' => $mandate,
+        ]);
+    }
+
+
+    //APP
+    protected function archive_mandate(Request $request)
+    {
+
+        // uuid           mandate_uuid
+        return response()->json([
+            'success' => true,
+            'response_code' => 200,
+            'message' => "Succesfully archived mandate!"
+        ]);
+    }
+
+    //APP
+    protected function cancel_mandate(Request $request)
+    {
+
+        // uuid           mandate_uuid
+        return response()->json([
+            'success' => true,
+            'response_code' => 200,
+            'message' => "Succesfully canceled mandate!"
+        ]);
+    }
+
+    protected function delete_mandate(Request $request)
+    {
+
+        // uuid           mandate_uuid
+        return response()->json([
+            'success' => true,
+            'response_code' => 200,
+            'message' => "Succesfully deleted mandate!"
+        ]);
+    }
 }
