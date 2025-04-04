@@ -102,11 +102,17 @@ Route::controller(AuthController::class)->group(function () {
     Route::post('v1/login', 'login');
 });
 
-
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('v1/sp-homepage', [MobileAppController::class, 'serivice_provider_dashboard']);
+    Route::get('v1/sp-homepage', [MobileAppController::class, 'summaries']);
+    Route::get('v1/debit-orders', [MobileAppController::class, 'debit_orders']);
+    Route::get('v1/debit-orders-summaries', [MobileAppController::class, 'debit_orders_summaries']);
+    Route::get('v1/deduction-histories/{uuid}', [MobileAppController::class, 'deduction_histories']);
+    Route::get('v1/actual-collections', [MobileAppController::class, 'actual_collections']);
+
     Route::post('v1/filter-collection-batches', [CollectionController::class, 'filter_collection_batches']);
     Route::post('v1/get-deduction-history', [CollectionController::class, 'get_deduction_history']);
+
+    //debit orders
     Route::post('v1/filter-mandates', [MandateRegistrationController::class, 'filter_mandates']);
     Route::post('v1/create-mandate', [MandateRegistrationController::class, 'create']);
     Route::post('v1/send-otp-code', [MandateRegistrationController::class, 'createOtp']);

@@ -15,8 +15,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-use function GuzzleHttp\Promise\rejection_for;
-
 class DashboardChartController extends Controller
 {
     //Pending and Approved Mandates

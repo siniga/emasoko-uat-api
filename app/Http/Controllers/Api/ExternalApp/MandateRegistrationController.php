@@ -419,7 +419,6 @@ class MandateRegistrationController extends Controller
     }
 
 
-
     //APP Filter Mandates
     protected function filter_mandates(Request $request)
     {
