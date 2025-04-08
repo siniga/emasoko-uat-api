@@ -45,11 +45,8 @@ class MobileAppController extends Controller
         //summation of mandate values
         $total_mandate_value = $mandates[0]['total_amount'] + $mandates[1]['total_amount'] + $mandates[2]['total_amount'];
 
-
         //recent debit orders
         $recent_debit_orders = DebitOrder::filterCondition()->take(10)->get();
-
-        //
 
         // graph stats
         $stats = [13545454, 23545454, 12545454, 23545454, 13545454, 23545454, 23545454, 23545454, 23545454, 23545454, 23545454, 23545454];

@@ -26,18 +26,6 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::controller(AuthController::class)->group(function () {
-    //Route::post('register', 'register');
-    Route::post('login', 'login');
-});
-
-Route::middleware('auth:sanctum')->group(function () {
-    Route::post('create-mandate', [MandateRegistrationController::class, 'create']);
-    Route::post('verify-otp', [MandateRegistrationController::class, 'verifyOtp']);
-    Route::post('create-otp', [MandateRegistrationController::class, 'createOtp']);
-});
-
-
 //contacts 
 Route::post('contacts', [CompanyController::class, 'contacts']);
 
@@ -102,7 +90,7 @@ Route::controller(AuthController::class)->group(function () {
     Route::post('v1/login', 'login');
 });
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('auth:api')->group(function () {
     Route::get('v1/sp-homepage', [MobileAppController::class, 'summaries']);
     Route::get('v1/debit-orders', [MobileAppController::class, 'debit_orders']);
     Route::get('v1/debit-orders-summaries', [MobileAppController::class, 'debit_orders_summaries']);
@@ -115,6 +103,7 @@ Route::middleware('auth:sanctum')->group(function () {
     //debit orders
     Route::post('v1/filter-mandates', [MandateRegistrationController::class, 'filter_mandates']);
     Route::post('v1/create-mandate', [MandateRegistrationController::class, 'create']);
+    Route::post('v1/verify-otp', [MandateRegistrationController::class, 'verifyOtp']);
     Route::post('v1/send-otp-code', [MandateRegistrationController::class, 'createOtp']);
     Route::post('v1/get-mandate-by-id', [MandateRegistrationController::class, 'get_mandate_by_id']);
     Route::post('v1/archive-mandate', [MandateRegistrationController::class, 'archive_mandate']);

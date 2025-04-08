@@ -16,6 +16,7 @@
         "illuminate/support": "^8.83",
         "intervention/image": "^2.7",
         "laravel/framework": "^8.65",
+        "laravel/passport": "^10.4",
         "laravel/sanctum": "^2.11",
         "laravel/tinker": "^2.5",
         "laravel/ui": "^3.3",
