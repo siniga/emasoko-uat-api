@@ -38,7 +38,6 @@ Route::get('regions', [CompanyController::class, 'regions']);
 // //company
 // //Route::post('companies/information', [CompanyController::class, 'storeCompanyDetails']);
 
-
 //external API
 Route::post('customer', [PaymentMandateController::class, 'customer']);
 Route::post('customerInfo', [PaymentMandateController::class, 'customerInfo']);
@@ -94,11 +93,6 @@ Route::middleware('auth:api')->group(function () {
     Route::get('v1/sp-homepage', [MobileAppController::class, 'summaries']);
     Route::get('v1/debit-orders', [MobileAppController::class, 'debit_orders']);
     Route::get('v1/debit-orders-summaries', [MobileAppController::class, 'debit_orders_summaries']);
-    Route::get('v1/deduction-histories/{uuid}', [MobileAppController::class, 'deduction_histories']);
-    Route::get('v1/actual-collections', [MobileAppController::class, 'actual_collections']);
-
-    Route::post('v1/filter-collection-batches', [CollectionController::class, 'filter_collection_batches']);
-    Route::post('v1/get-deduction-history', [CollectionController::class, 'get_deduction_history']);
 
     //debit orders
     Route::post('v1/filter-mandates', [MandateRegistrationController::class, 'filter_mandates']);
@@ -112,4 +106,6 @@ Route::middleware('auth:api')->group(function () {
 
     //collections
     Route::get('v1/collections', [CollectionController::class, 'all']);
+    Route::get('v1/actual-collections', [CollectionController::class, 'actual_collections']);
+    Route::get('v1/deduction-histories/{uuid}', [CollectionController::class, 'deduction_histories']);
 });
