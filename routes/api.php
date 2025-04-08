@@ -2,7 +2,7 @@
 
 use App\Http\Controllers\Api\Airtel\CollectionController as AirtelCollectionController;
 use App\Http\Controllers\Api\Airtel\MandateController as AirtelMandateController;
-use App\Http\Controllers\Api\CollectionController;
+use App\Http\Controllers\Api\ExternalApp\CollectionController;
 use App\Http\Controllers\Api\PaymentMandateController;
 use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\CorporateController;
@@ -109,4 +109,7 @@ Route::middleware('auth:api')->group(function () {
     Route::post('v1/archive-mandate', [MandateRegistrationController::class, 'archive_mandate']);
     Route::post('v1/cancel-mandate', [MandateRegistrationController::class, 'cancel_mandate']);
     Route::post('v1/delete-mandate', [MandateRegistrationController::class, 'delete_mandate']);
+
+    //collections
+    Route::get('v1/collections', [CollectionController::class, 'all']);
 });

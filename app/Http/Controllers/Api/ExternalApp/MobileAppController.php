@@ -173,6 +173,12 @@ class MobileAppController extends Controller
         $current_year = date('Y');
         $current_month = date('m');
 
+        if ($request->has('year'))
+            $current_year = $request->year;
+
+        if ($request->has('month'))
+            $current_month = $request->month;
+
         //partners
         $partners = Partner::filterCondition()->where('status', 202)->get();
 
