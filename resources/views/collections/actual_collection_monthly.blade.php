@@ -94,6 +94,7 @@
                                         $sum_expected_amount += $values['total_amount'];
                                         $sum_paid_amount += $values['paid_amount'];
                                         $sum_outstanding_amount += $values['outstanding_amount'];
+                                        $success_rate = ($sum_paid_amount / $sum_expected_amount) * 100;
                                     @endphp
                                 @endforeach
                                 <tr>
@@ -101,7 +102,7 @@
                                     <td class="text-sm-end">{{ number_format($sum_expected_amount) }}</td>
                                     <td class="text-sm-end">{{ number_format($sum_paid_amount) }}</td>
                                     <td class="text-sm-end">{{ number_format($sum_outstanding_amount) }}</td>
-                                    <td colspan="2"></td>
+                                    <td class="text-sm-end">{{ round($success_rate, 2) }}</td> 
                                 </tr>
                             </tbody>
                         </table>
