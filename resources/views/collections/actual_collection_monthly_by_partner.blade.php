@@ -23,7 +23,8 @@
                         <div></div>
                         <div class="text-sm-end d-none d-sm-block">
                             <a title="Export" class="btn btn-outline-success btn-sm"
-                                href="{{ route('collections.export-actual-monthly', $partner->uuid) }}"><i class="bx bx-export"></i> Export XLS
+                                href="{{ route('collections.export-actual-monthly', $partner->uuid) }}?month={{ $post_data['month'] }}&year={{ $post_data['year'] }}">
+                                <i class="bx bx-export"></i> Export XLS
                             </a>
                         </div>
                     </div>

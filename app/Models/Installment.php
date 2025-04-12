@@ -21,11 +21,7 @@ class Installment extends Model
         $installments = static::query();
 
         //filter installments
-        $installments = $installments->whereHas('debitOrder', function ($query) {
-            $query->where('debit_orders.approved', '=', 1)
-                ->where('debit_orders.deleted', '=', 0)
-                ->where('debit_orders.status', '=', 240);
-        });
+        $installments = $installments->whereHas('debitOrder');
 
         if ($user->hasRole('Partner')) {
             $company_user = CompanyUser::where(['user_id' => $user->id])->first();

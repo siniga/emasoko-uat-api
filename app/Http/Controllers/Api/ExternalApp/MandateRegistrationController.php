@@ -29,6 +29,81 @@ class MandateRegistrationController extends Controller
 {
     public function __construct(protected DeductionService $deductionService, protected BankPayloadService $payloadService, protected Messaging $messaging, protected BankApiService $bankApi) {}
 
+    //Filter Mandates
+    protected function all(Request $request)
+    {
+        //debit orders
+        $debit_orders = DebitOrder::filterCondition();
+
+        //all request
+        $requests = $request->all();
+
+        $debit_orders = $debit_orders->when($requests, function ($query) use ($requests) {
+            $query->withFilters($requests);
+        });
+
+        //debit orders
+        $number_of_debit_orders = $debit_orders->count();
+        $debit_orders = $debit_orders->orderBy('debit_orders.created_at', 'DESC')->paginate(50);
+
+        //response
+        return response()->json([
+            'success' => true,
+            'response_code' => 200,
+            'number_of_mandates' => $number_of_debit_orders,
+            'mandates' => $debit_orders,
+        ]);
+    }
+
+    //APP
+    protected function get_mandate_by_id(Request $request)
+    {
+
+        // uuid           mandate_uuid
+        $mandate = DebitOrder::orderBy('id', 'desc')->first();
+
+        return response()->json([
+            'success' => true,
+            'response_code' => 200,
+            'mandate' => $mandate,
+        ]);
+    }
+
+    //APP
+    protected function archive_mandate(Request $request)
+    {
+
+        // uuid           mandate_uuid
+        return response()->json([
+            'success' => true,
+            'response_code' => 200,
+            'message' => "Succesfully archived mandate!"
+        ]);
+    }
+
+    //APP
+    protected function cancel_mandate(Request $request)
+    {
+
+        // uuid           mandate_uuid
+        return response()->json([
+            'success' => true,
+            'response_code' => 200,
+            'message' => "Succesfully canceled mandate!"
+        ]);
+    }
+
+    protected function delete_mandate(Request $request)
+    {
+
+        // uuid           mandate_uuid
+        return response()->json([
+            'success' => true,
+            'response_code' => 200,
+            'message' => "Succesfully deleted mandate!"
+        ]);
+    }
+
     //create payment mandate
     public function create(Request $request)
     {
@@ -416,75 +491,5 @@ class MandateRegistrationController extends Controller
         $pdf->save($path  . $filename);
 
         return $filename;
-    }
-
-
-    //APP Filter Mandates
-    protected function filter_mandates(Request $request)
-    {
-
-        // start_date           2025-03-26
-        // end_date             2025-03-26
-        // account_holder       Brayson
-        // mandate_status       APPROVED
-        // channel              CRDB
-        $mandates = DebitOrder::orderBy('id', 'desc')->take(10)->get();
-
-
-        return response()->json([
-            'success' => true,
-            'response_code' => 200,
-            'mandates' => $mandates,
-        ]);
-    }
-
-    //APP
-    protected function get_mandate_by_id(Request $request)
-    {
-
-        // uuid           mandate_uuid
-        $mandate = DebitOrder::orderBy('id', 'desc')->first();
-
-        return response()->json([
-            'success' => true,
-            'response_code' => 200,
-            'mandate' => $mandate,
-        ]);
-    }
-
-
-    //APP
-    protected function archive_mandate(Request $request)
-    {
-
-        // uuid           mandate_uuid
-        return response()->json([
-            'success' => true,
-            'response_code' => 200,
-            'message' => "Succesfully archived mandate!"
-        ]);
-    }
-
-    //APP
-    protected function cancel_mandate(Request $request)
-    {
-
-        // uuid           mandate_uuid
-        return response()->json([
-            'success' => true,
-            'response_code' => 200,
-            'message' => "Succesfully canceled mandate!"
-        ]);
-    }
-
-    protected function delete_mandate(Request $request)
-    {
-
-        // uuid           mandate_uuid
-        return response()->json([
-            'success' => true,
-            'response_code' => 200,
-            'message' => "Succesfully deleted mandate!"
-        ]);
     }
 }
