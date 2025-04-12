@@ -99,10 +99,10 @@
                                 @endforeach
                                 <tr>
                                     <td colspan="3" class="font-weight-600">Total</td>
-                                    <td class="text-sm-end">{{ number_format($sum_expected_amount) }}</td>
-                                    <td class="text-sm-end">{{ number_format($sum_paid_amount) }}</td>
-                                    <td class="text-sm-end">{{ number_format($sum_outstanding_amount) }}</td>
-                                    <td class="text-sm-end">{{ round($success_rate, 2) }}</td> 
+                                    <td class="text-sm-end font-weight-600">{{ number_format($sum_expected_amount) }}</td>
+                                    <td class="text-sm-end font-weight-600">{{ number_format($sum_paid_amount) }}</td>
+                                    <td class="text-sm-end font-weight-600">{{ number_format($sum_outstanding_amount) }}</td>
+                                    <td class="text-sm-end font-weight-600">{{ round($success_rate, 2) }}</td> 
                                 </tr>
                             </tbody>
                         </table>
