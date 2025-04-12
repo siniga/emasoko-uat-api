@@ -156,7 +156,7 @@ class PaymentMandateController extends Controller
 
         //populate data
         $account_types = AccountType::all();
-        $accounts = Account::all();
+        $accounts = Account::where(['active' => 1])->get();
 
         //render view
         return view('payment_mandate.create.account_form', compact('title', 'customer_account', 'debit_order', 'account_types', 'accounts'));
