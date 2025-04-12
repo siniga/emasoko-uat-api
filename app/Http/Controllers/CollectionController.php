@@ -471,6 +471,12 @@ class CollectionController extends Controller
         $current_year = date('Y');
         $current_month = date('m');
 
+        if ($request->has('year') && $request->has('year') != "")
+            $current_year = $request->year;
+
+        if ($request->has('month') && $request->has('month') != "")
+            $current_month = $request->month;
+
         //partners
         $partners = Partner::filterCondition()->where('status', 202)->get();
 
@@ -510,19 +516,22 @@ class CollectionController extends Controller
         //sort array
         $arr_data = collect($arr_data)->sortBy('number_of_collection')->reverse()->toArray();
 
+        //post data
+        $post_data = ['year' => $current_year, 'month' => $current_month];
+
         //title
-        $display_current_month = date('F');
+        $display_current_month = date('F', mktime(0, 0, 0, $current_month, 1));
         $title = "Expected Monthly Collection - $display_current_month, $current_year";
 
         //render view
-        return view('collections.expected_collection_monthly', compact('title', 'arr_data'));
+        return view('collections.expected_collection_monthly', compact('title', 'arr_data', 'post_data'));
     }
 
-    public function expected_monthly_by_partner($uuid)
+    public function expected_monthly_detail($uuid, Request $request)
     {
         //current date
-        $current_year = date('Y');
-        $current_month = date('m');
+        $current_year = $request->year;
+        $current_month = $request->month;
 
         //partner
         $partner = Partner::where(['uuid' => $uuid])->firstOrfail();
@@ -562,19 +571,22 @@ class CollectionController extends Controller
             ];
         }
 
+        //post data
+        $post_data = ['year' => $current_year, 'month' => $current_month];
+
         //title
-        $display_current_month = date('F');
-        $title = "Monthly Collection - $display_current_month, $current_year";
+        $display_current_month = date('F', mktime(0, 0, 0, $current_month, 1));
+        $title = "Monthly Collection - $display_current_month, $current_year | $partner->business_name";
 
         //render view
-        return view('collections.expected_collection_monthly_by_partner', compact('title', 'partner', 'arr_installments'));
+        return view('collections.expected_collection_monthly_by_partner', compact('title', 'partner', 'arr_installments', 'post_data'));
     }
 
-    public function export_expected_monthly($uuid)
+    public function export_expected_monthly($uuid, Request $request)
     {
         //current date
-        $current_year = date('Y');
-        $current_month = date('m');
+        $current_year = $request->year;
+        $current_month = $request->month;
 
         //partner
         $partner = Partner::where(['uuid' => $uuid])->firstOrfail();
@@ -729,7 +741,7 @@ class CollectionController extends Controller
 
         //title
         $display_current_month = date('F', mktime(0, 0, 0, $current_month, 1));
-        $title = "Monthly Collection - $display_current_month, $current_year";
+        $title = "Monthly Collection - $display_current_month, $current_year | $partner->business_name";
 
         //render view
         return view('collections.actual_collection_monthly_by_partner', compact('title', 'partner', 'arr_installments', 'post_data'));

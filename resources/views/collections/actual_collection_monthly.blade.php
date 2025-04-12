@@ -18,15 +18,12 @@
         <div class="col-lg-12">
             <div class="card">
                 <div class="card-body">
-
                     <div class="d-flex justify-content-between mb-2">
                         <div></div>
                         <div class="text-sm-end d-none d-sm-block">
-
                             {!! Form::open(['url' => route('collections.actual-monthly'), 'method' => 'POST', 'class' => 'd-flex align-items-center']) !!}
                                 {{ Form::token() }}
 
-                                
                                 <select name="month" id="month" class="form-select form-select-md me-2">
                                     <option value="{{ $post_data['month'] }}">{{ date('F', mktime(0, 0, 0, $post_data['month'], 1)) }}</option>
                                     <option value="">-- Month --</option>

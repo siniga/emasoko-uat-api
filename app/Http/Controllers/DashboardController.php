@@ -106,9 +106,7 @@ class DashboardController extends Controller
                 DB::raw('COALESCE(SUM(installments.current_balance), 0) as paid_amount')
             )->whereHas('debitOrder', function ($query) use ($partner) {
                 $query->where('debit_orders.partner_id', '=', $partner->id)
-                    ->where('debit_orders.approved', '=', 1)
-                    ->where('debit_orders.deleted', '=', 0)
-                    ->where('debit_orders.status', '=', 240);
+                    ->where('debit_orders.approved', '=', 1);
             })->toBase();
 
             //this month collection
@@ -133,11 +131,14 @@ class DashboardController extends Controller
         //sort array
         $arr_data = collect($arr_data)->sortBy('number_of_collection')->reverse()->toArray();
 
+        //post data
+        $post_data = ['year' => $current_year, 'month' => $current_month];
+
         //title
-        $display_current_month = date('F');
+        $display_current_month = date('F', mktime(0, 0, 0, $current_month, 1));
         $collection_title = "Actual Monthly Collection - $display_current_month, $current_year";
 
         //render view
-        return view('dashboard', compact('title', 'collection_title' ,'arr_data', 'stats'));
+        return view('dashboard', compact('title', 'collection_title' ,'arr_data', 'stats', 'post_data'));
     }
 }

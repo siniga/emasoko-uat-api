@@ -17,7 +17,6 @@
                     <li class="breadcrumb-item active">Create Payment mandate</li>
                 </ol>
             </div>
-
         </div>
     </div>
 </div>

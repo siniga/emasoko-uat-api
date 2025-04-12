@@ -205,7 +205,7 @@ Route::get('collections/update-debit-orders', [CollectionController::class, 'upd
 Route::get('collections/reconciliation', [CollectionController::class, 'reconciliation'])->name('collections.reconciliation');
 
 Route::any('collections/expected-monthly', [CollectionController::class, 'expected_monthly'])->name('collections.expected-monthly');
-Route::get('collections/expected-monthly/{uuid}', [CollectionController::class, 'expected_monthly_by_partner'])->name('collections.expected-monthly-detail');
+Route::get('collections/expected-monthly/{uuid}', [CollectionController::class, 'expected_monthly_detail'])->name('collections.expected-monthly-detail');
 Route::get('collections/export-expected-monthly/{uuid}', [CollectionController::class, 'export_expected_monthly'])->name('collections.export-expected-monthly');
 Route::any('collections/actual-monthly', [CollectionController::class, 'actual_monthly'])->name('collections.actual-monthly');
 Route::get('collections/actual-monthly/{uuid}', [CollectionController::class, 'actual_monthly_detail'])->name('collections.actual-monthly-detail');
