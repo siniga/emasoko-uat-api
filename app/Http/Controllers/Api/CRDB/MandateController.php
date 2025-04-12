@@ -25,8 +25,8 @@ class MandateController extends Controller
         //predefined variables
         $debitAccount = $request->debitAccount;
         $phone = $request->phone;
-        $StartDate = $request->StartDate;
-        $EndDate = $request->EndDate;
+        $startDate = $request->startDate;
+        $endDate = $request->endDate;
 
         // $debitAccount = "0152418973800";
         // $phone = "255711711125";
@@ -66,12 +66,10 @@ class MandateController extends Controller
             'Checksum' => $checksum,
             "PhoneNumber" =>  $phone,
             "DebitAccount" =>  $debitAccount,
-            "TotalAmount" =>  "1000",
-            "InstallmentAmount" => "100",
-            "StartDate" => $StartDate,
-            "EndDate" => $EndDate,
-            // "StartDate" => "20-01-2025",
-            // "EndDate" => "10-10-2025",
+            "TotalAmount" =>  "600000",
+            "InstallmentAmount" => "300000",
+            "StartDate" => $startDate,
+            "EndDate" => $endDate,
             "FrequencyType" => "DAILY",
             "Frequency" => "1",
             "BillDetails" => "Recurring payment"
@@ -99,7 +97,7 @@ class MandateController extends Controller
         Log::debug('== CRDB Callback Response ==');
         Log::debug($request->all());
 
-        //\Log::channel('APILogs')->Info('CRDB Callback Response:' . json_encode($request->all(),true));
+        //Log::channel('APILogs')->Info('CRDB Callback Response:' . json_encode($request->all(),true));
 
         return $request['callbackType'];
 
@@ -126,23 +124,23 @@ class MandateController extends Controller
         //     }
         // }
 
-        if ($request['callbackType'] == "REQUEST_STATUS") {
-            //query debit order by reference id
-            $debit_order = DebitOrder::where('crdb_reference', '=', $request['data']['reference'])->first();
+        // if ($request['callbackType'] == "REQUEST_STATUS") {
+        //     //query debit order by reference id
+        //     $debit_order = DebitOrder::where('crdb_reference', '=', $request['data']['reference'])->first();
 
-            //check status
-            if (strtolower($request['data']['status']) == "approved") {
-                $debit_order->approved = 1;
-                $debit_order->status = 202;
-            } else if (strtolower($request['data']['status']) == "cancelled") {
-                $debit_order->status = 501;
-            } else {
-                $debit_order->status = 501;
-            }
-            $debit_order->save();
-        } else if ($request['callbackType'] == "PAYMENT_STATUS") {
-            //update installment amount
-        }
+        //     //check status
+        //     if (strtolower($request['data']['status']) == "approved") {
+        //         $debit_order->approved = 1;
+        //         $debit_order->status = 202;
+        //     } else if (strtolower($request['data']['status']) == "cancelled") {
+        //         $debit_order->status = 501;
+        //     } else {
+        //         $debit_order->status = 501;
+        //     }
+        //     $debit_order->save();
+        // } else if ($request['callbackType'] == "PAYMENT_STATUS") {
+        //     //update installment amount
+        // }
     }
     
 }

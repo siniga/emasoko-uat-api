@@ -65,7 +65,7 @@
                                         x-on:click="approveRegistration('{{ $company->uuid }}')"></button>
                                 </template>
 
-                                <template x-if="status ==201 || status==403 || status==500">
+                                <template x-if="status ==201 || status == 203 || status==403 || status==500">
                                     <button x-html="btnStatus" title="Get Status" class="btn btn-outline-success btn-sm"
                                         x-on:click="fetchRegistrationStatus('{{ $company->uuid }}')"></button>
                                 </template>
@@ -236,7 +236,7 @@
                                         <th width="8%">Customer No.</th>
                                         <th width="15%">Corporate Limit</th>
                                         <th width="10%">Currency</th>
-                                        <th width="15%">Status</th>
+                                        {{-- <th width="15%">Status</th> --}}
                                     </tr>
                                 </thead>
 
@@ -251,13 +251,13 @@
                                             <td>{{ $val->customer_code ?? '' }}</td>
                                             <td>{{ number_format($val->corporate_limit) ?? '' }}</td>
                                             <td>{{ $val->currency->short_code ?? '' }}</td>
-                                            <td>
+                                            {{-- <td>
                                                 @if($val->status == 1)
                                                     <span class="badge bg-success">Active</span>
                                                 @else
                                                     <span class="badge bg-danger">Inactive</span>
                                                 @endif    
-                                            </td>
+                                            </td> --}}
                                         </tr>
                                     @endforeach
                                 </tbody>
