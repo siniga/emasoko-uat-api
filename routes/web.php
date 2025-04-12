@@ -202,7 +202,7 @@ Route::post('collections/fetch-status', [CollectionController::class, 'fetch_sta
 
 Route::get('collections/create-debit-orders', [CollectionController::class, 'create_debit_orders'])->name('collections.create-debit-orders');
 Route::get('collections/update-debit-orders', [CollectionController::class, 'update_debit_orders'])->name('collections.update-debit-orders');
-Route::get('collections/reconciliation', [CollectionController::class, 'reconciliation'])->name('collections.reconciliation');
+//Route::get('collections/reconciliation', [CollectionController::class, 'reconciliation'])->name('collections.reconciliation');
 
 Route::any('collections/expected-monthly', [CollectionController::class, 'expected_monthly'])->name('collections.expected-monthly');
 Route::get('collections/expected-monthly/{uuid}', [CollectionController::class, 'expected_monthly_detail'])->name('collections.expected-monthly-detail');

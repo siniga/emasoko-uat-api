@@ -64,6 +64,13 @@
                                 </tr>
                             </thead>
 
+                            @php
+                                $sum_expected_amount = 0;
+                                $sum_paid_amount = 0;
+                                $sum_current_balance = 0;
+                                $sum_outstanding_amount = 0;
+                            @endphp
+
                             <tbody>
                                 @php $serial = 1; @endphp
                                 @foreach ($arr_data as $values)
@@ -82,7 +89,20 @@
                                         <td class="text-sm-end">{{ $values['percent'] }}</td>
                                     </tr>
                                     @php $serial++; @endphp
+
+                                    @php
+                                        $sum_expected_amount += $values['total_amount'];
+                                        $sum_paid_amount += $values['paid_amount'];
+                                        $sum_outstanding_amount += $values['outstanding_amount'];
+                                    @endphp
                                 @endforeach
+                                <tr>
+                                    <td colspan="3" class="font-weight-600">Total</td>
+                                    <td class="text-sm-end">{{ number_format($sum_expected_amount) }}</td>
+                                    <td class="text-sm-end">{{ number_format($sum_paid_amount) }}</td>
+                                    <td class="text-sm-end">{{ number_format($sum_outstanding_amount) }}</td>
+                                    <td colspan="2"></td>
+                                </tr>
                             </tbody>
                         </table>
 
