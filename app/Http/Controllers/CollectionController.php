@@ -471,6 +471,12 @@ class CollectionController extends Controller
         $current_year = date('Y');
         $current_month = date('m');
 
+        if ($request->has('year') && $request->has('year') != "")
+            $current_year = $request->year;
+
+        if ($request->has('month') && $request->has('month') != "")
+            $current_month = $request->month;
+
         //partners
         $partners = Partner::filterCondition()->where('status', 202)->get();
 
@@ -510,19 +516,22 @@ class CollectionController extends Controller
         //sort array
         $arr_data = collect($arr_data)->sortBy('number_of_collection')->reverse()->toArray();
 
+        //post data
+        $post_data = ['year' => $current_year, 'month' => $current_month];
+
         //title
-        $display_current_month = date('F');
+        $display_current_month = date('F', mktime(0, 0, 0, $current_month, 1));
         $title = "Expected Monthly Collection - $display_current_month, $current_year";
 
         //render view
-        return view('collections.expected_collection_monthly', compact('title', 'arr_data'));
+        return view('collections.expected_collection_monthly', compact('title', 'arr_data', 'post_data'));
     }
 
-    public function expected_monthly_by_partner($uuid)
+    public function expected_monthly_detail($uuid, Request $request)
     {
         //current date
-        $current_year = date('Y');
-        $current_month = date('m');
+        $current_year = $request->year;
+        $current_month = $request->month;
 
         //partner
         $partner = Partner::where(['uuid' => $uuid])->firstOrfail();
@@ -562,19 +571,22 @@ class CollectionController extends Controller
             ];
         }
 
+        //post data
+        $post_data = ['year' => $current_year, 'month' => $current_month];
+
         //title
-        $display_current_month = date('F');
-        $title = "Monthly Collection - $display_current_month, $current_year";
+        $display_current_month = date('F', mktime(0, 0, 0, $current_month, 1));
+        $title = "Monthly Collection - $display_current_month, $current_year | $partner->business_name";
 
         //render view
-        return view('collections.expected_collection_monthly_by_partner', compact('title', 'partner', 'arr_installments'));
+        return view('collections.expected_collection_monthly_by_partner', compact('title', 'partner', 'arr_installments', 'post_data'));
     }
 
-    public function export_expected_monthly($uuid)
+    public function export_expected_monthly($uuid, Request $request)
     {
         //current date
-        $current_year = date('Y');
-        $current_month = date('m');
+        $current_year = $request->year;
+        $current_month = $request->month;
 
         //partner
         $partner = Partner::where(['uuid' => $uuid])->firstOrfail();
@@ -626,6 +638,12 @@ class CollectionController extends Controller
         $current_year = date('Y');
         $current_month = date('m');
 
+        if ($request->has('year') && $request->has('year') != "")
+            $current_year = $request->year;
+
+        if ($request->has('month') && $request->has('month') != "")
+            $current_month = $request->month;
+
         //partners
         $partners = Partner::filterCondition()->where('status', 202)->get();
 
@@ -639,9 +657,7 @@ class CollectionController extends Controller
                 DB::raw('COALESCE(SUM(installments.current_balance), 0) as paid_amount')
             )->whereHas('debitOrder', function ($query) use ($partner) {
                 $query->where('debit_orders.partner_id', '=', $partner->id)
-                    ->where('debit_orders.approved', '=', 1)
-                    ->where('debit_orders.deleted', '=', 0)
-                    ->where('debit_orders.status', '=', 240);
+                    ->where('debit_orders.approved', '=', 1);
             })->toBase();
 
             //this month collection
@@ -666,19 +682,22 @@ class CollectionController extends Controller
         //sort array
         $arr_data = collect($arr_data)->sortBy('number_of_collection')->reverse()->toArray();
 
+        //post data
+        $post_data = ['year' => $current_year, 'month' => $current_month];
+
         //title
-        $display_current_month = date('F');
+        $display_current_month = date('F', mktime(0, 0, 0, $current_month, 1));
         $title = "Actual Monthly Collection - $display_current_month, $current_year";
 
         //render view
-        return view('collections.actual_collection_monthly', compact('title', 'arr_data'));
+        return view('collections.actual_collection_monthly', compact('title', 'arr_data', 'post_data'));
     }
 
-    public function actual_monthly_by_partner($uuid)
+    public function actual_monthly_detail($uuid, Request $request)
     {
         //current date
-        $current_year = date('Y');
-        $current_month = date('m');
+        $current_year = $request->year;
+        $current_month = $request->month;
 
         //partner
         $partner = Partner::where(['uuid' => $uuid])->firstOrfail();
@@ -690,9 +709,7 @@ class CollectionController extends Controller
         $installments = Installment::filterCondition()
             ->whereHas('debitOrder', function ($query) use ($partner) {
                 $query->where('debit_orders.partner_id', '=', $partner->id)
-                    ->where('debit_orders.approved', '=', 1)
-                    ->where('debit_orders.deleted', '=', 0)
-                    ->where('debit_orders.status', '=', 240);
+                    ->where('debit_orders.approved', '=', 1);
             })
             ->where('status', 'CLOSED')
             ->whereMonth('payment_date', $current_month)
@@ -719,19 +736,22 @@ class CollectionController extends Controller
             ];
         }
 
+        //post data
+        $post_data = ['year' => $current_year, 'month' => $current_month];
+
         //title
-        $display_current_month = date('F');
-        $title = "Monthly Collection - $display_current_month, $current_year";
+        $display_current_month = date('F', mktime(0, 0, 0, $current_month, 1));
+        $title = "Monthly Collection - $display_current_month, $current_year | $partner->business_name";
 
         //render view
-        return view('collections.actual_collection_monthly_by_partner', compact('title', 'partner', 'arr_installments'));
+        return view('collections.actual_collection_monthly_by_partner', compact('title', 'partner', 'arr_installments', 'post_data'));
     }
 
-    public function export_actual_monthly($uuid)
+    public function export_actual_monthly($uuid, Request $request)
     {
         //current date
-        $current_year = date('Y');
-        $current_month = date('m');
+        $current_year = $request->year;
+        $current_month = $request->month;
 
         //partner
         $partner = Partner::where(['uuid' => $uuid])->firstOrfail();
@@ -743,9 +763,7 @@ class CollectionController extends Controller
         $installments = Installment::filterCondition()
             ->whereHas('debitOrder', function ($query) use ($partner) {
                 $query->where('debit_orders.partner_id', '=', $partner->id)
-                    ->where('debit_orders.approved', '=', 1)
-                    ->where('debit_orders.deleted', '=', 0)
-                    ->where('debit_orders.status', '=', 240);
+                    ->where('debit_orders.approved', '=', 1);
             })
             ->where('status', 'CLOSED')
             ->whereMonth('payment_date', $current_month)
@@ -771,8 +789,11 @@ class CollectionController extends Controller
             ];
         }
 
+        //title
+        $current_month_year = date('F', mktime(0, 0, 0, $current_month, 1)) .'_'. $current_year;
+
         //create filename
-        $filename = "Actual_Collection_" . date('F') . "_" . $partner->business_name . ".xlsx";
+        $filename = "Actual_Collection_" . $current_month_year . "_" . $partner->business_name . ".xlsx";
 
         //return
         return Excel::download(new CollectionMonthly($arr_installments), $filename);
@@ -837,23 +858,29 @@ class CollectionController extends Controller
     public function reconciliation(Request $request)
     {
         //read file
-        $file = fopen(public_path('assets/NMB_file.csv'), 'r');
+        $file = fopen(public_path('assets/reports/03/Waningo_MicroCredit_31110037602.csv'), 'r');
         fgetcsv($file); // Skip the first row
 
         //array of installments
         $arr_installments = [];
 
         //iterarate file
-        while (($row = fgetcsv($file, 1000, ',')) !== false) {
-            $mandate_ref = substr($row[4], -12);
-            $paid_amount = $row[8];
+        while (($row = fgetcsv($file, 10000, ',')) !== false) {
+            $mandate_ref = substr($row[3], -12);
+            $paid_amount = $row[6];
+
+            if (empty($mandate_ref))
+                continue;
 
             //mandate 
             $debit_order = DebitOrder::where(["reference" => $mandate_ref])->first();
 
+            if (!$debit_order)
+                continue;
+
             //query installment which are failed
             $installment = Installment::where(['debit_order_id' => $debit_order->id])
-                ->whereMonth('payment_date', '02')->first();
+                ->whereMonth('payment_date', '03')->first();
 
             //installmentAmount
             $installmentAmount = $installment->installment_amount ?? $installment->max_installment_amount;
@@ -866,29 +893,26 @@ class CollectionController extends Controller
                 'paidAmount' => $paid_amount,
                 'installmentAmount' => $installmentAmount,
                 'NMB Status' => "PAID",
-                "Status" => $installment->status
+                "status" => $installment->status
             ];
 
             //process calculation for installment and debit order.
-            // if ($installment && $installment->status != "CLOSED"){
-            //     $process_data = $this->deductionService->processInstallment($installment, $paid_amount, $mandate_ref);
-            // }
+            if ($installment && $installment->status != "CLOSED") {
+                //update installment
+                $installment->last_paid_amount = $paid_amount;
+                $installment->save();
+
+                //process installment
+                $process_data = $this->deductionService->processInstallment($installment, $paid_amount, $mandate_ref);
+            }
         }
-        fclose($file);
+        //fclose($file);
 
-        echo "<pre>";
-        print_r($arr_installments);
+        // echo "<pre>";
+        // print_r($arr_installments);
 
-        // //create new file
-        // $new_file = fopen(public_path("assets/NMB_New_File1.csv"), "w");
-
-        // foreach ($arr_installments as $line) {
-        //     fputcsv($new_file, $line);
-        // }
-
-        // fclose($new_file);
-
-        //return response()->json(['success' => false, 'success_msg' => "File Processed"]);
+        //response
+        return response()->json(['success' => false, 'success_msg' => "File Processed"]);
     }
 
     public function create_debit_orders()

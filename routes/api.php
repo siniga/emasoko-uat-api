@@ -1,13 +1,15 @@
 <?php
 
+use App\Http\Controllers\Api\Airtel\CollectionController as AirtelCollectionController;
 use App\Http\Controllers\Api\Airtel\MandateController as AirtelMandateController;
-use App\Http\Controllers\Api\CollectionController;
+use App\Http\Controllers\Api\ExternalApp\CollectionController;
 use App\Http\Controllers\Api\PaymentMandateController;
 use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\CorporateController;
 use App\Http\Controllers\Api\CRDB\MandateController as CRDBMandateController;
 use App\Http\Controllers\Api\ExternalApp\AuthController;
 use App\Http\Controllers\Api\ExternalApp\MandateRegistrationController;
+use App\Http\Controllers\Api\ExternalApp\MobileAppController;
 use App\Http\Controllers\Api\MandateController;
 use App\Http\Controllers\Api\OtpController;
 use Illuminate\Http\Request;
@@ -24,18 +26,6 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::controller(AuthController::class)->group(function () {
-    //Route::post('register', 'register');
-    Route::post('login', 'login');
-});
-
-Route::middleware('auth:sanctum')->group( function () {
-    Route::post('create-mandate', [MandateRegistrationController::class, 'create']);
-    Route::post('verify-otp', [MandateRegistrationController::class, 'verifyOtp']);
-    Route::post('create-otp', [MandateRegistrationController::class, 'createOtp']);
-});
-
-
 //contacts 
 Route::post('contacts', [CompanyController::class, 'contacts']);
 
@@ -47,7 +37,6 @@ Route::get('regions', [CompanyController::class, 'regions']);
 
 // //company
 // //Route::post('companies/information', [CompanyController::class, 'storeCompanyDetails']);
-
 
 //external API
 Route::post('customer', [PaymentMandateController::class, 'customer']);
@@ -78,4 +67,45 @@ Route::post('mandate/crdb/callback', [CRDBMandateController::class, 'callback'])
 
 //Airtel apis
 Route::post('mandate/airtel', [AirtelMandateController::class, 'create']);
+Route::post('mandate/airtel/status', [AirtelMandateController::class, 'query_status']);
+Route::post('mandate/airtel/cancel', [AirtelMandateController::class, 'cancel']);
 Route::post('mandate/airtel/callback', [AirtelMandateController::class, 'callback']);
+
+Route::post('collection/airtel', [AirtelCollectionController::class, 'create']);
+Route::post('collection/airtel/inquiry', [AirtelCollectionController::class, 'inquiry']);
+Route::post('collection/airtel/refund-inquiry', [AirtelCollectionController::class, 'refund_inquiry']);
+Route::post('collection/airtel/recovery', [AirtelCollectionController::class, 'recovery']);
+Route::post('collection/airtel/recovery-inquiry', [AirtelCollectionController::class, 'recovery_inquiry']);
+Route::post('collection/airtel/recovery-refund', [AirtelCollectionController::class, 'recovery_refund']);
+
+
+/*
+|--------------------------------------------------------------------------
+| API Routes
+|--------------------------------------------------------------------------
+*/
+
+Route::controller(AuthController::class)->group(function () {
+    Route::post('v1/login', 'login');
+});
+
+Route::middleware('auth:api')->group(function () {
+    Route::get('v1/sp-homepage', [MobileAppController::class, 'summaries']);
+    Route::get('v1/debit-orders', [MobileAppController::class, 'debit_orders']);
+    Route::get('v1/debit-orders-summaries', [MobileAppController::class, 'debit_orders_summaries']);
+
+    //debit orders
+    Route::post('v1/filter-mandates', [MandateRegistrationController::class, 'filter_mandates']);
+    Route::post('v1/create-mandate', [MandateRegistrationController::class, 'create']);
+    Route::post('v1/verify-otp', [MandateRegistrationController::class, 'verifyOtp']);
+    Route::post('v1/send-otp-code', [MandateRegistrationController::class, 'createOtp']);
+    Route::post('v1/get-mandate-by-id', [MandateRegistrationController::class, 'get_mandate_by_id']);
+    Route::post('v1/archive-mandate', [MandateRegistrationController::class, 'archive_mandate']);
+    Route::post('v1/cancel-mandate', [MandateRegistrationController::class, 'cancel_mandate']);
+    Route::post('v1/delete-mandate', [MandateRegistrationController::class, 'delete_mandate']);
+
+    //collections
+    Route::get('v1/collections', [CollectionController::class, 'all']);
+    Route::get('v1/actual-collections', [CollectionController::class, 'actual_collections']);
+    Route::get('v1/deduction-histories/{uuid}', [CollectionController::class, 'deduction_histories']);
+});

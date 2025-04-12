@@ -353,7 +353,7 @@
                                     <tr>
                                         <td>{{ $serial }}</td>
                                         <td>
-                                            <a href="{{ route('collections.actual-monthly-detail', $values['uuid']) }}"
+                                            <a href="{{ route('collections.actual-monthly-detail', $values['uuid']) }}?month={{ $post_data['month'] }}&year={{ $post_data['year'] }}"
                                                 class="font-weight-600">
                                                 {{ strtoupper($values['partner_name']) }}
                                             </a>

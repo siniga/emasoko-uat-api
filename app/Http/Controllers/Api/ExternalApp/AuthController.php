@@ -32,7 +32,7 @@ class AuthController extends Controller
                 'success' => true,
                 'response_code' => 200,
                 'user' => $user,
-                'token' => $user->createToken('eMakato')->plainTextToken,
+                'token' => $user->createToken('eMakato')->accessToken,
             ]);
         }else{
             return response()->json([

@@ -5,14 +5,20 @@
 @endsection
 
 @section('content')
-    @component('components.breadcrumb')
-        @slot('li_1')
-            Dashboard
-        @endslot
-        @slot('title')
-            {{ $title }}
-        @endslot
-    @endcomponent
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                <h4 class="mb-sm-0 font-size-18">{{ $title }}</h4>
+
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+                        <li class="breadcrumb-item active">Expected Monthly Collection</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="row">
         <div class="col-lg-12">
@@ -23,7 +29,8 @@
                         <div></div>
                         <div class="text-sm-end d-none d-sm-block">
                             <a title="Export" class="btn btn-outline-success btn-sm"
-                                href="{{ route('collections.export-expected-monthly', $partner->uuid) }}"><i class="bx bx-export"></i> Export XLS
+                                href="{{ route('collections.export-expected-monthly', $partner->uuid) }}?month={{ $post_data['month'] }}&year={{ $post_data['year'] }}">
+                                <i class="bx bx-export"></i> Export XLS
                             </a>
                         </div>
                     </div>
@@ -40,7 +47,6 @@
                                     <th width="10%">Paid Amt</th>
                                     <th width="10%">Outstanding</th>
                                     <th width="10%">Status</th>
-                                    <th width="24%">Message</th>
                                 </tr>
                             </thead>
                             @php
@@ -64,7 +70,7 @@
                                         {{ number_format($val['outstanding_amount']) }}</td>
                                     <td>
                                         @if (strtoupper($val['status']) == 'OPEN')
-                                            <span class="badge bg-info">OPEN</span>
+                                            <span class="badge bg-primary">OPEN</span>
                                         @elseif (strtoupper($val['status']) == 'CLOSED')
                                             <span class="badge bg-success-1">PAID</span>
                                         @elseif(strtoupper($val['status']) == 'FAILED')
@@ -75,7 +81,6 @@
                                             <span class="badge bg-warning">{{ strtoupper($val['status']) }}</span>
                                         @endif
                                     </td>
-                                    <td>{{ $val['remarks'] }}</td>
                                 </tr>
 
                                 @php
