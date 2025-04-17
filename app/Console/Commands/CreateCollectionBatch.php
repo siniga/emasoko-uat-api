@@ -51,9 +51,12 @@ class CreateCollectionBatch extends Command
     {
         //Limit
         $limit = 250;
-        $current_date = Carbon::now(); //today batch
-        //$current_date = Carbon::now()->addDays(3); //2 days from today
+        //$current_date = Carbon::now(); //today batch
+        $current_date = Carbon::now()->addDays(2); //2 days from today
         Log::debug("== Creating collection batch: '{$current_date}' ==");
+
+        //initiate collection date
+        $collection_date = Carbon::now();
 
         //initialize deduction service
         $deductionService = new DeductionService();
@@ -111,6 +114,9 @@ class CreateCollectionBatch extends Command
                             $debit_end_date = Carbon::parse($installment->debitOrder->end_date);
                             $deleted = $installment->debitOrder->deleted;
 
+                            //update collection date
+                            $collection_date = $installment->payment_date;
+
                             //1.0: check if periodicity == MONTHLY and deleted = 0
                             if ($periodicity == "MONTHLY" && $deleted == 0) {
                                 //2.0: Check if mandate start date <= today
@@ -158,6 +164,7 @@ class CreateCollectionBatch extends Command
                         //check if installments is not null
                         if ($arr_installments) {
                             $batch->request_csv = $csv;
+                            $batch->collectionDate = $collection_date;
                             $batch->number_of_collections = $number_of_collections;
                             $batch->installment_ids = implode(",", $arr_installments);
                             $batch->save();
@@ -167,7 +174,7 @@ class CreateCollectionBatch extends Command
 
                             //send Notification of batch creation
                             $message = "Collection batch number " . $collection_reference . " created. Review and approve to the next stage.";
-                            $arr_phone = [255717705746, 255656314330, 255629602290, 255684512512];
+                            $arr_phone = [255717705746, 255656314330, 255629602290];
 
                             foreach ($arr_phone as $phone) {
                                 //send sms
