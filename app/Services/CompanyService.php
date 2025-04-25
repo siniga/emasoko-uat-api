@@ -218,11 +218,6 @@ class CompanyService
             $partner->updated_by = auth()->id();
             $partner->save();
 
-            //Create Credentials
-            $this->createCredential($partner);
-
-            //TODO: Create company users
-
             return 200;
         }
     }
@@ -233,6 +228,26 @@ class CompanyService
         //token and password
         $token = Str::random(64);
         $password = "12345678";
+
+        //partners staff
+        $staff = PartnerStaff::where(['partner_uuid' => $partner->uuid])->get();
+
+        if ($staff) {
+            foreach ($staff as $val) {
+                //create user to store data
+                $user = User::firstOrNew(['email' => $val->email, 'TIN_number' => $val->tin_number]);
+                $user->uuid = Str::uuid();
+                $user->name = $val->name;
+                $user->phone = $val->phone;
+                $user->verify_token = $token;
+                $user->password = Hash::make($password);
+                $user->otp_password = base64_encode($password);
+                $user->active = 1;
+                $user->save();
+            }
+        }
+
+
 
         //create user to store data
         $user = User::firstOrNew(['email' => $partner->email, 'TIN_number' => $partner->tin_number]);

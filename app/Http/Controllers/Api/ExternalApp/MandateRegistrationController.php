@@ -58,22 +58,47 @@ class MandateRegistrationController extends Controller
     //APP
     protected function get_mandate_by_id(Request $request)
     {
+        // debit order
+        $debit_order = DebitOrder::where(['uuid' => $request->mandate_uuid]);
 
-        // uuid           mandate_uuid
-        $mandate = DebitOrder::orderBy('id', 'desc')->first();
+        if ($debit_order->count() == 0) {
+            return response()->json([
+                'success' => false,
+                'response_code' => 404,
+                'message' => "Mandate not found",
+            ]);
+        }
 
+        //debit order
+        $debit_order = $debit_order->first();
+
+        //response
         return response()->json([
             'success' => true,
             'response_code' => 200,
-            'mandate' => $mandate,
+            'mandate' => $debit_order,
         ]);
     }
 
     //APP
     protected function archive_mandate(Request $request)
     {
+        // debit order
+        $debit_order = DebitOrder::where(['uuid' => $request->mandate_uuid]);
 
-        // uuid           mandate_uuid
+        if ($debit_order->count() == 0) {
+            return response()->json([
+                'success' => false,
+                'response_code' => 404,
+                'message' => "Mandate not found",
+            ]);
+        }
+
+        //debit order
+        $debit_order = $debit_order->first();
+        $debit_order->deleted = 1;
+        $debit_order->save();
+
         return response()->json([
             'success' => true,
             'response_code' => 200,
@@ -85,7 +110,24 @@ class MandateRegistrationController extends Controller
     protected function cancel_mandate(Request $request)
     {
 
-        // uuid           mandate_uuid
+        // debit order
+        $debit_order = DebitOrder::where(['uuid' => $request->mandate_uuid]);
+
+        if ($debit_order->count() == 0) {
+            return response()->json([
+                'success' => false,
+                'response_code' => 404,
+                'message' => "Mandate not found",
+            ]);
+        }
+
+        //debit order
+        $debit_order = $debit_order->first();
+        $debit_order->deleted = 1;
+        $debit_order->save();
+
+        //TODO: cancel mandate
+
         return response()->json([
             'success' => true,
             'response_code' => 200,
@@ -95,8 +137,25 @@ class MandateRegistrationController extends Controller
 
     protected function delete_mandate(Request $request)
     {
+        // debit order
+        $debit_order = DebitOrder::where(['uuid' => $request->mandate_uuid]);
 
-        // uuid           mandate_uuid
+        if ($debit_order->count() == 0) {
+            return response()->json([
+                'success' => false,
+                'response_code' => 404,
+                'message' => "Mandate not found",
+            ]);
+        }
+
+        //debit order
+        $debit_order = $debit_order->first();
+        $debit_order->deleted = 1;
+        $debit_order->save();
+
+        //TODO: delete mandate
+
+
         return response()->json([
             'success' => true,
             'response_code' => 200,
