@@ -67,6 +67,10 @@ class MobileAppController extends Controller
                 'failed_debit_orders_val' => $mandates[2]['total_amount'],
                 'total_debit_orders_val' => $total_mandate_value,
 
+                //collection
+                "expected_collection" => 0,
+                "actual_collection" => 0,
+
                 //stats
                 'stats' => $stats,
                 'recent_mandates' => $recent_debit_orders
