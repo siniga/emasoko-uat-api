@@ -53,8 +53,9 @@ class AuthOtpController extends Controller
         $message = "Your Emakato One Time Password(OTP) to Login is " . $verificationCode->otp;
 
         //send sms
-        $data = ["phone" => $phone, "message" => $message];
-        dispatch(new SendSMSJob($data));
+        $messaging = new Messaging();
+        $response = $messaging->sendSMS($phone, $message);
+        Log::debug("== SMS sent ==");
 
         //send email
         $data = [

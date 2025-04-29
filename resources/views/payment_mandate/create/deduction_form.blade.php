@@ -97,7 +97,7 @@
                     @endif
 
                     <div class="row">
-                        <div class="col-lg-3">
+                        <div class="col-lg-3 col-md-3 col-sm-3 col-12">
                             <div class="mb-3">
                                 <label>Total Amount <span class="text-danger">*</span></label>
                                 {{ Form::text('loan_amount', old('loan_amount'), ['class="form-control number-separator"', 'placeholder="Write total total amount..." x-model="form_data.total_amount"']) }}
@@ -105,14 +105,11 @@
                             </div>
                         </div>
 
-                        <div class="col-lg-3">
+                        <div class="col-lg-3 col-md-3 col-sm-3 col-12">
                             <div class="mb-3">
                                 <label>Debit Type <span class="text-danger">*</span></label>
                                 @php
-                                    $options = [
-                                        'FIXED' => 'Fixed',
-                                        'DYNAMIC' => 'Dynamic',
-                                    ];
+                                    $options = ['FIXED' => 'Fixed',];
                                     $options = ['' => 'Select'] + $options;
                                 @endphp
 
@@ -121,7 +118,7 @@
                             </div>
                         </div>
 
-                        <div class="col-lg-3" id="fixed_deduction" style="display: block">
+                        <div class="col-lg-3 col-md-3 col-sm-3 col-12" id="fixed_deduction" style="display: block">
                             <div class="mb-3">
                                 <label>Installment Amount <span class="text-danger">*</span></label>
                                 {{ Form::text('installment_amount', old('installment_amount'), ['class="form-control number-separator"', 'placeholder="Write deduction amount..." x-model="form_data.deduction_amount"']) }}
@@ -129,7 +126,7 @@
                             </div>
                         </div>
 
-                        <div class="col-lg-3" id="min_deduction" style="display: none">
+                        <div class="col-lg-3 col-md-3 col-sm-3 col-12" id="min_deduction" style="display: none">
                             <div class="mb-3">
                                 <label>Min Deduction Amount <span class="text-danger">*</span></label>
                                 {{ Form::text('min_installment_amount', old('min_installment_amount'), ['class="form-control number-separator"', 'placeholder="Minimum deduction amount..." x-model="form_data.min_installment_amount"', 'id="min_installment_amount"']) }}
@@ -137,7 +134,7 @@
                             </div>
                         </div>
 
-                        <div class="col-lg-3" id="max_deduction" style="display: none">
+                        <div class="col-lg-3 col-md-3 col-sm-3 col-12" id="max_deduction" style="display: none">
                             <div class="mb-3">
                                 <label>Installment Amount <span class="text-danger">*</span></label>
                                 {{ Form::text('max_installment_amount', old('max_installment_amount'), ['class="form-control number-separator"', 'placeholder="Maximum deduction amount..." x-model="form_data.max_installment_amount"', 'id="max_installment_amount"']) }}
@@ -145,7 +142,7 @@
                             </div>
                         </div>
 
-                        <div class="col-lg-3">
+                        <div class="col-lg-3 col-md-3 col-sm-3 col-12">
                             <div class="mb-3">
                                 <label>Frequency of Installment <span class="text-danger">*</span></label>
                                 @php
@@ -159,27 +156,24 @@
                                 <span class="text-danger">{{ $errors->first('periodicity') }}</span>
                             </div>
                         </div>
-                        <!--./col -->
 
-                        <div class="col-lg-3">
+                        <div class="col-lg-3 col-md-3 col-sm-3 col-12">
                             <div class="mb-3">
                                 <label>Number of installments <span class="text-danger">*</span></label>
                                 {{ Form::number('number_of_installment', old('number_of_installment'), ['class="form-control"', 'placeholder="Write number installment..." x-model="form_data.number_of_installment"', 'min' => 1]) }}
                                 <span class="text-danger">{{ $errors->first('number_of_installment') }}</span>
                             </div>
                         </div>
-                        <!--./col -->
 
-                        <div class="col-lg-3">
+                        <div class="col-lg-3 col-md-3 col-sm-3 col-12">
                             <div class="mb-3">
                                 <label>Deduction Start Date <span class="text-danger">*</span></label>
                                 {{ Form::date('start_date', old('start_date'), ['class="form-control"', 'min' => date('Y-m-d'), 'x-model="form_data.start_date"']) }}
                                 <span class="text-danger">{{ $errors->first('start_date') }}</span>
                             </div>
                         </div>
-                        <!--./col -->
 
-                        <div class="col-lg-3">
+                        <div class="col-lg-3 col-md-3 col-sm-3 col-12">
                             <div class="mb-3">
                                 <label>Deduction End<span class="text-danger">*</span></label>
                                 @php
@@ -194,21 +188,19 @@
                                 <span class="text-danger">{{ $errors->first('deduction_end') }}</span>
                             </div>
                         </div>
-                        <!--./col -->
 
-                        <div class="col-lg-3" id="end_date" style="display: none;">
+                        <div class="col-lg-3 col-md-3 col-sm-3 col-12" id="end_date" style="display: none;">
                             <div class="mb-3">
                                 <label>End Date <span class="text-danger">*</span></label>
                                 {{ Form::date('end_date', old('end_date'), ['class="form-control"', 'id="end_date" x-model="form_data.end_date"']) }}
                                 <span class="text-danger">{{ $errors->first('end_date') }}</span>
                             </div>
                         </div>
-                        <!--./col -->
                     </div>
                     <!--./row -->
 
                     <div class="row">
-                        <div class="col-md-12">
+                        <div class="col-lg-12 col-md-12 col-sm-12 col-12">
                             <div class="mb-3 text-sm-end d-sm-block">
                                 <a href="{{ route('payment-mandate.create-account',[$customer_account->uuid, ($debit_order ? $debit_order->uuid : '')]) }}"
                                     class="btn btn-outline-danger text-medium">Previous</a>
@@ -216,7 +208,6 @@
                                 <button type="submit" class="btn btn-primary px-3">Next</button>
                             </div>
                         </div>
-                        <!--./col -->
                     </div>
                     <!--./row -->
                 </section>
@@ -283,7 +274,7 @@
         function initData() {
             return {
                 form_data: {
-                     partner_id: "{{ $debit_order ? $debit_order->partner_id : '' }}",
+                    partner_id: "{{ $debit_order ? $debit_order->partner_id : '' }}",
                     total_amount: "{{ $debit_order ? number_format($debit_order->total_amount) : '' }}",
                     deduction_amount: '{{ $debit_order ? number_format($debit_order->installment_amount) : '' }}',
                     min_installment_amount: '{{ $debit_order ? number_format($debit_order->min_installment_amount) : '' }}',
