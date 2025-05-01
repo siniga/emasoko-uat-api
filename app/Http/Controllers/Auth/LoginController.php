@@ -43,7 +43,7 @@ class LoginController extends Controller
     }
 
     //login form
-    function showLoginForm()
+    public function showLoginForm()
     {
         $title = 'Login';
 

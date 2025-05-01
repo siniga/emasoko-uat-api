@@ -46,7 +46,7 @@ class DeductionService
             $number_of_days = "+1 day";
 
         //3. Delete all installments
-        $delete_installment = Installment::where('debit_order_id', $debitOrder->id)->delete();
+        $deleted_installment = Installment::where('debit_order_id', $debitOrder->id)->delete();
 
         //4. Calculate installment dates
         if ($debit_type == "FIXED") {
