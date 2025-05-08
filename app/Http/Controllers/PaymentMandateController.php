@@ -258,15 +258,36 @@ class PaymentMandateController extends Controller
             $request,
             [
                 'provider_id' => 'required_if:partner_id,==,null',
-                'loan_amount' => 'required',
+                'loan_amount' => [
+                    'required',
+                    function ($attribute, $value, $fail) use ($loan_amount) {
+                        if ($loan_amount < 1000) {
+                            return $fail('Total amount should be greater than or equal to 1,000');
+                        }
+                    }
+                ],
                 'debit_type' => 'required',
                 'periodicity' => 'required',
-                'number_of_installment' => 'required',
+                'number_of_installment' => ['required', 'min:1', 'max:100'],
                 'start_date' => 'required',
                 'deduction_end' => 'required',
-                'installment_amount' => 'required_if:debit_type,==,FIXED',
+                'installment_amount' => [
+                    'required_if:debit_type,==,FIXED',
+                    function ($attribute, $value, $fail) use ($installment_amount) {
+                        if ($installment_amount < 1000) {
+                            return $fail('Installment amount should be greater than or equal to 1,000');
+                        }
+                    }
+                ],
                 'end_date' => 'required_if:deduction_end,==,specificDate',
-                'min_installment_amount' => 'required_if:debit_type,==,DYNAMIC',
+                'min_installment_amount' => [
+                    'required_if:debit_type,==,DYNAMIC',
+                    function ($attribute, $value, $fail) use ($min_installment_amount) {
+                        if ($min_installment_amount < 1000) {
+                            return $fail('Minimum installment amount should be greater than or equal to 1,000');
+                        }
+                    }
+                ],
                 'max_installment_amount' => [
                     'required_if:debit_type,==,DYNAMIC',
                     function ($attribute, $value, $fail) use ($min_installment_amount, $max_installment_amount) {
@@ -284,6 +305,7 @@ class PaymentMandateController extends Controller
                 'min_installment_amount.required_if' => 'Minimum installment amount required',
                 'max_installment_amountrequired_if' => 'Maximum installment amount required',
                 'periodicity.required' => 'Periodicity required',
+                'number_of_installment.required' => 'Number of installment required',
                 'number_of_installment.required' => 'Number of installment required',
                 'start_date.required' => 'Start date required',
                 'deduction_end.required' => 'Deduction end required',
@@ -356,7 +378,7 @@ class PaymentMandateController extends Controller
 
         if ($debit_order) {
             //create deduction installments
-            $response = $this->deductionService->createInstallment($debit_order);
+            $this->deductionService->createInstallment($debit_order);
 
             // Link customer with service provider
             $customer_partner = CustomerPartner::firstOrNew(
@@ -892,7 +914,7 @@ class PaymentMandateController extends Controller
         foreach ($debit_orders as $debit_order) {
 
             //Find summation of installments
-            $installments = Installment::select(DB::raw('COUNT(installments.id) as number_of_installments') ,DB::raw('COALESCE(SUM(installments.installment_amount), 0) as paid_amount'))->where(['debit_order_id' => $debit_order->id, 'status' => 'CLOSED'])->get();
+            $installments = Installment::select(DB::raw('COUNT(installments.id) as number_of_installments'), DB::raw('COALESCE(SUM(installments.installment_amount), 0) as paid_amount'))->where(['debit_order_id' => $debit_order->id, 'status' => 'CLOSED'])->get();
 
             $amount = $installments[0]->paid_amount;
             $outstanding_amount = $debit_order->total_amount - $amount;

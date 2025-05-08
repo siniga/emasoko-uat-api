@@ -134,7 +134,6 @@ class CompanyController extends Controller
      */
     public function create()
     {
-
         //render view
         return view('companies.create');
     }
@@ -312,7 +311,7 @@ class CompanyController extends Controller
 
         //populate data
         $account_types = AccountType::toBase()->get();
-        $accounts = Account::toBase()->get();
+        $accounts = Account::where(['active' => 1])->toBase()->get();
         $currencies = Currency::toBase()->get();
 
         //render view
@@ -432,12 +431,12 @@ class CompanyController extends Controller
         //next stage
         $partner = $this->companyService->updateNextStep($id, 'companies/preview/' . $uuid);
 
-        DB::beginTransaction();
-        $this->companyService->createCredential((object) $request->all(), $partner);
-        DB::commit();
+        // DB::beginTransaction();
+        // $this->companyService->createCredential((object) $request->all(), $partner);
+        // DB::commit();
 
         //response
-        return response()->json(['success' => true, 'uuid' => $uuid, 'message' => 'Service Provider credentials saved'], 200);
+        return response()->json(['success' => true, 'uuid' => $uuid, 'message' => 'Authorised person saved'], 200);
     }
 
     //company info overview
@@ -772,6 +771,7 @@ class CompanyController extends Controller
                 //check for CRDB partner accounts
                 $crdb_partner_account = PartnerAccount::where(['partner_id' => $partner->id, 'account_type_id' => 1, 'account_id' => 2]);
 
+                //process corporate registration for NMB
                 if ($nmb_partner_account->count() > 0) {
                     $nmb_partner_account = $nmb_partner_account->first();
 
@@ -795,6 +795,9 @@ class CompanyController extends Controller
                     //approve partner
                     $partner->status = 202;
                     $partner->save();
+
+                    //create service provider credentials
+                    $this->companyService->createCredential($partner);
 
                     //create success msg
                     $success_msg = "Service provider approved.";

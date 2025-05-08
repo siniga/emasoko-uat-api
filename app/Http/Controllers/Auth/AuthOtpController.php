@@ -15,13 +15,47 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Foundation\Auth\ThrottlesLogins;
 
 class AuthOtpController extends Controller
 {
+    use ThrottlesLogins;
+
+    public function username()
+    {
+        return 'email';
+    }
+
+    protected function maxAttempts()
+    {
+        return 3;
+    }
+
+    protected function decayMinutes()
+    {
+        return 5;
+    }
+
     // Return View of OTP Login Page
     public function login()
     {
-        return view('auth.otp-login');
+        $title = 'Login';
+
+        //check if user already login
+        if (Auth::check()) {
+            //user
+            $user = User::whereId(Auth::user()->id)->first();
+
+            if ($user->hasRole('admin')) {
+                // Authentication passed...
+                return Redirect::route('dashboard')->with('success', 'Logged in successful');
+            } else {
+                // Authentication passed...
+                return Redirect::route('payment-mandate.create-account')->with('success', 'Logged in successful');
+            }
+        }
+
+        return view('auth.otp-login', compact('title'));
     }
 
     // Generate OTP
@@ -33,6 +67,11 @@ class AuthOtpController extends Controller
             'password' => 'required'
         ]);
 
+        if ($this->hasTooManyLoginAttempts($request)) {
+            $this->fireLockoutEvent($request);
+            return $this->sendLockoutResponse($request);
+        }
+
         //password
         $otp_password = base64_encode($request->input('password'));
 
@@ -40,8 +79,14 @@ class AuthOtpController extends Controller
         $user = User::where(['email' => $request->email, 'otp_password' => $otp_password])->first();
 
         if (!$user) {
+            $this->incrementLoginAttempts($request);
+
+            //redirect back
             return Redirect::route('otp.login')->with('danger', 'Invalid email or password');
         }
+
+        //clear login attempts
+        //$this->clearLoginAttempts($request);
 
         # Generate An OTP
         $verificationCode = $this->generateOtp($user);
@@ -53,8 +98,9 @@ class AuthOtpController extends Controller
         $message = "Your Emakato One Time Password(OTP) to Login is " . $verificationCode->otp;
 
         //send sms
-        $data = ["phone" => $phone, "message" => $message];
-        dispatch(new SendSMSJob($data));
+        $messaging = new Messaging();
+        $response = $messaging->sendSMS($phone, $message);
+        Log::debug("== SMS sent ==");
 
         //send email
         $data = [

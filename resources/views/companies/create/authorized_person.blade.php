@@ -209,7 +209,7 @@
 
                             //display message
                             $('.form-message').html(
-                                "<div class='alert alert-success py-2.5 px-2'>Service Provider credential(s) saved</div>"
+                                "<div class='alert alert-success py-2.5 px-2'>Company Authorized person saved.</div>"
                             );
 
                             //set timer

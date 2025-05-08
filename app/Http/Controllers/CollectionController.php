@@ -177,6 +177,9 @@ class CollectionController extends Controller
     public function store(Request $request)
     {
         if ($request->selected_partner_id && $request->installment_ids) {
+            //initiate collection date
+            $collection_date = Carbon::now();
+
             //1. Find partner information
             $partner = Partner::findOrFail($request->selected_partner_id);
 
@@ -217,6 +220,9 @@ class CollectionController extends Controller
                     $debit_start_date = Carbon::parse($installment->debitOrder->start_date);
                     $debit_end_date = Carbon::parse($installment->debitOrder->end_date);
                     $deleted = $installment->debitOrder->deleted;
+
+                    //update collection date
+                    $collection_date = $installment->payment_date;
 
                     //1.0 check if periodicity == MONTHLY
                     if ($periodicity == "MONTHLY" && $deleted == 0) {
@@ -263,6 +269,7 @@ class CollectionController extends Controller
 
                 //4. Save csv payload in database
                 $batch->request_csv = $csv;
+                $batch->collectionDate = $collection_date;
                 $batch->number_of_collections = $number_of_collections;
                 $batch->installment_ids = implode(",", $arr_installments);
                 $batch->save();
@@ -273,7 +280,7 @@ class CollectionController extends Controller
 
             //send Notification of batch creation
             $message = "Collection batch number " . $collection_reference . " created. Review and approve to the next stage.";
-            $arr_phone = [255717705746, 255656314330, 255629602290, 255684512512];
+            $arr_phone = [255717705746, 255656314330, 255629602290];
 
             foreach ($arr_phone as $phone) {
                 //send sms
@@ -889,22 +896,24 @@ class CollectionController extends Controller
             $arr_installments[] = [
                 'installmentId' => $installment->id,
                 'mandateReference' => $mandate_ref,
-                'paymentDate' => $installment->payment_date,
+                'accountName' => strtoupper($debit_order->customerAccount->account_name),
+                'accountNumber' => $debit_order->customerAccount->account_number,
                 'paidAmount' => $paid_amount,
                 'installmentAmount' => $installmentAmount,
+                'paymentDate' => $installment->payment_date,
                 'NMB Status' => "PAID",
-                "status" => $installment->status
+                "eMakato status" => $installment->status
             ];
 
             //process calculation for installment and debit order.
-            if ($installment && $installment->status != "CLOSED") {
-                //update installment
-                $installment->last_paid_amount = $paid_amount;
-                $installment->save();
+            // if ($installment && $installment->status != "CLOSED") {
+            //     //update installment
+            //     $installment->last_paid_amount = $paid_amount;
+            //     $installment->save();
 
-                //process installment
-                $process_data = $this->deductionService->processInstallment($installment, $paid_amount, $mandate_ref);
-            }
+            //     //process installment
+            //     $process_data = $this->deductionService->processInstallment($installment, $paid_amount, $mandate_ref);
+            // }
         }
         //fclose($file);
 

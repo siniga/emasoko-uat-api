@@ -46,7 +46,7 @@ class DeductionService
             $number_of_days = "+1 day";
 
         //3. Delete all installments
-        $delete_installment = Installment::where('debit_order_id', $debitOrder->id)->delete();
+        $deleted_installment = Installment::where('debit_order_id', $debitOrder->id)->delete();
 
         //4. Calculate installment dates
         if ($debit_type == "FIXED") {
@@ -162,7 +162,7 @@ class DeductionService
 
         //5. Update debit order end_date
         $last_installment_date = date('Y-m-d', strtotime($last_installment_date . $number_of_days));
-        $debitOrder->end_date = date('Y-m-d', strtotime($last_installment_date . " +1 year")); //add cap of 1 year
+        $debitOrder->end_date = date('Y-m-d', strtotime($last_installment_date . " +2 year")); //add buffer of 2 year
         $debitOrder->save();
 
         return 200;

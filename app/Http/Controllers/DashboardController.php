@@ -31,7 +31,11 @@ class DashboardController extends Controller
         $approvedStatuses = [0, 1, 2];
 
         //query
-        $debit_orders = DebitOrder::filterCondition()->select('debit_orders.approved', DB::raw('COALESCE(SUM(debit_orders.total_amount), 0) as total_amount'), DB::raw('COUNT(id) as number_of_mandate'))
+        $debit_orders = DebitOrder::filterCondition()->select(
+            'debit_orders.approved',
+            DB::raw('COALESCE(SUM(debit_orders.total_amount), 0) as total_amount'),
+            DB::raw('COUNT(id) as number_of_mandate')
+        )
             ->where(function ($query) {
                 $query->whereIn('debit_orders.approved', [0, 1, 2]);
             })->groupBy('debit_orders.approved')->orderBy('debit_orders.approved')->toBase();
@@ -59,7 +63,10 @@ class DashboardController extends Controller
         $current_month = date('m');
 
         //collection stats
-        $installments = Installment::filterCondition()->select(DB::raw('COALESCE(SUM(installments.installment_amount), 0) as total_amount'), DB::raw('COALESCE(SUM(installments.current_balance), 0) as paid_amount'))->toBase();
+        $installments = Installment::filterCondition()->select(
+            DB::raw('COALESCE(SUM(installments.installment_amount), 0) as total_amount'),
+            DB::raw('COALESCE(SUM(installments.current_balance), 0) as paid_amount')
+        )->toBase();
 
         //this month collection
         $this_month = $installments->whereMonth('payment_date', $current_month)->whereYear('payment_date', $current_year)->get();
@@ -139,6 +146,6 @@ class DashboardController extends Controller
         $collection_title = "Actual Monthly Collection - $display_current_month, $current_year";
 
         //render view
-        return view('dashboard', compact('title', 'collection_title' ,'arr_data', 'stats', 'post_data'));
+        return view('dashboard', compact('title', 'collection_title', 'arr_data', 'stats', 'post_data'));
     }
 }
