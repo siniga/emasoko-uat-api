@@ -215,7 +215,9 @@
                                                 @elseif($company->status == 200)
                                                     <span class="badge bg-info">Pending Approval</span>
                                                 @elseif($company->status == 201)
-                                                    <span class="badge bg-info">Pending Verification</span>
+                                                    <span class="badge bg-warning">Pending Verification</span>
+                                                @elseif($company->status == 203)
+                                                    <span class="badge bg-warning">Pending Verification</span>
                                                 @elseif($company->status == 202)
                                                     <span class="badge bg-success-1">Verified</span>
                                                 @elseif($company->status == 403) 
