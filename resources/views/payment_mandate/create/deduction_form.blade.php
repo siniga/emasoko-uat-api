@@ -160,7 +160,7 @@
                         <div class="col-lg-3 col-md-3 col-sm-3 col-12">
                             <div class="mb-3">
                                 <label>Number of installments <span class="text-danger">*</span></label>
-                                {{ Form::number('number_of_installment', old('number_of_installment'), ['class="form-control"', 'placeholder="Write number installment..." x-model="form_data.number_of_installment"', 'min' => 1]) }}
+                                {{ Form::number('number_of_installment', old('number_of_installment'), ['class="form-control"', 'placeholder="Write number installment..." x-model="form_data.number_of_installment"', 'min' => 1, 'max' => 100]) }}
                                 <span class="text-danger">{{ $errors->first('number_of_installment') }}</span>
                             </div>
                         </div>

@@ -268,7 +268,7 @@ class PaymentMandateController extends Controller
                 ],
                 'debit_type' => 'required',
                 'periodicity' => 'required',
-                'number_of_installment' => 'required',
+                'number_of_installment' => ['required', 'min:1', 'max:100'],
                 'start_date' => 'required',
                 'deduction_end' => 'required',
                 'installment_amount' => [
@@ -305,6 +305,7 @@ class PaymentMandateController extends Controller
                 'min_installment_amount.required_if' => 'Minimum installment amount required',
                 'max_installment_amountrequired_if' => 'Maximum installment amount required',
                 'periodicity.required' => 'Periodicity required',
+                'number_of_installment.required' => 'Number of installment required',
                 'number_of_installment.required' => 'Number of installment required',
                 'start_date.required' => 'Start date required',
                 'deduction_end.required' => 'Deduction end required',
