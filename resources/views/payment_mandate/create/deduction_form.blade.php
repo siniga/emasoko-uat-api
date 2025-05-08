@@ -111,7 +111,6 @@
                                 @php
                                     $options = [
                                         'FIXED' => 'Fixed',
-                                        //'DYNAMIC' => 'Dynamic',
                                     ];
                                     $options = ['' => 'Select'] + $options;
                                 @endphp

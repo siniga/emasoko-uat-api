@@ -69,6 +69,7 @@
                                 $sum_paid_amount = 0;
                                 $sum_current_balance = 0;
                                 $sum_outstanding_amount = 0;
+                                $success_rate = 0;
                             @endphp
 
                             <tbody>

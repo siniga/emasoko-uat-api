@@ -308,7 +308,7 @@
                                         <thead>
                                             <tr>
                                                 <td colspan="4" class="font-weight-600 text-uppercase">
-                                                    Deduction History
+                                                    Deduction History <span x-text="status"></span>
                                                 </td>
                                             </tr>
                                         </thead>
