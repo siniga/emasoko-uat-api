@@ -70,7 +70,6 @@
                 <input type="hidden" name="debit_order_id" value="{{ $debit_order->id ?? null }}">
                 <input type="hidden" name="debit_order_uuid" value="{{ $debit_order->uuid ?? null }}">
 
-                <!-- Customer Information -->
                 <section>
                     @if ($provider == null)
                         <div class="row">
@@ -199,7 +198,6 @@
                             </div>
                         </div>
                     </div>
-                    <!--./row -->
 
                     <div class="row">
                         <div class="col-lg-12 col-md-12 col-sm-12 col-12">
@@ -211,14 +209,12 @@
                             </div>
                         </div>
                     </div>
-                    <!--./row -->
                 </section>
                 {{ Form::close() }}
             </div>
         </div>
     </div>
 </div>
-<!-- end row -->
 @endsection
 
 @section('script')

@@ -126,8 +126,12 @@
                                         <span class="badge bg-info">Pending Approval</span>
                                     </template>
 
-                                    <template x-if="status==201 || status==203">
-                                        <span class="badge bg-info">Pending Verification</span>
+                                    <template x-if="status==201">
+                                        <span class="badge bg-warning">Pending Verification</span>
+                                    </template>
+
+                                    <template x-if="status==203">
+                                        <span class="badge bg-warning">Pending Verification</span>
                                     </template>
 
                                     <template x-if="status==202">
