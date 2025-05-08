@@ -268,7 +268,7 @@ class PaymentMandateController extends Controller
                 ],
                 'debit_type' => 'required',
                 'periodicity' => 'required',
-                'number_of_installment' => ['required', 'min:1', 'max:100'],
+                'number_of_installment' => 'required',
                 'start_date' => 'required',
                 'deduction_end' => 'required',
                 'installment_amount' => [
@@ -280,14 +280,7 @@ class PaymentMandateController extends Controller
                     }
                 ],
                 'end_date' => 'required_if:deduction_end,==,specificDate',
-                'min_installment_amount' => [
-                    'required_if:debit_type,==,DYNAMIC',
-                    function ($attribute, $value, $fail) use ($min_installment_amount) {
-                        if ($min_installment_amount < 1000) {
-                            return $fail('Minimum installment amount should be greater than or equal to 1,000');
-                        }
-                    }
-                ],
+                'min_installment_amount' => 'required_if:debit_type,==,DYNAMIC',
                 'max_installment_amount' => [
                     'required_if:debit_type,==,DYNAMIC',
                     function ($attribute, $value, $fail) use ($min_installment_amount, $max_installment_amount) {
