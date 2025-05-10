@@ -22,10 +22,15 @@ class MobileAppController extends Controller
         $approvedStatuses = [0, 1, 2];
 
         //query
-        $debit_orders = DebitOrder::filterCondition()->select('debit_orders.approved', DB::raw('COALESCE(SUM(debit_orders.total_amount), 0) as total_amount'), DB::raw('COUNT(id) as number_of_mandate'))
-            ->where(function ($query) {
-                $query->whereIn('debit_orders.approved', [0, 1, 2]);
-            })->groupBy('debit_orders.approved')->orderBy('debit_orders.approved')->toBase();
+        $debit_orders = DebitOrder::filterCondition()->select(
+            'debit_orders.approved',
+            DB::raw('COALESCE(SUM(debit_orders.total_amount), 0) as total_amount'),
+            DB::raw('COUNT(id) as number_of_mandate')
+        )->where(function ($query) {
+            $query->whereIn('debit_orders.approved', [0, 1, 2]);
+        })->whereHas('partner', function ($q) {
+            $q->where('partners.status', 202);
+        })->groupBy('debit_orders.approved')->orderBy('debit_orders.approved')->toBase();
 
         $debit_orders = $debit_orders->get();
 
@@ -45,12 +50,51 @@ class MobileAppController extends Controller
         //summation of mandate values
         $total_mandate_value = $mandates[0]['total_amount'] + $mandates[1]['total_amount'] + $mandates[2]['total_amount'];
 
+        //Collection this month
+        //current date
+        $current_year = date('Y');
+        $current_month = date('m');
+
+        //collection stats
+        $installments = Installment::filterCondition()->select(
+            DB::raw('COALESCE(SUM(installments.installment_amount), 0) as total_amount'),
+            DB::raw('COALESCE(SUM(installments.current_balance), 0) as paid_amount')
+        )->whereHas('debitOrder', function ($query) {
+            $query->where(['debit_orders.approved' => 1, 'debit_orders.deleted' => 0, 'debit_orders.status' => 240])
+                ->whereHas('partner', function ($q) {
+                    $q->where('partners.status', 202);
+                });
+        })->toBase();
+
+        //this month collection
+        $this_month = $installments->whereMonth('payment_date', $current_month)->whereYear('payment_date', $current_year)->get();
+
+        //declare variable
+        $year = date('Y');
+        $mandate_stats = [];
+
+        for ($i = 1; $i <= 12; $i++) {
+            $month = date('m', mktime(0, 0, 0, $i, 10));
+
+            //query
+            $debit_orders = DebitOrder::filterCondition()->select(
+                DB::raw('COALESCE(SUM(debit_orders.total_amount), 0) as total_amount')
+            )->whereHas('partner', function ($q) {
+                $q->where('partners.status', 202);
+            })->toBase();
+
+            $debit_orders = $debit_orders->whereMonth('created_at', $month)->whereYear('created_at', $year)->get();
+
+            array_push($mandate_stats, $debit_orders[0]->total_amount);
+        }
+
         //recent debit orders
-        $recent_debit_orders = DebitOrder::filterCondition()->take(10)->get();
+        $recent_debit_orders = DebitOrder::filterCondition()
+            ->whereHas('partner', function ($q) {
+                $q->where('partners.status', 202);
+            })->take(10)->get();
 
-        // graph stats
-        $stats = [13545454, 23545454, 12545454, 23545454, 13545454, 23545454, 23545454, 23545454, 23545454, 23545454, 23545454, 23545454];
-
+        //response
         return response()->json([
             'success' => true,
             'response_code' => 200,
@@ -68,11 +112,12 @@ class MobileAppController extends Controller
                 'total_debit_orders_val' => $total_mandate_value,
 
                 //collection
-                "expected_collection" => 0,
-                "actual_collection" => 0,
+                'collection_month' => date('F'),
+                "expected_collection_amount" => $this_month[0]->total_amount,
+                "actual_collection_amount" => $this_month[0]->paid_amount,
 
                 //stats
-                'stats' => $stats,
+                'stats' => $mandate_stats,
                 'recent_mandates' => $recent_debit_orders
             ]
         ]);

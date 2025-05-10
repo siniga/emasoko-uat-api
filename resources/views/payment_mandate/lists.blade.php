@@ -171,10 +171,10 @@
                                             <i class="bx bx-export"></i> Export XLS
                                         </a>
 
-                                        <a title="Export" class="btn btn-outline-danger btn-sm"
+                                        {{-- <a title="Export" class="btn btn-outline-danger btn-sm"
                                             href="{{ route('payment-mandate.export-pdf', ['start_at' => $post_data['start_at'], 'end_at' => $post_data['end_at'], 'account_type_id' => $post_data['account_type_id'], 'account_id' => $post_data['account_id'], 'partner_id' => $post_data['partner_id'], 'status' => $post_data['status'], 'keyword' => $post_data['keyword']]) }}">
                                             <i class="fas fa-file-pdf"></i> Export PDF
-                                        </a>
+                                        </a> --}}
                                     @endif
                                 </div>
                             </div>

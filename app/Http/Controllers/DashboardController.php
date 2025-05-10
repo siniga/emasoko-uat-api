@@ -35,11 +35,13 @@ class DashboardController extends Controller
             'debit_orders.approved',
             DB::raw('COALESCE(SUM(debit_orders.total_amount), 0) as total_amount'),
             DB::raw('COUNT(id) as number_of_mandate')
-        )
-            ->where(function ($query) {
-                $query->whereIn('debit_orders.approved', [0, 1, 2]);
-            })->groupBy('debit_orders.approved')->orderBy('debit_orders.approved')->toBase();
+        )->where(function ($query) {
+            $query->whereIn('debit_orders.approved', [0, 1, 2]);
+        })->whereHas('partner', function ($q) {
+            $q->where('partners.status', 202);
+        })->groupBy('debit_orders.approved')->orderBy('debit_orders.approved')->toBase();
 
+        //debit orders
         $debit_orders = $debit_orders->get();
 
         // Map over all approved statuses to ensure complete results
@@ -66,7 +68,12 @@ class DashboardController extends Controller
         $installments = Installment::filterCondition()->select(
             DB::raw('COALESCE(SUM(installments.installment_amount), 0) as total_amount'),
             DB::raw('COALESCE(SUM(installments.current_balance), 0) as paid_amount')
-        )->toBase();
+        )->whereHas('debitOrder', function ($query) {
+            $query->where(['debit_orders.approved' => 1, 'debit_orders.deleted' => 0, 'debit_orders.status' => 240])
+                ->whereHas('partner', function ($q) {
+                    $q->where('partners.status', 202);
+                });
+        })->toBase();
 
         //this month collection
         $this_month = $installments->whereMonth('payment_date', $current_month)->whereYear('payment_date', $current_year)->get();

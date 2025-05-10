@@ -171,10 +171,10 @@
                                         <i class="fas fa-file-excel"></i> Export XLS
                                     </a>
 
-                                    <a class="btn btn-outline-danger btn-sm"
+                                    {{-- <a class="btn btn-outline-danger btn-sm"
                                         href="{{ route('companies.export-pdf', ['start_at' => $post_data['start_at'], 'end_at' => $post_data['end_at'], 'category_id' => $post_data['category_id'], 'region_id' => $post_data['region_id'], 'status' => $post_data['status'], 'keyword' => $post_data['keyword']]) }}">
                                         <i class="fas fa-file-pdf"></i> Export PDF
-                                    </a>
+                                    </a> --}}
                                 @endif
                             </div>
                         </div>

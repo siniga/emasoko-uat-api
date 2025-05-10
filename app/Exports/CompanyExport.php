@@ -50,13 +50,23 @@ class CompanyExport implements FromQuery, WithHeadings, ShouldAutoSize, WithEven
             'Company Website',
             'Region',
             'Physical Address',
-            'Created Date'
+            'Created Date',
+            'Status'
         ];
     }
 
     //map
     public function map($companies): array
     {
+        $status = "FAILED";
+
+        if($companies->status == 100 || $companies->status == 200)
+            $status = "PENDING REGISTRATION";
+        else if($companies->status == 201 || $companies->status == 203)
+            $status = "PENDING VERIFICATION";
+        else if($companies->status == 202)
+            $status = "VERIFIED";
+
         return [
             $companies->business_name ?? '',
             $companies->tin_number ?? 'NIL',
@@ -69,6 +79,7 @@ class CompanyExport implements FromQuery, WithHeadings, ShouldAutoSize, WithEven
             $companies->region->name ?? '',
             $companies->physical_address ?? '',
             $companies->created_at,
+            $status,
         ];
     }
 
@@ -77,7 +88,7 @@ class CompanyExport implements FromQuery, WithHeadings, ShouldAutoSize, WithEven
     {
         return [
             AfterSheet::class    => function (AfterSheet $event) {
-                $cellRange = 'A1:K1'; // All headers
+                $cellRange = 'A1:L1'; // All headers
                 $event->sheet->getDelegate()->getStyle($cellRange)->getFont()->setSize(12);
                 $event->sheet->getDelegate()->getStyle($cellRange)->getFont()->setBold(true);
             },

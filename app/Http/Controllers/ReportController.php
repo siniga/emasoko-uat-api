@@ -25,8 +25,14 @@ class ReportController extends Controller
 
         if (isset($_POST['generate'])) {
             if ($request->report_type == "MANDATE") {
+                //TODO: do query here
+
+
                 return Excel::download(new PaymentMandateExport($request), date('YmdHis') . '_DebitMandate.xlsx');
             } else if ($request->report_type == "COLLECTION") {
+                //TODO: do query here
+
+                
                 return Excel::download(new CollectionExport($request), date('YmdHis') . '_Collection.xlsx');
             }
         }
