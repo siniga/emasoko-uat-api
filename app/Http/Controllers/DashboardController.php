@@ -35,12 +35,11 @@ class DashboardController extends Controller
             'debit_orders.approved',
             DB::raw('COALESCE(SUM(debit_orders.total_amount), 0) as total_amount'),
             DB::raw('COUNT(id) as number_of_mandate')
-        )
-            ->where(function ($query) {
-                $query->whereIn('debit_orders.approved', [0, 1, 2]);
-            })->whereHas('partner', function ($q) {
-                $q->where('partners.status', 202);
-            })->groupBy('debit_orders.approved')->orderBy('debit_orders.approved')->toBase();
+        )->where(function ($query) {
+            $query->whereIn('debit_orders.approved', [0, 1, 2]);
+        })->whereHas('partner', function ($q) {
+            $q->where('partners.status', 202);
+        })->groupBy('debit_orders.approved')->orderBy('debit_orders.approved')->toBase();
 
         //debit orders
         $debit_orders = $debit_orders->get();
