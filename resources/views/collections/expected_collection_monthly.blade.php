@@ -19,7 +19,7 @@
             <!-- -->
             <div class="card">
                 <div class="card-body">
-                <div class="d-flex justify-content-between mb-2">
+                    <div class="d-flex justify-content-between mb-2">
                         <div></div>
                         <div class="text-sm-end d-none d-sm-block">
                             {!! Form::open(['url' => route('collections.expected-monthly'), 'method' => 'POST', 'class' => 'd-flex align-items-center']) !!}

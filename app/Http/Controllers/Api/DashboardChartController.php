@@ -36,6 +36,8 @@ class DashboardChartController extends Controller
             $debit_orders = DebitOrder::filterCondition()->select('debit_orders.approved', DB::raw('COALESCE(SUM(debit_orders.total_amount), 0) as total_amount'))
                 ->where(function ($query) {
                     $query->whereIn('debit_orders.approved', [0, 1, 2]);
+                })->whereHas('partner', function ($q) {
+                    $q->where('partners.status', 202);
                 })->groupBy('debit_orders.approved')->orderBy('debit_orders.approved')->toBase();
 
             $debit_orders = $debit_orders->whereMonth('created_at', $month)->whereYear('created_at', $year)->get();
@@ -87,6 +89,8 @@ class DashboardChartController extends Controller
         $debit_orders = DebitOrder::filterCondition()->select('debit_orders.approved', DB::raw('COALESCE(COUNT(debit_orders.id), 0) as number_of_approved'))
             ->where(function ($query) {
                 $query->whereIn('debit_orders.approved', [0, 1, 2]);
+            })->whereHas('partner', function ($q) {
+                $q->where('partners.status', 202);
             })->groupBy('debit_orders.approved')->orderBy('debit_orders.approved')->toBase();
 
         $debit_orders = $debit_orders->get();
@@ -137,7 +141,17 @@ class DashboardChartController extends Controller
             $month = date('m', mktime(0, 0, 0, $i, 10));
 
             //installments
-            $installments = Installment::filterCondition()->select(DB::raw('COALESCE(SUM(installments.installment_amount), 0) as total_amount'), DB::raw('COALESCE(SUM(installments.current_balance), 0) as paid_amount'))->toBase();
+            $installments = Installment::filterCondition()->select(
+                DB::raw('COALESCE(SUM(installments.installment_amount), 0) as total_amount'),
+                DB::raw('COALESCE(SUM(installments.current_balance), 0) as paid_amount')
+            )->whereHas('debitOrder', function ($query) {
+                $query->where(['debit_orders.approved' => 1])
+                    ->whereHas('partner', function ($q) {
+                        $q->where('partners.status', 202);
+                    });
+            })->toBase();
+
+            //this month
             $installments = $installments->whereMonth('payment_date', $month)->whereYear('payment_date', $year)->get();
 
             //total amount
@@ -166,10 +180,6 @@ class DashboardChartController extends Controller
         else
             $current_date = $current_date;
 
-        Log::debug("current date");
-        Log::debug($current_date);
-
-
         //get dates
         $dates = $this->get_dates($current_date);
 
@@ -178,7 +188,17 @@ class DashboardChartController extends Controller
 
         foreach ($dates as $key => $v) {
             //installments
-            $installments = Installment::filterCondition()->select(DB::raw('COALESCE(SUM(installments.installment_amount), 0) as total_amount'), DB::raw('COALESCE(SUM(installments.current_balance), 0) as paid_amount'))->toBase();
+            $installments = Installment::filterCondition()->select(
+                DB::raw('COALESCE(SUM(installments.installment_amount), 0) as total_amount'),
+                DB::raw('COALESCE(SUM(installments.current_balance), 0) as paid_amount')
+            )->whereHas('debitOrder', function ($query) {
+                $query->where(['debit_orders.approved' => 1])
+                    ->whereHas('partner', function ($q) {
+                        $q->where('partners.status', 202);
+                    });
+            })->toBase();
+
+            //installment by date    
             $installments = $installments->whereDate('payment_date', $v)->get();
 
             //total amount
@@ -263,10 +283,6 @@ class DashboardChartController extends Controller
 
         //partner
         $partner = Partner::where(['uuid' => $uuid])->firstOrfail();
-
-        
-
-
     }
 
     public function get_dates($currentDate)

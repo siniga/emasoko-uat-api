@@ -150,7 +150,7 @@
         </div>
 
         <div class="col-md-3">
-            <a href="#">
+            <a href="{{ route('collections.expected-daily') }}">
                 <div class="card border-left-info bg-primary shadow h-96 py-2">
                     <div class="card-body">
                         <div class="row no-gutters align-items-center">
@@ -170,7 +170,7 @@
         </div>
 
         <div class="col-md-3">
-            <a href="#">
+            <a href="{{ route('collections.actual-daily') }}">
                 <div class="card border-left-info bg-success-1 shadow h-96 py-2">
                     <div class="card-body">
                         <div class="row no-gutters align-items-center">

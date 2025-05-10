@@ -152,10 +152,10 @@
                                             href="{{ route('customer-accounts.export-xls', ['start_at' => $data['start_at'], 'end_at' => $data['end_at'], 'account_type_id' => $data['account_type_id'], 'account_id' => $data['account_id'], 'status' => $data['status'], 'keyword' => $data['keyword']]) }}">
                                             <i class="bx bx-export"></i> Export XLS</a>
 
-                                        <a class="btn btn-outline-danger btn-sm"
+                                        {{-- <a class="btn btn-outline-danger btn-sm"
                                             href="{{ route('customer-accounts.export-pdf', ['start_at' => $data['start_at'], 'end_at' => $data['end_at'], 'account_type_id' => $data['account_type_id'], 'account_id' => $data['account_id'], 'status' => $data['status'], 'keyword' => $data['keyword']]) }}">
                                             <i class="fas fa-file-pdf"></i> Export PDF
-                                        </a>
+                                        </a> --}}
                                     </div>
                                 </div>
                             </div>

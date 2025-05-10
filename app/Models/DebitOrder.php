@@ -57,12 +57,12 @@ class DebitOrder extends Model
 
     public function installments()
     {
-        return $this->hasMany(Installment::class, 'debit_order_id');
+        return $this->hasMany(Installment::class, 'debit_order_id', 'id');
     }
 
     public function customerAccount()
     {
-        return $this->belongsTo(CustomerAccount::class, 'customer_account_id');
+        return $this->belongsTo(CustomerAccount::class, 'customer_account_id', 'id');
     }
 
     public function loanPurpose()
@@ -120,7 +120,7 @@ class DebitOrder extends Model
                     $query->where('debit_orders.created_at', '<=', $end_date);
             }
         })
-            ->when($partner_id, function($query) use ($partner_id){
+            ->when($partner_id, function ($query) use ($partner_id) {
                 $query->where('debit_orders.partner_id', '=', $partner_id);
             })
             ->when($status, function ($query) use ($status) {

@@ -16,29 +16,23 @@
 
     <div class="row">
         <div class="col-lg-12">
-            <div class="row mb-2">
-                <div class="col-lg-12 col-md-12 col-12">
-                    {!! Form::open(['url' => route('collections.expected-daily'), 'method' => 'POST', 'class' => 'form-horizontal']) !!}
-                    {{ Form::token() }}
-
-                    <div class="row">
-                        <div class="col-lg-3 col-md-3 col-12">
-                            <div class="input-group input-group-md">
-                                {{ Form::date('payment_at', old('payment_at'), ['placeholder="Payment Date..."', 'class="form-control"']) }}
-
-                                <button type="submit" name="filter" class="btn btn-secondary">
-                                    <i class="bx bx-search"></i> Filter
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    {{ Form::close() }}
-                </div>
-            </div>
-
-
             <div class="card">
                 <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <div></div>
+                        <div class="text-sm-end d-none d-sm-block">
+                            {!! Form::open(['url' => route('collections.expected-daily'), 'method' => 'POST', 'class' => 'd-flex align-items-center']) !!}
+                                {{ Form::token() }}
+
+                                {{ Form::date('payment_at', old('payment_at'), ['placeholder="Payment Date..."', 'class="form-control me-2"']) }}
+
+                                <button type="submit" name="filter" class="btn btn-secondary">
+                                    Filter
+                                </button>
+                            {{ Form::close() }}
+                        </div>
+                    </div>
+
                     <div class="table-responsive">
                         <table class="table table-bordered dt-responsive  nowrap w-100" id="dynamicTable">
                             <thead>
@@ -58,7 +52,11 @@
                                 @foreach ($arr_data as $values)
                                     <tr>
                                         <td>{{ $serial }}</td>
-                                        <td>{{ strtoupper($values['partner_name']) }}</td>
+                                        <td>
+                                            <a href="{{ route('collections.expected-daily-detail', $values['uuid']) }}?payment_at={{ $post_data['payment_at'] }}" class="font-weight-600">
+                                                {{ strtoupper($values['partner_name']) }} 
+                                            </a>
+                                        </td>
                                         <td class="text-sm-end">{{ number_format($values['number_of_collection']) }}</td>
                                         <td class="text-sm-end">{{ number_format($values['total_amount']) }}</td>
                                         <td class="text-sm-end">{{ number_format($values['paid_amount']) }}</td>
@@ -75,7 +73,4 @@
         </div>
     </div>
     <!-- end row -->
-@endsection
-@section('script')
-    <script type="text/javascript"></script>
 @endsection
