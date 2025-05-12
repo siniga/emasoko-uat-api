@@ -257,7 +257,7 @@ class ReportController extends Controller
 
         //populate data
         $account_types = AccountType::all();
-        $accounts = Account::all();
+        $accounts = Account::where('active', '=', 1)->get();
         $partners = Partner::filterCondition()->where('status', '=', 202)->get();
 
         //render view

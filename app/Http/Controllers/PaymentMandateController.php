@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Classes\Messaging;
+use App\Exports\DebitOrders;
 use App\Http\Requests\CustomerAccountRequest;
 use App\Http\Requests\CustomerDeductionRequest;
 use App\Jobs\CRDBMandateRegistrationJob;
@@ -54,7 +55,27 @@ class PaymentMandateController extends Controller
 
         //debit orders
         $number_of_debit_orders = 0;
-        $debit_orders = DebitOrder::filterCondition();
+        $debit_orders = DebitOrder::filterCondition()
+            ->select(
+                'id',
+                'uuid',
+                'reference',
+                'partner_id',
+                'customer_account_id',
+                'debit_type',
+                'periodicity',
+                'start_date',
+                'end_date',
+                'contract_status',
+                'status',
+                'remarks',
+                'approved',
+                'created_at',
+                'created_by'
+            )
+            ->whereHas('partner', function ($q) {
+                $q->where('partners.status', 202);
+            });
 
         if ($status) {
             switch ($status) {
@@ -66,6 +87,9 @@ class PaymentMandateController extends Controller
                     break;
                 case 'failed':
                     $approved = 2;
+                    break;
+                case 'cancelled':
+                    $approved = 9;
                     break;
                 default:
                     $approved = 0;
@@ -104,7 +128,7 @@ class PaymentMandateController extends Controller
 
         //populate data
         $account_types = AccountType::all();
-        $accounts = Account::all();
+        $accounts = Account::where('active', '=', 1)->get();
         $partners = Partner::filterCondition()->where('status', '=', 202)->get();
 
         //render view
@@ -114,7 +138,89 @@ class PaymentMandateController extends Controller
     //export xls
     public function export_xls(Request $request)
     {
-        return Excel::download(new PaymentMandateExport($request), date('YmdHis') . '-PaymentMandate.xlsx');
+        //all request
+        $requests = $request->all();
+
+        //Query Debit Mandate
+        $debit_orders = DebitOrder::filterCondition()
+            ->select(
+                'id',
+                'reference',
+                'partner_id',
+                'customer_account_id',
+                'debit_type',
+                'total_amount',
+                'paid_amount',
+                'outstanding_amount',
+                'current_balance',
+                'installment_amount',
+                'min_installment_amount',
+                'max_installment_amount',
+                'installment_number',
+                'periodicity',
+                'start_date',
+                'end_date',
+                'contract_status',
+                'status',
+                'remarks',
+                'approved',
+                'created_at',
+                'created_by'
+            )
+            ->whereHas('partner', function ($q) {
+                $q->where('partners.status', 202);
+            });
+
+        $debit_orders = $debit_orders->when($requests, function ($query) use ($requests) {
+            $query->withFilters($requests);
+        });
+
+        //debit orders
+        $debit_orders = $debit_orders->orderBy('debit_orders.created_at', 'DESC')->get();
+
+        //array debit orders
+        $arr_debit_orders = [];
+
+        foreach ($debit_orders as $val) {
+            //format status
+            $consent_status = "PENDING";
+            if (intval($val->approved) == 0)
+                $consent_status = "PENDING";
+            else if (intval($val->approved) == 1)
+                $consent_status = "APPROVED";
+            else if (intval($val->approved) == 2)
+                $consent_status = "FAILED";
+            else if (intval($val->approved) == 9)
+                $consent_status = "CANCELLED";
+
+            //arr debit orders
+            $arr_debit_orders[] = [
+                'Business_Name' => strtoupper($val->partner->business_name),
+                'Mandate_Reference' => $val->reference,
+                'Mandate_Status' => $consent_status,
+                'Account_Name' => strtoupper($val->customerAccount->account_name ?? ''),
+                'Account_Number' => $val->customerAccount->account_number ?? '',
+                'Debit_Type' => $val->debit_type,
+                'Periodicity' => $val->periodicity,
+                'Number_Installment' => $val->installment_number,
+                'Total_Amount' => number_format($val->total_amount),
+                'Paid_Amount' => number_format($val->current_balance),
+                'Outstanding_Amount' => number_format($val->outstanding_amount),
+                'Deduction_Amount' => $val->installment_amount == 0 ? number_format($val->max_installment_amount) : number_format($val->installment_amount),
+                'Deduction_Start_Date' => $val->start_date,
+                'Deduction_End Date' => $val->end_date,
+                'Contract_Status' => $val->contract_status,
+                'Remarks' => $val->remarks,
+                'Created_Date' => $val->created_at,
+                'Created_By' => strtoupper($val->userCreated->name),
+            ];
+        }
+
+        //create filename
+        $filename = "Debit_Mandates_" . date('YmdHis')  . ".xlsx";
+
+        //return
+        return Excel::download(new DebitOrders($arr_debit_orders), $filename);
     }
 
     //export xls
@@ -143,6 +249,19 @@ class PaymentMandateController extends Controller
     public function create_account($customer_id = null, $debit_order_id = null)
     {
         $title = "Payment Mandate";
+
+        //user
+        $user = User::findOrFail(Auth::user()->id);
+
+        //check if logged in user can create mandate
+        if ($user->hasRole('Company_Approver') || $user->hasRole('Company_User')) {
+            $partner_user = PartnerUser::whereHas('partner', function ($query) {
+                $query->where('status', '=', 202);
+            })->where('user_id', '=', $user->id);
+
+            if ($partner_user->count() == 0)
+                return Redirect::route('payment-mandate.lists')->with('danger', "Service provider is not activated, Kindly contact eMakato Team.");
+        }
 
         //customer account
         $customer_account = [];
