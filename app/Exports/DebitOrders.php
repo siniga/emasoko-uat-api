@@ -9,7 +9,7 @@ use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Events\AfterSheet;
 
-class CollectionMonthly implements FromArray, WithHeadings, ShouldAutoSize
+class DebitOrders implements FromArray, WithHeadings, ShouldAutoSize
 {
     /**
      * @return \Illuminate\Support\FromArray
@@ -25,25 +25,31 @@ class CollectionMonthly implements FromArray, WithHeadings, ShouldAutoSize
     public function headings(): array
     {
         return [
+            'Service Provider',
             'Mandate Reference',
-            'Periodicity',
+            'Mandate Status',
             'Account Name',
             'Account Number',
-            'Expected Amount',
+            'Debit Type',
+            'Periodicity',
+            'Number of Installment',
+            'Total Amount',
             'Paid Amount',
-            'Current Balance',
             'Outstanding Amount',
-            'Status',
+            'Deduction Amount',
+            'Deduction Start Date',
+            'Deduction End Date',
+            'Contract Status',
             'Remarks',
-            'Collection Date',
-            'Debit Start Date',
-            'Debit End Date',
+            'Created Date',
+            'Created By',
+
         ];
     }
 
     public function array(): array
     {
-        Log::debug("== collection ==");
+        Log::debug("== debit orders ==");
         Log::debug($this->data);
         return $this->data;
     }
@@ -52,7 +58,7 @@ class CollectionMonthly implements FromArray, WithHeadings, ShouldAutoSize
     {
         return [
             AfterSheet::class    => function (AfterSheet $event) {
-                $cellRange = 'A1:M1'; // All headers
+                $cellRange = 'A1:R1'; // All headers
                 $event->sheet->getDelegate()->getStyle($cellRange)->getFont()->setSize(12);
                 $event->sheet->getDelegate()->getStyle($cellRange)->getFont()->setBold(true);
             },

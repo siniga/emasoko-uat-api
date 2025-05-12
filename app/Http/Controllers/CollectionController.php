@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Classes\Messaging;
 use App\Exports\CollectionCreatedExport;
-use App\Exports\CollectionMonthly;
 use App\Exports\CollectionProcessedExport;
+use App\Exports\CollectionPayments;
 use App\Http\Requests\CollectionRequest;
 use App\Jobs\CollectionStatusJob;
 use App\Jobs\PushCollectionJob;
@@ -621,6 +621,7 @@ class CollectionController extends Controller
                 $status = strtoupper($val->status);
 
             $arr_installments[] = [
+                'business_name' => $val->debitOrder->partner->business_name,
                 'reference' => $val->debitOrder->reference,
                 'periodicity' => $val->debitOrder->periodicity,
                 'account_name' => strtoupper($val->debitOrder->customerAccount->account_name),
@@ -641,7 +642,7 @@ class CollectionController extends Controller
         $filename = "Expected_Collection_" . date('F') . "_" . $partner->business_name . ".xlsx";
 
         //return
-        return Excel::download(new CollectionMonthly($arr_installments), $filename);
+        return Excel::download(new CollectionPayments($arr_installments), $filename);
     }
 
     public function actual_monthly(Request $request)
@@ -785,6 +786,7 @@ class CollectionController extends Controller
 
         foreach ($installments as $val) {
             $arr_installments[] = [
+                'business_name' => $val->debitOrder->partner->business_name,
                 'reference' => $val->debitOrder->reference,
                 'periodicity' => $val->debitOrder->periodicity,
                 'account_name' => strtoupper($val->debitOrder->customerAccount->account_name),
@@ -808,7 +810,7 @@ class CollectionController extends Controller
         $filename = "Actual_Collection_" . $current_month_year . "_" . $partner->business_name . ".xlsx";
 
         //return
-        return Excel::download(new CollectionMonthly($arr_installments), $filename);
+        return Excel::download(new CollectionPayments($arr_installments), $filename);
     }
 
     public function expected_daily(Request $request)
@@ -946,6 +948,7 @@ class CollectionController extends Controller
 
         foreach ($installments as $val) {
             $arr_installments[] = [
+                'business_name' => $val->debitOrder->partner->business_name,
                 'reference' => $val->debitOrder->reference,
                 'periodicity' => $val->debitOrder->periodicity,
                 'account_name' => strtoupper($val->debitOrder->customerAccount->account_name),
@@ -966,7 +969,7 @@ class CollectionController extends Controller
         $filename = "Expected_Collection_" . date('d_m_Y', strtotime($current_date)) . "_" . $partner->business_name . ".xlsx";
 
         //return
-        return Excel::download(new CollectionMonthly($arr_installments), $filename);
+        return Excel::download(new CollectionPayments($arr_installments), $filename);
     }
 
     public function actual_daily(Request $request)
@@ -1100,6 +1103,7 @@ class CollectionController extends Controller
 
         foreach ($installments as $val) {
             $arr_installments[] = [
+                'business_name' => $val->debitOrder->partner->business_name,
                 'reference' => $val->debitOrder->reference,
                 'periodicity' => $val->debitOrder->periodicity,
                 'account_name' => strtoupper($val->debitOrder->customerAccount->account_name),
@@ -1120,7 +1124,7 @@ class CollectionController extends Controller
         $filename = "Actual_Collection_" . date('d_m_Y', strtotime($current_date)) . "_" . $partner->business_name . ".xlsx";
 
         //return
-        return Excel::download(new CollectionMonthly($arr_installments), $filename);
+        return Excel::download(new CollectionPayments($arr_installments), $filename);
     }
 
     public function reconciliation(Request $request)

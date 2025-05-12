@@ -97,7 +97,7 @@ class Partner extends Model
 
     public function debitOrders()
     {
-        return $this->hasMany(DebitOrder::class, 'partner_id');
+        return $this->hasMany(DebitOrder::class, 'partner_id')->orderBy('business_name', 'ASC');
     }
 
     public function verifiedBy()
