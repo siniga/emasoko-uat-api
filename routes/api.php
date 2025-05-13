@@ -95,7 +95,7 @@ Route::middleware('auth:api')->group(function () {
     Route::get('v1/debit-orders-summaries', [MobileAppController::class, 'debit_orders_summaries']);
 
     //debit orders
-    Route::post('v1/filter-mandates', [MandateRegistrationController::class, 'filter_mandates']);
+    Route::post('v1/filter-mandates', [MandateRegistrationController::class, 'all']);
     Route::post('v1/create-mandate', [MandateRegistrationController::class, 'create']);
     Route::post('v1/verify-otp', [MandateRegistrationController::class, 'verifyOtp']);
     Route::post('v1/send-otp-code', [MandateRegistrationController::class, 'createOtp']);
@@ -107,5 +107,6 @@ Route::middleware('auth:api')->group(function () {
     //collections
     Route::get('v1/collections', [CollectionController::class, 'all']);
     Route::get('v1/actual-collections', [CollectionController::class, 'actual_collections']);
+    Route::get('v1/monthly-collections', [CollectionController::class, 'monthly_collections']);
     Route::get('v1/deduction-histories/{uuid}', [CollectionController::class, 'deduction_histories']);
 });

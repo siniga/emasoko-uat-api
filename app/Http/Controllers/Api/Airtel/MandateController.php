@@ -114,6 +114,8 @@ class MandateController extends Controller
     public function create(Request $request)
     {
         $AUTH_BEARER_TOKEN = $this->auth->generate();
+        Log::debug("==API Token ==");
+        Log::debug($AUTH_BEARER_TOKEN);
 
         //headers
         $headers = [

@@ -120,4 +120,48 @@ class CollectionController extends Controller
             'installments' => $arr_data,
         ]);
     }
+
+    public function monthly_collections(Request $request)
+    {
+        //current or requested year
+        $year = date('Y');
+
+        //declare variable
+        $arr_data = [];
+
+        for ($i = 1; $i <= 12; $i++) {
+            $month = date('m', mktime(0, 0, 0, $i, 10));
+
+            //installments
+            $installments = Installment::filterCondition()->select(
+                DB::raw('COALESCE(SUM(installments.installment_amount), 0) as total_amount'),
+                DB::raw('COALESCE(SUM(installments.current_balance), 0) as paid_amount')
+            )->whereHas('debitOrder', function ($query) {
+                $query->where(['debit_orders.approved' => 1])
+                    ->whereHas('partner', function ($q) {
+                        $q->where('partners.status', 202);
+                    });
+            })->toBase();
+
+            //this month
+            $installments = $installments->whereMonth('payment_date', $month)->whereYear('payment_date', $year)->get();
+
+            //total amount
+            $total_amount = $installments[0]->total_amount;
+            $paid_amount = $installments[0]->paid_amount;
+
+            //create data array
+            $arr_data[] = [
+                "month" => date("M", mktime(0, 0, 0, $month, 10)),
+                "total" => (int) $total_amount,
+                "paid" => (int) $paid_amount,
+            ];
+        }
+
+        return response()->json([
+            'success' => true,
+            'response_code' => 200,
+            'installments' => $arr_data,
+        ]);
+    }
 }
