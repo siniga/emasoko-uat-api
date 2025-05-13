@@ -20,6 +20,7 @@ use App\Services\BankApiService;
 use App\Services\BankPayloadService;
 use App\Services\DeductionService;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -453,6 +454,33 @@ class CollectionController extends Controller
 
         //redirect
         return Redirect::route('collections.batches')->with('success', 'Collection batch archived');
+    }
+
+    public function create_failed($id)
+    {
+        $title = 'Create Failed Debit Mandate';
+
+        try {
+            //collection batch
+            $collection_batch = CollectionBatch::findOrFail($id);
+
+            //installment_ids
+            $installment_ids = explode(",", $collection_batch->installment_ids);
+
+            //find installments where status=FAILED
+            $installments = Installment::whereIn('id', $installment_ids)->where('status', '=', 'FAILED')->get();
+
+            if ($installments->isNotEmpty()) {
+                echo "<pre>";
+                print_r($installments);
+                exit();
+            }
+        }
+        // catch(Exception $e) catch any exception
+        catch (ModelNotFoundException $e) {
+            dd(get_class_methods($e)); // lists all available methods for exception object
+            dd($e);
+        }
     }
 
     public function fetch_status(Request $request)
