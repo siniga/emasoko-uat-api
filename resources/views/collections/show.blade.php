@@ -34,6 +34,24 @@
                 <div class="card">
                     <div class="card-body">
 
+                        <div class="row">
+                            <div class="col-md-12">
+                                @if (session()->get('success'))
+                                    <div class="alert alert-success">
+                                        {{ session()->get('success') }}
+                                    </div>
+                                @elseif(session()->get('warning'))
+                                    <div class="alert alert-warning">
+                                        {{ session()->get('warning') }}
+                                    </div>
+                                @elseif(session()->get('danger'))
+                                    <div class="alert alert-danger">
+                                        {{ session()->get('danger') }}
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+
                         <div id="message_wrp" class=""></div>
 
                         <div class="d-flex justify-content-between mb-2">
@@ -49,6 +67,15 @@
                                         </a>
                                     </template>
                                 </template>
+
+                                @if (Auth::user()->hasRole(['admin']))
+                                    <template x-if="pushed==1 && processed==1">
+                                        <a href="{{ route('collections.create-failed', $batch->id) }}" 
+                                        class="btn btn-secondary text-medium btn-sm" title="Recreate batch">
+                                           <i class="fas fa-plus-square"></i> Create Failed Collections
+                                        </a>
+                                    </template>
+                                @endif
 
                                 @if (Auth::user()->hasRole(['admin']))
                                     <template x-if="pushed==0">
@@ -274,7 +301,8 @@
                                                             @elseif(strtoupper($val['status']) == 'FUNDSCHECK')
                                                                 <span class="badge bg-danger">FUNDSCHECK</span>
                                                             @else
-                                                                <span class="badge bg-warning">{{ strtoupper($val['status']) }}</span>
+                                                                <span
+                                                                    class="badge bg-warning">{{ strtoupper($val['status']) }}</span>
                                                             @endif
                                                         </td>
                                                         <td>{{ $val['remarks'] }}</td>
