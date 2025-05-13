@@ -366,9 +366,6 @@ class DeductionService
                 //Send SMS
                 $data = ["phone" => $phone, "message" => $message];
                 dispatch(new SendSMSJob($data));
-
-                //update next debit date
-                $this->updateNextDebitDate($debit_order->id, $payment_date);
             }
 
             Log::debug("Installment => Processed");

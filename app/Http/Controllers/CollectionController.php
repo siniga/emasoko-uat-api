@@ -1392,21 +1392,48 @@ class CollectionController extends Controller
 
     public function update_debit_orders()
     {
-        $batches = CollectionBatch::where(['deleted' => 0])->get();
+        $current_month = now()->month; //current month
+        $current_year = now()->year; // current year
+        $debit_orders = DebitOrder::where(['approved' => 1])->get(); //debit orders
 
-        foreach ($batches as $val) {
-            $collection_debit_order = CollectionDebitOrder::where(['collection_batch_id' => $val->id]);
+        foreach ($debit_orders as $val) {
+            $payment_month = Carbon::parse($val->next_debit_date)->format('m');
 
-            if ($collection_debit_order->count() > 0) {
-                $number_of_collections = $collection_debit_order->count();
+            if ($payment_month != $current_month) {
+                //original date
+                $original = Carbon::parse($val->next_debit_date);
 
-                //update collection batch
-                $collection_batch = CollectionBatch::where(['id' => $val->id])->first();
-                $collection_batch->number_of_collections = $number_of_collections;
-                $collection_batch->save();
+                //new date
+                $newDate = Carbon::create($current_year, $current_month, $original->day);
+
+                //update debit order 
+                $debit_order = DebitOrder::findOrFail($val->id);
+                $debit_order->next_debit_date = $newDate;
+                $debit_order->save();
             }
         }
 
         return response()->json(['error' => false, 'success' => 'Debit order updated']);
+    }
+
+    public function update_collection_date()
+    {
+        $batches = CollectionBatch::all();
+
+        foreach ($batches as $val) {
+            $installment_ids = explode(",", $val->installment_ids);
+
+            //get installment
+            $installment = Installment::where(['id' => $installment_ids[0]])->first();
+
+            if ($installment) {
+                //collection batch
+                $collection_batch = CollectionBatch::findOrFail($val->id);
+                $collection_batch->collectionDate = $installment->payment_date;
+                $collection_batch->save();
+            }
+        }
+
+        return response()->json(['error' => false, 'success_msg' => 'Collection date updated']);
     }
 }

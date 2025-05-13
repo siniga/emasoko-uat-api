@@ -174,14 +174,14 @@
                                     </tr>
 
                                     <tr>
+                                        <th>Collection Date</th>
+                                        <td>
+                                            <span>{{ date('d-m-Y', strtotime($batch->collectionDate)) }}</span>
+                                        </td>
+
                                         <th>Created Date</th>
                                         <td>
                                             <span>{{ date('d-m-Y', strtotime($batch->created_at)) }}</span>
-                                        </td>
-
-                                        <th>Updated Date</th>
-                                        <td>
-                                            <span>{{ date('d-m-Y', strtotime($batch->updated_at)) }}</span>
                                         </td>
                                     </tr>
 

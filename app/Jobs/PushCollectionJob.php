@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Classes\Authentication;
 use App\Models\CollectionBatch;
 use App\Models\Installment;
+use App\Services\DeductionService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -43,6 +44,9 @@ class PushCollectionJob implements ShouldQueue
      */
     public function handle()
     {
+        //initialize deduction service
+        $deduction_service = new DeductionService();
+
         //create authentication token
         $AUTH_BEARER_TOKEN = $this->auth->generateToken();
 
@@ -98,6 +102,11 @@ class PushCollectionJob implements ShouldQueue
                         $installment = Installment::findOrFail($v);
                         $installment->pushed = 1;
                         $installment->save();
+
+                        //update debit order next debit order
+                        $debit_order_id = $installment->debitOrder->id;
+                        $payment_date = $installment->payment_date;
+                        $deduction_service->updateNextDebitDate($debit_order_id, $payment_date);
                     }
                 }
             } else if (strtolower($response['status']) == "fail") {
