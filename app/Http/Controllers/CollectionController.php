@@ -1021,7 +1021,7 @@ class CollectionController extends Controller
     public function expected_daily_detail($uuid, Request $request)
     {
         //payment date
-        $payment_at = $request->payment_at;
+        $payment_at = date('Y-m-d', strtotime($request->payment_at));
 
         //partner
         $partner = Partner::where(['uuid' => $uuid])->firstOrfail();
@@ -1040,6 +1040,7 @@ class CollectionController extends Controller
             ->whereDate('payment_date', $payment_at)
             ->orderBy('payment_date')
             ->get();
+
 
         foreach ($installments as $val) {
             $arr_installments[] = [
@@ -1074,7 +1075,7 @@ class CollectionController extends Controller
     public function export_expected_daily($uuid, Request $request)
     {
         //current date
-        $current_date = $request->payment_at;
+        $payment_at = date('Y-m-d', strtotime($request->payment_at));
 
         //partner
         $partner = Partner::where(['uuid' => $uuid])->firstOrfail();
@@ -1090,7 +1091,7 @@ class CollectionController extends Controller
                     ->where('debit_orders.deleted', '=', 0)
                     ->where('debit_orders.status', '=', 240);
             })
-            ->whereDate('payment_date', $current_date)
+            ->whereDate('payment_date', $payment_at)
             ->orderBy('payment_date')
             ->get();
 
@@ -1114,7 +1115,7 @@ class CollectionController extends Controller
         }
 
         //create filename
-        $filename = "Expected_Collection_" . date('d_m_Y', strtotime($current_date)) . "_" . $partner->business_name . ".xlsx";
+        $filename = "Expected_Collection_" . date('d_m_Y', strtotime($payment_at)) . "_" . $partner->business_name . ".xlsx";
 
         //return
         return Excel::download(new CollectionPayments($arr_installments), $filename);
@@ -1178,7 +1179,7 @@ class CollectionController extends Controller
     public function actual_daily_detail($uuid, Request $request)
     {
         //payment date
-        $payment_at = $request->payment_at;
+        $payment_at = date('Y-m-d', strtotime($request->payment_at));
 
         //partner
         $partner = Partner::where(['uuid' => $uuid])->firstOrfail();
@@ -1230,7 +1231,7 @@ class CollectionController extends Controller
     public function export_actual_daily($uuid, Request $request)
     {
         //current date
-        $current_date = $request->payment_at;
+        $payment_at = date('Y-m-d', strtotime($request->payment_at));
 
         //partner
         $partner = Partner::where(['uuid' => $uuid])->firstOrfail();
@@ -1245,7 +1246,7 @@ class CollectionController extends Controller
                     ->where('debit_orders.approved', '=', 1);
             })
             ->where('status', 'CLOSED')
-            ->whereDate('payment_date', $current_date)
+            ->whereDate('payment_date', $payment_at)
             ->orderBy('payment_date')
             ->get();
 
