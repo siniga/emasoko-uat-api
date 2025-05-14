@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Jobs\SendEmailJob;
 use App\Jobs\SendSMSJob;
 use App\Models\OtpRequest;
+use App\Models\PartnerUser;
 use App\Models\User;
 use App\Models\UserOtp;
 use Carbon\Carbon;
@@ -85,8 +86,18 @@ class AuthOtpController extends Controller
             return Redirect::route('otp.login')->with('danger', 'Invalid email or password');
         }
 
+        //check if logged in user can create mandate
+        if ($user->hasRole('Company_Approver') || $user->hasRole('Company_User')) {
+            $partner_user = PartnerUser::whereHas('partner', function ($query) {
+                $query->where('status', '=', 202);
+            })->where('user_id', '=', $user->id);
+
+            if ($partner_user->count() == 0)
+                return Redirect::route('otp.login')->with('danger', "Service provider is not activated, Kindly contact eMakato Team.");
+        }
+
         //clear login attempts
-        //$this->clearLoginAttempts($request);
+        $this->clearLoginAttempts($request);
 
         # Generate An OTP
         $verificationCode = $this->generateOtp($user);

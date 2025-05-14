@@ -29,42 +29,59 @@
                                         @php
                                             $options = [
                                                 'MANDATE' => 'Debit Mandate',
-                                                'COLLECTION' => 'Payment Collections',
-                                               
+                                                'COLLECTION' => 'Payment Collection',
                                             ];
                                             $options = ['' => '-- Report Type --'] + $options;
                                         @endphp
 
-                                        {{ Form::select('report_type', $options, old('report_type'), ['class' => 'form-control', 'required=""']) }}
+                                        {{ Form::select('report_type', $options, old('report_type'), ['id' => 'report_type', 'class' => 'form-control', 'required=""']) }}
                                     </div>
                                 </div>
 
-                                <div class="col-lg-3 col-md-3 col-12">
+                                <div class="col-lg-3 col-md-3 col-12" id="col-mandate" style="display: block;">
                                     <div class="mb-3">
                                         @php
                                             $options = [
-                                                'EXCEL' => 'Excel',
+                                                'pending' => 'Pending',
+                                                'approved' => 'Approved',
+                                                'failed' => 'Failed',
+                                                'cancelled' => 'Cancelled'
                                             ];
-                                            $options = ['' => '-- Report Format --'] + $options;
+                                            $options = ['' => '-- Mandate status --'] + $options;
                                         @endphp
 
-                                        {{ Form::select('report_format', $options, old('report_format'), ['class' => 'form-control', 'required=""']) }}
+                                        {{ Form::select('mandate_status', $options, old('mandate_status'), ['class' => 'form-control']) }}
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-3 col-md-3 col-12" id="col-collection" style="display: none;">
+                                    <div class="mb-3">
+                                        @php
+                                            $options = [
+                                                'pending' => 'Pending Upload',
+                                                'paid' => 'Paid',
+                                                'failed' => 'Failed',
+                                                'fund_check' => 'Fund Check'
+                                            ];
+                                            $options = ['' => '-- Collection status --'] + $options;
+                                        @endphp
+
+                                        {{ Form::select('collection_status', $options, old('collection_status'), ['class' => 'form-control']) }}
                                     </div>
                                 </div>
 
                                 <div class="col-lg-3 col-md-3 col-12">
                                     <div class="mb-3">
-                                        {{ Form::date('start_at', old('start_at'), ['placeholder="Start Date..."', 'class="form-control"']) }}
+                                        {{ Form::date('start_at', old('start_at'), ['placeholder="Start Date..."', 'class="form-control"', 'required=""']) }}
                                     </div>
                                 </div>
 
                                 <div class="col-lg-3 col-md-3 col-12">
                                     <div class="mb-3">
-                                        {{ Form::date('end_at', old('end_at'), ['placeholder="End Date..."', 'class="form-control"']) }}
+                                        {{ Form::date('end_at', old('end_at'), ['placeholder="End Date..."', 'class="form-control"', 'required=""']) }}
                                     </div>
                                 </div>
                             </div>
-                            <!--./row -->
 
                             <div class="row">
                                 <div class="col-lg-3 col-md-3 col-12">
@@ -106,18 +123,18 @@
                                 <div class="col-lg-6 col-md-6 col-12">
                                     <div class="mb-3">
                                         @php
-                                        $options = [];
-                                    @endphp
-                                    @foreach ($partners as $val)
-                                        @php
-                                            $options[$val->id] = $val->business_name;
+                                            $options = [];
                                         @endphp
-                                    @endforeach
-                                    @php
-                                        $options = ['' => '-- Service Provider --'] + $options;
-                                    @endphp
+                                        @foreach ($partners as $val)
+                                            @php
+                                                $options[$val->id] = $val->business_name;
+                                            @endphp
+                                        @endforeach
+                                        @php
+                                            $options = ['' => '-- Service Provider --'] + $options;
+                                        @endphp
 
-                                    {{ Form::select('partner_id', $options, old('partner_id'), ['class' => 'form-control select2', 'id' => 'partner_id']) }}
+                                        {{ Form::select('partner_id', $options, old('partner_id'), ['class' => 'form-control select2', 'id' => 'partner_id']) }}
                                     </div>
                                 </div>
                             </div>
@@ -134,7 +151,6 @@
                                 </div>
                                 <!--./col -->
                             </div>
-                            <!--./row -->
                             {{ Form::close() }}
                         </div>
                     </div>
@@ -160,6 +176,21 @@
                         $('.account_id').html(data);
                     }
                 });
+            });
+
+            //on change
+            $('#report_type').on('change', function(e) {
+                var reportType = $(this).val();
+                console.log(reportType)
+
+                if (reportType == "MANDATE") {
+                    $('#col-mandate').css('display', 'block');
+                    $('#col-collection').css('display', 'none');
+                } else if (reportType == "COLLECTION") {
+                    $('#col-mandate').css('display', 'none');
+                    $('#col-collection').css('display', 'block');
+                }
+
             });
 
         });

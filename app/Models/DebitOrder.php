@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
@@ -110,26 +111,39 @@ class DebitOrder extends Model
 
         return $query->when($start_date, function ($query) use ($start_date, $end_date) {
             if ($start_date != null || $end_date != null) {
+                //format dates
+                $start_at = Carbon::createFromFormat('Y-m-d', $start_date)->startOfDay();
+                $end_at = Carbon::createFromFormat('Y-m-d', $end_date)->endOfDay();
+
                 if ($start_date != null && $end_date != null)
-                    $query->whereBetween('debit_orders.created_at', [$start_date, $end_date]);
+                    $query->whereBetween('debit_orders.created_at', [$start_at, $end_at]);
 
                 else if ($start_date != null)
-                    $query->where('debit_orders.created_at', '>=', $start_date);
+                    $query->where('debit_orders.created_at', '>=', $start_at);
 
                 else if ($end_date != null)
-                    $query->where('debit_orders.created_at', '<=', $end_date);
+                    $query->where('debit_orders.created_at', '<=', $end_at);
             }
         })
             ->when($partner_id, function ($query) use ($partner_id) {
                 $query->where('debit_orders.partner_id', '=', $partner_id);
             })
             ->when($status, function ($query) use ($status) {
-                if ($status == 'pending')
-                    $query->where('debit_orders.approved', 0);
-                else if ($status == 'approved')
-                    $query->where('debit_orders.approved', 1)->where('debit_orders.status', 240);
-                else if ($status == 'failed')
-                    $query->where('debit_orders.approved', 2);
+                switch ($status) {
+                    case 'pending':
+                        $approved = 0;
+                        break;
+                    case 'approved':
+                        $approved = 1;
+                        break;
+                    case 'failed':
+                        $approved = 2;
+                        break;
+                    default:
+                        $approved = 0;
+                }
+
+                $query->where('debit_orders.approved', $approved);
             })
             ->when($account_type_id, function ($query) use ($account_type_id) {
                 $query->whereHas("customerAccount", function ($q) use ($account_type_id) {

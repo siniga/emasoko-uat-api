@@ -323,7 +323,9 @@
                                              <tr>
                                                 @foreach($debit_order->installments as $val)
                                                     <td class="text-center">
-                                                        @if($val->status == "OPEN" || $val->status == "FAILED")
+                                                        @if($val->status == "OPEN")
+                                                            <i class='bx bxs-x-square bx-sm text-warning'></i>
+                                                        @elseif($val->status == "FAILED")
                                                             <i class='bx bxs-x-square bx-sm text-danger'></i>
                                                         @elseif($val->status == "CLOSED" || $val->status == "SUCCESS")
                                                             <i class='bx bxs-check-square bx-sm text-success'></i>

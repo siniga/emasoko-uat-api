@@ -164,10 +164,6 @@ Route::post('payment-mandate/store-account', [PaymentMandateController::class, '
 Route::get('payment-mandate/create-deduction/{ca_uuid}/{do_uuid?}', [PaymentMandateController::class, 'create_deduction'])->name('payment-mandate.create-deduction');
 Route::post('payment-mandate/store-deduction', [PaymentMandateController::class, 'store_deduction'])->name('payment-mandate.store-deduction');
 
-//create evidennce
-//Route::get('payment-mandate/create-evidence/{do_uuid}', [PaymentMandateController::class, 'createEvidence'])->name('payment-mandate.create-evidence');
-// Route::post('payment-mandate/verify-evidence', [PaymentMandateController::class, 'verify_evidence'])->name('payment-mandate.verify-evidence');
-
 //preview 
 Route::get('payment-mandate/preview/{do_uuid}', [PaymentMandateController::class, 'preview'])->name('payment-mandate.preview');
 Route::get('payment-mandate/cancel/{do_uuid}', [PaymentMandateController::class, 'cancel'])->name('payment-mandate.cancel');
@@ -196,12 +192,14 @@ Route::post('collections/store', [CollectionController::class, 'store'])->name('
 Route::get('collections/show/{id}', [CollectionController::class, 'show'])->name('collections.show');
 Route::get('collections/export-created/{id}', [CollectionController::class, 'export_created'])->name('collections.export-created');
 Route::get('collections/export-processed/{id}', [CollectionController::class, 'export_processed'])->name('collections.export-processed');
+Route::get('collections/create-failed/{id}', [CollectionController::class, 'create_failed'])->name('collections.create-failed');
 Route::get('collections/archive/{id}', [CollectionController::class, 'archive'])->name('collections.archive');
 Route::post('collections/upload', [CollectionController::class, 'upload'])->name('collections.upload');
 Route::post('collections/fetch-status', [CollectionController::class, 'fetch_status'])->name('collections.fetch-status');
 
 Route::get('collections/create-debit-orders', [CollectionController::class, 'create_debit_orders'])->name('collections.create-debit-orders');
 Route::get('collections/update-debit-orders', [CollectionController::class, 'update_debit_orders'])->name('collections.update-debit-orders');
+Route::get('collections/update-collection-date', [CollectionController::class, 'update_collection_date'])->name('collections.update-collection-date');
 //Route::get('collections/reconciliation', [CollectionController::class, 'reconciliation'])->name('collections.reconciliation');
 
 Route::any('collections/expected-monthly', [CollectionController::class, 'expected_monthly'])->name('collections.expected-monthly');
