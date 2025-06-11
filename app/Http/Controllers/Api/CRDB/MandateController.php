@@ -27,6 +27,10 @@ class MandateController extends Controller
         $phone = $request->phone;
         $startDate = $request->startDate;
         $endDate = $request->endDate;
+        $totalAmount = $request->totalAmount;
+        $installmentAmount = $request->installmentAmount;
+        $periodicity = $request->periodicity;
+        $frequency = $request->frequency;
 
         // $debitAccount = "0152418973800";
         // $phone = "255711711125";
@@ -38,7 +42,6 @@ class MandateController extends Controller
         $salt = "dPQ11iVNGI2aLnCUGdQ3LQA2tCx00WzTxj6zPsdLK3vvR34n5J9s4U4kwzMguTTlahYY66yr6ieqbo7CfGZsVOlt8xKZr+Jon7jc599v9Zkw94ZIpI6Y3YmgXwLZql9nGsgWyA==";
         //create checksum
         $checksum = $this->auth->generateChecksum($data, $salt);
-
 
         Log::debug("== checksum ==");
         Log::debug($checksum);
@@ -66,12 +69,12 @@ class MandateController extends Controller
             'Checksum' => $checksum,
             "PhoneNumber" =>  $phone,
             "DebitAccount" =>  $debitAccount,
-            "TotalAmount" =>  "200000",
-            "InstallmentAmount" => "100000",
+            "TotalAmount" =>  $totalAmount,
+            "InstallmentAmount" => $installmentAmount,
             "StartDate" => $startDate,
             "EndDate" => $endDate,
-            "FrequencyType" => "DAILY",
-            "Frequency" => "1",
+            "FrequencyType" => $periodicity,
+            "Frequency" => $frequency,
             "BillDetails" => "Recurring payment"
         ];
 

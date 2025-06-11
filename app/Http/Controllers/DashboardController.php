@@ -64,10 +64,8 @@ class DashboardController extends Controller
         $current_year = date('Y');
         $current_month = date('m');
 
-        //collection stats
         $installments = Installment::filterCondition()->select(
             DB::raw('COALESCE(SUM(installments.installment_amount), 0) as total_amount'),
-            DB::raw('COALESCE(SUM(installments.current_balance), 0) as paid_amount')
         )->whereHas('debitOrder', function ($query) {
             $query->where(['debit_orders.approved' => 1, 'debit_orders.deleted' => 0, 'debit_orders.status' => 240])
                 ->whereHas('partner', function ($q) {
@@ -80,6 +78,22 @@ class DashboardController extends Controller
 
         //today collection
         $today = $installments->whereDate('payment_date', Carbon::now())->get();
+
+        //paid stats
+        $paid_installments = Installment::filterCondition()->select(
+            DB::raw('COALESCE(SUM(installments.current_balance), 0) as paid_amount')
+        )->whereHas('debitOrder', function ($query) {
+            $query->where(['debit_orders.approved' => 1])
+                ->whereHas('partner', function ($q) {
+                    $q->where('partners.status', 202);
+                });
+        })->toBase();
+
+        //this month collection
+        $paid_this_month = $paid_installments->whereMonth('payment_date', $current_month)->whereYear('payment_date', $current_year)->get();
+
+        //today collection
+        $paid_today = $paid_installments->whereDate('payment_date', Carbon::now())->get();
 
         //stats
         $stats  = [
@@ -98,9 +112,9 @@ class DashboardController extends Controller
             //this month and today collection
             'month' => date('F'),
             'this_month_expected' => $this_month[0]->total_amount,
-            'this_month_paid' => $this_month[0]->paid_amount,
+            'this_month_paid' => $paid_this_month[0]->paid_amount,
             'today_expected' => $today[0]->total_amount,
-            'today_paid' => $today[0]->paid_amount
+            'today_paid' => $paid_today[0]->paid_amount
         ];
 
         //current date

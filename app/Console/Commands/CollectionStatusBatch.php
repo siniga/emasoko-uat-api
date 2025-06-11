@@ -54,17 +54,12 @@ class CollectionStatusBatch extends Command
         $bankApi =  new BankApiService();
 
         //collection references
-        //$arr_references = [10239, 10240, 10241, 10242, 10243, 10244, 10245, 10246, 10247, 10248, 10249, 10253, 10254, 10255, 10256];
-        //$arr_references = [10260, 10261, 10262, 10263, 10264, 10265, 10266, 10269, 10270, 10271, 10272, 10273, 10274, 10275, 10276, 10277, 10278, 10279];
-        //$arr_references = [10280, 10281, 10285, 10286, 10287, 10288, 10290, 10294, 10295, 10296, 10299, 10300, 10301, 10302, 10303, 10304, 10305];
-        //$arr_references = [10306, 10307, 10308, 10309, 10310, 10311, 10312, 10313, 10314, 10315, 10316, 10317, 10335, 10336];
-        //$arr_references = [10341, 10342, 10344, 10345, 10346, 10347, 10348, 10349, 10350, 10351, 10352, 10353, 10354, 10355, 10356, 10357, 10358, 10359];
-        //$arr_references = [10360, 10361, 10362, 10363, 10364, 10365];
+        $start_at = 10472;
+        $end_at = 10534;
 
-        // Split into chunks of 5
-        //$arr_references = array_chunk($arr_references, 5);
-
-        // $collection_batches = CollectionBatch::whereIn('collectionReference', $arr_references)->orderBy('collectionReference', 'ASC');
+        // $collection_batches = CollectionBatch::whereBetween('collectionReference', [$start_at, $end_at])
+        //     ->where('deleted', '=', 0)
+        //     ->orderBy('collectionReference', 'ASC');
 
         // if ($collection_batches->count() > 0) {
         //     //take the first 10 collection batches
