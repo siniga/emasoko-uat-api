@@ -44,26 +44,28 @@ Route::post('customerInfo', [PaymentMandateController::class, 'customerInfo']);
 Route::post('customerUpdateTerms', [PaymentMandateController::class, 'updateCustomerTerms']);
 Route::post('customerPayment', [PaymentMandateController::class, 'payment']);
 
-//Corporate APIs
-Route::post('corporate/registration', [CorporateController::class, 'registration']);
-Route::post('corporate/status', [CorporateController::class, 'status']);
+Route::middleware('throttle:auth')->group(function () {
+    //Corporate APIs
+    Route::post('corporate/registration', [CorporateController::class, 'registration']);
+    Route::post('corporate/status', [CorporateController::class, 'status']);
 
-//Mandate APIs
-Route::post('mandate/create', [MandateController::class, 'create']);
-Route::post('mandate/status', [MandateController::class, 'status']);
-Route::post('mandate/cancellation', [MandateController::class, 'cancellation']);
+    //Mandate APIs
+    Route::post('mandate/create', [MandateController::class, 'create']);
+    Route::post('mandate/status', [MandateController::class, 'status']);
+    Route::post('mandate/cancellation', [MandateController::class, 'cancellation']);
 
-//OTP APIs
-Route::post('otp/create', [OtpController::class, 'create']);
-Route::post('otp/verify', [OtpController::class, 'verify']);
+    //OTP APIs
+    Route::post('otp/create', [OtpController::class, 'create']);
+    Route::post('otp/verify', [OtpController::class, 'verify']);
 
-//Collections APIs
-Route::post('collection/create', [CollectionController::class, 'create']);
-Route::post('collection/status', [CollectionController::class, 'status']);
+    //Collections APIs
+    Route::post('collection/create', [CollectionController::class, 'create']);
+    Route::post('collection/status', [CollectionController::class, 'status']);
 
-//CRDB apis
-Route::post('mandate/crdb', [CRDBMandateController::class, 'create']);
-Route::post('mandate/crdb/callback', [CRDBMandateController::class, 'callback']);
+    //CRDB apis
+    Route::post('mandate/crdb', [CRDBMandateController::class, 'create']);
+    Route::post('mandate/crdb/callback', [CRDBMandateController::class, 'callback']);
+});
 
 //Airtel apis
 Route::post('mandate/airtel', [AirtelMandateController::class, 'create']);
@@ -87,6 +89,10 @@ Route::post('collection/airtel/recovery-refund', [AirtelCollectionController::cl
 
 Route::controller(AuthController::class)->group(function () {
     Route::post('v1/login', 'login');
+});
+
+Route::middleware('throttle:global')->group(function () {
+    // Define your routes that should adhere to the global rate limit
 });
 
 Route::middleware('auth:api')->group(function () {

@@ -45,6 +45,9 @@ class CreateFailedCollectionBatch extends Command
      */
     public function handle()
     {
+        //initiate collection date
+        $collection_date = Carbon::now();
+
         //initialize deduction service
         $deductionService = new DeductionService();
 
@@ -109,6 +112,9 @@ class CreateFailedCollectionBatch extends Command
                             $debit_end_date = Carbon::parse($installment->debitOrder->end_date);
                             $deleted = $installment->debitOrder->deleted;
 
+                            //update collection date
+                            $collection_date = $installment->payment_date;
+
                             //updated installment set created = 0 and pushed = 0
                             $installment->created = 0;
                             $installment->pushed = 0;
@@ -166,6 +172,7 @@ class CreateFailedCollectionBatch extends Command
                     //check if installments is not null
                     if ($arr_installments) {
                         $new_batch->request_csv = $csv;
+                        $new_batch->collectionDate = $collection_date;
                         $new_batch->number_of_collections = $number_of_collections;
                         $new_batch->installment_ids = implode(",", $arr_installments);
                         $new_batch->save();
