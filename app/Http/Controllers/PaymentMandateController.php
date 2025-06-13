@@ -23,6 +23,7 @@ use App\Jobs\CRDBMandateRegistrationJob;
 use App\Jobs\MandateRegistrationJob;
 use App\Jobs\SendSMSJob;
 use App\Models\CustomerPartner;
+use App\Models\DebitOrderRequest;
 use App\Models\Installment;
 use App\Models\OtpRequest;
 use App\Models\Partner;
@@ -34,6 +35,7 @@ use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 class PaymentMandateController extends Controller
 {
@@ -942,6 +944,184 @@ class PaymentMandateController extends Controller
 
         //redirect
         return Redirect::route('payment-mandate.lists')->with('danger', 'Payment mandate deleted!');
+    }
+
+    //request cancellation
+    public function request_cancellation(Request $request)
+    {
+        $title = 'Request payment mandate cancellation';
+
+        if ($request->isMethod('post')) {
+            // Step 1: Validate the uploaded file
+            $request->validate([
+                'partner_id' => 'required|exists:partners,id',
+                'attachment' => 'required|file|mimes:xls,xlsx|mimetypes:application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            ]);
+
+            // Step 1.1: Get the service provider ID from the request
+            $serviceProviderId = $request->input('partner_id');
+
+            // Step 1.2: Load the Excel file into a Collection
+            $data = Excel::toArray([], $request->file('attachment'));
+            $rows = $data[0];
+
+            //headers
+            $headers = array_map('trim', $rows[0]); // row 0 = headers
+
+            // Step 1.3: Validate the content of the file
+            $errors = [];
+            foreach (array_slice($rows, 1) as $index => $row) {
+                $rowAssoc = array_combine($headers, $row);
+
+                //validate each row
+                $validator = Validator::make($rowAssoc, [
+                    'Mandate_Reference' => [
+                        'required',
+                        'numeric',
+                        function ($attribute, $value, $fail) use ($serviceProviderId) {
+                            $exists = DebitOrder::where('reference', $value)
+                                ->where('partner_id', $serviceProviderId)
+                                ->exists();
+
+                            if (!$exists) {
+                                $fail("Mandate Reference [$value] does not belong to the selected Service Provider.");
+                            }
+                        },
+                    ],
+                ]);
+
+                if ($validator->fails()) {
+                    $errors[$index + 1] = $validator->errors()->all(); // Row number starts at 1
+                }
+            }
+
+            if (!empty($errors)) {
+                return back()->with('file_errors', $errors);
+            }
+
+            // Step 2: Process the valid rows
+            $mandateReferences = [];
+            foreach (array_slice($rows, 1) as $row) {
+                $rowAssoc = array_combine($headers, $row);
+                $mandateReferences[] = $rowAssoc['Mandate_Reference'];
+            }
+            // Step 3: Create cancellation requests
+            foreach ($mandateReferences as $reference) {
+                // Find the debit order by reference and service provider
+                $debitOrder = DebitOrder::where('reference', $reference)
+                    ->where('partner_id', $serviceProviderId)
+                    ->first();
+
+                if ($debitOrder) {
+                    // Create a cancellation request
+                    $cancellationRequest = new DebitOrderRequest();
+                    $cancellationRequest->debit_order_id = $debitOrder->id;
+                    $cancellationRequest->request_type = 'CANCELLATION';
+                    $cancellationRequest->requested_by = Auth::user()->id;
+                    $cancellationRequest->status = 'PENDING';
+                    $cancellationRequest->requested_at = Carbon::now();
+                    $cancellationRequest->save();
+                }
+            }
+            // Step 4: Redirect with success message
+            return Redirect::route('payment-mandate.request-cancellation')->with('success', 'Cancellation requests have been successfully created.');
+        }
+
+        //providers
+        $providers = Partner::filterCondition();
+        $providers = $providers->get();
+
+        //render view
+        return view('payment_mandate.request_cancellation', compact('title', 'providers'));
+    }
+
+    //request closing payment mandate
+    public function request_closing(Request $request)
+    {
+        $title = 'Request payment mandate closing';
+
+        if ($request->isMethod('post')) {
+            // Step 1: Validate the uploaded file
+            $request->validate([
+                'partner_id' => 'required|exists:partners,id',
+                'attachment' => 'required|file|mimes:xls,xlsx|mimetypes:application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            ]);
+
+            // Step 1.1: Get the service provider ID from the request
+            $serviceProviderId = $request->input('partner_id');
+
+            // Step 1.2: Load the Excel file into a Collection
+            $data = Excel::toArray([], $request->file('attachment'));
+            $rows = $data[0];
+
+            //headers
+            $headers = array_map('trim', $rows[0]); // row 0 = headers
+
+            // Step 1.3: Validate the content of the file
+            $errors = [];
+            foreach (array_slice($rows, 1) as $index => $row) {
+                $rowAssoc = array_combine($headers, $row);
+
+                //validate each row
+                $validator = Validator::make($rowAssoc, [
+                    'Mandate_Reference' => [
+                        'required',
+                        'numeric',
+                        function ($attribute, $value, $fail) use ($serviceProviderId) {
+                            $exists = DebitOrder::where('reference', $value)
+                                ->where('partner_id', $serviceProviderId)
+                                ->exists();
+
+                            if (!$exists) {
+                                $fail("Mandate Reference [$value] does not belong to the selected Service Provider.");
+                            }
+                        },
+                    ],
+                ]);
+
+                if ($validator->fails()) {
+                    $errors[$index + 1] = $validator->errors()->all(); // Row number starts at 1
+                }
+            }
+
+            if (!empty($errors)) {
+                return back()->with('file_errors', $errors);
+            }
+
+            // Step 2: Process the valid rows
+            $mandateReferences = [];
+            foreach (array_slice($rows, 1) as $row) {
+                $rowAssoc = array_combine($headers, $row);
+                $mandateReferences[] = $rowAssoc['Mandate_Reference'];
+            }
+            // Step 3: Create cancellation requests
+            foreach ($mandateReferences as $reference) {
+                // Find the debit order by reference and service provider
+                $debitOrder = DebitOrder::where('reference', $reference)
+                    ->where('partner_id', $serviceProviderId)
+                    ->first();
+
+                if ($debitOrder) {
+                    // Create a cancellation request
+                    $cancellationRequest = new DebitOrderRequest();
+                    $cancellationRequest->debit_order_id = $debitOrder->id;
+                    $cancellationRequest->request_type = 'CLOSING';
+                    $cancellationRequest->requested_by = Auth::user()->id;
+                    $cancellationRequest->status = 'PENDING';
+                    $cancellationRequest->requested_at = Carbon::now();
+                    $cancellationRequest->save();
+                }
+            }
+            // Step 4: Redirect with success message
+            return Redirect::route('payment-mandate.request-closing')->with('success', 'Closing requests have been successfully created.');
+        }
+
+        //providers
+        $providers = Partner::filterCondition();
+        $providers = $providers->get();
+
+        //render view
+        return view('payment_mandate.request_closing', compact('title', 'providers'));
     }
 
     public function archive($id)

@@ -185,6 +185,10 @@ Route::get('payment-mandate/send-remainder/{do_uuid}', [PaymentMandateController
 Route::get('payment-mandate/update-mandates', [PaymentMandateController::class, 'update_mandates'])->name('payment-mandate.update-mandates');
 //Route::get('payment-mandate/update-installments', [PaymentMandateController::class, 'update_installments'])->name('payment-mandate.update-installments');
 
+//actions
+Route::any('payment-mandate/request-cancellation', [PaymentMandateController::class, 'request_cancellation'])->name('payment-mandate.request-cancellation');
+Route::any('payment-mandate/request-closing', [PaymentMandateController::class, 'request_closing'])->name('payment-mandate.request-closing');
+
 //collection batches
 Route::any('collections/batches', [CollectionController::class, 'batches'])->name('collections.batches');
 Route::any('collections/create', [CollectionController::class, 'create'])->name('collections.create');

@@ -86,25 +86,25 @@
 
                                         {{ Form::select('account_id', $options, old('account_id', $post_data['account_id']), ['class' => 'form-control account_id', 'id' => 'account_id']) }}
                                     </div>
-                                </div>         
+                                </div>
                             </div>
 
                             <div class="row">
                                 <div class="col-lg-4 col-md-4 col-12">
                                     <div class="mb-3">
                                         @php
-                                        $options = [];
-                                    @endphp
-                                    @foreach ($partners as $val)
-                                        @php
-                                            $options[$val->id] = $val->business_name;
+                                            $options = [];
                                         @endphp
-                                    @endforeach
-                                    @php
-                                        $options = ['' => '-- Service Provider --'] + $options;
-                                    @endphp
+                                        @foreach ($partners as $val)
+                                            @php
+                                                $options[$val->id] = $val->business_name;
+                                            @endphp
+                                        @endforeach
+                                        @php
+                                            $options = ['' => '-- Service Provider --'] + $options;
+                                        @endphp
 
-                                    {{ Form::select('partner_id', $options, old('partner_id', $post_data['partner_id']), ['class' => 'form-control select2', 'id' => 'partner_id']) }}
+                                        {{ Form::select('partner_id', $options, old('partner_id', $post_data['partner_id']), ['class' => 'form-control select2', 'id' => 'partner_id']) }}
                                     </div>
                                 </div>
 
@@ -151,7 +151,7 @@
                             </div>
                         </div>
 
-                        
+
                         <div class="row mb-2">
                             <div class="col-md-6">
                                 <span class="font-weight-500">No. of payment mandate:
@@ -160,21 +160,31 @@
 
                             <div class="col-md-6">
                                 <div class="text-sm-end d-none d-sm-block">
-                                    <a class="btn btn-primary btn-sm"
-                                        href="{{ route('payment-mandate.create-account') }}">
-                                        <i class="fas fa-plus"></i> Create New
+                                    <div class="btn-group">
+                                        <button class="btn btn-secondary btn-sm text-sm" type="button">
+                                            Actions
+                                        </button>
+                                        <button type="button"
+                                            class="btn btn-sm btn-secondary dropdown-toggle dropdown-toggle-split"
+                                            data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="mdi mdi-chevron-down"></i>
+                                        </button>
+                                        <div class="dropdown-menu">
+                                            <a class="dropdown-item text-sm" href="{{ route('payment-mandate.request-cancellation') }}">Request Cancellation</a>
+                                            <a class="dropdown-item text-sm" href="{{ route('payment-mandate.request-closing') }}">Request Mandate Close</a>
+                                            <div class="dropdown-divider"></div>
+                                        </div>
+                                    </div>
+
+                                    <a class="btn btn-primary btn-sm" href="{{ route('payment-mandate.create-account') }}">
+                                        <i class="bx bx-list-plus"></i> Create New
                                     </a>
-                                    
+
                                     @if (isset($debit_orders) && $debit_orders->isNotEmpty())
                                         <a title="Export" class="btn btn-outline-success btn-sm"
                                             href="{{ route('payment-mandate.export-xls', ['start_at' => $post_data['start_at'], 'end_at' => $post_data['end_at'], 'account_type_id' => $post_data['account_type_id'], 'account_id' => $post_data['account_id'], 'partner_id' => $post_data['partner_id'], 'status' => $post_data['status'], 'keyword' => $post_data['keyword']]) }}">
                                             <i class="bx bx-export"></i> Export XLS
                                         </a>
-
-                                        {{-- <a title="Export" class="btn btn-outline-danger btn-sm"
-                                            href="{{ route('payment-mandate.export-pdf', ['start_at' => $post_data['start_at'], 'end_at' => $post_data['end_at'], 'account_type_id' => $post_data['account_type_id'], 'account_id' => $post_data['account_id'], 'partner_id' => $post_data['partner_id'], 'status' => $post_data['status'], 'keyword' => $post_data['keyword']]) }}">
-                                            <i class="fas fa-file-pdf"></i> Export PDF
-                                        </a> --}}
                                     @endif
                                 </div>
                             </div>
@@ -216,25 +226,30 @@
 
                                                 <td>
                                                     @if ($values->status == 100)
-                                                        <span class="badge badge-pill badge-soft-danger">Pending Registration</span>
+                                                        <span class="badge badge-pill badge-soft-danger">Pending
+                                                            Registration</span>
                                                     @elseif($values->status == 200)
                                                         <span class="badge badge-pill badge-soft-info">Under Review</span>
                                                     @elseif($values->status == 201)
-                                                        <span class="badge badge-pill badge-soft-info">Pending Verification</span>
+                                                        <span class="badge badge-pill badge-soft-info">Pending
+                                                            Verification</span>
                                                     @elseif($values->status == 202)
                                                         <span class="badge badge-pill bg-success">Verified</span>
                                                     @elseif($values->status == 240)
                                                         <span class="badge badge-pill bg-success">Active</span>
                                                     @elseif($values->status == 249)
                                                         <span class="badge badge-pill badge-soft-warning">Processing</span>
-                                                    @elseif($values->status == 403) 
-                                                        <span class="badge badge-pill badge-soft-danger">Pending Registration</span>
-                                                    @elseif($values->status == 404) 
-                                                        <span class="badge badge-pill badge-soft-danger">Pending Registration</span>    
-                                                    @elseif($values->status == 405) 
-                                                        <span class="badge badge-pill badge-soft-danger">Cancelled</span>  
+                                                    @elseif($values->status == 403)
+                                                        <span class="badge badge-pill badge-soft-danger">Pending
+                                                            Registration</span>
+                                                    @elseif($values->status == 404)
+                                                        <span class="badge badge-pill badge-soft-danger">Pending
+                                                            Registration</span>
+                                                    @elseif($values->status == 405)
+                                                        <span class="badge badge-pill badge-soft-danger">Cancelled</span>
                                                     @elseif($values->status == 430 || $values->status == 500)
-                                                        <span class="badge badge-pill badge-soft-danger">Failed Verification</span>
+                                                        <span class="badge badge-pill badge-soft-danger">Failed
+                                                            Verification</span>
                                                     @elseif($values->status == 501)
                                                         <span class="badge badge-pill badge-soft-danger">Inactive</span>
                                                     @elseif($values->status == 999)
@@ -251,8 +266,8 @@
                                                     @endif
 
                                                     @if ($values->status != 100)
-                                                        <a href="{{ route('payment-mandate.show', $values->uuid) }}" title="View"
-                                                            class="btn btn-xss">
+                                                        <a href="{{ route('payment-mandate.show', $values->uuid) }}"
+                                                            title="View" class="btn btn-xss">
                                                             <i class="bx bxs-folder-open"></i>
                                                         </a>
                                                     @endif
@@ -291,7 +306,7 @@
         </div>
     </div>
     <!-- end row -->
-    
+
 @endsection
 @section('script')
     <script type="text/javascript">
