@@ -477,7 +477,10 @@ class CollectionController extends Controller
             $installment_ids = explode(",", $collection_batch->installment_ids);
 
             //find installments where status=FAILED
-            $installments = Installment::whereIn('id', $installment_ids)->where('status', '=', 'FAILED')->get();
+            $installments = Installment::whereIn('id', $installment_ids)->where(function ($q) {
+                    $q->orWhere('status', 'FAILED')
+                    ->orWhere('status', 'FUNDSCHECK');
+                })->where('remarks', '!=', 'Account Is Valid')->get();
 
             if ($installments->isNotEmpty()) {
                 //1. Create new collection batch
@@ -601,6 +604,9 @@ class CollectionController extends Controller
             Log::debug(get_class_methods($e));
             Log::debug($e);
         }
+
+        //redirect
+        return Redirect::route('collections.batches')->with('success', 'Collection batch recreated');
     }
 
     public function fetch_status(Request $request)
