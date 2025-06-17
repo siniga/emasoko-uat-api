@@ -68,7 +68,6 @@
                             <li><a href="{{ route('payment-mandate.approve-deletion') }}">Deletion</a></li>
                             <li><a href="{{ route('payment-mandate.approve-archive') }}">Archive</a></li>
                             <li><a href="{{ route('payment-mandate.approve-closing') }}">Closing</a></li>
-                            <li><a href="#">Archive</a></li>
                         </ul>
                     </li>
                 @endif
