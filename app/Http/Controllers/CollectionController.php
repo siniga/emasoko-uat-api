@@ -1403,9 +1403,10 @@ class CollectionController extends Controller
         return response()->json(['error' => false, 'success' => 'Debit order updated']);
     }
 
+    //delete collection batch
     public function delete_collection_batch()
     {
-        $collectionReference = "10568";
+        $collectionReference = "10576";
 
         //collection batch
         $collection_batch = CollectionBatch::where(['collectionReference' => $collectionReference])->firstOrFail();
@@ -1413,8 +1414,8 @@ class CollectionController extends Controller
         //installment_ids
         $installment_ids = explode(",", $collection_batch->installment_ids);
 
-        //find installments where status=FAILED
-        $installments = Installment::whereIn('id', $installment_ids)->where('status', '=', 'FAILED')->get();
+        //installments
+        $installments = Installment::whereIn('id', $installment_ids)->get();
 
         foreach ($installments as $installment) {
             $debit_order_id = $installment->debitOrder->id;
@@ -1443,6 +1444,7 @@ class CollectionController extends Controller
         return response()->json(['error' => false, 'success_msg' => 'Collection batch deleted successfully']);
     }
 
+    //update collection date
     public function update_collection_date()
     {
         $batches = CollectionBatch::all();
