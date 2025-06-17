@@ -1052,10 +1052,10 @@ class PaymentMandateController extends Controller
         $title = 'Approve payment mandate cancellation';
 
         if ($request->isMethod('post')) {
-            if (!$request->has('cancellation_id')) {
+            if (!$request->has('request_id')) {
                 return back()->with('danger', 'No payment mandate selected for cancellation.');
             } else {
-                foreach ($request->post('cancellation_id') as $dd_request_id) {
+                foreach ($request->post('request_id') as $dd_request_id) {
                     // Step 2: Find the cancellation request
                     $cancellationRequest = DebitOrderRequest::findOrFail($dd_request_id);
 
@@ -1080,11 +1080,11 @@ class PaymentMandateController extends Controller
         }
 
         //cancellation requests
-        $cancellation_requests = DebitOrderRequest::with('debitOrder')
+        $dd_requests = DebitOrderRequest::with('debitOrder')
             ->where('request_type', 'CANCELLATION')->where('status', 'PENDING')->get();
 
         //render view
-        return view('payment_mandate.approve_cancellation', compact('title', 'cancellation_requests'));
+        return view('payment_mandate.approve_cancellation', compact('title', 'dd_requests'));
     }
 
     //request deleting payment mandate
@@ -1170,7 +1170,7 @@ class PaymentMandateController extends Controller
                 }
             }
             // Step 4: Redirect with success message
-            return Redirect::route('payment-mandate.request-cancellation')->with('success', 'Cancellation requests have been successfully created.');
+            return Redirect::route('payment-mandate.request-deletion')->with('success', 'Deletion requests have been successfully created.');
         }
 
         //providers
@@ -1193,10 +1193,10 @@ class PaymentMandateController extends Controller
         $title = 'Approve payment mandate cancellation';
 
         if ($request->isMethod('post')) {
-            if (!$request->has('deletion_id')) {
+            if (!$request->has('request_id')) {
                 return back()->with('danger', 'No payment mandate selected for deletion.');
             } else {
-                foreach ($request->post('deletion_id') as $dd_request_id) {
+                foreach ($request->post('request_id') as $dd_request_id) {
                     // Step 2: Find the cancellation request
                     $cancellationRequest = DebitOrderRequest::findOrFail($dd_request_id);
 
@@ -1220,11 +1220,11 @@ class PaymentMandateController extends Controller
         }
 
         //deletion requests
-        $deletion_requests = DebitOrderRequest::with('debitOrder')
+        $dd_requests = DebitOrderRequest::with('debitOrder')
             ->where('request_type', 'DELETION')->where('status', 'PENDING')->get();
 
         //render view
-        return view('payment_mandate.approve_deletion', compact('title', 'deletion_requests'));
+        return view('payment_mandate.approve_deletion', compact('title', 'dd_requests'));
     }
 
     //request closing payment mandate
@@ -1345,16 +1345,16 @@ class PaymentMandateController extends Controller
                 }
 
                 // Step 5: add a success message for cancellation
-                return Redirect::route('payment-mandate.approve-deletion')->with('success', 'Payment mandate closing request approved successfully.');
+                return Redirect::route('payment-mandate.approve-closing')->with('success', 'Payment mandate closing request approved successfully.');
             }
         }
 
         //closing requests
-        $closing_requests = DebitOrderRequest::with('debitOrder')
+        $dd_requests = DebitOrderRequest::with('debitOrder')
             ->where('request_type', 'CLOSING')->where('status', 'PENDING')->get();
 
         //render view
-        return view('payment_mandate.approve_closing', compact('title', 'closing_requests'));
+        return view('payment_mandate.approve_closing', compact('title', 'dd_requests'));
     }
 
     //request archive payment mandate
@@ -1412,11 +1412,11 @@ class PaymentMandateController extends Controller
         }
 
         //archive requests
-        $archive_requests = DebitOrderRequest::with('debitOrder')
+        $dd_requests = DebitOrderRequest::with('debitOrder')
             ->where('request_type', 'ARCHIVE')->where('status', 'PENDING')->get();
 
         //render view
-        return view('payment_mandate.approve_archive', compact('title', 'archive_requests'));
+        return view('payment_mandate.approve_archive', compact('title', 'dd_requests'));
     }
 
     public function unarchieve($id)

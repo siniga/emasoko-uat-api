@@ -51,7 +51,7 @@
 
                         <div class="col-lg-6 col-md-6 col-sm-6 col-12">
                             <div class="text-sm-end">
-                                <a href="{{ asset('assets/files/payment-mandate-cancellation-template.xlsx') }}"
+                                <a href="{{ asset('assets/files/Mandate_Reference_sample.xlsx') }}"
                                     class="text-sm text-primary">Download XLS Template</a>
                             </div>
                         </div>

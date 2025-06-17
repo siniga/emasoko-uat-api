@@ -38,7 +38,7 @@
                             </div>
                         </div>
 
-                        @if (isset($archive_requests) && $archive_requests->isNotEmpty())
+                        @if (isset($dd_requests) && $dd_requests->isNotEmpty())
                             {!! Form::open(['url' => route('payment-mandate.approve-archive'), 'method' => 'POST']) !!}
                             {{ Form::token() }}
 
@@ -68,7 +68,7 @@
                                         </thead>
                                         <tbody>
                                             @php $serial = 1; @endphp
-                                            @foreach ($archive_requests as $values)
+                                            @foreach ($dd_requests as $values)
                                                 <tr>
                                                     <td>
                                                         <input type="checkbox" class="checkbox" id="request_id"
@@ -105,8 +105,8 @@
                                     </table>
 
                                     <div class="d-flex justify-content-end">
-                                        @if (method_exists($archive_requests, 'links'))
-                                            {{ $archive_requests->links() }}
+                                        @if (method_exists($dd_requests, 'links'))
+                                            {{ $dd_requests->links() }}
                                         @endif
                                     </div>
                                 </div>

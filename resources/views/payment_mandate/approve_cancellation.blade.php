@@ -38,7 +38,7 @@
                             </div>
                         </div>
 
-                        @if (isset($cancellation_requests) && $cancellation_requests->isNotEmpty())
+                        @if (isset($dd_requests) && $dd_requests->isNotEmpty())
                             {!! Form::open(['url' => route('payment-mandate.approve-cancellation'), 'method' => 'POST']) !!}
                             {{ Form::token() }}
 
@@ -68,11 +68,11 @@
                                         </thead>
                                         <tbody>
                                             @php $serial = 1; @endphp
-                                            @foreach ($cancellation_requests as $values)
+                                            @foreach ($dd_requests as $values)
                                                 <tr>
                                                     <td>
-                                                        <input type="checkbox" class="checkbox" id="cancellation_id"
-                                                            name="cancellation_id[]" value="{{ $values->id }}">
+                                                        <input type="checkbox" class="checkbox" id="request_id"
+                                                            name="request_id[]" value="{{ $values->id }}">
                                                     </td>
                                                     <td>
                                                         {{ strtoupper($values->debitOrder->customerAccount->account_name) ?? $values->debitOrder->customerAccount->phone }}<br>
@@ -105,8 +105,8 @@
                                     </table>
 
                                     <div class="d-flex justify-content-end">
-                                        @if (method_exists($cancellation_requests, 'links'))
-                                            {{ $cancellation_requests->links() }}
+                                        @if (method_exists($dd_requests, 'links'))
+                                            {{ $dd_requests->links() }}
                                         @endif
                                     </div>
                                 </div>
