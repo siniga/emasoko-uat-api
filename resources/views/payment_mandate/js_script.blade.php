@@ -1,0 +1,280 @@
+    <script type="text/javascript">
+        //initiate data
+        function initData() {
+            return {
+                sidebarOpen: false,
+                eModal: "Mandate_Information",
+                debit_order_uuid: "{{ $debit_order->uuid }}",
+                status: "{{ $debit_order->status }}",
+                deleted: "{{ $debit_order->deleted }}",
+                remarks: "{{ $debit_order->remarks }}",
+                approved: "{{ $debit_order->approved }}",
+                verifyTXT: "<i class='bx bx-check-square'></i> Verify OTP",
+
+                formData: {
+                    mandate_id: "{{ $debit_order->id }}",
+                    uuid: "{{ $debit_order->uuid }}",
+                    'remarks': "",
+                },
+
+                resendForm: {
+                    uuid: "{{ $debit_order->uuid }}",
+                },
+
+                verifyForm: {
+                    uuid: "{{ $debit_order->uuid }}",
+                    otpPin: "",
+                },
+
+                formLoading: false,
+                formMessage: "",
+                btnCancel: '<i class="fa fa-times"></i> Cancel Mandate',
+                btnStatus: '<i class="fa fa-check"></i> Mandate Status',
+                buttonSubmit: "Submit",
+
+                verifyLoading: false,
+                buttonVerify: "Verify",
+                resendTXT: "Resend",
+
+                //approval mandate status
+                fetchMandateStatus() {
+                    this.formLoading = true;
+                    this.btnStatus = '<i class="fas fa-spinner fa-spin"></i> Fetching mandate status....';
+
+                    fetch("/payment-mandate/fetch-status", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                Accept: "application/json",
+                                'X-CSRF-TOKEN': document.head.querySelector('meta[name=csrf-token]').content
+                            },
+                            body: JSON.stringify(this.formData),
+                        }).then(response => response.json())
+                        .then(responseJson => {
+                            this.status = responseJson.http_response_code
+                            this.remarks = responseJson.success_msg
+
+                            //response code and message
+                            let http_response_code = responseJson.http_response_code;
+                            let success_msg = responseJson.success_msg;
+
+                            if (http_response_code == 240) {
+                                $('#message_wrp').html(
+                                    "<div class='alert alert-success rounded-sm'>" + success_msg + "</div>"
+                                );
+                            } else if (http_response_code == 249 || http_response_code == 430) {
+                                $('#message_wrp').html(
+                                    "<div class='alert alert-info rounded-sm'>" + success_msg + "</div>"
+                                );
+                            } else if (http_response_code == 404) {
+                                $('#message_wrp').html(
+                                    "<div class='alert alert-danger rounded-sm'>" + success_msg + "</div>"
+                                );
+                            } else {
+                                $('#message_wrp').html(
+                                    "<div class='alert alert-danger rounded-sm'>" + success_msg + "</div>"
+                                );
+                            }
+                        }).catch(() => {
+                            $('#message_wrp').html(
+                                "<div class='alert alert-danger rounded-sm'>Something went wrong.</div>"
+                            );
+
+                        }).finally(() => {
+                            this.formLoading = false;
+                            this.btnStatus = '<i class="fa fa-check"></i> Mandate Status';
+                        });
+                },
+
+                //archive mandate
+                archiveMandate() {
+                    Swal.fire({
+                        title: 'Archive Mandate',
+                        html: "Are sure you want to archive mandate?",
+                        icon: 'success',
+                        showCancelButton: true,
+                        confirmButtonColor: '#4CAF50',
+                        cancelButtonColor: '#F44336',
+                        reverseButtons: true,
+                        confirmButtonText: 'Yes, Archive',
+                        cancelButtonText: 'No, Cancel',
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            //show loader
+                            //$('.loader').css('display', '');
+
+                            //call api to archive mandate
+                            fetch("/payment-mandate/request-archive/" + this.debit_order_uuid, {
+                                    method: "GET",
+                                    credentials: 'same-origin'
+                                })
+                                .then(res => res.json())
+                                .then(response => {
+                                    console.log(response)
+                                    //cancel loader
+                                    //$('.loader').css('display', 'none');
+
+                                    //display message
+                                    $('#message_wrp').html(
+                                        "<div class='alert alert-success rounded-sm'>" + response['success_msg'] + "</div>"
+                                    );
+                                });
+                        }
+                    });
+                },
+
+                //delete mandate
+
+                //open reject modal
+                openMandateCancellationModal() {
+                    $('#cancellationModal').modal('show');
+                },
+
+                //mandate cancellation
+                mandateCancellationForm() {
+                    this.formLoading = true;
+                    this.btnSubmit = '<i class="fas fa-spinner fa-spin"></i> Cancelling Mandate....';
+
+                    fetch("/payment-mandate/cancel-mandate", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                Accept: "application/json",
+                                'X-CSRF-TOKEN': document.head.querySelector('meta[name=csrf-token]').content
+                            },
+                            body: JSON.stringify(this.formData),
+                        }).then(response => response.json())
+                        .then(responseJson => {
+                            //response code 
+                            const http_response_code = responseJson.http_response_code;
+                            this.status = responseJson.http_response_code
+                            this.remarks = responseJson.remarks
+
+                            if (http_response_code == 405) {
+                                $('#message_wrp_1').html(
+                                    "<div class='alert alert-success rounded-sm'>Mandate cancelled.</div>"
+                                );
+                            } else {
+                                $('#message_wrp_1').html(
+                                    "<div class='alert alert-warning rounded-sm'>Failed to cancel mandate.</div>"
+                                );
+                            }
+                        }).catch(() => {
+                            $('#message_wrp_1').html(
+                                "<div class='alert alert-danger rounded-sm'>Something went wrong.</div>"
+                            );
+                        }).finally(() => {
+                            this.formLoading = false;
+                            this.btnSubmit = 'Submit';
+                        });
+                },
+
+                //verifyButton
+                verifyButton() {
+                    //display message
+                    $('#message_wrp_1').html(
+                        "<div class='alert alert-success rounded-sm'>Resend OTP and input the OTP PIN to confirm customer consent.</div>"
+                    );
+
+                    //todo: create modal for verifying Otp 
+                    $('#verifyOtpModal').modal('show');
+                },
+
+                //resend OTP
+                resendOtp() {
+                    //api for action
+                    fetch("/payment-mandate/resend-otp", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                Accept: "application/json",
+                                'X-CSRF-TOKEN': document.head.querySelector('meta[name=csrf-token]').content
+                            },
+                            body: JSON.stringify(this.resendForm),
+                        }).then(response => response.json())
+                        .then(responseJson => {
+                            console.log(responseJson);
+
+                            //response code 
+                            const http_response_code = responseJson.http_response_code;
+
+                            if (http_response_code == 200) {
+                                //display message
+                                $('#message_wrp_1').html(
+                                    "<div class='alert alert-success rounded-sm'>OTP sent successfully</div>"
+                                );
+                            } else if (http_response_code == 500) {
+                                //display message
+                                $('#message_wrp_1').html(
+                                    "<div class='alert alert-warning rounded-sm'>Failed to send OTP, Try again.</div>"
+                                );
+                            } else {
+                                //display message
+                                $('#message_wrp_1').html(
+                                    "<div class='alert alert-warning rounded-sm'>Failed to send OTP, Try again.</div>"
+                                );
+                            }
+
+                        }).catch(() => {
+                            this.formMessage = "Something went wrong.";
+                        }).finally(() => {
+
+                        });
+                },
+
+                //verify OTP
+                verifyOtp() {
+                    this.formMessage = "";
+                    this.verifyLoading = true;
+                    this.buttonVerify = "Verifying...";
+
+                    //api for action
+                    fetch("/payment-mandate/verify-otp", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                Accept: "application/json",
+                                'X-CSRF-TOKEN': document.head.querySelector('meta[name=csrf-token]').content
+                            },
+                            body: JSON.stringify(this.verifyForm),
+                        }).then(response => response.json())
+                        .then(responseJson => {
+                            console.log(responseJson);
+
+                            //response code 
+                            const http_response_code = responseJson.http_response_code;
+
+                            if (http_response_code == 202) {
+                                //display message
+                                $('#message_wrp_1').html(
+                                    "<div class='alert alert-success rounded-sm'>OTP validated</div>"
+                                );
+
+                                //redirect to details page
+                                var redirectionURL = '/payment-mandate/show/' + this.verifyForm.uuid;
+
+                                setTimeout(function() {
+                                    window.location.href = redirectionURL
+                                }, 2000);
+                            } else if (http_response_code == 500) {
+                                //display message
+                                $('#message_wrp_1').html(
+                                    "<div class='alert alert-danger rounded-sm'>Failed to verify OTP, Try again or resend OTP.</div>"
+                                );
+                            } else {
+                                //display message
+                                $('#message_wrp_1').html(
+                                    "<div class='alert alert-danger rounded-sm'>Failed to verify OTP, Try again or contact support.</div>"
+                                );
+                            }
+                        }).catch(() => {
+                            this.formMessage = "Something went wrong.";
+                        }).finally(() => {
+                            this.verifyLoading = false;
+                            this.buttonVerify = "Verify";
+                        });
+                },
+
+            }
+        }
+    </script>

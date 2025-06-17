@@ -61,6 +61,16 @@ class DebitOrder extends Model
         return $this->hasMany(Installment::class, 'debit_order_id', 'id');
     }
 
+    public function collectionDebitOrders()
+    {
+        return $this->hasMany(CollectionDebitOrder::class, 'debit_order_id', 'id');
+    }
+
+    public function debitOrderRequests()
+    {
+        return $this->hasMany(DebitOrderRequest::class, 'debit_order_id', 'id');
+    }
+
     public function customerAccount()
     {
         return $this->belongsTo(CustomerAccount::class, 'customer_account_id', 'id');

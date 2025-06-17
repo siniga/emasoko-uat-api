@@ -26,8 +26,9 @@
 <!-- Required datatable js -->
 <script src="{{ URL::asset('assets/libs/datatables/datatables.min.js') }}"></script>
 
-<!-- Sweet Alerts js -->
-<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+<!--sweet alert -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.0/sweetalert.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <!-- form mask -->
 <script src="{{ URL::asset('assets/libs/inputmask/inputmask.min.js') }}"></script>

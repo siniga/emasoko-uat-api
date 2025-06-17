@@ -39,11 +39,6 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 800 !important;
 }
 
-.text-xs {
-  font-size: 10px !important;
-}
-
-
 .text-faded {
   color: rgba(255, 255, 255, .7);
 }
@@ -98,6 +93,31 @@ h1, h2, h3, h4, h5, h6 {
 
 .text-light-blue {
   color: #1976D2 !important;
+}
+
+
+.text-xs {
+  font-size: 10px !important;
+}
+
+.text-sm {
+  font-size: 12px !important;
+}
+
+.text-md {
+  font-size: 14px !important;
+}
+
+.text-lg {
+  font-size: 16px !important;
+}
+
+.text-xl {
+  font-size: 18px !important;
+}
+
+.text-xxl {
+  font-size: 20px !important;
 }
 
 /*===============================================|
@@ -167,7 +187,12 @@ Sidebar
 }
 
 #sidebar-menu ul li ul.sub-menu li a:hover {
-  color: #383c40
+  color: #383c40 !important;
+  background-color: #E1F5FE !important;
+  border-radius: 20px !important;
+  transition: all .4s;
+  -webkit-transition: all .4s;
+  transition: all .4s;
 }
 
 #sidebar-menu ul li ul.sub-menu li ul.sub-menu {
@@ -185,7 +210,6 @@ Sidebar
   color: #FFFFFF !important;
   border-radius: 20px;
 }
-
 
 /*===============================================|
 Background Color

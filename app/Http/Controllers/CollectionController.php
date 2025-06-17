@@ -506,7 +506,7 @@ class CollectionController extends Controller
                     $csv = "SERIAL No.;BANK CODE;BRANCH NAME;EMPLOYEE NUMBER;CUSTOMER NAME;ACCOUNT NO;AMOUNT\n";
 
                     foreach ($installments as $installment) {
-                        //account details
+                        //debit order information
                         $account_name = strtoupper($installment->debitOrder->customerAccount->account_name);
                         $account_number = $installment->debitOrder->customerAccount->account_number;
                         $mandate_reference = $installment->debitOrder->reference;
@@ -1401,6 +1401,46 @@ class CollectionController extends Controller
         }
 
         return response()->json(['error' => false, 'success' => 'Debit order updated']);
+    }
+
+    public function delete_collection_batch()
+    {
+        $collectionReference = "10568";
+
+        //collection batch
+        $collection_batch = CollectionBatch::where(['collectionReference' => $collectionReference])->firstOrFail();
+
+        //installment_ids
+        $installment_ids = explode(",", $collection_batch->installment_ids);
+
+        //find installments where status=FAILED
+        $installments = Installment::whereIn('id', $installment_ids)->where('status', '=', 'FAILED')->get();
+
+        foreach ($installments as $installment) {
+            $debit_order_id = $installment->debitOrder->id;
+            $installment_id = $installment->id;
+            $payment_date = $installment->debitOrder->next_debit_date;
+
+            //4.0: check if the mandate reference debited this month
+            $collection_debit_order = CollectionDebitOrder::where(['debit_order_id' => $debit_order_id, 'status' => 'CREATED'])
+                ->whereMonth('payment_at', Carbon::parse($payment_date)->format('m'));
+
+
+            if ($collection_debit_order->count() > 0) {
+                $collection_debit_order = $collection_debit_order->first();
+                // echo "<pre>";
+                // print_r($collection_debit_order->toArray());
+
+                //delete collection debit order
+                $collection_debit_order->delete();
+            }
+        }
+
+        //delete collection batch
+        $collection_batch->deleted = 1;
+        $collection_batch->save();
+
+        return response()->json(['error' => false, 'success_msg' => 'Collection batch deleted successfully']);
     }
 
     public function update_collection_date()

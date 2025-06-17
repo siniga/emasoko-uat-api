@@ -55,4 +55,17 @@ $(document).ready(function () {
         });
     });
 
+    // Select/Deselect all checkboxes
+    $('#select_all').on('click', function (event) {  //on click
+        if (this.checked) { // check select status
+            $('.checkbox').each(function () { //loop through each checkbox
+                this.checked = true;  //select all checkboxes with class "checkbox"
+            });
+        } else {
+            $('.checkbox').each(function () { //loop through each checkbox
+                this.checked = false; //deselect all checkboxes with class "checkbox"
+            });
+        }
+    });
+
 });
