@@ -1322,10 +1322,10 @@ class PaymentMandateController extends Controller
         $title = 'Approve payment mandate closing';
 
         if ($request->isMethod('post')) {
-            if (!$request->has('closing_id')) {
-                return back()->with('danger', 'No payment mandate selected for cancellation.');
+            if (!$request->has('request_id')) {
+                return back()->with('danger', 'No payment mandate selected for closing.');
             } else {
-                foreach ($request->post('closing_id') as $dd_request_id) {
+                foreach ($request->post('request_id') as $dd_request_id) {
                     // Step 2: Find the closing request
                     $closingRequest = DebitOrderRequest::findOrFail($dd_request_id);
 
@@ -1345,7 +1345,7 @@ class PaymentMandateController extends Controller
                 }
 
                 // Step 5: add a success message for cancellation
-                return Redirect::route('payment-mandate.approve-deletion')->with('success', 'Payment mandate deletion request approved successfully.');
+                return Redirect::route('payment-mandate.approve-deletion')->with('success', 'Payment mandate closing request approved successfully.');
             }
         }
 

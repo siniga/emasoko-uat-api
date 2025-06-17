@@ -228,8 +228,12 @@
                                                 <span class="badge badge-pill badge-soft-danger">Inactive</span>
                                             </template>
 
+                                            <template x-if="status==900">
+                                                <span class="badge badge-pill badge-soft-success">Closed</span>
+                                            </template>
+
                                             <template x-if="status==999">
-                                                <span class="badge badge-pill badge-soft-danger">Canceled</span>
+                                                <span class="badge badge-pill badge-soft-danger">Cancelled</span>
                                             </template>
                                         </td>
                                     </tr>

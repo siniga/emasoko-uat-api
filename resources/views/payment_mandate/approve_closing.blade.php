@@ -71,8 +71,8 @@
                                             @foreach ($closing_requests as $values)
                                                 <tr>
                                                     <td>
-                                                        <input type="checkbox" class="checkbox" id="cancellation_id"
-                                                            name="cancellation_id[]" value="{{ $values->id }}">
+                                                        <input type="checkbox" class="checkbox" id="request_id"
+                                                            name="request_id[]" value="{{ $values->id }}">
                                                     </td>
                                                     <td>
                                                         {{ strtoupper($values->debitOrder->customerAccount->account_name) ?? $values->debitOrder->customerAccount->phone }}<br>
