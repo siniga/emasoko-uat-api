@@ -10,6 +10,7 @@ class CollectionDebitOrder extends Model
 {
     use HasFactory;
     protected $guarded = [];
+    
     public function debitOrder()
     {
         return $this->belongsTo(DebitOrder::class, "debit_order_id");

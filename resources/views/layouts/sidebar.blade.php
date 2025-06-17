@@ -50,18 +50,28 @@
                     </a>
                 </li>
 
-                <li class="{{ Route::is('payment-mandate.lists', 'payment-mandate.create-deduction', 'payment-mandate.preview', 'payment-mandate.show', 'payment-mandate.edit', 'payment-mandate.delete', 'payment-mandate.request-cancellation', 'payment-mandate.request-closing') ? 'mm-active' : '' }}">
-                    <a href="javascript: void(0);" class="has-arrow waves-effect">
+                <li class="{{ Route::is('payment-mandate.lists', 'payment-mandate.create-deduction', 'payment-mandate.preview', 'payment-mandate.show', 'payment-mandate.edit', 'payment-mandate.delete') ? "mm-active" : ""}}">
+                    <a href="{{ route('payment-mandate.lists') }}" class="waves-effect">
                         <i class="bx bxs-wallet-alt"></i>
-                        <span>Pending Mandates</span>
+                        <span key="t-layouts">Payment Mandate</span>
                     </a>
-                    <ul class="sub-menu" aria-expanded="false">
-                        <li><a href="{{ route('payment-mandate.lists') }}">Mandate Lists</a></li>
-                        <li><a href="#">Cancellation Approvals</a></li>
-                        <li><a href="#">Closing Approvals</a></li>
-                        <li><a href="#">Approval History</a></li>
-                    </ul>
                 </li>
+
+                @if (Auth::user()->hasRole(['admin']))
+                    <li class="{{ Route::is('payment-mandate.request-cancellation', 'payment-mandate.request-closing') ? 'mm-active' : '' }}">
+                        <a href="javascript: void(0);" class="has-arrow waves-effect">
+                            <i class='bx bx-list-check'></i>
+                            <span>Mandates Approvals</span>
+                        </a>
+                        <ul class="sub-menu" aria-expanded="false">
+                            <li><a href="{{ route('payment-mandate.approve-cancellation') }}">Cancellation</a></li>
+                            <li><a href="{{ route('payment-mandate.approve-deletion') }}">Deletion</a></li>
+                            <li><a href="{{ route('payment-mandate.approve-archive') }}">Archive</a></li>
+                            <li><a href="{{ route('payment-mandate.approve-closing') }}">Closing</a></li>
+                            <li><a href="#">Archive</a></li>
+                        </ul>
+                    </li>
+                @endif
 
                 <li class="{{ Route::is('collections.batches', 'collections.show') ? 'mm-active' : '' }}">
                     <a href="{{ route('collections.batches') }}" class="waves-effect">

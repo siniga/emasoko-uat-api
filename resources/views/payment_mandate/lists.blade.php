@@ -160,21 +160,24 @@
 
                             <div class="col-md-6">
                                 <div class="text-sm-end d-none d-sm-block">
-                                    <div class="btn-group">
-                                        <button class="btn btn-secondary btn-sm text-sm" type="button">
-                                            Actions
-                                        </button>
-                                        <button type="button"
-                                            class="btn btn-sm btn-secondary dropdown-toggle dropdown-toggle-split"
-                                            data-bs-toggle="dropdown" aria-expanded="false">
-                                            <i class="mdi mdi-chevron-down"></i>
-                                        </button>
-                                        <div class="dropdown-menu">
-                                            <a class="dropdown-item text-sm" href="{{ route('payment-mandate.request-cancellation') }}">Request Cancellation</a>
-                                            <a class="dropdown-item text-sm" href="{{ route('payment-mandate.request-closing') }}">Request Mandate Close</a>
-                                            <div class="dropdown-divider"></div>
+                                    @if (Auth::user()->hasRole(['admin']))
+                                        <div class="btn-group">
+                                            <button class="btn btn-secondary btn-sm text-sm" type="button">
+                                                Actions
+                                            </button>
+                                            <button type="button"
+                                                class="btn btn-sm btn-secondary dropdown-toggle dropdown-toggle-split"
+                                                data-bs-toggle="dropdown" aria-expanded="false">
+                                                <i class="mdi mdi-chevron-down"></i>
+                                            </button>
+                                            <div class="dropdown-menu">
+                                                <a class="dropdown-item text-sm" href="{{ route('payment-mandate.request-cancellation') }}">Request Cancellation</a>
+                                                <a class="dropdown-item text-sm" href="{{ route('payment-mandate.request-closing') }}">Request Mandate Close</a>
+                                                <div class="dropdown-divider"></div>
+                                                <a class="dropdown-item text-sm" href="{{ route('payment-mandate.request-deletion') }}">Request Deletion</a>
+                                            </div>
                                         </div>
-                                    </div>
+                                    @endif
 
                                     <a class="btn btn-primary btn-sm" href="{{ route('payment-mandate.create-account') }}">
                                         <i class="bx bx-list-plus"></i> Create New

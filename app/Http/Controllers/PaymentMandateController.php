@@ -932,21 +932,32 @@ class PaymentMandateController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy($uuid)
     {
         $title = 'Delete payment mandate';
 
-        //debit order
-        $debit_order = DebitOrder::where(['uuid' => $id])->first();
+        // Wrap in transaction to ensure data consistency
+        DB::transaction(function () use ($uuid) {
+            $debitOrder = DebitOrder::where('uuid', $uuid)->firstOrFail();
 
-        //delete debit order
-        $debit_order->delete();
+            // Delete related installments
+            $debitOrder->installments()->delete();
+
+            // Delete related debit order requests
+            $debitOrder->debitOrderRequests()->delete();
+
+            //delete collection debit orders
+            $debitOrder->collectionDebitOrders()->delete();
+
+            // Delete the main debit order
+            $debitOrder->delete();
+        });
 
         //redirect
         return Redirect::route('payment-mandate.lists')->with('danger', 'Payment mandate deleted!');
     }
 
-    //request cancellation
+    //request cancellation payment mandate
     public function request_cancellation(Request $request)
     {
         $title = 'Request payment mandate cancellation';
@@ -1035,6 +1046,187 @@ class PaymentMandateController extends Controller
         return view('payment_mandate.request_cancellation', compact('title', 'providers'));
     }
 
+    //approve payment mandate cancellation
+    public function approve_cancellation(Request $request)
+    {
+        $title = 'Approve payment mandate cancellation';
+
+        if ($request->isMethod('post')) {
+            if (!$request->has('cancellation_id')) {
+                return back()->with('danger', 'No payment mandate selected for cancellation.');
+            } else {
+                foreach ($request->post('cancellation_id') as $dd_request_id) {
+                    // Step 2: Find the cancellation request
+                    $cancellationRequest = DebitOrderRequest::findOrFail($dd_request_id);
+
+                    // Step 3: Update the cancellation request status
+                    $cancellationRequest->status = 'APPROVED';
+                    $cancellationRequest->approved_by = Auth::user()->id;
+                    $cancellationRequest->approved_at = Carbon::now();
+                    $cancellationRequest->save();
+
+                    // Step 4: Update the debit order status
+                    $debitOrder = $cancellationRequest->debitOrder;
+                    if ($debitOrder) {
+                        $debitOrder->cancelled = 1; // Mark as cancelled
+                        $debitOrder->deleted = 1; // Mark as deleted
+                        $debitOrder->save();
+                    }
+                }
+
+                // Step 5: add a success message for cancellation
+                return Redirect::route('payment-mandate.approve-cancellation')->with('success', 'Payment mandate cancellation request approved successfully.');
+            }
+        }
+
+        //cancellation requests
+        $cancellation_requests = DebitOrderRequest::with('debitOrder')
+            ->where('request_type', 'CANCELLATION')->where('status', 'PENDING')->get();
+
+        //render view
+        return view('payment_mandate.approve_cancellation', compact('title', 'cancellation_requests'));
+    }
+
+    //request deleting payment mandate
+    public function request_deletion(Request $request)
+    {
+        $title = 'Request payment mandate deletion';
+
+        if ($request->isMethod('post')) {
+            // Step 1: Validate the uploaded file
+            $request->validate([
+                'partner_id' => 'required|exists:partners,id',
+                'attachment' => 'required|file|mimes:xls,xlsx|mimetypes:application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            ]);
+
+            // Step 1.1: Get the service provider ID from the request
+            $serviceProviderId = $request->input('partner_id');
+
+            // Step 1.2: Load the Excel file into a Collection
+            $data = Excel::toArray([], $request->file('attachment'));
+            $rows = $data[0];
+
+            //headers
+            $headers = array_map('trim', $rows[0]); // row 0 = headers
+
+            // Step 1.3: Validate the content of the file
+            $errors = [];
+            foreach (array_slice($rows, 1) as $index => $row) {
+                $rowAssoc = array_combine($headers, $row);
+
+                //validate each row
+                $validator = Validator::make($rowAssoc, [
+                    'Mandate_Reference' => [
+                        'required',
+                        'numeric',
+                        function ($attribute, $value, $fail) use ($serviceProviderId) {
+                            $debit_order = DebitOrder::where('reference', $value)
+                                ->where('partner_id', $serviceProviderId);
+
+                            if (!$debit_order->exists()) {
+                                $fail("Mandate Reference [$value] does not belong to the selected Service Provider.");
+                            } else {
+                                // Check if the debit order is active or not
+                                $status = $debit_order->first()->status;
+                                if ($status === 240) {
+                                    $fail("Mandate Reference [$value] is active. You can not delete an active mandate.");
+                                }
+                            }
+                        },
+                    ],
+                ]);
+
+                if ($validator->fails()) {
+                    $errors[$index + 1] = $validator->errors()->all(); // Row number starts at 1
+                }
+            }
+
+            if (!empty($errors)) {
+                return back()->with('file_errors', $errors);
+            }
+
+            // Step 2: Process the valid rows
+            $mandateReferences = [];
+            foreach (array_slice($rows, 1) as $row) {
+                $rowAssoc = array_combine($headers, $row);
+                $mandateReferences[] = $rowAssoc['Mandate_Reference'];
+            }
+            // Step 3: Create cancellation requests
+            foreach ($mandateReferences as $reference) {
+                // Find the debit order by reference and service provider
+                $debitOrder = DebitOrder::where('reference', $reference)
+                    ->where('partner_id', $serviceProviderId)
+                    ->first();
+
+                if ($debitOrder) {
+                    // Create a cancellation request
+                    $cancellationRequest = new DebitOrderRequest();
+                    $cancellationRequest->debit_order_id = $debitOrder->id;
+                    $cancellationRequest->request_type = 'DELETION';
+                    $cancellationRequest->requested_by = Auth::user()->id;
+                    $cancellationRequest->status = 'PENDING';
+                    $cancellationRequest->requested_at = Carbon::now();
+                    $cancellationRequest->save();
+                }
+            }
+            // Step 4: Redirect with success message
+            return Redirect::route('payment-mandate.request-cancellation')->with('success', 'Cancellation requests have been successfully created.');
+        }
+
+        //providers
+        $providers = Partner::filterCondition();
+        $providers = $providers->get();
+
+        //render view
+        return view('payment_mandate.request_deletion', compact('title', 'providers'));
+    }
+
+    //request delete selected payment mandates
+    public function delete_selected(Request $request)
+    {
+        $title = 'Request payment mandate deletion';
+    }
+
+    //approve payment mandate deletion
+    public function approve_deletion(Request $request)
+    {
+        $title = 'Approve payment mandate cancellation';
+
+        if ($request->isMethod('post')) {
+            if (!$request->has('deletion_id')) {
+                return back()->with('danger', 'No payment mandate selected for deletion.');
+            } else {
+                foreach ($request->post('deletion_id') as $dd_request_id) {
+                    // Step 2: Find the cancellation request
+                    $cancellationRequest = DebitOrderRequest::findOrFail($dd_request_id);
+
+                    // Step 3: Update the cancellation request status
+                    $cancellationRequest->status = 'APPROVED';
+                    $cancellationRequest->approved_by = Auth::user()->id;
+                    $cancellationRequest->approved_at = Carbon::now();
+                    $cancellationRequest->save();
+
+                    // Step 4: Update the debit order status
+                    $debitOrder = $cancellationRequest->debitOrder;
+                    if ($debitOrder) {
+                        $debitOrder->deleted = 1; // Mark as deleted
+                        $debitOrder->save();
+                    }
+                }
+
+                // Step 5: add a success message for cancellation
+                return Redirect::route('payment-mandate.approve-deletion')->with('success', 'Payment mandate deletion request approved successfully.');
+            }
+        }
+
+        //deletion requests
+        $deletion_requests = DebitOrderRequest::with('debitOrder')
+            ->where('request_type', 'DELETION')->where('status', 'PENDING')->get();
+
+        //render view
+        return view('payment_mandate.approve_deletion', compact('title', 'deletion_requests'));
+    }
+
     //request closing payment mandate
     public function request_closing(Request $request)
     {
@@ -1102,14 +1294,14 @@ class PaymentMandateController extends Controller
                     ->first();
 
                 if ($debitOrder) {
-                    // Create a cancellation request
-                    $cancellationRequest = new DebitOrderRequest();
-                    $cancellationRequest->debit_order_id = $debitOrder->id;
-                    $cancellationRequest->request_type = 'CLOSING';
-                    $cancellationRequest->requested_by = Auth::user()->id;
-                    $cancellationRequest->status = 'PENDING';
-                    $cancellationRequest->requested_at = Carbon::now();
-                    $cancellationRequest->save();
+                    // Create a closing request
+                    $closingRequest = new DebitOrderRequest();
+                    $closingRequest->debit_order_id = $debitOrder->id;
+                    $closingRequest->request_type = 'CLOSING';
+                    $closingRequest->requested_by = Auth::user()->id;
+                    $closingRequest->status = 'PENDING';
+                    $closingRequest->requested_at = Carbon::now();
+                    $closingRequest->save();
                 }
             }
             // Step 4: Redirect with success message
@@ -1124,17 +1316,107 @@ class PaymentMandateController extends Controller
         return view('payment_mandate.request_closing', compact('title', 'providers'));
     }
 
-    public function archive($id)
+    //approve payment mandate closing
+    public function approve_closing(Request $request)
+    {
+        $title = 'Approve payment mandate closing';
+
+        if ($request->isMethod('post')) {
+            if (!$request->has('closing_id')) {
+                return back()->with('danger', 'No payment mandate selected for cancellation.');
+            } else {
+                foreach ($request->post('closing_id') as $dd_request_id) {
+                    // Step 2: Find the closing request
+                    $closingRequest = DebitOrderRequest::findOrFail($dd_request_id);
+
+                    // Step 3: Update the closing request status
+                    $closingRequest->status = 'APPROVED';
+                    $closingRequest->approved_by = Auth::user()->id;
+                    $closingRequest->approved_at = Carbon::now();
+                    $closingRequest->save();
+
+                    // Step 4: Update the debit order status
+                    $debitOrder = $closingRequest->debitOrder;
+                    if ($debitOrder) {
+                        $debitOrder->status = 900; //CLOSED STATUS
+                        $debitOrder->contract_status = "CLOSED";
+                        $debitOrder->save();
+                    }
+                }
+
+                // Step 5: add a success message for cancellation
+                return Redirect::route('payment-mandate.approve-deletion')->with('success', 'Payment mandate deletion request approved successfully.');
+            }
+        }
+
+        //closing requests
+        $closing_requests = DebitOrderRequest::with('debitOrder')
+            ->where('request_type', 'CLOSING')->where('status', 'PENDING')->get();
+
+        //render view
+        return view('payment_mandate.approve_closing', compact('title', 'closing_requests'));
+    }
+
+    //request archive payment mandate
+    public function request_archive($uuid)
     {
         $title = 'Archive payment mandate';
 
         //debit order
-        $debit_order = DebitOrder::where(['uuid' => $id])->firstOrFail();
-        $debit_order->deleted = 1;
-        $debit_order->save();
+        $debitOrder = DebitOrder::where(['uuid' => $uuid])->first();
 
-        //redirect
-        return Redirect::route('payment-mandate.lists')->with('success', 'Payment mandate archived');
+        // Create a closing request
+        $closingRequest = new DebitOrderRequest();
+        $closingRequest->debit_order_id = $debitOrder->id;
+        $closingRequest->request_type = 'ARCHIVE';
+        $closingRequest->requested_by = Auth::user()->id;
+        $closingRequest->status = 'PENDING';
+        $closingRequest->requested_at = Carbon::now();
+        $closingRequest->save();
+
+        //response 
+        return response()->json(["success" => true, 'success_msg' => "Archiving payment mandate request sent."], 200);
+    }
+
+    //approve payment mandate archive
+    public function approve_archive(Request $request)
+    {
+        $title = 'Approve payment mandate archive';
+
+        if ($request->isMethod('post')) {
+            if (!$request->has('request_id')) {
+                return back()->with('danger', 'No payment mandate selected for archive.');
+            } else {
+                foreach ($request->post('request_id') as $dd_request_id) {
+                    // Step 2: Find the closing request
+                    $closingRequest = DebitOrderRequest::findOrFail($dd_request_id);
+
+                    // Step 3: Update the closing request status
+                    $closingRequest->status = 'APPROVED';
+                    $closingRequest->approved_by = Auth::user()->id;
+                    $closingRequest->approved_at = Carbon::now();
+                    $closingRequest->save();
+
+                    // Step 4: Update the debit order status
+                    $debitOrder = $closingRequest->debitOrder;
+                    if ($debitOrder) {
+                        $debitOrder->archived = 1; // Mark as archived
+                        $debitOrder->deleted = 1; // Mark as deleted
+                        $debitOrder->save();
+                    }
+                }
+
+                // Step 5: add a success message for cancellation
+                return Redirect::route('payment-mandate.approve-archive')->with('success', 'Payment mandate archive request approved successfully.');
+            }
+        }
+
+        //archive requests
+        $archive_requests = DebitOrderRequest::with('debitOrder')
+            ->where('request_type', 'ARCHIVE')->where('status', 'PENDING')->get();
+
+        //render view
+        return view('payment_mandate.approve_archive', compact('title', 'archive_requests'));
     }
 
     public function unarchieve($id)
