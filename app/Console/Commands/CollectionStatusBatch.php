@@ -61,25 +61,25 @@ class CollectionStatusBatch extends Command
         //     ->where('deleted', '=', 0)
         //     ->orderBy('collectionReference', 'ASC');
 
-        $collection_batches = CollectionBatch::whereIn('collectionReference', [10488, 10402, 10416, 10495, 10395])
-            ->orderBy('collectionReference', 'ASC');
+        // $collection_batches = CollectionBatch::whereIn('collectionReference', [10488, 10402, 10416, 10495, 10395])
+        //     ->orderBy('collectionReference', 'ASC');
 
-        if ($collection_batches->count() > 0) {
-            //take the first 10 collection batches
-            $collection_batches = $collection_batches->get();
+        // if ($collection_batches->count() > 0) {
+        //     //take the first 10 collection batches
+        //     $collection_batches = $collection_batches->get();
 
-            foreach ($collection_batches as $value) {
-                //collection batch
-                $batch = CollectionBatch::findOrFail($value->id);
+        //     foreach ($collection_batches as $value) {
+        //         //collection batch
+        //         $batch = CollectionBatch::findOrFail($value->id);
 
-                //create payload
-                $payload = $bankPayload->collectionStatusPayload($batch);
+        //         //create payload
+        //         $payload = $bankPayload->collectionStatusPayload($batch);
 
-                //3. BackgroundJob for creating collection batches
-                dispatch(new CollectionStatusJob($payload));
-                sleep(5); // sleep for 5 seconds
-            }
-        }
+        //         //3. BackgroundJob for creating collection batches
+        //         dispatch(new CollectionStatusJob($payload));
+        //         sleep(5); // sleep for 5 seconds
+        //     }
+        // }
         //logging successiong
         Log::debug("== Success on creating collection batch status ==");
 
