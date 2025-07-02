@@ -532,43 +532,18 @@ class CollectionController extends Controller
                     $csv = "SERIAL No.;BANK CODE;BRANCH NAME;EMPLOYEE NUMBER;CUSTOMER NAME;ACCOUNT NO;AMOUNT\n";
 
                     foreach ($installments as $installment) {
-                        //payment date
-                        $payment_date = $installment->payment_date;
-
-                        // Convert to Carbon instance if it's not already
-                        $paymentDate = Carbon::parse($payment_date);
-
-                        //same day next month
-                        $nextMonthPaymentDate = $paymentDate->copy()->addMonth();
-
-                        // Now query the installment for next month
-                        $nextInstallment = Installment::whereDate('payment_date', $nextMonthPaymentDate->toDateString())->first();
-
-                        //check if next installment exists  
-                        if (!$nextInstallment) {
-                            // create new installment
-                            $nextInstallment = Installment::create([
-                                'debit_order_id' => $installment->debitOrder->id,
-                                'installment_order' => $installment->installment_order + 1,
-                                'installment_amount' => $installment->installment_amount,
-                                'current_balance' => 0,
-                                'outstanding_amount' => $installment->installment_amount,
-                                'payment_date' => $nextMonthPaymentDate->toDateString()
-                            ]);
-                        }
-
                         //debit order information
-                        $account_name = strtoupper($nextInstallment->debitOrder->customerAccount->account_name);
-                        $account_number = $nextInstallment->debitOrder->customerAccount->account_number;
-                        $mandate_reference = $nextInstallment->debitOrder->reference;
-                        $debit_order_id = $nextInstallment->debitOrder->id;
-                        $periodicity = $nextInstallment->debitOrder->periodicity;
-                        $installment_id = $nextInstallment->id;
-                        $payment_amount = $nextInstallment->installment_amount;
-                        $payment_date = $nextInstallment->payment_date;
-                        $debit_start_date = Carbon::parse($nextInstallment->debitOrder->start_date);
-                        $debit_end_date = Carbon::parse($nextInstallment->debitOrder->end_date);
-                        $deleted = $nextInstallment->debitOrder->deleted;
+                        $account_name = strtoupper($installment->debitOrder->customerAccount->account_name);
+                        $account_number = $installment->debitOrder->customerAccount->account_number;
+                        $mandate_reference = $installment->debitOrder->reference;
+                        $debit_order_id = $installment->debitOrder->id;
+                        $periodicity = $installment->debitOrder->periodicity;
+                        $installment_id = $installment->id;
+                        $payment_amount = $installment->installment_amount;
+                        $payment_date = $installment->payment_date;
+                        $debit_start_date = Carbon::parse($installment->debitOrder->start_date);
+                        $debit_end_date = Carbon::parse($installment->debitOrder->end_date);
+                        $deleted = $installment->debitOrder->deleted;
 
                         //1.0: check if periodicity == MONTHLY and deleted = 0
                         if ($periodicity == "MONTHLY" && $deleted == 0) {
@@ -582,7 +557,7 @@ class CollectionController extends Controller
                                         $collection_debit_order = CollectionDebitOrder::where(['debit_order_id' => $debit_order_id, 'status' => 'CREATED'])
                                             ->whereMonth('payment_at', Carbon::parse($payment_date)->format('m'));
 
-                                        if ($collection_debit_order->count() == 0) {
+                                        if ($collection_debit_order->count() == 1) {
                                             //create csv file
                                             $csv .= "{$installment_id};016;NMB;{$mandate_reference};{$account_name};{$account_number};{$payment_amount}\n";
 
@@ -592,17 +567,18 @@ class CollectionController extends Controller
                                             //update array installments
                                             array_push($arr_installments, $installment_id);
 
-                                            //update installment status => created = 1
-                                            $up_installment = Installment::findOrFail($installment_id);
-                                            $up_installment->created = 1;
-                                            $up_installment->save();
+                                            // Convert to Carbon instance if it's not already
+                                            $paymentDate = Carbon::parse($payment_date);
+
+                                            //same day next month
+                                            $nextMonthPaymentDate = $paymentDate->copy()->addMonth();
 
                                             // create collection debit order
                                             $create_collection_debit_order = CollectionDebitOrder::create([
                                                 'collection_batch_id' => $batch->id,
                                                 'debit_order_id' => $debit_order_id,
                                                 'status' => 'CREATED',
-                                                'payment_at' => $payment_date
+                                                'payment_at' => $nextMonthPaymentDate->toDateString()
                                             ]);
 
                                             //increment number of collections
@@ -619,6 +595,7 @@ class CollectionController extends Controller
                         $batch->request_csv = $csv;
                         $batch->number_of_collections = $number_of_collections;
                         $batch->installment_ids = implode(",", $arr_installments);
+                        //$batch->recreated = 1;
                         $batch->save();
 
                         //Batch Information
@@ -626,7 +603,7 @@ class CollectionController extends Controller
 
                         //send Notification of batch creation
                         $message = "Collection batch number " . $collection_reference . " created. Review and approve to the next stage.";
-                        $arr_phone = [255717705746, 255656314330, 255629602290];
+                        $arr_phone = [255717705746, 255656314330];
 
                         foreach ($arr_phone as $phone) {
                             //send sms
