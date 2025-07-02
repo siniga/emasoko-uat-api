@@ -93,6 +93,11 @@ class CollectionController extends Controller
                 ->whereDate('end_date', '>=', Carbon::now())
                 ->take($limit);
 
+            echo "<pre>";
+            print_r($debit_orders->get()->toArray());
+            echo "</pre>";
+            exit();
+
             if ($debit_orders->count() > 0) {
                 //debit orders
                 $debit_orders = $debit_orders->orderBy('created_at', 'asc')->get();
@@ -304,14 +309,30 @@ class CollectionController extends Controller
         //batch
         $batch = CollectionBatch::where(['id' => $id])->firstOrFail();
 
+        // validate the date before creating new collection dates
+        $current_month = now()->month; //current month
+        $batch_month = Carbon::parse($batch->collectionDate)->format('m');
+        $diff = $current_month - $batch_month;
+
+        $show_create_button = false;
+        if ($diff == 1)
+            $show_create_button = true;
+
         //installments
         $arr_installments = [];
+        $number_of_failed_installments = 0;
         $installment_ids = explode(',', $batch->installment_ids);
+
         $installments = Installment::whereIn('id', $installment_ids);
 
         if ($installments->count() > 0) {
             //installments
             $installments = $installments->get();
+
+            //count number of failed installments
+            $number_of_failed_installments = $installments->filter(function ($installment) {
+                return in_array($installment->status, ['FAILED', 'FUNDSCHECK']);
+            })->count();
 
             foreach ($installments as $val) {
                 $arr_installments[] = [
@@ -333,7 +354,7 @@ class CollectionController extends Controller
         }
 
         //render view
-        return view('collections.show', compact('title', 'batch', 'arr_installments'));
+        return view('collections.show', compact('title', 'batch', 'arr_installments', 'show_create_button', 'number_of_failed_installments'));
     }
 
     //export xls
@@ -478,12 +499,17 @@ class CollectionController extends Controller
 
             //find installments where status=FAILED
             $installments = Installment::whereIn('id', $installment_ids)->where(function ($q) {
-                    $q->orWhere('status', 'FAILED')
+                $q->orWhere('status', 'FAILED')
                     ->orWhere('status', 'FUNDSCHECK');
-                })->where('remarks', '!=', 'Account Is Valid')->get();
+            })->where('remarks', '!=', 'Account Is Valid')->get();
 
             if ($installments->isNotEmpty()) {
                 //1. Create new collection batch
+                //1.0 Create and format next month collection date
+                $collectionDate = Carbon::parse($collection_batch->collectionDate);
+                $nextMonthCollectionDate = $collectionDate->copy()->addMonth();
+
+                //create statement
                 $batch = CollectionBatch::create([
                     "partner_id" => $collection_batch->partner->id,
                     "collectionReference" => $this->deductionService->getCollectionReference(),
@@ -491,7 +517,7 @@ class CollectionController extends Controller
                     "selectedPostingDate" => Carbon::now(),
                     "createdBy" => 1,
                     "verifiedBy" => 1,
-                    "collectionDate" => $collection_batch->collectionDate,
+                    "collectionDate" => $nextMonthCollectionDate->toDateString(),
                     "createdDate" => Carbon::now(),
                     "verifyDate" => Carbon::now(),
                 ]);
@@ -506,18 +532,43 @@ class CollectionController extends Controller
                     $csv = "SERIAL No.;BANK CODE;BRANCH NAME;EMPLOYEE NUMBER;CUSTOMER NAME;ACCOUNT NO;AMOUNT\n";
 
                     foreach ($installments as $installment) {
-                        //debit order information
-                        $account_name = strtoupper($installment->debitOrder->customerAccount->account_name);
-                        $account_number = $installment->debitOrder->customerAccount->account_number;
-                        $mandate_reference = $installment->debitOrder->reference;
-                        $debit_order_id = $installment->debitOrder->id;
-                        $periodicity = $installment->debitOrder->periodicity;
-                        $installment_id = $installment->id;
-                        $payment_amount = $installment->installment_amount;
+                        //payment date
                         $payment_date = $installment->payment_date;
-                        $debit_start_date = Carbon::parse($installment->debitOrder->start_date);
-                        $debit_end_date = Carbon::parse($installment->debitOrder->end_date);
-                        $deleted = $installment->debitOrder->deleted;
+
+                        // Convert to Carbon instance if it's not already
+                        $paymentDate = Carbon::parse($payment_date);
+
+                        //same day next month
+                        $nextMonthPaymentDate = $paymentDate->copy()->addMonth();
+
+                        // Now query the installment for next month
+                        $nextInstallment = Installment::whereDate('payment_date', $nextMonthPaymentDate->toDateString())->first();
+
+                        //check if next installment exists  
+                        if (!$nextInstallment) {
+                            // create new installment
+                            $nextInstallment = Installment::create([
+                                'debit_order_id' => $installment->debitOrder->id,
+                                'installment_order' => $installment->installment_order + 1,
+                                'installment_amount' => $installment->installment_amount,
+                                'current_balance' => 0,
+                                'outstanding_amount' => $installment->installment_amount,
+                                'payment_date' => $nextMonthPaymentDate->toDateString()
+                            ]);
+                        }
+
+                        //debit order information
+                        $account_name = strtoupper($nextInstallment->debitOrder->customerAccount->account_name);
+                        $account_number = $nextInstallment->debitOrder->customerAccount->account_number;
+                        $mandate_reference = $nextInstallment->debitOrder->reference;
+                        $debit_order_id = $nextInstallment->debitOrder->id;
+                        $periodicity = $nextInstallment->debitOrder->periodicity;
+                        $installment_id = $nextInstallment->id;
+                        $payment_amount = $nextInstallment->installment_amount;
+                        $payment_date = $nextInstallment->payment_date;
+                        $debit_start_date = Carbon::parse($nextInstallment->debitOrder->start_date);
+                        $debit_end_date = Carbon::parse($nextInstallment->debitOrder->end_date);
+                        $deleted = $nextInstallment->debitOrder->deleted;
 
                         //1.0: check if periodicity == MONTHLY and deleted = 0
                         if ($periodicity == "MONTHLY" && $deleted == 0) {
@@ -531,7 +582,7 @@ class CollectionController extends Controller
                                         $collection_debit_order = CollectionDebitOrder::where(['debit_order_id' => $debit_order_id, 'status' => 'CREATED'])
                                             ->whereMonth('payment_at', Carbon::parse($payment_date)->format('m'));
 
-                                        if ($collection_debit_order->count() == 1) {
+                                        if ($collection_debit_order->count() == 0) {
                                             //create csv file
                                             $csv .= "{$installment_id};016;NMB;{$mandate_reference};{$account_name};{$account_number};{$payment_amount}\n";
 
@@ -541,29 +592,18 @@ class CollectionController extends Controller
                                             //update array installments
                                             array_push($arr_installments, $installment_id);
 
-                                            //change payment date to this month
-                                            //original date
-                                            $original = Carbon::parse($payment_date);
+                                            //update installment status => created = 1
+                                            $up_installment = Installment::findOrFail($installment_id);
+                                            $up_installment->created = 1;
+                                            $up_installment->save();
 
-                                            // Get current month and year
-                                            $currentMonth = now()->month;
-                                            $currentYear = now()->year;
-
-                                            // Adjust year if original was in December and we're now in January
-                                            $newYear = ($original->month === 12 && $currentMonth === 1) ? $original->year + 1 : $original->year;
-
-                                            // Try to build new date with current month, original day and adjusted year
-                                            try {
-                                                $newDate = Carbon::create($newYear, $currentMonth, $original->day);
-                                            } catch (\Exception $e) {
-                                                // Day is invalid for the current month (e.g., Feb 30)
-                                                $newDate = Carbon::create($newYear, $currentMonth, 1)->endOfMonth();
-                                            }
-
-                                            // update collection debit order
-                                            $collection_debit_order = $collection_debit_order->first();
-                                            $collection_debit_order->payment_at = $newDate;
-                                            $collection_debit_order->save();
+                                            // create collection debit order
+                                            $create_collection_debit_order = CollectionDebitOrder::create([
+                                                'collection_batch_id' => $batch->id,
+                                                'debit_order_id' => $debit_order_id,
+                                                'status' => 'CREATED',
+                                                'payment_at' => $payment_date
+                                            ]);
 
                                             //increment number of collections
                                             $number_of_collections += 1;
@@ -597,13 +637,18 @@ class CollectionController extends Controller
                         $batch->delete();
                     }
                 }
+
+                //update existing collection batch
+                $collection_batch->recreated = 1;
+                $collection_batch->save();
             }
-        }
-        // catch(Exception $e) catch any exception
-        catch (ModelNotFoundException $e) {
+        } catch (ModelNotFoundException $e) {
             Log::debug(get_class_methods($e));
             Log::debug($e);
         }
+
+        //redirect
+        return Redirect::route('collections.batches')->with('success', 'Collection batch created, review and approve to the next stage.');
     }
 
     public function fetch_status(Request $request)
@@ -1355,6 +1400,131 @@ class CollectionController extends Controller
         //     fputcsv($new_file, $line);
         // }
         // fclose($new_file);
+
+        //response
+        return response()->json(['success' => false, 'success_msg' => "File Processed"]);
+    }
+
+    public function update_collection_status(Request $request)
+    {
+        //read file
+        $file = fopen(public_path('assets/reports/05/Modified_Batch_RN.csv'), 'r');
+        fgetcsv($file); // Skip the first row
+
+        //array of installments
+        $arr_installments = [];
+
+        //iterarate file
+        while (($row = fgetcsv($file, 10000, ',')) !== false) {
+            $mandateRef = $row[0];
+            $status = $row[2];
+            $collDate = $row[3];
+
+            if (empty($mandateRef) || $status != "PAID")
+                continue;
+
+            //mandate 
+            $debit_order = DebitOrder::where(["reference" => $mandateRef])->first();
+
+            if (!$debit_order)
+                continue;
+
+            //query installment which are failed
+            $installment = Installment::where(['debit_order_id' => $debit_order->id])
+                ->whereMonth('payment_date', '05')->first();
+
+            if (!$installment)
+                continue;
+
+            # Query installment for next month
+            $next_month_installment = Installment::where(['debit_order_id' => $debit_order->id, 'status' => 'OPEN'])
+                ->whereMonth('payment_date', '06')->first();
+
+            if ($next_month_installment) {
+                //update next month installment status to "CLOSED"
+                $next_month_installment->status = "CLOSED";
+                $next_month_installment->remarks = "Account Is Valid";
+                $next_month_installment->current_balance = $installment->current_balance;
+                $next_month_installment->outstanding_amount = 0;
+                $next_month_installment->last_paid_amount = $installment->last_paid_amount;
+                $next_month_installment->pushed = 1;
+                $next_month_installment->created = 1;
+                $next_month_installment->save();
+
+                //update this month installment status to "FUNDSCHECK"  
+                $installment->status = "FUNDSCHECK";
+                $installment->remarks = "Insufficient Funds";
+                $installment->current_balance = 0;
+                $installment->outstanding_amount = $installment->installment_amount;
+                $installment->last_paid_amount = 0;
+                $installment->save();
+            }
+        }
+        fclose($file);
+
+        //response
+        return response()->json(['success' => false, 'success_msg' => "File Processed"]);
+    }
+
+    public function update_collection_values(Request $request)
+    {
+        //select active debit orders
+        $debit_orders = DebitOrder::where(['approved' => 1, 'deleted' => 0, 'status' => 240])->get();
+
+        // foreach ($debit_orders as $debit_order) {
+        //     if ($debit_order->debit_type == 'FIXED') {
+        //         //find installment where installment amount is not equal to debit order installment amount
+        //         $installments = Installment::where(['debit_order_id' => $debit_order->id])
+        //             ->where('installment_amount', '!=', $debit_order->installment_amount)
+        //             ->where('status', '!=', 'CLOSED')
+        //             ->latest('installment_order')->first();
+
+        //         //calculate sum of installment amount except the last installment
+        //         $sum_installment_amount = Installment::where(['debit_order_id' => $debit_order->id])
+        //             ->where('installment_order', '<', $installments->installment_order)
+        //             ->sum('installment_amount');
+        //     }else{}
+        // }
+
+        //read file
+        $file = fopen(public_path('assets/reports/05/Collection_Anomaly_v2.csv'), 'r');
+        fgetcsv($file); // Skip the first row
+
+        //iterarate file
+        while (($row = fgetcsv($file, 10000, ',')) !== false) {
+            $installmentId = $row[0];
+
+            if (empty($installmentId))
+                continue;
+
+            //query installment
+            $installment = Installment::where(['id' => $installmentId])->first();
+
+            if (!$installment)
+                continue;
+
+            if ($installment->debitOrder->debit_type == 'FIXED') {
+                if ($installment->debitOrder->installment_amount != $installment->installment_amount) {
+                    //update installment amount
+                    $installment->installment_amount = $installment->debitOrder->installment_amount;
+                    $installment->current_balance = 0;
+                    $installment->outstanding_amount = $installment->debitOrder->installment_amount;
+                    $installment->save();
+                }
+            } else if ($installment->debitOrder->debit_type == 'DYNAMIC') {
+                //update installment amount
+                if ($installment->debitOrder->max_installment_amount != $installment->installment_amount) {
+                    //update installment amount
+                    $installment->installment_amount = $installment->debitOrder->max_installment_amount;
+                    $installment->min_installment_amount = $installment->debitOrder->min_installment_amount;
+                    $installment->max_installment_amount = $installment->debitOrder->max_installment_amount;
+                    $installment->current_balance = 0;
+                    $installment->outstanding_amount = $installment->debitOrder->max_installment_amount;
+                    $installment->save();
+                }
+            }
+        }
+        fclose($file);
 
         //response
         return response()->json(['success' => false, 'success_msg' => "File Processed"]);

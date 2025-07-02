@@ -69,7 +69,7 @@
                                 </template>
 
                                 @if (Auth::user()->hasRole(['admin']))
-                                    <template x-if="pushed==1 && processed==1">
+                                    <template x-if="recreated == 0 && show_create_button==true && number_of_failed_installments > 0">
                                         <a href="{{ route('collections.create-failed', $batch->id) }}" 
                                         class="btn btn-secondary text-medium btn-sm" title="Recreate batch">
                                            <i class="fas fa-plus-square"></i> Create Failed Collections
@@ -354,6 +354,9 @@
                 processed: "{{ $batch->processed }}",
                 deleted: "{{ $batch->deleted }}",
                 failed: "{{ $batch->failed }}",
+                recreated: "{{ $batch->recreated }}",
+                show_create_button: "{{ $show_create_button }}",
+                number_of_failed_installments: "{{ $number_of_failed_installments }}",
 
                 formData: {
                     batch_id: "{{ $batch->id }}",

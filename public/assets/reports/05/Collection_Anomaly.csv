@@ -1,0 +1,5 @@
+id,PaymentDate,MandateStartDate,MandateEndDate,reference,MinInstallmentAmount,MaxInstallmentAmount,InstallmentAmount,OutstandingAmount,PaymentStatus
+54956,7/2/25,5/2/25,8/1/26,20420256878,181667,0,1,181666,OPEN
+54979,7/4/25,5/4/25,8/3/26,30420256883,181667,0,0.01,363333,OPEN
+808816,7/4/25,7/4/25,8/3/27,2.8062E+12,5000,0,5000,5000,OPEN
+479667,7/17/25,4/17/25,8/16/26,1.7042E+11,228000,0,2000,682000,OPEN
