@@ -210,6 +210,8 @@ Route::post('collections/fetch-status', [CollectionController::class, 'fetch_sta
 Route::get('collections/create-debit-orders', [CollectionController::class, 'create_debit_orders'])->name('collections.create-debit-orders');
 Route::get('collections/update-debit-orders', [CollectionController::class, 'update_debit_orders'])->name('collections.update-debit-orders');
 Route::get('collections/update-collection-date', [CollectionController::class, 'update_collection_date'])->name('collections.update-collection-date');
+Route::get('collections/update-collection-status', [CollectionController::class, 'update_collection_status'])->name('collections.update-collection-status');
+Route::get('collections/update-collection-values', [CollectionController::class, 'update_collection_values'])->name('collections.update-collection-values');
 //Route::get('collections/delete-batch', [CollectionController::class, 'delete_collection_batch'])->name('collections.delete-batch');
 //Route::get('collections/reconciliation', [CollectionController::class, 'reconciliation'])->name('collections.reconciliation');
 
