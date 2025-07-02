@@ -1428,19 +1428,25 @@ class CollectionController extends Controller
     {
         //select active debit orders
         $debit_orders = DebitOrder::where(['approved' => 1, 'deleted' => 0, 'status' => 240, 'debit_type' => 'FIXED'])
-            ->where('end_date', '>=', now())->whereBetween("id", [1, 3000])->get();
+            ->where('end_date', '>=', now())->whereBetween("id", [3301, 3400])->get();
 
         foreach ($debit_orders as $debit_order) {
-            //find installment where installment amount is not equal to debit order installment amount
-            $installments = Installment::where(['debit_order_id' => $debit_order->id])
-                ->where('installment_amount', '!=', $debit_order->installment_amount)
-                ->where('status', '!=', 'CLOSED')
-                ->latest('id')->count();
+            //summation of installment amounts
+            $total_installment_amount = Installment::where(['debit_order_id' => $debit_order->id])
+                ->sum('installment_amount');
 
-            if (!$installments)
-                continue;
+            if ($total_installment_amount != $debit_order->total_amount) {
+                //find installment where installment amount is not equal to debit order installment amount
+                $installments = Installment::where(['debit_order_id' => $debit_order->id])
+                    ->where('installment_amount', '!=', $debit_order->installment_amount)
+                    ->where('status', '!=', 'CLOSED')
+                    ->latest('id')->count();
 
-            echo "Reference: {$debit_order->reference} - Installments: {$installments}<br>";
+                if (!$installments)
+                    continue;
+
+                echo "Reference: {$debit_order->reference} - Installments: {$installments}<br>";
+            }
         }
     }
 
