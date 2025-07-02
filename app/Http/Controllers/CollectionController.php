@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 use Maatwebsite\Excel\Facades\Excel;
@@ -1443,24 +1444,96 @@ class CollectionController extends Controller
         return response()->json(['success' => false, 'success_msg' => "File Processed"]);
     }
 
-    public function update_collection_values(Request $request)
+    public function create_collection_values(Request $request)
     {
+        $filename = 'collection_value_06.csv';
+        $folderPath = public_path('assets/reports/05');
+
+        // Ensure the folder exists
+        if (!File::exists($folderPath)) {
+            File::makeDirectory($folderPath, 0775, true);
+        }
+
+        $filePath = $folderPath . '/' . $filename;
+
         //select active debit orders
         $debit_orders = DebitOrder::where(['approved' => 1, 'deleted' => 0, 'status' => 240, 'debit_type' => 'FIXED'])
-            ->where('end_date', '>=', now())->whereBetween("id", [1, 3000])->get();
+            ->where('end_date', '>=', now())->whereBetween("id", [3301, 3400])->get();
+
+        // Open file handle
+        $handle = fopen($filePath, 'w');
 
         foreach ($debit_orders as $debit_order) {
-            //find installment where installment amount is not equal to debit order installment amount
-            $installments = Installment::where(['debit_order_id' => $debit_order->id])
-                ->where('installment_amount', '!=', $debit_order->installment_amount)
-                ->where('status', '!=', 'CLOSED')
-                ->latest('id')->count();
+            //summation of installment amounts
+            $total_installment_amount = Installment::where(['debit_order_id' => $debit_order->id])
+                ->sum('installment_amount');
 
-            if (!$installments)
+            if ($total_installment_amount != $debit_order->total_amount) {
+                //find installment where installment amount is not equal to debit order installment amount
+                $installments = Installment::where(['debit_order_id' => $debit_order->id])
+                    ->where('installment_amount', '!=', $debit_order->installment_amount)
+                    ->where('status', '!=', 'CLOSED')
+                    ->latest('id')->count();
+
+                if (!$installments)
+                    continue;
+
+                if ($installments == 1)
+                    fputcsv($handle, [$debit_order->reference]);
+
+                echo "Reference: {$debit_order->reference} - Installments: {$installments}<br>";
+            }
+        }
+        fclose($handle);
+
+        // return response()->json([
+        //     'status' => 'success',
+        //     'message' => 'csv generated',
+        //     'file' => asset('assets/reports/05/' . $filename)
+        // ]);
+    }
+
+    public function update_collection_values(Request $request)
+    {
+        //read file
+        $file = fopen(public_path('assets/reports/05/collection_value_06.csv'), 'r');
+        fgetcsv($file); // Skip the first row
+
+        //iterarate file
+        while (($row = fgetcsv($file, 10000, ',')) !== false) {
+            $mandateRef = $row[0];
+
+            if (empty($mandateRef))
                 continue;
 
-            echo "Reference: {$debit_order->reference} - Installments: {$installments}<br>";
+            //mandate 
+            $debit_order = DebitOrder::where(["reference" => $mandateRef])->first();
+
+            if (!$debit_order)
+                continue;
+
+            // Get the last 2 installments for this debit_order_id, ordered by created_at or id
+            $installments = Installment::where('debit_order_id', $debit_order->id)
+                ->orderBy('id', 'desc')
+                ->take(2)
+                ->get();
+
+            // Check if we have at least 2 records
+            if ($installments->count() == 2) {
+                // Since we ordered descending, first is latest, second is before latest
+                $latest = $installments[0];
+                $previous = $installments[1];
+
+                // Calculate difference
+                $difference = $previous->installment_amount - $latest->installment_amount;
+
+                // Update latest installment
+                $latest->installment_amount = $difference;
+                $latest->save();
+            }
         }
+
+        return response()->json(['status' => 'success']);
     }
 
     public function create_debit_orders()
