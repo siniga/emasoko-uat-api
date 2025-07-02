@@ -1446,65 +1446,21 @@ class CollectionController extends Controller
     public function update_collection_values(Request $request)
     {
         //select active debit orders
-        $debit_orders = DebitOrder::where(['approved' => 1, 'deleted' => 0, 'status' => 240])->get();
+        $debit_orders = DebitOrder::where(['approved' => 1, 'deleted' => 0, 'status' => 240, 'debit_type' => 'FIXED'])
+            ->where('end_date', '>=', now())->whereBetween("id", [1, 3000])->get();
 
-        // foreach ($debit_orders as $debit_order) {
-        //     if ($debit_order->debit_type == 'FIXED') {
-        //         //find installment where installment amount is not equal to debit order installment amount
-        //         $installments = Installment::where(['debit_order_id' => $debit_order->id])
-        //             ->where('installment_amount', '!=', $debit_order->installment_amount)
-        //             ->where('status', '!=', 'CLOSED')
-        //             ->latest('installment_order')->first();
+        foreach ($debit_orders as $debit_order) {
+            //find installment where installment amount is not equal to debit order installment amount
+            $installments = Installment::where(['debit_order_id' => $debit_order->id])
+                ->where('installment_amount', '!=', $debit_order->installment_amount)
+                ->where('status', '!=', 'CLOSED')
+                ->latest('id')->count();
 
-        //         //calculate sum of installment amount except the last installment
-        //         $sum_installment_amount = Installment::where(['debit_order_id' => $debit_order->id])
-        //             ->where('installment_order', '<', $installments->installment_order)
-        //             ->sum('installment_amount');
-        //     }else{}
-        // }
-
-        //read file
-        $file = fopen(public_path('assets/reports/05/Collection_Anomaly_v2.csv'), 'r');
-        fgetcsv($file); // Skip the first row
-
-        //iterarate file
-        while (($row = fgetcsv($file, 10000, ',')) !== false) {
-            $installmentId = $row[0];
-
-            if (empty($installmentId))
+            if (!$installments)
                 continue;
 
-            //query installment
-            $installment = Installment::where(['id' => $installmentId])->first();
-
-            if (!$installment)
-                continue;
-
-            if ($installment->debitOrder->debit_type == 'FIXED') {
-                if ($installment->debitOrder->installment_amount != $installment->installment_amount) {
-                    //update installment amount
-                    $installment->installment_amount = $installment->debitOrder->installment_amount;
-                    $installment->current_balance = 0;
-                    $installment->outstanding_amount = $installment->debitOrder->installment_amount;
-                    $installment->save();
-                }
-            } else if ($installment->debitOrder->debit_type == 'DYNAMIC') {
-                //update installment amount
-                if ($installment->debitOrder->max_installment_amount != $installment->installment_amount) {
-                    //update installment amount
-                    $installment->installment_amount = $installment->debitOrder->max_installment_amount;
-                    $installment->min_installment_amount = $installment->debitOrder->min_installment_amount;
-                    $installment->max_installment_amount = $installment->debitOrder->max_installment_amount;
-                    $installment->current_balance = 0;
-                    $installment->outstanding_amount = $installment->debitOrder->max_installment_amount;
-                    $installment->save();
-                }
-            }
+            echo "Reference: {$debit_order->reference} - Installments: {$installments}<br>";
         }
-        fclose($file);
-
-        //response
-        return response()->json(['success' => false, 'success_msg' => "File Processed"]);
     }
 
     public function create_debit_orders()
