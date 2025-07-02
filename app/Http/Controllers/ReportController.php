@@ -152,7 +152,7 @@ class ReportController extends Controller
                         'Contract_Status' => $val->contract_status,
                         'Remarks' => $val->remarks,
                         'Created_Date' => $val->created_at,
-                        'Created_By' => strtoupper($val->userCreated->name),
+                        'Created_By' => $val->userCreated ? strtoupper($val->userCreated->name) : '',
                     ];
                 }
 

@@ -114,16 +114,16 @@ class CreateFailedCollection extends Command
                                 $installment_id = $installment->id;
                                 $payment_amount = $installment->installment_amount;
                                 $payment_date = $installment->payment_date;
-                                $debit_start_date = Carbon::parse($installment->debitOrder->start_date);
-                                $debit_end_date = Carbon::parse($installment->debitOrder->end_date);
+                                $debit_start_date = Carbon::parse($installment->debitOrder->start_date)->toDateString();
+                                $debit_end_date = Carbon::parse($installment->debitOrder->end_date)->toDateString();
                                 $deleted = $installment->debitOrder->deleted;
 
                                 //1.0: check if periodicity == MONTHLY and deleted = 0
                                 if ($periodicity == "MONTHLY" && $deleted == 0) {
                                     //2.0: Check if mandate start date <= today
-                                    if ($debit_start_date->lte(Carbon::now())) {
+                                    if ($debit_start_date <=Carbon::now()->toDateString()) {
                                         //2.1: check if debit mandate expire
-                                        if ($debit_end_date->gte(Carbon::now())) {
+                                        if ($debit_end_date >= Carbon::now()->toDateString()) {
                                             //3.0: check if account exists in this batch
                                             if (!in_array($account_number, $arr_accounts)) {
                                                 //4.0: check if the mandate reference debited this month

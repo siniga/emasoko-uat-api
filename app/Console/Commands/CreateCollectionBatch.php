@@ -52,7 +52,8 @@ class CreateCollectionBatch extends Command
         //Limit
         $limit = 250;
         $current_date = Carbon::now(); //today batch
-        //$current_date = Carbon::now()->addDays(8); //8 days from today 25-05
+        //$current_date = Carbon::now()->addDays(7); //1 days from today 28-06
+        echo "== Creating collection batch: '{$current_date}' ==\n";
         Log::debug("== Creating collection batch: '{$current_date}' ==");
 
         //initiate collection date
@@ -65,6 +66,7 @@ class CreateCollectionBatch extends Command
             return $query->where(['contract_status' => 'OPEN', 'channel' => 'NMB', 'approved' => 1, 'status' => 240, 'deleted' => 0])
                 ->whereDate('next_debit_date', "=", $current_date);
         })->where('partners.status', '=', 202)->get();
+
 
         foreach ($partners as $partner) {
             //1.0: Number of installment
@@ -110,19 +112,19 @@ class CreateCollectionBatch extends Command
                             $installment_id = $installment->id;
                             $payment_amount = $installment->installment_amount;
                             $payment_date = $installment->payment_date;
-                            $debit_start_date = Carbon::parse($installment->debitOrder->start_date);
-                            $debit_end_date = Carbon::parse($installment->debitOrder->end_date);
+                            $debit_start_date = Carbon::parse($installment->debitOrder->start_date)->toDateString();
+                            $debit_end_date = Carbon::parse($installment->debitOrder->end_date)->toDateString();
                             $deleted = $installment->debitOrder->deleted;
-
+                            
                             //update collection date
                             $collection_date = $installment->payment_date;
 
                             //1.0: check if periodicity == MONTHLY and deleted = 0
                             if ($periodicity == "MONTHLY" && $deleted == 0) {
                                 //2.0: Check if mandate start date <= today
-                                if ($debit_start_date->lte(Carbon::now())) {
+                                if ($debit_start_date <=Carbon::now()->toDateString()) {
                                     //2.1: check if debit mandate expire
-                                    if ($debit_end_date->gte(Carbon::now())) {
+                                    if ($debit_end_date >= Carbon::now()->toDateString()) {
                                         //3.0: check if account exists in this batch
                                         if (!in_array($account_number, $arr_accounts)) {
                                             //4.0: check if the mandate reference debited this month
@@ -130,6 +132,8 @@ class CreateCollectionBatch extends Command
                                                 ->whereMonth('payment_at', Carbon::parse($payment_date)->format('m'));
 
                                             if ($collection_debit_order->count() == 0) {
+                                                echo "deleted: {$deleted} - periodicity: {$periodicity} - start date: {$debit_start_date} - end date: {$debit_end_date} - payment date: {$payment_date}\n";
+
                                                 //create csv file
                                                 $csv .= "{$installment_id};016;NMB;{$mandate_reference};{$account_name};{$account_number};{$payment_amount}\n";
 

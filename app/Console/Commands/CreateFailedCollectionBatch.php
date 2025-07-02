@@ -52,7 +52,7 @@ class CreateFailedCollectionBatch extends Command
         $deductionService = new DeductionService();
 
         //FAILED collection batch => 10397
-        $collection_batches = CollectionBatch::where('collectionReference', '=', 10397)->get();
+        $collection_batches = CollectionBatch::where('collectionReference', '=', 10666)->get();
 
         if ($collection_batches) {
             foreach ($collection_batches as $batch) {
@@ -108,8 +108,8 @@ class CreateFailedCollectionBatch extends Command
                             $installment_id = $installment->id;
                             $payment_amount = $installment->installment_amount;
                             $payment_date = $installment->payment_date;
-                            $debit_start_date = Carbon::parse($installment->debitOrder->start_date);
-                            $debit_end_date = Carbon::parse($installment->debitOrder->end_date);
+                            $debit_start_date = Carbon::parse($installment->debitOrder->start_date)->toDateString();
+                            $debit_end_date = Carbon::parse($installment->debitOrder->end_date)->toDateString();
                             $deleted = $installment->debitOrder->deleted;
 
                             //update collection date
@@ -128,9 +128,9 @@ class CreateFailedCollectionBatch extends Command
                             //2.0: check if periodicity == MONTHLY and deleted = 0
                             if ($periodicity == "MONTHLY" && $deleted == 0) {
                                 //3.0: Check if mandate start date <= today
-                                if ($debit_start_date->lte(Carbon::now())) {
+                                if ($debit_start_date <=Carbon::now()->toDateString()) {
                                     //3.1: check if debit mandate expire
-                                    if ($debit_end_date->gte(Carbon::now())) {
+                                    if ($debit_end_date >= Carbon::now()->toDateString()) {
                                         //4.0: check if account exists in this batch
                                         if (!in_array($account_number, $arr_accounts)) {
                                             //5.0: check if the mandate reference debited this month

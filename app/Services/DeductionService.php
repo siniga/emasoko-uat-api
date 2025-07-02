@@ -80,7 +80,7 @@ class DeductionService
 
                     //PAID Amount
                     if ($sum_installment_amount > $total_amount)
-                        $paid_amount = $sum_installment_amount - $total_amount;
+                        $paid_amount = $total_amount - ($sum_installment_amount - $debitOrder->installment_amount);
                     else
                         $paid_amount = $debitOrder->installment_amount;
 
@@ -131,7 +131,7 @@ class DeductionService
 
                     //PAID Amount
                     if ($sum_installment_amount > $total_amount)
-                        $paid_amount = $sum_installment_amount - $total_amount;
+                        $paid_amount = $total_amount - ($sum_installment_amount - $debitOrder->max_installment_amount);
                     else
                         $paid_amount = $debitOrder->max_installment_amount;
 
