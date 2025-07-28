@@ -92,15 +92,7 @@ class MandateRegistrationJob implements ShouldQueue
 
             //TODO: Send OTP message on FAILURE
             if(strtolower($response['status']) == "fail"){
-                //construct message
-                // $message = "Payment Mandate failed from NMB endpoint. Kindly update mandate information and process again.";
 
-                // //format mobile phone
-                // $phone =  casting_phone($debit_order->userCreated->phone);
-
-                // //send sms
-                // $data = ["phone" => $phone, "message" => $message];
-                // dispatch(new SendSMSJob($data));
             }
         } else {
             Log::debug("No response from NMB end");

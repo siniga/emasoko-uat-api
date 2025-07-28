@@ -40,7 +40,6 @@
                             <div></div>
 
                             <div class="text-sm-end d-none d-sm-block">
-
                                 <div class="btn-group">
                                     <button class="btn btn-primary btn-sm text-sm" type="button">
                                         Mandate Actions
@@ -90,7 +89,7 @@
                                 </div>
 
                                 <template x-if="status==201 || status==249 || status==430 || status==500">
-                                    <button x-html="verifyTXT" title="Verify OTP"
+                                    <button x-html="verifyTxt" title="Verify OTP"
                                         class="btn btn-outline-primary text-medium btn-sm btn-sm"
                                         x-on:click="verifyButton();"></button>
                                 </template>
@@ -375,7 +374,6 @@
         @include('payment_mandate.modals.cancellation_modal')
     </div>
 @endsection
-
 
 @section('script')
     @include('payment_mandate.js_script')

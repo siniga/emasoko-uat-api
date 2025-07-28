@@ -175,7 +175,7 @@
                                 <label>Deduction End<span class="text-danger">*</span></label>
                                 @php
                                     $options = [
-                                        'totalLoanCovered' => 'Until total loan covered',
+                                        'totalLoanCovered' => 'Until total Amount covered',
                                     ];
                                     $options = ['' => 'Select'] + $options;
                                 @endphp
@@ -264,7 +264,7 @@
 
         });
 
-        //alpine
+        //alpine JS
         function initData() {
             return {
                 //calculate number_of_installment

@@ -491,8 +491,9 @@ class PaymentMandateController extends Controller
         $debit_order->save();
 
         if ($debit_order) {
-            //create deduction installments
-            $this->deductionService->createInstallment($debit_order);
+            // add debit end date
+            $debit_order->end_date = $this->deductionService->calculateEndDate($debit_order);
+            $debit_order->save();
 
             // Link customer with service provider
             $customer_partner = CustomerPartner::firstOrNew(
@@ -546,31 +547,59 @@ class PaymentMandateController extends Controller
         return Redirect::route('payment-mandate.lists')->with('danger', 'Payment mandate application cancelled');
     }
 
-    //confirm application
-    public function confirm(Request $request)
+    //save application for later confirmation
+    public function save(Request $request)
     {
-        $show_modal = false; //show OTP Modal
-
         //post data
         $debit_order_uuid = $request->input('uuid');
 
         //debit order
-        $debit_order = DebitOrder::where("uuid", "=", $debit_order_uuid)->first();
+        $debit_order = DebitOrder::where("uuid", $debit_order_uuid)->first();
+
+        //update status of debit mandate
+        $debit_order->status = 100;
+        $debit_order->save();
+
+        //response
+        return response()->json(['success' => false, 'success_msg' => "Debit mandate saved"], 200);
+    }
+
+    //confirm application
+    public function confirm(Request $request)
+    {
+        //post data
+        $debit_order_uuid = $request->input('uuid');
+
+        //debit order
+        $debit_order = DebitOrder::where("uuid", $debit_order_uuid)->first();
 
         //update status of debit mandate
         $debit_order->status = 200;
         $debit_order->save();
+
+        //declare channel and remarks
+        $success = true;
+        $response_code = 200;
+        $remarks = "";
+        $channel = $debit_order->channel;
 
         //check if account is NMB/CRDB/EcoBank/NBC
         if ($debit_order->channel == "NMB") {
             //create payload
             $payload = $this->payloadService->mandateRegistrationPayload($debit_order);
 
-            //show OTP Modal
-            $show_modal = true;
+            //api service
+            $arr_response = $this->bankApi->mandateRegistrationRequest($payload);
 
-            //Create Request to NMB
-            dispatch(new MandateRegistrationJob($payload));
+            if ($arr_response) {
+                $success = true;
+                $response_code = $arr_response[0];
+                $remarks = $arr_response[1];
+            } else {
+                $success = false;
+                $remarks = "API system error, contact eMakato support team.";
+                $response_code = 500;
+            }
         } else if ($debit_order->channel == "CRDB") {
             //requestId
             $requestId = Str::uuid()->toString();
@@ -583,32 +612,12 @@ class PaymentMandateController extends Controller
             $data['requestId'] = $requestId;
             $data['mandateReferenceNumber'] = $debit_order->reference;
 
-            //show OTP Modal
-            $show_modal = false;
-
             //Create Request to CRDB
             dispatch(new CRDBMandateRegistrationJob($data));
         }
 
         //response
-        return response()->json(['success' => true, 'show_modal' => $show_modal, 'success_msg' => "Debit mandate processed"], 200);
-    }
-
-    //saving application
-    public function saving(Request $request)
-    {
-        //post data
-        $mandate_id = $request->input('mandate_id');
-
-        //debit order
-        $mandate = DebitOrder::findOrFail($mandate_id);
-
-        //update status of debit mandate
-        $mandate->status = 'saved';
-        $mandate->save();
-
-        //response
-        return response()->json(['success' => false, 'success_msg' => "Debit mandate saved"], 200);
+        return response()->json(['success' => $success, 'channel' => $channel, "response_code" => $response_code, "success_msg" => $remarks], 200);
     }
 
     //resend otp
@@ -626,32 +635,44 @@ class PaymentMandateController extends Controller
         $otp_request->created_by = Auth::user()->id;
         $otp_request->save();
 
-        //create payload
-        $payload = $this->payloadService->createOtpPayload($otp_request);
+        //declare channel and remarks
+        $success = true;
+        $response_code = 200;
+        $remarks = "";
+        $channel = $debit_order->channel;
 
-        //create otp
-        $http_response_code = $this->bankApi->createOtpRequest($payload);
+        //check if account is NMB/CRDB/EcoBank/NBC
+        if ($debit_order->channel == "NMB") {
+            //create payload
+            $payload = $this->payloadService->createOtpPayload($otp_request);
 
-        if ($http_response_code == 202) {
-            return response()->json(['success' => true, 'success_msg' => "OTP succesfully generated and sent", "http_response_code" => $http_response_code], 200);
-        } else if ($http_response_code == 404) {
-            return response()->json(['success' => true, 'success_msg' => "Mandate not found, Edit mandate and process again.", "http_response_code" => $http_response_code], 200);
-        } else if ($http_response_code == 410) {
-            return response()->json(['success' => true, 'success_msg' => "Duplicate request found, wait for first request to process.", "http_response_code" => $http_response_code], 200);
-        } else if ($http_response_code == 500) {
-            return response()->json(['success' => true, 'success_msg' => "Internal Server, resend otp again", "http_response_code" => $http_response_code], 200);
-        } else if ($http_response_code == 510) {
-            return response()->json(['success' => true, 'success_msg' => "Users mobile number is missing, edit mandate and process again.", "http_response_code" => $http_response_code], 200);
-        } else if ($http_response_code == 520) {
-            return response()->json(['success' => true, 'success_msg' => "SMS failed to send, resend otp request.", "http_response_code" => $http_response_code], 200);
-        } else {
-            return response()->json(['success' => true, 'success_msg' => "System error, contact eMakato support team.", "http_response_code" => $http_response_code], 200);
+            //api service
+            $arr_response = $this->bankApi->createOtpRequest($payload);
+
+            if ($arr_response) {
+                $success = true;
+                $response_code = $arr_response[0];
+                $remarks = $arr_response[1];
+            } else {
+                $success = false;
+                $remarks = "API system error, contact eMakato support team.";
+                $response_code = 500;
+            }
         }
+
+        //response
+        return response()->json(['success' => $success, 'channel' => $channel, "response_code" => $response_code, "success_msg" => $remarks], 200);
     }
 
     // verify_otp
     public function verify_otp(Request $request)
     {
+        // Step 1: Validate request data
+        $request->validate([
+            'uuid' => 'required|uuid|exists:debit_orders,uuid',
+            'otpPin' => 'required|string|min:4|max:10',
+        ]);
+
         // post data
         $debit_order = DebitOrder::where("uuid", $request->uuid)->first();
 
@@ -663,27 +684,33 @@ class PaymentMandateController extends Controller
         $otp_request->created_by = Auth::user()->id;
         $otp_request->save();
 
-        //create payload
-        $payload = $this->payloadService->verifyOtpPayload($otp_request, $request->otpPin);
+        //declare channel and remarks
+        $success = true;
+        $response_code = 200;
+        $remarks = "";
+        $channel = $debit_order->channel;
 
-        //passing data
-        $accountNumber = $debit_order->customerAccount->account_number;
-        $otpReference = $debit_order->reference;
+        //check if account is NMB/CRDB/EcoBank/NBC
+        if ($debit_order->channel == "NMB") {
+            //create payload
+            $payload = $this->payloadService->verifyOtpPayload($otp_request, $request->otpPin);
 
-        //api service
-        $http_response_code = $this->bankApi->verifyOtpRequest($payload, $accountNumber, $otpReference);
+            //api service
+            $arr_response = $this->bankApi->verifyOtpRequest($payload, $debit_order->reference);
 
-        if ($http_response_code == 202) {
-            return response()->json(['success' => true, 'success_msg' => "OTP verified", "http_response_code" => $http_response_code], 200);
-        } else if ($http_response_code == 404) {
-            return response()->json(['success' => true, 'success_msg' => "Mandate not found, Edit mandate and process again.", "http_response_code" => $http_response_code], 200);
-        } else if ($http_response_code == 430) {
-            return response()->json(['success' => true, 'success_msg' => "OTP Invalid, Enter valid otp sent to a customer phone.", "http_response_code" => $http_response_code], 200);
-        } else if ($http_response_code == 431) {
-            return response()->json(['success' => true, 'success_msg' => "OTP Expired, create new OTP by click resend otp link.", "http_response_code" => $http_response_code], 200);
-        } else {
-            return response()->json(['success' => true, 'success_msg' => "System error, contact eMakato support team.", "http_response_code" => $http_response_code], 200);
+            if ($arr_response) {
+                $success = true;
+                $response_code = $arr_response[0];
+                $remarks = $arr_response[1];
+            } else {
+                $success = false;
+                $remarks = "API system error, contact eMakato support team.";
+                $response_code = 500;
+            }
         }
+
+        //response
+        return response()->json(['success' => $success, 'channel' => $channel, "response_code" => $response_code, "success_msg" => $remarks], 200);
     }
 
     //query mandate status
@@ -692,28 +719,37 @@ class PaymentMandateController extends Controller
         // debit order
         $debit_order = DebitOrder::where("uuid", $request->uuid)->first();
 
-        //create payload
-        $payload = $this->payloadService->mandateStatusPayload($debit_order);
+        //declare channel and remarks
+        $success = true;
+        $response_code = 200;
+        $remarks = "";
+        $channel = $debit_order->channel;
 
-        //api service
-        $arr_response = $this->bankApi->mandateStatusRequest($payload);
+        //check if account is NMB/CRDB/EcoBank/NBC
+        if ($debit_order->channel == "NMB") {
+            //create payload
+            $payload = $this->payloadService->mandateStatusPayload($debit_order);
 
-        if ($arr_response) {
-            $http_response_code = $arr_response[0];
-            $remarks = $arr_response[1];
+            //api service
+            $arr_response = $this->bankApi->mandateStatusRequest($payload);
 
-            if ($http_response_code == 240) {
-                return response()->json(["success" => true, 'success_msg' => "Mandate activated.", "http_response_code" => $http_response_code], 200);
-            } else if ($http_response_code == 249 || $http_response_code == 430) {
-                return response()->json(["success" => true, 'success_msg' => $remarks, "http_response_code" => $http_response_code], 200);
-            } else if ($http_response_code == 404) {
-                return response()->json(["success" => true, 'success_msg' => "Mandate not found, Edit mandate and process again.", "http_response_code" => $http_response_code], 200);
+            if ($arr_response) {
+                $success = true;
+                $response_code = $arr_response[0];
+                $remarks = $arr_response[1];
+
+                // Create debit order installments IF response code = 240
+                if ($response_code == 240 & $debit_order->approved == 1)
+                    $this->deductionService->createInstallment($debit_order);
             } else {
-                return response()->json(['success' => true, 'success_msg' => "System error, contact eMakato support team.", "http_response_code" => $http_response_code], 200);
+                $success = false;
+                $remarks = "API system error, contact eMakato support team.";
+                $response_code = 500;
             }
-        } else {
-            return response()->json(['success' => true, 'success_msg' => "System error, contact eMakato support team.", "http_response_code" => 500], 200);
         }
+
+        //response
+        return response()->json(['success' => $success, 'channel' => $channel, "response_code" => $response_code, "success_msg" => $remarks], 200);
     }
 
     //mandate cancellation

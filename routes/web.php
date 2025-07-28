@@ -167,8 +167,8 @@ Route::post('payment-mandate/store-deduction', [PaymentMandateController::class,
 //preview 
 Route::get('payment-mandate/preview/{do_uuid}', [PaymentMandateController::class, 'preview'])->name('payment-mandate.preview');
 Route::get('payment-mandate/cancel/{do_uuid}', [PaymentMandateController::class, 'cancel'])->name('payment-mandate.cancel');
+Route::post('payment-mandate/save', [PaymentMandateController::class, 'save'])->name('payment-mandate.save');
 Route::post('payment-mandate/confirm', [PaymentMandateController::class, 'confirm'])->name('payment-mandate.confirm');
-Route::post('payment-mandate/saving', [PaymentMandateController::class, 'saving'])->name('payment-mandate.saving');
 Route::post('payment-mandate/resend-otp', [PaymentMandateController::class, 'resend_otp'])->name('payment-mandate.resend-otp');
 Route::post('payment-mandate/verify-otp', [PaymentMandateController::class, 'verify_otp'])->name('payment-mandate.verify-otp');
 
