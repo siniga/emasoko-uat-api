@@ -94,7 +94,7 @@
                                         x-on:click="verifyButton();"></button>
                                 </template>
 
-                                <template x-if="status==201 || status==202 || status==249 || status==430 || status==501 ">
+                                <template x-if="status==201 || status==202 || status==249 || status==430 || status==501 || status==240">
                                     <button x-html="btnStatus" title="Get Mandate Status"
                                         class="btn btn-outline-success btn-sm" x-on:click="fetchMandateStatus();"></button>
                                 </template>

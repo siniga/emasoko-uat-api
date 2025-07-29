@@ -169,29 +169,6 @@
                                 <span class="text-danger">{{ $errors->first('start_date') }}</span>
                             </div>
                         </div>
-
-                        <div class="col-lg-3 col-md-3 col-sm-3 col-12">
-                            <div class="mb-3">
-                                <label>Deduction End<span class="text-danger">*</span></label>
-                                @php
-                                    $options = [
-                                        'totalLoanCovered' => 'Until total Amount covered',
-                                    ];
-                                    $options = ['' => 'Select'] + $options;
-                                @endphp
-
-                                {{ Form::select('deduction_end', $options, old('deduction_end', $debit_order->deduction_end_date ?? ''), ['class' => 'form-control', 'id' => 'deduction_end']) }}
-                                <span class="text-danger">{{ $errors->first('deduction_end') }}</span>
-                            </div>
-                        </div>
-
-                        <div class="col-lg-3 col-md-3 col-sm-3 col-12" id="end_date" style="display: none;">
-                            <div class="mb-3">
-                                <label>End Date <span class="text-danger">*</span></label>
-                                {{ Form::date('end_date', old('end_date'), ['class="form-control"', 'id="end_date"']) }}
-                                <span class="text-danger">{{ $errors->first('end_date') }}</span>
-                            </div>
-                        </div>
                     </div>
 
                     <div class="row">
@@ -199,7 +176,6 @@
                             <div class="mb-3 text-sm-end d-sm-block">
                                 <a href="{{ route('payment-mandate.create-account',[$customer_account->uuid, ($debit_order ? $debit_order->uuid : '')]) }}"
                                     class="btn btn-outline-danger text-medium">Previous</a>
-
                                 <button type="submit" class="btn btn-primary px-3">Next</button>
                             </div>
                         </div>
@@ -243,25 +219,6 @@
                     $('#fixed_deduction').css('display', 'none');
                 }
             });
-
-            //before on change start and end date
-            deductionEndDate = $('#deduction_end').val();
-
-            if (deductionEndDate === 'specificDate')
-                $('#end_date').css('display', '');
-            else
-                $('#end_date').css('display', 'none');
-
-            //on change deduction start and end date
-            $('#deduction_end').on('change', function(e) {
-                deductionEndDate = $(this).val();
-
-                if (deductionEndDate === 'specificDate')
-                    $('#end_date').css('display', '');
-                else
-                    $('#end_date').css('display', 'none');
-            });
-
         });
 
         //alpine JS

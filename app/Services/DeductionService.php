@@ -19,6 +19,20 @@ class DeductionService
     //create debit order evidence of aggrement
     public function createEvidence(DebitOrder $debitOrder) {}
 
+    //calculate number of installment
+    protected function calculateNumberOfInstallments($debit_type, $total_amount, $iamount, $max_amount)
+    {
+        $numberInstallment = 0;
+
+        if ($debit_type == "FIXED") {
+            $numberInstallment = floatval($total_amount) / floatval($iamount);
+            return ceil($numberInstallment); //$numberInstallment;
+        } else if ($debit_type == "DYNAMIC") {
+            $numberInstallment = floatval($total_amount) / floatval($max_amount);
+            return ceil($numberInstallment); //$numberInstallment;
+        }
+    }
+
     // calculate debit end date
     public function calculateEndDate(DebitOrder $debitOrder)
     {
@@ -117,69 +131,52 @@ class DeductionService
     protected function fixedInstallment(DebitOrder $debitOrder, $numberOfDays)
     {
         $periodicity = $debitOrder->periodicity;
-        $start_date = $debitOrder->start_date;
+        $startDate = Carbon::parse($debitOrder->start_date);
+        $dayOfMonth = $startDate->day;
 
-        $last_installment_date = null;
-        $number_of_installment = $debitOrder->installment_number;
-        $total_amount = $debitOrder->total_amount;
+        $lastInstallmentDate = $startDate->copy();
+        $installmentCount = $debitOrder->installment_number;
+        $totalAmount = $debitOrder->total_amount;
+        $installmentAmount = $debitOrder->installment_amount;
 
-        //dates
-        $dayOfMonth = date('d', strtotime($start_date));
+        $sumInstallmentAmount = 0;
 
-        $sum_installment_amount = 0;
-        for ($i = 1; $i <= $number_of_installment; $i++) {
-            if ($last_installment_date == null) {
-                $installment_date = date('Y-m-d', strtotime($start_date));
-
-                //SUMMATION installment Amount
-                $sum_installment_amount += $debitOrder->installment_amount;
-
-                //PAID Amount
-                $paid_amount = $debitOrder->installment_amount;
-
-                //assign last installment date
-                $last_installment_date =  $installment_date;
+        for ($i = 1; $i <= $installmentCount; $i++) {
+            if ($i === 1) {
+                $installmentDate = $lastInstallmentDate->copy();
             } else {
-                $installment_date = date('Y-m-d', strtotime($last_installment_date . $numberOfDays));
-
-                //formating all the dates if periodicity = "MONTHLY"
-                if ($periodicity == "MONTHLY") {
-                    $year = date('Y', strtotime($installment_date));
-                    $month = date('m', strtotime($installment_date));
-
-                    $date = Carbon::createFromDate($year, $month, $dayOfMonth);
-                    $installment_date = $date->format('Y-m-d'); // Format as dd-mm-yyyy
+                if ($periodicity === "MONTHLY") {
+                    $installmentDate = $lastInstallmentDate->copy()->addMonthNoOverflow();
+                    // Set same day, fallback to last valid day of month
+                    $installmentDate->day = min($dayOfMonth, $installmentDate->daysInMonth);
+                } else {
+                    $installmentDate = $lastInstallmentDate->copy()->addDays($numberOfDays);
                 }
-
-                //SUMMATION installment Amount 
-                $sum_installment_amount += $debitOrder->installment_amount;
-
-                //PAID Amount
-                if ($sum_installment_amount > $total_amount)
-                    $paid_amount = $total_amount - ($sum_installment_amount - $debitOrder->installment_amount);
-                else
-                    $paid_amount = $debitOrder->installment_amount;
-
-                //assign last installment date
-                $last_installment_date =  $installment_date;
             }
 
-            Log::debug("Installment Date: {$installment_date}, Paid Amount: {$paid_amount}");
+            $sumInstallmentAmount += $installmentAmount;
 
-            // //3. Create Installment deduction
-            // $installment = Installment::firstOrNew(
-            //     ['debit_order_id' => $debitOrder->id, 'installment_order' => $i],
-            //     [
-            //         'installment_amount' => $paid_amount,
-            //         'current_balance' => 0,
-            //         'outstanding_amount' => $paid_amount,
-            //         'payment_date' => $installment_date
-            //     ]
-            // );
-            // $installment->save();
+            // Calculate paid amount safely
+            $paidAmount = ($sumInstallmentAmount > $totalAmount)
+                ? $totalAmount - ($sumInstallmentAmount - $installmentAmount)
+                : $installmentAmount;
+
+            // Save for next iteration
+            $lastInstallmentDate = $installmentDate->copy();
+            Log::debug("Installment Date: {$installmentDate->toDateString()}, Paid Amount: {$paidAmount}");
+
+            // Create or update installment
+            Installment::updateOrCreate(
+                ['debit_order_id' => $debitOrder->id, 'installment_order' => $i],
+                [
+                    'installment_amount' => $paidAmount,
+                    'current_balance' => 0,
+                    'outstanding_amount' => $paidAmount,
+                    'payment_date' => $installmentDate->toDateString()
+                ]
+            );
         }
     }
-
     //create dynamic installment
     protected function dynamicInstallment(DebitOrder $debitOrder, $numberOfDays)
     {

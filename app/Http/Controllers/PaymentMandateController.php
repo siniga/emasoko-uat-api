@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Exports\PaymentMandateExport;
 use App\Models\Account;
 use App\Models\AccountType;
 use App\Models\Customer;
@@ -391,7 +390,6 @@ class PaymentMandateController extends Controller
                 'periodicity' => 'required',
                 'number_of_installment' => 'required',
                 'start_date' => 'required',
-                'deduction_end' => 'required',
                 'installment_amount' => [
                     'required_if:debit_type,==,FIXED',
                     function ($attribute, $value, $fail) use ($installment_amount) {
@@ -400,7 +398,6 @@ class PaymentMandateController extends Controller
                         }
                     }
                 ],
-                'end_date' => 'required_if:deduction_end,==,specificDate',
                 'min_installment_amount' => 'required_if:debit_type,==,DYNAMIC',
                 'max_installment_amount' => [
                     'required_if:debit_type,==,DYNAMIC',
@@ -420,10 +417,7 @@ class PaymentMandateController extends Controller
                 'max_installment_amountrequired_if' => 'Maximum installment amount required',
                 'periodicity.required' => 'Periodicity required',
                 'number_of_installment.required' => 'Number of installment required',
-                'number_of_installment.required' => 'Number of installment required',
-                'start_date.required' => 'Start date required',
-                'deduction_end.required' => 'Deduction end required',
-                'end_date.required_if' => 'End date required',
+                'start_date.required' => 'Deduction start date required'
             ]
         );
 
@@ -484,7 +478,7 @@ class PaymentMandateController extends Controller
         $debit_order->installment_number = $request->input('number_of_installment');
         $debit_order->start_date = $request->input('start_date');
         $debit_order->next_debit_date = $request->input('start_date');
-        $debit_order->deduction_end_date = $request->input('deduction_end');
+        $debit_order->deduction_end_date = "totalLoanCovered";
         $debit_order->otp_code = $otp_code;
         $debit_order->approved = 0;
         $debit_order->channel = $customer_account->account->slug;
@@ -505,7 +499,7 @@ class PaymentMandateController extends Controller
             $customer_partner->created_by = Auth::user()->id;
             $customer_partner->save();
 
-            //create evidence of aggrement
+            //create evidence of agreement
             $filename = $this->createEvidence($debit_order);
             $debit_order->aggrement_evidence = $filename;
             $debit_order->status = 100;
@@ -737,6 +731,9 @@ class PaymentMandateController extends Controller
                 $success = true;
                 $response_code = $arr_response[0];
                 $remarks = $arr_response[1];
+
+                Log::debug("Mandate Status Response: " . json_encode($arr_response));
+                Log::debug("approved: " . $debit_order->approved);
 
                 // Create debit order installments IF response code = 240
                 if ($response_code == 240 & $debit_order->approved == 1)
@@ -1468,16 +1465,16 @@ class PaymentMandateController extends Controller
         return Redirect::route('payment-mandate.lists')->with('danger', 'Payment mandate unarchived');
     }
 
-    public function createEvidence(DebitOrder $debit_order)
+    public function createEvidence(DebitOrder $debitOrder)
     {
         //Create Evidence of Agreement
-        view()->share('debit_order', $debit_order);
+        view()->share('debit_order', $debitOrder);
 
         //PDF Creation
         $pdf = Pdf::loadView('payment_mandate.pdf.evidence');
 
         //create filename
-        $filename = "{$debit_order->reference}.pdf";
+        $filename = "{$debitOrder->reference}.pdf";
 
         $path = 'assets/uploads/pdf/';
         $pdf->save($path  . $filename);

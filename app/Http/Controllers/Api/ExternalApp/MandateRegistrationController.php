@@ -520,19 +520,7 @@ class MandateRegistrationController extends Controller
             return false;
     }
 
-    //calculate number of installment
-    protected function calculateNumberOfInstallments($debit_type, $total_amount, $iamount, $max_amount)
-    {
-        $numberInstallment = 0;
 
-        if ($debit_type == "FIXED") {
-            $numberInstallment = floatval($total_amount) / floatval($iamount);
-            return ceil($numberInstallment); //$numberInstallment;
-        } else if ($debit_type == "DYNAMIC") {
-            $numberInstallment = floatval($total_amount) / floatval($max_amount);
-            return ceil($numberInstallment); //$numberInstallment;
-        }
-    }
 
     //Create Evidence of Agreement
     protected function createEvidence(DebitOrder $debit_order)
