@@ -754,6 +754,7 @@ class PaymentMandateController extends Controller
     {
         // post data
         $debit_order = DebitOrder::where("uuid", $request->uuid)->first();
+        $channel = $debit_order->channel;
 
         //save cancellation information
         $debit_order->cancellation_reason = $request->remarks;
@@ -763,58 +764,27 @@ class PaymentMandateController extends Controller
         $debit_order->cancellationApprovedAt = date('Y-m-d H:i:s');
         $debit_order->save();
 
-        //create payload
-        $payload = $this->payloadService->mandateCancellationPayload($debit_order);
+        //check if account is NMB/CRDB/EcoBank/NBC
+        if ($debit_order->channel == "NMB") {
+            //create payload
+            $payload = $this->payloadService->mandateCancellationPayload($debit_order);
 
-        //api response
-        $arr_response = $this->bankApi->mandateCancellationRequest($payload);
+            //api response
+            $arr_response = $this->bankApi->mandateCancellationRequest($payload);
 
-        if ($arr_response) {
-            $http_response_code = $arr_response[0];
-            $remarks = $arr_response[1];
-
-            if ($http_response_code == 405) {
-                return response()->json(
-                    [
-                        "success" => true,
-                        'success_msg' => $remarks,
-                        "http_response_code" => $http_response_code,
-                        "remarks" => $remarks
-                    ],
-                    200
-                );
-            } else if ($http_response_code == 500) {
-                return response()->json(
-                    [
-                        "success" => false,
-                        'success_msg' => $remarks,
-                        "http_response_code" => $http_response_code,
-                        "remarks" => $remarks
-                    ],
-                    200
-                );
+            if ($arr_response) {
+                $success = true;
+                $response_code = $arr_response[0];
+                $remarks = $arr_response[1];
             } else {
-                return response()->json(
-                    [
-                        "success" => false,
-                        'success_msg' => "Failed to update mandate status, Try again...",
-                        "http_response_code" => 500,
-                        "remarks" => $remarks
-                    ],
-                    200
-                );
+                $success = false;
+                $remarks = "API system error, contact eMakato support team.";
+                $response_code = 500;
             }
-        } else {
-            return response()->json(
-                [
-                    "success" => false,
-                    'success_msg' => "API does not response, Kindly try again or contact support.",
-                    "http_response_code" => 500,
-                    "remarks" => "API does not response, Kindly try again or contact support."
-                ],
-                200
-            );
         }
+
+        //response
+        return response()->json(['success' => $success, 'channel' => $channel, "response_code" => $response_code, "success_msg" => $remarks], 200);
     }
 
     //customer details

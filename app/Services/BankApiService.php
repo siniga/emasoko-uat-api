@@ -318,9 +318,6 @@ class BankApiService
             Log::debug("No response from NMB end");
             return [500, 'No response from NMB endpoint.'];
         }
-        $debit_order->save();
-
-        return [$response_code, $remarks];
     }
 
     //mandate cancellation 
@@ -359,34 +356,39 @@ class BankApiService
         $debit_order = DebitOrder::where('reference', '=', $payload['data']['mandateReferenceNumber'])->first();
         $debit_order->http_response_status_json = $response;
 
-        //decode the response 
+        // //decode the response 
         $response = json_decode($response, true);
 
         //logging response
         Log::debug('== MandateCancellation Response  ==');
         Log::debug($response);
 
-        if (strtolower($response['status']) == "success") {
-            $response_code = 405; //response code
-            $remarks = $response['data']['response'][0]['responseDescription'];
+        // Check if response is null or not
+        if ($response) {
+            // Separate status code
+            if (strtolower($response['status']) == "success") {
+                $response_code = $response['data']['response'][0]['responseCode'];
+                $remarks = $response['data']['response'][0]['responseDescription'];
 
-            $debit_order->deleted = 1;
-            $debit_order->status = 405;
-            $debit_order->http_response_code = $response['data']['response'][0]['responseCode'];
-            $debit_order->remarks = $response['data']['response'][0]['responseDescription'];
-            $debit_order->save();
-        } else if (strtolower($response['status']) == "fail") {
-            $response_code = 500; //response code
-            $remarks = $response['data']['response'][0]['responseDescription'];
+                //update debit order => approved
+                if ($response_code == 201){
+                    $debit_order->status = 405;
+                    $debit_order->cancelled = 1; // Mark as cancelled
+                    $debit_order->deleted = 1; // Mark as deleted
+                }
+            } else if (strtolower($response['status']) == "fail") {
+                $response_code = $response['data']['response'][0]['responseCode'];
+                $remarks = $response['data']['response'][0]['responseDescription'];
+            }
 
-            $debit_order->deleted = 0;
-            $debit_order->status = 500;
-            $debit_order->http_response_code = $response['data']['response'][0]['responseCode'];
-            $debit_order->remarks = $response['data']['response'][0]['responseDescription'];
+            $debit_order->remarks = $remarks;
             $debit_order->save();
+
+            return [$response_code, $remarks];
+        } else {
+            Log::debug("No response from NMB end");
+            return [500, 'No response from NMB endpoint.'];
         }
-
-        return [$response_code, $remarks];
     }
 
     //create Otp 

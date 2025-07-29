@@ -9,7 +9,7 @@
 
             <div class="modal-body">
                 <!--form message => success or danger -->
-                <div id="message_wrp_1"></div>
+                <div id="message_wrp_2"></div>
 
                 <div class="row mb-2">
                     <form @submit.prevent="mandateCancellationForm();" autocomplete="off">

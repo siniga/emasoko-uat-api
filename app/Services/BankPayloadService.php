@@ -170,18 +170,13 @@ class BankPayloadService
     //create mandate cancellation Payload
     public function mandateCancellationPayload(DebitOrder $debitOrder)
     {
-        $partner = $debitOrder->partner;
-
         //create payload
         $payload = [
             "mandateReferenceNumber" => $debitOrder->reference,
-            "corporateReference" => $partner->reference,
+            "corporateReference" => $debitOrder->partner->reference,
             "cancelReason" => $debitOrder->cancellation_reason,
             "createdBy" => static::userNameFormat(auth()->user()),
             "verifiedBy" => static::userNameFormat(auth()->user()),
-
-            // "createdBy" => static::userNameFormat($debitOrder->cancellationStartedBy),
-            // "verifiedBy" => static::userNameFormat($debitOrder->cancellationApprovedBy),
             "createdDate" => $debitOrder->cancellationStartedAt,
             "verifyDate" => $debitOrder->cancellationApprovedAt
         ];
