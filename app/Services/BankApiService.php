@@ -180,13 +180,13 @@ class BankApiService
         $remarks = "";
 
         //create authentication token
-        // $AUTH_BEARER_TOKEN = $this->auth->generateToken();
+        $AUTH_BEARER_TOKEN = $this->auth->generateToken();
 
-        // //Create Headers
-        // $headers = [
-        //     'Content-Type' => 'application/json',
-        //     'Authorization' => 'Bearer ' . $AUTH_BEARER_TOKEN
-        // ];
+        //Create Headers
+        $headers = [
+            'Content-Type' => 'application/json',
+            'Authorization' => 'Bearer ' . $AUTH_BEARER_TOKEN
+        ];
 
         //Create Payload
         $payload = [
@@ -197,56 +197,49 @@ class BankApiService
             "data" => $data
         ];
 
-        //Create Payload
-        Log::debug('== MandateRegistration Request == ');
-        Log::debug($payload);
-
-        return [201, 'Mandate created.'];
-
         //API URL 
-        // $API_URL = env('API_URL');
-        // Log::debug("API URL =>" . $API_URL);
+        $API_URL = env('API_URL');
 
-        // //response
-        // $response = Http::withHeaders($headers)->post($API_URL, $payload);
+        //response
+        $response = Http::withHeaders($headers)->post($API_URL, $payload);
 
-        // //update debit response
-        // $debit_order = DebitOrder::where('reference', '=', $payload['data']['mandateReferenceNumber'])->first();
-        // $debit_order->http_response_json = $response;
+        //update debit response
+        $debit_order = DebitOrder::where('reference', '=', $payload['data']['mandateReferenceNumber'])->first();
+        $debit_order->http_response_json = $response;
 
-        // //decode the response 
-        // $response = json_decode($response, true);
+        //decode the response 
+        $response = json_decode($response, true);
 
-        // //logging response
-        // Log::debug('== MandateRegistration Response ==');
-        // Log::debug($response);
+        //logging response
+        Log::debug('== MandateRegistration Response ==');
+        Log::debug($response);
 
-        // // Check if response is null or not
-        // if ($response) {
-        //     // Separate status code
-        //     if (strtolower($response['status']) == "success") {
-        //         $response_code = $response['data']['response'][0]['responseCode'];
-        //         $remarks = $response['data']['response'][0]['responseDescription'];
+        // Check if response is null or not
+        if ($response) {
+            // Separate status code
+            if (strtolower($response['status']) == "success") {
+                $response_code = $response['data']['response'][0]['responseCode'];
+                $remarks = $response['data']['response'][0]['responseDescription'];
 
-        //         $debit_order->status = 201; //created
-        //         $debit_order->otp_reference = $response['data']['otpCaseReference'];
-        //     } else if (strtolower($response['status']) == "fail") {
-        //         $response_code = $response['data']['response'][0]['responseCode'];
-        //         $remarks = $response['data']['response'][0]['responseDescription'];
+                $debit_order->status = 201; //created
+                $debit_order->otp_reference = $response['data']['otpCaseReference'];
+            } else if (strtolower($response['status']) == "fail") {
+                $response_code = $response['data']['response'][0]['responseCode'];
+                $remarks = $response['data']['response'][0]['responseDescription'];
 
-        //update debit order status
-        //$debit_order->status = 500;
-        //     }
+                //update debit order status
+                $debit_order->status = 500;
+            }
 
-        //     $debit_order->http_response_code = $response['data']['response'][0]['responseCode'];
-        //     $debit_order->remarks = $response['data']['response'][0]['responseDescription'];
-        //     $debit_order->save();
+            $debit_order->http_response_code = $response['data']['response'][0]['responseCode'];
+            $debit_order->remarks = $response['data']['response'][0]['responseDescription'];
+            $debit_order->save();
 
-        //     return [$response_code, $remarks];
-        // } else {
-        //     Log::debug("No response from NMB end");
-        //     return [500, 'No response from NMB endpoint.'];
-        // }
+            return [$response_code, $remarks];
+        } else {
+            Log::debug("No response from NMB end");
+            return [500, 'No response from NMB endpoint.'];
+        }
     }
 
     //mandate cancellation 
@@ -257,10 +250,10 @@ class BankApiService
         $remarks = "";
 
         //create authentication token
-        //$AUTH_BEARER_TOKEN = $this->auth->generateToken();
+        $AUTH_BEARER_TOKEN = $this->auth->generateToken();
 
         //Create Headers
-        //$headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer ' . $AUTH_BEARER_TOKEN];
+        $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer ' . $AUTH_BEARER_TOKEN];
 
         //Create Payload
         $payload = [
@@ -275,61 +268,59 @@ class BankApiService
         Log::debug('Mandate Status Request');
         Log::debug($payload);
 
-        return [240, 'Mandate activated.'];
+        //API URL 
+        $API_URL = env('API_URL');
 
-        // //API URL 
-        // $API_URL = env('API_URL');
+        //response
+        $response = Http::withHeaders($headers)->post($API_URL, $payload);
 
-        // //response
-        // $response = Http::withHeaders($headers)->post($API_URL, $payload);
+        //update the debit order
+        $debit_order = DebitOrder::where('reference', '=', $payload['data']['mandateReferenceNumber'])->first();
+        $debit_order->http_response_status_json = $response;
 
-        // //update the debit order
-        // $debit_order = DebitOrder::where('reference', '=', $payload['data']['mandateReferenceNumber'])->first();
-        // $debit_order->http_response_status_json = $response;
+        //decode the response 
+        $response = json_decode($response, true);
 
-        // //decode the response 
-        // $response = json_decode($response, true);
+        //logging response
+        Log::debug('== MandateStatus Response  ==');
+        Log::debug($response);
 
-        // //logging response
-        // Log::debug('== MandateStatus Response  ==');
-        // Log::debug($response);
+        // Check if response is null or not
+        if ($response) {
+            // Separate status code
+            if (strtolower($response['status']) == "success") {
+                $response_code = $response['data']['response'][0]['responseCode'];
+                $remarks = $response['data']['response'][0]['responseDescription'];
 
-        // // Check if response is null or not
-        // if ($response) {
-        //     // Separate status code
-        //     if (strtolower($response['status']) == "success") {
-        //         $response_code = $response['data']['response'][0]['responseCode'];
-        //         $remarks = $response['data']['response'][0]['responseDescription'];
+                //update status
+                $debit_order->status = $response['data']['response'][0]['responseCode'];
 
-        //         //update status
-        //         $debit_order->status = $response['data']['response'][0]['responseCode'];
+                //update debit order => approved
+                if ($response_code == 240)
+                    $debit_order->approved = 1;
+                else
+                    $debit_order->approved = 0;
+            } else if (strtolower($response['status']) == "fail") {
+                $response_code = $response['data']['response'][0]['responseCode'];
+                $remarks = $response['data']['response'][0]['responseDescription'];
 
-        //         //update debit order => approved
-        //         if ($response_code == 240)
-        //             $debit_order->approved = 1;
-        //         else
-        //             $debit_order->approved = 0;
-        //     } else if (strtolower($response['status']) == "fail") {
-        //         $response_code = $response['data']['response'][0]['responseCode'];
-        //         $remarks = $response['data']['response'][0]['responseDescription'];
+                //update status and status
+                $debit_order->status = 500;
+                $debit_order->approved = 0;
+            }
 
-        //         //update status and status
-        //         $debit_order->status = 500;
-        //         $debit_order->approved = 0;
-        //     }
+            $debit_order->http_response_code = $response_code;
+            $debit_order->remarks = $remarks;
+            $debit_order->save();
 
-        //     $debit_order->http_response_code = $response_code;
-        //     $debit_order->remarks = $remarks;
-        //     $debit_order->save();
+            return [$response_code, $remarks];
+        } else {
+            Log::debug("No response from NMB end");
+            return [500, 'No response from NMB endpoint.'];
+        }
+        $debit_order->save();
 
-        //     return [$response_code, $remarks];
-        // } else {
-        //     Log::debug("No response from NMB end");
-        //     return [500, 'No response from NMB endpoint.'];
-        // }
-        // $debit_order->save();
-
-        // return [$response_code, $remarks];
+        return [$response_code, $remarks];
     }
 
     //mandate cancellation 
@@ -406,10 +397,10 @@ class BankApiService
         $remarks = "";
 
         //create authentication token
-        //$AUTH_BEARER_TOKEN = $this->auth->generateToken();
+        $AUTH_BEARER_TOKEN = $this->auth->generateToken();
 
         //Create Headers
-        //$headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer ' . $AUTH_BEARER_TOKEN];
+        $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer ' . $AUTH_BEARER_TOKEN];
 
         //Create Payload
         $payload = [
@@ -420,15 +411,11 @@ class BankApiService
             "data" => $data
         ];
 
-        //Create Payload
-        Log::debug('OTPCreate Request');
-        Log::debug($payload);
-
         //API URL 
-        //$API_URL = env('API_URL');
+        $API_URL = env('API_URL');
 
         //response
-        //$response = Http::withHeaders($headers)->post($API_URL, $payload);
+        $response = Http::withHeaders($headers)->post($API_URL, $payload);
 
         //create or update the otp request
         $otp_request = OtpRequest::firstOrNew(
@@ -440,32 +427,29 @@ class BankApiService
         //$otp_request->http_response_json = $response;
         $otp_request->save();
 
-        return [201, 'OTP created.'];
-
         //decode the response 
-        // $response = json_decode($response, true);
+        $response = json_decode($response, true);
 
-        // //logging response
-        // Log::debug('== OtpCreate Response  ==');
-        // Log::debug($response);
+        //logging response
+        Log::debug('== OtpCreate Response  ==');
+        Log::debug($response);
 
-        // // Check if response is null or not
-        // if ($response) {
-        //     // Separate status code
-        //     if (strtolower($response['status']) == "success") {
-        //         $response_code = 201;
-        //         $remarks = $response['data']['response'][0]['responseDescription'];
+        // Check if response is null or not
+        if ($response) {
+            // Separate status code
+            if (strtolower($response['status']) == "success") {
+                $response_code = 201;
+                $remarks = $response['data']['response'][0]['responseDescription'];
+            } else if (strtolower($response['status']) == "fail") {
+                $response_code = $response['data']['response'][0]['responseCode'];
+                $remarks = $response['data']['response'][0]['responseDescription'];
+            }
 
-        //     } else if (strtolower($response['status']) == "fail") {
-        //         $response_code = $response['data']['response'][0]['responseCode'];
-        //         $remarks = $response['data']['response'][0]['responseDescription'];
-        //     }
-
-        //     return [$response_code, $remarks];
-        // } else {
-        //     Log::debug("No response from NMB end");
-        //     return [500, 'No response from NMB endpoint.'];
-        // }
+            return [$response_code, $remarks];
+        } else {
+            Log::debug("No response from NMB end");
+            return [500, 'No response from NMB endpoint.'];
+        }
     }
 
     //verify OTP
@@ -475,11 +459,11 @@ class BankApiService
         $response_code = 200;
         $remarks = "";
 
-        // //create authentication token
-        // $AUTH_BEARER_TOKEN = $this->auth->generateToken();
+        //create authentication token
+        $AUTH_BEARER_TOKEN = $this->auth->generateToken();
 
-        // //Create Headers
-        // $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer ' . $AUTH_BEARER_TOKEN];
+        //Create Headers
+        $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer ' . $AUTH_BEARER_TOKEN];
 
         //Create Payload
         $payload = [
@@ -495,10 +479,10 @@ class BankApiService
         Log::debug($payload);
 
         //API URL 
-        // $API_URL = env('API_URL');
+        $API_URL = env('API_URL');
 
-        // //response
-        // $response = Http::withHeaders($headers)->post($API_URL, $payload);
+        //response
+        $response = Http::withHeaders($headers)->post($API_URL, $payload);
 
         //create or update the otp request
         $otp_request = OtpRequest::firstOrNew(
@@ -510,44 +494,42 @@ class BankApiService
         //$otp_request->http_response_json = $response;
         $otp_request->save();
 
-        return [202, 'OTP Verified.'];
+        //decode the response 
+        $response = json_decode($response, true);
 
-        // //decode the response 
-        // $response = json_decode($response, true);
+        //logging response
+        Log::debug('== OtpVerify Response  ==');
+        Log::debug($response);
 
-        // //logging response
-        // Log::debug('== OtpVerify Response  ==');
-        // Log::debug($response);
+        //debit order
+        $debit_order = DebitOrder::where('reference', '=', $reference)->first();
 
-        // //debit order
-        // $debit_order = DebitOrder::where('reference', '=', $reference)->first();
+        // Check if response is null or not
+        if ($response) {
+            // Separate status code
+            if (strtolower($response['status']) == "success") {
+                $response_code = 202;
+                $remarks = $response['data']['response'][0]['responseDescription'];
 
-        // // Check if response is null or not
-        // if ($response) {
-        //     // Separate status code
-        //     if (strtolower($response['status']) == "success") {
-        //         $response_code = 202;
-        //         $remarks = $response['data']['response'][0]['responseDescription'];
+                //update debit order status
+                $debit_order->status = 202; //otp verified
+            } else if (strtolower($response['status']) == "fail") {
+                $response_code = $response['data']['response'][0]['responseCode'];
+                $remarks = $response['data']['response'][0]['responseDescription'];
 
-        //         //update debit order status
-        //         $debit_order->status = 202; //otp verified
-        //     } else if (strtolower($response['status']) == "fail") {
-        //         $response_code = $response['data']['response'][0]['responseCode'];
-        //         $remarks = $response['data']['response'][0]['responseDescription'];
+                //update debit order status
+                $debit_order->status = 500;
+            }
 
-        //         //update debit order status
-        //         $debit_order->status = 500;
-        //     }
+            $debit_order->http_response_code = $response['data']['response'][0]['responseCode'];
+            $debit_order->remarks = $response['data']['response'][0]['responseDescription'];
+            $debit_order->save();
 
-        //     $debit_order->http_response_code = $response['data']['response'][0]['responseCode'];
-        //     $debit_order->remarks = $response['data']['response'][0]['responseDescription'];
-        //     $debit_order->save();
-
-        //     return [$response_code, $remarks];
-        // } else {
-        //     Log::debug("No response from NMB end");
-        //     return [500, 'No response from NMB endpoint.'];
-        // }
+            return [$response_code, $remarks];
+        } else {
+            Log::debug("No response from NMB end");
+            return [500, 'No response from NMB endpoint.'];
+        }
     }
 
     //create collection deduction
@@ -567,10 +549,6 @@ class BankApiService
             "status" => "Create",
             "data" => $data
         ];
-
-        //Create Payload
-        Log::debug('== CollectionCreate Request ==');
-        Log::debug($payload);
 
         //API URL 
         $API_URL = env('API_URL');
