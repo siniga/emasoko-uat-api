@@ -137,6 +137,7 @@ class UserController extends Controller
             'phone' => $request->input('phone'),
             'password' => Hash::make($password),
             'otp_password' => base64_encode($password),
+            'is_api_user' => $request->input('is_api_user') ? 1 : 0,
             'active' => 1,
         ]);
         $user->save();
@@ -252,6 +253,7 @@ class UserController extends Controller
         $user->name = $request->input('name');
         $user->email = $request->input('email');
         $user->phone = $request->input('phone');
+        $user->is_api_user = $request->input('is_api_user') ? 1 : 0;
 
         if ($request->input('password') != null || $request->input('password') != '') {
             $user->password = Hash::make($password);
