@@ -6,6 +6,7 @@
                 eModal: "Mandate_Information",
                 debit_order_uuid: "{{ $debit_order->uuid }}",
                 status: "{{ $debit_order->status }}",
+                channel: "{{ $debit_order->channel }}",
                 deleted: "{{ $debit_order->deleted }}",
                 remarks: "{{ $debit_order->remarks }}",
                 approved: "{{ $debit_order->approved }}",

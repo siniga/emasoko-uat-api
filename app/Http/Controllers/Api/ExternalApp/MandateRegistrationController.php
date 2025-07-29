@@ -520,8 +520,6 @@ class MandateRegistrationController extends Controller
             return false;
     }
 
-
-
     //Create Evidence of Agreement
     protected function createEvidence(DebitOrder $debit_order)
     {

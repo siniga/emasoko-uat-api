@@ -201,7 +201,7 @@
                                     </div>
                                 </div>
 
-                                <template x-if="status==201">
+                                <template x-if="status==201 && channel == 'NMB'">
                                     <div class="row">
                                         <div class="col-md-12 d-flex justify-content-end text-sm-end mb-2">
                                             <button type="button" name="verify" x-on:click="verifyButton();" class="btn btn-primary">

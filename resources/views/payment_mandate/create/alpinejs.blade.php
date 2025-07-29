@@ -4,6 +4,7 @@
         return {
             uuid: "{{ $debit_order->uuid }}",
             status: "{{ $debit_order->status }}",
+            channel: "{{ $debit_order->channel }}",
             showModal: false,
 
             formData: {
@@ -104,7 +105,7 @@
                                this.status = 201;
                                
                                //display message
-                                $('#message_wrp').html("<div class='alert alert-danger rounded-sm'>" + data.success_msg + "</div>");
+                                $('#message_wrp').html("<div class='alert alert-success rounded-sm'>" + data.success_msg + "</div>");
                             }
                         } else {
                             //other channels
