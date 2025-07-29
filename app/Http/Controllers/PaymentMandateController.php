@@ -17,7 +17,6 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Classes\Messaging;
 use App\Exports\DebitOrders;
 use App\Http\Requests\CustomerAccountRequest;
-use App\Http\Requests\CustomerDeductionRequest;
 use App\Jobs\CRDBMandateRegistrationJob;
 use App\Jobs\MandateRegistrationJob;
 use App\Jobs\SendSMSJob;
@@ -608,6 +607,11 @@ class PaymentMandateController extends Controller
 
             //Create Request to CRDB
             dispatch(new CRDBMandateRegistrationJob($data));
+
+            //request response
+            $success = true;
+            $response_code = 201;
+            $remarks = "Mandate registration request sent to CRDB.";
         }
 
         //response

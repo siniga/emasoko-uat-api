@@ -78,18 +78,5 @@ class CRDBMandateRegistrationJob implements ShouldQueue
         $debit_order->http_response_code = $response['ResponseHeader']['StatusCode'];
         $debit_order->remarks = $response['ResponseHeader']['StatusDesc'];
         $debit_order->save();
-
-        //TODO: Send OTP message on FAILURE
-        if ($response['ResponseHeader']['StatusCode'] == 1001) {
-            //construct message
-            $message = "Payment Mandate failed from CRDB endpoint. Kindly update mandate information and process again.";
-
-            //format mobile phone
-            $phone =  casting_phone($debit_order->userCreated->phone);
-
-            //send sms
-            $data = ["phone" => $phone, "message" => $message];
-            dispatch(new SendSMSJob($data));
-        }
     }
 }
