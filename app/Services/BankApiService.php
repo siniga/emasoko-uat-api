@@ -342,6 +342,8 @@ class BankApiService
             "data" => $data
         ];
 
+        return [201 , "Mandate cancellation request has been sent successfully."];
+
         //Create Payload
         Log::debug('== Mandate Cancellation Request ==');
         Log::debug($payload);

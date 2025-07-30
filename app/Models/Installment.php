@@ -61,7 +61,6 @@ class Installment extends Model
         return $this->belongsTo(DebitOrder::class, "debit_order_id");
     }
 
-
     public static function getCreated(Partner $partner, $current_date)
     {
         //installments

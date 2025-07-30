@@ -20,7 +20,7 @@ class DeductionService
     public function createEvidence(DebitOrder $debitOrder) {}
 
     //calculate number of installment
-    protected function calculateNumberOfInstallments($debit_type, $total_amount, $iamount, $max_amount)
+    public function calculateNumberOfInstallments($debit_type, $total_amount, $iamount, $max_amount)
     {
         $numberInstallment = 0;
 
