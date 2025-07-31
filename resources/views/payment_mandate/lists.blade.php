@@ -110,7 +110,7 @@
 
                                 <div class="col-lg-6 col-md-6 col-12">
                                     <div class="mb-3">
-                                        {{ Form::text('keyword', old('keyword'), ['class="form-control"', 'placeholder="Search by name of account holder or number..."']) }}
+                                        {{ Form::text('keyword', old('keyword'), ['class="form-control"', 'placeholder="Search by name of account holder or number or reference..."']) }}
                                     </div>
                                 </div>
 

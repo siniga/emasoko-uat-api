@@ -183,10 +183,15 @@ class DebitOrder extends Model
                 });
             })
             ->when($keyword, function ($query) use ($keyword) {
-                $query->whereHas("customerAccount", function ($q) use ($keyword) {
-                    $q->where(DB::raw('LOWER(account_name)'), 'like', "%" . strtolower($keyword) . "%")
-                        ->orWhere(DB::raw('LOWER(account_number)'), 'like', "%" . strtolower($keyword) . "%");
-                });
+                $query->where(function ($q) use ($keyword) {
+                    $q->where(DB::raw('LOWER(reference)'), 'like', '%' . strtolower($keyword) . '%');
+                })
+                    ->whereHas('customerAccount', function ($q) use ($keyword) {
+                        $q->where(function ($sub) use ($keyword) {
+                            $sub->where(DB::raw('LOWER(account_name)'), 'like', '%' . strtolower($keyword) . '%')
+                                ->orWhere(DB::raw('LOWER(account_number)'), 'like', '%' . strtolower($keyword) . '%');
+                        });
+                    });
             });
     }
 }
