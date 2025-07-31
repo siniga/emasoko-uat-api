@@ -1,4 +1,5 @@
 <?php
+namespace App\Exports;
 
 use App\Models\DebitOrder;
 use Illuminate\Http\Request;

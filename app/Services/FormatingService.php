@@ -5,7 +5,7 @@ namespace App\Services;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
-class DeductionService
+class FormatingService
 {
     public function __construct() {}
 
