@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Dedoc\Scramble\Attributes\ExcludeRouteFromDocs;
 
 class MandateRegistrationController extends Controller
 {
