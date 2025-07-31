@@ -5,13 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\DebitOrder;
 use App\Models\Installment;
 use App\Models\Partner;
-use App\Models\User;
-use Carbon\Carbon;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Mail;
+
 
 class DashboardController extends Controller
 {
@@ -28,21 +22,14 @@ class DashboardController extends Controller
     {
         $title = 'Dashboard';
 
-        $approvedStatuses = [0, 1, 2];
+        $approvedStatuses = [0, 1, 2]; // status
+
+        //current year and month
+        $current_year = date('Y');
+        $current_month = date('m');
 
         //query
-        $debit_orders = DebitOrder::filterCondition()->select(
-            'debit_orders.approved',
-            DB::raw('COALESCE(SUM(debit_orders.total_amount), 0) as total_amount'),
-            DB::raw('COUNT(id) as number_of_mandate')
-        )->where(function ($query) {
-            $query->whereIn('debit_orders.approved', [0, 1, 2]);
-        })->whereHas('partner', function ($q) {
-            $q->where('partners.status', 202);
-        })->groupBy('debit_orders.approved')->orderBy('debit_orders.approved')->toBase();
-
-        //debit orders
-        $debit_orders = $debit_orders->get();
+        $debit_orders = DebitOrder::mandateApprovalStats();
 
         // Map over all approved statuses to ensure complete results
         $mandates = collect($approvedStatuses)->map(function ($status) use ($debit_orders) {
@@ -60,26 +47,11 @@ class DashboardController extends Controller
         //summation of mandate values
         $total_mandate_value = $mandates[0]['total_amount'] + $mandates[1]['total_amount'] + $mandates[2]['total_amount'];
 
-        //current date
-        $current_year = date('Y');
-        $current_month = date('m');
+        // This Month’s Collection
+        $this_month = Installment::thisMonthStats($current_month, $current_year);
 
-        //collection stats
-        $installments = Installment::filterCondition()->select(
-            DB::raw('COALESCE(SUM(installments.installment_amount), 0) as total_amount'),
-            DB::raw('COALESCE(SUM(installments.current_balance), 0) as paid_amount')
-        )->whereHas('debitOrder', function ($query) {
-            $query->where(['debit_orders.approved' => 1, 'debit_orders.deleted' => 0, 'debit_orders.status' => 240])
-                ->whereHas('partner', function ($q) {
-                    $q->where('partners.status', 202);
-                });
-        })->toBase();
-
-        //this month collection
-        $this_month = $installments->whereMonth('payment_date', $current_month)->whereYear('payment_date', $current_year)->get();
-
-        //today collection
-        $today = $installments->whereDate('payment_date', Carbon::now())->get();
+        // Today’s Collection
+        $today = Installment::todayStats();
 
         //stats
         $stats  = [
@@ -97,47 +69,30 @@ class DashboardController extends Controller
 
             //this month and today collection
             'month' => date('F'),
-            'this_month_expected' => $this_month[0]->total_amount,
-            'this_month_paid' => $this_month[0]->paid_amount,
-            'today_expected' => $today[0]->total_amount,
-            'today_paid' => $today[0]->paid_amount
+            'this_month_expected' => $this_month->total_amount,
+            'this_month_paid' => $this_month->paid_amount,
+            'today_expected' => $today->total_amount,
+            'today_paid' => $today->paid_amount
         ];
-
-        //current date
-        $current_year = date('Y');
-        $current_month = date('m');
 
         //partners
         $partners = Partner::filterCondition()->where('status', 202)->get();
 
         $arr_data = [];
         foreach ($partners as $partner) {
-            //collection stats
-            $installments = Installment::select(
-                DB::raw('COALESCE(COUNT(installments.id), 0) as number_of_collection'),
-                DB::raw('COALESCE(SUM(installments.installment_amount), 0) as total_amount'),
-                DB::raw('COALESCE(SUM(installments.outstanding_amount), 0) as outstanding_amount'),
-                DB::raw('COALESCE(SUM(installments.current_balance), 0) as paid_amount')
-            )->whereHas('debitOrder', function ($query) use ($partner) {
-                $query->where('debit_orders.partner_id', '=', $partner->id)
-                    ->where('debit_orders.approved', '=', 1);
-            })->toBase();
-
             //this month collection
-            $this_month = $installments
-                ->whereMonth('payment_date', $current_month)
-                ->whereYear('payment_date', $current_year)->get();
+            $this_month = Installment::monthlyCollectionStats($partner->id, $current_month, $current_year);
 
             //create dictionary
-            if ($this_month[0]->paid_amount > 0) {
+            if ($this_month->number_of_collection > 0) {
                 $arr_data[] = [
                     'uuid' => $partner->uuid,
                     'partner_name' => $partner->business_name,
-                    'number_of_collection' => $this_month[0]->number_of_collection,
-                    'total_amount' => $this_month[0]->total_amount,
-                    'outstanding_amount' => $this_month[0]->outstanding_amount,
-                    'paid_amount' => $this_month[0]->paid_amount,
-                    'percent' => round(($this_month[0]->paid_amount / $this_month[0]->total_amount) * 100, 2)
+                    'number_of_collection' => $this_month->number_of_collection,
+                    'total_amount' => $this_month->total_amount,
+                    'outstanding_amount' => $this_month->outstanding_amount,
+                    'paid_amount' => $this_month->paid_amount,
+                    'percent' => $this_month->paid_amount > 0 ? round(($this_month->paid_amount / $this_month->total_amount) * 100, 2) : 0
                 ];
             }
         }

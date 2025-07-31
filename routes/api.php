@@ -90,8 +90,8 @@ Route::middleware('auth:api')->group(function () {
     Route::get('v1/mandate/all', [PaymentMandateController::class, 'all']);
     Route::get('v1/mandate/{reference}', [PaymentMandateController::class, 'getMandate']);
     Route::post('v1/mandate/create', [PaymentMandateController::class, 'create']);
-    Route::post('v1/mandate/create-otp', [PaymentMandateController::class, 'createOtp']);
-    Route::post('v1/mandate/verify-otp', [PaymentMandateController::class, 'verifyOtp']);
+    Route::post('v1/mandate/otp/create', [PaymentMandateController::class, 'createOtp']);
+    Route::post('v1/mandate/otp/verify', [PaymentMandateController::class, 'verifyOtp']);
     Route::post('v1/mandate/status', [PaymentMandateController::class, 'fetchStatus']);
     Route::post('v1/mandate/cancellation', [PaymentMandateController::class, 'cancellation']);
 

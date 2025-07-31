@@ -109,6 +109,23 @@ class DebitOrder extends Model
             ->first();
     }
 
+    public static function mandateApprovalStats()
+    {
+        return self::filterCondition()
+            ->select([
+                'debit_orders.approved',
+                DB::raw('COALESCE(SUM(debit_orders.total_amount), 0) as total_amount'),
+                DB::raw('COUNT(id) as number_of_mandate'),
+            ])
+            ->whereIn('debit_orders.approved', [0, 1, 2])
+            ->whereHas('partner', function ($q) {
+                $q->where('partners.status', 202);
+            })
+            ->groupBy('debit_orders.approved')
+            ->orderBy('debit_orders.approved')
+            ->toBase()->get();
+    }
+
     public function scopeWithFilters($query, $request)
     {
         $start_date        = $request['start_at'] ?? null;

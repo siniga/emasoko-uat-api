@@ -663,31 +663,19 @@ class CollectionController extends Controller
 
         $arr_data = [];
         foreach ($partners as $partner) {
-            //collection stats
-            $installments = Installment::select(
-                DB::raw('COALESCE(COUNT(installments.id), 0) as number_of_collection'),
-                DB::raw('COALESCE(SUM(installments.installment_amount), 0) as total_amount'),
-                DB::raw('COALESCE(SUM(installments.outstanding_amount), 0) as outstanding_amount'),
-                DB::raw('COALESCE(SUM(installments.current_balance), 0) as paid_amount')
-            )->whereHas('debitOrder', function ($query) use ($partner) {
-                $query->where('debit_orders.partner_id', '=', $partner->id)
-                    ->where('debit_orders.approved', '=', 1);
-            })->toBase();
-
             //this month collection
-            $this_month = $installments->whereMonth('payment_date', $current_month)
-                ->whereYear('payment_date', $current_year)->get();
+            $this_month = Installment::monthlyCollectionStats($partner->id, $current_month, $current_year, $status = 240, $deleted = 0);
 
             //create dictionary
-            if ($this_month[0]->number_of_collection > 0) {
+            if ($this_month->number_of_collection > 0) {
                 $arr_data[] = [
                     'uuid' => $partner->uuid,
                     'partner_name' => $partner->business_name,
-                    'number_of_collection' => $this_month[0]->number_of_collection,
-                    'total_amount' => $this_month[0]->total_amount,
-                    'outstanding_amount' => $this_month[0]->outstanding_amount,
-                    'paid_amount' => $this_month[0]->paid_amount,
-                    'percent' => round(($this_month[0]->paid_amount / $this_month[0]->total_amount) * 100, 2)
+                    'number_of_collection' => $this_month->number_of_collection,
+                    'total_amount' => $this_month->total_amount,
+                    'outstanding_amount' => $this_month->outstanding_amount,
+                    'paid_amount' => $this_month->paid_amount,
+                    'percent' => $this_month->paid_amount > 0 ? round(($this_month->paid_amount / $this_month->total_amount) * 100, 2) : 0
                 ];
             }
         }
@@ -807,6 +795,7 @@ class CollectionController extends Controller
                 'status' => $status,
                 'remarks' => $val->remarks,
                 'payment_date' => Carbon::parse($val->payment_date)->format('d-m-Y'),
+                'effective_payment_date' => Carbon::parse($val->effective_payment_date)->format('d-m-Y'),
                 'start_date' => Carbon::parse($val->debitOrder->start_date)->format('d-m-Y'),
                 'end_date' => Carbon::parse($val->debitOrder->end_date)->format('d-m-Y'),
             ];
@@ -836,32 +825,18 @@ class CollectionController extends Controller
 
         $arr_data = [];
         foreach ($partners as $partner) {
-            //collection stats
-            $installments = Installment::select(
-                DB::raw('COALESCE(COUNT(installments.id), 0) as number_of_collection'),
-                DB::raw('COALESCE(SUM(installments.installment_amount), 0) as total_amount'),
-                DB::raw('COALESCE(SUM(installments.outstanding_amount), 0) as outstanding_amount'),
-                DB::raw('COALESCE(SUM(installments.current_balance), 0) as paid_amount')
-            )->whereHas('debitOrder', function ($query) use ($partner) {
-                $query->where('debit_orders.partner_id', '=', $partner->id)
-                    ->where('debit_orders.approved', '=', 1);
-            })->toBase();
-
-            //this month collection
-            $this_month = $installments
-                ->whereMonth('payment_date', $current_month)
-                ->whereYear('payment_date', $current_year)->get();
+            $this_month = Installment::monthlyCollectionStats($partner->id, $current_month, $current_year);
 
             //create dictionary
-            if ($this_month[0]->paid_amount > 0) {
+            if ($this_month->paid_amount > 0) {
                 $arr_data[] = [
                     'uuid' => $partner->uuid,
                     'partner_name' => $partner->business_name,
-                    'number_of_collection' => $this_month[0]->number_of_collection,
-                    'total_amount' => $this_month[0]->total_amount,
-                    'outstanding_amount' => $this_month[0]->outstanding_amount,
-                    'paid_amount' => $this_month[0]->paid_amount,
-                    'percent' => round(($this_month[0]->paid_amount / $this_month[0]->total_amount) * 100, 2)
+                    'number_of_collection' => $this_month->number_of_collection,
+                    'total_amount' => $this_month->total_amount,
+                    'outstanding_amount' => $this_month->outstanding_amount,
+                    'paid_amount' => $this_month->paid_amount,
+                    'percent' => $this_month->paid_amount > 0 ? round(($this_month->paid_amount / $this_month->total_amount) * 100, 2) : 0
                 ];
             }
         }
@@ -899,9 +874,9 @@ class CollectionController extends Controller
                     ->where('debit_orders.approved', '=', 1);
             })
             ->where('status', 'CLOSED')
-            ->whereMonth('payment_date', $current_month)
-            ->whereYear('payment_date', $current_year)
-            ->orderBy('payment_date')
+            ->whereMonth('effective_payment_date', $current_month)
+            ->whereYear('effective_payment_date', $current_year)
+            ->orderBy('effective_payment_date')
             ->get();
 
         foreach ($installments as $val) {
@@ -918,6 +893,7 @@ class CollectionController extends Controller
                 'status' => $val->status,
                 'remarks' => $val->remarks,
                 'payment_date' => Carbon::parse($val->payment_date)->format('d-m-Y'),
+                'effective_payment_date' => Carbon::parse($val->effective_payment_date)->format('d-m-Y'),
                 'start_date' => Carbon::parse($val->debitOrder->start_date)->format('d-m-Y'),
                 'end_date' => Carbon::parse($val->debitOrder->end_date)->format('d-m-Y'),
             ];
@@ -972,6 +948,7 @@ class CollectionController extends Controller
                 'status' => $val->status,
                 'remarks' => $val->remarks,
                 'payment_date' => Carbon::parse($val->payment_date)->format('d-m-Y'),
+                'effective_payment_date' => Carbon::parse($val->effective_payment_date)->format('d-m-Y'),
                 'start_date' => Carbon::parse($val->debitOrder->start_date)->format('d-m-Y'),
                 'end_date' => Carbon::parse($val->debitOrder->end_date)->format('d-m-Y'),
             ];
@@ -990,7 +967,7 @@ class CollectionController extends Controller
     public function expected_daily(Request $request)
     {
         //current date
-        $current_date = Carbon::now();
+        $current_date = Carbon::now()->format('Y-m-d');
 
         if ($request->has('payment_at'))
             $current_date = date('Y-m-d', strtotime($request->input('payment_at')));
@@ -1000,32 +977,19 @@ class CollectionController extends Controller
 
         $arr_data = [];
         foreach ($partners as $partner) {
-            //collection stats
-            $installments = Installment::select(
-                DB::raw('COALESCE(COUNT(installments.id), 0) as number_of_collection'),
-                DB::raw('COALESCE(SUM(installments.installment_amount), 0) as total_amount'),
-                DB::raw('COALESCE(SUM(installments.outstanding_amount), 0) as outstanding_amount'),
-                DB::raw('COALESCE(SUM(installments.current_balance), 0) as paid_amount')
-            )->whereHas('debitOrder', function ($query) use ($partner) {
-                $query->where('debit_orders.partner_id', '=', $partner->id)
-                    ->where('debit_orders.approved', '=', 1)
-                    ->where('debit_orders.deleted', '=', 0)
-                    ->where('debit_orders.status', '=', 240);
-            })->toBase();
-
-            //this day collection
-            $this_month = $installments->whereDate('payment_date', $current_date)->get();
+            // today stats
+            $today_stats = Installment::todayCollectionStats($partner->id, $current_date, $status = 240, $deleted = 0);
 
             //create dictionary
-            if ($this_month[0]->number_of_collection > 0) {
+            if ($today_stats->number_of_collection > 0) {
                 $arr_data[] = [
                     'uuid' => $partner->uuid,
                     'partner_name' => $partner->business_name,
-                    'number_of_collection' => $this_month[0]->number_of_collection,
-                    'total_amount' => $this_month[0]->total_amount,
-                    'outstanding_amount' => $this_month[0]->outstanding_amount,
-                    'paid_amount' => $this_month[0]->paid_amount,
-                    'percent' => round(($this_month[0]->paid_amount / $this_month[0]->total_amount) * 100, 2)
+                    'number_of_collection' => $today_stats->number_of_collection,
+                    'total_amount' => $today_stats->total_amount,
+                    'outstanding_amount' => $today_stats->outstanding_amount,
+                    'paid_amount' => $today_stats->paid_amount,
+                    'percent' => round(($today_stats->paid_amount / $today_stats->total_amount) * 100, 2)
                 ];
             }
         }
@@ -1063,8 +1027,8 @@ class CollectionController extends Controller
                     ->where('debit_orders.deleted', '=', 0)
                     ->where('debit_orders.status', '=', 240);
             })
-            ->whereDate('payment_date', $payment_at)
-            ->orderBy('payment_date')
+            ->whereDate('effective_payment_date', $payment_at)
+            ->orderBy('effective_payment_date')
             ->get();
 
         foreach ($installments as $val) {
@@ -1081,6 +1045,7 @@ class CollectionController extends Controller
                 'status' => $val->status,
                 'remarks' => $val->remarks,
                 'payment_date' => Carbon::parse($val->payment_date)->format('d-m-Y'),
+                'effective_payment_date' => Carbon::parse($val->effective_payment_date)->format('d-m-Y'),
                 'start_date' => Carbon::parse($val->debitOrder->start_date)->format('d-m-Y'),
                 'end_date' => Carbon::parse($val->debitOrder->end_date)->format('d-m-Y'),
             ];
@@ -1134,6 +1099,7 @@ class CollectionController extends Controller
                 'status' => $val->status,
                 'remarks' => $val->remarks,
                 'payment_date' => Carbon::parse($val->payment_date)->format('d-m-Y'),
+                'effective_payment_date' => Carbon::parse($val->effective_payment_date)->format('d-m-Y'),
                 'start_date' => Carbon::parse($val->debitOrder->start_date)->format('d-m-Y'),
                 'end_date' => Carbon::parse($val->debitOrder->end_date)->format('d-m-Y'),
             ];
@@ -1159,30 +1125,19 @@ class CollectionController extends Controller
 
         $arr_data = [];
         foreach ($partners as $partner) {
-            //collection stats
-            $installments = Installment::select(
-                DB::raw('COALESCE(COUNT(installments.id), 0) as number_of_collection'),
-                DB::raw('COALESCE(SUM(installments.installment_amount), 0) as total_amount'),
-                DB::raw('COALESCE(SUM(installments.outstanding_amount), 0) as outstanding_amount'),
-                DB::raw('COALESCE(SUM(installments.current_balance), 0) as paid_amount')
-            )->whereHas('debitOrder', function ($query) use ($partner) {
-                $query->where('debit_orders.partner_id', '=', $partner->id)
-                    ->where('debit_orders.approved', '=', 1);
-            })->toBase();
-
-            //this day collection
-            $this_month = $installments->whereDate('payment_date', $current_date)->get();
+            // today stats
+            $today_stats = Installment::todayCollectionStats($partner->id, $current_date);
 
             //create dictionary
-            if ($this_month[0]->paid_amount > 0) {
+            if ($today_stats->paid_amount > 0) {
                 $arr_data[] = [
                     'uuid' => $partner->uuid,
                     'partner_name' => $partner->business_name,
-                    'number_of_collection' => $this_month[0]->number_of_collection,
-                    'total_amount' => $this_month[0]->total_amount,
-                    'outstanding_amount' => $this_month[0]->outstanding_amount,
-                    'paid_amount' => $this_month[0]->paid_amount,
-                    'percent' => round(($this_month[0]->paid_amount / $this_month[0]->total_amount) * 100, 2)
+                    'number_of_collection' => $today_stats->number_of_collection,
+                    'total_amount' => $today_stats->total_amount,
+                    'outstanding_amount' => $today_stats->outstanding_amount,
+                    'paid_amount' => $today_stats->paid_amount,
+                    'percent' => round(($today_stats->paid_amount / $today_stats->total_amount) * 100, 2)
                 ];
             }
         }
@@ -1219,8 +1174,8 @@ class CollectionController extends Controller
                     ->where('debit_orders.approved', '=', 1);
             })
             ->where('status', 'CLOSED')
-            ->whereDate('payment_date', $payment_at)
-            ->orderBy('payment_date')
+            ->whereDate('effective_payment_date', $payment_at)
+            ->orderBy('effective_payment_date')
             ->get();
 
         foreach ($installments as $val) {
@@ -1237,6 +1192,7 @@ class CollectionController extends Controller
                 'status' => $val->status,
                 'remarks' => $val->remarks,
                 'payment_date' => Carbon::parse($val->payment_date)->format('d-m-Y'),
+                'effective_payment_date' => Carbon::parse($val->effective_payment_date)->format('d-m-Y'),
                 'start_date' => Carbon::parse($val->debitOrder->start_date)->format('d-m-Y'),
                 'end_date' => Carbon::parse($val->debitOrder->end_date)->format('d-m-Y'),
             ];
@@ -1271,8 +1227,8 @@ class CollectionController extends Controller
                     ->where('debit_orders.approved', '=', 1);
             })
             ->where('status', 'CLOSED')
-            ->whereDate('payment_date', $current_date)
-            ->orderBy('payment_date')
+            ->whereDate('effective_payment_date', $current_date)
+            ->orderBy('effective_payment_date')
             ->get();
 
         foreach ($installments as $val) {
@@ -1289,6 +1245,7 @@ class CollectionController extends Controller
                 'status' => $val->status,
                 'remarks' => $val->remarks,
                 'payment_date' => Carbon::parse($val->payment_date)->format('d-m-Y'),
+                'effective_payment_date' => Carbon::parse($val->effective_payment_date)->format('d-m-Y'),
                 'start_date' => Carbon::parse($val->debitOrder->start_date)->format('d-m-Y'),
                 'end_date' => Carbon::parse($val->debitOrder->end_date)->format('d-m-Y'),
             ];

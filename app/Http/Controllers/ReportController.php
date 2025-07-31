@@ -164,7 +164,7 @@ class ReportController extends Controller
             } else if ($request->report_type == "COLLECTION") {
                 //Query for payment collection
                 $installments = Installment::filterCondition()
-                    ->select('id', 'debit_order_id', 'installment_amount', 'last_paid_amount', 'current_balance', 'outstanding_amount', 'status', 'remarks', 'payment_date')
+                    ->select('id', 'debit_order_id', 'installment_amount', 'last_paid_amount', 'current_balance', 'outstanding_amount', 'status', 'remarks', 'payment_date', 'effective_payment_date', 'created_at')
                     ->whereHas('debitOrder', function ($query) {
                         $query->where('debit_orders.approved', '=', 1)
                             ->whereHas('partner', function ($q) {
@@ -178,7 +178,7 @@ class ReportController extends Controller
                     $start_at = Carbon::createFromFormat('Y-m-d', $request->start_at)->startOfDay();
                     $end_at = Carbon::createFromFormat('Y-m-d', $request->end_at)->endOfDay();
 
-                    $installments = $installments->whereBetween('installments.payment_date', [$start_at, $end_at]);
+                    $installments = $installments->whereBetween('installments.effective_payment_date', [$start_at, $end_at]);
                 }
 
                 //filtering by service provider
@@ -215,7 +215,7 @@ class ReportController extends Controller
                 }
 
                 //order installments
-                $installments = $installments->orderBy('installments.payment_date', 'ASC')->get();
+                $installments = $installments->orderBy('installments.effective_payment_date', 'ASC')->get();
 
                 //arr installments
                 $arr_installments = [];
@@ -242,6 +242,7 @@ class ReportController extends Controller
                         'status' => $status,
                         'remarks' => $val->remarks,
                         'payment_date' => Carbon::parse($val->payment_date)->format('d-m-Y'),
+                        'effective_payment_date' => Carbon::parse($val->effective_payment_date)->format('d-m-Y'),
                         'start_date' => Carbon::parse($val->debitOrder->start_date)->format('d-m-Y'),
                         'end_date' => Carbon::parse($val->debitOrder->end_date)->format('d-m-Y'),
                     ];
