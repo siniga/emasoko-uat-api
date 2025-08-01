@@ -1613,6 +1613,13 @@ class CollectionController extends Controller
                 $installment->save();
 
                 Log::info("New Payment Date: {$collection_date}");
+            } else if ($installment->status == "FAILED" && $installment->remarks == "Account Is Valid") {
+                //update installment payment date
+                $collection_date = Carbon::parse($installment->payment_date)->addMonth();
+                $installment->effective_payment_date = $collection_date;
+                $installment->save();
+
+                Log::info("New Payment Date: {$collection_date}");
             }
         }
 
