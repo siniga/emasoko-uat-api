@@ -1594,7 +1594,8 @@ class CollectionController extends Controller
 
     public function update_collection_date()
     {
-        $batches = CollectionBatch::all();
+        $reference = [10957, 10964, 10965, 10966, 10967, 10968, 10969, 10961, 10970, 10972, 10973, 10974, 10975, 10976, 10977, 10978, 10979, 10980, 10981, 10982, 10983, 10984, 10985, 10986, 10987, 10988, 10989, 10990, 10991, 10992, 10993, 10994, 10995, 10996, 10997, 10998, 10999, 11000, 11001, 11002, 11003, 11004, 11005, 11006, 11008, 11009, 11010, 11011, 11016, 11017, 11018];
+        $batches = CollectionBatch::select('id', 'installment_ids')->whereIn('collectionReference', $reference)->get();
 
         foreach ($batches as $val) {
             $installment_ids = explode(",", $val->installment_ids);
@@ -1602,11 +1603,16 @@ class CollectionController extends Controller
             //get installment
             $installment = Installment::where(['id' => $installment_ids[0]])->first();
 
-            if ($installment) {
-                //collection batch
-                $collection_batch = CollectionBatch::findOrFail($val->id);
-                $collection_batch->collectionDate = $installment->payment_date;
-                $collection_batch->save();
+            if (!$installment)
+                continue;
+
+            if ($installment->status == "CLOSED") {
+                //update installment payment date
+                $collection_date = Carbon::parse($installment->payment_date)->addMonth();
+                $installment->effective_payment_date = $collection_date;
+                $installment->save();
+
+                Log::info("New Payment Date: {$collection_date}");
             }
         }
 
