@@ -259,11 +259,11 @@ class PaymentMandateController extends Controller
 
                 if ($arr_response) {
                     $response_code = $arr_response[0];
-                    if ($response_code == 201) {
+                    if ($response_code == 200 || $response_code == 201) {
                         //return success message
                         return response()->json([
                             'success' => true,
-                            'response_code' => 200,
+                            'response_code' => 201,
                             'success_msg' => "Mandate created successfully.",
                             'data' => [
                                 'status' => 'success',

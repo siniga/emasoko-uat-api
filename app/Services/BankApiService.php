@@ -197,6 +197,10 @@ class BankApiService
             "data" => $data
         ];
 
+        //Create Payload
+        Log::debug('== MandateRegistration Request == ');
+        Log::debug($payload);
+
         //API URL 
         $API_URL = env('API_URL');
 
@@ -218,7 +222,7 @@ class BankApiService
         if ($response) {
             // Separate status code
             if (strtolower($response['status']) == "success") {
-                $response_code = $response['data']['response'][0]['responseCode'];
+                $response_code = 201;
                 $remarks = $response['data']['response'][0]['responseDescription'];
 
                 $debit_order->status = 201; //created
