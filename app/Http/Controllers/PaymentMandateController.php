@@ -581,7 +581,7 @@ class PaymentMandateController extends Controller
             //create payload
             $payload = $this->payloadService->mandateRegistrationPayload($debit_order);
 
-            //api service
+            //arr response
             $arr_response = $this->bankApi->mandateRegistrationRequest($payload);
 
             if ($arr_response) {

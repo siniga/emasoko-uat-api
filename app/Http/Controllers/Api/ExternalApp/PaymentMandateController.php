@@ -254,33 +254,39 @@ class PaymentMandateController extends Controller
                 //create payload
                 $payload = $this->payloadService->mandateRegistrationPayload($debit_order);
 
-                //Create Request to NMB
-                dispatch(new MandateRegistrationJob($payload));
-            } elseif ($request->payment_channel == "CRDB") {
-                //requestId
-                $requestId = Str::uuid()->toString();
+                //arr response
+                $arr_response = $this->bankApi->mandateRegistrationRequest($payload);
 
-                //create payload
-                $payload = $this->payloadService->CRDBMandatePayload($debit_order, $requestId);
-
-                //create data
-                $data['payload'] = $payload;
-                $data['requestId'] = $requestId;
-                $data['mandateReferenceNumber'] = $debit_order->reference;
-
-                //Create Request to CRDB
-                dispatch(new CRDBMandateRegistrationJob($data));
+                if ($arr_response) {
+                    $response_code = $arr_response[0];
+                    if ($response_code == 201) {
+                        //return success message
+                        return response()->json([
+                            'success' => true,
+                            'response_code' => 200,
+                            'success_msg' => "Mandate created successfully.",
+                            'data' => [
+                                'status' => 'success',
+                                'mandateReference' => $debit_order->reference,
+                            ]
+                        ]);
+                    } else {
+                        // error response
+                        return response()->json([
+                            'success' => false,
+                            'response_code' => 500,
+                            'error_msg' => $arr_response[1]
+                        ]);
+                    }
+                } else {
+                    // error response
+                    return response()->json([
+                        'success' => false,
+                        'response_code' => 500,
+                        'error_msg' => "API system error, contact eMakato support team."
+                    ]);
+                }
             }
-
-            //return success message
-            return response()->json([
-                'success' => true,
-                'response_code' => 200,
-                'success_msg' => "Mandate created successfully.",
-                'data' => [
-                    'mandateReference' => $debit_order->reference,
-                ]
-            ]);
         } else {
             return response()->json([
                 'success' => false,
@@ -331,6 +337,7 @@ class PaymentMandateController extends Controller
 
         //declare channel and remarks
         $success = true;
+        $status = 'success';
         $response_code = 200;
         $remarks = "";
 
@@ -343,10 +350,20 @@ class PaymentMandateController extends Controller
             $arr_response = $this->bankApi->verifyOtpRequest($payload, $otpReference);
 
             if ($arr_response) {
-                $success = true;
+                $response_code = $arr_response[0];
                 $remarks = $arr_response[1];
+
+                if ($response_code == 202) {
+                    //update response code
+                    $response_code = 202;
+                } else {
+                    $success = false;
+                    $status = 'failed';
+                    $response_code = 500;
+                }
             } else {
                 $success = false;
+                $status = 'failed';
                 $remarks = "API system error, contact eMakato support team.";
                 $response_code = 500;
             }
@@ -359,10 +376,10 @@ class PaymentMandateController extends Controller
                 "response_code" => $response_code,
                 "message" => $remarks,
                 'data' => [
+                    'status' => $status,
                     'mandateReference' => $debit_order->reference,
                 ]
-            ],
-            200
+            ]
         );
     }
 
@@ -404,6 +421,7 @@ class PaymentMandateController extends Controller
 
         //declare channel and remarks
         $success = true;
+        $status = 'success';
         $response_code = 200;
         $remarks = "";
 
@@ -416,10 +434,20 @@ class PaymentMandateController extends Controller
             $arr_response = $this->bankApi->createOtpRequest($payload);
 
             if ($arr_response) {
-                $success = true;
+                $response_code = $arr_response[0];
                 $remarks = $arr_response[1];
+
+                if ($response_code == 201) {
+                    //update response code
+                    $response_code = 201;
+                } else {
+                    $success = false;
+                    $status = 'failed';
+                    $response_code = 500;
+                }
             } else {
                 $success = false;
+                $status = 'failed';
                 $remarks = "API system error, contact eMakato support team.";
                 $response_code = 500;
             }
@@ -432,6 +460,7 @@ class PaymentMandateController extends Controller
                 "response_code" => $response_code,
                 "message" => $remarks,
                 'data' => [
+                    'status' => $status,
                     'mandateReference' => $debit_order->reference,
                 ]
             ],
@@ -468,6 +497,7 @@ class PaymentMandateController extends Controller
 
         //declare channel and remarks
         $success = true;
+        $status = 'success';
         $response_code = 200;
         $remarks = "";
 
@@ -480,14 +510,23 @@ class PaymentMandateController extends Controller
             $arr_response = $this->bankApi->mandateStatusRequest($payload);
 
             if ($arr_response) {
-                $success = true;
+                $response_code = $arr_response[0];
                 $remarks = $arr_response[1];
 
                 // Create debit order installments IF response code = 240
-                if ($response_code == 240 & $debit_order->approved == 0)
+                if ($response_code == 240 & $debit_order->approved == 1) {
                     $this->deductionService->createInstallment($debit_order);
+
+                    //update response code
+                    $response_code = 202;
+                } else {
+                    $success = false;
+                    $response_code = 500;
+                    $status = 'failed';
+                }
             } else {
                 $success = false;
+                $status = 'failed';
                 $remarks = "API system error, contact eMakato support team.";
                 $response_code = 500;
             }
@@ -500,10 +539,10 @@ class PaymentMandateController extends Controller
                 "response_code" => $response_code,
                 "message" => $remarks,
                 'data' => [
+                    'status' => $status,
                     'mandateReference' => $debit_order->reference,
                 ]
-            ],
-            200
+            ]
         );
     }
 
@@ -545,6 +584,7 @@ class PaymentMandateController extends Controller
 
         //declare channel and remarks
         $success = true;
+        $status = 'success';
         $response_code = 200;
         $remarks = "";
 
@@ -557,10 +597,20 @@ class PaymentMandateController extends Controller
             $arr_response = $this->bankApi->mandateCancellationRequest($payload);
 
             if ($arr_response) {
-                $success = true;
+                $response_code = $arr_response[0];
                 $remarks = $arr_response[1];
+
+                if ($response_code == 201) {
+                    //update response code
+                    $response_code = 201;
+                } else {
+                    $success = false;
+                    $status = 'failed';
+                    $response_code = 500;
+                }
             } else {
                 $success = false;
+                $status = 'failed';
                 $remarks = "API system error, contact eMakato support team.";
                 $response_code = 500;
             }
@@ -573,6 +623,7 @@ class PaymentMandateController extends Controller
                 "response_code" => $response_code,
                 "message" => $remarks,
                 'data' => [
+                    'status' => $status,
                     'mandateReference' => $debit_order->reference,
                 ]
             ],

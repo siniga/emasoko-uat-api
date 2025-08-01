@@ -40,6 +40,10 @@ class PaymentCollectionController extends Controller
         if ($request->has('status'))
             $collections = $collections->where('installments.status', $request->status); // OPEN, CLOSED, FUNDSCHECK, FAILED
 
+        // mandate reference
+        if ($request->reference)
+            $collections = $collections->where('debit_orders.reference', $request->reference);
+        
         //order
         $collections = $collections->orderBy('installments.payment_date', 'ASC')->get();
 
