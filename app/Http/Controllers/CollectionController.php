@@ -1600,26 +1600,28 @@ class CollectionController extends Controller
         foreach ($batches as $val) {
             $installment_ids = explode(",", $val->installment_ids);
 
-            //get installment
-            $installment = Installment::where(['id' => $installment_ids[0]])->first();
+            foreach ($installment_ids as $installment_id) {
+                //get installment
+                $installment = Installment::where(['id' => $installment_id])->first();
 
-            if (!$installment)
-                continue;
+                if (!$installment)
+                    continue;
 
-            if ($installment->status == "CLOSED") {
-                //update installment payment date
-                $collection_date = Carbon::parse($installment->payment_date)->addMonth();
-                $installment->effective_payment_date = $collection_date;
-                $installment->save();
+                if ($installment->status == "CLOSED") {
+                    //update installment payment date
+                    $collection_date = Carbon::parse($installment->payment_date)->addMonth();
+                    $installment->effective_payment_date = $collection_date;
+                    $installment->save();
 
-                Log::info("New Payment Date (CLOSED): {$collection_date} for Installment ID: {$installment->id}");
-            } else if ($installment->status == "FAILED" && $installment->remarks == "Account Is Valid") {
-                //update installment payment date
-                $collection_date = Carbon::parse($installment->payment_date)->addMonth();
-                $installment->effective_payment_date = $collection_date;
-                $installment->save();
+                    Log::info("New Payment Date (CLOSED): {$collection_date} for Installment ID: {$installment->id}");
+                } else if ($installment->status == "FAILED" && $installment->remarks == "Account Is Valid") {
+                    //update installment payment date
+                    $collection_date = Carbon::parse($installment->payment_date)->addMonth();
+                    $installment->effective_payment_date = $collection_date;
+                    $installment->save();
 
-                Log::info("New Payment Date (FAILED): {$collection_date}");
+                    Log::info("New Payment Date (FAILED): {$collection_date}");
+                }
             }
         }
 
