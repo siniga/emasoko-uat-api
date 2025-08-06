@@ -94,10 +94,10 @@ class CollectionController extends Controller
                 ->whereDate('end_date', '>=', Carbon::now())
                 ->take($limit);
 
-            echo "<pre>";
-            print_r($debit_orders->get()->toArray());
-            echo "</pre>";
-            exit();
+            // echo "<pre>";
+            // print_r($debit_orders->get()->toArray());
+            // echo "</pre>";
+            // exit();
 
             if ($debit_orders->count() > 0) {
                 //debit orders
@@ -1439,7 +1439,7 @@ class CollectionController extends Controller
 
         //select active debit orders
         $debit_orders = DebitOrder::where(['approved' => 1, 'deleted' => 0, 'status' => 240, 'debit_type' => 'FIXED'])
-            ->where('end_date', '>=', now())->whereBetween("id", [3301, 3400])->get();
+            ->where('end_date', '>=', now())->whereBetween("id", [4701, 4800])->get();
 
         // Open file handle
         $handle = fopen($filePath, 'w');
@@ -1462,16 +1462,10 @@ class CollectionController extends Controller
                 if ($installments == 1)
                     fputcsv($handle, [$debit_order->reference]);
 
-                echo "Reference: {$debit_order->reference} - Installments: {$installments}<br>";
+                echo "TI: {$total_installment_amount} TD: {$debit_order->total_amount} -- Reference: {$debit_order->reference} - Installments: {$installments}<br>";
             }
         }
         fclose($handle);
-
-        // return response()->json([
-        //     'status' => 'success',
-        //     'message' => 'csv generated',
-        //     'file' => asset('assets/reports/05/' . $filename)
-        // ]);
     }
 
     public function update_collection_values(Request $request)
@@ -1495,7 +1489,7 @@ class CollectionController extends Controller
 
             // Get the last 2 installments for this debit_order_id, ordered by created_at or id
             $installments = Installment::where('debit_order_id', $debit_order->id)
-                ->orderBy('id', 'desc')
+                ->orderBy('installment_order', 'desc')
                 ->take(2)
                 ->get();
 

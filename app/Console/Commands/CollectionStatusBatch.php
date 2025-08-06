@@ -54,13 +54,18 @@ class CollectionStatusBatch extends Command
         $bankApi =  new BankApiService();
 
         //collection references
-        $start_at = 10616;
-        $end_at = 10932;
+        $start_at = 10372;
+        $end_at = 10534;
 
-        $collection_batches = CollectionBatch::whereBetween('collectionReference', [$start_at, $end_at])
-            ->where('pushed', '=', 1)
-            ->where('deleted', '=', 0)
-            ->orderBy('collectionReference', 'ASC');
+        // $collectionReferences = [10633, 10634, 10637, 10659, 10565, 10937, 10897, 10683];
+
+        // $collection_batches = CollectionBatch::whereIn('collectionReference', $collectionReferences)
+        //     ->orderBy('collectionReference', 'ASC');
+
+        // $collection_batches = CollectionBatch::whereBetween('collectionReference', [$start_at, $end_at])
+        //     ->where('pushed', '=', 1)
+        //     ->where('deleted', '=', 0)
+        //     ->orderBy('collectionReference', 'ASC');
 
 
         // if ($collection_batches->count() > 0) {
