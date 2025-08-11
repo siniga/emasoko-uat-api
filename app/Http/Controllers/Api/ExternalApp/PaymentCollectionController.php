@@ -71,8 +71,11 @@ class PaymentCollectionController extends Controller
         $collections = Installment::filterCondition();
 
         // mandate reference
-        if ($request->reference)
-            $collections = $collections->where('debit_orders.reference', $request->reference);
+        if ($request->reference) {
+            $collections = $collections->whereHas('debitOrder', function ($query) use ($request) {
+                $query->where('debit_orders.reference', $request->reference);
+            });
+        }
 
         //apply status
         if ($request->has('status'))
