@@ -17,8 +17,8 @@ class InstallmentResource extends JsonResource
         return [
             'mandate' => new MandateResource($this->whenLoaded('debitOrder')),
             'mandate' => [
-                'reference' => $this->debitOrder->reference ?? null,
-                "installment_amount" => $this->debitOrder->installment_amount ?? null,
+                "reference" => $this->debitOrder->reference ?? null,
+                "debit_type" => $this->debitOrder->debit_type ?? null,
                 'start_date' => $this->debitOrder->start_date,
                 'end_date' => $this->debitOrder->end_date,
                 'contract_status' => $this->debitOrder->contract_status,
