@@ -514,7 +514,7 @@ class PaymentMandateController extends Controller
                 $remarks = $arr_response[1];
 
                 // Create debit order installments IF response code = 240
-                if ($response_code == 240 & $debit_order->approved == 1) {
+                if ($response_code == 240) {
                     $this->deductionService->createInstallment($debit_order);
 
                     //update response code
