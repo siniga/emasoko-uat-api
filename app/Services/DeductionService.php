@@ -10,6 +10,8 @@ use App\Models\PartnerAccount;
 use App\Models\Installment;
 use App\Models\InstallmentPayment;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 
 class DeductionService
@@ -308,8 +310,8 @@ class DeductionService
                         $paymentDate = $installment->payment_date;
 
                         //send sms => Insufficient Funds
-                        $phone = $installment->debitOrder->customerAccount->phone;
-                        $message = "Makato ya tarehe {$paymentDate} ya kiasi cha shilingi {$installmentAmt} yameshindikana. Tafadhali weka pesa kwenye akaunti yako ya benki kwa ajili ya makato.";
+                        // $phone = $installment->debitOrder->customerAccount->phone;
+                        // $message = "Makato ya tarehe {$paymentDate} ya kiasi cha shilingi {$installmentAmt} yameshindikana. Tafadhali weka pesa kwenye akaunti yako ya benki kwa ajili ya makato.";
 
                         // //send sms
                         // $data = ["phone" => $phone, "message" => $message];
@@ -324,7 +326,7 @@ class DeductionService
                     $success_installments += 1;
 
                     //process calculation for installment and debit order.
-                    $this->processInstallment($installment, $amount, $collection_reference);
+                    $this->processInstallment($installment, $amount);
                 } else {
                     //updated status of installment
                     $installment->status = $status;
@@ -379,7 +381,7 @@ class DeductionService
     }
 
     //process installment
-    public function processInstallment(Installment $installment, $amount, $reference)
+    public function processInstallment(Installment $installment, $amount)
     {
         Log::debug("== Installment Information ==");
         Log::debug($installment);
@@ -397,11 +399,16 @@ class DeductionService
                 $installment->status = "CLOSED";
                 $installment->save();
             } else {
+                //1. Generate a unique payment reference
+                $reference = $this->uniquePaymentReference(12);
+
                 //1. Update installment => outstanding amount, current balance
                 $outstanding_amount = $installment->outstanding_amount - $amount;
                 $current_balance = $installment->current_balance + $amount;
                 $installment->outstanding_amount = $outstanding_amount;
                 $installment->current_balance = $current_balance;
+                $installment->effective_payment_date = Carbon::now()->toDateString();
+                $installment->collection_reference = $reference;
 
                 //2. update installment status {OPEN, CLOSED, PARTIAL_PAID}
                 if ($outstanding_amount <= 0)
@@ -511,6 +518,26 @@ class DeductionService
         $app_variable->save();
 
         return $cur_collection_reference;
+    }
+
+    //generate random alphanumeric string
+    public static function generateRandomString(int $length = 10): string
+    {
+        $pool = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+        $out = '';
+        for ($i = 0; $i < $length; $i++) {
+            $out .= $pool[random_int(0, strlen($pool) - 1)];
+        }
+        return $out;
+    }
+
+    //generate unique payment reference
+    function uniquePaymentReference(int $length = 10): string
+    {
+        do {
+            $code = Str::upper($this->generateRandomString($length));
+        } while (DB::table("installments")->where("payment_reference", $code)->exists());
+        return $code;
     }
 
     //check for duplicate
