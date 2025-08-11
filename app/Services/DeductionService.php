@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Http\Resources\InstallmentResource;
+use App\Jobs\CollectionCallbackJob;
 use App\Jobs\SendSMSJob;
 use App\Models\AppVariable;
 use App\Models\DebitOrder;
@@ -455,6 +457,20 @@ class DeductionService
                 //Send SMS
                 $data = ["phone" => $phone, "message" => $message];
                 dispatch(new SendSMSJob($data));
+
+                if ($debit_order->partner->callback_url && $debit_order->partner->callback_url != "") {
+                    //dispatch callback job
+                    $callback_data = [
+                        'status' => $installment->status,
+                        'callback_url' => $debit_order->partner->callback_url,
+                        'collection' => InstallmentResource::collection($installment),
+                    ];
+
+                    Log::debug("== Collection Callback Data ==");
+                    Log::debug($callback_data);
+                    // call CollectionCallbackJob
+                    dispatch(new CollectionCallbackJob($callback_data));
+                }
             }
 
             Log::debug("Installment => Processed");
