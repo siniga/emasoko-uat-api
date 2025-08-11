@@ -179,6 +179,8 @@ class Installment extends Model
         $month = $month ?? now()->month;
         $year  = $year ?? now()->year;
 
+        Log::debug("Fetching monthly collection stats for Partner ID: {$partnerId}, Month: {$month}, Year: {$year}");
+
         return self::select([
             DB::raw("COALESCE(SUM(CASE
             WHEN MONTH(payment_date) = {$month} AND YEAR(payment_date) = {$year}
