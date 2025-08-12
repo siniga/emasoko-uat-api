@@ -111,7 +111,6 @@
                                     </div>
                                 </div>
 
-                                <!--./row -->
                                 <div class="row">
                                     <div class="col-lg-12">
                                         <table class="table table-bordered">
@@ -202,7 +201,7 @@
                                     </div>
                                 </div>
 
-                                <template x-if="status==200 || status==201">
+                                <template x-if="status==201 && channel == 'NMB'">
                                     <div class="row">
                                         <div class="col-md-12 d-flex justify-content-end text-sm-end mb-2">
                                             <button type="button" name="verify" x-on:click="verifyButton();" class="btn btn-primary">
@@ -212,7 +211,7 @@
                                     </div>
                                 </template>
 
-                                <template x-if="status==100">
+                                <template x-if="status==100 || status==200">
                                     <div class="row">
                                         <div class="col-md-12">
                                             <div class="mb-3 text-sm-end d-sm-block">
@@ -225,10 +224,10 @@
                                                     Edit
                                                 </a>
                                                 <button type="submit" name="save" class="btn btn-secondary"
-                                                    x-text="buttonSave" :disabled="saveLoading" x-on:click="savingForm();">
+                                                    x-text="buttonSave" :disabled="saveLoading" x-on:click="saveMandateForm();">
                                                 </button>
                                                 <button type="submit" name="submit" class="btn btn-success"
-                                                    x-text="buttonSubmit" :disabled="submitLoading" x-on:click="submitForm();">
+                                                    x-html="buttonSubmit" :disabled="submitLoading" x-on:click="submitMandateForm();">
                                                 </button>
                                             </div>
                                         </div>
@@ -248,212 +247,5 @@
 @endsection
 
 @section('script')
-    <script type="text/javascript">
-        //initiate data
-        function initData() {
-            return {
-                uuid: "{{ $debit_order->uuid }}",
-                status: "{{ $debit_order->status }}",
-                show_modal: false,
-
-                formData: {
-                    uuid: "{{ $debit_order->uuid }}",
-                },
-
-                verifyForm: {
-                    uuid: "{{ $debit_order->uuid }}",
-                    otpPin: "",
-                },
-
-                formMessage: "",
-                saveLoading: false,
-                buttonSave: "Save",
-
-                submitLoading: false,
-                buttonSubmit: "Submit",
-
-                verifyLoading: false,
-                buttonVerify: "Verify",
-
-                resendTXT: "Resend",
-
-                //submit form
-                submitForm() {
-                    this.formMessage = "";
-                    this.submitLoading = false;
-                    this.buttonSubmit = "Submitting...";
-
-                    fetch("/payment-mandate/confirm", {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                                Accept: "application/json",
-                                'X-CSRF-TOKEN': document.head.querySelector('meta[name=csrf-token]').content
-                            },
-                            body: JSON.stringify(this.formData),
-                        }).then(response => response.json())
-                        .then(responseJson => {
-                            console.log(responseJson);
-                            //change status
-                            this.status = 200;
-                            
-                            //check if required to show modal
-                            if(responseJson.show_modal == true){
-                                //display message
-                                $('#message_wrp_1').html(
-                                    "<div class='alert alert-success rounded-sm'>Payment mandate successfully created. Input the OTP PIN to confirm customer consent.</div>"
-                                );
-
-                                //create modal for verifying OTP 
-                                $('#verifyOtpModal').modal('show');
-                            } else {
-                                //display message
-                                $('.message_wrp').html(
-                                    "<div class='alert alert-success rounded-sm'>Payment mandate successfully created.</div>"
-                                );
-
-                                //redirect to details page 
-                                var redirectionURL = '/payment-mandate/show/' + this.uuid;
-
-                                setTimeout(function () {
-                                    window.location.href = redirectionURL
-                                }, 2000);
-                            }
-                        }).catch(() => {
-                            this.formMessage = "Something went wrong.";
-                        }).finally(() => {
-                            this.submitLoading = false;
-                            this.buttonSubmit = "Submit";
-                        });
-                },
-
-                //verifyButton
-                verifyButton() {
-                    //display message
-                    $('#message_wrp_1').html(
-                        "<div class='alert alert-success rounded-sm'>Payment mandate successfully created. Input the OTP PIN to confirm customer consent.</div>"
-                    );
-
-                    //todo: create modal for verifying Otp 
-                    $('#verifyOtpModal').modal('show');
-                },
-
-                //saving Form
-                savingForm() {
-                    this.formMessage = "";
-                    this.saveLoading = false;
-                    this.buttonSave = "Saving...";
-
-                    fetch("/payment-mandate/saving", {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                                Accept: "application/json",
-                                'X-CSRF-TOKEN': document.head.querySelector('meta[name=csrf-token]').content
-                            },
-                            body: JSON.stringify(this.formData),
-                        }).then(response => response.json())
-                        .then(responseJson => {
-                            console.log(responseJson);
-                            // change status
-                            this.status = "saved";
-
-                            // display message
-                            $('#message_wrp').html(
-                                "<div class='alert alert-success rounded-sm'>Debit Mandate saved.</div>");
-                        }).catch(() => {
-                            this.formMessage = "Something went wrong.";
-                        }).finally(() => {
-                            this.saveLoading = false;
-                            this.buttonSave = "Save";
-                        });
-                },
-
-                //resend OTP
-                resendOtp() {
-                    this.resendTXT = "Resending...";
-
-                    //api for action
-                    fetch("/payment-mandate/resend-otp", {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                                Accept: "application/json",
-                                'X-CSRF-TOKEN': document.head.querySelector('meta[name=csrf-token]').content
-                            },
-                            body: JSON.stringify(this.formData),
-                        }).then(response => response.json())
-                        .then(responseJson => {
-                            console.log(responseJson);
-
-                            //response code and message
-                            let http_response_code = responseJson.http_response_code;
-                            let success_msg = responseJson.success_msg;
-
-                            if(http_response_code == 202){
-                                $('#message_wrp_1').html(
-                                    "<div class='alert alert-success rounded-sm'>OTP succesfully generated and sent.</div>"
-                                );
-                            } else {
-                                $('#message_wrp_1').html(
-                                    "<div class='alert alert-danger rounded-sm'>" + success_msg + "</div>"
-                                );
-                            }
-
-                        }).catch(() => {
-                            this.formMessage = "Something went wrong.";
-                        }).finally(() => {
-                            this.resendTXT = "Resend";
-                        });
-                },
-
-                //verify OTP
-                verifyOtp() {
-                    this.formMessage = "";
-                    this.verifyLoading = true;
-                    this.buttonVerify = "Verifying...";
-
-                    //api for action
-                    fetch("/payment-mandate/verify-otp", {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                                Accept: "application/json",
-                                'X-CSRF-TOKEN': document.head.querySelector('meta[name=csrf-token]').content
-                            },
-                            body: JSON.stringify(this.verifyForm),
-                        }).then(response => response.json())
-                        .then(responseJson => {
-                            console.log(responseJson);
-
-                            //response code and message
-                            let http_response_code = responseJson.http_response_code;
-                            let success_msg = responseJson.success_msg;
-
-                            if(http_response_code == 202){
-                                $('#message_wrp_1').html(
-                                    "<div class='alert alert-success rounded-sm'>OTP verified</div>"
-                                );
-
-                                //redirect to details page
-                                var redirectionURL = '/payment-mandate/show/' + this.verifyForm.uuid;
-
-                                setTimeout(function () {
-                                    window.location.href = redirectionURL
-                                }, 2000);
-                            } else {
-                                $('#message_wrp_1').html(
-                                    "<div class='alert alert-danger rounded-sm'>" + success_msg + "</div>"
-                                );
-                            }
-                        }).catch(() => {
-                            this.formMessage = "Something went wrong.";
-                        }).finally(() => {
-                            this.verifyLoading = false;
-                            this.buttonVerify = "Verify";
-                        });
-                },
-            }
-        }
-    </script>
+    @include('payment_mandate.create.alpinejs')
 @endsection

@@ -140,26 +140,14 @@ class DashboardChartController extends Controller
         for ($i = 1; $i <= 12; $i++) {
             $month = date('m', mktime(0, 0, 0, $i, 10));
 
-            //installments
-            $installments = Installment::filterCondition()->select(
-                DB::raw('COALESCE(SUM(installments.installment_amount), 0) as total_amount'),
-                DB::raw('COALESCE(SUM(installments.current_balance), 0) as paid_amount')
-            )->whereHas('debitOrder', function ($query) {
-                $query->where(['debit_orders.approved' => 1])
-                    ->whereHas('partner', function ($q) {
-                        $q->where('partners.status', 202);
-                    });
-            })->toBase();
-
-            //this month
-            $installments = $installments->whereMonth('payment_date', $month)->whereYear('payment_date', $year)->get();
+            $installments = Installment::thisMonthStats($month, $year);
 
             // Log::debug("== installments ==");
             // Log::debug($installments);
 
             //total amount
-            $total_amount = $installments[0]->total_amount;
-            $paid_amount = $installments[0]->paid_amount;
+            $total_amount = $installments->total_amount;
+            $paid_amount = $installments->paid_amount;
 
             //create data array
             $data_array[] = [
@@ -190,23 +178,12 @@ class DashboardChartController extends Controller
         $data_array = [];
 
         foreach ($dates as $key => $v) {
-            //installments
-            $installments = Installment::filterCondition()->select(
-                DB::raw('COALESCE(SUM(installments.installment_amount), 0) as total_amount'),
-                DB::raw('COALESCE(SUM(installments.current_balance), 0) as paid_amount')
-            )->whereHas('debitOrder', function ($query) {
-                $query->where(['debit_orders.approved' => 1])
-                    ->whereHas('partner', function ($q) {
-                        $q->where('partners.status', 202);
-                    });
-            })->toBase();
-
-            //installment by date    
-            $installments = $installments->whereDate('payment_date', $v)->get();
+            //get installments
+            $installments = Installment::todayStats($v);
 
             //total amount
-            $total_amount = $installments[0]->total_amount;
-            $paid_amount = $installments[0]->paid_amount;
+            $total_amount = $installments->total_amount;
+            $paid_amount = $installments->paid_amount;
 
             //create data array
             $data_array[] = [

@@ -33,65 +33,71 @@
                         </div>
                     </div>
 
-                    <div class="table-responsive">
-                        <table class="table table-bordered dt-responsive  nowrap w-100" id="dynamicTable">
-                            <thead>
-                                <tr>
-                                    <th width="3%">#</th>
-                                    <th width="30%">Service Provider</th>
-                                    <th width="12%">No. of Collection</th>
-                                    <th width="14%">Expected Amount</th>
-                                    <th width="14%">Collected Amount</th>
-                                    <th width="14%">Outstanding Amount</th>
-                                    <th width="12%">Success Rate(%)</th>
-                                </tr>
-                            </thead>
-
-                            @php
-                                $sum_expected_amount = 0;
-                                $sum_paid_amount = 0;
-                                $sum_current_balance = 0;
-                                $sum_outstanding_amount = 0;
-                                $success_rate = 0;
-                            @endphp
-
-                            <tbody>
-                                @php $serial = 1; @endphp
-                                @foreach ($arr_data as $values)
+                    @if ($arr_data)
+                        <div class="table-responsive">
+                            <table class="table table-bordered dt-responsive  nowrap w-100" id="dynamicTable">
+                                <thead>
                                     <tr>
-                                        <td>{{ $serial }}</td>
-                                        <td>
-                                            <a href="{{ route('collections.actual-daily-detail', $values['uuid']) }}?payment_at={{ $post_data['payment_at'] }}"
-                                                class="font-weight-600">
-                                                {{ strtoupper($values['partner_name']) }}
-                                            </a>
-                                        </td>
-                                        <td class="text-sm-end">{{ number_format($values['number_of_collection']) }}</td>
-                                        <td class="text-sm-end">{{ number_format($values['total_amount']) }}</td>
-                                        <td class="text-sm-end">{{ number_format($values['paid_amount']) }}</td>
-                                        <td class="text-sm-end">{{ number_format($values['outstanding_amount']) }}</td>
-                                        <td class="text-sm-end">{{ $values['percent'] }}</td>
+                                        <th width="3%">#</th>
+                                        <th width="30%">Service Provider</th>
+                                        <th width="12%">No. of Collection</th>
+                                        <th width="14%">Expected Amount</th>
+                                        <th width="14%">Collected Amount</th>
+                                        <th width="14%">Outstanding Amount</th>
+                                        <th width="12%">Success Rate(%)</th>
                                     </tr>
-                                    @php $serial++; @endphp
+                                </thead>
 
-                                    @php
-                                        $sum_expected_amount += $values['total_amount'];
-                                        $sum_paid_amount += $values['paid_amount'];
-                                        $sum_outstanding_amount += $values['outstanding_amount'];
-                                        $success_rate = ($sum_paid_amount / $sum_expected_amount) * 100;
-                                    @endphp
-                                @endforeach
-                                <tr>
-                                    <td colspan="3" class="font-weight-600">Total</td>
-                                    <td class="text-sm-end font-weight-600">{{ number_format($sum_expected_amount) }}</td>
-                                    <td class="text-sm-end font-weight-600">{{ number_format($sum_paid_amount) }}</td>
-                                    <td class="text-sm-end font-weight-600">{{ number_format($sum_outstanding_amount) }}</td>
-                                    <td class="text-sm-end font-weight-600">{{ round($success_rate, 2) }}</td> 
-                                </tr>
-                            </tbody>
-                        </table>
+                                @php
+                                    $sum_expected_amount = 0;
+                                    $sum_paid_amount = 0;
+                                    $sum_current_balance = 0;
+                                    $sum_outstanding_amount = 0;
+                                    $success_rate = 0;
+                                @endphp
 
-                    </div>
+                                <tbody>
+                                    @php $serial = 1; @endphp
+                                    @foreach ($arr_data as $values)
+                                        <tr>
+                                            <td>{{ $serial }}</td>
+                                            <td>
+                                                <a href="{{ route('collections.actual-daily-detail', $values['uuid']) }}?payment_at={{ $post_data['payment_at'] }}"
+                                                    class="font-weight-600">
+                                                    {{ strtoupper($values['partner_name']) }}
+                                                </a>
+                                            </td>
+                                            <td class="text-sm-end">{{ number_format($values['number_of_collection']) }}</td>
+                                            <td class="text-sm-end">{{ number_format($values['total_amount']) }}</td>
+                                            <td class="text-sm-end">{{ number_format($values['paid_amount']) }}</td>
+                                            <td class="text-sm-end">{{ number_format($values['outstanding_amount']) }}</td>
+                                            <td class="text-sm-end">{{ $values['percent'] }}</td>
+                                        </tr>
+                                        @php $serial++; @endphp
+
+                                        @php
+                                            $sum_expected_amount += $values['total_amount'];
+                                            $sum_paid_amount += $values['paid_amount'];
+                                            $sum_outstanding_amount += $values['outstanding_amount'];
+                                            $success_rate = ($sum_paid_amount / $sum_expected_amount) * 100;
+                                        @endphp
+                                    @endforeach
+                                    <tr>
+                                        <td colspan="3" class="font-weight-600">Total</td>
+                                        <td class="text-sm-end font-weight-600">{{ number_format($sum_expected_amount) }}</td>
+                                        <td class="text-sm-end font-weight-600">{{ number_format($sum_paid_amount) }}</td>
+                                        <td class="text-sm-end font-weight-600">{{ number_format($sum_outstanding_amount) }}</td>
+                                        <td class="text-sm-end font-weight-600">{{ round($success_rate, 2) }}</td> 
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                        </div>
+                    @else
+                        <div class="alert alert-danger mb-0">
+                            <span>No data found for the selected date.</span>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>

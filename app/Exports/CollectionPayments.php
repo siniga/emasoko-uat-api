@@ -36,6 +36,7 @@ class CollectionPayments implements FromArray, WithHeadings, ShouldAutoSize
             'Outstanding Amount',
             'Status',
             'Remarks',
+            'Payment Date',
             'Collection Date',
             'Debit Start Date',
             'Debit End Date',
@@ -53,7 +54,7 @@ class CollectionPayments implements FromArray, WithHeadings, ShouldAutoSize
     {
         return [
             AfterSheet::class    => function (AfterSheet $event) {
-                $cellRange = 'A1:N1'; // All headers
+                $cellRange = 'A1:O1'; // All headers
                 $event->sheet->getDelegate()->getStyle($cellRange)->getFont()->setSize(12);
                 $event->sheet->getDelegate()->getStyle($cellRange)->getFont()->setBold(true);
             },

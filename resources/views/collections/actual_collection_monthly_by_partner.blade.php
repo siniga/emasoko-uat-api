@@ -41,13 +41,14 @@
                                 <tr>
                                     <th width="3%">#</th>
                                     <th width="8%">Mandate Ref</th>
-                                    <th width="20%">Account Name</th>
-                                    <th width="10%">Account No.</th>
+                                    <th width="18%">Account Name</th>
+                                    <th width="8%">Account No.</th>
                                     <th width="10%">Expected Amt</th>
                                     <th width="10%">Paid Amt</th>
                                     <th width="10%">Outstanding</th>
-                                    <th width="10%">Status</th>
+                                    <th width="8%">Status</th>
                                     <th width="10%">Payment Date</th>
+                                    <th width="10%">Collection Date</th>
                                 </tr>
                             </thead>
                             @php
@@ -83,6 +84,7 @@
                                         @endif
                                     </td>
                                     <td>{{ $val['payment_date'] }}</td>
+                                    <td>{{ $val['effective_payment_date'] }}</td>
                                 </tr>
 
                                 @php
@@ -97,7 +99,7 @@
                                 <td class="text-sm-end">{{ number_format($sum_expected_amount) }}</td>
                                 <td class="text-sm-end">{{ number_format($sum_paid_amount) }}</td>
                                 <td class="text-sm-end">{{ number_format($sum_outstanding_amount) }}</td>
-                                <td colspan="2"></td>
+                                <td colspan="3"></td>
                             </tr>
                             </tbody>
                         </table>

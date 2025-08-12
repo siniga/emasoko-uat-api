@@ -95,8 +95,10 @@
                                 <span class="text-danger">{{ $errors->first('company_id') }}</span>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="col-lg-12 col-md-12">
+                    <div class="row">
+                        <div class="col-lg-6 col-md-6">
                             <div class="mb-3">
                                 <label>Service Provider</label>
                                 @php $options = []; @endphp
@@ -108,7 +110,16 @@
                                 {{ Form::select('provider_ids[]', $options, old('provider_ids', $assigned_partners ?? null), ['class' => 'select2 form-control select2-multiple', 'id' => 'provider_id', 'multiple' => 'multiple', 'data-placeholder' => 'Choose...']) }}
                                 <span class="text-danger">{{ $errors->first('provider_ids') }}</span>
                             </div>
-                        </div>  
+                        </div> 
+                        
+                        <div class="col-lg-3 col-md-3">
+                            <div class="mb-3">
+                                <label>Is API User?</label><br />
+                                <label class="form-check-label">
+                                    {{ Form::checkbox('is_api_user', 1, $user->is_api_user ?? false, ['class' => 'form-check-input']) }} Yes
+                                </label>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="row">

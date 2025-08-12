@@ -102,48 +102,26 @@ class MandateController extends Controller
 
         //Log::channel('APILogs')->Info('CRDB Callback Response:' . json_encode($request->all(),true));
 
-        return $request['callbackType'];
+        // check for valid callback type
+        $callback_type = $request->input('callbackType');
 
-        // {
-        //     "callbackType": "PAYMENT_STATUS",
-        //     "requestId": "8feb5f39-9955-43cb-8548-caefddb3848d",
-        //     "data": {
-        //         "reference": 10020,
-        //         "phoneNumber": "255752059910",
-        //         "accountNumber": "0152202249000",
-        //         "transferResponse": "success",
-        //         "transactionDateTime": "2023-12-01T05:56:15.649142047"
-        //     }
-        // }
-        
-         
-        
-        // {
-        //     "callbackType": "REQUEST_STATUS",
-        //     "requestId": "8feb5f39-9955-43cb-8548-caefddb3848d",
-        //     "data": {
-        //         "reference": 10020,
-        //         "status": "APPROVED"
-        //     }
-        // }
+        if ($callback_type == "REQUEST_STATUS") {
+            //query debit order by reference id
+            $debit_order = DebitOrder::where('crdb_reference', '=', $request['data']['reference'])->first();
 
-        // if ($request['callbackType'] == "REQUEST_STATUS") {
-        //     //query debit order by reference id
-        //     $debit_order = DebitOrder::where('crdb_reference', '=', $request['data']['reference'])->first();
-
-        //     //check status
-        //     if (strtolower($request['data']['status']) == "approved") {
-        //         $debit_order->approved = 1;
-        //         $debit_order->status = 202;
-        //     } else if (strtolower($request['data']['status']) == "cancelled") {
-        //         $debit_order->status = 501;
-        //     } else {
-        //         $debit_order->status = 501;
-        //     }
-        //     $debit_order->save();
-        // } else if ($request['callbackType'] == "PAYMENT_STATUS") {
-        //     //update installment amount
-        // }
+            //check status
+            if (strtolower($request['data']['status']) == "approved") {
+                $debit_order->approved = 1;
+                $debit_order->status = 240; //approved
+            } else if (strtolower($request['data']['status']) == "cancelled") {
+                $debit_order->status = 501;
+            } else {
+                $debit_order->status = 501;
+            }
+            $debit_order->save();
+        } else if ($callback_type == "PAYMENT_STATUS") {
+            //update installment amount
+        }
     }
     
 }

@@ -109,6 +109,23 @@ class DebitOrder extends Model
             ->first();
     }
 
+    public static function mandateApprovalStats()
+    {
+        return self::filterCondition()
+            ->select([
+                'debit_orders.approved',
+                DB::raw('COALESCE(SUM(debit_orders.total_amount), 0) as total_amount'),
+                DB::raw('COUNT(id) as number_of_mandate'),
+            ])
+            ->whereIn('debit_orders.approved', [0, 1, 2])
+            ->whereHas('partner', function ($q) {
+                $q->where('partners.status', 202);
+            })
+            ->groupBy('debit_orders.approved')
+            ->orderBy('debit_orders.approved')
+            ->toBase()->get();
+    }
+
     public function scopeWithFilters($query, $request)
     {
         $start_date        = $request['start_at'] ?? null;
@@ -166,9 +183,17 @@ class DebitOrder extends Model
                 });
             })
             ->when($keyword, function ($query) use ($keyword) {
-                $query->whereHas("customerAccount", function ($q) use ($keyword) {
-                    $q->where(DB::raw('LOWER(account_name)'), 'like', "%" . strtolower($keyword) . "%")
-                        ->orWhere(DB::raw('LOWER(account_number)'), 'like', "%" . strtolower($keyword) . "%");
+                $query->where(function ($q) use ($keyword) {
+                    $lowered = strtolower($keyword);
+
+                    // Match reference OR customer account name/number
+                    $q->whereRaw('LOWER(reference) LIKE ?', ["%{$lowered}%"])
+                        ->orWhereHas('customerAccount', function ($q2) use ($lowered) {
+                            $q2->where(function ($q3) use ($lowered) {
+                                $q3->whereRaw('LOWER(account_name) LIKE ?', ["%{$lowered}%"])
+                                    ->orWhereRaw('LOWER(account_number) LIKE ?', ["%{$lowered}%"]);
+                            });
+                        });
                 });
             });
     }

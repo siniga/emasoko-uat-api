@@ -54,8 +54,8 @@ class CollectionStatusBatch extends Command
         $bankApi =  new BankApiService();
 
         //collection references
-        $start_at = 10372;
-        $end_at = 10534;
+        $start_at = 10946;
+        $end_at = 11225;
 
         // $collectionReferences = [10633, 10634, 10637, 10659, 10565, 10937, 10897, 10683];
 
