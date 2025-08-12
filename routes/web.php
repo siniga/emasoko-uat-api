@@ -182,7 +182,7 @@ Route::post('payment-mandate/cancel-mandate', [PaymentMandateController::class, 
 
 Route::get('payment-mandate/unarchieve/{uuid}', [PaymentMandateController::class, 'unarchieve'])->name('payment-mandate.unarchieve');
 Route::get('payment-mandate/send-remainder/{uuid}', [PaymentMandateController::class, 'sendRemainder'])->name('payment-mandate.send-remainder');
-Route::get('payment-mandate/update-mandates', [PaymentMandateController::class, 'update_mandates'])->name('payment-mandate.update-mandates');
+//Route::get('payment-mandate/update-mandates', [PaymentMandateController::class, 'update_mandates'])->name('payment-mandate.update-mandates');
 //Route::get('payment-mandate/update-installments', [PaymentMandateController::class, 'update_installments'])->name('payment-mandate.update-installments');
 
 //actions

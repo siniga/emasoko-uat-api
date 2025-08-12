@@ -1490,7 +1490,7 @@ class PaymentMandateController extends Controller
 
     public function update_mandates()
     {
-        $debit_orders = DebitOrder::whereIn('reference', [240, 250])->get();
+        $debit_orders = DebitOrder::whereIn('id', [5714, 5720])->get();
 
         foreach ($debit_orders as $debit_order) {
             // create installments
