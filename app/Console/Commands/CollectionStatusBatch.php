@@ -53,7 +53,7 @@ class CollectionStatusBatch extends Command
         $bankPayload = new BankPayloadService();
         $bankApi =  new BankApiService();
 
-        //get the start and end of the month
+                //get the start and end of the month
         $start = now()->startOfMonth();
         $end   = now()->endOfMonth();
 
@@ -61,13 +61,13 @@ class CollectionStatusBatch extends Command
         $collection_batches = CollectionBatch::whereBetween('created_at', [$start, $end])
             ->orderBy('collectionReference', 'ASC')->get();
 
-        if ($collection_batches->count() > 0) {
-            //take the first 10 collection batches
-            $collection_batches = $collection_batches->get();
+        if ($collection_batches->isEmpty())
+            return;
 
-            foreach ($collection_batches as $value) {
-                //collection batch
-                $batch = CollectionBatch::findOrFail($value->id);
+        //2. Loop through each collection batch and create a payload for each
+        foreach ($collection_batches as $value) {
+            //collection batch
+            $batch = CollectionBatch::findOrFail($value->id);
 
             //create payload
             $payload = $bankPayload->collectionStatusPayload($batch);
