@@ -97,6 +97,7 @@ Route::middleware('auth:api')->group(function () {
 
     //Collections APIs
     Route::post('v1/collections/all', [PaymentCollectionController::class, 'all']);
+    Route::post('v1/collections/filtering', [PaymentCollectionController::class, 'filtering']);
     Route::post('v1/collections/actual', [PaymentCollectionController::class, 'actual_collections']);
 });
 

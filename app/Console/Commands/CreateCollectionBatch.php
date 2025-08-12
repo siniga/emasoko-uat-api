@@ -51,10 +51,8 @@ class CreateCollectionBatch extends Command
     {
         //Limit
         $limit = 250;
-        $current_date = '2025-08-05'; //today batch
-        //$current_date = Carbon::now(); //today batch
-        //$current_date = Carbon::now()->addDays(11); //1 days from today 31-07
-        echo "== Creating collection batch: '{$current_date}' ==\n";
+        $current_date = Carbon::now(); //today batch
+        //$current_date = Carbon::now()->addDays(1); //2 days from today
         Log::debug("== Creating collection batch: '{$current_date}' ==");
 
         //initiate collection date
@@ -180,7 +178,6 @@ class CreateCollectionBatch extends Command
                             //send Notification of batch creation
                             $message = "Collection batch number " . $collection_reference . " created. Review and approve to the next stage.";
                             $arr_phone = [255717705746, 255656314330];
-                            //$arr_phone = [255717705746, 255656314330, 255629602290, 255684512512];
 
                             foreach ($arr_phone as $phone) {
                                 //send sms

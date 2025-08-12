@@ -8,6 +8,7 @@ use App\Models\Installment;
 use App\Models\Partner;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 
 class PaymentCollectionController extends Controller
@@ -40,10 +41,46 @@ class PaymentCollectionController extends Controller
         if ($request->has('status'))
             $collections = $collections->where('installments.status', $request->status); // OPEN, CLOSED, FUNDSCHECK, FAILED
 
+        //order
+        $collections = $collections->orderBy('installments.payment_date', 'ASC')->get();
+
+        return response()->json([
+            'success' => true,
+            'response_code' => 200,
+            'collections' => InstallmentResource::collection($collections),
+        ]);
+    }
+
+    //filter collections
+    public function filtering(Request $request)
+    {
+        //validate request
+        $validator = Validator::make($request->all(), [
+            'reference' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'response_code' => 403,
+                'error_msg' => $validator->errors()
+            ]);
+        }
+
+        //collections
+        $collections = Installment::filterCondition();
+
         // mandate reference
-        if ($request->reference)
-            $collections = $collections->where('debit_orders.reference', $request->reference);
-        
+        if ($request->reference) {
+            $collections = $collections->whereHas('debitOrder', function ($query) use ($request) {
+                $query->where('debit_orders.reference', $request->reference);
+            });
+        }
+
+        //apply status
+        if ($request->has('status'))
+            $collections = $collections->where('installments.status', $request->status); // OPEN, CLOSED, FUNDSCHECK, FAILED
+
         //order
         $collections = $collections->orderBy('installments.payment_date', 'ASC')->get();
 

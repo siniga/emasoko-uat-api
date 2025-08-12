@@ -53,37 +53,30 @@ class CollectionStatusBatch extends Command
         $bankPayload = new BankPayloadService();
         $bankApi =  new BankApiService();
 
-        //collection references
-        $start_at = 10946;
-        $end_at = 11225;
+        //get the start and end of the month
+        $start = now()->startOfMonth();
+        $end   = now()->endOfMonth();
 
-        // $collectionReferences = [10633, 10634, 10637, 10659, 10565, 10937, 10897, 10683];
+        //1. Get all collection batches created in the current month
+        $collection_batches = CollectionBatch::whereBetween('created_at', [$start, $end])
+            ->orderBy('collectionReference', 'ASC')->get();
 
-        // $collection_batches = CollectionBatch::whereIn('collectionReference', $collectionReferences)
-        //     ->orderBy('collectionReference', 'ASC');
+        if ($collection_batches->count() > 0) {
+            //take the first 10 collection batches
+            $collection_batches = $collection_batches->get();
 
-        // $collection_batches = CollectionBatch::whereBetween('collectionReference', [$start_at, $end_at])
-        //     ->where('pushed', '=', 1)
-        //     ->where('deleted', '=', 0)
-        //     ->orderBy('collectionReference', 'ASC');
+            foreach ($collection_batches as $value) {
+                //collection batch
+                $batch = CollectionBatch::findOrFail($value->id);
 
+            //create payload
+            $payload = $bankPayload->collectionStatusPayload($batch);
 
-        // if ($collection_batches->count() > 0) {
-        //     //take the first 10 collection batches
-        //     $collection_batches = $collection_batches->get();
+            //3. BackgroundJob for creating collection batches
+            dispatch(new CollectionStatusJob($payload));
+            sleep(5); // sleep for 5 seconds
+        }
 
-        //     foreach ($collection_batches as $value) {
-        //         //collection batch
-        //         $batch = CollectionBatch::findOrFail($value->id);
-
-        //         //create payload
-        //         $payload = $bankPayload->collectionStatusPayload($batch);
-
-        //         //3. BackgroundJob for creating collection batches
-        //         dispatch(new CollectionStatusJob($payload));
-        //         sleep(5); // sleep for 5 seconds
-        //     }
-        // }
         //logging successiong
         Log::debug("== Success on creating collection batch status ==");
 

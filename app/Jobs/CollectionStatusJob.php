@@ -165,7 +165,7 @@ class CollectionStatusJob implements ShouldQueue
 
                 //send SMS when batch failed
                 $message = "Collection batch number " . $collection_reference . " failed from NMB end. Review and resend the batch.";
-                $arr_phone = [255717705746, 255656314330, 255629602290, 255684512512];
+                $arr_phone = [255717705746, 255656314330];
 
                 foreach ($arr_phone as $phone) {
                     //send sms
