@@ -100,8 +100,6 @@ class Installment extends Model
             ->whereHas('debitOrder', function ($query) {
                 $query->where([
                     'debit_orders.approved' => 1,
-                    'debit_orders.deleted' => 0,
-                    'debit_orders.status' => 240,
                 ])->whereHas('partner', function ($q) {
                     $q->where('partners.status', 202);
                 });
@@ -127,9 +125,7 @@ class Installment extends Model
             ])
             ->whereHas('debitOrder', function ($query) {
                 $query->where([
-                    'debit_orders.approved' => 1,
-                    'debit_orders.deleted' => 0,
-                    'debit_orders.status' => 240,
+                    'debit_orders.approved' => 1
                 ])->whereHas('partner', function ($q) {
                     $q->where('partners.status', 202);
                 });
