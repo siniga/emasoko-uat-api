@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Classes\Authentication;
+use App\Events\CollectionStatus;
 use App\Models\CollectionBatch;
 use App\Services\DeductionService;
 use Illuminate\Bus\Queueable;
@@ -171,5 +172,8 @@ class CollectionStatusJob implements ShouldQueue
                 }
             }
         }
+
+        // Broadcast an event with the result
+        event(new CollectionStatus($collection_batch));
     }
 }
