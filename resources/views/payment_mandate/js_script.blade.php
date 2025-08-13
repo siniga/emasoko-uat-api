@@ -82,7 +82,8 @@
                                 //check for other channels
                             }
                         } else if (data.success == false) {
-                            $('#message_wrp').html("<div class='alert alert-danger rounded-sm'>" + data.success_msg + "</div>");
+                            $('#message_wrp').html("<div class='alert alert-danger rounded-sm'>" + data
+                                .success_msg + "</div>");
                         }
                     }).catch(error => {
                         console.error("Error caught:", error);
@@ -166,17 +167,21 @@
                                     this.status = 405;
 
                                     //display message
-                                    $('#message_wrp_2').html("<div class='alert alert-success rounded-sm'>" + data.success_msg + "</div>");
+                                    $('#message_wrp_2').html("<div class='alert alert-success rounded-sm'>" +
+                                        data.success_msg + "</div>");
                                 } else if (http_response_code == 249 || http_response_code == 430) {
-                                    $('#message_wrp_2').html("<div class='alert alert-info rounded-sm'>" + data.success_msg + "</div>");
+                                    $('#message_wrp_2').html("<div class='alert alert-info rounded-sm'>" + data
+                                        .success_msg + "</div>");
                                 } else {
-                                    $('#message_wrp_2').html("<div class='alert alert-danger rounded-sm'>" + data.success_msg + "</div>");
+                                    $('#message_wrp_2').html("<div class='alert alert-danger rounded-sm'>" +
+                                        data.success_msg + "</div>");
                                 }
                             } else {
                                 //check for other channels
                             }
                         } else if (data.success == false) {
-                            $('#message_wrp_2').html("<div class='alert alert-danger rounded-sm'>" + data.success_msg + "</div>");
+                            $('#message_wrp_2').html("<div class='alert alert-danger rounded-sm'>" + data
+                                .success_msg + "</div>");
                         }
                     }).catch(error => {
                         console.error("Error caught:", error);
@@ -193,106 +198,147 @@
                 verifyButton() {
                     //display message
                     $('#message_wrp_1').html(
-                        "<div class='alert alert-success rounded-sm'>Resend OTP and input the OTP PIN to confirm customer consent.</div>"
+                        "<div class='alert alert-success rounded-sm'>Input the OTP PIN sent to customer to consent and verify.</div>"
                     );
 
-                    //todo: create modal for verifying Otp 
+                    //create modal for verifying Otp 
                     $('#verifyOtpModal').modal('show');
                 },
 
-                //resend OTP
-                resendOtp() {
-                    //api for action
-                    fetch("/payment-mandate/resend-otp", {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                                Accept: "application/json",
-                                'X-CSRF-TOKEN': document.head.querySelector('meta[name=csrf-token]').content
-                            },
-                            body: JSON.stringify(this.resendForm),
-                        }).then(response => response.json())
-                        .then(responseJson => {
-                            console.log(responseJson);
+                //request for create Otp
+                createMandateOtp() {
+                    this.resendBtn = '<i class="fas fa-spinner fa-spin"></i> Resending...';
 
-                            //response code 
-                            const http_response_code = responseJson.http_response_code;
+                    fetch("{{ route('payment-mandate.resend-otp') }}", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Accept: "application/json",
+                            'X-CSRF-TOKEN': document.head.querySelector('meta[name=csrf-token]').content
+                        },
+                        body: JSON.stringify(this.formData),
+                    }).then(async response => {
+                        const data = await response.json();
 
-                            if (http_response_code == 200) {
-                                //display message
-                                $('#message_wrp_1').html(
-                                    "<div class='alert alert-success rounded-sm'>OTP sent successfully</div>"
-                                );
-                            } else if (http_response_code == 500) {
-                                //display message
-                                $('#message_wrp_1').html(
-                                    "<div class='alert alert-warning rounded-sm'>Failed to send OTP, Try again.</div>"
-                                );
+                        if (!response.ok) {
+                            // Manually throw error to enter .catch
+                            throw {
+                                status: response.status,
+                                data
+                            };
+                        }
+
+                        //check if response is success
+                        if (data.success == true) {
+                            //check if channel is NMB
+                            if (data.channel == "NMB") {
+                                //set show modal to true
+                                if (data.response_code == 201) {
+                                    this.status = 201;
+
+                                    //display message
+                                    $('#message_wrp_1').html("<div class='alert alert-success rounded-sm'>" +
+                                        data.success_msg + "</div>");
+
+                                } else {
+                                    //display message
+                                    $('#message_wrp_1').html("<div class='alert alert-danger rounded-sm'>" +
+                                        data.success_msg + "</div>");
+                                }
                             } else {
-                                //display message
-                                $('#message_wrp_1').html(
-                                    "<div class='alert alert-warning rounded-sm'>Failed to send OTP, Try again.</div>"
-                                );
+                                //check for other channels
                             }
+                        } else if (data.success == false) {
+                            $('#message_wrp_1').html("<div class='alert alert-danger rounded-sm'>" + data
+                                .success_msg + "</div>");
+                        }
+                    }).catch(error => {
+                        console.error("Error caught:", error);
+                        let message = "Something went wrong.";
 
-                        }).catch(() => {
-                            this.formMessage = "Something went wrong.";
-                        }).finally(() => {
-
-                        });
+                        $('#message_wrp_1').html(
+                            "<div class='alert alert-danger py-3 px-2'>" + message + "</div>"
+                        );
+                    }).finally(() => {
+                        this.resendBtn = "Resend";
+                    });
                 },
 
-                //verify OTP
-                verifyOtp() {
+                //Request for verifying Otp
+                verifyMandateOtp() {
                     this.formMessage = "";
                     this.verifyLoading = true;
-                    this.buttonVerify = "Verifying...";
+                    this.buttonVerify = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
 
-                    //api for action
-                    fetch("/payment-mandate/verify-otp", {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                                Accept: "application/json",
-                                'X-CSRF-TOKEN': document.head.querySelector('meta[name=csrf-token]').content
-                            },
-                            body: JSON.stringify(this.verifyForm),
-                        }).then(response => response.json())
-                        .then(responseJson => {
-                            console.log(responseJson);
+                    fetch("{{ route('payment-mandate.verify-otp') }}", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Accept: "application/json",
+                            'X-CSRF-TOKEN': document.head.querySelector('meta[name=csrf-token]').content
+                        },
+                        body: JSON.stringify(this.verifyForm),
+                    }).then(async response => {
+                        const data = await response.json();
 
-                            //response code 
-                            const http_response_code = responseJson.http_response_code;
+                        if (!response.ok) {
+                            throw {
+                                status: response.status,
+                                data
+                            };
+                        }
 
-                            if (http_response_code == 202) {
-                                //display message
-                                $('#message_wrp_1').html(
-                                    "<div class='alert alert-success rounded-sm'>OTP validated</div>"
-                                );
+                        //change status
+                        this.status = 201;
 
-                                //redirect to details page
-                                var redirectionURL = '/payment-mandate/show/' + this.verifyForm.uuid;
+                        //check if response is success
+                        if (data.success == true) {
+                            //check if channel is NMB
+                            if (data.channel == "NMB") {
+                                //set show modal to true
+                                if (data.response_code == 202) {
+                                    this.status = 202;
 
-                                setTimeout(function() {
-                                    window.location.href = redirectionURL
-                                }, 2000);
-                            } else if (http_response_code == 500) {
-                                //display message
-                                $('#message_wrp_1').html(
-                                    "<div class='alert alert-danger rounded-sm'>Failed to verify OTP, Try again or resend OTP.</div>"
-                                );
+                                    //display message
+                                    $('#message_wrp_1').html("<div class='alert alert-success rounded-sm'>" +
+                                        data.success_msg + "</div>");
+
+                                    //Redirect to success page
+                                    var redirectionURL = '/payment-mandate/show/' + this.uuid;
+
+                                    setTimeout(function() {
+                                        window.location.href = redirectionURL
+                                    }, 2000);
+                                } else {
+                                    //display message
+                                    $('#message_wrp').html("<div class='alert alert-danger rounded-sm'>" + data
+                                        .success_msg + "</div>");
+                                }
                             } else {
-                                //display message
-                                $('#message_wrp_1').html(
-                                    "<div class='alert alert-danger rounded-sm'>Failed to verify OTP, Try again or contact support.</div>"
-                                );
+                                //check for other channels
                             }
-                        }).catch(() => {
-                            this.formMessage = "Something went wrong.";
-                        }).finally(() => {
-                            this.verifyLoading = false;
-                            this.buttonVerify = "Verify";
-                        });
+                        } else if (data.success == false) {
+                            $('#message_wrp_1').html("<div class='alert alert-danger rounded-sm'>" + data
+                                .success_msg + "</div>");
+                        }
+                    }).catch(error => {
+                        console.error("Error caught:", error);
+                        let message = "Something went wrong.";
+
+                        if (error.status === 422 && error.data?.errors) {
+                            const errors = error.data.errors;
+                            message = Object.values(errors).flat().join(" ");
+                        } else {
+                            message = error.data?.message || "Something went wrong. Try again.";
+                        }
+
+                        $('#message_wrp_1').html(
+                            "<div class='alert alert-danger py-3 px-2'>" + message + "</div>"
+                        );
+                    }).finally(() => {
+                        this.verifyLoading = false;
+                        this.buttonVerify = "Verify";
+                    });
                 },
 
             }

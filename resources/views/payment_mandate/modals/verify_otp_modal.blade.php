@@ -11,7 +11,7 @@
                 <!--form message => success or danger -->
                 <div id="message_wrp_1"></div>
 
-                <form @submit.prevent="verifyOtp();" autocomplete="off">
+                <form @submit.prevent="verifyMandateOtp();" autocomplete="off">
                     <input type="hidden" name="uuid" x-model="verifyForm.uuid">
 
                     <div class="row">
@@ -49,7 +49,7 @@
                     <div class="col-md-12 d-flex justify-content-end text-sm-end">
                         <div class="m-1">
                             <i>Didn't receive otp?</i> 
-                            <span role="button" class="text-primary ms-2 resend_otp" x-on:click="resendOtp()" x-html="resendBtn"></span>
+                            <span role="button" class="text-primary ms-2 resend_otp" x-on:click="createMandateOtp()" x-html="resendBtn"></span>
                         </div>
                     </div>
                 </div>
