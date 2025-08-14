@@ -32,7 +32,7 @@ class InstallmentResource extends JsonResource
             "outstanding_amount" => $this->outstanding_amount,
             "payment_date" => $this->payment_date,
             "last_paid_amount" => $this->last_paid_amount,
-            "reference" => $this->collection_reference,
+            "reference" => $this->payment_reference,
             "status" => $this->status,
             "remarks" => $this->remarks,
         ];

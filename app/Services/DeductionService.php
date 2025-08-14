@@ -410,7 +410,7 @@ class DeductionService
                 $installment->outstanding_amount = $outstanding_amount;
                 $installment->current_balance = $current_balance;
                 $installment->effective_payment_date = Carbon::now()->toDateString();
-                $installment->collection_reference = $reference;
+                $installment->payment_reference = $reference;
 
                 //2. update installment status {OPEN, CLOSED, PARTIAL_PAID}
                 if ($outstanding_amount <= 0)
