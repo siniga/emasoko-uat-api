@@ -13,12 +13,12 @@ class Checksum
         //headers
         $headers = [
             'Content-Type' => 'application/x-www-form-urlencoded',
-            'Authorization' => 'Basic Q2JpZTFLOVdVd1c0Y0RFTFlPNnB2ZjJGQU9ZYTpaS0ZxMmxkbHQ1ZlV3aURDc2t0QUFiSm9wQmNh',
+            'Authorization' => 'Basic ' . base64_encode(env('CRDB_CONSUMER_KEY') . ':' . env('CRDB_CONSUMER_SECRET')),
             'Cookie' => 'BIGipServerCRDB_DC_ESB_STB_WSO2_POOL_443=363664044.47873.0000; route=1726646754.062.70.52380'
           ];
 
         //API URL
-        $API_URL = 'https://pre-prod-esb-wso2is.crdbbank.co.tz/oauth2/token';
+        $API_URL = env('CRDB_TOKEN_URL');
 
         // Send the POST request using Laravel's HTTP client
         $response = Http::withHeaders($headers)->asForm()->post($API_URL, 
@@ -43,10 +43,10 @@ class Checksum
      * @return string
      * @throws Exception
      */
-    public function generateChecksum(string $data, string $salt): string
+    public function generateChecksum(string $data): string
     {
         // Concatenate the data and salt
-        $dataWithSalt = $data . $salt;
+        $dataWithSalt = $data . env('CRDB_SALT');
 
         // Generate the hash using SHA-256
         $hash = hash('sha256', $dataWithSalt);

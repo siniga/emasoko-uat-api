@@ -23,17 +23,25 @@ class MandateController extends Controller
     public function create(Request $request)
     {
         //predefined variables
-        $debitAccount = "019461235600";
-        $phone = "255755676052";
-        $partnerId = "7c0e38cf-1f74-4fc1-83d0-abd4afb5b9d9";
+        $debitAccount = $request->debitAccount;
+        $phone = $request->phone;
+        $startDate = $request->startDate;
+        $endDate = $request->endDate;
+        $totalAmount = $request->totalAmount;
+        $installmentAmount = $request->installmentAmount;
+        $periodicity = $request->periodicity;
+        $frequency = $request->frequency;
+
+        //validate mandatory fields
+        $partnerId = env('CRDB_PARTNER_ID');
         $requestId = Str::uuid()->toString();
 
         //data and salt
         $data = $requestId . substr($debitAccount, -4) . $partnerId;
-        $salt = "dPQ11iVNGI2aLnCUGdQ3LQA2tCx00WzTxj6zPsdLK3vvR34n5J9s4U4kwzMguTTlahYY66yr6ieqbo7CfGZsVOlt8xKZr+Jon7jc599v9Zkw94ZIpI6Y3YmgXwLZql9nGsgWyA==";
+        $salt = env('CRDB_SALT');
+
         //create checksum
         $checksum = $this->auth->generateChecksum($data, $salt);
-
 
         Log::debug("== checksum ==");
         Log::debug($checksum);
@@ -42,8 +50,8 @@ class MandateController extends Controller
 
         //headers
         $headers = [
-            'Channel' => 'IB',
-            'AppId' => 'INTERNET',
+            'Channel' => env('CRDB_CHANNEL_ID'),
+            'AppId' => env('CRDB_APP_ID'),
             'AppVersion' => '1.0.0',
             "RequestId" => $requestId,
             'Authorization' => 'Bearer ' . $AUTH_BEARER_TOKEN,
@@ -61,12 +69,12 @@ class MandateController extends Controller
             'Checksum' => $checksum,
             "PhoneNumber" =>  $phone,
             "DebitAccount" =>  $debitAccount,
-            "TotalAmount" =>  "1000",
-            "InstallmentAmount" => "100",
-            "StartDate" => "20-12-2024",
-            "EndDate" => "31-12-2024",
-            "FrequencyType" => "WEEKLY",
-            "Frequency" => "1",
+            "TotalAmount" =>  $totalAmount,
+            "InstallmentAmount" => $installmentAmount,
+            "StartDate" => $startDate,
+            "EndDate" => $endDate,
+            "FrequencyType" => $periodicity,
+            "Frequency" => $frequency,
             "BillDetails" => "Recurring payment"
         ];
 

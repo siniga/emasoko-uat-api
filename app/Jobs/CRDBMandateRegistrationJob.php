@@ -39,10 +39,10 @@ class CRDBMandateRegistrationJob implements ShouldQueue
         //create authentication token
         $AUTH_BEARER_TOKEN = $this->auth->generateToken();
 
-        //Create Headers
+        //headers
         $headers = [
-            'Channel' => 'IB',
-            'AppId' => 'INTERNET',
+            'Channel' => env('CRDB_CHANNEL_ID'),
+            'AppId' => env('CRDB_APP_ID'),
             'AppVersion' => '1.0.0',
             "RequestId" => $this->data['requestId'],
             'Authorization' => 'Bearer ' . $AUTH_BEARER_TOKEN,
@@ -58,6 +58,7 @@ class CRDBMandateRegistrationJob implements ShouldQueue
 
         //update the debit order
         $debit_order = DebitOrder::where('reference', '=', $this->data['mandateReferenceNumber'])->first();
+        $debit_order->crdb_request_id = $this->data['requestId'];
         $debit_order->http_response_status_json = $response;
 
         //decode the response 
