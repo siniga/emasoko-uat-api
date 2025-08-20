@@ -32,14 +32,14 @@ class MandateController extends Controller
         $periodicity = $request->periodicity;
         $frequency = $request->frequency;
 
-        // $debitAccount = "0152418973800";
-        // $phone = "255711711125";
-        $partnerId = "7c0e38cf-1f74-4fc1-83d0-abd4afb5b9d9";
+        //validate mandatory fields
+        $partnerId = env('CRDB_PARTNER_ID');
         $requestId = Str::uuid()->toString();
 
         //data and salt
         $data = $requestId . substr($debitAccount, -4) . $partnerId;
-        $salt = "dPQ11iVNGI2aLnCUGdQ3LQA2tCx00WzTxj6zPsdLK3vvR34n5J9s4U4kwzMguTTlahYY66yr6ieqbo7CfGZsVOlt8xKZr+Jon7jc599v9Zkw94ZIpI6Y3YmgXwLZql9nGsgWyA==";
+        $salt = env('CRDB_SALT');
+        
         //create checksum
         $checksum = $this->auth->generateChecksum($data, $salt);
 
@@ -50,8 +50,8 @@ class MandateController extends Controller
 
         //headers
         $headers = [
-            'Channel' => 'IB',
-            'AppId' => 'INTERNET',
+            'Channel' => env('CRDB_CHANNEL_ID'),
+            'AppId' => env('CRDB_APP_ID'),
             'AppVersion' => '1.0.0',
             "RequestId" => $requestId,
             'Authorization' => 'Bearer ' . $AUTH_BEARER_TOKEN,

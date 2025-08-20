@@ -72,6 +72,9 @@ Route::post('collection/airtel/recovery', [AirtelCollectionController::class, 'r
 Route::post('collection/airtel/recovery-inquiry', [AirtelCollectionController::class, 'recovery_inquiry']);
 Route::post('collection/airtel/recovery-refund', [AirtelCollectionController::class, 'recovery_refund']);
 
+//CRDB apis
+Route::post('v1/mandate/crdb', [CRDBMandateController::class, 'create']);
+Route::post('v1/mandate/crdb/callback', [CRDBMandateController::class, 'callback']);
 
 /*
 |--------------------------------------------------------------------------

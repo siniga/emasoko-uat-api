@@ -18,7 +18,7 @@ class Checksum
           ];
 
         //API URL
-        $API_URL = 'https://pre-prod-esb-wso2is.crdbbank.co.tz/oauth2/token';
+        $API_URL = env('CRDB_TOKEN_URL');
 
         // Send the POST request using Laravel's HTTP client
         $response = Http::withHeaders($headers)->asForm()->post($API_URL, 
