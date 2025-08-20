@@ -39,7 +39,7 @@ class MandateController extends Controller
         //data and salt
         $data = $requestId . substr($debitAccount, -4) . $partnerId;
         $salt = env('CRDB_SALT');
-        
+
         //create checksum
         $checksum = $this->auth->generateChecksum($data, $salt);
 

@@ -133,10 +133,9 @@ class BankPayloadService
 
         //data and salt
         $data = $requestId . substr($customerAccount->account_number, -4) . $partnerId;
-        $salt = env("CRDB_SALT");
 
         //create checksum
-        $checksum = $this->auth->generateChecksum($data, $salt);
+        $checksum = $this->auth->generateChecksum($data);
 
         $payload = [
             "PartnerId" =>  $partnerId,
