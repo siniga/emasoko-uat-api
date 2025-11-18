@@ -15,14 +15,16 @@ use Carbon\Carbon;
 use DateTime;
 use Exception;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Collection;
 
 class DeductionService
 {
-    public function __construct() {}
+    private $app_variable;
+    public function __construct() {
+        $this->app_variable = AppVariable::first();
+    }
 
     //create debit order evidence of aggrement
     public function createEvidence(DebitOrder $debitOrder) {}
@@ -596,16 +598,14 @@ class DeductionService
     public function getMandateReference()
     {
         //app variable
-        $app_variable = AppVariable::first();
-
-        static $number = $app_variable->cur_mandate_reference;
+        static $number = $this->app_variable->cur_mandate_reference;
 
         $number++;
         $cur_mandate_reference = $number;
 
         //update app variable
-        $app_variable->cur_mandate_reference = $cur_mandate_reference;
-        $app_variable->save();
+        $this->app_variable->cur_mandate_reference = $cur_mandate_reference;
+        $this->app_variable->save();
 
         return $cur_mandate_reference;
     }
@@ -614,16 +614,14 @@ class DeductionService
     public function getCollectionReference()
     {
         //app variable
-        $app_variable = AppVariable::first();
-
-        static $number = $app_variable->cur_collection_reference;
+        static $number = $this->app_variable->cur_collection_reference;
 
         $number++;
         $cur_collection_reference = $number;
 
         //update app variable
-        $app_variable->cur_collection_reference = $cur_collection_reference;
-        $app_variable->save();
+        $this->app_variable->cur_collection_reference = $cur_collection_reference;
+        $this->app_variable->save();
 
         return $cur_collection_reference;
     }
