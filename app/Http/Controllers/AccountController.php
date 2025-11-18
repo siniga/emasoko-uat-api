@@ -10,8 +10,7 @@ class AccountController extends Controller
     //get account type from account category
     function account_types($id)
     {
-        //accounts
-        $accounts = Account::where(['account_type_id' => $id, 'active' => 1])->get();
+        $accounts = Account::where('account_type_id', '=', $id)->where(['active' => 1])->get();
 
         if ($accounts) {
             echo '<option value="">Select</option>';

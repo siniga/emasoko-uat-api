@@ -142,6 +142,9 @@ class DashboardChartController extends Controller
 
             $installments = Installment::thisMonthStats($month, $year);
 
+            // Log::debug("== installments ==");
+            // Log::debug($installments);
+
             //total amount
             $total_amount = $installments->total_amount;
             $paid_amount = $installments->paid_amount;

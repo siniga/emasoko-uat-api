@@ -86,7 +86,7 @@
                     </a>
                 </li>
 
-                @if (Auth::user()->hasRole(['admin']))
+                @if (Auth::user()->hasRole(['admin']) || Auth::user()->hasRole(['Partner']))
                     <li class="menu-title" key="t-apps">Authentication</li>
 
                     <li

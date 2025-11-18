@@ -319,7 +319,6 @@
                             <div id="collected-mandate-value-weekly-chart"></div>
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>

@@ -611,7 +611,7 @@ class PaymentMandateController extends Controller
             //request response
             $success = true;
             $response_code = 201;
-            $remarks = "Mandate registration request sent to CRDB.";
+            $remarks = "Mandate registration request sent to CRDB. Go to customer SimBanking and approve mandate.";
         }
 
         //response
@@ -1490,7 +1490,7 @@ class PaymentMandateController extends Controller
 
     public function update_mandates()
     {
-        $debit_orders = DebitOrder::whereIn('reference', [240, 250])->get();
+        $debit_orders = DebitOrder::whereIn('id', [5714, 5720])->get();
 
         foreach ($debit_orders as $debit_order) {
             // create installments

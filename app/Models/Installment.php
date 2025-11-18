@@ -101,14 +101,14 @@ class Installment extends Model
                 $query->where([
                     'debit_orders.approved' => 1,
                 ])->whereHas('partner', function ($q) {
-                    $q->where('partners.status', 202);
+                    $q->where('partners.approved', 1);
                 });
             })
             ->first();
     }
 
     // Get this month's statistics
-    public static function thisMonthStats($month = null, $year = null)
+    public static function thisMonthStats($month = null, $year = null, $paid = null)
     {
         $month = $month ?? now()->month;
         $year = $year ?? now()->year;
@@ -120,7 +120,7 @@ class Installment extends Model
                 THEN installment_amount ELSE 0 END), 0) as total_amount"),
 
                 DB::raw("COALESCE(SUM(CASE 
-                WHEN MONTH(effective_payment_date) = {$month} AND YEAR(effective_payment_date) = {$year} 
+                WHEN MONTH(effective_payment_date) = {$month} AND YEAR(effective_payment_date) = {$year} AND status='CLOSED'
                 THEN current_balance ELSE 0 END), 0) as paid_amount")
             ])
             ->whereHas('debitOrder', function ($query) {
@@ -134,7 +134,7 @@ class Installment extends Model
     }
 
     // Get today's collection statistics for a specific partner
-    public static function todayCollectionStats($partnerId, $date = null, $status = null, $deleted = null)
+    public static function todayCollectionStats($partnerId, $date = null, $status = null, $deleted = null, $paid = null)
     {
         $date = $date ?? now()->toDateString(); // Default to today's date: 'Y-m-d'
 
@@ -152,7 +152,7 @@ class Installment extends Model
             THEN outstanding_amount ELSE 0 END), 0) as outstanding_amount"),
 
             DB::raw("COALESCE(SUM(CASE
-            WHEN DATE(effective_payment_date) = '{$date}'
+            WHEN DATE(effective_payment_date) = '{$date}' AND status='CLOSED'
             THEN current_balance ELSE 0 END), 0) as paid_amount")
         ])
             ->whereHas('debitOrder', function ($query) use ($partnerId, $status, $deleted) {
@@ -189,21 +189,20 @@ class Installment extends Model
             THEN outstanding_amount ELSE 0 END), 0) as outstanding_amount"),
 
             DB::raw("COALESCE(SUM(CASE
-            WHEN MONTH(effective_payment_date) = {$month} AND YEAR(effective_payment_date) = {$year}
+            WHEN MONTH(effective_payment_date) = {$month} AND YEAR(effective_payment_date) = {$year} AND status='CLOSED'
             THEN current_balance ELSE 0 END), 0) as paid_amount")
-        ])->when($paid,  function ($query) use ( $paid) {
-            $query->where("installments.status", "=",  $paid);
-        })->whereHas('debitOrder', function ($query) use ($partnerId, $status, $deleted) {
-            $query->where('debit_orders.approved', 1)
-                ->when($partnerId, function ($q) use ($partnerId) {
-                    $q->where('debit_orders.partner_id', $partnerId);
-                })
-                ->when($status, function ($q) use ($status) {
-                    $q->where('debit_orders.status', $status);
-                })
-                ->when($deleted, function ($q) use ($deleted) {
-                    $q->where('debit_orders.deleted', $deleted);
-                });
-        })->first();
+        ])
+        ->whereHas('debitOrder', function ($query) use ($partnerId, $status, $deleted) {
+                $query->where('debit_orders.approved', 1)
+                    ->when($partnerId, function ($q) use ($partnerId) {
+                        $q->where('debit_orders.partner_id', $partnerId);
+                    })
+                    ->when($status, function ($q) use ($status) {
+                        $q->where('debit_orders.status', $status);
+                    })
+                    ->when($deleted, function ($q) use ($deleted) {
+                        $q->where('debit_orders.deleted', $deleted);
+                    });
+            })->first();
     }
 }

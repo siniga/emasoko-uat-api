@@ -63,7 +63,7 @@ class BankApiService
             if ($response) {
                 //update the corporate
                 $partner = Partner::where('reference', '=', $payload['data']['corporateReference'])->first();
-                $partner->http_response_json = $response;
+                //$partner->http_response_json = $response;
 
                 //decode the response 
                 $response = json_decode($response, true);
@@ -131,7 +131,7 @@ class BankApiService
 
         //update the corporate
         $partner = Partner::where('reference', '=', $payload['data']['corporateReference'])->first();
-        $partner->http_response_status_json = $response;
+        //$partner->http_response_status_json = $response;
 
         //Decode the response 
         $response = json_decode($response, true);
@@ -280,7 +280,7 @@ class BankApiService
 
         //update the debit order
         $debit_order = DebitOrder::where('reference', '=', $payload['data']['mandateReferenceNumber'])->first();
-        $debit_order->http_response_status_json = $response;
+        //$debit_order->http_response_status_json = $response;
 
         //decode the response 
         $response = json_decode($response, true);
@@ -358,7 +358,7 @@ class BankApiService
 
         //update the debit order
         $debit_order = DebitOrder::where('reference', '=', $payload['data']['mandateReferenceNumber'])->first();
-        $debit_order->http_response_status_json = $response;
+        //$debit_order->http_response_status_json = $response;
 
         // //decode the response 
         $response = json_decode($response, true);
@@ -564,7 +564,7 @@ class BankApiService
 
         //update collection batch 
         $collection_batch = CollectionBatch::where('collectionReference', '=', $payload['data']['collectionReference'])->first();
-        $collection_batch->http_response_json = $response;
+        //$collection_batch->http_response_json = $response;
 
         //decode the response 
         $response = json_decode($response, true);
@@ -646,7 +646,7 @@ class BankApiService
                     //1. Batch Complete
                     //1.1: read csv file
                     $data = base64_to_content($response['data']['file']['fileData']);
-                    $collection_batch->response_csv = $data;
+                    //$collection_batch->response_csv = $data;
 
                     Log::debug("== Complete Collection CSV ==");
                     Log::debug($data);
@@ -661,7 +661,7 @@ class BankApiService
                     //1. Batch Complete
                     //1.1: read csv file
                     $data = base64_to_content($response['data']['file']['fileData']);
-                    $collection_batch->response_csv = $data;
+                    //$collection_batch->response_csv = $data;
 
                     Log::debug("== Failed Collection CSV ==");
                     Log::debug($data);
@@ -676,7 +676,7 @@ class BankApiService
                     //3.Batch Processing
                     //3.1: read csv file
                     $data = base64_to_content($response['data']['file']['fileData']);
-                    $collection_batch->response_csv = $data;
+                    //$collection_batch->response_csv = $data;
 
                     Log::debug("== Processing Collection CSV ==");
                     Log::debug($data);

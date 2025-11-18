@@ -94,11 +94,6 @@ class CollectionController extends Controller
                 ->whereDate('end_date', '>=', Carbon::now())
                 ->take($limit);
 
-            echo "<pre>";
-            print_r($debit_orders->get()->toArray());
-            echo "</pre>";
-            exit();
-
             if ($debit_orders->count() > 0) {
                 //debit orders
                 $debit_orders = $debit_orders->orderBy('created_at', 'asc')->get();
@@ -545,9 +540,10 @@ class CollectionController extends Controller
                         $debit_start_date = Carbon::parse($installment->debitOrder->start_date);
                         $debit_end_date = Carbon::parse($installment->debitOrder->end_date);
                         $deleted = $installment->debitOrder->deleted;
+                        $contract_status = $installment->debitOrder->contract_status;
 
                         //1.0: check if periodicity == MONTHLY and deleted = 0
-                        if ($periodicity == "MONTHLY" && $deleted == 0) {
+                        if ($periodicity == "MONTHLY" && $contract_status == "OPEN" && $deleted == 0) {
                             //2.0: Check if mandate start date <= today
                             if ($debit_start_date->lte(Carbon::now())) {
                                 //2.1: check if debit mandate expire
@@ -659,7 +655,7 @@ class CollectionController extends Controller
             $current_month = $request->month;
 
         //partners
-        $partners = Partner::filterCondition()->where('status', 202)->get();
+        $partners = Partner::filterCondition()->where('approved', 1)->get();
 
         $arr_data = [];
         foreach ($partners as $partner) {
@@ -821,11 +817,11 @@ class CollectionController extends Controller
             $current_month = $request->month;
 
         //partners
-        $partners = Partner::filterCondition()->where('status', 202)->get();
+        $partners = Partner::filterCondition()->where('approved', 1)->get();
 
         $arr_data = [];
         foreach ($partners as $partner) {
-            $this_month = Installment::monthlyCollectionStats($partner->id, $current_month, $current_year);
+            $this_month = Installment::monthlyCollectionStats($partner->id, $current_month, $current_year, $status = null, $deleted = null);
 
             //create dictionary
             if ($this_month->paid_amount > 0) {
@@ -836,7 +832,7 @@ class CollectionController extends Controller
                     'total_amount' => $this_month->total_amount,
                     'outstanding_amount' => $this_month->outstanding_amount,
                     'paid_amount' => $this_month->paid_amount,
-                    'percent' => $this_month->paid_amount > 0 ? round(($this_month->paid_amount / $this_month->total_amount) * 100, 2) : 0
+                    'percent' => $this_month->paid_amount > 0 & $this_month->total_amount > 0 ? round(($this_month->paid_amount / $this_month->total_amount) * 100, 2) : 0
                 ];
             }
         }
@@ -973,7 +969,7 @@ class CollectionController extends Controller
             $current_date = date('Y-m-d', strtotime($request->input('payment_at')));
 
         //partners
-        $partners = Partner::filterCondition()->where('status', 202)->get();
+        $partners = Partner::filterCondition()->where('approved', 1)->get();
 
         $arr_data = [];
         foreach ($partners as $partner) {
@@ -1011,7 +1007,7 @@ class CollectionController extends Controller
     public function expected_daily_detail($uuid, Request $request)
     {
         //payment date
-        $payment_at = $request->payment_at;
+        $payment_at = date('Y-m-d', strtotime($request->payment_at));
 
         //partner
         $partner = Partner::where(['uuid' => $uuid])->firstOrfail();
@@ -1030,6 +1026,7 @@ class CollectionController extends Controller
             ->whereDate('effective_payment_date', $payment_at)
             ->orderBy('effective_payment_date')
             ->get();
+
 
         foreach ($installments as $val) {
             $arr_installments[] = [
@@ -1065,7 +1062,7 @@ class CollectionController extends Controller
     public function export_expected_daily($uuid, Request $request)
     {
         //current date
-        $current_date = $request->payment_at;
+        $payment_at = date('Y-m-d', strtotime($request->payment_at));
 
         //partner
         $partner = Partner::where(['uuid' => $uuid])->firstOrfail();
@@ -1081,7 +1078,7 @@ class CollectionController extends Controller
                     ->where('debit_orders.deleted', '=', 0)
                     ->where('debit_orders.status', '=', 240);
             })
-            ->whereDate('payment_date', $current_date)
+            ->whereDate('payment_date', $payment_at)
             ->orderBy('payment_date')
             ->get();
 
@@ -1106,7 +1103,7 @@ class CollectionController extends Controller
         }
 
         //create filename
-        $filename = "Expected_Collection_" . date('d_m_Y', strtotime($current_date)) . "_" . $partner->business_name . ".xlsx";
+        $filename = "Expected_Collection_" . date('d_m_Y', strtotime($payment_at)) . "_" . $partner->business_name . ".xlsx";
 
         //return
         return Excel::download(new CollectionPayments($arr_installments), $filename);
@@ -1121,7 +1118,7 @@ class CollectionController extends Controller
             $current_date = date('Y-m-d', strtotime($request->input('payment_at')));
 
         //partners
-        $partners = Partner::filterCondition()->where('status', 202)->get();
+        $partners = Partner::filterCondition()->where('approved', 1)->get();
 
         $arr_data = [];
         foreach ($partners as $partner) {
@@ -1159,7 +1156,7 @@ class CollectionController extends Controller
     public function actual_daily_detail($uuid, Request $request)
     {
         //payment date
-        $payment_at = $request->payment_at;
+        $payment_at = date('Y-m-d', strtotime($request->payment_at));
 
         //partner
         $partner = Partner::where(['uuid' => $uuid])->firstOrfail();
@@ -1212,7 +1209,7 @@ class CollectionController extends Controller
     public function export_actual_daily($uuid, Request $request)
     {
         //current date
-        $current_date = $request->payment_at;
+        $payment_at = date('Y-m-d', strtotime($request->payment_at));
 
         //partner
         $partner = Partner::where(['uuid' => $uuid])->firstOrfail();
@@ -1261,7 +1258,7 @@ class CollectionController extends Controller
     public function reconciliation(Request $request)
     {
         //read file
-        $file = fopen(public_path('assets/reports/03/Amacha_Credit.csv'), 'r');
+        $file = fopen(public_path('assets/reports/03/Waningo_MicroCredit_31110037602.csv'), 'r');
         fgetcsv($file); // Skip the first row
 
         //array of installments
@@ -1311,30 +1308,10 @@ class CollectionController extends Controller
             //     $process_data = $this->deductionService->processInstallment($installment, $paid_amount, $mandate_ref);
             // }
         }
-        fclose($file);
+        //fclose($file);
+
         // echo "<pre>";
         // print_r($arr_installments);
-
-        //create new file
-        //$new_file = fopen(public_path("assets/reports/03/Amacha_Credit_03_2025.csv"), "w");
-
-        // //header
-        // fputcsv($new_file, [
-        //     "InstallmentId",
-        //     "MandateReference",
-        //     "AccountName",
-        //     "AccountNumber",
-        //     "PaidAmount",
-        //     "InstallmentAmount",
-        //     "PaymentDate",
-        //     "NMBStatus",
-        //     "eMakatoStatus"
-        // ]);
-
-        // foreach ($arr_installments as $line) {
-        //     fputcsv($new_file, $line);
-        // }
-        // fclose($new_file);
 
         //response
         return response()->json(['success' => false, 'success_msg' => "File Processed"]);
@@ -1415,7 +1392,7 @@ class CollectionController extends Controller
 
         //select active debit orders
         $debit_orders = DebitOrder::where(['approved' => 1, 'deleted' => 0, 'status' => 240, 'debit_type' => 'FIXED'])
-            ->where('end_date', '>=', now())->whereBetween("id", [3301, 3400])->get();
+            ->where('end_date', '>=', now())->whereBetween("id", [4701, 4800])->get();
 
         // Open file handle
         $handle = fopen($filePath, 'w');
@@ -1438,16 +1415,10 @@ class CollectionController extends Controller
                 if ($installments == 1)
                     fputcsv($handle, [$debit_order->reference]);
 
-                echo "Reference: {$debit_order->reference} - Installments: {$installments}<br>";
+                echo "TI: {$total_installment_amount} TD: {$debit_order->total_amount} -- Reference: {$debit_order->reference} - Installments: {$installments}<br>";
             }
         }
         fclose($handle);
-
-        // return response()->json([
-        //     'status' => 'success',
-        //     'message' => 'csv generated',
-        //     'file' => asset('assets/reports/05/' . $filename)
-        // ]);
     }
 
     public function update_collection_values(Request $request)
@@ -1471,7 +1442,7 @@ class CollectionController extends Controller
 
             // Get the last 2 installments for this debit_order_id, ordered by created_at or id
             $installments = Installment::where('debit_order_id', $debit_order->id)
-                ->orderBy('id', 'desc')
+                ->orderBy('installment_order', 'desc')
                 ->take(2)
                 ->get();
 
@@ -1552,9 +1523,10 @@ class CollectionController extends Controller
         return response()->json(['error' => false, 'success' => 'Debit order updated']);
     }
 
+    //delete collection batch
     public function delete_collection_batch()
     {
-        $collectionReference = "10568";
+        $collectionReference = "10576";
 
         //collection batch
         $collection_batch = CollectionBatch::where(['collectionReference' => $collectionReference])->firstOrFail();
@@ -1592,6 +1564,7 @@ class CollectionController extends Controller
         return response()->json(['error' => false, 'success_msg' => 'Collection batch deleted successfully']);
     }
 
+    //update collection date
     public function update_collection_date()
     {
         $reference = [10957, 10964, 10965, 10966, 10967, 10968, 10969, 10961, 10970, 10972, 10973, 10974, 10975, 10976, 10977, 10978, 10979, 10980, 10981, 10982, 10983, 10984, 10985, 10986, 10987, 10988, 10989, 10990, 10991, 10992, 10993, 10994, 10995, 10996, 10997, 10998, 10999, 11000, 11001, 11002, 11003, 11004, 11005, 11006, 11008, 11009, 11010, 11011, 11016, 11017, 11018];

@@ -160,7 +160,7 @@
 
                             <div class="col-md-6">
                                 <div class="text-sm-end d-none d-sm-block">
-                                    @if (Auth::user()->hasRole(['admin']))
+                                    @if (Auth::user()->hasRole(['admin']) || Auth::user()->hasRole(['Company_Approver']))
                                         <div class="btn-group">
                                             <button class="btn btn-secondary btn-sm text-sm" type="button">
                                                 Actions
@@ -258,7 +258,7 @@
                                                     @elseif($values->status == 900)
                                                         <span class="badge badge-pill bg-success">Closed</span>
                                                     @elseif($values->status == 999)
-                                                        <span class="badge badge-pill badge-soft-danger">Canceled</span>
+                                                        <span class="badge badge-pill badge-soft-danger">Cancelled</span>
                                                     @endif
                                                 </td>
                                                 <td>{{ date('d-m-Y H:i', strtotime($values->created_at)) }}</td>

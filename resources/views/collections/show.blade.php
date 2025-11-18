@@ -59,8 +59,7 @@
 
                             <div class="text-sm-end d-none d-sm-block">
                                 <template x-if="deleted==0">
-                                    <template
-                                        x-if="status==100 || status ==235 || status ==239 || status==249 || status==403 || status==405 || status==500 || status==501">
+                                    <template x-if="status==100 || status ==200 || status ==230 || status ==235 || status ==239 || status==249 || status==403 || status==405 || status==500 || status==501">
                                         <a href="{{ route('collections.archive', $batch->id) }}" title="Archive"
                                             class="btn btn-warning text-medium btn-sm archive">
                                             <i class="bx bx-archive-in font-size-12"></i> Archive Batch
@@ -68,14 +67,14 @@
                                     </template>
                                 </template>
 
-                                @if (Auth::user()->hasRole(['admin']))
+                                <!-- @if (Auth::user()->hasRole(['admin']))
                                     <template x-if="recreated == 0 && show_create_button==true && number_of_failed_installments > 0">
                                         <a href="{{ route('collections.create-failed', $batch->id) }}" 
                                         class="btn btn-secondary text-medium btn-sm" title="Recreate batch">
                                            <i class="fas fa-plus-square"></i> Create Failed Collections
                                         </a>
                                     </template>
-                                @endif
+                                @endif -->
 
                                 @if (Auth::user()->hasRole(['admin']))
                                     <template x-if="pushed==0">
@@ -144,12 +143,12 @@
 
                                         <th width=25%>Status</th>
                                         <td width=25%>
-                                            @if ($batch->pushed == 0 && $batch->failed == 0)
-                                                <span class="badge badge-pill badge-soft-warning">On Progress</span>
+                                            @if($batch->pushed == 0 && $batch->failed == 0)
+                                                <span class="badge bg-warning">On Progress</span>
                                             @elseif($batch->processed == 1 && $batch->failed == 0)
-                                                <span class="badge badge-pill badge-soft-success">Pass</span>
-                                            @elseif($batch->processed == 1 && $batch->failed == 1)
-                                                <span class="badge badge-pill badge-soft-danger">Failed</span>
+                                                <span class="badge badge-success">Pass</span>
+                                            @elseif($batch->processed == 1  && $batch->failed == 1)
+                                                <span class="badge badge-danger">Failed</span>
                                             @endif
                                         </td>
                                     </tr>
@@ -319,9 +318,7 @@
                                                     <td colspan="4" class="font-weight-600">Total</td>
                                                     <td class="text-sm-end">{{ number_format($sum_expected_amount) }}</td>
                                                     <td class="text-sm-end">{{ number_format($sum_paid_amount) }}</td>
-                                                    <td class="text-sm-end">{{ number_format($sum_current_balance) }}</td>
-                                                    <td class="text-sm-end">{{ number_format($sum_outstanding_amount) }}
-                                                    </td>
+                                                    <td class="text-sm-end">{{ number_format($sum_outstanding_amount) }}</td>
                                                     <td colspan="2"></td>
                                                 </tr>
                                             </tbody>
@@ -383,7 +380,7 @@
                         }).then(response => response.json())
                         .then(responseJson => {
                             $('#message_wrp').html(
-                                "<div class='alert alert-success rounded-sm'>Collection batch uploaded, Wait for 10 minutes before query status.</div>"
+                                "<div class='alert alert-success rounded-sm'>Collection batch uploaded, Wait for 2-5 minutes and refresh the page.</div>"
                             );
                             this.pushed = 1
 
@@ -415,7 +412,7 @@
                         }).then(response => response.json())
                         .then(responseJson => {
                             $('#message_wrp').html(
-                                "<div class='alert alert-success rounded-sm'>Collection status fetched</div>"
+                                "<div class='alert alert-success rounded-sm'>Collection status are processed, Wait for 2-5 minutes and refresh the page.</div>"
                             );
 
                             setTimeout(function() {
@@ -430,7 +427,7 @@
 
                         }).finally(() => {
                             this.formLoading = false;
-                            this.btnStatus = '<i class="fa fa-check"></i> Collection Status';
+                            this.btnStatus = '<i class="fa fa-check"></i> Query Status';
                         });
                 },
             }

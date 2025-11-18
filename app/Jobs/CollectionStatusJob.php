@@ -44,6 +44,9 @@ class CollectionStatusJob implements ShouldQueue
         //initialize deduction service
         $deduction_service = new DeductionService();
 
+        Log::info('Current directory: ' . getcwd());
+        Log::info(app()->environment());
+
         //create authentication token
         $AUTH_BEARER_TOKEN = $this->auth->generateToken();
 

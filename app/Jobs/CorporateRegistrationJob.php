@@ -68,7 +68,7 @@ class CorporateRegistrationJob implements ShouldQueue
 
         //update the corporate
         $partner = Partner::where('reference', '=', $payload['data']['corporateReference'])->first();
-        $partner->http_response_json = $response;
+        //$partner->http_response_json = $response;
 
         //decode the response 
         $response = json_decode($response, true);

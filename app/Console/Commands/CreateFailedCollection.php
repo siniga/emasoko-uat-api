@@ -52,17 +52,18 @@ class CreateFailedCollection extends Command
         //current month
         $previous_month = now()->subMonth()->month;
         $current_year = now()->year;
-        Log::debug("== Failed Collection for Current Month: '{$previous_month}' ==");
-        Log::debug("== Failed Collection for Current Year: '{$current_year}' ==");
+        Log::debug("== Previous Month: '{$previous_month}' ==");
+        Log::debug("== Current Year: '{$current_year}' ==");
 
-        //collection references
-        $collection_batches = CollectionBatch::whereMonth("created_at", "=", $previous_month)
-            ->whereYear("created_at", "=", $current_year)
-            ->orderBy('collectionReference', 'ASC');
+        //collection references 13450
+        $collection_batches = CollectionBatch::where('collectionReference', '=', 13450);
+        // $collection_batches = CollectionBatch::whereMonth("created_at", "=", $previous_month)
+        //     ->whereYear("created_at", "=", $current_year)
+        //     ->orderBy('collectionReference', 'ASC');
 
         if ($collection_batches->count() > 0) {
-            //take the first 5 collection batches
-            $collection_batches = $collection_batches->take(5)->get();
+            //take the first 20 collection batches
+            $collection_batches = $collection_batches->get();
 
             foreach ($collection_batches as $collection_batch) {
                 //installment_ids
@@ -73,6 +74,10 @@ class CreateFailedCollection extends Command
                     $q->orWhere('status', 'FAILED')
                         ->orWhere('status', 'FUNDSCHECK');
                 })->where('remarks', '!=', 'Account Is Valid')->get();
+
+                //Logging installments
+                Log::debug("== Collection Reference: '{$collection_batch->collectionReference}' ==");
+                Log::debug("== Number of Failed Installments: '{$installments->count()}' ==");
 
                 if ($installments->isNotEmpty()) {
                     //1. Create new collection batch

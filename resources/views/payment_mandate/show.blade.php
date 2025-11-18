@@ -62,7 +62,7 @@
                                         </template>
 
                                         <template x-if="deleted==0">
-                                            <template x-if="status==201 || status==249 || status==403 || status==430 || status==405 || status==500 || status==501">
+                                            <template x-if="status==100 || status==200 || status==201 || status==249 || status==403 || status==430 || status==405 || status==500 || status==501">
                                                 <a class="dropdown-item text-sm" x-on:click="archiveMandate();"
                                                     href="javascript:void(0);">
                                                     Archive Mandate
@@ -70,7 +70,7 @@
                                             </template>
                                         </template>
 
-                                        <template x-if="status==201 || status==202 || status==240 || status==249 || status==405 || status==500">
+                                        <template x-if="status==201 || status==202 || status==240 || status==249 || status==405 || status==403 || status==500">
                                             <a class="dropdown-item text-sm" title="Cancel Mandate"
                                                 x-on:click="openMandateCancellationModal();" href="javascript:void(0);">
                                                 Cancel Mandate
@@ -296,12 +296,12 @@
                                         </td>
                                     </tr>
 
-                                    <tr>
+                                    <!-- <tr>
                                         <th>Paid Installment</th>
                                         <td>{{ $debit_order->paid_installment ?? '' }}</td>
                                         <th>UnPaid Installment</th>
                                         <td>{{ $debit_order->installment_number - $debit_order->paid_installment }}</td>
-                                    </tr>
+                                    </tr> -->
 
                                     <tr>
                                         <th>Deduction Start Date</th>

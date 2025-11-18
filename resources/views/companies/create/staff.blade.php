@@ -333,7 +333,7 @@
                                 }, 300);
                             }   else if(response.success == false){
                                      $('.form-message').html(
-                                        '<div class="alert alert-danger py-2.5 px-2">' + responseJson.message + '</div>'
+                                        '<div class="alert alert-danger py-2.5 px-2">' + response.message + '</div>'
                                     );
                             }
                         },
@@ -341,11 +341,11 @@
                             //display errors
                             if (jQuery.type(error.response.errors) == "object") {
                                 $('.form-message').html('');
-                                $.each(error.responseJson.errors, function(key, value) {
+                                $.each(error.response.errors, function(key, value) {
                                     $('.form-message').append('<div class="alert alert-danger">' + value + '</div>');
                                 });
                             } else {
-                                $('.form-message').html('<div class="alert alert-danger">' + error.responseJson.errors + '</div>');
+                                $('.form-message').html('<div class="alert alert-danger">' + error.response.errors + '</div>');
                             }
 
                             //change submit button

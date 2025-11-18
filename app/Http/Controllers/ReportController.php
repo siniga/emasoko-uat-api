@@ -57,7 +57,7 @@ class ReportController extends Controller
                         'created_by'
                     )
                     ->whereHas('partner', function ($q) {
-                        $q->where('partners.status', 202);
+                        $q->where('partners.approved', 1);
                     });
 
                 //filtering start and end date
@@ -168,7 +168,7 @@ class ReportController extends Controller
                     ->whereHas('debitOrder', function ($query) {
                         $query->where('debit_orders.approved', '=', 1)
                             ->whereHas('partner', function ($q) {
-                                $q->where('partners.status', 202);
+                                $q->where('partners.approved', 1);
                             });
                     });
 
@@ -261,7 +261,7 @@ class ReportController extends Controller
                     ->whereHas('debitOrder', function ($query) {
                         $query->where('debit_orders.approved', '=', 1)
                             ->whereHas('partner', function ($q) {
-                                $q->where('partners.status', 202);
+                                $q->where('partners.approved', 1);
                             });
                     });
 
@@ -270,6 +270,9 @@ class ReportController extends Controller
                     //format dates
                     $start_at = Carbon::createFromFormat('Y-m-d', $request->start_at)->startOfDay();
                     $end_at = Carbon::createFromFormat('Y-m-d', $request->end_at)->endOfDay();
+
+                    Log::debug("Report Start_Date = {$start_at}");
+                    Log::debug("Report End_Date = {$end_at}");
 
                     $installments = $installments->whereBetween('installments.effective_payment_date', [$start_at, $end_at]);
                 }

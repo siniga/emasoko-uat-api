@@ -15,6 +15,7 @@ use Carbon\Carbon;
 use DateTime;
 use Exception;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Collection;
@@ -120,9 +121,10 @@ class DeductionService
         return $newDate;
     }
 
+    // get open and failed installments
     public function getInstallments(Partner $partner, $current_date, ?int $limit = null): Collection
     {
-        $picked = collect(); // Collection<Installment>
+        $picked = collect();
 
         // Stream debit orders in chunks to avoid loading everything at once
         DebitOrder::query()
@@ -150,8 +152,8 @@ class DeductionService
                         ->orderBy('installments.payment_date')
                         ->first();
 
-                        Log::debug("== Opened Installment Information ==");
-                        Log::debug($open);
+                    // Log::debug("== Opened Installment Information ==");
+                    // Log::debug($open);
 
                     if ($open) {
                         $picked->push($open);
@@ -164,8 +166,8 @@ class DeductionService
                             ->orderBy('installments.payment_date')
                             ->first();
 
-                        Log::debug("== Failed Installment Information ==");
-                        Log::debug($fallback);
+                        // Log::debug("== Failed Installment Information ==");
+                        // Log::debug($fallback);
 
                         if ($fallback) {
                             $picked->push($fallback);
@@ -407,6 +409,7 @@ class DeductionService
                 } else if ($status == "SUCCESS") {
                     //updated status of installment
                     $installment->last_paid_amount = $amount;
+                    $installment->remarks = $message;
                     $installment->save();
 
                     //increment success count
@@ -470,8 +473,8 @@ class DeductionService
     //process installment
     public function processInstallment(Installment $installment, $amount)
     {
-        Log::debug("== Installment Information ==");
-        Log::debug($installment);
+        // Log::debug("== Installment ==");
+        // Log::debug($installment);
 
         //installment status
         $installment_status = strtoupper($installment->status);
@@ -535,9 +538,9 @@ class DeductionService
                 $outstandingAmt = number_format($outstanding_amount);
                 $installmentAmt = number_format($installment_amount);
 
-                //send message for outstanding amount and current balance from eMakato.
-                $phone = $installment->debitOrder->customerAccount->phone;
-                $message = "Makato ya tarehe {$payment_date} ya kiasi cha shilingi {$installmentAmt} yamekamilishwa na kiasi kilichobaki ni Tsh {$outstandingAmt}. Asante kwa kutumia eMakato.";
+            //send message for outstanding amount and current balance from eMakato.
+            $phone = $installment->debitOrder->customerAccount->phone;
+            $message = "Makato ya tarehe {$payment_date} ya kiasi cha shilingi {$installmentAmt} yamekamilishwa na kiasi kilichobaki ni Tsh {$outstandingAmt}. Asante kwa kutumia eMakato.";
 
                 //Send SMS
                 $data = ["phone" => $phone, "message" => $message];

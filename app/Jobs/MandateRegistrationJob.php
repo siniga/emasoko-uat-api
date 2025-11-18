@@ -67,7 +67,8 @@ class MandateRegistrationJob implements ShouldQueue
 
         //update debit response
         $debit_order = DebitOrder::where('reference', '=', $payload['data']['mandateReferenceNumber'])->first();
-        $debit_order->http_response_json = $response;
+        Log::debug("== Debit Mandate ==");
+        Log::debug($debit_order);
 
         //decode the response 
         $response = json_decode($response, true);
