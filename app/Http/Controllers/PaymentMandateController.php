@@ -611,7 +611,7 @@ class PaymentMandateController extends Controller
             //request response
             $success = true;
             $response_code = 201;
-            $remarks = "Mandate registration request sent to CRDB.";
+            $remarks = "Mandate registration request sent to CRDB. Go to customer SimBanking and approve mandate.";
         }
 
         //response

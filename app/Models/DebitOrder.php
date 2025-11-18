@@ -119,7 +119,7 @@ class DebitOrder extends Model
             ])
             ->whereIn('debit_orders.approved', [0, 1, 2])
             ->whereHas('partner', function ($q) {
-                $q->where('partners.status', 202);
+                $q->where('partners.approved', 1);
             })
             ->groupBy('debit_orders.approved')
             ->orderBy('debit_orders.approved')

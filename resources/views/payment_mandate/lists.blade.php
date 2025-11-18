@@ -160,7 +160,7 @@
 
                             <div class="col-md-6">
                                 <div class="text-sm-end d-none d-sm-block">
-                                    @if (Auth::user()->hasRole(['admin']))
+                                    @if (Auth::user()->hasRole(['admin']) || Auth::user()->hasRole(['Company_Approver']))
                                         <div class="btn-group">
                                             <button class="btn btn-secondary btn-sm text-sm" type="button">
                                                 Actions

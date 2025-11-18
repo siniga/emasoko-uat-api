@@ -67,14 +67,14 @@
                                     </template>
                                 </template>
 
-                                @if (Auth::user()->hasRole(['admin']))
+                                <!-- @if (Auth::user()->hasRole(['admin']))
                                     <template x-if="recreated == 0 && show_create_button==true && number_of_failed_installments > 0">
                                         <a href="{{ route('collections.create-failed', $batch->id) }}" 
                                         class="btn btn-secondary text-medium btn-sm" title="Recreate batch">
                                            <i class="fas fa-plus-square"></i> Create Failed Collections
                                         </a>
                                     </template>
-                                @endif
+                                @endif -->
 
                                 @if (Auth::user()->hasRole(['admin']))
                                     <template x-if="pushed==0">

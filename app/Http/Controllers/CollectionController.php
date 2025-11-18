@@ -540,9 +540,10 @@ class CollectionController extends Controller
                         $debit_start_date = Carbon::parse($installment->debitOrder->start_date);
                         $debit_end_date = Carbon::parse($installment->debitOrder->end_date);
                         $deleted = $installment->debitOrder->deleted;
+                        $contract_status = $installment->debitOrder->contract_status;
 
                         //1.0: check if periodicity == MONTHLY and deleted = 0
-                        if ($periodicity == "MONTHLY" && $deleted == 0) {
+                        if ($periodicity == "MONTHLY" && $contract_status == "OPEN" && $deleted == 0) {
                             //2.0: Check if mandate start date <= today
                             if ($debit_start_date->lte(Carbon::now())) {
                                 //2.1: check if debit mandate expire
@@ -654,7 +655,7 @@ class CollectionController extends Controller
             $current_month = $request->month;
 
         //partners
-        $partners = Partner::filterCondition()->where('status', 202)->get();
+        $partners = Partner::filterCondition()->where('approved', 1)->get();
 
         $arr_data = [];
         foreach ($partners as $partner) {
@@ -816,11 +817,11 @@ class CollectionController extends Controller
             $current_month = $request->month;
 
         //partners
-        $partners = Partner::filterCondition()->where('status', 202)->get();
+        $partners = Partner::filterCondition()->where('approved', 1)->get();
 
         $arr_data = [];
         foreach ($partners as $partner) {
-            $this_month = Installment::monthlyCollectionStats($partner->id, $current_month, $current_year);
+            $this_month = Installment::monthlyCollectionStats($partner->id, $current_month, $current_year, $status = null, $deleted = null);
 
             //create dictionary
             if ($this_month->paid_amount > 0) {
@@ -831,7 +832,7 @@ class CollectionController extends Controller
                     'total_amount' => $this_month->total_amount,
                     'outstanding_amount' => $this_month->outstanding_amount,
                     'paid_amount' => $this_month->paid_amount,
-                    'percent' => $this_month->paid_amount > 0 ? round(($this_month->paid_amount / $this_month->total_amount) * 100, 2) : 0
+                    'percent' => $this_month->paid_amount > 0 & $this_month->total_amount > 0 ? round(($this_month->paid_amount / $this_month->total_amount) * 100, 2) : 0
                 ];
             }
         }
@@ -968,7 +969,7 @@ class CollectionController extends Controller
             $current_date = date('Y-m-d', strtotime($request->input('payment_at')));
 
         //partners
-        $partners = Partner::filterCondition()->where('status', 202)->get();
+        $partners = Partner::filterCondition()->where('approved', 1)->get();
 
         $arr_data = [];
         foreach ($partners as $partner) {
@@ -1117,7 +1118,7 @@ class CollectionController extends Controller
             $current_date = date('Y-m-d', strtotime($request->input('payment_at')));
 
         //partners
-        $partners = Partner::filterCondition()->where('status', 202)->get();
+        $partners = Partner::filterCondition()->where('approved', 1)->get();
 
         $arr_data = [];
         foreach ($partners as $partner) {

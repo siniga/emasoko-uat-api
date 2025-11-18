@@ -36,8 +36,20 @@ class CRDBMandateRegistrationJob implements ShouldQueue
      */
     public function handle()
     {
+        //update the debit order
+        $debit_order = DebitOrder::where('reference', '=', $this->data['mandateReferenceNumber'])->first();
+        if (!$debit_order) {
+            Log::warning('Debit order not found for mandateReferenceNumber', [
+                'mandateReferenceNumber' => $this->data['mandateReferenceNumber'] ?? null
+            ]);
+            // Bail early; nothing to update
+            return;
+        }
+
         //create authentication token
         $AUTH_BEARER_TOKEN = $this->auth->generateToken();
+        Log::debug("== CRDB Auth Token ==");
+        Log::debug($AUTH_BEARER_TOKEN);
 
         //headers
         $headers = [
@@ -50,34 +62,73 @@ class CRDBMandateRegistrationJob implements ShouldQueue
             'Accept' => 'application/json'
         ];
 
+        //Payload
+        Log::debug("== CRDB Payload ==");
+        Log::debug($this->data['payload']);
+
         //API URL
         $API_URL = env('CRDB_API_URL');
 
         //push payload => NMB Direct Debits
-        $response = Http::withHeaders($headers)->post($API_URL, $this->data['payload']);
+        $httpResponse = Http::withHeaders($headers)->post($API_URL, $this->data['payload']);
 
-        //update the debit order
-        $debit_order = DebitOrder::where('reference', '=', $this->data['mandateReferenceNumber'])->first();
-        $debit_order->crdb_request_id = $this->data['requestId'];
-        $debit_order->http_response_status_json = $response;
+        Log::debug('== Raw Response Body ==');
+        Log::debug($httpResponse->body());
 
-        //decode the response 
-        $response = json_decode($response, true);
+        //http response
+        $raw = $httpResponse->body();
 
-        //logging response
-        Log::debug('== MandateRegistration Response ==');
-        Log::debug($response);
+        // strip UTF-8 BOM + trim
+        $raw = preg_replace('/^\xEF\xBB\xBF/', '', trim($raw ?? ''));
 
-        // Separate status code
-        if ($response['ResponseHeader']['StatusCode'] == 1000) {
-            $debit_order->status = 201;
-            $debit_order->crdb_reference = $response['ResponseBody']['Reference'];
-        } else if ($response['ResponseHeader']['StatusCode'] == 1001) {
+        // remove trailing commas before } or ] (JSON5-style but not valid JSON)
+        $sanitized = preg_replace('/,\s*(\}|\])/m', '$1', $raw);
+
+        // now decode with error reporting
+        $response = json_decode($sanitized, true);
+
+        if (!is_array($response)) {
             $debit_order->status = 403;
+            $debit_order->http_response_code = $httpResponse->status();
+            $debit_order->remarks = 'HTTP error or invalid JSON from gateway';
+            $debit_order->save();
+
+            Log::error('MandateRegistration failed: HTTP error or invalid JSON', [
+                'json_error' => json_last_error_msg(),
+                'sample'     => Str::limit($raw, 800),
+            ]);
+            return;
         }
 
-        $debit_order->http_response_code = $response['ResponseHeader']['StatusCode'];
-        $debit_order->remarks = $response['ResponseHeader']['StatusDesc'];
+        // safely read values
+        $statusCode = data_get($response, 'ResponseHeader.StatusCode');
+        $statusDesc = data_get($response, 'ResponseHeader.StatusDesc');
+        $responseId = data_get($response, 'ResponseBody.RequestId');
+        $reference  = data_get($response, 'ResponseBody.Reference');
+        Log::debug('Parsed header', compact('statusCode', 'statusDesc', 'reference'));
+
+        // Handle business logic only if StatusCode is present
+        if ($statusCode === 1000) {
+            $debit_order->status = 201;  // success
+            if ($reference) {
+                $debit_order->crdb_request_id = $responseId;
+                $debit_order->crdb_reference = $reference;
+            }
+        } elseif ($statusCode === 1001) {
+            $debit_order->status = 403;  // failure
+        } else {
+            // Unknown/other code: record it for investigation
+            Log::warning('MandateRegistration returned unexpected StatusCode', [
+                'StatusCode' => $statusCode,
+                'response'    => $response,
+            ]);
+        }
+
+        // Persist shared fields (guard nulls)
+        $debit_order->http_response_code = $statusCode ?? $httpResponse->status();
+        $debit_order->remarks = $statusDesc ?: 'No StatusDesc in response';
         $debit_order->save();
+
+        Log::debug('== CRDB Mandate registered successfully ===');
     }
 }
