@@ -12,9 +12,12 @@ use App\Models\PartnerAccount;
 use App\Models\Installment;
 use App\Models\InstallmentPayment;
 use Carbon\Carbon;
+use DateTime;
+use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Collection;
 
 class DeductionService
 {
@@ -91,6 +94,88 @@ class DeductionService
         $debit_end_date = date('Y-m-d', strtotime($last_installment_date . " +2 year"));
 
         return $debit_end_date;
+    }
+
+    //create new collection date
+    public function createCollectionDate($payment_date)
+    {
+        //original date
+        $original = Carbon::parse($payment_date);
+
+        // Get current month and year
+        $currentMonth = now()->month;
+        $currentYear = now()->year;
+
+        // Adjust year if original was in December and we're now in January
+        $newYear = ($original->month === 12 && $currentMonth === 1) ? $original->year + 1 : $original->year;
+
+        // Try to build new date with current month, original day and adjusted year
+        try {
+            $newDate = Carbon::create($newYear, $currentMonth, $original->day);
+        } catch (\Exception $e) {
+            // Day is invalid for the current month (e.g., Feb 30)
+            $newDate = Carbon::create($newYear, $currentMonth, 1)->endOfMonth();
+        }
+
+        return $newDate;
+    }
+
+    public function getInstallments(Partner $partner, $current_date, ?int $limit = null): Collection
+    {
+        $picked = collect(); // Collection<Installment>
+
+        // Stream debit orders in chunks to avoid loading everything at once
+        DebitOrder::query()
+            ->where('approved', 1)
+            ->where('status', 240)
+            ->where('contract_status', 'OPEN')
+            ->where('deleted', 0)
+            ->whereDate('next_debit_date', $current_date)
+            ->whereHas('partner', function ($q) use ($partner) {
+                $q->where('partners.id', $partner->id);
+            })
+            ->orderBy('id') // required for chunkById determinism
+            ->chunkById(200, function ($orders) use (&$picked, $current_date, $limit) {
+                foreach ($orders as $debitOrder) {
+                    // If a limit was provided and we've reached it, stop early.
+                    if ($limit !== null && $picked->count() >= $limit) {
+                        return false; // abort further chunking
+                    }
+
+                    // 1) Prefer OPEN + not created + due today (earliest first)
+                    $open = $debitOrder->installments()
+                        ->where('installments.status', 'OPEN')
+                        ->where('installments.created', 0)
+                        ->whereDate('installments.payment_date', $current_date)
+                        ->orderBy('installments.payment_date')
+                        ->first();
+
+                        Log::debug("== Opened Installment Information ==");
+                        Log::debug($open);
+
+                    if ($open) {
+                        $picked->push($open);
+                    } else {
+                        // 2) Fallback: earliest FAILED/FUNDSCHECK before today, exclude "Account Is Valid"
+                        $fallback = $debitOrder->installments()
+                            ->whereIn('status', ['FAILED', 'FUNDSCHECK'])
+                            ->where('remarks', '!=', 'Account Is Valid')
+                            ->whereDate('payment_date', '<', $current_date)
+                            ->orderBy('installments.payment_date')
+                            ->first();
+
+                        Log::debug("== Failed Installment Information ==");
+                        Log::debug($fallback);
+
+                        if ($fallback) {
+                            $picked->push($fallback);
+                        }
+                    }
+                }
+            });
+
+        // If limit is set, trim; otherwise return everything collected.
+        return $limit !== null ? $picked->take($limit)->values() : $picked->values();
     }
 
     //create debit order installments
@@ -409,7 +494,7 @@ class DeductionService
                 $current_balance = $installment->current_balance + $amount;
                 $installment->outstanding_amount = $outstanding_amount;
                 $installment->current_balance = $current_balance;
-                $installment->effective_payment_date = Carbon::now()->toDateString();
+                //$installment->effective_payment_date = Carbon::now()->toDateString();
                 $installment->payment_reference = $reference;
 
                 //2. update installment status {OPEN, CLOSED, PARTIAL_PAID}
@@ -486,17 +571,21 @@ class DeductionService
     //update debit date
     public function updateNextDebitDate($debit_id, $payment_date)
     {
-        //next installment
-        $next_installment = Installment::where(['debit_order_id' => $debit_id, 'status' => 'OPEN'])
-            ->whereDate('payment_date', '>', $payment_date)->orderBy("payment_date", "ASC");
-
-        if ($next_installment->count() > 0) {
-            $next_installment = $next_installment->first();
+        try {
+            //next payment date
+            $date = new DateTime($payment_date);
+            $date->modify('+1 month');
+            $new_payment_date = $date->format('Y-m-d');
 
             //update next debit date
             $debit_order = DebitOrder::findOrFail($debit_id);
-            $debit_order->next_debit_date = $next_installment->payment_date;
+            $debit_order->next_debit_date = $new_payment_date;
             $debit_order->save();
+
+            //Log
+            Log::debug("Next Debit Date => Updated");
+        } catch (Exception $e) {
+            Log::debug("Invalid date format: " . $e->getMessage());
         }
     }
 

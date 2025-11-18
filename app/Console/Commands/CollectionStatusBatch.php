@@ -34,7 +34,7 @@ class CollectionStatusBatch extends Command
      *
      * @return void
      */
-    public function __construct()
+    public function __construct(protected BankPayloadService $bankPayload)
     {
         parent::__construct();
     }
@@ -48,10 +48,6 @@ class CollectionStatusBatch extends Command
     {
         $current_date = Carbon::now();
         Log::debug("== Creating collection status: '{$current_date}' ==");
-
-        //initialize deduction service
-        $bankPayload = new BankPayloadService();
-        $bankApi =  new BankApiService();
 
         //get the start and end of the month
         $start = now()->startOfMonth();
@@ -71,7 +67,7 @@ class CollectionStatusBatch extends Command
             $batch = CollectionBatch::findOrFail($value->id);
 
             //create payload
-            $payload = $bankPayload->collectionStatusPayload($batch);
+            $payload = $this->bankPayload->collectionStatusPayload($batch);
 
             //3. BackgroundJob for creating collection batches
             dispatch(new CollectionStatusJob($payload));
@@ -80,7 +76,6 @@ class CollectionStatusBatch extends Command
 
         //logging successiong
         Log::debug("== Success on creating collection batch status ==");
-
         return 200;
     }
 }

@@ -31,7 +31,7 @@ class PushCollectionBatch extends Command
      *
      * @return void
      */
-    public function __construct()
+    public function __construct(protected BankPayloadService $bankPayload)
     {
         parent::__construct();
     }
@@ -43,22 +43,26 @@ class PushCollectionBatch extends Command
      */
     public function handle()
     {
-        $current_date = Carbon::now();
-        Log::debug("== Push collection batch: '{$current_date}' ==");
-        
-        $bankPayload = new BankPayloadService();
-        $bankApi =  new BankApiService();
+        //current month
+        $current_month = now()->month;
+        $current_year = now()->year;
 
         //get unprocessed collection batch
-        $collection_batches = CollectionBatch::where(['pushed' => 0])->orderBy('collectionReference', 'ASC');
+        $collection_batches = CollectionBatch::where(['pushed' => 0, 'deleted' => 0])
+            ->whereMonth("created_at", "=", $current_month)
+            ->whereYear("created_at", "=", $current_year)
+            ->orderBy('collectionReference', 'ASC');
 
         if ($collection_batches->count() > 0) {
             //take the first 10 collection batches
-            $collection_batches = $collection_batches->get();
+            $collection_batches = $collection_batches->take(10)->get();
 
             foreach ($collection_batches as $value) {
-                //single batch
+                //batch information
                 $batch = CollectionBatch::findOrFail($value->id);
+
+                //Log the collection batches
+                Log::debug("== Pushed collection batch: '{$batch->collectionReference}' ==");
 
                 if (!empty($batch->request_csv)) {
                     //1. Create parameters
@@ -66,7 +70,7 @@ class PushCollectionBatch extends Command
                     $arr_installments = explode(",", $batch->installment_ids);
 
                     //2. Create payload for collection 
-                    $payload = $bankPayload->collectionPayload($batch, $csv);
+                    $payload = $this->bankPayload->collectionPayload($batch, $csv);
 
                     //3. BackgroundJob for creating collection batches
                     dispatch(new PushCollectionJob($payload, $arr_installments));
@@ -74,8 +78,9 @@ class PushCollectionBatch extends Command
                 sleep(5); //sleep for 5 seconds
             }
         }
-        Log::debug("== Success on pushing collection batch ==");
 
-        return 0;
+        // Log the collection batches
+        Log::debug("== Success on pushing collection batch ==");
+        return 200;
     }
 }

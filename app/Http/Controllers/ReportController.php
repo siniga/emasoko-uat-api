@@ -161,7 +161,7 @@ class ReportController extends Controller
 
                 //return
                 return Excel::download(new DebitOrders($arr_debit_orders), $filename);
-            } else if ($request->report_type == "COLLECTION") {
+            } else if ($request->report_type == "EXPECTED_COLLECTION") {
                 //Query for payment collection
                 $installments = Installment::filterCondition()
                     ->select('id', 'debit_order_id', 'installment_amount', 'last_paid_amount', 'current_balance', 'outstanding_amount', 'status', 'remarks', 'payment_date', 'effective_payment_date', 'created_at')
@@ -178,7 +178,7 @@ class ReportController extends Controller
                     $start_at = Carbon::createFromFormat('Y-m-d', $request->start_at)->startOfDay();
                     $end_at = Carbon::createFromFormat('Y-m-d', $request->end_at)->endOfDay();
 
-                    $installments = $installments->whereBetween('installments.effective_payment_date', [$start_at, $end_at]);
+                    $installments = $installments->whereBetween('installments.payment_date', [$start_at, $end_at]);
                 }
 
                 //filtering by service provider
@@ -215,7 +215,7 @@ class ReportController extends Controller
                 }
 
                 //order installments
-                $installments = $installments->orderBy('installments.effective_payment_date', 'ASC')->get();
+                $installments = $installments->orderBy('installments.payment_date', 'ASC')->get();
 
                 //arr installments
                 $arr_installments = [];
@@ -249,7 +249,72 @@ class ReportController extends Controller
                 }
 
                 //create filename
-                $filename = "Payment_Collection_" . date('YmdHis')  . ".xlsx";
+                $filename = "Expected_Payment_Collection_" . date('YmdHis')  . ".xlsx";
+
+                //return
+                return Excel::download(new CollectionPayments($arr_installments), $filename);
+            } else if ($request->report_type == "ACTUAL_COLLECTION") {
+                //Query for payment collection
+                $installments = Installment::filterCondition()
+                    ->select('id', 'debit_order_id', 'installment_amount', 'last_paid_amount', 'current_balance', 'outstanding_amount', 'status', 'remarks', 'payment_date', 'effective_payment_date', 'created_at')
+                    ->where("installments.status", "=", "CLOSED")
+                    ->whereHas('debitOrder', function ($query) {
+                        $query->where('debit_orders.approved', '=', 1)
+                            ->whereHas('partner', function ($q) {
+                                $q->where('partners.status', 202);
+                            });
+                    });
+
+                //filtering start and end date
+                if ($request->has('start_at') && $request->has('end_at')) {
+                    //format dates
+                    $start_at = Carbon::createFromFormat('Y-m-d', $request->start_at)->startOfDay();
+                    $end_at = Carbon::createFromFormat('Y-m-d', $request->end_at)->endOfDay();
+
+                    $installments = $installments->whereBetween('installments.effective_payment_date', [$start_at, $end_at]);
+                }
+
+                //filtering by service provider
+                if ($request->has('partner_id') && $request->partner_id != "") {
+                    $partner_id = $request->partner_id;
+
+                    $installments = $installments->whereHas('debitOrder', function ($query) use ($partner_id) {
+                        $query->where('debit_orders.partner_id', '=', $partner_id);
+                    });
+                }
+
+                //order installments
+                $installments = $installments->orderBy('installments.effective_payment_date', 'ASC')->get();
+
+                //arr installments
+                $arr_installments = [];
+
+                foreach ($installments as $val) {
+                    if ($val->status == "CLOSED")
+                        $status = "PAID";
+
+                    //data array
+                    $arr_installments[] = [
+                        'business_name' => strtoupper($val->debitOrder->partner->business_name),
+                        'reference' => $val->debitOrder->reference,
+                        'account_name' => strtoupper($val->debitOrder->customerAccount->account_name),
+                        'account_number' => $val->debitOrder->customerAccount->account_number,
+                        'periodicity' => $val->debitOrder->periodicity,
+                        'amount' => $val->installment_amount,
+                        'last_paid_amount' => $val->last_paid_amount,
+                        'current_balance' => $val->current_balance,
+                        'outstanding_amount' => $val->outstanding_amount,
+                        'status' => $status,
+                        'remarks' => $val->remarks,
+                        'payment_date' => Carbon::parse($val->payment_date)->format('d-m-Y'),
+                        'effective_payment_date' => Carbon::parse($val->effective_payment_date)->format('d-m-Y'),
+                        'start_date' => Carbon::parse($val->debitOrder->start_date)->format('d-m-Y'),
+                        'end_date' => Carbon::parse($val->debitOrder->end_date)->format('d-m-Y'),
+                    ];
+                }
+
+                //create filename
+                $filename = "Actual_Payment_Collection_" . date('YmdHis')  . ".xlsx";
 
                 //return
                 return Excel::download(new CollectionPayments($arr_installments), $filename);

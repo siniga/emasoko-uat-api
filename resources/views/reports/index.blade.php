@@ -29,7 +29,8 @@
                                         @php
                                             $options = [
                                                 'MANDATE' => 'Debit Mandate',
-                                                'COLLECTION' => 'Payment Collection',
+                                                'EXPECTED_COLLECTION' => 'Expected Payment Collection',
+                                                'ACTUAL_COLLECTION' => 'Actual Payment Collection',
                                             ];
                                             $options = ['' => '-- Report Type --'] + $options;
                                         @endphp
@@ -186,7 +187,7 @@
                 if (reportType == "MANDATE") {
                     $('#col-mandate').css('display', 'block');
                     $('#col-collection').css('display', 'none');
-                } else if (reportType == "COLLECTION") {
+                } else if (reportType == "ACTUAL_COLLECTION" || reportType == "EXPECTED_COLLECTION") {
                     $('#col-mandate').css('display', 'none');
                     $('#col-collection').css('display', 'block');
                 }
