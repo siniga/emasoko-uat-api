@@ -741,9 +741,6 @@ class PaymentMandateController extends Controller
                 $response_code = $arr_response[0];
                 $remarks = $arr_response[1];
 
-                //Log response
-                Log::debug("Mandate Status Response: " . json_encode($arr_response));
-
                 // Create debit order installments IF response code = 240
                 if ($response_code == 240)
                     $this->deductionService->createInstallment($debit_order);

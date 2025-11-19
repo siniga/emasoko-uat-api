@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\CRDB;
 use App\Classes\Checksum;
 use App\Http\Controllers\Controller;
 use App\Models\DebitOrder;
+use App\Services\DeductionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -15,7 +16,7 @@ class MandateController extends Controller
 {
     private $auth;
 
-    public function __construct()
+    public function __construct(protected DeductionService $deductionService)
     {
         $this->auth = new Checksum();
     }
@@ -181,29 +182,35 @@ class MandateController extends Controller
         Log::debug('== CRDB Callback Response ==');
         Log::debug($request->all());
 
-        // // check for valid callback type
-        // $callback_type = $request->input('callbackType');
+        // check for valid callback type
+        $callback_type = $request->input('callbackType');
 
-        // if ($callback_type == "REQUEST_STATUS") {
-        //     //query debit order by reference id
-        //     $debit_order = DebitOrder::where('crdb_reference', '=', $request['data']['reference'])->first();
+        if ($callback_type == "REQUEST_STATUS") {
+            //query debit order by reference id
+            $debit_order = DebitOrder::where('crdb_reference', '=', $request['data']['reference'])->first();
 
             //check status
             if (strtolower($request['data']['status']) == "approved") {
                 $debit_order->approved = 1;
                 $debit_order->status = 240;
                 $debit_order->remarks = "Mandate approved";
-            } else if (strtolower($request['data']['status']) == "cancelled") {
-                $debit_order->status = 405;
-                $debit_order->remarks = "Mandate cancelled";
+                $debit_order->save();
+
+                //Log response
+                Log::debug("== CRDB Mandate Status Approved ==");
+
+                // create installments
+                $this->deductionService->createInstallment($debit_order);
             } else {
                 $debit_order->status = 500;
                 $debit_order->remarks = "Failed to approve mandate.";
+                $debit_order->save();
+
+                //Log response
+                Log::debug("== Failed to approve CRDB Mandate ==");
             }
-            $debit_order->save();
         } else if ($callback_type == "PAYMENT_STATUS") {
             //update installment amount
         }
     }
-    
 }
