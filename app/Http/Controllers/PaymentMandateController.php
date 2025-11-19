@@ -29,6 +29,7 @@ use App\Models\User;
 use App\Services\BankApiService;
 use App\Services\BankPayloadService;
 use App\Services\DeductionService;
+use App\Services\MandateActionService;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
@@ -38,7 +39,7 @@ use Illuminate\Support\Facades\Validator;
 class PaymentMandateController extends Controller
 {
 
-    public function __construct(protected DeductionService $deductionService, protected BankPayloadService $payloadService, protected Messaging $messaging, protected BankApiService $bankApi)
+    public function __construct(protected MandateActionService $mandateActionService, protected DeductionService $deductionService, protected BankPayloadService $payloadService, protected Messaging $messaging, protected BankApiService $bankApi)
     {
         $this->middleware('auth');
     }
@@ -759,35 +760,24 @@ class PaymentMandateController extends Controller
     public function cancel_mandate(Request $request)
     {
         // post data
-        $debit_order = DebitOrder::where("uuid", $request->uuid)->first();
-        $channel = $debit_order->channel;
+        $debitOrder = DebitOrder::where("uuid", $request->uuid)->first();
+        $channel = $debitOrder->channel;
 
         //save cancellation information
-        $debit_order->cancellation_reason = $request->remarks;
-        $debit_order->cancellationStartedBy = Auth::user()->id;
-        $debit_order->cancellationStartedAt = date('Y-m-d H:i:s');
-        $debit_order->cancellationApprovedBy = Auth::user()->id;
-        $debit_order->cancellationApprovedAt = date('Y-m-d H:i:s');
-        $debit_order->save();
+        $debitOrder->cancellation_reason = $request->remarks;
+        $debitOrder->cancellationStartedBy = Auth::user()->id;
+        $debitOrder->cancellationStartedAt = date('Y-m-d H:i:s');
+        $debitOrder->cancellationApprovedBy = Auth::user()->id;
+        $debitOrder->cancellationApprovedAt = date('Y-m-d H:i:s');
+        $debitOrder->save();
 
-        //check if account is NMB/CRDB/EcoBank/NBC
-        if ($debit_order->channel == "NMB") {
-            //create payload
-            $payload = $this->payloadService->mandateCancellationPayload($debit_order);
+        //return response
+        $success = true;
+        $response_code = 201;
+        $remarks = "Mandate cancellation request sent successfully. Wait for few minutes for the cancellation to take effect.";
 
-            //api response
-            $arr_response = $this->bankApi->mandateCancellationRequest($payload);
-
-            if ($arr_response) {
-                $success = true;
-                $response_code = $arr_response[0];
-                $remarks = $arr_response[1];
-            } else {
-                $success = false;
-                $remarks = "API system error, contact eMakato support team.";
-                $response_code = 500;
-            }
-        }
+        // request mandate cancellation in background
+        $this->mandateActionService->cancelMandate($debitOrder);
 
         //response
         return response()->json(['success' => $success, 'channel' => $channel, "response_code" => $response_code, "success_msg" => $remarks], 200);
@@ -1081,6 +1071,9 @@ class PaymentMandateController extends Controller
                         $debitOrder->deleted = 1; // Mark as deleted
                         $debitOrder->save();
                     }
+
+                    // request mandate cancellation in background
+                    $this->mandateActionService->cancelMandate($debitOrder);
                 }
 
                 // Step 5: add a success message for cancellation
@@ -1221,6 +1214,9 @@ class PaymentMandateController extends Controller
                         $debitOrder->deleted = 1; // Mark as deleted
                         $debitOrder->save();
                     }
+
+                    // request mandate cancellation in background
+                    $this->mandateActionService->cancelMandate($debitOrder);
                 }
 
                 // Step 5: add a success message for cancellation
@@ -1351,6 +1347,9 @@ class PaymentMandateController extends Controller
                         $debitOrder->contract_status = "CLOSED";
                         $debitOrder->save();
                     }
+
+                    // request mandate cancellation in background
+                    $this->mandateActionService->cancelMandate($debitOrder);
                 }
 
                 // Step 5: add a success message for cancellation

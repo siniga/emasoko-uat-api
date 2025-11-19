@@ -161,7 +161,7 @@
                         //check if response is success
                         if (data.success == true) {
                             //check if channel is NMB
-                            if (data.channel == "NMB") {
+                            if (data.channel == "NMB" || data.channel == "CRDB") {
                                 //set show modal to true
                                 if (data.response_code == 201) {
                                     this.status = 405;

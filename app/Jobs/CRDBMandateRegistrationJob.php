@@ -12,6 +12,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class CRDBMandateRegistrationJob implements ShouldQueue
 {
@@ -103,7 +104,7 @@ class CRDBMandateRegistrationJob implements ShouldQueue
         // safely read values
         $statusCode = data_get($response, 'ResponseHeader.StatusCode');
         $statusDesc = data_get($response, 'ResponseHeader.StatusDesc');
-        $responseId = data_get($response, 'ResponseBody.RequestId');
+        $responseId = data_get($response, 'ResponseHeader.RequestId');
         $reference  = data_get($response, 'ResponseBody.Reference');
         Log::debug('Parsed header', compact('statusCode', 'statusDesc', 'reference'));
 

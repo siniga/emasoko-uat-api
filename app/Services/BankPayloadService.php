@@ -183,6 +183,36 @@ class BankPayloadService
         return $payload;
     }
 
+    //create CRDB mandate payload
+    public function CRDBMandateCancellationPayload(DebitOrder $debitOrder, $requestId)
+    {
+        $customerAccount = $debitOrder->customerAccount;
+        $partnerId = env("CRDB_PARTNER_ID");
+
+        //data and salt
+        $data = $requestId . substr($customerAccount->account_number, -4) . $partnerId;
+
+        //create checksum
+        $checksum = $this->auth->generateChecksum($data);
+
+        $payload = [
+            "PartnerId" =>  $partnerId,
+            "RequestId" => $requestId,
+            'Checksum' => $checksum,
+            "PhoneNumber" =>  $customerAccount->phone,
+            "DebitAccount" =>  $customerAccount->account_number,
+            "TotalAmount" =>  0,
+            "InstallmentAmount" => 0,
+            "StartDate" => Carbon::parse($debitOrder->start_date)->format('d-m-Y'),
+            "EndDate" => Carbon::parse($debitOrder->end_date)->format('d-m-Y'),
+            "FrequencyType" => strtoupper($debitOrder->periodicity),
+            "Frequency" => "1",
+            "BillDetails" => "Recurring payment"
+        ];
+
+        return $payload;
+    }
+
     //create otp payload
     public function createOtpPayload(OtpRequest $otpRequest)
     {
