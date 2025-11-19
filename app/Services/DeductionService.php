@@ -47,12 +47,12 @@ class DeductionService
                     'start_date' => $debit_order->start_date,
                     'end_date' => $debit_order->end_date,
                     'total_amount' => $debit_order->total_amount,
-                    'installment_amount' => $debit_order->installment_amount,
+                    'installment_amount' => ($debit_order->debit_type == "FIXED") ? $debit_order->installment_amount : $debit_order->max_installment_amount,
                     'paid_amount' => $debit_order->paid_amount,
                     'outstanding_amount' => $debit_order->outstanding_amount,
                     'number_of_installments' => $debit_order->installment_number,
                     'paid_installments' => $debit_order->paid_installment,
-                    'failed_installments' => $debit_order->paid_installment,
+                    'failed_installments' => $debit_order->failed_installment,
                 ];
             }
         }

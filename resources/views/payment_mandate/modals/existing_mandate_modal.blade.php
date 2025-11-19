@@ -45,8 +45,8 @@
                             @foreach ($arr_debit_orders as $index => $order)
                                 <tr>
                                     <td>{{ $index + 1 }}</td>
-                                    <td>{{ $order['start_date'] }}</td>
-                                    <td>{{ $order['end_date'] }}</td>
+                                    <td>{{ date('d-m-Y', strtotime($order['start_date'])) }}</td>
+                                    <td>{{ date('d-m-Y', strtotime($order['end_date'])) }}</td>
                                     <td class="text-end">{{ number_format($order['total_amount'] ?? 0) }}</td>
                                     <td class="text-end">{{ number_format($order['installment_amount'] ?? 0) }}</td>
                                     <td class="text-end">{{ $order['number_of_installments'] }}</td>
