@@ -27,19 +27,20 @@ class CollectionPayments implements FromArray, WithHeadings, ShouldAutoSize
         return [
             'Service Provider',
             'Mandate Reference',
-            'Periodicity',
             'Account Name',
             'Account Number',
+            'Customer Address',
+            'Periodicity',
             'Expected Amount',
             'Paid Amount',
             'Current Balance',
             'Outstanding Amount',
-            'Status',
-            'Remarks',
+            'Payment Status',
             'Payment Date',
             'Collection Date',
             'Debit Start Date',
             'Debit End Date',
+            'Payment Remarks',
         ];
     }
 
