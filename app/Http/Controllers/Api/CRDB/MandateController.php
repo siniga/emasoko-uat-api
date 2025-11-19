@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\CRDB;
 use App\Classes\Checksum;
 use App\Http\Controllers\Controller;
 use App\Models\DebitOrder;
+use App\Models\Installment;
 use App\Services\DeductionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -210,7 +211,42 @@ class MandateController extends Controller
                 Log::debug("== Failed to approve CRDB Mandate ==");
             }
         } else if ($callback_type == "PAYMENT_STATUS") {
-            //update installment amount
+            // payment variables
+            $mandateReference = $request['data']['reference'];
+            $transferResponse = $request['data']['transferResponse'];
+            $collectionDate = $request['data']['collectionDate'];
+            $phoneNumber = $request['data']['phoneNumber'];
+            $accountNumber = $request['data']['accountNumber'];
+            $amount = $request['data']['amount'];
+            $transactionReference = $request['data']['transactionReference'];
+            $transactionDateTime = $request['data']['transactionDateTime'];
+
+            if (strtoupper($transferResponse) == "SUCCESS") {
+                // get the first installment with status = "OPEN"
+                $installment = Installment::whereHas('debitOrder', function ($query) use ($mandateReference) {
+                    $query->where('crdb_reference', '=', $mandateReference);
+                })->where('installments.status', '=', 'OPEN')->first();
+
+                if ($installment) {
+                    //updated status of installment
+                    $installment->last_paid_amount = $amount;
+                    $installment->payment_reference = $transactionReference;
+                    $installment->effective_payment_date = date('Y-m-d', strtotime($collectionDate));
+                    $installment->remarks = "Amount paid";
+                    $installment->save();
+
+                    // process installment
+                    $this->deductionService->processInstallment($installment);
+                }
+            } else {
+                // check for failed installments
+            }
         }
+
+        // response
+        return response()->json([
+            'status' => true,
+            'message' => "Callback received",
+        ], 200);
     }
 }

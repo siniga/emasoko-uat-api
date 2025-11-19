@@ -443,16 +443,31 @@ class DeductionService
                         // dispatch(new SendSMSJob($data));
                     }
                 } else if ($status == "SUCCESS") {
+                    //Generate a unique payment reference
+                    $reference = $this->uniquePaymentReference(12);
+
                     //updated status of installment
+                    $installment->payment_reference = $reference;
                     $installment->last_paid_amount = $amount;
                     $installment->remarks = $message;
+                    //$installment->effective_payment_date = Carbon::now()->toDateString(); // Fix this
                     $installment->save();
+
+                    //4. Insert or Create payment in installment amount
+                    $payment = InstallmentPayment::firstOrNew(
+                        [
+                            'reference' => $reference,
+                            'installment_id' => $installment->id
+                        ]
+                    );
+                    $payment->amount = $amount;
+                    $payment->save();
 
                     //increment success count
                     $success_installments += 1;
 
                     //process calculation for installment and debit order.
-                    $this->processInstallment($installment, $amount);
+                    $this->processInstallment($installment);
                 } else {
                     //updated status of installment
                     $installment->status = $status;
@@ -507,13 +522,11 @@ class DeductionService
     }
 
     //process installment
-    public function processInstallment(Installment $installment, $amount)
+    public function processInstallment(Installment $installment)
     {
-        // Log::debug("== Installment ==");
-        // Log::debug($installment);
-
         //installment status
         $installment_status = strtoupper($installment->status);
+        $amount = $installment->last_paid_amount; //paid amount
 
         //0. Check if installment status is not CLOSED
         if ($installment_status == 'OPEN' || $installment_status == 'FAILED' || $installment_status == 'FUNDSCHECK') {
@@ -525,16 +538,11 @@ class DeductionService
                 $installment->status = "CLOSED";
                 $installment->save();
             } else {
-                //1. Generate a unique payment reference
-                $reference = $this->uniquePaymentReference(12);
-
                 //1. Update installment => outstanding amount, current balance
                 $outstanding_amount = $installment->outstanding_amount - $amount;
                 $current_balance = $installment->current_balance + $amount;
                 $installment->outstanding_amount = $outstanding_amount;
                 $installment->current_balance = $current_balance;
-                //$installment->effective_payment_date = Carbon::now()->toDateString();
-                $installment->payment_reference = $reference;
 
                 //2. update installment status {OPEN, CLOSED, PARTIAL_PAID}
                 if ($outstanding_amount <= 0)
@@ -544,11 +552,6 @@ class DeductionService
 
                 //3. Save installment
                 $installment->save();
-
-                //4. Insert or Create payment in installment amount
-                $payment = InstallmentPayment::firstOrNew(['reference' => $reference, 'installment_id' => $installment->id]);
-                $payment->amount = $amount;
-                $payment->save();
 
                 //5. Update debit order => outstanding amount, current balance
                 $debit_order = $installment->debitOrder;
