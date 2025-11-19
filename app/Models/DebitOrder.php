@@ -37,10 +37,15 @@ class DebitOrder extends Model
             foreach ($partners as $val)
                 array_push($arr_partners, $val->partner_id);
 
-            if ($arr_partners)
-                $debit_orders = $debit_orders->whereIn('debit_orders.partner_id', $arr_partners);
+            if ($arr_partners) {
+                $debit_orders = $debit_orders
+                    ->where('debit_orders.contract_status', '=', "OPEN")
+                    ->whereIn('debit_orders.partner_id', $arr_partners);
+            }
         } else if ($user->hasRole('Company_User')) {
-            $debit_orders = $debit_orders->where('debit_orders.created_by', '=', $user->id);
+            $debit_orders = $debit_orders
+                ->where('debit_orders.contract_status', '=', "OPEN")
+                ->where('debit_orders.created_by', '=', $user->id);
         }
 
         return $debit_orders;

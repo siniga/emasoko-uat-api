@@ -22,8 +22,42 @@ use Illuminate\Support\Collection;
 class DeductionService
 {
     private $app_variable;
-    public function __construct() {
+    public function __construct()
+    {
         $this->app_variable = AppVariable::first();
+    }
+
+    // check if customer account has active debit order
+    public function hasActiveDebitOrder($customer_account_uuid)
+    {
+        //declare array
+        $arr_debit_order = [];
+
+        // debit order
+        $debit_order = DebitOrder::whereHas("customerAccount", function ($q) use ($customer_account_uuid) {
+            $q->where('customer_accounts.uuid', $customer_account_uuid);
+        })->where('debit_orders.contract_status', 'OPEN');
+
+        if ($debit_order->exists()) {
+            foreach ($debit_order->get() as $debit_order) {
+                $arr_debit_order[] = [
+                    'id' => $debit_order->id,
+                    'uuid' => $debit_order->uuid,
+                    'created_date' => $debit_order->created_at,
+                    'start_date' => $debit_order->start_date,
+                    'end_date' => $debit_order->end_date,
+                    'total_amount' => $debit_order->total_amount,
+                    'installment_amount' => $debit_order->installment_amount,
+                    'paid_amount' => $debit_order->paid_amount,
+                    'outstanding_amount' => $debit_order->outstanding_amount,
+                    'number_of_installments' => $debit_order->installment_number,
+                    'paid_installments' => $debit_order->paid_installment,
+                    'failed_installments' => $debit_order->paid_installment,
+                ];
+            }
+        }
+
+        return $arr_debit_order;
     }
 
     //create debit order evidence of aggrement
@@ -540,9 +574,9 @@ class DeductionService
                 $outstandingAmt = number_format($outstanding_amount);
                 $installmentAmt = number_format($installment_amount);
 
-            //send message for outstanding amount and current balance from eMakato.
-            $phone = $installment->debitOrder->customerAccount->phone;
-            $message = "Makato ya tarehe {$payment_date} ya kiasi cha shilingi {$installmentAmt} yamekamilishwa na kiasi kilichobaki ni Tsh {$outstandingAmt}. Asante kwa kutumia eMakato.";
+                //send message for outstanding amount and current balance from eMakato.
+                $phone = $installment->debitOrder->customerAccount->phone;
+                $message = "Makato ya tarehe {$payment_date} ya kiasi cha shilingi {$installmentAmt} yamekamilishwa na kiasi kilichobaki ni Tsh {$outstandingAmt}. Asante kwa kutumia eMakato.";
 
                 //Send SMS
                 $data = ["phone" => $phone, "message" => $message];

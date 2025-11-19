@@ -340,6 +340,11 @@ class PaymentMandateController extends Controller
     {
         $title = "Payment Mandate";
 
+        $arr_debit_orders = [];
+        if ($debit_order_uuid == null) {
+            $arr_debit_orders = $this->deductionService->hasActiveDebitOrder($customer_account_uuid);
+        }
+
         //users
         $user = User::findOrFail(Auth::user()->id);
 
@@ -360,7 +365,7 @@ class PaymentMandateController extends Controller
         $providers = $providers->get();
 
         //render view
-        return view('payment_mandate.create.deduction_form', compact('title', 'customer_account', 'debit_order', 'providers', 'provider'));
+        return view('payment_mandate.create.deduction_form', compact('title', 'customer_account', 'debit_order', 'providers', 'provider', 'arr_debit_orders'));
     }
 
     //store deduction information
