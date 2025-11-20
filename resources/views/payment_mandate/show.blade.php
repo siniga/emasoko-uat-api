@@ -196,7 +196,7 @@
                                             </template>
 
                                             <template x-if="status==201">
-                                                <span class="badge badge-pill badge-soft-info">Pending Verification</span>
+                                                <span class="badge badge-pill badge-soft-warning">Pending Verification</span>
                                             </template>
 
                                             <template x-if="status==202">
