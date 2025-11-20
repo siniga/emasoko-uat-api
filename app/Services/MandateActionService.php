@@ -7,6 +7,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use App\Classes\Authentication;
 use App\Jobs\CRDBMandateCancellationJob;
+use App\Jobs\CRDBMandateRegistrationJob;
 use App\Jobs\MandateCancellationJob;
 use App\Jobs\SendSMSJob;
 use App\Models\CollectionBatch;
@@ -21,6 +22,7 @@ use Exception;
 class MandateActionService
 {
     private $auth;
+    private $bankApi;
     private $payloadService;
 
     public function __construct()
@@ -29,7 +31,55 @@ class MandateActionService
         $this->payloadService = new BankPayloadService();
     }
 
-    public function registerMandate($debitOrder) {}
+    public function registerMandate($debitOrder)
+    {
+        if ($debitOrder->channel == "CRDB") {
+            //requestId
+            $requestId = Str::uuid()->toString();
+
+            //create payload
+            $payload = $this->payloadService->CRDBMandateRegistrationPayload($debitOrder, $requestId);
+
+            //create data
+            $data['payload'] = $payload;
+            $data['requestId'] = $requestId;
+            $data['mandateReferenceNumber'] = $debitOrder->reference;
+
+            //Create Request to CRDB
+            dispatch(new CRDBMandateRegistrationJob($data));
+
+            //return response
+            return response()->json([
+                'success' => true,
+                'response_code' => 201,
+                'remarks' => "Mandate registration request sent to CRDB. Go to customer SimBanking and approve mandate."
+            ]);
+        } else if ($debitOrder->channel == "NMB") {
+            //create payload
+            $payload = $this->payloadService->mandateRegistrationPayload($debitOrder);
+
+            //arr response
+            $arrResponse = $this->bankApi->mandateRegistrationRequest($payload);
+
+            if ($arrResponse) {
+                $success = true;
+                $response_code = $arrResponse[0];
+                $remarks = $arrResponse[1];
+
+                return response()->json([
+                    'success' => $success,
+                    'response_code' => $response_code,
+                    'remarks' => $remarks
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'response_code' => 500,
+                    'remarks' => 'Unable to register mandate'
+                ]);
+            }
+        }
+    }
 
 
     public function cancelMandate($debitOrder)

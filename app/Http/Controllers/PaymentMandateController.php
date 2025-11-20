@@ -570,55 +570,21 @@ class PaymentMandateController extends Controller
         $debit_order_uuid = $request->input('uuid');
 
         //debit order
-        $debit_order = DebitOrder::where("uuid", $debit_order_uuid)->first();
+        $debitOrder = DebitOrder::where("uuid", $debit_order_uuid)->first();
 
         //update status of debit mandate
-        $debit_order->status = 200;
-        $debit_order->save();
+        $debitOrder->status = 200;
+        $debitOrder->save();
 
-        //declare channel and remarks
-        $success = true;
-        $response_code = 200;
-        $remarks = "";
-        $channel = $debit_order->channel;
+        //mandate registration
+        $response = $this->mandateActionService->registerMandate($debitOrder);
+        $response = json_decode($response, true);
 
-        //check if account is NMB/CRDB/EcoBank/NBC
-        if ($debit_order->channel == "NMB") {
-            //create payload
-            $payload = $this->payloadService->mandateRegistrationPayload($debit_order);
-
-            //arr response
-            $arr_response = $this->bankApi->mandateRegistrationRequest($payload);
-
-            if ($arr_response) {
-                $success = true;
-                $response_code = $arr_response[0];
-                $remarks = $arr_response[1];
-            } else {
-                $success = false;
-                $remarks = "API system error, contact eMakato support team.";
-                $response_code = 500;
-            }
-        } else if ($debit_order->channel == "CRDB") {
-            //requestId
-            $requestId = Str::uuid()->toString();
-
-            //create payload
-            $payload = $this->payloadService->CRDBMandatePayload($debit_order, $requestId);
-
-            //create data
-            $data['payload'] = $payload;
-            $data['requestId'] = $requestId;
-            $data['mandateReferenceNumber'] = $debit_order->reference;
-
-            //Create Request to CRDB
-            dispatch(new CRDBMandateRegistrationJob($data));
-
-            //request response
-            $success = true;
-            $response_code = 201;
-            $remarks = "Mandate registration request sent to CRDB. Go to customer SimBanking and approve mandate.";
-        }
+        //Define variables for response
+        $success = $response['success'];
+        $response_code = $response['response_code'];
+        $remarks = $response['remarks'];
+        $channel = $debitOrder->channel;
 
         //response
         return response()->json(['success' => $success, 'channel' => $channel, "response_code" => $response_code, "success_msg" => $remarks], 200);

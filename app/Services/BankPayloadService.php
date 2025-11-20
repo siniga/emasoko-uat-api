@@ -126,7 +126,7 @@ class BankPayloadService
     }
 
     //create CRDB mandate payload
-    public function CRDBMandatePayload(DebitOrder $debitOrder, $requestId)
+    public function CRDBMandateRegistrationPayload(DebitOrder $debitOrder, $requestId)
     {
         $customerAccount = $debitOrder->customerAccount;
         $partnerId = env("CRDB_PARTNER_ID");
