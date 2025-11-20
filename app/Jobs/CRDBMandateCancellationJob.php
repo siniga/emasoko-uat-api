@@ -38,8 +38,8 @@ class CRDBMandateCancellationJob implements ShouldQueue
     public function handle()
     {
         //update the debit order
-        $debit_order = DebitOrder::where('reference', '=', $this->data['mandateReferenceNumber'])->first();
-        if (!$debit_order) {
+        $debitOrder = DebitOrder::where('reference', '=', $this->data['mandateReferenceNumber'])->first();
+        if (!$debitOrder) {
             Log::warning('Debit order not found for mandateReferenceNumber', [
                 'mandateReferenceNumber' => $this->data['mandateReferenceNumber'] ?? null
             ]);
@@ -89,11 +89,6 @@ class CRDBMandateCancellationJob implements ShouldQueue
         $response = json_decode($sanitized, true);
 
         if (!is_array($response)) {
-            $debit_order->status = 403;
-            $debit_order->http_response_code = $httpResponse->status();
-            $debit_order->remarks = 'HTTP error or invalid JSON from gateway';
-            $debit_order->save();
-
             Log::error('MandateCancellation failed: HTTP error or invalid JSON', [
                 'json_error' => json_last_error_msg(),
                 'sample'     => Str::limit($raw, 800),
@@ -109,16 +104,16 @@ class CRDBMandateCancellationJob implements ShouldQueue
 
         // Handle business logic only if StatusCode is present
         if ($statusCode === 1000) {
-            $debit_order->status = 405;
-            $debit_order->cancelled = 1;
-            $debit_order->deleted = 1;
-            $debit_order->remarks = "Mandate cancelled successfully";
+            $debitOrder->status = 405;
+            $debitOrder->cancelled = 1;
+            $debitOrder->deleted = 1;
+            $debitOrder->remarks = "Mandate cancelled successfully";
         } elseif ($statusCode === 1001) {
             if (isset($response['ErrorMetadata']['400'])) {
-                $debit_order->status = 405;
-                $debit_order->cancelled = 1;
-                $debit_order->deleted = 1;
-                $debit_order->remarks = "Mandate cancelled successfully";
+                $debitOrder->status = 405;
+                $debitOrder->cancelled = 1;
+                $debitOrder->deleted = 1;
+                $debitOrder->remarks = "Mandate cancelled successfully";
             }
         } else {
             // Unknown/other code: record it for investigation
@@ -129,8 +124,8 @@ class CRDBMandateCancellationJob implements ShouldQueue
         }
 
         // Persist shared fields (guard nulls)
-        $debit_order->http_response_code = $statusCode ?? $httpResponse->status();
-        $debit_order->save();
+        $debitOrder->http_response_code = $statusCode ?? $httpResponse->status();
+        $debitOrder->save();
 
         Log::debug('== CRDB Mandate cancellation successfully ===');
     }

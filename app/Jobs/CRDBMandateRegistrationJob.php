@@ -38,8 +38,8 @@ class CRDBMandateRegistrationJob implements ShouldQueue
     public function handle()
     {
         //update the debit order
-        $debit_order = DebitOrder::where('reference', '=', $this->data['mandateReferenceNumber'])->first();
-        if (!$debit_order) {
+        $debitOrder = DebitOrder::where('reference', '=', $this->data['mandateReferenceNumber'])->first();
+        if (!$debitOrder) {
             Log::warning('Debit order not found for mandateReferenceNumber', [
                 'mandateReferenceNumber' => $this->data['mandateReferenceNumber'] ?? null
             ]);
@@ -89,10 +89,10 @@ class CRDBMandateRegistrationJob implements ShouldQueue
         $response = json_decode($sanitized, true);
 
         if (!is_array($response)) {
-            $debit_order->status = 403;
-            $debit_order->http_response_code = $httpResponse->status();
-            $debit_order->remarks = 'HTTP error or invalid JSON from gateway';
-            $debit_order->save();
+            $debitOrder->status = 403;
+            $debitOrder->http_response_code = $httpResponse->status();
+            $debitOrder->remarks = 'HTTP error or invalid JSON from gateway';
+            $debitOrder->save();
 
             Log::error('MandateRegistration failed: HTTP error or invalid JSON', [
                 'json_error' => json_last_error_msg(),
@@ -110,13 +110,13 @@ class CRDBMandateRegistrationJob implements ShouldQueue
 
         // Handle business logic only if StatusCode is present
         if ($statusCode === 1000) {
-            $debit_order->status = 201;  // success
+            $debitOrder->status = 201;  // success
             if ($reference) {
-                $debit_order->crdb_request_id = $responseId;
-                $debit_order->crdb_reference = $reference;
+                $debitOrder->crdb_request_id = $responseId;
+                $debitOrder->crdb_reference = $reference;
             }
         } elseif ($statusCode === 1001) {
-            $debit_order->status = 403;  // failure
+            $debitOrder->status = 403;  // failure
         } else {
             // Unknown/other code: record it for investigation
             Log::warning('MandateRegistration returned unexpected StatusCode', [
@@ -126,9 +126,9 @@ class CRDBMandateRegistrationJob implements ShouldQueue
         }
 
         // Persist shared fields (guard nulls)
-        $debit_order->http_response_code = $statusCode ?? $httpResponse->status();
-        $debit_order->remarks = $statusDesc ?: 'No StatusDesc in response';
-        $debit_order->save();
+        $debitOrder->http_response_code = $statusCode ?? $httpResponse->status();
+        $debitOrder->remarks = $statusDesc ?: 'No StatusDesc in response';
+        $debitOrder->save();
 
         Log::debug('== CRDB Mandate registered successfully ===');
     }

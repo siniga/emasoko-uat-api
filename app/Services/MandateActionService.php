@@ -7,6 +7,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use App\Classes\Authentication;
 use App\Jobs\CRDBMandateCancellationJob;
+use App\Jobs\MandateCancellationJob;
 use App\Jobs\SendSMSJob;
 use App\Models\CollectionBatch;
 use App\Models\DebitOrder;
@@ -51,25 +52,11 @@ class MandateActionService
             //cancel mandate
             Log::debug("== NMB Cancel Mandate Payload ==");
 
-            //check if account is NMB/CRDB/EcoBank/NBC
-            // if ($debit_order->channel == "NMB") {
-            //     //create payload
-            //     $payload = $this->payloadService->mandateCancellationPayload($debit_order);
+            //create payload
+            $payload = $this->payloadService->mandateCancellationPayload($debitOrder);
 
-            //     //api response
-            //     $arr_response = $this->bankApi->mandateCancellationRequest($payload);
-
-            //     if ($arr_response) {
-            //         $success = true;
-            //         $response_code = $arr_response[0];
-            //         $remarks = $arr_response[1];
-            //     } else {
-            //         $success = false;
-            //         $remarks = "API system error, contact eMakato support team.";
-            //         $response_code = 500;
-            //     }
-            // }
-
+            //background job
+            dispatch(new MandateCancellationJob($payload));
         }
     }
 }
