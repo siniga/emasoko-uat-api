@@ -577,8 +577,12 @@ class PaymentMandateController extends Controller
         $debitOrder->save();
 
         //mandate registration
-        $response = $this->mandateActionService->registerMandate($debitOrder);
-        $response = json_decode($response, true);
+        $jsonResponse = $this->mandateActionService->registerMandate($debitOrder);
+        $response = $jsonResponse->getData(true);
+
+        //logging response
+        Log::debug("== Mandate response data ==");
+        Log::debug($response);
 
         //Define variables for response
         $success = $response['success'];
