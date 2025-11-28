@@ -12,14 +12,53 @@ use App\Models\PartnerAccount;
 use App\Models\Installment;
 use App\Models\InstallmentPayment;
 use Carbon\Carbon;
+use DateTime;
+use Exception;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Collection;
 
 class DeductionService
 {
-    public function __construct() {}
+    private $app_variable;
+    public function __construct()
+    {
+        $this->app_variable = AppVariable::first();
+    }
+
+    // check if customer account has active debit order
+    public function hasActiveDebitOrder($customer_account_uuid)
+    {
+        //declare array
+        $arr_debit_order = [];
+
+        // debit order
+        $debit_order = DebitOrder::whereHas("customerAccount", function ($q) use ($customer_account_uuid) {
+            $q->where('customer_accounts.uuid', $customer_account_uuid);
+        })->where('debit_orders.contract_status', 'OPEN');
+
+        if ($debit_order->exists()) {
+            foreach ($debit_order->get() as $debit_order) {
+                $arr_debit_order[] = [
+                    'id' => $debit_order->id,
+                    'uuid' => $debit_order->uuid,
+                    'created_date' => $debit_order->created_at,
+                    'start_date' => $debit_order->start_date,
+                    'end_date' => $debit_order->end_date,
+                    'total_amount' => $debit_order->total_amount,
+                    'installment_amount' => ($debit_order->debit_type == "FIXED") ? $debit_order->installment_amount : $debit_order->max_installment_amount,
+                    'paid_amount' => $debit_order->paid_amount,
+                    'outstanding_amount' => $debit_order->outstanding_amount,
+                    'number_of_installments' => $debit_order->installment_number,
+                    'paid_installments' => $debit_order->paid_installment,
+                    'failed_installments' => $debit_order->failed_installment,
+                ];
+            }
+        }
+
+        return $arr_debit_order;
+    }
 
     //create debit order evidence of aggrement
     public function createEvidence(DebitOrder $debitOrder) {}
@@ -404,16 +443,31 @@ class DeductionService
                         // dispatch(new SendSMSJob($data));
                     }
                 } else if ($status == "SUCCESS") {
+                    //Generate a unique payment reference
+                    $reference = $this->uniquePaymentReference(12);
+
                     //updated status of installment
+                    $installment->payment_reference = $reference;
                     $installment->last_paid_amount = $amount;
                     $installment->remarks = $message;
+                    //$installment->effective_payment_date = Carbon::now()->toDateString(); // Fix this
                     $installment->save();
+
+                    //4. Insert or Create payment in installment amount
+                    $payment = InstallmentPayment::firstOrNew(
+                        [
+                            'reference' => $reference,
+                            'installment_id' => $installment->id
+                        ]
+                    );
+                    $payment->amount = $amount;
+                    $payment->save();
 
                     //increment success count
                     $success_installments += 1;
 
                     //process calculation for installment and debit order.
-                    $this->processInstallment($installment, $amount);
+                    $this->processInstallment($installment);
                 } else {
                     //updated status of installment
                     $installment->status = $status;
@@ -468,13 +522,11 @@ class DeductionService
     }
 
     //process installment
-    public function processInstallment(Installment $installment, $amount)
+    public function processInstallment(Installment $installment)
     {
-        // Log::debug("== Installment ==");
-        // Log::debug($installment);
-
         //installment status
         $installment_status = strtoupper($installment->status);
+        $amount = $installment->last_paid_amount; //paid amount
 
         //0. Check if installment status is not CLOSED
         if ($installment_status == 'OPEN' || $installment_status == 'FAILED' || $installment_status == 'FUNDSCHECK') {
@@ -486,16 +538,11 @@ class DeductionService
                 $installment->status = "CLOSED";
                 $installment->save();
             } else {
-                //1. Generate a unique payment reference
-                $reference = $this->uniquePaymentReference(12);
-
                 //1. Update installment => outstanding amount, current balance
                 $outstanding_amount = $installment->outstanding_amount - $amount;
                 $current_balance = $installment->current_balance + $amount;
                 $installment->outstanding_amount = $outstanding_amount;
                 $installment->current_balance = $current_balance;
-                //$installment->effective_payment_date = Carbon::now()->toDateString();
-                $installment->payment_reference = $reference;
 
                 //2. update installment status {OPEN, CLOSED, PARTIAL_PAID}
                 if ($outstanding_amount <= 0)
@@ -505,11 +552,6 @@ class DeductionService
 
                 //3. Save installment
                 $installment->save();
-
-                //4. Insert or Create payment in installment amount
-                $payment = InstallmentPayment::firstOrNew(['reference' => $reference, 'installment_id' => $installment->id]);
-                $payment->amount = $amount;
-                $payment->save();
 
                 //5. Update debit order => outstanding amount, current balance
                 $debit_order = $installment->debitOrder;
@@ -535,9 +577,9 @@ class DeductionService
                 $outstandingAmt = number_format($outstanding_amount);
                 $installmentAmt = number_format($installment_amount);
 
-            //send message for outstanding amount and current balance from eMakato.
-            $phone = $installment->debitOrder->customerAccount->phone;
-            $message = "Makato ya tarehe {$payment_date} ya kiasi cha shilingi {$installmentAmt} yamekamilishwa na kiasi kilichobaki ni Tsh {$outstandingAmt}. Asante kwa kutumia eMakato.";
+                //send message for outstanding amount and current balance from eMakato.
+                $phone = $installment->debitOrder->customerAccount->phone;
+                $message = "Makato ya tarehe {$payment_date} ya kiasi cha shilingi {$installmentAmt} yamekamilishwa na kiasi kilichobaki ni Tsh {$outstandingAmt}. Asante kwa kutumia eMakato.";
 
                 //Send SMS
                 $data = ["phone" => $phone, "message" => $message];
@@ -571,17 +613,21 @@ class DeductionService
     //update debit date
     public function updateNextDebitDate($debit_id, $payment_date)
     {
-        //next installment
-        $next_installment = Installment::where(['debit_order_id' => $debit_id, 'status' => 'OPEN'])
-            ->whereDate('payment_date', '>', $payment_date)->orderBy("payment_date", "ASC");
-
-        if ($next_installment->count() > 0) {
-            $next_installment = $next_installment->first();
+        try {
+            //next payment date
+            $date = new DateTime($payment_date);
+            $date->modify('+1 month');
+            $new_payment_date = $date->format('Y-m-d');
 
             //update next debit date
             $debit_order = DebitOrder::findOrFail($debit_id);
-            $debit_order->next_debit_date = $next_installment->payment_date;
+            $debit_order->next_debit_date = $new_payment_date;
             $debit_order->save();
+
+            //Log
+            Log::debug("Next Debit Date => Updated");
+        } catch (Exception $e) {
+            Log::debug("Invalid date format: " . $e->getMessage());
         }
     }
 
@@ -589,16 +635,14 @@ class DeductionService
     public function getMandateReference()
     {
         //app variable
-        $app_variable = AppVariable::first();
-
-        static $number = $app_variable->cur_mandate_reference;
+        static $number = $this->app_variable->cur_mandate_reference;
 
         $number++;
         $cur_mandate_reference = $number;
 
         //update app variable
-        $app_variable->cur_mandate_reference = $cur_mandate_reference;
-        $app_variable->save();
+        $this->app_variable->cur_mandate_reference = $cur_mandate_reference;
+        $this->app_variable->save();
 
         return $cur_mandate_reference;
     }
@@ -607,16 +651,14 @@ class DeductionService
     public function getCollectionReference()
     {
         //app variable
-        $app_variable = AppVariable::first();
-
-        static $number = $app_variable->cur_collection_reference;
+        static $number = $this->app_variable->cur_collection_reference;
 
         $number++;
         $cur_collection_reference = $number;
 
         //update app variable
-        $app_variable->cur_collection_reference = $cur_collection_reference;
-        $app_variable->save();
+        $this->app_variable->cur_collection_reference = $cur_collection_reference;
+        $this->app_variable->save();
 
         return $cur_collection_reference;
     }

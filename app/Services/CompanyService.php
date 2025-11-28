@@ -23,7 +23,11 @@ use Illuminate\Support\Facades\Auth;
 
 class CompanyService
 {
-    public function __construct() {}
+    private $app_variable;
+    public function __construct()
+    {
+        $this->app_variable = AppVariable::first();
+    }
 
     //create company information
     public function createInformation($data, $uuid): Partner
@@ -280,18 +284,15 @@ class CompanyService
     //get customer code
     public function getCustomerCode()
     {
-        //app variable
-        $app_variable = AppVariable::first();
-
-        static $number = $app_variable->cur_customer_code;
+        static $number = $this->app_variable->cur_customer_code;
 
         $number++;
         $next_customer_code = str_pad($number, 9, '0', STR_PAD_LEFT);
 
         //update app variable
-        $app_variable->cur_customer_code = $number;
-        $app_variable->next_customer_code = $next_customer_code;
-        $app_variable->save();
+        $this->app_variable->cur_customer_code = $number;
+        $this->app_variable->next_customer_code = $next_customer_code;
+        $this->app_variable->save();
 
         return $next_customer_code;
     }

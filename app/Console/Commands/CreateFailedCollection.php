@@ -56,10 +56,10 @@ class CreateFailedCollection extends Command
         Log::debug("== Current Year: '{$current_year}' ==");
 
         //collection references 13450
-        $collection_batches = CollectionBatch::where('collectionReference', '=', 13450);
-        // $collection_batches = CollectionBatch::whereMonth("created_at", "=", $previous_month)
-        //     ->whereYear("created_at", "=", $current_year)
-        //     ->orderBy('collectionReference', 'ASC');
+        //$collection_batches = CollectionBatch::where('collectionReference', '=', 13450);
+        $collection_batches = CollectionBatch::whereMonth("created_at", "=", $previous_month)
+            ->whereYear("created_at", "=", $current_year)
+            ->orderBy('collectionReference', 'ASC');
 
         if ($collection_batches->count() > 0) {
             //take the first 20 collection batches
@@ -191,7 +191,7 @@ class CreateFailedCollection extends Command
         }
 
         // Log the collection batches
-        Log::debug("== Success on creating failed collection ==");
+        Log::debug("== Failed collection batches created==");
         return 200;
     }
 }

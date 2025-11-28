@@ -5,16 +5,19 @@ namespace App\Http\Controllers\Api\CRDB;
 use App\Classes\Checksum;
 use App\Http\Controllers\Controller;
 use App\Models\DebitOrder;
+use App\Models\Installment;
+use App\Services\DeductionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\Response;
 
 class MandateController extends Controller
 {
     private $auth;
 
-    public function __construct()
+    public function __construct(protected DeductionService $deductionService)
     {
         $this->auth = new Checksum();
     }
@@ -192,17 +195,58 @@ class MandateController extends Controller
                 $debit_order->approved = 1;
                 $debit_order->status = 240;
                 $debit_order->remarks = "Mandate approved";
-            } else if (strtolower($request['data']['status']) == "cancelled") {
-                $debit_order->status = 405;
-                $debit_order->remarks = "Mandate cancelled";
+                $debit_order->save();
+
+                //Log response
+                Log::debug("== CRDB Mandate Status Approved ==");
+
+                // create installments
+                $this->deductionService->createInstallment($debit_order);
             } else {
                 $debit_order->status = 500;
                 $debit_order->remarks = "Failed to approve mandate.";
+                $debit_order->save();
+
+                //Log response
+                Log::debug("== Failed to approve CRDB Mandate ==");
             }
-            $debit_order->save();
         } else if ($callback_type == "PAYMENT_STATUS") {
-            //update installment amount
+            // payment variables
+            $mandateReference = $request['data']['reference'];
+            $transferResponse = $request['data']['transferResponse'];
+            $collectionDate = $request['data']['collectionDate'];
+            $phoneNumber = $request['data']['phoneNumber'];
+            $accountNumber = $request['data']['accountNumber'];
+            $amount = $request['data']['amount'];
+            $transactionReference = $request['data']['transactionReference'];
+            $transactionDateTime = $request['data']['transactionDateTime'];
+
+            if (strtoupper($transferResponse) == "SUCCESS") {
+                // get the first installment with status = "OPEN"
+                $installment = Installment::whereHas('debitOrder', function ($query) use ($mandateReference) {
+                    $query->where('crdb_reference', '=', $mandateReference);
+                })->where('installments.status', '=', 'OPEN')->first();
+
+                if ($installment) {
+                    //updated status of installment
+                    $installment->last_paid_amount = $amount;
+                    $installment->payment_reference = $transactionReference;
+                    $installment->effective_payment_date = date('Y-m-d', strtotime($collectionDate));
+                    $installment->remarks = "Amount paid";
+                    $installment->save();
+
+                    // process installment
+                    $this->deductionService->processInstallment($installment);
+                }
+            } else {
+                // check for failed installments
+            }
         }
+
+        // response
+        return response()->json([
+            'status' => true,
+            'message' => "Callback received",
+        ], 200);
     }
-    
 }

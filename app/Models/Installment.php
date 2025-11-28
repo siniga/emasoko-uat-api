@@ -170,7 +170,7 @@ class Installment extends Model
     }
 
     // Get monthly collection statistics for a specific partner
-    public static function monthlyCollectionStats($partnerId, $month = null, $year = null, $status = null, $deleted = null)
+    public static function monthlyCollectionStats($partnerId, $month = null, $year = null, $status = null, $deleted = null, $paid = null)
     {
         $month = $month ?? now()->month;
         $year  = $year ?? now()->year;

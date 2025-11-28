@@ -161,27 +161,23 @@
                         //check if response is success
                         if (data.success == true) {
                             //check if channel is NMB
-                            if (data.channel == "NMB") {
+                            if (data.channel == "NMB" || data.channel == "CRDB") {
                                 //set show modal to true
                                 if (data.response_code == 201) {
                                     this.status = 405;
 
                                     //display message
-                                    $('#message_wrp_2').html("<div class='alert alert-success rounded-sm'>" +
-                                        data.success_msg + "</div>");
+                                    $('#message_wrp_2').html("<div class='alert alert-success rounded-sm'>" + data.success_msg + "</div>");
                                 } else if (http_response_code == 249 || http_response_code == 430) {
-                                    $('#message_wrp_2').html("<div class='alert alert-info rounded-sm'>" + data
-                                        .success_msg + "</div>");
+                                    $('#message_wrp_2').html("<div class='alert alert-info rounded-sm'>" + data.success_msg + "</div>");
                                 } else {
-                                    $('#message_wrp_2').html("<div class='alert alert-danger rounded-sm'>" +
-                                        data.success_msg + "</div>");
+                                    $('#message_wrp_2').html("<div class='alert alert-danger rounded-sm'>" + data.success_msg + "</div>");
                                 }
                             } else {
                                 //check for other channels
                             }
                         } else if (data.success == false) {
-                            $('#message_wrp_2').html("<div class='alert alert-danger rounded-sm'>" + data
-                                .success_msg + "</div>");
+                            $('#message_wrp_2').html("<div class='alert alert-danger rounded-sm'>" + data.success_msg + "</div>");
                         }
                     }).catch(error => {
                         console.error("Error caught:", error);

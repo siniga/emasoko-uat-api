@@ -54,7 +54,8 @@
                                             href="{{ route('payment-mandate.create-deduction', [$debit_order->customerAccount->uuid]) }}">
                                             Create New Mandate
                                         </a>
-                                        <template x-if="status==100 || status==200 || status==403 || status==430 || status==500 || status==501">
+                                        <template
+                                            x-if="status==100 || status==200 || status==403 || status==430 || status==500 || status==501">
                                             <a class="dropdown-item text-sm"
                                                 href="{{ route('payment-mandate.create-account', [$debit_order->customerAccount->uuid, $debit_order->uuid]) }}">
                                                 Edit Mandate
@@ -62,7 +63,8 @@
                                         </template>
 
                                         <template x-if="deleted==0">
-                                            <template x-if="status==100 || status==200 || status==201 || status==249 || status==403 || status==430 || status==405 || status==500 || status==501">
+                                            <template
+                                                x-if="status==100 || status==200 || status==201 || status==249 || status==403 || status==430 || status==405 || status==500 || status==501">
                                                 <a class="dropdown-item text-sm" x-on:click="archiveMandate();"
                                                     href="javascript:void(0);">
                                                     Archive Mandate
@@ -70,7 +72,8 @@
                                             </template>
                                         </template>
 
-                                        <template x-if="status==201 || status==202 || status==240 || status==249 || status==405 || status==403 || status==500">
+                                        <template
+                                            x-if="status==201 || status==202 || status==240 || status==249 || status==405 || status==403 || status==500">
                                             <a class="dropdown-item text-sm" title="Cancel Mandate"
                                                 x-on:click="openMandateCancellationModal();" href="javascript:void(0);">
                                                 Cancel Mandate
@@ -79,7 +82,8 @@
 
                                         <div class="dropdown-divider"></div>
 
-                                        <template x-if="status==201 || status==249 || status==403 || status==430 || status==405 || status==500 || status==501">
+                                        <template
+                                            x-if="status==201 || status==249 || status==403 || status==430 || status==405 || status==500 || status==501">
                                             <a class="dropdown-item text-sm"
                                                 href="{{ route('payment-mandate.delete', $debit_order->uuid) }}">
                                                 Delete Mandate
@@ -88,13 +92,15 @@
                                     </div>
                                 </div>
 
-                                <template x-if="(status==201 || status==249 || status==430 || status==500) && channel == 'NMB'">
+                                <template
+                                    x-if="(status==201 || status==249 || status==430 || status==500) && channel == 'NMB'">
                                     <button x-html="verifyTxt" title="Verify OTP"
                                         class="btn btn-outline-primary text-medium btn-sm btn-sm"
                                         x-on:click="verifyButton();"></button>
                                 </template>
 
-                                <template x-if="(status==201 || status==202 || status==249 || status==430 || status==501) && channel == 'NMB'">
+                                <template
+                                    x-if="(status==201 || status==202 || status==249 || status==430 || status==501) && channel == 'NMB'">
                                     <button x-html="btnStatus" title="Get Mandate Status"
                                         class="btn btn-outline-success btn-sm" x-on:click="fetchMandateStatus();"></button>
                                 </template>
@@ -190,7 +196,7 @@
                                             </template>
 
                                             <template x-if="status==201">
-                                                <span class="badge badge-pill badge-soft-info">Pending Verification</span>
+                                                <span class="badge badge-pill badge-soft-warning">Pending Verification</span>
                                             </template>
 
                                             <template x-if="status==202">
@@ -296,12 +302,12 @@
                                         </td>
                                     </tr>
 
-                                    <!-- <tr>
-                                        <th>Paid Installment</th>
+                                    <tr>
+                                        <th>Paid Installments</th>
                                         <td>{{ $debit_order->paid_installment ?? '' }}</td>
-                                        <th>UnPaid Installment</th>
-                                        <td>{{ $debit_order->installment_number - $debit_order->paid_installment }}</td>
-                                    </tr> -->
+                                        <th>Failed Installments</th>
+                                        <td>{{ $debit_order->failed_installment }}</td>
+                                    </tr>
 
                                     <tr>
                                         <th>Deduction Start Date</th>
