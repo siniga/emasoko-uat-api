@@ -45,8 +45,7 @@ class MandateUpdation extends Command
         Log::debug("== Creating collection installments: '{$current_date}' ==");
 
         //debit orders
-        $debit_orders = DebitOrder::whereIn('reference', [2711202518934])->get();
-        //$debit_order = DebitOrder::whereIn('reference', [2711202518934, 2711202518880, 2711202518867, 2711202518881, 2711202518842, 2711202518843, 2711202518805, 2611202518782, 2611202518781, 2611202518771, 2611202518766])->get();
+        $debit_orders = DebitOrder::whereIn('reference', [2711202518880, 2711202518867, 2711202518881, 2711202518842, 2711202518843, 2711202518805, 2611202518782, 2611202518781, 2611202518771, 2611202518766])->get();
         //$debit_orders = DebitOrder::where(['approved' => 1, 'status' => 240, 'deleted' => 0])->get();
 
         foreach ($debit_orders as $debit_order) {
