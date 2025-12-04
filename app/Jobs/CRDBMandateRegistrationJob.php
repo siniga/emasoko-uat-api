@@ -114,9 +114,15 @@ class CRDBMandateRegistrationJob implements ShouldQueue
             if ($reference) {
                 $debitOrder->crdb_request_id = $responseId;
                 $debitOrder->crdb_reference = $reference;
+                $debitOrder->remarks = $statusDesc ?: 'No StatusDesc in response';
             }
         } elseif ($statusCode === 1001) {
-            $debitOrder->status = 403;  // failure
+            // get error metadata
+            $errorMetadata = data_get($response, 'ResponseHeader.ErrorMetadata', []);
+
+            //set update params
+            $debitOrder->status = 403;
+            $debitOrder->remarks = $errorMetadata ?: 'No StatusDesc in response';
         } else {
             // Unknown/other code: record it for investigation
             Log::warning('MandateRegistration returned unexpected StatusCode', [
@@ -127,7 +133,6 @@ class CRDBMandateRegistrationJob implements ShouldQueue
 
         // Persist shared fields (guard nulls)
         $debitOrder->http_response_code = $statusCode ?? $httpResponse->status();
-        $debitOrder->remarks = $statusDesc ?: 'No StatusDesc in response';
         $debitOrder->save();
 
         Log::debug('== CRDB Mandate registered successfully ===');

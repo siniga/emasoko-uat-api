@@ -28,6 +28,7 @@ class MandateActionService
     public function __construct()
     {
         $this->auth = new Authentication();
+        $this->bankApi = new BankApiService();
         $this->payloadService = new BankPayloadService();
     }
 
