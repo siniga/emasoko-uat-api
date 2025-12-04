@@ -180,6 +180,7 @@ class ReportController extends Controller
                     $start_at = Carbon::createFromFormat('Y-m-d', $request->start_at)->startOfDay();
                     $end_at = Carbon::createFromFormat('Y-m-d', $request->end_at)->endOfDay();
 
+                    // installments by dates
                     $installments = $installments->whereBetween('installments.payment_date', [$start_at, $end_at]);
                 }
 
@@ -189,6 +190,26 @@ class ReportController extends Controller
 
                     $installments = $installments->whereHas('debitOrder', function ($query) use ($partner_id) {
                         $query->where('debit_orders.partner_id', '=', $partner_id);
+                    });
+                }
+
+                //filtering by account type
+                if ($request->has('account_type_id') && $request->account_type_id != null) {
+                    $account_type_id = $request->account_type_id;
+                    $installments = $installments->whereHas('debitOrder', function ($query) use ($account_type_id) {
+                        $query->whereHas('customerAccount', function ($q) use ($account_type_id) {
+                            $q->where('account_type_id', $account_type_id);
+                        });
+                    });
+                }
+
+                //filtering by account id
+                if ($request->has('account_id') && $request->account_id != null) {
+                    $account_id = $request->account_id;
+                    $installments = $installments->whereHas('debitOrder', function ($query) use ($account_id) {
+                        $query->whereHas('customerAccount', function ($q) use ($account_id) {
+                            $q->where('account_id', $account_id);
+                        });
                     });
                 }
 
@@ -213,10 +234,11 @@ class ReportController extends Controller
                             $paid = "CLOSED";
                     }
 
+                    //installments by status
                     $installments = $installments->where("installments.status", "=", $paid);
                 }
 
-                //order installments
+                //ordering installments
                 $installments = $installments->orderBy('installments.payment_date', 'ASC')->get();
 
                 //arr installments
@@ -234,6 +256,7 @@ class ReportController extends Controller
                     $arr_installments[] = [
                         'Business_Name' => strtoupper($val->debitOrder->partner->business_name),
                         'Mandate_Reference' => $val->debitOrder->reference,
+                        'Account_Type' => strtoupper($val->debitOrder->customerAccount->account->name ?? ''),
                         'Account_Name' => strtoupper($val->debitOrder->customerAccount->account_name),
                         'Account_Number' => $val->debitOrder->customerAccount->account_number,
                         'Customer_Address' => $val->debitOrder->customerAccount->customer->address ?? '',
@@ -274,9 +297,7 @@ class ReportController extends Controller
                     $start_at = Carbon::createFromFormat('Y-m-d', $request->start_at)->startOfDay();
                     $end_at = Carbon::createFromFormat('Y-m-d', $request->end_at)->endOfDay();
 
-                    Log::debug("Report Start_Date = {$start_at}");
-                    Log::debug("Report End_Date = {$end_at}");
-
+                    // installments by dates
                     $installments = $installments->whereBetween('installments.effective_payment_date', [$start_at, $end_at]);
                 }
 
@@ -286,6 +307,26 @@ class ReportController extends Controller
 
                     $installments = $installments->whereHas('debitOrder', function ($query) use ($partner_id) {
                         $query->where('debit_orders.partner_id', '=', $partner_id);
+                    });
+                }
+
+                //filtering by account type
+                if ($request->has('account_type_id') && $request->account_type_id != null) {
+                    $account_type_id = $request->account_type_id;
+                    $installments = $installments->whereHas('debitOrder', function ($query) use ($account_type_id) {
+                        $query->whereHas('customerAccount', function ($q) use ($account_type_id) {
+                            $q->where('account_type_id', $account_type_id);
+                        });
+                    });
+                }
+
+                //filtering by account id
+                if ($request->has('account_id') && $request->account_id != null) {
+                    $account_id = $request->account_id;
+                    $installments = $installments->whereHas('debitOrder', function ($query) use ($account_id) {
+                        $query->whereHas('customerAccount', function ($q) use ($account_id) {
+                            $q->where('account_id', $account_id);
+                        });
                     });
                 }
 
@@ -303,6 +344,7 @@ class ReportController extends Controller
                     $arr_installments[] = [
                         'Business_Name' => strtoupper($val->debitOrder->partner->business_name),
                         'Mandate_Reference' => $val->debitOrder->reference,
+                        'Account_Type' => strtoupper($val->debitOrder->customerAccount->account->name ?? ''),
                         'Account_Name' => strtoupper($val->debitOrder->customerAccount->account_name),
                         'Account_Number' => $val->debitOrder->customerAccount->account_number,
                         'Customer_Address' => $val->debitOrder->customerAccount->customer->address ?? '',
