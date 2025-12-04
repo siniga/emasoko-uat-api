@@ -62,34 +62,36 @@ class DailyCollectionReport extends Command
                 //batch information
                 $batch = CollectionBatch::findOrFail($value->id);
 
-                //Log the collection batches
-                Log::debug("== Collection batch: '{$batch->collectionReference}' ==");
-
+                //arr installments
                 $arr_installments = explode(",", $batch->installment_ids);
+                Log::debug("== Array Installments ==");
+                Log::debug($arr_installments);
 
                 foreach ($arr_installments as $installment_id) {
                     $installment = Installment::where(['id' => $installment_id])->firstOrFail();
-
-                    //Log the collection batches
-                    Log::debug("== Installment: '{$installment->installmentReference}' ==");
-
-                    if ($installment->status == "CLOSED") {
-                        $paid += $paid;
-                    } else if ($installment->status == "FAILED") {
-                        $failed += $failed;
-                    } else if ($installment->status == "FUNDSCHECK") {
-                        $insufficient_funds += $insufficient_funds;
+                    Log::debug("== Installment status: '{$installment->status}' ==");
+                    $status = $installment->status;
+                    
+                    if ($status == "CLOSED") {
+                        $paid++;
+                    } else if ($status == "FAILED") {
+                        $failed++;
+                    } else if ($status == "FUNDSCHECK") {
+                        $insufficient_funds++;
                     }
 
-                    $total += $total;
+                    $total++;
                 }
             }
 
             //Log the collection batches
-            Log::debug("== Total: '{$total}' ==");
-            Log::debug("== Paid: '{$paid}' ==");
-            Log::debug("== Insufficient funds: '{$insufficient_funds}' ==");
-            Log::debug("== Failed: '{$failed}' ==");
+            echo "== Total: '{$total}' ==";
+            echo "<br />";
+            echo "== Paid: '{$paid}' ==";
+            echo "<br />";
+            echo "== Insufficient funds: '{$insufficient_funds}' ==";
+            echo "<br />";
+            echo "== Failed: '{$failed}' ==";
         }
     }
 }

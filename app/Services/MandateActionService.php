@@ -61,6 +61,8 @@ class MandateActionService
 
             //arr response
             $arrResponse = $this->bankApi->mandateRegistrationRequest($payload);
+            Log::debug("== arrResponse ==");
+            Log::debug($arrResponse[0]);
 
             if ($arrResponse) {
                 $success = true;
