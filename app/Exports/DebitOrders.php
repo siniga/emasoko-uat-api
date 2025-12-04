@@ -28,8 +28,10 @@ class DebitOrders implements FromArray, WithHeadings, ShouldAutoSize
             'Service Provider',
             'Mandate Reference',
             'Mandate Status',
+            'Account Type',
             'Account Name',
             'Account Number',
+            "Customer Address",
             'Debit Type',
             'Periodicity',
             'Number of Installment',
@@ -40,10 +42,9 @@ class DebitOrders implements FromArray, WithHeadings, ShouldAutoSize
             'Deduction Start Date',
             'Deduction End Date',
             'Contract Status',
-            'Remarks',
             'Created Date',
             'Created By',
-
+            'Remarks',
         ];
     }
 
@@ -58,7 +59,7 @@ class DebitOrders implements FromArray, WithHeadings, ShouldAutoSize
     {
         return [
             AfterSheet::class    => function (AfterSheet $event) {
-                $cellRange = 'A1:R1'; // All headers
+                $cellRange = 'A1:T1'; // All headers
                 $event->sheet->getDelegate()->getStyle($cellRange)->getFont()->setSize(12);
                 $event->sheet->getDelegate()->getStyle($cellRange)->getFont()->setBold(true);
             },

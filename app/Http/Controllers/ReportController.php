@@ -26,7 +26,7 @@ class ReportController extends Controller
 
     public function lists(Request $request)
     {
-        $title = "System Reports";
+        $title = "Reports";
 
         if (isset($_POST['generate'])) {
             if ($request->report_type == "MANDATE") {
@@ -138,6 +138,7 @@ class ReportController extends Controller
                         'Business_Name' => strtoupper($val->partner->business_name),
                         'Mandate_Reference' => $val->reference,
                         'Mandate_Status' => $consent_status,
+                        'Account_Type' => strtoupper($val->customerAccount->account->name ?? ''),
                         'Account_Name' => strtoupper($val->customerAccount->account_name ?? ''),
                         'Account_Number' => $val->customerAccount->account_number ?? '',
                         'Customer_Address' => $val->customerAccount->customer->address ?? '',
@@ -151,9 +152,9 @@ class ReportController extends Controller
                         'Deduction_Start_Date' => $val->start_date,
                         'Deduction_End Date' => $val->end_date,
                         'Contract_Status' => $val->contract_status,
-                        'Remarks' => $val->remarks,
                         'Created_Date' => $val->created_at,
                         'Created_By' => strtoupper($val->userCreated->name),
+                        'Remarks' => $val->remarks,
                     ];
                 }
 
