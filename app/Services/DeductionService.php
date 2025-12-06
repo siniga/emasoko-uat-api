@@ -435,12 +435,12 @@ class DeductionService
                         $paymentDate = $installment->payment_date;
 
                         //send sms => Insufficient Funds
-                        // $phone = $installment->debitOrder->customerAccount->phone;
-                        // $message = "Makato ya tarehe {$paymentDate} ya kiasi cha shilingi {$installmentAmt} yameshindikana. Tafadhali weka pesa kwenye akaunti yako ya benki kwa ajili ya makato.";
+                        $phone = $installment->debitOrder->customerAccount->phone;
+                        $message = "Makato ya tarehe {$paymentDate} ya kiasi cha shilingi {$installmentAmt} yameshindikana. Tafadhali weka pesa kwenye akaunti yako ya benki kwa ajili ya makato.";
 
-                        // //send sms
-                        // $data = ["phone" => $phone, "message" => $message];
-                        // dispatch(new SendSMSJob($data));
+                        //send sms
+                        $data = ["phone" => $phone, "message" => $message];
+                        dispatch(new SendSMSJob($data));
                     }
                 } else if ($status == "SUCCESS") {
                     //Generate a unique payment reference
