@@ -166,6 +166,7 @@ class DeductionService
         DebitOrder::query()
             ->where('approved', 1)
             ->where('status', 240)
+            ->where('channel', 'NMB')
             ->where('contract_status', 'OPEN')
             ->where('deleted', 0)
             ->whereDate('next_debit_date', $current_date)

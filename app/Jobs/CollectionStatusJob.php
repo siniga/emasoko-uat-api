@@ -72,6 +72,13 @@ class CollectionStatusJob implements ShouldQueue
         //response
         $response = Http::withHeaders($headers)->post($API_URL, $payload);
 
+        // Log response metadata BEFORE decoding
+        Log::debug('== CollectionStatus HTTP Response ==', [
+            'status'  => $response->status(),
+            'headers' => $response->headers(),
+            'body'    => $response->body(),   // raw string
+        ]);
+
         //collection reference
         $collection_reference = $payload['data']['collectionReference'];
 

@@ -72,6 +72,13 @@ class PushCollectionJob implements ShouldQueue
         //response
         $response = Http::withHeaders($headers)->post($API_URL, $payload);
 
+        // Log response metadata BEFORE decoding
+        Log::debug('== CollectionStatus HTTP Response ==', [
+            'status'  => $response->status(),
+            'headers' => $response->headers(),
+            'body'    => $response->body(),   // raw string
+        ]);
+
         //update collection batch 
         $collection_batch = CollectionBatch::where('collectionReference', '=', $payload['data']['collectionReference'])->first();
 
