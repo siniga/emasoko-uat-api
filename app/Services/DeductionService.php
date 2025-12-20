@@ -403,76 +403,79 @@ class DeductionService
             //get installment from id
             $installment = Installment::where('id', '=', $fields[0])->first();
 
-            //check if installment exists AND status != CLOSED
-            if ($installment && $installment->status != "CLOSED") {
-                //installment amount
-                $installment_amount = $installment->installment_amount;
+            //check if installment exists AND channel == "NMB"
+            if($installment && $installment->debitOrder->channel == "NMB"){
+                //check if installment status != CLOSED
+                if ($installment->status != "CLOSED") {
+                    //installment amount
+                    $installment_amount = $installment->installment_amount;
 
-                //status and paid amount
-                $message = ucwords(strtolower($fields[8]));
-                $status = strtoupper($fields[7]);
-                $amount = floatval($fields[6]);
+                    //status and paid amount
+                    $message = ucwords(strtolower($fields[8]));
+                    $status = strtoupper($fields[7]);
+                    $amount = floatval($fields[6]);
 
-                //check for status
-                if ($status == "FAIL" || $status == "FUNDSCHECK") {
-                    //status
-                    if ($status == "FAIL")
-                        $installment->status = "FAILED";
-                    else if ($status == "FUNDSCHECK")
-                        $installment->status = "FUNDSCHECK";
+                    //check for status
+                    if ($status == "FAIL" || $status == "FUNDSCHECK") {
+                        //status
+                        if ($status == "FAIL")
+                            $installment->status = "FAILED";
+                        else if ($status == "FUNDSCHECK")
+                            $installment->status = "FUNDSCHECK";
 
-                    //remarks
-                    $installment->remarks = $message;
-                    $installment->save();
+                        //remarks
+                        $installment->remarks = $message;
+                        $installment->save();
 
-                    //increment failed count
-                    $failed_installments += 1;
+                        //increment failed count
+                        $failed_installments += 1;
 
-                    if ($message == 'Insufficient Funds') {
-                        //format amount
-                        $installmentAmt = number_format($installment_amount);
+                        if ($message == 'Insufficient Funds') {
+                            //format amount
+                            $installmentAmt = number_format($installment_amount);
 
-                        //payment date
-                        $paymentDate = $installment->payment_date;
+                            //payment date
+                            $paymentDate = $installment->payment_date;
 
-                        //send sms => Insufficient Funds
-                        $phone = $installment->debitOrder->customerAccount->phone;
-                        $message = "Makato ya tarehe {$paymentDate} ya kiasi cha shilingi {$installmentAmt} yameshindikana. Tafadhali weka pesa kwenye akaunti yako ya benki kwa ajili ya makato.";
+                            //send sms => Insufficient Funds
+                            $phone = $installment->debitOrder->customerAccount->phone;
+                            $message = "Makato ya tarehe {$paymentDate} ya kiasi cha shilingi {$installmentAmt} yameshindikana. Tafadhali weka pesa kwenye akaunti yako ya benki kwa ajili ya makato.";
 
-                        //send sms
-                        $data = ["phone" => $phone, "message" => $message];
-                        dispatch(new SendSMSJob($data));
+                            //send sms
+                            $data = ["phone" => $phone, "message" => $message];
+                            dispatch(new SendSMSJob($data));
+                        }
+                    } else if ($status == "SUCCESS") {
+                        //Generate a unique payment reference
+                        $reference = $this->uniquePaymentReference(12);
+
+                        //updated status of installment
+                        $installment->payment_reference = $reference;
+                        $installment->last_paid_amount = $amount;
+                        $installment->remarks = $message;
+                        //$installment->effective_payment_date = Carbon::now()->toDateString(); // Fix this
+                        $installment->save();
+
+                        //4. Insert or Create payment in installment amount
+                        $payment = InstallmentPayment::firstOrNew(
+                            [
+                                'reference' => $reference,
+                                'installment_id' => $installment->id
+                            ]
+                        );
+                        $payment->amount = $amount;
+                        $payment->save();
+
+                        //increment success count
+                        $success_installments += 1;
+
+                        //process calculation for installment and debit order.
+                        $this->processInstallment($installment);
+                    } else {
+                        //updated status of installment
+                        $installment->status = $status;
+                        $installment->save();
                     }
-                } else if ($status == "SUCCESS") {
-                    //Generate a unique payment reference
-                    $reference = $this->uniquePaymentReference(12);
-
-                    //updated status of installment
-                    $installment->payment_reference = $reference;
-                    $installment->last_paid_amount = $amount;
-                    $installment->remarks = $message;
-                    //$installment->effective_payment_date = Carbon::now()->toDateString(); // Fix this
-                    $installment->save();
-
-                    //4. Insert or Create payment in installment amount
-                    $payment = InstallmentPayment::firstOrNew(
-                        [
-                            'reference' => $reference,
-                            'installment_id' => $installment->id
-                        ]
-                    );
-                    $payment->amount = $amount;
-                    $payment->save();
-
-                    //increment success count
-                    $success_installments += 1;
-
-                    //process calculation for installment and debit order.
-                    $this->processInstallment($installment);
-                } else {
-                    //updated status of installment
-                    $installment->status = $status;
-                    $installment->save();
                 }
             }
         }
@@ -504,18 +507,21 @@ class DeductionService
             //get installment from id
             $installment = Installment::where('id', '=', $fields[0])->first();
 
-            //check if installment exists AND status != CLOSED
-            if ($installment && $installment->status != "CLOSED") {
-                //status and paid amount
-                $message = ucwords(strtolower($fields[8]));
+            //check if installment exists AND channel == "NMB"
+            if($installment && $installment->debitOrder->channel == "NMB"){
+                //check if installment status != CLOSED
+                if ($installment->status != "CLOSED") {
+                    //status and paid amount
+                    $message = ucwords(strtolower($fields[8]));
 
-                //updated status of installment
-                $installment->status = "FAILED";
-                $installment->remarks = $message;
-                $installment->save();
+                    //updated status of installment
+                    $installment->status = "FAILED";
+                    $installment->remarks = $message;
+                    $installment->save();
 
-                //increment failed count
-                $failed_installments += 1;
+                    //increment failed count
+                    $failed_installments += 1;
+                }
             }
         }
 
