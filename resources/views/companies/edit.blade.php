@@ -196,7 +196,6 @@
                             </form>
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
@@ -279,8 +278,11 @@
                     const formData = new FormData(form);
                     const jsonData = Object.fromEntries(formData);
 
+                    console.log("== jsonData ==")
+                    console.log(jsonData);
+
                     //post data => URL
-                    fetch("/companies/update", {
+                    fetch("/companies/update/" + "{{ $company->uuid }}", {
                             method: "POST",
                             headers: {
                                 "Content-Type": "application/json",
@@ -299,7 +301,7 @@
                                 "<div class='alert alert-success py-2.5 px-2'>Service provider information updated</div>"
                             );
 
-                            //set timer
+                            // //set timer
                             setTimeout(function() {
                                 window.location.href = "/companies/details/" + responseJson.uuid;
                             }, 2000);

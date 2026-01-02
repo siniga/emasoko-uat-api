@@ -84,13 +84,11 @@
                                     <div class="mb-3">
                                         @php
                                             $options = [
-                                                0 => 'Registration Process',
-                                                1 => 'Completed Registration',
-                                                100 => 'Approval Process',
-                                                200 => 'Approved',
-                                                403 => 'Rejected',
+                                                0 => 'Pending Review',
+                                                1 => 'Approved',
+                                                99 => 'Failed',
                                             ];
-                                            $options = ['' => '-- Select Status --'] + $options;
+                                            $options = ['' => '-- Select eMakato Status --'] + $options;
                                         @endphp
 
                                         {{ Form::select('status', $options, old('status', $post_data['status']), ['class' => 'form-control']) }}
@@ -170,11 +168,6 @@
                                         href="{{ route('companies.export-xls', ['start_at' => $post_data['start_at'], 'end_at' => $post_data['end_at'], 'category_id' => $post_data['category_id'], 'region_id' => $post_data['region_id'], 'status' => $post_data['status'], 'keyword' => $post_data['keyword']]) }}">
                                         <i class="fas fa-file-excel"></i> Export XLS
                                     </a>
-
-                                    {{-- <a class="btn btn-outline-danger btn-sm"
-                                        href="{{ route('companies.export-pdf', ['start_at' => $post_data['start_at'], 'end_at' => $post_data['end_at'], 'category_id' => $post_data['category_id'], 'region_id' => $post_data['region_id'], 'status' => $post_data['status'], 'keyword' => $post_data['keyword']]) }}">
-                                        <i class="fas fa-file-pdf"></i> Export PDF
-                                    </a> --}}
                                 @endif
                             </div>
                         </div>
@@ -182,18 +175,18 @@
 
                     <div class="table-responsive">
                         @if (isset($companies) && $companies->isNotEmpty())
-                            <table id="dt" class="table table-hover table-bordered">
+                            <table class="table table-bordered dt-responsive  nowrap w-100" id="dynamicTable">
                                 <thead>
                                     <tr>
                                         <th width="3%">#</th>
-                                        <th width="18%">Bussiness Name</th>
+                                        <th width="22%">Bussiness Name</th>
                                         <th width="16%">Category</th>
                                         <th width="10%">TIN Number</th>
-                                        <th width="8%">Year of Incorporation</th>
+                                        <th width="10%">Year of Inc</th>
                                         <th width="10%">Phone</th>
                                         <th width="10%">Region</th>
-                                        <th width="10%">Status</th>
-                                        <th style="width: 60px;">Actions</th>
+                                        <th width="10%">Approved</th>
+                                        <th style="width: 40px;">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -206,24 +199,15 @@
                                             <td>{{ $company->tin_number }}</td>
                                             <td>{{ $company->year_of_incorporation }}</td>
                                             <td>{{ $company->phone }}</td>
-                                            <td>{{ $company->region ? ucfirst(strtolower($company->region->name)) : '' }}</td>
+                                            <td>{{ $company->region ? ucfirst(strtolower($company->region->name)) : '' }}
+                                            </td>
                                             <td>
-                                                @if ($company->status == 0)
-                                                    <span class="badge bg-warning">Registration Process</span>
-                                                @elseif($company->status == 100)
-                                                    <span class="badge bg-info">Pending Review</span>
-                                                @elseif($company->status == 200)
-                                                    <span class="badge bg-info">Pending Approval</span>
-                                                @elseif($company->status == 201)
-                                                    <span class="badge bg-warning">Pending Verification</span>
-                                                @elseif($company->status == 203)
-                                                    <span class="badge bg-warning">Pending Verification</span>
-                                                @elseif($company->status == 202)
-                                                    <span class="badge bg-success-1">Verified</span>
-                                                @elseif($company->status == 403) 
-                                                    <span class="badge bg-danger">Failed</span>   
-                                                @elseif($company->status == 500)
-                                                    <span class="badge bg-danger">Rejected</span>
+                                                @if ($company->approved == 0)
+                                                    <span class="badge bg-warning">Pending Review</span>
+                                                @elseif($company->approved == 1)
+                                                    <span class="badge bg-success">Approved</span>
+                                                @elseif($company->approved == 99)
+                                                    <span class="badge bg-danger">Failed</span>
                                                 @endif
                                             </td>
                                             <td>
@@ -232,21 +216,21 @@
                                                         title="View" class="btn btn-xss">
                                                         <i class="bx bxs-folder-open"></i>
                                                     </a>
-                                                @elseif($company->complete == 0 || $company->status == 500)
+                                                @elseif($company->complete == 0)
                                                     <a href="{{ route('companies.registration', $company->uuid) }}"
                                                         title="View" class="btn btn-xss">
                                                         <i class='bx bxs-plus-square bx-xs'></i>
                                                     </a>
                                                 @endif
 
-                                                @if ($company->status == 100 || $company->status ==200 || $company->status == 201)
-                                                    <a href="{{ route('companies.edit', $company->uuid) }}" title="Edit"
-                                                        class="btn btn-xss">
-                                                        <i class="bx bx-edit text-secondary"></i>
-                                                    </a>
+                                                <a href="{{ route('companies.edit', $company->uuid) }}" title="Edit"
+                                                    class="btn btn-xss">
+                                                    <i class="bx bx-edit text-secondary"></i>
+                                                </a>
 
-                                                    <a href="{{ route('companies.delete', $company->uuid) }}" title="Delete"
-                                                        class="btn btn-xss delete">
+                                                @if ($company->approved == 0 || $company->approved == 99)
+                                                    <a href="{{ route('companies.delete', $company->uuid) }}"
+                                                        title="Delete" class="btn btn-xss delete">
                                                         <i class="bx bx-trash text-danger"></i>
                                                     </a>
                                                 @endif

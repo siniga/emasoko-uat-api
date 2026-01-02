@@ -91,7 +91,7 @@ Route::post('reset-password', [ForgotPasswordController::class, 'submitResetPass
 Route::any('companies/lists', [CompanyController::class, 'index'])->name('companies.lists');
 Route::get('companies/details/{uuid}', [CompanyController::class, 'show'])->name('companies.details');
 Route::get('companies/edit/{uuid}', [CompanyController::class, 'edit'])->name('companies.edit');
-Route::post('companies/update', [CompanyController::class, 'update'])->name('companies.update');
+Route::post('companies/update/{uuid}', [CompanyController::class, 'update'])->name('companies.update');
 Route::get('companies/delete/{uuid}', [CompanyController::class, 'destroy'])->name('companies.delete');
 Route::get('companies/export-xls', [CompanyController::class, 'exportXLS'])->name('companies.export-xls');
 Route::get('companies/export-pdf', [CompanyController::class, 'exportPDF'])->name('companies.export-pdf');
@@ -108,6 +108,10 @@ Route::post('companies/store-documents', [CompanyController::class, 'storeCompan
 Route::get('companies/accounts/{uuid}', [CompanyController::class, 'companyAccountForm'])->name('companies.register-accounts');
 Route::post('companies/store-accounts', [CompanyController::class, 'storeCompanyAccounts'])->name('companies.store-accounts');
 
+//new collection accounts
+Route::get('companies/collection_account/{uuid}', [CompanyController::class, 'newCollectionAccountForm'])->name('companies.collection-account');
+Route::post('companies/store-collection-account', [CompanyController::class, 'storeCollectionAccount'])->name('companies.store-collection-account');
+
 //company staff
 Route::get('companies/staff/{uuid}', [CompanyController::class, 'companyStaffForm'])->name('companies.register-staff');
 Route::post('companies/store-staff', [CompanyController::class, 'storeCompanyStaff'])->name('companies.store-staff');
@@ -122,10 +126,10 @@ Route::get('companies/cancel-registration/{uuid}', [CompanyController::class, 'c
 Route::post('companies/saving-registration', [CompanyController::class, 'savingRegistration'])->name('companies.saving-registration');
 Route::post('companies/confirm-registration', [CompanyController::class, 'confirmRegistration'])->name('companies.confirm-registration');
 
-Route::get('companies/assessment/{uuid}', [CompanyController::class, 'companyAssessment'])->name('companies.assessment');
-Route::get('companies/assessment-stages', [CompanyController::class, 'companyAssessmentStages'])->name('companies.assessment-stages');
-Route::get('companies/assessment-approval', [CompanyController::class, 'companyAssessmentApproval'])->name('companies.assessment-approval');
-Route::post('companies/store-assessment', [CompanyController::class, 'storeAssessment'])->name('companies.store-assessment');
+//Route::get('companies/assessment/{uuid}', [CompanyController::class, 'companyAssessment'])->name('companies.assessment');
+//Route::get('companies/assessment-stages', [CompanyController::class, 'companyAssessmentStages'])->name('companies.assessment-stages');
+//Route::get('companies/assessment-approval', [CompanyController::class, 'companyAssessmentApproval'])->name('companies.assessment-approval');
+//Route::post('companies/store-assessment', [CompanyController::class, 'storeAssessment'])->name('companies.store-assessment');
 Route::post('companies/confirm-assessment', [CompanyController::class, 'confirmAssessment'])->name('companies.confirm-assessment');
 Route::post('companies/fetch-corporate-status', [CompanyController::class, 'fetchCorporateStatus'])->name('companies.fetch-corporate-status');
 Route::get('companies/create-invoice/{uuid}', [CompanyController::class, 'createInvoice'])->name('companies.create-invoice');

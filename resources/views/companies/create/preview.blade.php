@@ -204,7 +204,7 @@
                                                         <td>{{ $val->customer_code ?? '' }}</td>
                                                         <td>{{ $val->branch_code ?? '' }}</td>
                                                         <td>{{ number_format($val->corporate_limit) ?? '' }}</td>
-                                                        <td>{{ $val->currency->short_code ?? '' }}</td>       
+                                                        <td>{{ $val->currency->short_code ?? '' }}</td>
                                                     </tr>
                                                 @endforeach
                                             </tbody>
@@ -255,54 +255,32 @@
                                 </div>
                             </div>
 
-                            {{-- <div class="row">
-                                <div class="col-lg-12">
-                                    <table class="table table-stripped table-bordered">
-                                        <tr>
-                                            <td colspan="4" class="font-weight-600 text-uppercase">
-                                                Service Provider Credentials
-                                            </td>
-                                        </tr>
-
-                                        <tr>
-                                            <th width=25%>Company Name</th>
-                                            <td width=25%>
-                                                <span>{{ $company->partnerAuthorizeUser->user->name ?? '' }}</span>
-                                            </td>
-
-                                            <th>Email/Username</th>
-                                            <td>{{ $company->partnerAuthorizeUser->user->email ?? '' }}
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </div>
-                            </div> --}}
-
                             <div id="message_wrp"></div>
 
                             <template x-if="complete=='0' || complete=='1'">
                                 <div class="row">
                                     <div class="col-md-12">
                                         <div class="mb-3 text-sm-end d-none d-sm-block">
-                                            <template x-if="status==0 || status==403 || status==500">
+                                            <template x-if="approved==0">
                                                 <a href="{{ route('companies.cancel-registration', $company->uuid) }}"
                                                     class="btn btn-danger cancel text-medium mx-1">Cancel
                                                 </a>
                                             </template>
 
-                                            <template x-if="status==0 || status==403 || status==500">
+                                            <template x-if="approved==0 || approved==99">
                                                 <a href="{{ route('companies.registration', $company->uuid) }}"
                                                     class="btn btn-info text-medium mx-1">Edit
                                                 </a>
                                             </template>
 
-                                            <template x-if="status==0 || status==403 || status==500">
-                                                <button type="submit" name="save" class="btn btn-secondary text-medium mx-1"
-                                                    x-text="buttonSave" :disabled="saveLoading" x-on:click="savingForm();">
+                                            <template x-if="approved==0">
+                                                <button type="submit" name="save"
+                                                    class="btn btn-secondary text-medium mx-1" x-text="buttonSave"
+                                                    :disabled="saveLoading" x-on:click="savingForm();">
                                                 </button>
                                             </template>
 
-                                            <template x-if="status==0 || status==403 || status==500">
+                                            <template x-if="approved==0 || approved==99">
                                                 <button type="submit" name="submit" class="btn btn-success text-medium"
                                                     x-text="buttonSubmit" :disabled="submitLoading"
                                                     x-on:click="submitForm();"></button>
@@ -321,105 +299,5 @@
 @endsection
 
 @section('script')
-    <script type="text/javascript">
-        //initiate data
-        function initData() {
-            return {
-                formData: {
-                    id: "{{ $company->id }}",
-                    uuid: "{{ $company->uuid }}",
-                },
-                complete: "{{ $company->complete }}",
-                status: "{{ $company->status }}",
-                formMessage: "",
-
-                saveLoading: false,
-                buttonSave: "Save",
-
-                submitLoading: false,
-                buttonSubmit: "Submit",
-
-                //submit form
-                submitForm() {
-                    this.formMessage = "";
-                    this.submitLoading = false;
-                    this.buttonSubmit = "Submitting...";
-
-                    fetch("/companies/confirm-registration", {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                                Accept: "application/json",
-                                'X-CSRF-TOKEN': document.head.querySelector('meta[name=csrf-token]').content
-                            },
-                            body: JSON.stringify(this.formData),
-                        }).then(response => response.json())
-                        .then(responseJson => {
-                            console.log(responseJson);
-                            //change complete status
-                            this.complete = 1;
-
-                            //display message
-                            $('#message_wrp').html(
-                                "<div class='alert alert-success rounded-sm'>Service provider registered, Waiting for assessment and approval process.</div>"
-                            );
-
-                            //set timer
-                            setTimeout(function() {
-                                window.location.href = "/companies/details/" + responseJson.uuid;
-                            }, 1000);
-
-                        }).catch(() => {
-                            //change submit button text
-                            $('#submitButton').text('Update');
-
-                            //write error message
-                            $('.form-message').html(
-                                "<div class='alert alert-danger py-2.5 px-2'>Failed to update service provider information</div>"
-                            );
-                        }).finally(() => {
-                            this.submitLoading = false;
-                            this.buttonSubmit = "Submit";
-                        });
-                },
-
-                //saving Form
-                savingForm() {
-                    this.formMessage = "";
-                    this.saveLoading = false;
-                    this.buttonSave = "Saving...";
-
-                    fetch("/companies/saving-registration", {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                                Accept: "application/json",
-                                'X-CSRF-TOKEN': document.head.querySelector('meta[name=csrf-token]').content
-                            },
-                            body: JSON.stringify(this.formData),
-                        }).then(response => response.json())
-                        .then(responseJson => {
-                            console.log(responseJson);
-                            //change complete status
-                            this.complete = 0;
-
-                            //display message
-                            $('#message_wrp').html(
-                                "<div class='alert alert-success rounded-sm'>Service provider information saved.</div>"
-                            );
-
-                            //set timer
-                            setTimeout(function() {
-                                window.location.href = "/companies/details/" + response.uuid;
-                            }, 1000);
-                        }).catch(() => {
-                            this.formMessage = "Something went wrong.";
-                        }).finally(() => {
-                            this.saveLoading = false;
-                            this.buttonSave = "Save";
-                        });
-                }
-            }
-        }
-    </script>
+    @include('companies.create.alpinejs')
 @endsection

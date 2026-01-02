@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Jobs\SendEmailJob;
+use App\Models\Account;
 use App\Models\AppVariable;
 use App\Models\CompanyUser;
 use App\Models\DocumentCategory;
@@ -57,7 +58,7 @@ class CompanyService
         $partner->business_name = ucwords($data->business_name);
         $partner->tin_number = $data->tin_number;
         $partner->year_of_incorporation = $data->year_of_incorporation;
-        $partner->number_of_staff = 0;
+        $partner->number_of_staff = $data->number_of_staff;
         $partner->region_id = $data->region_id;
         $partner->phone = $phone;
         $partner->email = $data->company_email;
@@ -87,6 +88,9 @@ class CompanyService
         if ($data['account_id']) {
             for ($i = 0; $i < sizeof($data['account_id']); $i++) {
                 if ($data['account_id'][$i] != '' && $data['account_name'][$i] != '' && $data['account_name'][$i] != '') {
+                    // detect account channel
+                    $account = Account::where(['id' => $data['account_id'][$i]])->first();
+
                     //create new partner account
                     $partner_account = PartnerAccount::firstOrNew([
                         'partner_id' => $partner['id'],
@@ -102,6 +106,7 @@ class CompanyService
                     $partner_account->corporate_limit = floatval(str_replace(',', '', $data['corporate_limit'][$i]));
                     $partner_account->branch_code = substr($data['account_number'][$i], 0, 3);
                     $partner_account->currency_id = $data['currency_id'][$i];
+                    $partner_account->channel = $account->slug;
                     $partner_account->save();
                 }
             }
@@ -193,15 +198,15 @@ class CompanyService
     {
         if ($data['action'] == "REJECT") {
             //update company registration status
-            $partner->status = 500;
             $partner->complete = 0;
+            $partner->approved = 99;
             $partner->remarks = $data['remarks'];
             $partner->updated_by = auth()->id();
             $partner->save();
 
             //construct message
-            $message = "<p>Company information has been rejected by eMakato.</p>";
-            $message .= "<p>" . $data['remarks'] . "</p>";
+            $message = "<p>Company information has been rejected by eMakato Team.</p>";
+            $message .= "<p>Reason for rejection:" . $data['remarks'] . "</p>";
             $message .= "<p>Please, contact with eMakato Team to complete your information</p>";
 
             //send email
@@ -218,6 +223,9 @@ class CompanyService
             return 500;
         } else if ($data['action'] == "APPROVE") {
             //update company registration status
+            $partner->complete = 1;
+            $partner->approved = 1; //approved
+            $partner->remarks = "Service provider registration approved by eMakato Team";
             $partner->status = 200; //OK
             $partner->updated_by = auth()->id();
             $partner->save();

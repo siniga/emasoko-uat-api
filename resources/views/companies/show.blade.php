@@ -40,35 +40,34 @@
                             <div></div>
 
                             <div class="text-sm-end d-none d-sm-block">
-                                {{-- <a href="{{ route('companies.create-invoice', $company->uuid) }}" title="Send Invoice"
-                                    class="btn btn-success btn-sm">
-                                    <i class='fa fa-file-pdf'></i> Send Invoice
-                                </a> --}}
+                                <a href="{{ route('companies.collection-account', $company->uuid) }}"
+                                    title="New Collection Account" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-plus"></i> New Collection Account
+                                </a>
 
-                                <template x-if="status==100 || status==403 || status==500">
+                                <template x-if="approved==0 || approved==99">
                                     <a href="{{ route('companies.registration', $company->uuid) }}" title="View"
                                         class="btn btn-warning btn-sm">
                                         <i class='fa fa-pen'></i> Update Information
                                     </a>
                                 </template>
 
-                                <template x-if="status==0 || status==100 || status==403">
+                                <template x-if="approved==0 || approved==99">
                                     <button title="Reject Registration" class="btn btn-danger btn-sm"
                                         x-on:click="openRejectModal();" x-transition x-cloak>
                                         <i class="fa fa-times"></i> Reject Registration
                                     </button>
                                 </template>
 
-                                <template
-                                    x-if="status==100 || status==200">
+                                @if ($is_verified_false > 0)
                                     <button x-html="btnApprove" title="Approve Registration" class="btn btn-success btn-sm"
-                                        x-on:click="approveRegistration('{{ $company->uuid }}')"></button>
-                                </template>
+                                        x-on:click="approveRegistration()"></button>
+                                @endif
 
-                                <template x-if="status ==201 || status == 203 || status==403 || status==500">
+                                @if ($is_nmb_verified_false > 0)
                                     <button x-html="btnStatus" title="Get Status" class="btn btn-outline-success btn-sm"
                                         x-on:click="fetchRegistrationStatus('{{ $company->uuid }}')"></button>
-                                </template>
+                                @endif
                             </div>
                         </div>
 
@@ -112,38 +111,18 @@
                             </tr>
 
                             <tr>
-                                <th>Registration Status</th>
+                                <th>eMakato Status</th>
                                 <td id="company-status">
-                                    <template x-if="status==0">
-                                        <span class="badge bg-warning">Registration Process</span>
-                                    </template>
-
-                                    <template x-if="status==100">
+                                    <template x-if="approved==0">
                                         <span class="badge bg-warning">Pending Review</span>
                                     </template>
 
-                                    <template x-if="status==200">
-                                        <span class="badge bg-info">Pending Approval</span>
+                                    <template x-if="approved==1">
+                                        <span class="badge bg-success">Approved</span>
                                     </template>
 
-                                     <template x-if="status==201">
-                                        <span class="badge bg-warning">Pending Verification</span>
-                                    </template>
-
-                                    <template x-if="status==203">
-                                        <span class="badge bg-warning">Pending Verification</span>
-                                    </template>
-
-                                    <template x-if="status==202">
-                                        <span class="badge bg-success">Company Verified</span>
-                                    </template>
-
-                                    <template x-if="status==403">
+                                    <template x-if="approved==99">
                                         <span class="badge bg-danger">Failed</span>
-                                    </template>
-
-                                    <template x-if="status==500">
-                                        <span class="badge bg-danger">Rejected</span>
                                     </template>
                                 </td>
 
@@ -180,6 +159,58 @@
                                 <td>{{ $company->physical_address }}</td>
                             </tr>
                         </table>
+
+                        @if ($company->partnerAccounts->isNotEmpty())
+                            <table class="table table-bordered dt-responsive  nowrap w-100" id="dynamicTable">
+                                <thead>
+                                    <tr>
+                                        <td colspan="4" class="font-weight-600 text-uppercase">
+                                            Service Provider Collection Accounts
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <th width="3%">#</th>
+                                        <th width="10%">Channel</th>
+                                        <th width="10%">Bank/MNO</th>
+                                        <th width="20%">Account Name</th>
+                                        <th width="10%">Account No.</th>
+                                        <th width="10%">Customer No.</th>
+                                        <th width="8%">Verified</th>
+                                        <th width="24%">Remarks</th>
+                                        {{-- <th style="width:10px !important;"></th> --}}
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    @foreach ($company->partnerAccounts as $val)
+                                        <tr>
+                                            <td>{{ $loop->iteration }}</td>
+                                            <td>{{ $val->accountType->name ?? '' }}</td>
+                                            <td>{{ $val->account->name ?? '' }}</td>
+                                            <td>{{ $val->account_name ?? '' }}</td>
+                                            <td>{{ $val->account_number ?? '' }}</td>
+                                            <td>{{ $val->customer_code ?? '' }}</td>
+                                            <td>
+                                                @if ($val->is_verified == 1)
+                                                    <span class="badge bg-success">Yes</span>
+                                                @elseif($val->is_verified == 0)
+                                                    <span class="badge bg-danger">No</span>
+                                                @endif
+                                            </td>
+                                            <td>{{ $val->remarks ?? '' }}</td>
+                                            {{-- <td>
+                                                <a title="View" class="btn btn-xss">
+                                                    <i class="bx bxs-folder-open"></i>
+                                                </a>
+                                            </td> --}}
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        @else
+                            <div class="alert alert-danger">No any collection account at the moment!</div>
+                        @endif
 
                         @if ($company->partnerDocuments->isNotEmpty())
                             <table class="table table-nowrap align-middle table-bordered mb-4">
@@ -220,54 +251,6 @@
                             </table>
                         @else
                             <div class="alert alert-danger">No any document at the moment!</div>
-                        @endif
-
-                        @if ($company->partnerAccounts->isNotEmpty())
-                            <table class="table table-nowrap align-middle table-bordered mb-4">
-                                <thead>
-                                    <tr>
-                                        <td colspan="4" class="font-weight-600 text-uppercase">
-                                            Service Provider Collection Accounts
-                                        </td>
-                                    </tr>
-
-                                    <tr>
-                                        <th width="3%">#</th>
-                                        <th width="12%">Account Type</th>
-                                        <th width="20%">Bank/MNO</th>
-                                        <th width="25%">Account Name</th>
-                                        <th width="10%">Account No.</th>
-                                        <th width="8%">Customer No.</th>
-                                        <th width="15%">Corporate Limit</th>
-                                        <th width="10%">Currency</th>
-                                        {{-- <th width="15%">Status</th> --}}
-                                    </tr>
-                                </thead>
-
-                                <tbody>
-                                    @foreach ($company->partnerAccounts as $val)
-                                        <tr>
-                                            <td>{{ $loop->iteration }}</td>
-                                            <td>{{ $val->accountType->name ?? '' }}</td>
-                                            <td>{{ $val->account->name ?? '' }}</td>
-                                            <td>{{ $val->account_name ?? '' }}</td>
-                                            <td>{{ $val->account_number ?? '' }}</td>
-                                            <td>{{ $val->customer_code ?? '' }}</td>
-                                            <td>{{ number_format($val->corporate_limit) ?? '' }}</td>
-                                            <td>{{ $val->currency->short_code ?? '' }}</td>
-                                            {{-- <td>
-                                                @if($val->status == 1)
-                                                    <span class="badge bg-success">Active</span>
-                                                @else
-                                                    <span class="badge bg-danger">Inactive</span>
-                                                @endif    
-                                            </td> --}}
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        @else
-                            <div class="alert alert-danger">No any collection account at the moment!</div>
                         @endif
 
                         @if ($company->partnerStaff->isNotEmpty())
@@ -311,182 +294,10 @@
             </div>
         </div>
 
-        <!--offcanvas wrp -->
-        {{-- <div id="offcanvas-wrp" x-show="sidebarOpen" x-transition>
-            <div id="detail-div"></div>
-        </div> --}}
-        
-        @include('companies.modals.reject_modal')
+        @include('companies.modals.rejecting')
     </div>
 @endsection
 
 @section('script')
-    <script type="text/javascript">
-        //initiate data
-        function initData() {
-            return {
-                sidebarOpen: false,
-                eModal: "Company_Information",
-                status: "{{ $company->status }}",
-                remarks: "{{ $company->remarks }}",
-                stages: [],
-
-                formData: {
-                    'uuid': "{{ $company->uuid }}",
-                    'action': "",
-                    'remarks': "",
-                },
-                formLoading: false,
-                formMessage: "",
-                btnApprove: '<i class="fa fa-check"></i> Approve Registration',
-                buttonSubmit: "Submit",
-                buttonConfirm: "Confirm",
-                confirm_btn: false,
-
-                //status
-                btnStatus: '<i class="fa fa-check"></i> Get Status',
-
-                //fetch url info
-                fetchData(uuid) {
-                    fetch("/companies/assessment/" + uuid)
-                        .then(response => response.text())
-                        .then(data => {
-                            $('#detail-div').html(data)
-                        });
-                },
-
-                //open reject modal
-                openRejectModal() {
-                    $('#rejectModal').modal('show');
-                },
-
-                //approval company registration
-                approveRegistration() {
-                    this.formLoading = true;
-                    this.btnApprove = '<i class="fas fa-spinner fa-spin"></i> Approving Registration....';
-
-                    //format form 
-                    this.formData.action = "APPROVE";
-                    this.formData.remarks = "Company registration approved";
-
-                    fetch("/companies/confirm-assessment", {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                                Accept: "application/json",
-                                'X-CSRF-TOKEN': document.head.querySelector('meta[name=csrf-token]').content
-                            },
-                            body: JSON.stringify(this.formData),
-                        }).then(response => response.json())
-                        .then(responseJson => {
-                            console.log(responseJson);
-                            this.status = responseJson.status
-
-                            $('#message_wrp').html(
-                                "<div class='alert alert-success rounded-sm'>" + responseJson.message + "</div>"
-                            );
-                        }).catch(() => {
-                            //display message
-                            $('#message_wrp').html(
-                                "<div class='alert alert-danger rounded-sm'>Something went wrong.</div>"
-                            );
-
-                        }).finally(() => {
-                            this.formLoading = false;
-                            this.btnApprove = '<i class="fa fa-check"></i> Approve Registration';
-                        });
-                },
-
-                //reject company registration
-                rejectRegistration() {
-                    this.formLoading = true;
-                    this.btnSubmit = 'Reject Registration....';
-
-                    //format form 
-                    this.formData.action = "REJECT";
-
-                    fetch("/companies/confirm-assessment", {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                                Accept: "application/json",
-                                'X-CSRF-TOKEN': document.head.querySelector('meta[name=csrf-token]').content
-                            },
-                            body: JSON.stringify(this.formData),
-                        }).then(response => response.json())
-                        .then(responseJson => {
-                            this.status = responseJson.status
-                            this.remarks = responseJson.remarks
-
-                            $('#message_wrp_1').html(
-                                "<div class='alert alert-success rounded-sm'>" + responseJson.message + "</div>"
-                            );
-                        }).catch(() => {
-                            //display message
-                            $('#message_wrp').html(
-                                "<div class='alert alert-danger rounded-sm'>Something went wrong.</div>"
-                            );
-
-                        }).finally(() => {
-                            this.formLoading = false;
-                            this.btnSubmit = 'Submit';
-                        });
-                },
-
-                //approval company registration
-                fetchRegistrationStatus() {
-                    this.formLoading = true;
-                    this.btnStatus = '<i class="fas fa-spinner fa-spin"></i> Get Registration status....';
-
-                    //format form 
-                    this.formData.action = "APPROVE";
-                    this.formData.remarks = "Company registration approved";
-
-                    fetch("/companies/fetch-corporate-status", {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                                Accept: "application/json",
-                                'X-CSRF-TOKEN': document.head.querySelector('meta[name=csrf-token]').content
-                            },
-                            body: JSON.stringify(this.formData),
-                        }).then(response => response.json())
-                        .then(responseJson => {
-                            console.log(responseJson);
-                            this.status = responseJson.http_response_code;
-                            this.remarks = responseJson.remarks;
-
-                            $('#message_wrp').html(
-                                "<div class='alert alert-success rounded-sm'>" + responseJson.success_msg + "</div>"
-                            );
-                        }).catch(() => {
-                            //display message
-                            $('#message_wrp').html(
-                                "<div class='alert alert-danger rounded-sm'>Something went wrong.</div>"
-                            );
-
-                        }).finally(() => {
-                            this.formLoading = false;
-                            this.btnStatus = '<i class="fa fa-check"></i> Get Status';
-                        });
-                },
-
-                //show assessment verdict
-                fetchAssessment(uuid, stage) {
-                    fetch("/companies/assessment-approval/?uuid=" + uuid + "&stage=" + stage)
-                        .then(response => response.json())
-                        .then(response => {
-                            console.log(response);
-
-                            //change status of the assessment    
-                            this.eModal = response.data.stage;
-                            this.formData.stage = response.data.stage;
-                            this.formData.criteria = response.data.criteria;
-                            this.formData.remarks = response.data.remarks;
-
-                        });
-                },
-            }
-        }
-    </script>
+    @include('companies.alpinejs')
 @endsection
