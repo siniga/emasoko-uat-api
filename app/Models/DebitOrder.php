@@ -114,7 +114,7 @@ class DebitOrder extends Model
             ->first();
     }
 
-    public static function mandateApprovalStats()
+    public static function mandateApprovalStats($channel = null)
     {
         return self::filterCondition()
             ->select([
@@ -125,6 +125,9 @@ class DebitOrder extends Model
             ->whereIn('debit_orders.approved', [0, 1, 2])
             ->whereHas('partner', function ($q) {
                 $q->where('partners.approved', 1);
+            })
+            ->when($channel != null, function ($q) use ($channel) {
+                $q->where('debit_orders.channel', $channel);
             })
             ->groupBy('debit_orders.approved')
             ->orderBy('debit_orders.approved')

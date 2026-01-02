@@ -5,7 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\DebitOrder;
 use App\Models\Installment;
 use App\Models\Partner;
-
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class DashboardController extends Controller
 {
@@ -18,7 +19,7 @@ class DashboardController extends Controller
     }
 
     //index page
-    function index()
+    public function index(Request $request)
     {
         $title = 'Dashboard';
 
@@ -27,9 +28,10 @@ class DashboardController extends Controller
         //current year and month
         $current_year = date('Y');
         $current_month = date('m');
+        $channel = $request->channel;
 
         //query
-        $debit_orders = DebitOrder::mandateApprovalStats();
+        $debit_orders = DebitOrder::mandateApprovalStats($channel);
 
         // Map over all approved statuses to ensure complete results
         $mandates = collect($approvedStatuses)->map(function ($status) use ($debit_orders) {
@@ -48,10 +50,10 @@ class DashboardController extends Controller
         $total_mandate_value = $mandates[0]['total_amount'] + $mandates[1]['total_amount'] + $mandates[2]['total_amount'];
 
         // This Month’s Collection
-        $this_month = Installment::thisMonthStats($current_month, $current_year);
+        $this_month = Installment::thisMonthStats($current_month, $current_year, $channel);
 
         // Today’s Collection
-        $today = Installment::todayStats();
+        $today = Installment::todayStats(now()->toDateString(), $channel);
 
         //stats
         $stats  = [
@@ -76,12 +78,12 @@ class DashboardController extends Controller
         ];
 
         //partners
-        $partners = Partner::filterCondition()->where('status', 202)->get();
+        $partners = Partner::filterCondition()->where('approved', '=', 1)->get();
 
         $arr_data = [];
         foreach ($partners as $partner) {
             //this month collection
-            $this_month = Installment::monthlyCollectionStats($partner->id, $current_month, $current_year);
+            $this_month = Installment::monthlyCollectionStats($partner->id, $current_month, $current_year, null, null, $channel);
 
             //create dictionary
             if ($this_month->number_of_collection > 0) {
@@ -98,16 +100,26 @@ class DashboardController extends Controller
         }
 
         //sort array
-        $arr_data = collect($arr_data)->sortBy('number_of_collection')->reverse()->toArray();
+        $arr_data = collect($arr_data)
+            ->sortBy([
+                ['number_of_collection', 'desc'],
+                ['total_amount', 'desc'],
+                ['paid_amount', 'desc'],
+            ])
+            ->values()
+            ->toArray();
 
         //post data
-        $post_data = ['year' => $current_year, 'month' => $current_month];
+        $post_data = ['year' => $current_year, 'month' => $current_month, 'channel' => $channel];
 
         //title
         $display_current_month = date('F', mktime(0, 0, 0, $current_month, 1));
         $collection_title = "Actual Monthly Collection - $display_current_month, $current_year";
 
+        //form action
+        $form_action = route('dashboard');
+
         //render view
-        return view('dashboard', compact('title', 'collection_title', 'arr_data', 'stats', 'post_data'));
+        return view('dashboard', compact('title', 'collection_title', 'arr_data', 'stats', 'form_action', 'post_data'));
     }
 }

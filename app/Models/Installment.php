@@ -83,7 +83,7 @@ class Installment extends Model
     }
 
     // Get today's statistics
-    public static function todayStats($date = null)
+    public static function todayStats($date = null, $channel = null)
     {
         $date = $date ?? now()->toDateString(); // Default to today's date: 'Y-m-d'
 
@@ -97,18 +97,20 @@ class Installment extends Model
                 WHEN DATE(effective_payment_date) = '{$date}' 
                 THEN current_balance ELSE 0 END), 0) as paid_amount")
             ])
-            ->whereHas('debitOrder', function ($query) {
-                $query->where([
-                    'debit_orders.approved' => 1,
-                ])->whereHas('partner', function ($q) {
-                    $q->where('partners.approved', 1);
-                });
+            ->whereHas('debitOrder', function ($query) use ($channel) {
+                $query->where(['debit_orders.approved' => 1])
+                    ->when(!is_null($channel), function ($query) use ($channel) {
+                        $query->where('debit_orders.channel', $channel);
+                    })
+                    ->whereHas('partner', function ($q) {
+                        $q->where('partners.approved', 1);
+                    });
             })
             ->first();
     }
 
     // Get this month's statistics
-    public static function thisMonthStats($month = null, $year = null, $paid = null)
+    public static function thisMonthStats($month = null, $year = null, $channel = null, $paid = null)
     {
         $month = $month ?? now()->month;
         $year = $year ?? now()->year;
@@ -123,12 +125,14 @@ class Installment extends Model
                 WHEN MONTH(effective_payment_date) = {$month} AND YEAR(effective_payment_date) = {$year} AND status='CLOSED'
                 THEN current_balance ELSE 0 END), 0) as paid_amount")
             ])
-            ->whereHas('debitOrder', function ($query) {
-                $query->where([
-                    'debit_orders.approved' => 1
-                ])->whereHas('partner', function ($q) {
-                    $q->where('partners.approved', 1);
-                });
+            ->whereHas('debitOrder', function ($query) use ($channel) {
+                $query->where(['debit_orders.approved' => 1])
+                    ->when(!is_null($channel), function ($query) use ($channel) {
+                        $query->where('debit_orders.channel', $channel);
+                    })
+                    ->whereHas('partner', function ($q) {
+                        $q->where('partners.approved', 1);
+                    });
             })
             ->first();
     }
@@ -170,7 +174,7 @@ class Installment extends Model
     }
 
     // Get monthly collection statistics for a specific partner
-    public static function monthlyCollectionStats($partnerId, $month = null, $year = null, $status = null, $deleted = null, $paid = null)
+    public static function monthlyCollectionStats($partnerId, $month = null, $year = null, $status = null, $deleted = null, $channel = null, $paid = null)
     {
         $month = $month ?? now()->month;
         $year  = $year ?? now()->year;
@@ -192,16 +196,19 @@ class Installment extends Model
             WHEN MONTH(effective_payment_date) = {$month} AND YEAR(effective_payment_date) = {$year} AND status='CLOSED'
             THEN current_balance ELSE 0 END), 0) as paid_amount")
         ])
-        ->whereHas('debitOrder', function ($query) use ($partnerId, $status, $deleted) {
+            ->whereHas('debitOrder', function ($query) use ($partnerId, $status, $deleted, $channel) {
                 $query->where('debit_orders.approved', 1)
-                    ->when($partnerId, function ($q) use ($partnerId) {
+                    ->when($partnerId != null, function ($q) use ($partnerId) {
                         $q->where('debit_orders.partner_id', $partnerId);
                     })
-                    ->when($status, function ($q) use ($status) {
+                    ->when($status != null, function ($q) use ($status) {
                         $q->where('debit_orders.status', $status);
                     })
-                    ->when($deleted, function ($q) use ($deleted) {
+                    ->when($deleted != null, function ($q) use ($deleted) {
                         $q->where('debit_orders.deleted', $deleted);
+                    })
+                    ->when($channel != null, function ($q) use ($channel) {
+                        $q->where('debit_orders.channel', $channel);
                     });
             })->first();
     }

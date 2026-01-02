@@ -49,10 +49,15 @@ class PaymentMandateController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function lists(Request $request, $status = null)
+    public function lists(Request $request)
     {
         $title = 'Payment Mandate';
         //has_allowed('roles', 'lists');
+
+        $status = null;
+        if (isset($request->status)) {
+            $status = $request->status;
+        }
 
         //debit orders
         $number_of_debit_orders = 0;
@@ -75,7 +80,7 @@ class PaymentMandateController extends Controller
                 'created_by'
             )
             ->whereHas('partner', function ($q) {
-                $q->where('partners.status', 202);
+                $q->where('partners.approved', '=', 1);
             });
 
         if ($status) {
@@ -114,7 +119,7 @@ class PaymentMandateController extends Controller
         } else {
             //debit orders
             $number_of_debit_orders = $debit_orders->count();
-            $debit_orders = $debit_orders->orderBy('debit_orders.created_at', 'DESC')->paginate(50);
+            $debit_orders = $debit_orders->orderBy('debit_orders.created_at', 'DESC')->paginate(50)->withQueryString();
         }
 
         $post_data = [

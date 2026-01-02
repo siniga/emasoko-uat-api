@@ -7,11 +7,13 @@ const handleBarClick = (
     //console.log(dataPointIndex);
 };
 
-//Payment mandate value
-$.getJSON("api/dashboard/mandate-values", (data) => {
-    //console.log("== data ==")
-    //console.log(data)
+//Filters
+const filters = window.DASHBOARD_FILTERS || {};
+const channel = filters.channel;
+console.log('Dashboard Channel:', channel);
 
+//Payment mandate value
+$.getJSON("charts/mandate-values", { channel: channel }, (data) => {
     if (data.error == false) {
         var arr_month = [];
         var arr_total = [];
@@ -111,7 +113,7 @@ $("#mandate-value-select-year").on("change", function (e) {
     //variables
     var yearName = $(this).val();
 
-    $.getJSON("api/dashboard/mandate-values", { year: yearName }, (data) => {
+    $.getJSON("charts/mandate-values", { year: yearName, channel: channel }, (data) => {
         if (data.error == false) {
             var arr_month = [];
             var arr_total = [];
@@ -209,11 +211,8 @@ $("#mandate-value-select-year").on("change", function (e) {
 });
 
 //Payment mandate percentage
-$.getJSON("api/dashboard/mandate-percentages", (data) => {
+$.getJSON("charts/mandate-percentages", { channel: channel }, (data) => {
     if (data.error == false) {
-        // console.log("== percent data ==");
-        // console.log(data);
-
         //charts
         var options = {
             series: [data.pending, data.approved, data.rejected],
@@ -245,7 +244,7 @@ $.getJSON("api/dashboard/mandate-percentages", (data) => {
 });
 
 //Expected and collected Mandates
-$.getJSON("api/dashboard/collected-mandate", (data) => {
+$.getJSON("charts/collected-mandate", { channel: channel }, (data) => {
     if (data.error == false) {
         var arr_month = [];
         var arr_total = [];
@@ -333,18 +332,18 @@ $("#collected-mandate-value-select-year").on("change", function (e) {
     //variables
     var yearName = $(this).val();
 
-    $.getJSON("api/dashboard/collected-mandate", { year: yearName }, (data) => {
+    $.getJSON("charts/collected-mandate", { year: yearName, channel: channel }, (data) => {
         if (data.error == false) {
             var arr_month = [];
             var arr_total = [];
             var arr_paid = [];
-    
+
             for (k = 0; k < data.chart.length; k++) {
                 arr_month.push(data.chart[k].month);
                 arr_total.push(data.chart[k].total);
                 arr_paid.push(data.chart[k].paid);
             }
-    
+
             var options = {
                 series: [
                     {
@@ -407,7 +406,7 @@ $("#collected-mandate-value-select-year").on("change", function (e) {
 
             //clear the chart
             $("#collected-mandate-value-chart").html("");
-    
+
             //render chart
             var chart = new ApexCharts(
                 document.querySelector("#collected-mandate-value-chart"),
@@ -419,9 +418,7 @@ $("#collected-mandate-value-select-year").on("change", function (e) {
 });
 
 //Expected and collected Mandates
-$.getJSON("api/dashboard/weekly-collected-mandate", (data) => {
-    console.log(data);
-
+$.getJSON("charts/weekly-collected-mandate", { channel: channel }, (data) => {
     if (data.error == false) {
         var arr_dates = [];
         var arr_total = [];
@@ -503,27 +500,24 @@ $.getJSON("api/dashboard/weekly-collected-mandate", (data) => {
 });
 
 //change date
-$("#collected-mandate-value-weekly-date").on("change", function(e){
+$("#collected-mandate-value-weekly-date").on("change", function (e) {
     e.preventDefault;
-    console.log("reached hapa")
 
     //variables
     var currentDate = $(this).val();
 
-    $.getJSON("api/dashboard/weekly-collected-mandate", {curr_date: currentDate}, (data) => {
-        console.log(data);
-    
+    $.getJSON("charts/weekly-collected-mandate", { curr_date: currentDate, channel: channel }, (data) => {
         if (data.error == false) {
             var arr_dates = [];
             var arr_total = [];
             var arr_paid = [];
-    
+
             for (k = 0; k < data.chart.length; k++) {
                 arr_dates.push(data.chart[k].date);
                 arr_total.push(data.chart[k].total);
                 arr_paid.push(data.chart[k].paid);
             }
-    
+
             var options = {
                 series: [
                     {
@@ -586,7 +580,7 @@ $("#collected-mandate-value-weekly-date").on("change", function(e){
 
             //clear the chart
             $("#collected-mandate-value-weekly-chart").html("");
-    
+
             //render chart
             var chart = new ApexCharts(
                 document.querySelector("#collected-mandate-value-weekly-chart"),
@@ -598,7 +592,7 @@ $("#collected-mandate-value-weekly-date").on("change", function(e){
 });
 
 //pending and approved by payment channel
-$.getJSON("api/dashboard/mandate-channel", (data) => {
+$.getJSON("charts/mandate-channel", { channel: channel }, (data) => {
     if (data.error == false) {
         var arr_channels = [];
         var arr_approved = [];
@@ -667,7 +661,7 @@ $("#select-month").on("change", function (e) {
     //variables
     var monthName = $(this).val();
 
-    $.getJSON("api/dashboard/mandate-channel", { month: monthName }, (data) => {
+    $.getJSON("charts/mandate-channel", { month: monthName, channel: channel }, (data) => {
         if (data.error == false) {
             var arr_filter_channels = [];
             var arr_filter_approved = [];

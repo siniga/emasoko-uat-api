@@ -5,14 +5,21 @@
 @endsection
 
 @section('content')
-    @component('components.breadcrumb')
-        @slot('li_1')
-            Dashboard
-        @endslot
-        @slot('title')
-            Summaries
-        @endslot
-    @endcomponent
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                <h4 class="mb-sm-0 font-size-18">Summaries : {{ request('channel') ?? 'All Channels'}}</h4>
+
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+                        <li class="breadcrumb-item active">Summaries</li>
+                    </ol>
+                </div>
+
+            </div>
+        </div>
+    </div>
 
     <div class="row">
         <div class="col-md-3">
@@ -39,7 +46,7 @@
         </div>
 
         <div class="col-md-3">
-            <a href="{{ route('payment-mandate.lists', 'approved') }}">
+            <a href="{{ route('payment-mandate.lists', ['status' => 'approved']) }}">
                 <div class="card border-left-info bg-success-1 shadow h-96 py-2">
                     <div class="card-body">
                         <div class="row no-gutters align-items-center">
@@ -62,7 +69,7 @@
         </div>
 
         <div class="col-md-3">
-            <a href="{{ route('payment-mandate.lists', 'pending') }}">
+            <a href="{{ route('payment-mandate.lists', ['status' => 'pending']) }}">
                 <div class="card border-left-info bg-danger-1 shadow h-96 py-2">
                     <div class="card-body">
                         <div class="row no-gutters align-items-center">
@@ -85,7 +92,7 @@
         </div>
 
         <div class="col-md-3">
-            <a href="{{ route('payment-mandate.lists', 'failed') }}">
+            <a href="{{ route('payment-mandate.lists', ['status' => 'failed']) }}">
                 <div class="card border-left-info bg-danger shadow h-96 py-2">
                     <div class="card-body">
                         <div class="row no-gutters align-items-center">
@@ -379,6 +386,10 @@
 @section('script')
     <!-- apexcharts -->
     <script src="{{ URL::asset('/assets/libs/apexcharts/apexcharts.min.js') }}"></script>
+
+    <script>
+    window.DASHBOARD_FILTERS = @json($post_data);
+</script>
 
     <!-- Saas dashboard init -->
     <script src="{{ URL::asset('/assets/js/charts/dashboard.js') }}"></script>

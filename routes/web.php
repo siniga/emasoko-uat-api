@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Controllers\AccountController;
-use App\Http\Controllers\Api\DashboardChartController;
+use App\Http\Controllers\DashboardChartController;
 use App\Http\Controllers\Auth\AuthOtpController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LoginController;
@@ -60,9 +60,15 @@ Route::get('auth/logout', [LoginController::class, 'logout'])->name('auth.logout
 // Route::get('auth/login', [LoginController::class, 'showLoginForm'])->name('login');
 
 //After Login
-Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
-Route::get('index', [DashboardController::class, 'index'])->name('index');
+Route::any('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+Route::any('index', [DashboardController::class, 'index'])->name('index');
 
+//charts
+Route::get('charts/mandate-values', [DashboardChartController::class, 'mandate_values']);
+Route::get('charts/mandate-percentages', [DashboardChartController::class, 'mandate_percentages']);
+Route::get('charts/mandate-channel', [DashboardChartController::class, 'mandate_channel']);
+Route::get('charts/collected-mandate', [DashboardChartController::class, 'collected_mandates']);
+Route::get('charts/weekly-collected-mandate', [DashboardChartController::class, 'weekly_collected_mandates']);
 
 // //track company registration
 // Route::get('track-company-registration', [RegisterController::class, 'trackCompanyRegistrationForm'])->name('company.track-registration');
@@ -156,7 +162,7 @@ Route::resources([
 Route::get('payment-channels/{id}/delete', [PaymentChannelController::class, 'delete'])->name('payment-channels.delete');
 
 //payment mandate
-Route::any('payment-mandate/lists/{consent?}', [PaymentMandateController::class, 'lists'])->name('payment-mandate.lists');
+Route::any('payment-mandate/lists', [PaymentMandateController::class, 'lists'])->name('payment-mandate.lists');
 Route::get('payment-mandate/export-xls', [PaymentMandateController::class, 'export_xls'])->name('payment-mandate.export-xls');
 Route::get('payment-mandate/export-pdf', [PaymentMandateController::class, 'export_pdf'])->name('payment-mandate.export-pdf');
 
@@ -249,11 +255,3 @@ Route::get('users/view/otp', [UserController::class, 'view_otp'])->name('users.v
 //roles
 Route::get('roles/{id}/assign-perms', [RoleController::class, 'assign_perms'])->name('roles.assign-perms');
 Route::post('roles/{id}/store-perms', [RoleController::class, 'store_perms'])->name('roles.store-perms');
-
-
-//charts
-Route::get('api/dashboard/mandate-values', [DashboardChartController::class, 'mandate_values']);
-Route::get('api/dashboard/mandate-percentages', [DashboardChartController::class, 'mandate_percentages']);
-Route::get('api/dashboard/mandate-channel', [DashboardChartController::class, 'mandate_channel']);
-Route::get('api/dashboard/collected-mandate', [DashboardChartController::class, 'collected_mandates']);
-Route::get('api/dashboard/weekly-collected-mandate', [DashboardChartController::class, 'weekly_collected_mandates']);
