@@ -91,7 +91,7 @@
                                             $options = ['' => '-- Select eMakato Status --'] + $options;
                                         @endphp
 
-                                        {{ Form::select('status', $options, old('status', $post_data['status']), ['class' => 'form-control']) }}
+                                        {{ Form::select('approved', $options, old('approved', $post_data['approved']), ['class' => 'form-control']) }}
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -109,14 +109,13 @@
                                     <div class="mb-3">
                                         @php
                                             $options = [
-                                                0 => 'All',
-                                                // 1 => 'Approved',
-                                                2 => 'With Rejected Accounts',
+                                                1 => 'Verified',
+                                                99 => 'With Rejected Accounts',
                                             ];
                                             $options = ['' => '-- Select Account Status --'] + $options;
                                         @endphp
 
-                                        {{ Form::select('account_status', $options, old('account_status', request()->account_status), ['class' => 'form-control']) }}
+                                        {{ Form::select('is_verified', $options, old('is_verified', $post_data['is_verified']), ['class' => 'form-control']) }}
                                     </div>
                                 </div>
 
@@ -138,115 +137,116 @@
 
             <div class="card">
                 <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-12">
-                            @if (session()->get('success'))
-                                <div class="alert alert-success">
-                                    {{ session()->get('success') }}
-                                </div>
-                            @elseif(session()->get('danger'))
-                                <div class="alert alert-danger">
-                                    {{ session()->get('danger') }}
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-
-                    <div class="row mb-2">
-                        <div class="col-md-6">
-                            <span class="font-weight-500">No. of service providers:
-                                {{ number_format($number_of_companies) }} </span>
-                        </div>
-
-                        <div class="col-md-6">
-                            <div class="text-sm-end d-none d-sm-block">
-                                <a class="btn btn-primary btn-sm" href="{{ route('companies.registration') }}">
-                                    <i class="fas fa-plus"></i> Register
-                                </a>
-                                @if (isset($companies) && $companies->isNotEmpty())
-                                    <a class="btn btn-outline-success btn-sm"
-                                        href="{{ route('companies.export-xls', ['start_at' => $post_data['start_at'], 'end_at' => $post_data['end_at'], 'category_id' => $post_data['category_id'], 'region_id' => $post_data['region_id'], 'status' => $post_data['status'], 'keyword' => $post_data['keyword']]) }}">
-                                        <i class="fas fa-file-excel"></i> Export XLS
-                                    </a>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-
                     <div class="table-responsive">
-                        @if (isset($companies) && $companies->isNotEmpty())
-                            <table class="table table-bordered dt-responsive  nowrap w-100" id="dynamicTable">
-                                <thead>
-                                    <tr>
-                                        <th width="3%">#</th>
-                                        <th width="22%">Bussiness Name</th>
-                                        <th width="16%">Category</th>
-                                        <th width="10%">TIN Number</th>
-                                        <th width="10%">Year of Inc</th>
-                                        <th width="10%">Phone</th>
-                                        <th width="10%">Region</th>
-                                        <th width="10%">Approved</th>
-                                        <th style="width: 40px;">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @php $serial = 1; @endphp
-                                    @foreach ($companies as $company)
-                                        <tr>
-                                            <td>{{ $serial }}</td>
-                                            <td>{{ $company->business_name }}</td>
-                                            <td>{{ $company->partnerCategory->name ?? '' }}</td>
-                                            <td>{{ $company->tin_number }}</td>
-                                            <td>{{ $company->year_of_incorporation }}</td>
-                                            <td>{{ $company->phone }}</td>
-                                            <td>{{ $company->region ? ucfirst(strtolower($company->region->name)) : '' }}
-                                            </td>
-                                            <td>
-                                                @if ($company->approved == 0)
-                                                    <span class="badge bg-warning">Pending Review</span>
-                                                @elseif($company->approved == 1)
-                                                    <span class="badge bg-success">Approved</span>
-                                                @elseif($company->approved == 99)
-                                                    <span class="badge bg-danger">Failed</span>
-                                                @endif
-                                            </td>
-                                            <td>
-                                                @if ($company->complete == 1)
-                                                    <a href="{{ route('companies.details', $company->uuid) }}"
-                                                        title="View" class="btn btn-xss">
-                                                        <i class="bx bxs-folder-open"></i>
-                                                    </a>
-                                                @elseif($company->complete == 0)
-                                                    <a href="{{ route('companies.registration', $company->uuid) }}"
-                                                        title="View" class="btn btn-xss">
-                                                        <i class='bx bxs-plus-square bx-xs'></i>
-                                                    </a>
-                                                @endif
-
-                                                <a href="{{ route('companies.edit', $company->uuid) }}" title="Edit"
-                                                    class="btn btn-xss">
-                                                    <i class="bx bx-edit text-secondary"></i>
-                                                </a>
-
-                                                @if ($company->approved == 0 || $company->approved == 99)
-                                                    <a href="{{ route('companies.delete', $company->uuid) }}"
-                                                        title="Delete" class="btn btn-xss delete">
-                                                        <i class="bx bx-trash text-danger"></i>
-                                                    </a>
-                                                @endif
-                                            </td>
-                                        </tr>
-                                        @php $serial++; @endphp
-                                    @endforeach
-                                </tbody>
-                            </table>
-
-                            <div class="d-flex justify-content-end">
-                                @if (method_exists($companies, 'links'))
-                                    {{ $companies->links() }}
+                        <div class="row">
+                            <div class="col-md-12">
+                                @if (session()->get('success'))
+                                    <div class="alert alert-success">
+                                        {{ session()->get('success') }}
+                                    </div>
+                                @elseif(session()->get('danger'))
+                                    <div class="alert alert-danger">
+                                        {{ session()->get('danger') }}
+                                    </div>
                                 @endif
                             </div>
-                            <!--./d-flex -->
+                        </div>
+
+                        <div class="row mb-2">
+                            <div class="col-md-6">
+                                <span class="font-weight-500">No. of service providers:
+                                    {{ number_format($number_of_companies) }} </span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="text-sm-end d-none d-sm-block">
+                                    <a class="btn btn-primary btn-sm" href="{{ route('companies.registration') }}">
+                                        <i class="fas fa-plus"></i> Register
+                                    </a>
+                                    @if (isset($companies) && $companies->isNotEmpty())
+                                        <a class="btn btn-outline-success btn-sm"
+                                            href="{{ route('companies.export-xls', ['start_at' => $post_data['start_at'], 'end_at' => $post_data['end_at'], 'category_id' => $post_data['category_id'], 'region_id' => $post_data['region_id'], 'approved' => $post_data['approved'], 'is_verified' => $post_data['is_verified'], 'keyword' => $post_data['keyword']]) }}">
+                                            <i class="fas fa-file-excel"></i> Export XLS
+                                        </a>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+
+                        @if (isset($companies) && $companies->isNotEmpty())
+                            <div class="table-responsive">
+                                <table class="table table-bordered dt-responsive  nowrap w-100" id="dynamicTable">
+                                    <thead>
+                                        <tr>
+                                            <th width="3%">#</th>
+                                            <th width="24%">Bussiness Name</th>
+                                            <th>Category</th>
+                                            <th>TIN Number</th>
+                                            <th>Year of Inc</th>
+                                            <th>Phone</th>
+                                            <th>Region</th>
+                                            <th>Approved</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @php $serial = 1; @endphp
+                                        @foreach ($companies as $company)
+                                            <tr>
+                                                <td>{{ $serial }}</td>
+                                                <td>{{ $company->business_name }}</td>
+                                                <td>{{ $company->partnerCategory->name ?? '' }}</td>
+                                                <td>{{ $company->tin_number }}</td>
+                                                <td>{{ $company->year_of_incorporation }}</td>
+                                                <td>{{ $company->phone }}</td>
+                                                <td>{{ $company->region ? ucfirst(strtolower($company->region->name)) : '' }}
+                                                </td>
+                                                <td>
+                                                    @if ($company->approved == 0)
+                                                        <span class="badge bg-warning">Pending Review</span>
+                                                    @elseif($company->approved == 1)
+                                                        <span class="badge bg-success">Approved</span>
+                                                    @elseif($company->approved == 99)
+                                                        <span class="badge bg-danger">Failed</span>
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    @if ($company->complete == 1)
+                                                        <a href="{{ route('companies.details', $company->uuid) }}"
+                                                            title="View" class="btn btn-xss">
+                                                            <i class="bx bxs-folder-open"></i>
+                                                        </a>
+                                                    @elseif($company->complete == 0)
+                                                        <a href="{{ route('companies.registration', $company->uuid) }}"
+                                                            title="View" class="btn btn-xss">
+                                                            <i class='bx bxs-plus-square bx-xs'></i>
+                                                        </a>
+                                                    @endif
+
+                                                    <a href="{{ route('companies.edit', $company->uuid) }}" title="Edit"
+                                                        class="btn btn-xss">
+                                                        <i class="bx bx-edit text-secondary"></i>
+                                                    </a>
+
+                                                    @if ($company->approved == 0 || $company->approved == 99)
+                                                        <a href="{{ route('companies.delete', $company->uuid) }}"
+                                                            title="Delete" class="btn btn-xss delete">
+                                                            <i class="bx bx-trash text-danger"></i>
+                                                        </a>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                            @php $serial++; @endphp
+                                        @endforeach
+                                    </tbody>
+                                </table>
+
+                                <div class="d-flex justify-content-end">
+                                    @if (method_exists($companies, 'links'))
+                                        {{ $companies->links() }}
+                                    @endif
+                                </div>
+                            </div>
                         @else
                             <div class="alert alert-danger"> No any service provider registered</div>
                         @endif

@@ -293,6 +293,7 @@
                                         @endforeach
                                     </tbody>
                                 </table>
+                                
                                 <div class="d-flex justify-content-end">
                                     @if (method_exists($debit_orders, 'links'))
                                         {{ $debit_orders->links() }}

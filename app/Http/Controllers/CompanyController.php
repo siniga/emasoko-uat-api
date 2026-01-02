@@ -64,6 +64,7 @@ class CompanyController extends Controller
         if (isset($_POST['filter'])) {
             //all request
             $requests = $request->all();
+            Log::debug($requests);
 
             $companies = $companies->when($requests, function ($query) use ($requests) {
                 $query->withFilters($requests);
@@ -90,7 +91,8 @@ class CompanyController extends Controller
             'end_at' => $request->end_at ?? null,
             'category_id' => $request->category_id ?? null,
             'region_id' => $request->region_id ?? null,
-            'status' => $request->status ?? null,
+            'approved' => $request->approved ?? null,
+            'is_verified' => $request->is_verified ?? null,
             'keyword' => $request->keyword ?? null
         ];
 

@@ -58,14 +58,14 @@ class CompanyExport implements FromQuery, WithHeadings, ShouldAutoSize, WithEven
     //map
     public function map($companies): array
     {
-        $status = "FAILED";
+        $status = "Failed";
 
-        if($companies->status == 100 || $companies->status == 200)
-            $status = "PENDING REGISTRATION";
-        else if($companies->status == 201 || $companies->status == 203)
-            $status = "PENDING VERIFICATION";
-        else if($companies->status == 202)
-            $status = "VERIFIED";
+        if($companies->approved == 0)
+            $status = "Pending Review";
+        else if($companies->approved == 1)
+            $status = "Approved";
+        else if ($companies->approved == 99)
+            $status = "Failed";
 
         return [
             $companies->business_name ?? '',

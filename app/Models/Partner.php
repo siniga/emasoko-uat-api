@@ -114,44 +114,42 @@ class Partner extends Model
     {
         $start_date        = $request['start_at'] ?? null;
         $end_date          = $request['end_at'] ?? null;
-        $status            = $request['status'] ?? null;
+        $approved          = $request['approved'] ?? null;
+        $is_verified       = $request['is_verified'] ?? null;
         $category_id       = $request['category_id'] ?? null;
         $region_id         = $request['region_id'] ?? null;
         $keyword           = $request['keyword'] ?? null;
 
-        return $query->when($start_date, function ($query) use ($start_date, $end_date) {
-            if ($start_date != null || $end_date != null) {
-                if ($start_date != null && $end_date != null)
-                    $query->whereBetween("created_at", [$start_date, $end_date]);
+        Log::debug("approved: $approved");
 
-                else if ($start_date != null)
-                    $query->where("created_at", '>=', $start_date);
-
-                else if ($end_date != null)
-                    $query->where("created_at", '<=', $end_date);
-            }
-        })
-            ->when($status, function ($query) use ($status) {
-                $query->where('status', $status);
+        return $query
+            ->when($start_date || $end_date, function ($q) use ($start_date, $end_date) {
+                if ($start_date && $end_date) {
+                    $q->whereBetween('created_at', [$start_date, $end_date]);
+                } elseif ($start_date) {
+                    $q->whereDate('created_at', '>=', $start_date);
+                } elseif ($end_date) {
+                    $q->whereDate('created_at', '<=', $end_date);
+                }
             })
-            ->when($category_id, function ($query) use ($category_id) {
-                $query->where('partner_category_id', $category_id);
+            ->when(!is_null($approved) && $approved !== '', function ($q) use ($approved) {
+                $q->where('approved', (int) $approved);
             })
-            ->when($region_id, function ($query) use ($region_id) {
-                $query->where('region_id', $region_id);
+            ->when(!is_null($category_id) && $category_id !== '', function ($q) use ($category_id) {
+                $q->where('partner_category_id', $category_id);
             })
-            ->when($keyword, function ($query) use ($keyword) {
-                $query->orWhere('business_name', 'LIKE', "%$keyword%")
-                    ->orWhere('tin_number', 'LIKE', "%$keyword%");
+            ->when(!is_null($region_id) && $region_id !== '', function ($q) use ($region_id) {
+                $q->where('region_id', $region_id);
             })
-            ->when(request()->account_status, function ($query) {
-                $query->whereHas('partnerAccounts', function ($query) {
-                    if (request()->account_status == 1) {
-                        $query->whereNotNull("verified_at");
-                    }
-                    if (request()->account_status == 2) {
-                        $query->whereNotNull("rejected_at");
-                    }
+            ->when(!is_null($keyword) && $keyword !== '', function ($q) use ($keyword) {
+                $q->where(function ($qq) use ($keyword) {
+                    $qq->where('business_name', 'LIKE', "%{$keyword}%")
+                        ->orWhere('tin_number', 'LIKE', "%{$keyword}%");
+                });
+            })
+            ->when(!is_null($is_verified) && $is_verified !== '', function ($q) use ($is_verified) {
+                $q->whereHas('partnerAccounts', function ($qq) use ($is_verified) {
+                    $qq->where('is_verified', (int) $is_verified);
                 });
             });
     }
