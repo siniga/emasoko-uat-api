@@ -44,6 +44,8 @@
                                                 'pending' => 'Pending',
                                                 'approved' => 'Approved',
                                                 'failed' => 'Failed',
+                                                'cancelled' => 'Cancelled',
+                                                'closed' => 'Closed',
                                             ];
                                             $options = ['' => '-- Mandate Status --'] + $options;
                                         @endphp
@@ -151,7 +153,6 @@
                             </div>
                         </div>
 
-
                         <div class="row mb-2">
                             <div class="col-md-6">
                                 <span class="font-weight-500">No. of payment mandate:
@@ -171,10 +172,16 @@
                                                 <i class="mdi mdi-chevron-down"></i>
                                             </button>
                                             <div class="dropdown-menu">
-                                                <a class="dropdown-item text-sm" href="{{ route('payment-mandate.request-cancellation') }}">Request Cancellation</a>
-                                                <a class="dropdown-item text-sm" href="{{ route('payment-mandate.request-closing') }}">Request Mandate Close</a>
+                                                <a class="dropdown-item text-sm"
+                                                    href="{{ route('payment-mandate.request-cancellation') }}">Request
+                                                    Cancellation</a>
+                                                <a class="dropdown-item text-sm"
+                                                    href="{{ route('payment-mandate.request-closing') }}">Request Mandate
+                                                    Close</a>
                                                 <div class="dropdown-divider"></div>
-                                                <a class="dropdown-item text-sm" href="{{ route('payment-mandate.request-deletion') }}">Request Deletion</a>
+                                                <a class="dropdown-item text-sm"
+                                                    href="{{ route('payment-mandate.request-deletion') }}">Request
+                                                    Deletion</a>
                                             </div>
                                         </div>
                                     @endif
@@ -200,7 +207,7 @@
                                         <tr>
                                             <th width="3%">#</th>
                                             <th width="20%">Account Name</th>
-                                            <th>Bank Name/MNO</th>
+                                            <th>Channel</th>
                                             <th>Account Number</th>
                                             <th>Mandate Reference</th>
                                             <th>Primary Phone</th>
@@ -218,7 +225,7 @@
                                                     {{ strtoupper($values->customerAccount->account_name) ?? $values->customerAccount->phone }}<br>
                                                     ID: {{ $values->customerAccount->customer->id_number ?? 'NIL' }}
                                                 </td>
-                                                <td>{{ $values->customerAccount->account->name ?? '' }}</td>
+                                                <td>{{ $values->customerAccount->account->slug ?? '' }}</td>
                                                 <td>
                                                     {{ $values->customerAccount->account_number ?? $values->customerAccount->phone }}
                                                 </td>
@@ -227,37 +234,7 @@
                                                 </td>
                                                 <td>{{ $values->customerAccount->phone ?? '' }}</td>
 
-                                                <td>
-                                                    @if ($values->status == 100)
-                                                        <span class="badge badge-pill badge-soft-danger">Pending
-                                                            Registration</span>
-                                                    @elseif($values->status == 200)
-                                                        <span class="badge badge-pill badge-soft-info">Under Review</span>
-                                                    @elseif($values->status == 201)
-                                                        <span class="badge badge-pill badge-soft-warning">Pending
-                                                            Verification</span>
-                                                    @elseif($values->status == 202)
-                                                        <span class="badge badge-pill bg-success">Verified</span>
-                                                    @elseif($values->status == 240)
-                                                        <span class="badge badge-pill bg-success">Active</span>
-                                                    @elseif($values->status == 249)
-                                                        <span class="badge badge-pill badge-soft-warning">Processing</span>
-                                                    @elseif($values->status == 403)
-                                                        <span class="badge badge-pill badge-soft-danger">Pending Registration</span>
-                                                    @elseif($values->status == 404)
-                                                        <span class="badge badge-pill badge-soft-danger">Pending Registration</span>
-                                                    @elseif($values->status == 405)
-                                                        <span class="badge badge-pill badge-soft-danger">Cancelled</span>
-                                                    @elseif($values->status == 430 || $values->status == 500)
-                                                        <span class="badge badge-pill badge-soft-danger">Failed Verification</span>
-                                                    @elseif($values->status == 501)
-                                                        <span class="badge badge-pill badge-soft-danger">Inactive</span>
-                                                    @elseif($values->status == 900)
-                                                        <span class="badge badge-pill bg-success">Closed</span>
-                                                    @elseif($values->status == 999)
-                                                        <span class="badge badge-pill badge-soft-danger">Cancelled</span>
-                                                    @endif
-                                                </td>
+                                                <td>{!! mandate_status_badge($values) !!}</td>
                                                 <td>{{ date('d-m-Y H:i', strtotime($values->created_at)) }}</td>
                                                 <td>
                                                     @if ($values->status == 100)
@@ -293,6 +270,7 @@
                                         @endforeach
                                     </tbody>
                                 </table>
+
                                 <div class="d-flex justify-content-end">
                                     @if (method_exists($debit_orders, 'links'))
                                         {{ $debit_orders->links() }}

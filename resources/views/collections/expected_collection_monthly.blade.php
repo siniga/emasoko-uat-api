@@ -22,31 +22,45 @@
                     <div class="d-flex justify-content-between mb-2">
                         <div></div>
                         <div class="text-sm-end d-none d-sm-block">
-                            {!! Form::open(['url' => route('collections.expected-monthly'), 'method' => 'POST', 'class' => 'd-flex align-items-center']) !!}
-                                {{ Form::token() }}
+                            {!! Form::open([
+                                'url' => route('collections.expected-monthly'),
+                                'method' => 'POST',
+                                'class' => 'd-flex align-items-center',
+                            ]) !!}
+                            {{ Form::token() }}
 
-                                <select name="month" id="month" class="form-select form-select-md me-2">
-                                    <option value="{{ $post_data['month'] }}">{{ date('F', mktime(0, 0, 0, $post_data['month'], 1)) }}</option>
-                                    <option value="">-- Month --</option>
-                                    @foreach (range(1, 12) as $v)
-                                        @php
-                                            $month_name = date('F', mktime(0, 0, 0, $v, 10));
-                                        @endphp
-                                        <option value="{{ $v }}">{{ $month_name }}</option>
-                                    @endforeach
-                                </select>
+                            <select name="channel" id="channel" class="form-select form-select-md me-2">
+                                <option value="">-- All Channels --</option>
+                                @foreach ($payment_channels as $channel)
+                                    <option value="{{ $channel->slug }}"
+                                        {{ request('channel') === $channel->slug ? 'selected' : '' }}>{{ $channel->slug }}
+                                    </option>
+                                @endforeach
+                            </select>
 
-                                <select name="year" id="year" class="form-select form-select-md me-2">
-                                    <option value="{{ $post_data['year'] }}">{{ $post_data['year'] }}</option>
-                                    <option value="">-- Year --</option>
-                                    @foreach (range(2024, date('Y')) as $v)
-                                        <option value="{{ $v }}">{{ $v }}</option>
-                                    @endforeach
-                                </select>
+                            <select name="month" id="month" class="form-select form-select-md me-2">
+                                <option value="{{ $post_data['month'] }}">
+                                    {{ date('F', mktime(0, 0, 0, $post_data['month'], 1)) }}</option>
+                                <option value="">-- Month --</option>
+                                @foreach (range(1, 12) as $v)
+                                    @php
+                                        $month_name = date('F', mktime(0, 0, 0, $v, 10));
+                                    @endphp
+                                    <option value="{{ $v }}">{{ $month_name }}</option>
+                                @endforeach
+                            </select>
 
-                                <button type="submit" name="filter" class="btn btn-secondary">
-                                    Filter
-                                </button>
+                            <select name="year" id="year" class="form-select form-select-md me-2">
+                                <option value="{{ $post_data['year'] }}">{{ $post_data['year'] }}</option>
+                                <option value="">-- Year --</option>
+                                @foreach (range(2024, date('Y')) as $v)
+                                    <option value="{{ $v }}">{{ $v }}</option>
+                                @endforeach
+                            </select>
+
+                            <button type="submit" name="filter" class="btn btn-secondary">
+                                Filter
+                            </button>
                             {{ Form::close() }}
                         </div>
                     </div>
@@ -66,23 +80,31 @@
                             </thead>
 
                             <tbody>
-                                @php $serial = 1; @endphp
-                                @foreach ($arr_data as $values)
+                                @if ($arr_data)
+                                    @php $serial = 1; @endphp
+                                    @foreach ($arr_data as $values)
+                                        <tr>
+                                            <td>{{ $serial }}</td>
+                                            <td>
+                                                <a href="{{ route('collections.expected-monthly-detail', $values['uuid']) }}?month={{ $post_data['month'] }}&year={{ $post_data['year'] }}&channel={{ $post_data['channel'] }}"
+                                                    class="font-weight-600">
+                                                    {{ strtoupper($values['partner_name']) }}
+                                                </a>
+                                            </td>
+                                            <td class="text-sm-end">{{ number_format($values['number_of_collection']) }}
+                                            </td>
+                                            <td class="text-sm-end">{{ number_format($values['total_amount']) }}</td>
+                                            <td class="text-sm-end">{{ number_format($values['paid_amount']) }}</td>
+                                            <td class="text-sm-end">{{ number_format($values['outstanding_amount']) }}</td>
+                                            <td class="text-sm-end">{{ $values['percent'] }}</td>
+                                        </tr>
+                                        @php $serial++; @endphp
+                                    @endforeach
+                                @else
                                     <tr>
-                                        <td>{{ $serial }}</td>
-                                        <td>
-                                            <a href="{{ route('collections.expected-monthly-detail', $values['uuid']) }}?month={{ $post_data['month'] }}&year={{ $post_data['year'] }}" class="font-weight-600">
-                                                {{ strtoupper($values['partner_name']) }}
-                                            </a>
-                                        </td>
-                                        <td class="text-sm-end">{{ number_format($values['number_of_collection']) }}</td>
-                                        <td class="text-sm-end">{{ number_format($values['total_amount']) }}</td>
-                                        <td class="text-sm-end">{{ number_format($values['paid_amount']) }}</td>
-                                        <td class="text-sm-end">{{ number_format($values['outstanding_amount']) }}</td>
-                                        <td class="text-sm-end">{{ $values['percent'] }}</td>
+                                        <td colspan="7" class="text-center">No data found</td>
                                     </tr>
-                                    @php $serial++; @endphp
-                                @endforeach
+                                @endif
                             </tbody>
                         </table>
 

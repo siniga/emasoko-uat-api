@@ -49,10 +49,15 @@ class PaymentMandateController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function lists(Request $request, $status = null)
+    public function lists(Request $request)
     {
         $title = 'Payment Mandate';
         //has_allowed('roles', 'lists');
+
+        $status = null;
+        if (isset($request->status)) {
+            $status = $request->status;
+        }
 
         //debit orders
         $number_of_debit_orders = 0;
@@ -71,33 +76,35 @@ class PaymentMandateController extends Controller
                 'status',
                 'remarks',
                 'approved',
+                'cancelled',
+                'closed',
                 'created_at',
                 'created_by'
             )
             ->whereHas('partner', function ($q) {
-                $q->where('partners.status', 202);
+                $q->where('partners.approved', '=', 1);
             });
 
         if ($status) {
             switch ($status) {
                 case 'pending':
-                    $approved = 0;
+                    $debit_orders = $debit_orders->where(['approved' => 0]);
                     break;
                 case 'approved':
-                    $approved = 1;
+                    $debit_orders = $debit_orders->where(['approved' => 1]);
                     break;
                 case 'failed':
-                    $approved = 2;
+                    $debit_orders = $debit_orders->where(['approved' => 2]);
                     break;
                 case 'cancelled':
-                    $approved = 9;
+                    $debit_orders = $debit_orders->where(['cancelled' => 1]);
+                    break;
+                case 'closed':
+                    $debit_orders = $debit_orders->where(['closed' => 1]);
                     break;
                 default:
-                    $approved = 0;
+                    $debit_orders = $debit_orders->where(['approved' => 0]);
             }
-
-            //where condition
-            $debit_orders->where(['approved' => $approved]);
         }
 
         if (isset($_POST['filter'])) {
@@ -114,7 +121,7 @@ class PaymentMandateController extends Controller
         } else {
             //debit orders
             $number_of_debit_orders = $debit_orders->count();
-            $debit_orders = $debit_orders->orderBy('debit_orders.created_at', 'DESC')->paginate(50);
+            $debit_orders = $debit_orders->orderBy('debit_orders.created_at', 'DESC')->paginate(50)->withQueryString();
         }
 
         $post_data = [
@@ -1037,7 +1044,7 @@ class PaymentMandateController extends Controller
                     // Step 4: Update the debit order status
                     $debitOrder = $cancellationRequest->debitOrder;
                     if ($debitOrder) {
-                        $debitOrder->cancelled = 1; // Mark as cancelled
+                        $debitOrder->$debitOrder->cancelled = 1; // Mark as cancelled
                         $debitOrder->deleted = 1; // Mark as deleted
                         $debitOrder->save();
                     }
@@ -1313,7 +1320,7 @@ class PaymentMandateController extends Controller
                     // Step 4: Update the debit order status
                     $debitOrder = $closingRequest->debitOrder;
                     if ($debitOrder) {
-                        $debitOrder->status = 900; //CLOSED STATUS
+                        $debitOrder->closed = 1;
                         $debitOrder->contract_status = "CLOSED";
                         $debitOrder->save();
                     }

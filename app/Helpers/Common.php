@@ -27,19 +27,27 @@ if (!function_exists('cast_phone')) {
     }
 }
 
-
 if (!function_exists('casting_phone')) {
     function casting_phone($phone)
     {
-        if (preg_match("~^0\d+$~", $phone)) {
+        // remove spaces just in case
+        $phone = trim($phone);
+
+        // Starts with 0 (e.g. 0712345678 → 255712345678)
+        if (preg_match('~^0\d+$~', $phone)) {
             return '255' . substr($phone, 1);
-        } else if (preg_match("~^+\d+$~", $phone)) {
-            return substr($phone, 1);
-        } else {
-            return $phone;
         }
+
+        // Starts with + (e.g. +255712345678 → 255712345678)
+        if (preg_match('~^\+\d+$~', $phone)) {
+            return substr($phone, 1);
+        }
+
+        // Already normalized or unknown format
+        return $phone;
     }
 }
+
 
 if (!function_exists('reverse_casting_phone')) {
     function reverse_casting_phone($phone)

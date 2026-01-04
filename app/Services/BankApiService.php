@@ -30,7 +30,7 @@ class BankApiService
     public function corporateRegistrationRequest($data)
     {
         //declare code
-        $http_code = 200;
+        $http_response_code = 200;
 
         //create authentication token
         $AUTH_BEARER_TOKEN = $this->auth->generateToken();
@@ -55,45 +55,37 @@ class BankApiService
         //API URL 
         $API_URL = env('API_URL');
 
+        //response
+        $response = Http::withHeaders($headers)->post($API_URL, $payload);
 
-        try {
-            //response
-            $response = Http::withHeaders($headers)->post($API_URL, $payload);
+        //update the corporate
+        $partner = Partner::where('reference', '=', $payload['data']['corporateReference'])->first();
 
-            if ($response) {
-                //update the corporate
-                $partner = Partner::where('reference', '=', $payload['data']['corporateReference'])->first();
-                //$partner->http_response_json = $response;
+        //decode the response 
+        $response = json_decode($response, true);
 
-                //decode the response 
-                $response = json_decode($response, true);
+        //logging response
+        Log::debug('== CorporateRegistration Response ==');
+        Log::debug($response);
 
-                //logging response
-                Log::debug('== CorporateRegistration Response ==');
-                Log::debug($response);
-
-                if ($response['status'] == "Success") {
-                    $partner->status = 201; //created
-
-                    //http code
-                    $http_code = 201;
-                } else if ($response['status'] == "Fail") {
-                    $http_code = 403; //Failed
-
-                    if ($response['data']['response'][0]['responseCode'] != 410)
-                        $partner->status = 403;
-                }
-
-                $partner->http_response_code = $response['data']['response'][0]['responseCode'];
-                $partner->remarks = $response['data']['response'][0]['responseDescription'];
-                $partner->save();
-
-                return response()->json(['error' => false, 'http_code' => $http_code, 'error_msg' => $response['data']['response'][0]['responseDescription']]);
-            } else {
-                return response()->json(['error' => true, 'http_code' => 500, 'error_msg' => 'No any response.']);
+        if ($response) {
+            if (strtolower($response['status']) == "success") {
+                $http_response_code = 201; //created
+                $remarks = $response['data']['response'][0]['responseDescription'];
+            } else if (strtolower($response['status']) == "fail") {
+                $http_response_code = 404; //failed
+                $remarks = $response['data']['response'][0]['responseDescription'];
             }
-        } catch (Exception $e) {
-            return response()->json(['error' => true, 'http_code' => 500, 'error_msg' => '']);
+
+            //updated partner account
+            $partner_account = PartnerAccount::where(['partner_id' => $partner->id, 'channel' => "NMB"])->first();
+            $partner_account->remarks = $remarks;
+            $partner_account->save();
+
+            return [$http_response_code, $remarks];
+        } else {
+            Log::debug("No response from NMB end");
+            return [500, 'No response from NMB endpoint.'];
         }
     }
 
@@ -101,6 +93,7 @@ class BankApiService
     public function corporateStatusRequest($data)
     {
         //responce code
+        $is_verified = 0;
         $response_code = 200;
         $remarks = "";
 
@@ -131,7 +124,9 @@ class BankApiService
 
         //update the corporate
         $partner = Partner::where('reference', '=', $payload['data']['corporateReference'])->first();
-        //$partner->http_response_status_json = $response;
+
+        //NMB partner account
+        $nmb_partner_account = PartnerAccount::where(['partner_id' => $partner->id, 'channel' => "NMB"])->first();
 
         //Decode the response 
         $response = json_decode($response, true);
@@ -145,29 +140,27 @@ class BankApiService
             $remarks = $response['data']['response'][0]['responseDescription'];
 
             // check for response code
-            if ($response_code == 240)
+            if ($response_code == 240) {
+                $is_verified = 1;
                 $response_code = 202;
-            else
+            } else {
                 $response_code = 203;
-
-            $partner->status = $response_code;
-            $partner->http_response_code = $response['data']['response'][0]['responseCode'];
-            $partner->remarks = $response['data']['response'][0]['responseDescription'];
-            $partner->save();
-
-            //TODO: update partner account
-            $nmb_partner_account = PartnerAccount::where(['partner_id' => $partner->id, 'account_type_id' => 1, 'account_id' => 1])->first();
-            $nmb_partner_account->status = 1;
-            $nmb_partner_account->save();
+            }
         } else if (strtolower($response['status']) == "fail") {
-            $response_code = 500; //response code
+            $response_code = 500;
             $remarks = $response['data']['response'][0]['responseDescription'];
-
-            $partner->status = 500;
-            $partner->http_response_code = $response['data']['response'][0]['responseCode'];
-            $partner->remarks = $response['data']['response'][0]['responseDescription'];
-            $partner->save();
         }
+
+        // update partner
+        $partner->status = $response_code;
+        $partner->http_response_code = $response['data']['response'][0]['responseCode'];
+        $partner->remarks = $response['data']['response'][0]['responseDescription'];
+        $partner->save();
+
+        //update partner account
+        $nmb_partner_account->is_verified = $is_verified;
+        $nmb_partner_account->remarks = $remarks;
+        $nmb_partner_account->save();
 
         return [$response_code, $remarks];
     }
@@ -375,8 +368,7 @@ class BankApiService
                 $remarks = $response['data']['response'][0]['responseDescription'];
 
                 //update debit order => approved
-                if ($response_code == 201){
-                    $debit_order->status = 405;
+                if ($response_code == 201) {
                     $debit_order->cancelled = 1; // Mark as cancelled
                     $debit_order->deleted = 1; // Mark as deleted
                 }

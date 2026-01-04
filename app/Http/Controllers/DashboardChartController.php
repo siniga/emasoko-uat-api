@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Account;
@@ -20,10 +20,16 @@ class DashboardChartController extends Controller
     //Pending and Approved Mandates
     public function mandate_values(Request $request)
     {
+        //channel
+        $channel = null;
+        if ($request->has('channel'))
+            $channel = $request->channel;
+
         //current or requested year
         $year = date('Y');
         if ($request->has('year'))
             $year = $request->year;
+
 
         //declare variable
         $data_array = [];
@@ -36,7 +42,11 @@ class DashboardChartController extends Controller
             $debit_orders = DebitOrder::filterCondition()->select('debit_orders.approved', DB::raw('COALESCE(SUM(debit_orders.total_amount), 0) as total_amount'))
                 ->where(function ($query) {
                     $query->whereIn('debit_orders.approved', [0, 1, 2]);
-                })->whereHas('partner', function ($q) {
+                })
+                ->when($channel != null, function ($q) use ($channel) {
+                    $q->where('debit_orders.channel', $channel);
+                })
+                ->whereHas('partner', function ($q) {
                     $q->where('partners.status', 202);
                 })->groupBy('debit_orders.approved')->orderBy('debit_orders.approved')->toBase();
 
@@ -79,17 +89,26 @@ class DashboardChartController extends Controller
     }
 
     //aggregate consent percentage
-    public function mandate_percentages()
+    public function mandate_percentages(Request $request)
     {
         //declare array
         $data_array = [];
         $approvedStatuses = [0, 1, 2];
 
+        //channel
+        $channel = null;
+        if ($request->has('channel'))
+            $channel = $request->channel;
+
         //query
         $debit_orders = DebitOrder::filterCondition()->select('debit_orders.approved', DB::raw('COALESCE(COUNT(debit_orders.id), 0) as number_of_approved'))
             ->where(function ($query) {
                 $query->whereIn('debit_orders.approved', [0, 1, 2]);
-            })->whereHas('partner', function ($q) {
+            })
+            ->when($channel != null, function ($q) use ($channel) {
+                $q->where('debit_orders.channel', $channel);
+            })
+            ->whereHas('partner', function ($q) {
                 $q->where('partners.status', 202);
             })->groupBy('debit_orders.approved')->orderBy('debit_orders.approved')->toBase();
 
@@ -129,6 +148,11 @@ class DashboardChartController extends Controller
     //Monthly Collected 
     public function collected_mandates(Request $request)
     {
+        //channel
+        $channel = null;
+        if ($request->has('channel'))
+            $channel = $request->channel;
+
         //current or requested year
         $year = date('Y');
         if ($request->has('year'))
@@ -140,10 +164,7 @@ class DashboardChartController extends Controller
         for ($i = 1; $i <= 12; $i++) {
             $month = date('m', mktime(0, 0, 0, $i, 10));
 
-            $installments = Installment::thisMonthStats($month, $year);
-
-            // Log::debug("== installments ==");
-            // Log::debug($installments);
+            $installments = Installment::thisMonthStats($month, $year, $channel);
 
             //total amount
             $total_amount = $installments->total_amount;
@@ -164,6 +185,11 @@ class DashboardChartController extends Controller
     //Weekly Collection
     public function weekly_collected_mandates(Request $request)
     {
+        //channel
+        $channel = null;
+        if ($request->has('channel'))
+            $channel = $request->channel;
+
         //current date
         $current_date = date('Y-m-d');
         if ($request->has('curr_date'))
@@ -179,7 +205,7 @@ class DashboardChartController extends Controller
 
         foreach ($dates as $key => $v) {
             //get installments
-            $installments = Installment::todayStats($v);
+            $installments = Installment::todayStats($v, $channel);
 
             //total amount
             $total_amount = $installments->total_amount;
@@ -207,6 +233,11 @@ class DashboardChartController extends Controller
         $data_array = [];
         $approvedStatuses = [0, 1, 2];
 
+        //channel
+        $channel = null;
+        if ($request->has('channel'))
+            $channel = $request->channel;
+
         foreach ($accounts as $key => $val) {
             //query per channel
             $debit_orders = DebitOrder::filterCondition()->select('debit_orders.approved', DB::raw('COALESCE(COUNT(debit_orders.id), 0) as number_of_approved'))
@@ -214,7 +245,11 @@ class DashboardChartController extends Controller
                     $q->where('account_id', $val->id);
                 })->where(function ($query) {
                     $query->whereIn('debit_orders.approved', [0, 1, 2]);
-                })->groupBy('debit_orders.approved')->orderBy('debit_orders.approved');
+                })
+                ->when($channel != null, function ($q) use ($channel) {
+                    $q->where('debit_orders.channel', $channel);
+                })
+                ->groupBy('debit_orders.approved')->orderBy('debit_orders.approved');
 
             if ($request->has('month')) {
                 $debit_orders = $debit_orders->whereMonth('debit_orders.created_at', $request->month)

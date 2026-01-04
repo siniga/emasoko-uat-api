@@ -39,7 +39,7 @@ use Stidges\CountryFlags\CountryFlag;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Str;
 use Barryvdh\DomPDF\Facade\Pdf;
-
+use Carbon\Carbon;
 
 class CompanyController extends Controller
 {
@@ -64,6 +64,7 @@ class CompanyController extends Controller
         if (isset($_POST['filter'])) {
             //all request
             $requests = $request->all();
+            Log::debug($requests);
 
             $companies = $companies->when($requests, function ($query) use ($requests) {
                 $query->withFilters($requests);
@@ -90,7 +91,8 @@ class CompanyController extends Controller
             'end_at' => $request->end_at ?? null,
             'category_id' => $request->category_id ?? null,
             'region_id' => $request->region_id ?? null,
-            'status' => $request->status ?? null,
+            'approved' => $request->approved ?? null,
+            'is_verified' => $request->is_verified ?? null,
             'keyword' => $request->keyword ?? null
         ];
 
@@ -439,6 +441,68 @@ class CompanyController extends Controller
         return response()->json(['success' => true, 'uuid' => $uuid, 'message' => 'Authorised person saved'], 200);
     }
 
+    //new collection account
+    public function newCollectionAccountForm($uuid)
+    {
+        $title = 'New Collection Account';
+
+        //company
+        $company = Partner::where(['uuid' => $uuid])->firstOrFail();
+
+        //populate data
+        $account_types = AccountType::toBase()->get();
+        $accounts = Account::where(['active' => 1])->toBase()->get();
+        $currencies = Currency::toBase()->get();
+
+        //render view
+        return view('companies.collection_account', compact('title', 'company', 'account_types', 'accounts', 'currencies'));
+    }
+
+    public function storeCollectionAccount(Request $request)
+    {
+        //post data
+        $id = $request->input('partner_id');
+        $uuid = $request->input('partner_uuid');
+
+        //check if partner account exists with account number, account type, currency, is_verified
+        $partner_account = PartnerAccount::where(
+            [
+                'partner_uuid' => $uuid,
+                'account_type_id' => $request->account_type_id,
+                'account_id' => $request->account_id,
+                'is_verified' => 1
+            ]
+        )->first();
+
+        if ($partner_account) {
+            return response()->json(['success' => false, 'message' => "{$partner_account->channel} Collection Account already exists"], 200);
+        }
+
+        // detect account channel
+        $account = Account::where(['id' => $request->account_id])->first();
+
+        //create new partner account
+        $partner_account = PartnerAccount::firstOrNew([
+            'partner_id' => $id,
+            'partner_uuid' => $uuid,
+            'account_type_id' => $request->account_type_id,
+            'account_id' => $request->account_id
+        ]);
+
+        $partner_account->send_verification = 1;
+        $partner_account->customer_code = $request->customer_code;
+        $partner_account->account_name = $request->account_name;
+        $partner_account->account_number = $request->account_number;
+        $partner_account->corporate_limit = floatval(str_replace(',', '', $request->corporate_limit));
+        $partner_account->branch_code = substr($request->account_number, 0, 3);
+        $partner_account->currency_id = $request->currency_id;
+        $partner_account->channel = $account->slug;
+        $partner_account->save();
+
+        //response
+        return response()->json(['success' => true, 'uuid' => $uuid, 'message' => "{$partner_account->channel} collection account added"], 200);
+    }
+
     //company info overview
     public function companyPreview($uuid)
     {
@@ -534,20 +598,14 @@ class CompanyController extends Controller
         //service provider
         $company = Partner::where(['uuid' => $uuid])->firstOrFail();
 
-        //company information  approval
-        $company_info_approval = PartnerApproval::where(['partner_id' => $company->id, 'key' => 'Company_Information'])->first();
+        //is_verified_false partner accounts
+        $is_verified_false = PartnerAccount::where(['partner_id' => $company->id, 'is_verified' => 0])->count();
 
-        //company documents
-        $company_docs_approval = PartnerApproval::where(['partner_id' => $company->id, 'key' => 'Company_Documents'])->first();
-
-        //collection accounts
-        $company_accounts_approval = PartnerApproval::where(['partner_id' => $company->id, 'key' => 'Company_Collection_Accounts'])->first();
-
-        //authorized personnels
-        $company_staff_approval = PartnerApproval::where(['partner_id' => $company->id, 'key' => 'Company_Authorized_Representative'])->first();
+        //nmb is verified_false partner accounts
+        $is_nmb_verified_false = PartnerAccount::where(['partner_id' => $company->id, 'is_verified' => 0, 'channel' => 'NMB'])->count();
 
         //render view
-        return view('companies.show', compact('title', 'company', 'company_info_approval', 'company_docs_approval', 'company_accounts_approval', 'company_staff_approval'));
+        return view('companies.show', compact('title', 'company', 'is_verified_false', 'is_nmb_verified_false'));
     }
 
     //create invoice
@@ -621,11 +679,9 @@ class CompanyController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(CompanyDetailRequest $request)
+    public function update(Request $request, $uuid)
     {
-        // validated request
-        $validated = $request->validated();
-        $uuid = $request->input('partner_uuid');
+        //todo: validate data
 
         //create or update service provider    
         $partner = $this->companyService->createInformation((object) $request->all(), $uuid);
@@ -671,81 +727,7 @@ class CompanyController extends Controller
         }
     }
 
-    //company assessment
-    public function companyAssessment($uuid)
-    {
-        $title = "Company Assessment";
-
-        //service provider
-        $company = Partner::where(['uuid' => $uuid])->firstOrFail();
-
-        //render view
-        return view('companies.assessments', compact('title', 'company'));
-    }
-
-    //get assessment approval
-    public function companyAssessmentStages(Request $request)
-    {
-        $uuid = $request->input('uuid');
-
-        //service provider
-        $company = Partner::where(['uuid' => $uuid])->firstOrFail();
-
-        //partner approval
-        $approval = PartnerApproval::where(['partner_id' => $company->id])->orderBy('sequence', 'asc')->get();
-
-        //response
-        return response()->json(['error' => false, 'data' => $approval], 200);
-    }
-
-    //get assessment approval
-    public function companyAssessmentApproval(Request $request)
-    {
-        $uuid = $request->input('uuid');
-        $stage = $request->input('stage');
-
-        //service provider
-        $company = Partner::where(['uuid' => $uuid])->firstOrFail();
-
-        //partner approval
-        $approval = PartnerApproval::where(['partner_id' => $company->id, 'key' => $stage])->first();
-
-        //assign data
-        $data = [
-            'uuid' => $uuid,
-            'stage' => $stage,
-            'criteria' => $approval->status,
-            'remarks' => $approval->remarks
-        ];
-
-        //response
-        return response()->json(['error' => false, 'data' => $data], 200);
-    }
-
-    //store company assessment
-    public function storeAssessment(Request $request)
-    {
-        //requests
-        $uuid = $request->input('uuid');
-        $stage = $request->input('stage');
-        $criteria = $request->input('criteria');
-
-        //service provider
-        $company = Partner::where(['uuid' => $uuid])->firstOrFail();
-        $company->status = 2;
-        $company->save();
-
-        //update partner approval
-        $partner_approval = PartnerApproval::where(['partner_id' => $company->id, 'key' => $stage])->first();
-        $partner_approval->status = $criteria;
-        $partner_approval->remarks = $request->input('remarks');
-        $partner_approval->save();
-
-        //response
-        return response()->json(['error' => false, 'uuid' => $uuid, 'criteria' => $criteria], 200);
-    }
-
-    //confirm/reject company assessment
+    //confirm/reject company approval
     public function confirmAssessment(Request $request)
     {
         //requests
@@ -755,60 +737,57 @@ class CompanyController extends Controller
         $partner = Partner::where(['uuid' => $uuid])->firstOrFail();
 
         //process assessment
-        $http_status_code = $this->companyService->processAssessment($partner, $request->all());
-        Log::debug($http_status_code);
+        $http_response_code = $this->companyService->processAssessment($partner, $request->all());
 
-        if ($http_status_code == 200) {
+        if ($http_response_code == 200) {
             //TODO: Check if corporate has NMB or CRDB partner accounts
-            $partner_account = PartnerAccount::where(['partner_id' => $partner->id, 'account_type_id' => 1]);
+            $partner_account = PartnerAccount::where(['partner_id' => $partner->id, 'is_verified' => 0]);
 
             $success_msg = "";
+            $nmb_account = 0;
+            $crdb_account = 0;
             if ($partner_account->count() > 0) {
+                // iterate through partner accounts
+                foreach ($partner_account->get() as $partner_account) {
+                    if ($partner_account->channel == "CRDB") {
+                        //update partner account
+                        $partner_account->is_verified = 1;
+                        $partner_account->verified_at = Carbon::now();
+                        $partner_account->remarks = "Account processing completed successfully and is active.";
+                        $partner_account->save();
 
-                //check for NMB partner accounts
-                $nmb_partner_account = PartnerAccount::where(['partner_id' => $partner->id, 'account_type_id' => 1, 'account_id' => 1]);
+                        $crdb_account += 1; //iterate crdb account
+                    } else if ($partner_account->channel == "NMB") {
+                        //create payload
+                        $payload = $this->payloadService->corporateRegistrationPayload($partner, $partner_account);
 
-                //check for CRDB partner accounts
-                $crdb_partner_account = PartnerAccount::where(['partner_id' => $partner->id, 'account_type_id' => 1, 'account_id' => 2]);
+                        //arr response
+                        $arrResponse = $this->bankApi->corporateRegistrationRequest($payload);
 
-                //process corporate registration for NMB
-                if ($nmb_partner_account->count() > 0) {
-                    $nmb_partner_account = $nmb_partner_account->first();
-
-                    //create payload
-                    $payload = $this->payloadService->corporateRegistrationPayload($partner, $nmb_partner_account);
-
-                    //Create Request to NMB
-                    dispatch(new CorporateRegistrationJob($payload));
-
-                    //create success msg
-                    $success_msg = "Service provider approved and pending approval from NMB.";
+                        if ($arrResponse)
+                            $nmb_account += 1; //iterate nmb account
+                    }
                 }
 
-                if ($crdb_partner_account->count() > 0) {
-                    $crdb_partner_account = $crdb_partner_account->first();
+                //check if account is NMB/CRDB
+                $http_response_code = 200;
 
-                    //approve partner account
-                    $crdb_partner_account->status = 1;
-                    $crdb_partner_account->save();
-
-                    //approve partner
-                    $partner->status = 202;
-                    $partner->save();
-
-                    //create service provider credentials
-                    $this->companyService->createCredential($partner);
-
-                    //create success msg
-                    $success_msg = "Service provider approved.";
-                    $http_status_code = 202;
+                if ($nmb_account && $crdb_account) {
+                    $success_msg = "Service provider approved and pending approval from NMB.";
+                } elseif ($nmb_account) {
+                    $success_msg = "Service provider approved and pending approval from NMB.";
+                } elseif ($crdb_account) {
+                    $success_msg = "Account processing completed successfully and is active";
+                } else {
+                    $http_response_code = 400;
+                    $success_msg = "Failed to approve service provider. Review accounts remarks and try again.";
                 }
             }
 
             //response
-            return response()->json(['error' => false, "status" => $http_status_code, "message" => $success_msg], 200);
-        } else if ($http_status_code == 500) {
-            return response()->json(['error' => false, "status" => $http_status_code, "remarks" => $request->remarks, "message" => 'Service provider rejected.'], 200);
+            return response()->json(['error' => false, "status" => $http_response_code, "message" => $success_msg], 200);
+        } else if ($http_response_code == 500) {
+            return response()->json(['error' => false, "status" => $http_response_code, "remarks" => $request->remarks, "message" => 'Service provider rejected and notification sent to service provider.'], 200);
         }
     }
 
@@ -820,6 +799,20 @@ class CompanyController extends Controller
 
         //service provider
         $partner = Partner::where(['uuid' => $uuid])->firstOrFail();
+
+        $partner_account = PartnerAccount::where(['partner_id' => $partner->id, 'is_verified' => 0, 'channel' => 'NMB'])->first();
+
+        if (!$partner_account) {
+            return response()->json(
+                [
+                    "success" => false,
+                    'success_msg' => "No NMB account found",
+                    "http_response_code" => 400,
+                    "remarks" => "No NMB account found"
+                ],
+                200
+            );
+        }
 
         //create payload
         $payload = $this->payloadService->corporateStatusPayload($partner);
@@ -835,8 +828,8 @@ class CompanyController extends Controller
                 return response()->json(
                     [
                         "success" => true,
-                        'success_msg' => "Corporate status updated",
-                        "http_response_code" => $http_response_code,
+                        'message' => "Corporate status updated",
+                        "http_response_code" => 200,
                         "remarks" => $remarks
                     ],
                     200
@@ -845,8 +838,8 @@ class CompanyController extends Controller
                 return response()->json(
                     [
                         "success" => false,
-                        'success_msg' => "Failed to update corporate status, Try again...",
-                        "http_response_code" => $http_response_code,
+                        'message' => "Failed to update corporate status, Try again...",
+                        "http_response_code" => 400,
                         "remarks" => $remarks
                     ],
                     200
@@ -855,8 +848,8 @@ class CompanyController extends Controller
                 return response()->json(
                     [
                         "success" => false,
-                        'success_msg' => "Failed to update corporate status, Try again...",
-                        "http_response_code" => 500,
+                        'message' => "Failed to update corporate status, Try again...",
+                        "http_response_code" => 400,
                         "remarks" => $remarks
                     ],
                     200
@@ -866,8 +859,8 @@ class CompanyController extends Controller
             return response()->json(
                 [
                     "success" => false,
-                    'success_msg' => "Failed to update corporate status, Try again...",
-                    "http_response_code" => 500,
+                    'message' => "Failed to update corporate status, Try again...",
+                    "http_response_code" => 404,
                     "remarks" => "API does not response, Kindly try again or contact support."
                 ],
                 200

@@ -46,7 +46,8 @@
                                                 'pending' => 'Pending',
                                                 'approved' => 'Approved',
                                                 'failed' => 'Failed',
-                                                'cancelled' => 'Cancelled'
+                                                'cancelled' => 'Cancelled',
+                                                'closed' => 'Closed',
                                             ];
                                             $options = ['' => '-- Mandate status --'] + $options;
                                         @endphp
@@ -62,7 +63,7 @@
                                                 'pending' => 'Pending Upload',
                                                 'paid' => 'Paid',
                                                 'failed' => 'Failed',
-                                                'fund_check' => 'Fund Check'
+                                                'fund_check' => 'Fund Check',
                                             ];
                                             $options = ['' => '-- Collection status --'] + $options;
                                         @endphp
