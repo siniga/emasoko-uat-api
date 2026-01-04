@@ -21,14 +21,27 @@
                     <div class="d-flex justify-content-between mb-2">
                         <div></div>
                         <div class="text-sm-end d-none d-sm-block">
-                            {!! Form::open(['url' => route('collections.actual-daily'), 'method' => 'POST', 'class' => 'd-flex align-items-center']) !!}
-                                {{ Form::token() }}
+                            {!! Form::open([
+                                'url' => route('collections.actual-daily'),
+                                'method' => 'POST',
+                                'class' => 'd-flex align-items-center',
+                            ]) !!}
+                            {{ Form::token() }}
 
-                                {{ Form::date('payment_at', old('payment_at'), ['placeholder="Payment Date..."', 'class="form-control me-2"']) }}
+                            <select name="channel" id="channel" class="form-select form-select-md me-2">
+                                <option value="">-- All Channels --</option>
+                                @foreach ($payment_channels as $channel)
+                                    <option value="{{ $channel->slug }}"
+                                        {{ request('channel') === $channel->slug ? 'selected' : '' }}>{{ $channel->slug }}
+                                    </option>
+                                @endforeach
+                            </select>
 
-                                <button type="submit" name="filter" class="btn btn-secondary">
-                                    Filter
-                                </button>
+                            {{ Form::date('payment_at', old('payment_at', $post_data['payment_at']), ['placeholder="Payment Date..."', 'class="form-control me-2"']) }}
+
+                            <button type="submit" name="filter" class="btn btn-secondary">
+                                Filter
+                            </button>
                             {{ Form::close() }}
                         </div>
                     </div>
@@ -62,12 +75,13 @@
                                         <tr>
                                             <td>{{ $serial }}</td>
                                             <td>
-                                                <a href="{{ route('collections.actual-daily-detail', $values['uuid']) }}?payment_at={{ $post_data['payment_at'] }}"
+                                                <a href="{{ route('collections.actual-daily-detail', $values['uuid']) }}?payment_at={{ $post_data['payment_at'] }}&channel={{ $post_data['channel'] }}"
                                                     class="font-weight-600">
                                                     {{ strtoupper($values['partner_name']) }}
                                                 </a>
                                             </td>
-                                            <td class="text-sm-end">{{ number_format($values['number_of_collection']) }}</td>
+                                            <td class="text-sm-end">{{ number_format($values['number_of_collection']) }}
+                                            </td>
                                             <td class="text-sm-end">{{ number_format($values['total_amount']) }}</td>
                                             <td class="text-sm-end">{{ number_format($values['paid_amount']) }}</td>
                                             <td class="text-sm-end">{{ number_format($values['outstanding_amount']) }}</td>
@@ -84,10 +98,12 @@
                                     @endforeach
                                     <tr>
                                         <td colspan="3" class="font-weight-600">Total</td>
-                                        <td class="text-sm-end font-weight-600">{{ number_format($sum_expected_amount) }}</td>
+                                        <td class="text-sm-end font-weight-600">{{ number_format($sum_expected_amount) }}
+                                        </td>
                                         <td class="text-sm-end font-weight-600">{{ number_format($sum_paid_amount) }}</td>
-                                        <td class="text-sm-end font-weight-600">{{ number_format($sum_outstanding_amount) }}</td>
-                                        <td class="text-sm-end font-weight-600">{{ round($success_rate, 2) }}</td> 
+                                        <td class="text-sm-end font-weight-600">
+                                            {{ number_format($sum_outstanding_amount) }}</td>
+                                        <td class="text-sm-end font-weight-600">{{ round($success_rate, 2) }}</td>
                                     </tr>
                                 </tbody>
                             </table>

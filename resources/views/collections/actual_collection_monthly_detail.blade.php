@@ -13,7 +13,7 @@
                 <div class="page-title-right">
                     <ol class="breadcrumb m-0">
                         <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item active">Expected Daily Collection</li>
+                        <li class="breadcrumb-item active">Actual Monthly Collection</li>
                     </ol>
                 </div>
             </div>
@@ -22,14 +22,13 @@
 
     <div class="row">
         <div class="col-lg-12">
-            <!-- -->
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex justify-content-between mb-2">
                         <div></div>
                         <div class="text-sm-end d-none d-sm-block">
                             <a title="Export" class="btn btn-outline-success btn-sm"
-                                href="{{ route('collections.export-expected-daily', $partner->uuid) }}?payment_at={{ $post_data['payment_at'] }}">
+                                href="{{ route('collections.export-actual-monthly', $partner->uuid) }}?month={{ $post_data['month'] }}&year={{ $post_data['year'] }}&channel={{ $post_data['channel'] }}">
                                 <i class="bx bx-export"></i> Export XLS
                             </a>
                         </div>
@@ -40,13 +39,16 @@
                             <thead>
                                 <tr>
                                     <th width="3%">#</th>
-                                    <th width="8%">Mandate Ref</th>
-                                    <th width="20%">Account Name</th>
-                                    <th width="10%">Account No.</th>
-                                    <th width="10%">Expected Amt</th>
-                                    <th width="10%">Paid Amt</th>
-                                    <th width="10%">Outstanding</th>
-                                    <th width="10%">Status</th>
+                                    <th>Mandate Ref</th>
+                                    <th>Channel</th>
+                                    <th>Account Name</th>
+                                    <th>Account No.</th>
+                                    <th>Expected Amt</th>
+                                    <th>Paid Amt</th>
+                                    <th>Outstanding</th>
+                                    <th>Status</th>
+                                    <th>Payment Date</th>
+                                    <th>Collection Date</th>
                                 </tr>
                             </thead>
                             @php
@@ -60,6 +62,7 @@
                                 <tr>
                                     <td>{{ $loop->iteration }}</td>
                                     <td>{{ $val['reference'] }}</td>
+                                    <td>{{ $val['channel'] }}</td>
                                     <td>{{ $val['account_name'] }}</td>
                                     <td>{{ $val['account_number'] }}</td>
                                     <td class="text-sm-end">{{ number_format($val['amount']) }}</td>
@@ -70,7 +73,7 @@
                                         {{ number_format($val['outstanding_amount']) }}</td>
                                     <td>
                                         @if (strtoupper($val['status']) == 'OPEN')
-                                            <span class="badge bg-primary">OPEN</span>
+                                            <span class="badge bg-info">OPEN</span>
                                         @elseif (strtoupper($val['status']) == 'CLOSED')
                                             <span class="badge bg-success-1">PAID</span>
                                         @elseif(strtoupper($val['status']) == 'FAILED')
@@ -81,6 +84,8 @@
                                             <span class="badge bg-warning">{{ strtoupper($val['status']) }}</span>
                                         @endif
                                     </td>
+                                    <td>{{ $val['payment_date'] }}</td>
+                                    <td>{{ $val['effective_payment_date'] }}</td>
                                 </tr>
 
                                 @php
@@ -91,18 +96,15 @@
                                 @endphp
                             @endforeach
                             <tr>
-                                <td colspan="4" class="font-weight-600">Total</td>
+                                <td colspan="5" class="font-weight-600">Total</td>
                                 <td class="text-sm-end">{{ number_format($sum_expected_amount) }}</td>
                                 <td class="text-sm-end">{{ number_format($sum_paid_amount) }}</td>
-                                <td class="text-sm-end">{{ number_format($sum_outstanding_amount) }}
-                                </td>
-                                <td colspan="2"></td>
+                                <td class="text-sm-end">{{ number_format($sum_outstanding_amount) }}</td>
+                                <td colspan="3"></td>
                             </tr>
                             </tbody>
                         </table>
-
                     </div>
-
                 </div>
             </div>
         </div>

@@ -8,6 +8,7 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Events\AfterSheet;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 
 class CollectionPayments implements FromArray, WithHeadings, ShouldAutoSize
 {
@@ -27,11 +28,11 @@ class CollectionPayments implements FromArray, WithHeadings, ShouldAutoSize
         return [
             'Service Provider',
             'Mandate Reference',
-            'Account Type',
+            'Periodicity',
+            'Payment Channel',
             'Account Name',
             'Account Number',
             'Customer Address',
-            'Periodicity',
             'Expected Amount',
             'Paid Amount',
             'Current Balance',
@@ -55,10 +56,34 @@ class CollectionPayments implements FromArray, WithHeadings, ShouldAutoSize
     public function registerEvents(): array
     {
         return [
-            AfterSheet::class    => function (AfterSheet $event) {
-                $cellRange = 'A1:Q1'; // All headers
-                $event->sheet->getDelegate()->getStyle($cellRange)->getFont()->setSize(12);
-                $event->sheet->getDelegate()->getStyle($cellRange)->getFont()->setBold(true);
+            AfterSheet::class => function (AfterSheet $event) {
+
+                $cellRange = 'A1:R1'; // Header row
+
+                $event->sheet->getDelegate()->getStyle($cellRange)->applyFromArray([
+                    'font' => [
+                        'bold' => true,
+                        'size' => 12,
+                        'color' => [
+                            'rgb' => 'FFFFFF', // white text (optional)
+                        ],
+                    ],
+                    'fill' => [
+                        'fillType' => Fill::FILL_SOLID,
+                        'startColor' => [
+                            'rgb' => '1F4E78', // dark blue background
+                        ],
+                    ],
+                    'alignment' => [
+                        'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                        'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+                    ],
+                    'borders' => [
+                        'bottom' => [
+                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                        ],
+                    ],
+                ]);
             },
         ];
     }

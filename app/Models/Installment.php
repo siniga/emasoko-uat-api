@@ -138,7 +138,7 @@ class Installment extends Model
     }
 
     // Get today's collection statistics for a specific partner
-    public static function todayCollectionStats($partnerId, $date = null, $status = null, $deleted = null, $paid = null)
+    public static function todayCollectionStats($partnerId, $date = null, $status = null, $deleted = null, $channel = null , $paid = null)
     {
         $date = $date ?? now()->toDateString(); // Default to today's date: 'Y-m-d'
 
@@ -159,10 +159,13 @@ class Installment extends Model
             WHEN DATE(effective_payment_date) = '{$date}' AND status='CLOSED'
             THEN current_balance ELSE 0 END), 0) as paid_amount")
         ])
-            ->whereHas('debitOrder', function ($query) use ($partnerId, $status, $deleted) {
+            ->whereHas('debitOrder', function ($query) use ($partnerId, $status, $deleted, $channel) {
                 $query->where('debit_orders.approved', 1)
                     ->when($partnerId, function ($q) use ($partnerId) {
                         $q->where('debit_orders.partner_id', $partnerId);
+                    })
+                     ->when(!is_null($channel), function ($query) use ($channel) {
+                        $query->where('debit_orders.channel', $channel);
                     })
                     ->when($status, function ($q) use ($status) {
                         $q->where('debit_orders.status', $status);
