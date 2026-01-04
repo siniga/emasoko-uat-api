@@ -369,7 +369,6 @@ class BankApiService
 
                 //update debit order => approved
                 if ($response_code == 201) {
-                    $debit_order->status = 405;
                     $debit_order->cancelled = 1; // Mark as cancelled
                     $debit_order->deleted = 1; // Mark as deleted
                 }

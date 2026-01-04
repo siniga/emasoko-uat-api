@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Account;
 use App\Models\DebitOrder;
 use App\Models\Installment;
 use App\Models\Partner;
@@ -117,9 +118,10 @@ class DashboardController extends Controller
         $collection_title = "Actual Monthly Collection - $display_current_month, $current_year";
 
         //form action
+        $payment_channels = Account::where('active', '=', 1)->get();
         $form_action = route('dashboard');
 
         //render view
-        return view('dashboard', compact('title', 'collection_title', 'arr_data', 'stats', 'form_action', 'post_data'));
+        return view('dashboard', compact('title', 'collection_title', 'arr_data', 'stats', 'payment_channels', 'form_action', 'post_data'));
     }
 }

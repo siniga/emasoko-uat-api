@@ -161,7 +161,7 @@
                             <div class="col-md-6">
                                 <div class="text-sm-end d-none d-sm-block">
                                     <a class="btn btn-primary btn-sm" href="{{ route('companies.registration') }}">
-                                        <i class="fas fa-plus"></i> Register
+                                        <i class="bx bx-list-plus"></i> Register New
                                     </a>
                                     @if (isset($companies) && $companies->isNotEmpty())
                                         <a class="btn btn-outline-success btn-sm"

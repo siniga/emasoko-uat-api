@@ -261,6 +261,12 @@ Border Colors
   border-color: #0D47A1 !important;
 }
 
+.badge-soft-closed {
+  background-color: #FFE0B2 !important;
+  color: #F57C00 !important;
+  font-weight: 600;
+}
+
 /*===============================================|
 Button
 ================================================*/

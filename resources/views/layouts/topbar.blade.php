@@ -37,8 +37,9 @@
                         <div class="form-group mb-0">
                             <select class="form-select" id="channel-select" name="channel">
                                 <option value="">-- All Channels --</option>
-                                <option value="NMB" {{ request('channel') === 'NMB' ? 'selected' : '' }}>NMB</option>
-                                <option value="CRDB" {{ request('channel') === 'CRDB' ? 'selected' : '' }}>CRDB</option>
+                                @foreach($payment_channels as $channel)
+                                    <option value="{{ $channel->slug }}" {{ request('channel') === $channel->slug ? 'selected' : '' }}>{{ $channel->slug }}</option>
+                                @endforeach
                             </select>
                         </div>
                     </div>
@@ -74,7 +75,6 @@
                 </div>
             </div>
 
-
             <div class="dropdown d-none d-lg-inline-block ms-1">
                 <button type="button" class="btn header-item noti-icon waves-effect" data-toggle="fullscreen">
                     <i class="bx bx-fullscreen"></i>
@@ -101,16 +101,16 @@
                     <i class="mdi mdi-chevron-down d-none d-xl-inline-block"></i>
                 </button>
                 <div class="dropdown-menu dropdown-menu-end">
-                    <span class="dropdown-item font-weight-600">Personal Information</span>
-                    <!-- item-->
-                    <span class="dropdown-item">
-                        {{ ucfirst(Auth::user()->name) }}
-                    </span>
-
-                    <a class="dropdown-item text-primary" href="#">My Profile</a>
-
+                    <a class="dropdown-item text-primary" href="#">
+                        <i class="bx bx-user-pin font-size-16 align-middle me-1"></i> Change Password
+                    </a>
+                    <a class="dropdown-item text-primary" href="#">
+                        <i class="bx bx-user font-size-16 align-middle me-1"></i> My Profile
+                    </a>
                     <div class="dropdown-divider"></div>
-                    <a class="dropdown-item text-danger" href="{{ route('auth.logout') }}">Logout</a>
+                    <a class="dropdown-item text-danger" href="{{ route('auth.logout') }}">
+                        <i class="bx bx-power-off font-size-16 align-middle me-1 text-danger"></i> Logout
+                    </a>
                 </div>
             </div>
         </div>
