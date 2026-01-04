@@ -75,22 +75,23 @@ class ReportController extends Controller
 
                     switch ($mandate_status) {
                         case 'pending':
-                            $approved = 0;
+                            $debit_orders = $debit_orders->where(['approved' => 0]);
                             break;
                         case 'approved':
-                            $approved = 1;
+                            $debit_orders = $debit_orders->where(['approved' => 1]);
                             break;
                         case 'failed':
-                            $approved = 2;
+                            $debit_orders = $debit_orders->where(['approved' => 2]);
                             break;
                         case 'cancelled':
-                            $approved = 9;
+                            $debit_orders = $debit_orders->where(['cancelled' => 1]);
+                            break;
+                        case 'closed':
+                            $debit_orders = $debit_orders->where(['closed' => 1]);
                             break;
                         default:
-                            $approved = 0;
+                            $debit_orders = $debit_orders->where(['approved' => 0]);
                     }
-
-                    $debit_orders = $debit_orders->where('debit_orders.approved', $approved);
                 }
 
                 //filtering by service provider
@@ -256,11 +257,11 @@ class ReportController extends Controller
                     $arr_installments[] = [
                         'Business_Name' => strtoupper($val->debitOrder->partner->business_name),
                         'Mandate_Reference' => $val->debitOrder->reference,
-                        'Account_Type' => strtoupper($val->debitOrder->customerAccount->account->name ?? ''),
+                        'Periodicity' => $val->debitOrder->periodicity,
+                        'Channel' => $val->debitOrder->channel,
                         'Account_Name' => strtoupper($val->debitOrder->customerAccount->account_name),
                         'Account_Number' => $val->debitOrder->customerAccount->account_number,
                         'Customer_Address' => $val->debitOrder->customerAccount->customer->address ?? '',
-                        'Periodicity' => $val->debitOrder->periodicity,
                         'Installment_Amount' => $val->installment_amount ?? 0,
                         'Last_Paid_Amount' => $val->last_paid_amount ?? 0,
                         'Current_Balance' => $val->current_balance ?? 0,
@@ -344,11 +345,11 @@ class ReportController extends Controller
                     $arr_installments[] = [
                         'Business_Name' => strtoupper($val->debitOrder->partner->business_name),
                         'Mandate_Reference' => $val->debitOrder->reference,
-                        'Account_Type' => strtoupper($val->debitOrder->customerAccount->account->name ?? ''),
+                        'Periodicity' => $val->debitOrder->periodicity,
+                        'Channel' => $val->debitOrder->channel,
                         'Account_Name' => strtoupper($val->debitOrder->customerAccount->account_name),
                         'Account_Number' => $val->debitOrder->customerAccount->account_number,
                         'Customer_Address' => $val->debitOrder->customerAccount->customer->address ?? '',
-                        'Periodicity' => $val->debitOrder->periodicity,
                         'Installment_Amount' => $val->installment_amount ?? 0,
                         'Last_Paid_Amount' => $val->last_paid_amount ?? 0,
                         'Current_Balance' => $val->current_balance ?? 0,

@@ -88,23 +88,22 @@ class PaymentMandateController extends Controller
         if ($status) {
             switch ($status) {
                 case 'pending':
-                    $approved = 0;
-                    $debit_orders->where(['approved' => $approved]);
+                    $debit_orders = $debit_orders->where(['approved' => 0]);
                     break;
                 case 'approved':
-                    $debit_orders->where(['approved' => 1]);
+                    $debit_orders = $debit_orders->where(['approved' => 1]);
                     break;
                 case 'failed':
-                    $debit_orders->where(['approved' => 2]);
+                    $debit_orders = $debit_orders->where(['approved' => 2]);
                     break;
                 case 'cancelled':
-                    $debit_orders->where(['cancelled' => 1]);
+                    $debit_orders = $debit_orders->where(['cancelled' => 1]);
                     break;
                 case 'closed':
-                    $debit_orders->where(['closed' => 1]);
+                    $debit_orders = $debit_orders->where(['closed' => 1]);
                     break;
                 default:
-                    $approved = 0;
+                    $debit_orders = $debit_orders->where(['approved' => 0]);
             }
         }
 
@@ -1045,8 +1044,7 @@ class PaymentMandateController extends Controller
                     // Step 4: Update the debit order status
                     $debitOrder = $cancellationRequest->debitOrder;
                     if ($debitOrder) {
-                        $debitOrder->
-                        $debitOrder->cancelled = 1; // Mark as cancelled
+                        $debitOrder->$debitOrder->cancelled = 1; // Mark as cancelled
                         $debitOrder->deleted = 1; // Mark as deleted
                         $debitOrder->save();
                     }
