@@ -58,7 +58,7 @@ class CompanyService
         $partner->business_name = ucwords($data->business_name);
         $partner->tin_number = $data->tin_number;
         $partner->year_of_incorporation = $data->year_of_incorporation;
-        $partner->number_of_staff = $data->number_of_staff;
+        $partner->number_of_staff = 0;
         $partner->region_id = $data->region_id;
         $partner->phone = $phone;
         $partner->email = $data->company_email;
