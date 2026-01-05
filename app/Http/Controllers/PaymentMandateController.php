@@ -137,7 +137,7 @@ class PaymentMandateController extends Controller
         //populate data
         $account_types = AccountType::all();
         $accounts = Account::where('active', '=', 1)->get();
-        $partners = Partner::filterCondition()->where('status', '=', 202)->get();
+        $partners = Partner::filterCondition()->where('approved', '=', 1)->get();
 
         //render view
         return view('payment_mandate.lists', compact('title', 'account_types', 'accounts', 'partners', 'debit_orders', 'number_of_debit_orders', 'post_data'));
