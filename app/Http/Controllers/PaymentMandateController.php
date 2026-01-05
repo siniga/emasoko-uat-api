@@ -264,7 +264,7 @@ class PaymentMandateController extends Controller
         //check if logged in user can create mandate
         if ($user->hasRole('Company_Approver') || $user->hasRole('Company_User')) {
             $partner_user = PartnerUser::whereHas('partner', function ($query) {
-                $query->where('status', '=', 202);
+                $query->where('approved', '=', 1);
             })->where('user_id', '=', $user->id);
 
             if ($partner_user->count() == 0)
