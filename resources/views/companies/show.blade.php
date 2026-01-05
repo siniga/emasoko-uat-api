@@ -114,15 +114,15 @@
                                 <th>eMakato Status</th>
                                 <td id="company-status">
                                     <template x-if="approved==0">
-                                        <span class="badge bg-warning">Pending Review</span>
+                                        <span class="badge badge-soft-warning">Pending Review</span>
                                     </template>
 
                                     <template x-if="approved==1">
-                                        <span class="badge bg-success">Approved</span>
+                                        <span class="badge badge-soft-success">Approved</span>
                                     </template>
 
                                     <template x-if="approved==99">
-                                        <span class="badge bg-danger">Failed</span>
+                                        <span class="badge badge-soft-danger">Failed</span>
                                     </template>
                                 </td>
 
@@ -193,9 +193,9 @@
                                             <td>{{ $val->customer_code ?? '' }}</td>
                                             <td>
                                                 @if ($val->is_verified == 1)
-                                                    <span class="badge bg-success">Yes</span>
+                                                    <span class="badge badge-soft-success">Yes</span>
                                                 @elseif($val->is_verified == 0)
-                                                    <span class="badge bg-danger">No</span>
+                                                    <span class="badge badge-soft-danger">No</span>
                                                 @endif
                                             </td>
                                             <td>{{ $val->remarks ?? '' }}</td>

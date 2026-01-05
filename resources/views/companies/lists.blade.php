@@ -203,11 +203,11 @@
                                                 </td>
                                                 <td>
                                                     @if ($company->approved == 0)
-                                                        <span class="badge bg-warning">Pending Review</span>
+                                                        <span class="badge badge-soft-warning">Pending Review</span>
                                                     @elseif($company->approved == 1)
-                                                        <span class="badge bg-success">Approved</span>
+                                                        <span class="badge badge-soft-success">Approved</span>
                                                     @elseif($company->approved == 99)
-                                                        <span class="badge bg-danger">Failed</span>
+                                                        <span class="badge badge-soft-danger">Failed</span>
                                                     @endif
                                                 </td>
                                                 <td>
