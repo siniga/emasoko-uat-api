@@ -50,8 +50,10 @@ class CreateFailedCollection extends Command
     public function handle()
     {
         //current month
-        $previous_month = now()->subMonth()->month;
-        $current_year = now()->year;
+        //$previous_month = now()->subMonth()->month;
+        $previous_month = 12;
+        //$current_year = now()->year;
+        $current_year = 2025;
         Log::debug("== Previous Month: '{$previous_month}' ==");
         Log::debug("== Current Year: '{$current_year}' ==");
 
