@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Jobs\SendSMSJob;
 use App\Models\CollectionBatch;
 use App\Models\CollectionDebitOrder;
 use App\Models\Installment;
@@ -128,7 +129,7 @@ class CreateFailedCollectionBatch extends Command
                             //2.0: check if periodicity == MONTHLY and deleted = 0
                             if ($periodicity == "MONTHLY" && $deleted == 0) {
                                 //3.0: Check if mandate start date <= today
-                                if ($debit_start_date <=Carbon::now()->toDateString()) {
+                                if ($debit_start_date <= Carbon::now()->toDateString()) {
                                     //3.1: check if debit mandate expire
                                     if ($debit_end_date >= Carbon::now()->toDateString()) {
                                         //4.0: check if account exists in this batch
@@ -188,6 +189,18 @@ class CreateFailedCollectionBatch extends Command
             }
         }
 
+        //send Notification of batch creation
+        $message = "Failed collection batches created. Review and approve batches to the next stage.";
+        $arr_phone = [255717705746, 255656314330];
+
+        foreach ($arr_phone as $phone) {
+            //send sms
+            $data = ["phone" => $phone, "message" => $message];
+            dispatch(new SendSMSJob($data));
+        }
+
+        // Log the collection batches
+        Log::debug("== Failed collection batches created==");
         return 200;
     }
 }
