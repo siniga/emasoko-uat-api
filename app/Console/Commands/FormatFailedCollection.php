@@ -60,7 +60,7 @@ class FormatFailedCollection extends Command
                     $installment_id = $installment->id;
                     $payment_amount = $installment->installment_amount;
 
-                    if ($installment->status == 'FAILED' && $installment->remarks == 'Item Can Be Collected And Has Been Tracked Successfully.') {
+                    if ($installment->status == 'FAILED' && ($installment->remarks == 'Item Can Be Collected And Has Been Tracked Successfully.' || $installment->remarks == 'Insufficient funds Archive')) {
                         if (($installment->installment_amount != $installment->debitOrder->installment_amount) || ($installment->installment_amount != $installment->debitOrder->max_installment_amount)) {
                             $installment->installment_amount = ($debit_type == 'FIXED') ? $installment->debitOrder->installment_amount : $installment->debitOrder->max_installment_amount;
                             $installment->min_installment_amount = $installment->debitOrder->min_installment_amount;
