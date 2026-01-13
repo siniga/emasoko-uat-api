@@ -53,7 +53,7 @@ class CreateFailedCollectionBatch extends Command
         $deductionService = new DeductionService();
 
         //Query filed collection batches
-        $collection_batches = CollectionBatch::whereIn('collectionReference', [15045, 15046, 15047, 15048, 15049, 15050, 15051])->get();
+        $collection_batches = CollectionBatch::whereIn('collectionReference', [15045, 15046, 15047, 15048, 15049, 15050, 15051, 15052])->get();
 
         if ($collection_batches) {
             foreach ($collection_batches as $batch) {
@@ -129,7 +129,7 @@ class CreateFailedCollectionBatch extends Command
 
                             //2.0: check if periodicity == MONTHLY and deleted = 0
                             if ($periodicity == "MONTHLY" && $contract_status == "OPEN" && $deleted == 0) {
-                                Log::debug("== Mandate passed validation ==");
+                                
                                 //3.0: Check if mandate start date <= today
                                 if ($debit_start_date <= Carbon::now()->toDateString()) {
                                     //3.1: check if debit mandate expire
