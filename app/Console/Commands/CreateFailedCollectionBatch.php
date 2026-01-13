@@ -112,6 +112,7 @@ class CreateFailedCollectionBatch extends Command
                             $debit_start_date = Carbon::parse($installment->debitOrder->start_date)->toDateString();
                             $debit_end_date = Carbon::parse($installment->debitOrder->end_date)->toDateString();
                             $deleted = $installment->debitOrder->deleted;
+                            $contract_status = $installment->debitOrder->contract_status;
 
                             //update collection date
                             $collection_date = $installment->payment_date;
@@ -127,7 +128,8 @@ class CreateFailedCollectionBatch extends Command
                                 ->whereMonth('payment_at', Carbon::parse($payment_date)->format('m'))->delete();
 
                             //2.0: check if periodicity == MONTHLY and deleted = 0
-                            if ($periodicity == "MONTHLY" && $deleted == 0) {
+                            if ($periodicity == "MONTHLY" && $contract_status == "OPEN" && $deleted == 0) {
+                                Log::debug("== Mandate passed validation ==");
                                 //3.0: Check if mandate start date <= today
                                 if ($debit_start_date <= Carbon::now()->toDateString()) {
                                     //3.1: check if debit mandate expire
@@ -187,16 +189,6 @@ class CreateFailedCollectionBatch extends Command
                 $old_batch->deleted = 1;
                 $old_batch->save();
             }
-        }
-
-        //send Notification of batch creation
-        $message = "Failed collection batches created. Review and approve batches to the next stage.";
-        $arr_phone = [255717705746, 255656314330];
-
-        foreach ($arr_phone as $phone) {
-            //send sms
-            $data = ["phone" => $phone, "message" => $message];
-            dispatch(new SendSMSJob($data));
         }
 
         // Log the collection batches
