@@ -175,11 +175,11 @@ class CollectionStatusJob implements ShouldQueue
                 $message = "Collection batch number " . $collection_reference . " failed from NMB end. Review and resend the batch.";
                 $arr_phone = [255717705746, 255656314330];
 
-                foreach ($arr_phone as $phone) {
-                    //send sms
-                    $data = ["phone" => $phone, "message" => $message];
-                    dispatch(new SendSMSJob($data));
-                }
+                // foreach ($arr_phone as $phone) {
+                //     //send sms
+                //     $data = ["phone" => $phone, "message" => $message];
+                //     dispatch(new SendSMSJob($data));
+                // }
             }
         }
 

@@ -51,7 +51,7 @@ class CreateCollectionBatch extends Command
     {
         //Limit
         $limit = 250;
-        $current_date = Carbon::now(); //today batch
+        $current_date = "2026-01-25"; //Carbon::now(); //today batch ;
         //$current_date = Carbon::now()->addDays(15); //2 days from today
         Log::debug("== Collection for Current Date: '{$current_date}' ==");
 
@@ -70,7 +70,6 @@ class CreateCollectionBatch extends Command
             //$number_installments = Installment::getCreated($partner, $current_date)->count();
             $installments = $this->deductionService->getInstallments($partner, $current_date);
             $number_installments = $installments->count();
-            Log::debug("== Number of installment: '{$number_installments}' ==");
 
             if ($number_installments > 0) {
                 //looping
@@ -157,7 +156,7 @@ class CreateCollectionBatch extends Command
                                                     'collection_batch_id' => $batch->id,
                                                     'debit_order_id' => $debit_order_id,
                                                     'status' => 'CREATED',
-                                                    'payment_at' => $payment_date
+                                                    'payment_at' => $new_payment_date // changed this to current month
                                                 ]);
 
                                                 //increment number of collections
