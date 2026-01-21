@@ -44,9 +44,6 @@ class CollectionStatusJob implements ShouldQueue
         //initialize deduction service
         $deduction_service = new DeductionService();
 
-        // Log::info('Current directory: ' . getcwd());
-        // Log::info(app()->environment());
-
         //create authentication token
         $AUTH_BEARER_TOKEN = $this->auth->generateToken();
 
@@ -105,51 +102,39 @@ class CollectionStatusJob implements ShouldQueue
 
                 //check for batch processing or batch complete
                 if ($response_code == 230) {
-                    //1. Batch Complete
-                    //1.1: read csv file
+                    //1.0: Complete Success Batch 
                     $data = base64_to_content($response['data']['file']['fileData']);
                     Log::debug("== Complete Collection CSV ==");
                     Log::debug($data);
 
-                    //1.2: response
-                    $response = $deduction_service->updateInstallments($data, $collection_reference);
+                    //1.1: response
+                    $response = $deduction_service->updateInstallments($data);
 
                     //1.3: process batch
-                    $collection_batch->number_of_success += $response[0];
+                    $collection_batch->number_of_success = $response[0];
                     $collection_batch->number_of_failed = $response[1];
                     $collection_batch->save();
                 } else if ($response_code == 235) {
-                    //1. Batch Complete
-                    //1.1: read csv file
+                    //2.0: Complete Failed Batch
                     $data = base64_to_content($response['data']['file']['fileData']);
                     Log::debug("== Failed Collection CSV ==");
                     Log::debug($data);
 
+                    //2.1: response
                     $response = $deduction_service->updateFailedInstallments($data);
-
-                    //send SMS when batch failed
-                    $message = "Collection batch number " . $collection_reference . " failed from NMB end. Review and resend the batch.";
-                    $arr_phone = [255717705746, 255656314330];
-
-                    foreach ($arr_phone as $phone) {
-                        //send sms
-                        $data = ["phone" => $phone, "message" => $message];
-                        dispatch(new SendSMSJob($data));
-                    }
 
                     //1.3: process batch
                     $collection_batch->number_of_failed = $response[0];
                     $collection_batch->failed = 1;
                     $collection_batch->save();
                 } else if ($response_code == 239) {
-                    //3.Batch Processing
-                    //1.1: read csv file
+                    //3.0: Process Ongoing Batch
                     $data = base64_to_content($response['data']['file']['fileData']);
                     Log::debug("== Processing Collection CSV ==");
                     Log::debug($data);
 
-                    //1.2: response
-                    $response = $deduction_service->updateInstallments($data, $collection_reference);
+                    //3.1: response
+                    $response = $deduction_service->updateInstallments($data);
 
                     //1.3: process batch
                     $collection_batch->number_of_success += $response[0];
@@ -171,15 +156,7 @@ class CollectionStatusJob implements ShouldQueue
                 //save batch    
                 $collection_batch->save();
 
-                //send SMS when batch failed
-                $message = "Collection batch number " . $collection_reference . " failed from NMB end. Review and resend the batch.";
-                $arr_phone = [255717705746, 255656314330];
-
-                // foreach ($arr_phone as $phone) {
-                //     //send sms
-                //     $data = ["phone" => $phone, "message" => $message];
-                //     dispatch(new SendSMSJob($data));
-                // }
+                //TODO: Messaging Module
             }
         }
 

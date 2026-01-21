@@ -66,8 +66,7 @@ class CreateCollectionBatch extends Command
 
         $success = 0;
         foreach ($partners as $partner) {
-            //1.0: Number of installment
-            //$number_installments = Installment::getCreated($partner, $current_date)->count();
+            //1.0: Number of installments
             $installments = $this->deductionService->getInstallments($partner, $current_date);
             $number_installments = $installments->count();
 
@@ -135,7 +134,7 @@ class CreateCollectionBatch extends Command
                                                 ->whereMonth('payment_at', Carbon::parse($new_payment_date)->format('m'))
                                                 ->whereYear('payment_at', Carbon::parse($new_payment_date)->format('Y'));
 
-                                            if ($collection_debit_order->count() == 0) {
+                                            if (!$collection_debit_order->exists()) {
                                                 //create csv file
                                                 $csv .= "{$installment_id};016;NMB;{$mandate_reference};{$account_name};{$account_number};{$payment_amount}\n";
 
@@ -146,17 +145,18 @@ class CreateCollectionBatch extends Command
                                                 array_push($arr_installments, $installment_id);
 
                                                 //update installment status => created = 1 and effective payment date
-                                                $up_installment = Installment::findOrFail($installment_id);
-                                                $up_installment->effective_payment_date = $new_payment_date;
-                                                $up_installment->created = 1;
-                                                $up_installment->save();
+                                                $updated_installment = Installment::findOrFail($installment_id);
+                                                $updated_installment->effective_payment_date = $new_payment_date;
+                                                $updated_installment->created = 1;
+                                                $updated_installment->save();
 
                                                 // create collection debit order
-                                                $create_collection_debit_order = CollectionDebitOrder::create([
+                                                $new_collection_debit_order = CollectionDebitOrder::create([
                                                     'collection_batch_id' => $batch->id,
                                                     'debit_order_id' => $debit_order_id,
+                                                    'installment_id' => $installment_id,
                                                     'status' => 'CREATED',
-                                                    'payment_at' => $new_payment_date // changed this to current month
+                                                    'payment_at' => $new_payment_date
                                                 ]);
 
                                                 //increment number of collections

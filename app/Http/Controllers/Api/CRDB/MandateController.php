@@ -6,6 +6,7 @@ use App\Classes\Checksum;
 use App\Http\Controllers\Controller;
 use App\Models\DebitOrder;
 use App\Models\Installment;
+use App\Models\InstallmentPayment;
 use App\Services\DeductionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -187,59 +188,136 @@ class MandateController extends Controller
         $callback_type = $request->input('callbackType');
 
         if ($callback_type == "REQUEST_STATUS") {
+            // mandate reference
+            $mandateReference = $request['data']['reference'];
+
             //query debit order by reference id
-            $debit_order = DebitOrder::where('crdb_reference', '=', $request['data']['reference'])->first();
+            $debitOrder = DebitOrder::where('crdb_reference', '=', $request['data']['reference']);
 
-            //check status
-            if (strtolower($request['data']['status']) == "approved") {
-                $debit_order->approved = 1;
-                $debit_order->status = 240;
-                $debit_order->remarks = "Mandate approved";
-                $debit_order->save();
+            if ($debitOrder->exists()) {
+                $debitOrder = $debitOrder->first();
 
-                //Log response
-                Log::debug("== CRDB Mandate Status Approved ==");
+                //approved data
+                $approved = $request['data']['status'];
 
-                // create installments
-                $this->deductionService->createInstallment($debit_order);
-            } else {
-                $debit_order->status = 500;
-                $debit_order->remarks = "Failed to approve mandate.";
-                $debit_order->save();
+                if (strtolower($approved) == "approved") {
+                    $debitOrder->approved = 1;
+                    $debitOrder->status = 240;
+                    $debitOrder->remarks = "Mandate approved";
+                    $debitOrder->save();
 
-                //Log response
-                Log::debug("== Failed to approve CRDB Mandate ==");
+                    // create installments
+                    $this->deductionService->createInstallment($debitOrder);
+
+                    //Log response
+                    Log::debug("== CRDB Mandate Status Approved ==");
+                } else {
+                    // Failed debit orders
+                    $debitOrder->status = 500;
+                    $debitOrder->remarks = "Failed to approve mandate.";
+                    $debitOrder->save();
+
+                    //Log response
+                    Log::debug("== Failed to approve CRDB Mandate ==");
+                }
             }
         } else if ($callback_type == "PAYMENT_STATUS") {
-            // payment variables
+            // mandate reference
             $mandateReference = $request['data']['reference'];
-            $transferResponse = $request['data']['transferResponse'];
-            $collectionDate = $request['data']['collectionDate'];
-            $phoneNumber = $request['data']['phoneNumber'];
-            $accountNumber = $request['data']['accountNumber'];
-            $amount = $request['data']['amount'];
-            $transactionReference = $request['data']['transactionReference'];
-            $transactionDateTime = $request['data']['transactionDateTime'];
 
-            if (strtoupper($transferResponse) == "SUCCESS") {
-                // get the first installment with status = "OPEN"
-                $installment = Installment::whereHas('debitOrder', function ($query) use ($mandateReference) {
-                    $query->where('crdb_reference', '=', $mandateReference);
-                })->where('installments.status', '=', 'OPEN')->first();
+            //query debit order by reference id
+            $debitOrder = DebitOrder::where('crdb_reference', '=', $mandateReference);
 
-                if ($installment) {
-                    //updated status of installment
-                    $installment->last_paid_amount = $amount;
-                    $installment->payment_reference = $transactionReference;
-                    $installment->effective_payment_date = date('Y-m-d', strtotime($collectionDate));
-                    $installment->remarks = "Amount paid";
-                    $installment->save();
+            if ($debitOrder->exists()) {
+                $debitOrder = $debitOrder->first();
 
-                    // process installment
-                    $this->deductionService->processInstallment($installment);
+                //payment responses
+                $transferResponse = $request['data']['transferResponse'];
+                $collectionDate = $request['data']['collectionDate'];
+
+                if (strtolower($transferResponse) == "success") {
+                    // get success data
+                    $phoneNumber = $request['data']['phoneNumber'];
+                    $accountNumber = $request['data']['accountNumber'];
+                    $amount = $request['data']['amount'];
+                    $transactionReference = $request['data']['transactionReference'];
+                    $transactionDateTime = $request['data']['transactionDateTime'];
+
+                    // check if payment reference exists in installments payment
+                    $installment_payments = InstallmentPayment::where([
+                        'mandate_reference' => $debitOrder->reference,
+                        'payment_reference' => $transactionReference
+                    ]);
+
+                    if (!$installment_payments->exists()) {
+                        // create installment payment
+                        $installment_payment = new InstallmentPayment();
+                        $installment_payment->mandate_reference = $debitOrder->reference;
+                        $installment_payment->payment_reference = $transactionReference;
+                        $installment_payment->amount = $amount;
+                        $installment_payment->payment_at = date('Y-m-d', strtotime($collectionDate));
+                        $installment_payment->save();
+
+                        // check if installment  exists with status == "OPEN" or "PARTIAL_PAID"
+                        $installments = Installment::where('debit_order_id', "=", $debitOrder->id)
+                            ->whereMonth('payment_date', "=", date('m', strtotime($collectionDate)))
+                            ->whereYear('payment_date', "=", date('Y', strtotime($collectionDate)));
+
+                        if ($installments->exists()) {
+                            // get installment
+                            $installment = $installments->first();
+
+                            //if status is OPEN or FAILED
+                            if ($installment->status == "OPEN" || $installment->status == "FAILED") {
+                                //updated status of installment
+                                $installment->last_paid_amount = $amount;
+                                $installment->payment_reference = $transactionReference;
+                                $installment->effective_payment_date = date('Y-m-d', strtotime($collectionDate));
+                                $installment->remarks = "Amount paid";
+                                $installment->save();
+
+                                // process installment
+                                $this->deductionService->processInstallment($installment);
+                            } else if ($installment->status == "PARTIAL_PAID") {
+                                //1.0 calculate outstanding amount
+                                $outstanding_amount = ($installment->installment_amount - $installment->last_paid_amount);
+                                //create function for partial payment
+
+                            }
+                        } else {
+                            //1.0 calculate installment amount
+                            $installment_amount = $this->deductionService->getInstallmentAmount($debitOrder);
+                            $last_installment_order = $this->deductionService->getLastInstallmentOrder($debitOrder);
+
+                            //1.0 create new installment with payment details
+                            $new_installment = new Installment();
+                            $new_installment->debit_order_id = $debitOrder->id;
+                            $new_installment->installment_order = $last_installment_order + 1;
+                            $new_installment->installment_amount = $installment_amount;
+                            $new_installment->payment_date = date('Y-m-d', strtotime($collectionDate));
+                            $new_installment->last_paid_amount = $amount;
+                            $new_installment->payment_reference = $transactionReference;
+                            $new_installment->effective_payment_date = date('Y-m-d', strtotime($collectionDate));
+                            $new_installment->remarks = "Amount paid";
+                            $new_installment->save();
+
+                            //2.0 then process payment installment
+                            $this->deductionService->processInstallment($new_installment);
+                        }
+                    }
+                } else if (strtolower($transferResponse) == "insufficient_amount") {
+                    // select installment for this month
+                    $installments = Installment::where('debit_order_id', "=", $debitOrder->id)
+                        ->whereMonth('payment_date', "=", date('m', strtotime($collectionDate)))
+                        ->whereYear('payment_date', "=", date('Y', strtotime($collectionDate)));
+
+                    if ($installments->exists()) {
+                        $installment = $installments->first();
+                        $installment->status = "FAILED";
+                        $installment->remarks = "Insufficient funds";
+                        $installment->save();
+                    }
                 }
-            } else {
-                // check for failed installments
             }
         }
 
