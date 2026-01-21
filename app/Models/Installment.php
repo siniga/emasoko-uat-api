@@ -94,7 +94,7 @@ class Installment extends Model
                 THEN installment_amount ELSE 0 END), 0) as total_amount"),
 
                 DB::raw("COALESCE(SUM(CASE 
-                WHEN DATE(effective_payment_date) = '{$date}' 
+                WHEN DATE(effective_payment_date) = '{$date}' AND status IN ('CLOSED', 'PARTIAL_PAID')
                 THEN current_balance ELSE 0 END), 0) as paid_amount")
             ])
             ->whereHas('debitOrder', function ($query) use ($channel) {
@@ -122,7 +122,7 @@ class Installment extends Model
                 THEN installment_amount ELSE 0 END), 0) as total_amount"),
 
                 DB::raw("COALESCE(SUM(CASE 
-                WHEN MONTH(effective_payment_date) = {$month} AND YEAR(effective_payment_date) = {$year} AND status='CLOSED'
+                WHEN MONTH(effective_payment_date) = {$month} AND YEAR(effective_payment_date) = {$year} AND status IN ('CLOSED', 'PARTIAL_PAID')
                 THEN current_balance ELSE 0 END), 0) as paid_amount")
             ])
             ->whereHas('debitOrder', function ($query) use ($channel) {
@@ -156,7 +156,7 @@ class Installment extends Model
             THEN outstanding_amount ELSE 0 END), 0) as outstanding_amount"),
 
             DB::raw("COALESCE(SUM(CASE
-            WHEN DATE(effective_payment_date) = '{$date}' AND status='CLOSED'
+            WHEN DATE(effective_payment_date) = '{$date}' AND status IN ('CLOSED', 'PARTIAL_PAID')
             THEN current_balance ELSE 0 END), 0) as paid_amount")
         ])
             ->whereHas('debitOrder', function ($query) use ($partnerId, $status, $deleted, $channel) {
@@ -196,7 +196,7 @@ class Installment extends Model
             THEN outstanding_amount ELSE 0 END), 0) as outstanding_amount"),
 
             DB::raw("COALESCE(SUM(CASE
-            WHEN MONTH(effective_payment_date) = {$month} AND YEAR(effective_payment_date) = {$year} AND status='CLOSED'
+            WHEN MONTH(effective_payment_date) = {$month} AND YEAR(effective_payment_date) = {$year} AND status IN ('CLOSED', 'PARTIAL_PAID')
             THEN current_balance ELSE 0 END), 0) as paid_amount")
         ])
             ->whereHas('debitOrder', function ($query) use ($partnerId, $status, $deleted, $channel) {
