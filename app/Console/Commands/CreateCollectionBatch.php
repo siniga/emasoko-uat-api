@@ -115,7 +115,7 @@ class CreateCollectionBatch extends Command
                             $deleted = $installment->debitOrder->deleted;
                             $contract_status = $installment->debitOrder->contract_status;
 
-                            //update collection date
+                            //collection date
                             $collection_date = $installment->payment_date;
 
                             //1.0: check if periodicity == MONTHLY and deleted = 0
@@ -129,7 +129,7 @@ class CreateCollectionBatch extends Command
                                             // 3.1: create new collection date from previous month
                                             $new_payment_date = $this->deductionService->createCollectionDate($payment_date);
 
-                                            //4.0: check if the mandate reference debited this month
+                                            //4.0: check if the mandate reference is exists for this month
                                             $collection_debit_order = CollectionDebitOrder::where(['debit_order_id' => $debit_order_id])
                                                 ->whereMonth('payment_at', Carbon::parse($new_payment_date)->format('m'))
                                                 ->whereYear('payment_at', Carbon::parse($new_payment_date)->format('Y'));

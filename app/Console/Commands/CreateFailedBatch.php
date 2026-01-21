@@ -27,7 +27,7 @@ class CreateFailedBatch extends Command
      *
      * @var string
      */
-    protected $description = 'Command for sending failed batch ';
+    protected $description = 'Command for sending failed batches';
 
     /**
      * Create a new command instance.
@@ -109,12 +109,14 @@ class CreateFailedBatch extends Command
                             $installment_id = $installment->id;
                             $payment_amount = $installment->installment_amount;
                             $payment_date = $installment->payment_date;
-                            $debit_start_date = Carbon::parse($installment->debitOrder->start_date)->toDateString();
-                            $debit_end_date = Carbon::parse($installment->debitOrder->end_date)->toDateString();
+                            $debit_start_date = Carbon::parse($installment->debitOrder->start_date);
+                            $debit_end_date = Carbon::parse($installment->debitOrder->end_date);
+
+                            //debit status
                             $deleted = $installment->debitOrder->deleted;
                             $contract_status = $installment->debitOrder->contract_status;
 
-                            //update collection date
+                            //collection date
                             $collection_date = $installment->payment_date;
 
                             //updated installment set created = 0 and pushed = 0
@@ -123,24 +125,23 @@ class CreateFailedBatch extends Command
                             $installment->status = "OPEN";
                             $installment->save();
 
-                            //1.0: Delete the collection_debit_order where payment_date and debit_order_id
-                            $delete_cdo = CollectionDebitOrder::where(['debit_order_id' => $debit_order_id])
-                                ->whereMonth('payment_at', Carbon::parse($payment_date)->format('m'))->delete();
-
                             //2.0: check if periodicity == MONTHLY and deleted = 0
                             if ($periodicity == "MONTHLY" && $contract_status == "OPEN" && $deleted == 0) {
-                                
-                                //3.0: Check if mandate start date <= today
-                                if ($debit_start_date <= Carbon::now()->toDateString()) {
-                                    //3.1: check if debit mandate expire
-                                    if ($debit_end_date >= Carbon::now()->toDateString()) {
-                                        //4.0: check if account exists in this batch
+                                //2.0: Check if mandate start date <= today
+                                if ($debit_start_date->lte(Carbon::now())) {
+                                    //2.1: check if debit mandate expire
+                                    if ($debit_end_date->gte(Carbon::now())) {
+                                        //3.0: check if account exists in this batch
                                         if (!in_array($account_number, $arr_accounts)) {
-                                            //5.0: check if the mandate reference debited this month
-                                            $collection_debit_order = CollectionDebitOrder::where(['debit_order_id' => $debit_order_id])
-                                                ->whereMonth('payment_at', Carbon::parse($payment_date)->format('m'));
+                                            // 3.1: create new collection date from previous month
+                                            $new_payment_date = $installment->effective_payment_date;
 
-                                            if ($collection_debit_order->count() == 0) {
+                                            //3.2: check if the mandate reference is exists for this month
+                                            $collection_debit_order = CollectionDebitOrder::where(['debit_order_id' => $debit_order_id])
+                                                ->whereMonth('payment_at', Carbon::parse($new_payment_date)->format('m'))
+                                                ->whereYear('payment_at', Carbon::parse($new_payment_date)->format('Y'));
+
+                                            if ($collection_debit_order->count() == 1) {
                                                 //create csv file
                                                 $csv .= "{$installment_id};016;NMB;{$mandate_reference};{$account_name};{$account_number};{$payment_amount}\n";
 
@@ -153,14 +154,6 @@ class CreateFailedBatch extends Command
                                                 //updated installment set created = 1
                                                 $installment->created = 1;
                                                 $installment->save();
-
-                                                // create collection debit order
-                                                $create_collection_debit_order = CollectionDebitOrder::create([
-                                                    'collection_batch_id' => $batch->id,
-                                                    'debit_order_id' => $debit_order_id,
-                                                    'status' => 'CREATED',
-                                                    'payment_at' => $payment_date
-                                                ]);
 
                                                 //increment number of collections
                                                 $number_of_collections += 1;
@@ -180,7 +173,7 @@ class CreateFailedBatch extends Command
                         $new_batch->installment_ids = implode(",", $arr_installments);
                         $new_batch->save();
                     } else {
-                        $new_batch->delete();
+                        $new_batch->delete(); // delete batch if no collections
                     }
                 }
 
