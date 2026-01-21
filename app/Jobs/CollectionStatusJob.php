@@ -72,6 +72,13 @@ class CollectionStatusJob implements ShouldQueue
         //response
         $response = Http::withHeaders($headers)->post($API_URL, $payload);
 
+        // Log response metadata BEFORE decoding
+        Log::debug('== CollectionStatus HTTP Response ==', [
+            'status'  => $response->status(),
+            'headers' => $response->headers(),
+            'body'    => $response->body(),   // raw string
+        ]);
+
         //collection reference
         $collection_reference = $payload['data']['collectionReference'];
 
@@ -168,11 +175,11 @@ class CollectionStatusJob implements ShouldQueue
                 $message = "Collection batch number " . $collection_reference . " failed from NMB end. Review and resend the batch.";
                 $arr_phone = [255717705746, 255656314330];
 
-                foreach ($arr_phone as $phone) {
-                    //send sms
-                    $data = ["phone" => $phone, "message" => $message];
-                    dispatch(new SendSMSJob($data));
-                }
+                // foreach ($arr_phone as $phone) {
+                //     //send sms
+                //     $data = ["phone" => $phone, "message" => $message];
+                //     dispatch(new SendSMSJob($data));
+                // }
             }
         }
 

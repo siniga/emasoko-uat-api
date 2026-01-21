@@ -40,7 +40,7 @@ class FormatFailedCollection extends Command
     public function handle()
     {
         //Query filed collection batches
-        $collection_batches = CollectionBatch::whereIn('collectionReference', [])->get();
+        $collection_batches = CollectionBatch::whereIn('collectionReference', [16752])->get();
 
         if ($collection_batches) {
             foreach ($collection_batches as $batch) {

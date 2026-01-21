@@ -50,13 +50,15 @@ class CreateFailedCollection extends Command
     public function handle()
     {
         //current month
-        $previous_month = now()->subMonth()->month;
-        $current_year = now()->year;
+        //$previous_month = now()->subMonth()->month;
+        $previous_month = 12;
+        //$current_year = now()->year;
+        $current_year = 2025;
         Log::debug("== Previous Month: '{$previous_month}' ==");
         Log::debug("== Current Year: '{$current_year}' ==");
 
         //collection references 13450
-        //$collection_batches = CollectionBatch::where('collectionReference', '=', 13450);
+        //$collection_batches = CollectionBatch::where('collectionReference', '=', 13708);
         $collection_batches = CollectionBatch::whereMonth("created_at", "=", $previous_month)
             ->whereYear("created_at", "=", $current_year)
             ->orderBy('collectionReference', 'ASC');
