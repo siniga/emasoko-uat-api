@@ -613,7 +613,6 @@ class BankApiService
 
         //update collection batch 
         $collection_batch = CollectionBatch::where('collectionReference', '=', $collection_reference)->first();
-        //$collection_batch->http_response_json = $response;
 
         //decode the response 
         $response = json_decode($response, true);
@@ -638,12 +637,12 @@ class BankApiService
                     //1. Batch Complete
                     //1.1: read csv file
                     $data = base64_to_content($response['data']['file']['fileData']);
-                    //$collection_batch->response_csv = $data;
 
                     Log::debug("== Complete Collection CSV ==");
                     Log::debug($data);
 
-                    $response = $this->deduction_service->updateInstallments($data, $collection_reference);
+                    //update installments
+                    $response = $this->deduction_service->updateInstallments($data);
 
                     //3. process batch
                     $collection_batch->success = $response[0];
@@ -653,12 +652,12 @@ class BankApiService
                     //1. Batch Complete
                     //1.1: read csv file
                     $data = base64_to_content($response['data']['file']['fileData']);
-                    //$collection_batch->response_csv = $data;
 
                     Log::debug("== Failed Collection CSV ==");
                     Log::debug($data);
 
-                    $response = $this->deduction_service->updateInstallments($data, $collection_reference);
+                    //update installments
+                    $response = $this->deduction_service->updateInstallments($data);
 
                     //3. process batch
                     $collection_batch->success = $response[0];
@@ -673,8 +672,8 @@ class BankApiService
                     Log::debug("== Processing Collection CSV ==");
                     Log::debug($data);
 
-                    //response
-                    $response = $this->deduction_service->updateInstallments($data, $collection_reference);
+                    //update installments
+                    $response = $this->deduction_service->updateInstallments($data);
 
                     //3. process batch
                     $collection_batch->success = $response[0];

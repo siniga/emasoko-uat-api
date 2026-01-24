@@ -50,21 +50,18 @@ class CreateFailedCollection extends Command
     public function handle()
     {
         //current month
-        //$previous_month = now()->subMonth()->month;
-        $previous_month = 12;
-        //$current_year = now()->year;
-        $current_year = 2025;
+        $previous_month = now()->subMonth()->month;
+        $current_year = now()->year;
         Log::debug("== Previous Month: '{$previous_month}' ==");
         Log::debug("== Current Year: '{$current_year}' ==");
 
-        //collection references 13450
-        //$collection_batches = CollectionBatch::where('collectionReference', '=', 13708);
+        //collection batches
         $collection_batches = CollectionBatch::whereMonth("created_at", "=", $previous_month)
             ->whereYear("created_at", "=", $current_year)
             ->orderBy('collectionReference', 'ASC');
 
         if ($collection_batches->count() > 0) {
-            //take the first 20 collection batches
+            //collection batches
             $collection_batches = $collection_batches->get();
 
             foreach ($collection_batches as $collection_batch) {
@@ -119,6 +116,9 @@ class CreateFailedCollection extends Command
                             $deleted = $installment->debitOrder->deleted;
                             $contract_status = $installment->debitOrder->contract_status;
 
+                            //collection date
+                            $collection_date  = $installment->effective_payment_date;
+
                             //1.0: check if periodicity == MONTHLY and deleted = 0
                             if ($periodicity == "MONTHLY" && $contract_status == "OPEN" && $deleted == 0) {
                                 //2.0: Check if mandate start date <= today
@@ -128,14 +128,14 @@ class CreateFailedCollection extends Command
                                         //3.0: check if account exists in this batch
                                         if (!in_array($account_number, $arr_accounts)) {
                                             // 3.1: create new collection date from previous month
-                                            $new_payment_date = $this->deductionService->createCollectionDate($payment_date);
+                                            $new_payment_date = $this->deductionService->createCollectionDate($collection_date);
 
                                             //4.0: check if the mandate reference debited this month
                                             $collection_debit_order = CollectionDebitOrder::where(['debit_order_id' => $debit_order_id])
                                                 ->whereMonth('payment_at', Carbon::parse($new_payment_date)->format('m'))
                                                 ->whereYear('payment_at', Carbon::parse($new_payment_date)->format('Y'));
 
-                                            if ($collection_debit_order->count() == 0) {
+                                            if (!$collection_debit_order->exists()) {
                                                 //create csv file
                                                 $csv .= "{$installment_id};016;NMB;{$mandate_reference};{$account_name};{$account_number};{$payment_amount}\n";
 
@@ -145,16 +145,17 @@ class CreateFailedCollection extends Command
                                                 //update array installments
                                                 array_push($arr_installments, $installment_id);
 
-                                                //update installment effective date
-                                                $up_installment = Installment::findOrFail($installment_id);
-                                                $up_installment->effective_payment_date = $new_payment_date;
-                                                $up_installment->created = 1;
-                                                $up_installment->save();
+                                                //update installment status => created = 1 and effective payment date
+                                                $updated_installment = Installment::findOrFail($installment_id);
+                                                $updated_installment->effective_payment_date = $new_payment_date;
+                                                $updated_installment->created = 1;
+                                                $updated_installment->save();
 
                                                 // create collection debit order
-                                                $create_collection_debit_order = CollectionDebitOrder::create([
+                                                $new_collection_debit_order = CollectionDebitOrder::create([
                                                     'collection_batch_id' => $batch->id,
                                                     'debit_order_id' => $debit_order_id,
+                                                    'installment_id' => $installment_id,
                                                     'status' => 'CREATED',
                                                     'payment_at' => $new_payment_date
                                                 ]);
@@ -181,6 +182,8 @@ class CreateFailedCollection extends Command
                 }
             }
         }
+
+        //TODO: Messaging module
 
         //send Notification of batch creation
         $message = "Collection batches created. Review and approve batches to the next stage.";

@@ -141,7 +141,6 @@ class DeductionService
 
         // Get current month and year
         $currentMonth = now()->month;
-        $currentYear = now()->year;
 
         // Adjust year if original was in December and we're now in January
         $newYear = ($original->month === 12 && $currentMonth === 1) ? $original->year + 1 : $original->year;
@@ -189,9 +188,6 @@ class DeductionService
                         ->orderBy('installments.payment_date')
                         ->first();
 
-                    // Log::debug("== Opened Installment Information ==");
-                    // Log::debug($open);
-
                     if ($open) {
                         $picked->push($open);
                     } else {
@@ -202,9 +198,6 @@ class DeductionService
                             ->whereDate('payment_date', '<', $current_date)
                             ->orderBy('installments.payment_date')
                             ->first();
-
-                        // Log::debug("== Failed Installment Information ==");
-                        // Log::debug($fallback);
 
                         if ($fallback) {
                             $picked->push($fallback);
@@ -291,7 +284,6 @@ class DeductionService
 
             // Save for next iteration
             $lastInstallmentDate = $installmentDate->copy();
-            Log::debug("Installment Date: {$installmentDate->toDateString()}, Paid Amount: {$paidAmount}");
 
             // Create or update installment
             Installment::updateOrCreate(
@@ -378,7 +370,7 @@ class DeductionService
         }
     }
 
-    public function updateInstallments($data, $collection_reference)
+    public function updateInstallments($data)
     {
         //Convert the data into an array of rows
         $rows = explode("\n", $data);
@@ -404,7 +396,7 @@ class DeductionService
             $installment = Installment::where('id', '=', $fields[0])->first();
 
             //check if installment exists AND channel == "NMB"
-            if($installment && $installment->debitOrder->channel == "NMB"){
+            if ($installment && $installment->debitOrder->channel == "NMB") {
                 //check if installment status != CLOSED
                 if ($installment->status != "CLOSED") {
                     //installment amount
@@ -427,7 +419,7 @@ class DeductionService
                         $installment->remarks = $message;
                         $installment->save();
 
-                        //increment failed count
+                        //increment failed installments
                         $failed_installments += 1;
 
                         if ($message == 'Insufficient Funds') {
@@ -435,38 +427,34 @@ class DeductionService
                             $installmentAmt = number_format($installment_amount);
 
                             //payment date
-                            $paymentDate = $installment->payment_date;
+                            $paymentDate = $installment->effective_payment_date;
 
-                            //send sms => Insufficient Funds
-                            // $phone = $installment->debitOrder->customerAccount->phone;
-                            // $message = "Makato ya tarehe {$paymentDate} ya kiasi cha shilingi {$installmentAmt} yameshindikana. Tafadhali weka pesa kwenye akaunti yako ya benki kwa ajili ya makato.";
+                            //TODO: Messaging Module 
+                            //1.0: Send Single email to service provider => show all failed collections
 
-                            // //send sms
-                            // $data = ["phone" => $phone, "message" => $message];
-                            // dispatch(new SendSMSJob($data));
                         }
                     } else if ($status == "SUCCESS") {
                         //Generate a unique payment reference
-                        $reference = $this->uniquePaymentReference(12);
+                        $payment_reference = $this->uniquePaymentReference(12);
 
-                        //updated status of installment
-                        $installment->payment_reference = $reference;
-                        $installment->last_paid_amount = $amount;
-                        $installment->remarks = $message;
-                        //$installment->effective_payment_date = Carbon::now()->toDateString(); // Fix this
-                        $installment->save();
-
-                        //4. Insert or Create payment in installment amount
+                        //4. Create or update installment payment
                         $payment = InstallmentPayment::firstOrNew(
                             [
-                                'reference' => $reference,
-                                'installment_id' => $installment->id
+                                'mandate_reference' => $installment->debitOrder->reference,
+                                'payment_reference' => $payment_reference,
                             ]
                         );
                         $payment->amount = $amount;
+                        $payment->payment_at = date('Y-m-d');
                         $payment->save();
 
-                        //increment success count
+                        //updated status of installment
+                        $installment->payment_reference = $payment_reference;
+                        $installment->last_paid_amount = $amount;
+                        $installment->remarks = $message;
+                        $installment->save();
+
+                        //increment success installments
                         $success_installments += 1;
 
                         //process calculation for installment and debit order.
@@ -508,7 +496,7 @@ class DeductionService
             $installment = Installment::where('id', '=', $fields[0])->first();
 
             //check if installment exists AND channel == "NMB"
-            if($installment && $installment->debitOrder->channel == "NMB"){
+            if ($installment && $installment->debitOrder->channel == "NMB") {
                 //check if installment status != CLOSED
                 if ($installment->status != "CLOSED") {
                     //status and paid amount
@@ -519,7 +507,7 @@ class DeductionService
                     $installment->remarks = $message;
                     $installment->save();
 
-                    //increment failed count
+                    //increment failed installments
                     $failed_installments += 1;
                 }
             }
@@ -618,24 +606,39 @@ class DeductionService
     }
 
     //update debit date
-    public function updateNextDebitDate($debit_id, $payment_date)
+    public function updateNextDebitDate(DebitOrder $debitOrder)
     {
         try {
             //next payment date
-            $date = new DateTime($payment_date);
+            $date = new DateTime($debitOrder->next_debit_date);
             $date->modify('+1 month');
             $new_payment_date = $date->format('Y-m-d');
 
-            //update next debit date
+            //update debit order
+            $debit_id = $debitOrder->id;
             $debit_order = DebitOrder::findOrFail($debit_id);
             $debit_order->next_debit_date = $new_payment_date;
             $debit_order->save();
-
-            //Log
-            Log::debug("Next Debit Date => Updated");
         } catch (Exception $e) {
             Log::debug("Invalid date format: " . $e->getMessage());
         }
+    }
+
+    //get installment amount from debit type
+    public function getInstallmentAmount(DebitOrder $debitOrder)
+    {
+        if ($debitOrder->debit_type == "FIXED")
+            return $debitOrder->installment_amount;
+        else if ($debitOrder->debit_type == "DYNAMIC")
+            return $debitOrder->max_installment_amount;
+        else
+            return $debitOrder->installment_amount;
+    }
+
+    //get last installment order
+    public function getLastInstallmentOrder(DebitOrder $debitOrder)
+    {
+        return $debitOrder->installments()->orderBy('created_at', 'desc')->first();
     }
 
     //get mandate reference

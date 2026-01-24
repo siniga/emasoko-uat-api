@@ -6,21 +6,21 @@ use App\Models\CollectionBatch;
 use App\Models\Installment;
 use Illuminate\Console\Command;
 
-class FormatFailedCollection extends Command
+class FormatFailedBatch extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'format:failed-collection';
+    protected $signature = 'format:failed-batches';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Command to format failed collection';
+    protected $description = 'Command to format failed batch collections';
 
     /**
      * Create a new command instance.

@@ -61,9 +61,6 @@ class PushCollectionBatch extends Command
                 //batch information
                 $batch = CollectionBatch::findOrFail($value->id);
 
-                //Log the collection batches
-                Log::debug("== Pushed collection batch: '{$batch->collectionReference}' ==");
-
                 if (!empty($batch->request_csv)) {
                     //1. Create parameters
                     $csv = $batch->request_csv;

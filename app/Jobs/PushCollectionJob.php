@@ -110,9 +110,7 @@ class PushCollectionJob implements ShouldQueue
                         $installment->save();
 
                         //update debit order next debit order
-                        $debit_order_id = $installment->debitOrder->id;
-                        $payment_date = $installment->payment_date;
-                        $deduction_service->updateNextDebitDate($debit_order_id, $payment_date);
+                        $deduction_service->updateNextDebitDate($installment->debitOrder);
                     }
                 }
             } else if (strtolower($response['status']) == "fail") {
@@ -121,8 +119,8 @@ class PushCollectionJob implements ShouldQueue
 
                 //update collection batch
                 $collection_batch->status = 500;
-                $collection_batch->http_response_code = $response['data']['response'][0]['responseCode'];
-                $collection_batch->remarks = $response['data']['response'][0]['responseDescription'];
+                $collection_batch->http_response_code = $response_code;
+                $collection_batch->remarks = $remarks;
                 $collection_batch->save();
 
                 Log::debug('== Failed to create collection batch ==');
