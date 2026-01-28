@@ -28,11 +28,10 @@ class Kernel extends ConsoleKernel
     {
         // collection batches 
         $schedule->command('create:batches')->dailyAt('01:00');
-        //$schedule->command('push:batches')->everyTwoHours();
         $schedule->command('collection:status')->dailyAt('03:00');
 
         //summary reports
-        $schedule->command('send:daily-report-summary')->dailyAt('23:50');
+        //$schedule->command('send:daily-report-summary')->dailyAt('23:50');
         //$schedule->command('send:monthly-report-summary')->lastDayOfMonth('23:30');
     }
 
