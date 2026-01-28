@@ -590,6 +590,7 @@ class DeductionService
 
                     Log::debug("== Collection Callback Data ==");
                     Log::debug($callback_data);
+                    
                     // call CollectionCallbackJob
                     dispatch(new CollectionCallbackJob($callback_data));
                 }
