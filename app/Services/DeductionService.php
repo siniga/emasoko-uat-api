@@ -563,18 +563,18 @@ class DeductionService
                 $debit_order->save();
 
                 //installment amount
-                $installment_amount = $installment->installment_amount;
+                $paid_amount = $installment->last_paid_amount;
 
                 //payment date
                 $payment_date = $installment->payment_date;
 
                 //format amount
                 $outstandingAmt = number_format($outstanding_amount);
-                $installmentAmt = number_format($installment_amount);
+                $paidAmt = number_format($paid_amount);
 
                 //send message for outstanding amount and current balance from eMakato.
                 $phone = $installment->debitOrder->customerAccount->phone;
-                $message = "Makato ya tarehe {$payment_date} ya kiasi cha shilingi {$installmentAmt} yamekamilishwa na kiasi kilichobaki ni Tsh {$outstandingAmt}. Asante kwa kutumia eMakato.";
+                $message = "Makato ya tarehe {$payment_date} ya kiasi cha shilingi {$paidAmt} yamekamilishwa na kiasi kilichobaki ni Tsh {$outstandingAmt}. Asante kwa kutumia eMakato.";
 
                 //Send SMS
                 $data = ["phone" => $phone, "message" => $message];
