@@ -281,8 +281,15 @@ class MandateController extends Controller
                             } else if ($installment->status == "PARTIAL_PAID") {
                                 //1.0 calculate outstanding amount
                                 $outstanding_amount = ($installment->installment_amount - $installment->last_paid_amount);
-                                //create function for partial payment
 
+                                //if effective_payment_date is the same as collection date, it means the payment was the same month, then add amount to last_paid_amount
+                                if ($installment->effective_payment_date == date('Y-m-d', strtotime($collectionDate))) {
+                                    $installment->last_paid_amount = $installment->last_paid_amount + $amount;
+                                    $installment->save();
+                                } else {
+                                    //TODO: create new installment
+
+                                }
                             }
                         } else {
                             //1.0 calculate installment amount
