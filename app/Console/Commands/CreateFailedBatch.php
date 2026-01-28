@@ -70,6 +70,9 @@ class CreateFailedBatch extends Command
                     "verifyDate" => Carbon::now(),
                 ]);
 
+                //batch collection date
+                $batch_collection_date = Carbon::parse($batch->collectionDate);
+
                 if ($new_batch->wasRecentlyCreated) {
                     //3. Create CSV file based installment
                     $csv = "SERIAL No.;BANK CODE;BRANCH NAME;EMPLOYEE NUMBER;CUSTOMER NAME;ACCOUNT NO;AMOUNT\n";
@@ -109,16 +112,12 @@ class CreateFailedBatch extends Command
                             $periodicity = $installment->debitOrder->periodicity;
                             $installment_id = $installment->id;
                             $payment_amount = $installment->installment_amount;
-                            $payment_date = $installment->payment_date;
                             $debit_start_date = Carbon::parse($installment->debitOrder->start_date);
                             $debit_end_date = Carbon::parse($installment->debitOrder->end_date);
 
                             //debit status
                             $deleted = $installment->debitOrder->deleted;
                             $contract_status = $installment->debitOrder->contract_status;
-
-                            //collection date
-                            $collection_date = $installment->payment_date;
 
                             //updated installment set created = 0 and pushed = 0
                             $installment->created = 0;
@@ -135,12 +134,12 @@ class CreateFailedBatch extends Command
                                         //3.0: check if account exists in this batch
                                         if (!in_array($account_number, $arr_accounts)) {
                                             // 3.1: create new collection date from previous month
-                                            $new_payment_date = $installment->effective_payment_date;
+                                            $collection_date = $installment->effective_payment_date;
 
                                             //3.2: check if the mandate reference is exists for this month
                                             $collection_debit_order = CollectionDebitOrder::where(['debit_order_id' => $debit_order_id])
-                                                ->whereMonth('payment_at', Carbon::parse($new_payment_date)->format('m'))
-                                                ->whereYear('payment_at', Carbon::parse($new_payment_date)->format('Y'));
+                                                ->whereMonth('payment_at', Carbon::parse($collection_date)->format('m'))
+                                                ->whereYear('payment_at', Carbon::parse($collection_date)->format('Y'));
 
                                             if ($collection_debit_order->count() == 1) {
                                                 //create csv file
@@ -169,19 +168,19 @@ class CreateFailedBatch extends Command
                     //check if installments is not null
                     if ($arr_installments) {
                         $new_batch->request_csv = $csv;
-                        $new_batch->collectionDate = $collection_date;
+                        $new_batch->collectionDate = $batch_collection_date;
                         $new_batch->number_of_collections = $number_of_collections;
                         $new_batch->installment_ids = implode(",", $arr_installments);
                         $new_batch->save();
                     } else {
-                        $new_batch->delete(); // delete batch if no collections
+                        $new_batch->delete();
                     }
                 }
 
                 //set old batch deleted = 1
-                $old_batch = CollectionBatch::where(['id' => $batch->id])->firstOrFail();
-                $old_batch->deleted = 1;
-                $old_batch->save();
+                $origin_batch = CollectionBatch::where(['id' => $batch->id])->first();
+                $origin_batch->deleted = 1;
+                $origin_batch->save();
             }
         }
 

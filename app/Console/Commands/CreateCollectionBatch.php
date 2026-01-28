@@ -32,7 +32,7 @@ class CreateCollectionBatch extends Command
      */
     protected $description = 'Create collection bacthes';
 
-   /**
+    /**
      * Create a new command instance.
      *
      * @return void
@@ -51,12 +51,12 @@ class CreateCollectionBatch extends Command
     {
         //Limit
         $limit = 250;
-        $current_date = "2026-01-30"; //Carbon::now(); //today batch ;
+        $current_date = Carbon::now(); //today batch ;
         //$current_date = Carbon::now()->addDays(15); //2 days from today
         Log::debug("== Collection for Current Date: '{$current_date}' ==");
 
         //initiate collection date
-        $collection_date = Carbon::now();
+        $batch_collection_date = Carbon::now();
 
         // initialize deduction service
         $partners = Partner::whereHas('debitOrders', function ($query) use ($current_date) {
@@ -112,11 +112,13 @@ class CreateCollectionBatch extends Command
                             $payment_date = $installment->payment_date;
                             $debit_start_date = Carbon::parse($installment->debitOrder->start_date);
                             $debit_end_date = Carbon::parse($installment->debitOrder->end_date);
+
+                            //debit status
                             $deleted = $installment->debitOrder->deleted;
                             $contract_status = $installment->debitOrder->contract_status;
 
-                            //collection date
-                            $collection_date = $installment->payment_date;
+                            //Batch Collection Date
+                            $batch_collection_date = $installment->payment_date;
 
                             //1.0: check if periodicity == MONTHLY and deleted = 0
                             if ($periodicity == "MONTHLY" && $contract_status == "OPEN" && $deleted == 0) {
@@ -127,12 +129,12 @@ class CreateCollectionBatch extends Command
                                         //3.0: check if account exists in this batch
                                         if (!in_array($account_number, $arr_accounts)) {
                                             // 3.1: create new collection date from previous month
-                                            $new_payment_date = $this->deductionService->createCollectionDate($payment_date);
+                                            $collection_date = $this->deductionService->createCollectionDate($payment_date);
 
                                             //4.0: check if the mandate reference is exists for this month
                                             $collection_debit_order = CollectionDebitOrder::where(['debit_order_id' => $debit_order_id])
-                                                ->whereMonth('payment_at', Carbon::parse($new_payment_date)->format('m'))
-                                                ->whereYear('payment_at', Carbon::parse($new_payment_date)->format('Y'));
+                                                ->whereMonth('payment_at', Carbon::parse($collection_date)->format('m'))
+                                                ->whereYear('payment_at', Carbon::parse($collection_date)->format('Y'));
 
                                             if (!$collection_debit_order->exists()) {
                                                 //create csv file
@@ -146,17 +148,17 @@ class CreateCollectionBatch extends Command
 
                                                 //update installment status => created = 1 and effective payment date
                                                 $updated_installment = Installment::findOrFail($installment_id);
-                                                $updated_installment->effective_payment_date = $new_payment_date;
+                                                $updated_installment->effective_payment_date = $collection_date;
                                                 $updated_installment->created = 1;
                                                 $updated_installment->save();
 
                                                 // create collection debit order
-                                                $new_collection_debit_order = CollectionDebitOrder::create([
+                                                CollectionDebitOrder::create([
                                                     'collection_batch_id' => $batch->id,
                                                     'debit_order_id' => $debit_order_id,
                                                     'installment_id' => $installment_id,
                                                     'status' => 'CREATED',
-                                                    'payment_at' => $new_payment_date
+                                                    'payment_at' => $collection_date
                                                 ]);
 
                                                 //increment number of collections
@@ -171,7 +173,7 @@ class CreateCollectionBatch extends Command
                         //check if installments is not null
                         if ($arr_installments) {
                             $batch->request_csv = $csv;
-                            $batch->collectionDate = $collection_date;
+                            $batch->collectionDate = $batch_collection_date;
                             $batch->number_of_collections = $number_of_collections;
                             $batch->installment_ids = implode(",", $arr_installments);
                             $batch->save();
@@ -187,7 +189,7 @@ class CreateCollectionBatch extends Command
         }
 
         //send Notification of batch creation
-        if ($success > 0){
+        if ($success > 0) {
             // create messages
             $message = "Collection batches created. Review and approve batches to the next stage.";
             $arr_phone = [255717705746, 255656314330];

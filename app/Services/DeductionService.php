@@ -549,18 +549,18 @@ class DeductionService
                 $installment->save();
 
                 //5. Update debit order => outstanding amount, current balance
-                $debit_order = $installment->debitOrder;
-                $outstanding_amount = $debit_order->outstanding_amount - $amount;
-                $current_balance = $debit_order->current_balance + $amount;
-                $debit_order->outstanding_amount = $outstanding_amount;
-                $debit_order->current_balance = $current_balance;
+                $debitOrder = $installment->debitOrder;
+                $outstanding_amount = $debitOrder->outstanding_amount - $amount;
+                $current_balance = $debitOrder->current_balance + $amount;
+                $debitOrder->outstanding_amount = $outstanding_amount;
+                $debitOrder->current_balance = $current_balance;
 
                 //6. Update contract status = outstanding amount <= 0
                 if ($outstanding_amount <= 0)
-                    $debit_order->contract_status = "CLOSED";
+                    $debitOrder->contract_status = "CLOSED";
 
                 //save debit order
-                $debit_order->save();
+                $debitOrder->save();
 
                 //installment amount
                 $paid_amount = $installment->last_paid_amount;
@@ -572,24 +572,25 @@ class DeductionService
                 $outstandingAmt = number_format($outstanding_amount);
                 $paidAmt = number_format($paid_amount);
 
+                //business name
+                $businessName = $debitOrder->partner->business_name;
+
                 //send message for outstanding amount and current balance from eMakato.
                 $phone = $installment->debitOrder->customerAccount->phone;
-                $message = "Makato ya tarehe {$payment_date} ya kiasi cha shilingi {$paidAmt} yamekamilishwa na kiasi kilichobaki ni Tsh {$outstandingAmt}. Asante kwa kutumia eMakato.";
+                $message = "Makato ya tarehe {$payment_date} ya kiasi cha shilingi {$paidAmt} yamekamilishwa kwa {$businessName}. Kiasi kilichobaki ni Tsh {$outstandingAmt}. Asante kwa kutumia eMakato.";
 
                 //Send SMS
                 $data = ["phone" => $phone, "message" => $message];
                 dispatch(new SendSMSJob($data));
 
-                if ($debit_order->partner->callback_url && $debit_order->partner->callback_url != "") {
+                if ($debitOrder->partner->callback_url && $debitOrder->partner->callback_url != "") {
                     //dispatch callback job
                     $callback_data = [
                         'status' => $installment->status,
-                        'callback_url' => $debit_order->partner->callback_url,
+                        'callback_url' => $debitOrder->partner->callback_url,
                         'collection' => InstallmentResource::collection($installment),
                     ];
 
-                    Log::debug("== Collection Callback Data ==");
-                    Log::debug($callback_data);
                     // call CollectionCallbackJob
                     dispatch(new CollectionCallbackJob($callback_data));
                 }

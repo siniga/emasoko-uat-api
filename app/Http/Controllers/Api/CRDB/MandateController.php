@@ -282,7 +282,7 @@ class MandateController extends Controller
                                 //1.0 calculate outstanding amount
                                 $outstanding_amount = ($installment->installment_amount - $installment->last_paid_amount);
 
-                                //if effective_payment_date is the same as collection date, it means the payment was the same month, then add amount to last_paid_amount
+                                //if effective_payment_date {month, year} is the same as collection date {month, year}, it means the payment was the same month, then add amount to last_paid_amount
                                 if ($installment->effective_payment_date == date('Y-m-d', strtotime($collectionDate))) {
                                     $installment->last_paid_amount = $installment->last_paid_amount + $amount;
                                     $installment->save();
