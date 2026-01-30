@@ -52,11 +52,7 @@ class CreateCollectionBatch extends Command
         //Limit
         $limit = 250;
         $current_date = Carbon::now(); //today batch ;
-<<<<<<< HEAD
-        //$current_date = Carbon::now()->addDays(15); //2 days from today
-=======
         //$current_date = Carbon::now()->addDays(15);
->>>>>>> 410f287c53474c05f961b3c560a2a29b67094f74
         Log::debug("== Collection for Current Date: '{$current_date}' ==");
 
         //initiate batch collection date
