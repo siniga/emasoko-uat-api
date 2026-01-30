@@ -258,7 +258,7 @@ class MandateController extends Controller
                         $installment_payment->payment_at = date('Y-m-d', strtotime($collectionDate));
                         $installment_payment->save();
 
-                        // check if installment  exists with status == "OPEN" or "PARTIAL_PAID"
+                        // check if installment  exists
                         $installments = Installment::where('debit_order_id', "=", $debitOrder->id)
                             ->whereMonth('payment_date', "=", date('m', strtotime($collectionDate)))
                             ->whereYear('payment_date', "=", date('Y', strtotime($collectionDate)));
@@ -267,30 +267,15 @@ class MandateController extends Controller
                             // get installment
                             $installment = $installments->first();
 
-                            //if status is OPEN or FAILED
-                            if ($installment->status == "OPEN" || $installment->status == "FAILED") {
-                                //updated status of installment
-                                $installment->last_paid_amount = $amount;
-                                $installment->payment_reference = $transactionReference;
-                                $installment->effective_payment_date = date('Y-m-d', strtotime($collectionDate));
-                                $installment->remarks = "Amount paid";
-                                $installment->save();
+                            //updated installment
+                            $installment->last_paid_amount = $amount;
+                            $installment->payment_reference = $transactionReference;
+                            $installment->effective_payment_date = date('Y-m-d', strtotime($collectionDate));
+                            $installment->remarks = "Amount paid";
+                            $installment->save();
 
-                                // process installment
-                                $this->deductionService->processInstallment($installment);
-                            } else if ($installment->status == "PARTIAL_PAID") {
-                                //1.0 calculate outstanding amount
-                                $outstanding_amount = ($installment->installment_amount - $installment->last_paid_amount);
-
-                                //if effective_payment_date is the same as collection date, it means the payment was the same month, then add amount to last_paid_amount
-                                if ($installment->effective_payment_date == date('Y-m-d', strtotime($collectionDate))) {
-                                    $installment->last_paid_amount = $installment->last_paid_amount + $amount;
-                                    $installment->save();
-                                } else {
-                                    //TODO: create new installment
-
-                                }
-                            }
+                            // process installment
+                            $this->deductionService->processInstallment($installment);
                         } else {
                             //1.0 calculate installment amount
                             $installment_amount = $this->deductionService->getInstallmentAmount($debitOrder);

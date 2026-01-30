@@ -55,6 +55,9 @@ class CreateFailedCollection extends Command
         Log::debug("== Previous Month: '{$previous_month}' ==");
         Log::debug("== Current Year: '{$current_year}' ==");
 
+        //initiate collection date
+        $batch_collection_date = Carbon::now();
+
         //collection batches
         $collection_batches = CollectionBatch::whereMonth("created_at", "=", $previous_month)
             ->whereYear("created_at", "=", $current_year)
@@ -73,10 +76,6 @@ class CreateFailedCollection extends Command
                     $q->orWhere('status', 'FAILED')
                         ->orWhere('status', 'FUNDSCHECK');
                 })->where('remarks', '!=', 'Account Is Valid')->get();
-
-                //Logging installments
-                Log::debug("== Collection Reference: '{$collection_batch->collectionReference}' ==");
-                Log::debug("== Number of Failed Installments: '{$installments->count()}' ==");
 
                 if ($installments->isNotEmpty()) {
                     //1. Create new collection batch
@@ -111,13 +110,14 @@ class CreateFailedCollection extends Command
                             $installment_id = $installment->id;
                             $payment_amount = $installment->installment_amount;
                             $payment_date = $installment->payment_date;
+                            $effective_date = $installment->effective_payment_date;
                             $debit_start_date = Carbon::parse($installment->debitOrder->start_date);
                             $debit_end_date = Carbon::parse($installment->debitOrder->end_date);
                             $deleted = $installment->debitOrder->deleted;
                             $contract_status = $installment->debitOrder->contract_status;
 
-                            //collection date
-                            $collection_date  = $installment->effective_payment_date;
+                            //Batch Collection Date
+                            $batch_collection_date = $installment->effective_payment_date;
 
                             //1.0: check if periodicity == MONTHLY and deleted = 0
                             if ($periodicity == "MONTHLY" && $contract_status == "OPEN" && $deleted == 0) {
@@ -128,12 +128,12 @@ class CreateFailedCollection extends Command
                                         //3.0: check if account exists in this batch
                                         if (!in_array($account_number, $arr_accounts)) {
                                             // 3.1: create new collection date from previous month
-                                            $new_payment_date = $this->deductionService->createCollectionDate($collection_date);
+                                            $collection_date = $this->deductionService->createCollectionDate($effective_date);
 
                                             //4.0: check if the mandate reference debited this month
                                             $collection_debit_order = CollectionDebitOrder::where(['debit_order_id' => $debit_order_id])
-                                                ->whereMonth('payment_at', Carbon::parse($new_payment_date)->format('m'))
-                                                ->whereYear('payment_at', Carbon::parse($new_payment_date)->format('Y'));
+                                                ->whereMonth('payment_at', Carbon::parse($collection_date)->format('m'))
+                                                ->whereYear('payment_at', Carbon::parse($collection_date)->format('Y'));
 
                                             if (!$collection_debit_order->exists()) {
                                                 //create csv file
@@ -147,17 +147,17 @@ class CreateFailedCollection extends Command
 
                                                 //update installment status => created = 1 and effective payment date
                                                 $updated_installment = Installment::findOrFail($installment_id);
-                                                $updated_installment->effective_payment_date = $new_payment_date;
+                                                $updated_installment->effective_payment_date = $collection_date;
                                                 $updated_installment->created = 1;
                                                 $updated_installment->save();
 
                                                 // create collection debit order
-                                                $new_collection_debit_order = CollectionDebitOrder::create([
+                                                CollectionDebitOrder::create([
                                                     'collection_batch_id' => $batch->id,
                                                     'debit_order_id' => $debit_order_id,
                                                     'installment_id' => $installment_id,
                                                     'status' => 'CREATED',
-                                                    'payment_at' => $new_payment_date
+                                                    'payment_at' => $collection_date
                                                 ]);
 
                                                 //increment number of collections
@@ -172,6 +172,7 @@ class CreateFailedCollection extends Command
                         //check if installments is not null
                         if ($arr_installments) {
                             $batch->request_csv = $csv;
+                            $batch->collectionDate = $batch_collection_date;
                             $batch->number_of_collections = $number_of_collections;
                             $batch->installment_ids = implode(",", $arr_installments);
                             $batch->save();
@@ -196,7 +197,7 @@ class CreateFailedCollection extends Command
         }
 
         // Log the collection batches
-        Log::debug("== Failed collection batches created==");
+        Log::debug("== {$previous_month} - {$current_year} failed collection batches created ==");
         return 200;
     }
 }
