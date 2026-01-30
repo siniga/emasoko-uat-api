@@ -524,7 +524,7 @@ class DeductionService
         $amount = $installment->last_paid_amount; //paid amount
 
         //0. Check if installment status is not CLOSED
-        if ($installment_status == 'OPEN' || $installment_status == 'FAILED' || $installment_status == 'FUNDSCHECK') {
+        if ($installment_status == 'OPEN' || $installment_status == 'FAILED' || $installment_status == 'FUNDSCHECK' || $installment_status == 'PARTIAL_PAID') {
             //check if installment already updated
             $outstanding_amount = $installment->outstanding_amount;
 
@@ -595,10 +595,6 @@ class DeductionService
                     dispatch(new CollectionCallbackJob($callback_data));
                 }
             }
-
-            Log::debug("Installment => Processed");
-        } else if ($installment->status == 'PARTIAL_PAID') {
-            Log::debug("Installment => Partial Paid");
         } else if ($installment->status == 'CLOSED') {
             Log::debug("Installement => Closed");
         }
