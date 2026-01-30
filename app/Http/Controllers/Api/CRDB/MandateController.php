@@ -308,6 +308,9 @@ class MandateController extends Controller
                         $installment->status = "FAILED";
                         $installment->remarks = "Insufficient funds";
                         $installment->save();
+
+                        Log::debug("== update installment : insufficient amount ===");
+                        Log::debug($installment->toArray());
                     }
                 }
             }
