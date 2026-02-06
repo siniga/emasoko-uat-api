@@ -635,7 +635,12 @@ class DeductionService
     //get last installment order
     public function getLastInstallmentOrder(DebitOrder $debitOrder)
     {
-        return $debitOrder->installments()->orderBy('created_at', 'desc')->first();
+        $last = $debitOrder->installments()->orderBy('created_at', 'desc')->first();
+
+        if ($last)
+            return $last->installment_order;
+        else
+            return 0;
     }
 
     //get mandate reference

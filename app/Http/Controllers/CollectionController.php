@@ -15,6 +15,7 @@ use App\Models\CollectionBatch;
 use App\Models\CollectionDebitOrder;
 use App\Models\DebitOrder;
 use App\Models\Installment;
+use App\Models\InstallmentPayment;
 use App\Models\Partner;
 use App\Models\User;
 use App\Services\BankApiService;
@@ -1459,6 +1460,98 @@ class CollectionController extends Controller
 
         //response
         return response()->json(['success' => false, 'success_msg' => "File Processed"]);
+    }
+
+    public function reconciliation_crdb(Request $request)
+    {
+        //read file
+        $file = fopen(public_path('assets/reports/CRDB/Jan_2026.csv'), 'r');
+        fgetcsv($file); // Skip the first row
+
+        //iterarate file
+        $success = 0;
+        while (($row = fgetcsv($file, 10000, ',')) !== false) {
+            $collectionDate = $row[0];
+            $transactionReference = $row[1];
+            $amount = floatval(str_replace(',', '', $row[3]));
+            $mandateReference = $row[4];
+
+            if (empty($mandateReference))
+                continue;
+
+            Log::debug("Mandate Reference: $mandateReference");
+
+            //mandate 
+            $debitOrder = DebitOrder::where(["reference" => $mandateReference])->first();
+
+            if (!$debitOrder)
+                continue;
+
+            Log::debug("== debit order found ==");
+
+            // check if payment reference exists in installments payment
+            $installment_payments = InstallmentPayment::where([
+                'mandate_reference' => $debitOrder->reference,
+                'payment_reference' => $transactionReference
+            ]);
+
+            if (!$installment_payments->exists()) {
+                Log::debug("== installment payment does not exist ==");
+
+                // create installment payment
+                $installment_payment = new InstallmentPayment();
+                $installment_payment->mandate_reference = $debitOrder->reference;
+                $installment_payment->payment_reference = $transactionReference;
+                $installment_payment->amount = floatval($amount); //$amount;
+                $installment_payment->payment_at = date('Y-m-d', strtotime($collectionDate));
+                $installment_payment->save();
+
+                // check if installment  exists
+                $installments = Installment::where('debit_order_id', "=", $debitOrder->id)
+                    ->whereMonth('payment_date', "=", date('m', strtotime($collectionDate)))
+                    ->whereYear('payment_date', "=", date('Y', strtotime($collectionDate)));
+
+                if ($installments->exists()) {
+                    // get installment
+                    $installment = $installments->first();
+
+                    //updated installment
+                    $installment->last_paid_amount = $amount;
+                    $installment->payment_reference = $transactionReference;
+                    $installment->effective_payment_date = date('Y-m-d', strtotime($collectionDate));
+                    $installment->remarks = "Amount paid";
+                    $installment->save();
+
+                    // process installment
+                    $this->deductionService->processInstallment($installment);
+                } else {
+                    //1.0 calculate installment amount
+                    $installment_amount = $this->deductionService->getInstallmentAmount($debitOrder);
+                    $last_installment_order = $this->deductionService->getLastInstallmentOrder($debitOrder);
+
+                    //1.0 create new installment with payment details
+                    $new_installment = new Installment();
+                    $new_installment->debit_order_id = $debitOrder->id;
+                    $new_installment->installment_order = $last_installment_order + 1;
+                    $new_installment->installment_amount = $installment_amount;
+                    $new_installment->payment_date = date('Y-m-d', strtotime($collectionDate));
+                    $new_installment->last_paid_amount = $amount;
+                    $new_installment->payment_reference = $transactionReference;
+                    $new_installment->effective_payment_date = date('Y-m-d', strtotime($collectionDate));
+                    $new_installment->remarks = "Amount paid";
+                    $new_installment->save();
+
+                    //2.0 then process payment installment
+                    $this->deductionService->processInstallment($new_installment);
+                }
+                $success++;
+            } else {
+                Log::debug("== installment payment exists ==");
+            }
+        }
+
+        //response
+        return response()->json(['success' => true, 'success_msg' => "File Processed", 'success_count' => $success]);
     }
 
     public function update_collection_status(Request $request)

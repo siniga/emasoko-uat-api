@@ -225,6 +225,7 @@ Route::get('collections/update-collection-date', [CollectionController::class, '
 //Route::get('collections/update-collection-values', [CollectionController::class, 'update_collection_values'])->name('collections.update-collection-values');
 //Route::get('collections/delete-batch', [CollectionController::class, 'delete_collection_batch'])->name('collections.delete-batch');
 //Route::get('collections/reconciliation', [CollectionController::class, 'reconciliation'])->name('collections.reconciliation');
+Route::get('collections/reconciliation-crdb', [CollectionController::class, 'reconciliation_crdb'])->name('collections.reconciliation-crdb');
 
 Route::any('collections/expected-monthly', [CollectionController::class, 'expected_monthly'])->name('collections.expected-monthly');
 Route::get('collections/expected-monthly/{uuid}', [CollectionController::class, 'expected_monthly_detail'])->name('collections.expected-monthly-detail');

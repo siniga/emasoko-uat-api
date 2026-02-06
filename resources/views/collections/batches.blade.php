@@ -25,7 +25,7 @@
                             {{ Form::token() }}
 
                             <div class="row">
-                                <div class="col-lg-4 col-md-4 col-12">
+                                <div class="col-lg-6 col-md-6 col-12">
                                     <div class="mb-0">
                                         @php
                                             $options = [];
@@ -54,9 +54,15 @@
                                     <div class="mb-3">
                                         {{ Form::date('end_at', old('end_at', $post_data['end_at']), ['placeholder="End Date..."', 'class="form-control"']) }}
                                     </div>
-                                </div>                               
+                                </div>   
+                                
+                                <div class="col-lg-6 col-md-6 col-12">
+                                    <div class="mb-3">
+                                        {{ Form::text('mandate_reference', old('mandate_reference'), ['class="form-control"', 'placeholder="Search by mandate reference..."']) }}
+                                    </div>
+                                </div>
                             
-                                <div class="col-lg-2 col-md-2 col-12">
+                                <div class="col-lg-6 col-md-6 col-12">
                                     <div class="mb-3">
                                         <div class="text-sm-end d-none d-sm-block">
                                             <button type="submit" name="filter" class="btn btn-secondary">
