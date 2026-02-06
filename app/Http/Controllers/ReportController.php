@@ -284,7 +284,7 @@ class ReportController extends Controller
                 //Query for payment collection
                 $installments = Installment::filterCondition()
                     ->select('id', 'debit_order_id', 'installment_amount', 'last_paid_amount', 'current_balance', 'outstanding_amount', 'status', 'remarks', 'payment_date', 'effective_payment_date', 'created_at')
-                    ->where("installments.status", "=", "CLOSED")
+                    ->whereIn("installments.status", ["CLOSED", "PARTIAL_PAID"])
                     ->whereHas('debitOrder', function ($query) {
                         $query->where('debit_orders.approved', '=', 1)
                             ->whereHas('partner', function ($q) {
