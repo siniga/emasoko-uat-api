@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\ExternalApp\PaymentCollectionController;
 use App\Http\Controllers\Api\ExternalApp\PaymentMandateController;
 use App\Http\Controllers\Api\NMB\MandateController;
 use App\Http\Controllers\Api\NMB\OtpController;
+use App\Http\Controllers\Api\Yas\MandateController as YasMandateController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -59,7 +60,7 @@ Route::get('regions', [CompanyController::class, 'regions']);
 //     Route::post('mandate/crdb/callback', [CRDBMandateController::class, 'callback']);
 // });
 
-//Airtel apis
+//Airtel APIs
 Route::post('mandate/airtel', [AirtelMandateController::class, 'create']);
 Route::post('mandate/airtel/status', [AirtelMandateController::class, 'query_status']);
 Route::post('mandate/airtel/cancel', [AirtelMandateController::class, 'cancel']);
@@ -72,12 +73,17 @@ Route::post('collection/airtel/recovery', [AirtelCollectionController::class, 'r
 Route::post('collection/airtel/recovery-inquiry', [AirtelCollectionController::class, 'recovery_inquiry']);
 Route::post('collection/airtel/recovery-refund', [AirtelCollectionController::class, 'recovery_refund']);
 
-//CRDB apis
+//CRDB APIs
 Route::post('v1/mandate/crdb', [CRDBMandateController::class, 'create']);
 Route::post('v1/mandate/crdb/cancel', [CRDBMandateController::class, 'cancel']);
 Route::post('v1/mandate/crdb/callback', [CRDBMandateController::class, 'callback']);
 Route::post('v1/mandate/crdb/request', [CRDBMandateController::class, 'request']);
 Route::post('v1/mandate/crdb/response', [CRDBMandateController::class, 'response']);
+
+//YAS APIs
+Route::post('v1/mandate/yas', [YasMandateController::class, 'create']);
+Route::post('v1/mandate/yas/cancel', [YasMandateController::class, 'cancel']);
+Route::post('v1/mandate/yas/callback', [YasMandateController::class, 'callback']);
 
 /*
 |--------------------------------------------------------------------------
