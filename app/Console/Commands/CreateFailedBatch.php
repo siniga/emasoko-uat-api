@@ -54,7 +54,7 @@ class CreateFailedBatch extends Command
         $deductionService = new DeductionService();
 
         //Query filed collection batches
-        $collection_batches = CollectionBatch::whereIn('collectionReference', [16901, 16906, 16972, 16973, 16977, 16996, 16999, 17074])->get();
+        $collection_batches = CollectionBatch::whereIn('collectionReference', [])->get();
 
         if ($collection_batches) {
             foreach ($collection_batches as $batch) {
