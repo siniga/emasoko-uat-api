@@ -25,8 +25,8 @@ class MandateController extends Controller
     public function __construct(protected DeductionService $deductionService)
     {
         $tokenUrl =  "https://jumena-pay.tech-vault.com/oauth/token";
-        $clientId = env('YAS_CLIENT_ID');
-        $clientSecret = env('YAS_CLIENT_SECRET');
+        $clientId = "sk_test_NE6vb9DwC9tSAf72ECIzO3e48rvkjhrm"; //env('YAS_CLIENT_ID');
+        $clientSecret = "sk_0XUaFB-vswZxMOYryVe_ldM_--6A_rQ_RCdn0JSX1AO3wWbEuzOPDLVffqTL4TON"; //env('YAS_CLIENT_SECRET');
         $this->auth = new BearerToken($clientId, $clientSecret, $tokenUrl);
     }
 
@@ -77,8 +77,7 @@ class MandateController extends Controller
     }
 
     //cancellation
-    public function cancel(Request $request)
-    {}
+    public function cancel(Request $request) {}
 
     //callback function from CRDB
     public function callback(Request $request)
