@@ -41,6 +41,8 @@ class MandateController extends Controller
         $installmentAmount = $request->installmentAmount;
         $periodicity = $request->periodicity;
 
+        $requestId = Str::uuid()->toString();
+
         //token
         $bearerToken = $this->auth->generate();
         Log::debug("== Bearer Token ==");
@@ -51,13 +53,13 @@ class MandateController extends Controller
             'Authorization' => 'Bearer ' . $bearerToken,
             'Content-Type' => 'application/json',
             'Accept' => 'application/json',
-            'X-Idempotency-Key' => "unique-key-123"
+            'X-Idempotency-Key' => $requestId
         ];
 
         //create payload
         $payload = [
-            "orderId" => "SOLO-1234",
-            "customerMsisdn" => "255712345678",
+            "orderId" => "SOLO-1702202626166",
+            "customerMsisdn" => "255717705746",
             "amount" => 1000
         ];
 
