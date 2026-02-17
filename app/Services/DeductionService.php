@@ -577,7 +577,7 @@ class DeductionService
 
                 //send message for outstanding amount and current balance from eMakato.
                 $phone = $installment->debitOrder->customerAccount->phone;
-                $message = "Makato ya tarehe {$payment_date} ya kiasi cha shilingi {$paidAmt} yamekamilishwa kwa {$businessName}. Kiasi kilichobaki ni Tsh {$outstandingAmt}. Asante kwa kutumia eMakato.";
+                $message = "Makato ya tarehe {$payment_date} ya kiasi cha shilingi {$paidAmt} yamekamilishwa kwa {$businessName}. Kiasi kilichobaki ni Tsh {$outstandingAmt}.";
 
                 //Send SMS
                 $data = ["phone" => $phone, "message" => $message];

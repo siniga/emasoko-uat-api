@@ -55,7 +55,7 @@ class PushCollectionBatch extends Command
 
         if ($collection_batches->count() > 0) {
             //take the first 10 collection batches
-            $collection_batches = $collection_batches->take(50)->get();
+            $collection_batches = $collection_batches->take(200)->get();
 
             foreach ($collection_batches as $value) {
                 //batch information

@@ -340,6 +340,10 @@ class ReportController extends Controller
                 foreach ($installments as $val) {
                     if ($val->status == "CLOSED")
                         $status = "PAID";
+                    else if($val->status == "PARTIAL_PAID")
+                        $status = "PARTIAL PAID";
+                    else
+                        $status = "UNPAID";
 
                     //data array
                     $arr_installments[] = [
