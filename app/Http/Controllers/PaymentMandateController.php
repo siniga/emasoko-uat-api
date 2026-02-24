@@ -596,9 +596,16 @@ class PaymentMandateController extends Controller
         $response_code = $response['response_code'];
         $remarks = $response['remarks'];
         $channel = $debitOrder->channel;
+        $redirect_url  = $response['redirect_url'] ?? null;
 
         //response
-        return response()->json(['success' => $success, 'channel' => $channel, "response_code" => $response_code, "success_msg" => $remarks], 200);
+        return response()->json([
+            'success' => $success,
+            'channel' => $channel,
+            "response_code" => $response_code,
+            "success_msg" => $remarks,
+            'redirect_url' => $redirect_url
+        ], 200);
     }
 
     //resend otp

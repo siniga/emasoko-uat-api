@@ -192,7 +192,7 @@ class MandateController extends Controller
             $mandateReference = $request['data']['reference'];
 
             //query debit order by reference id
-            $debitOrder = DebitOrder::where('crdb_reference', '=', $request['data']['reference']);
+            $debitOrder = DebitOrder::where('otp_reference', '=', $request['data']['reference']);
 
             if ($debitOrder->exists()) {
                 $debitOrder = $debitOrder->first();
@@ -226,7 +226,7 @@ class MandateController extends Controller
             $mandateReference = $request['data']['reference'];
 
             //query debit order by reference id
-            $debitOrder = DebitOrder::where('crdb_reference', '=', $mandateReference);
+            $debitOrder = DebitOrder::where('otp_reference', '=', $mandateReference);
 
             if ($debitOrder->exists()) {
                 $debitOrder = $debitOrder->first();

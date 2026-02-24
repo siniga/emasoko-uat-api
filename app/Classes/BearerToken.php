@@ -2,20 +2,21 @@
 
 namespace App\Classes;
 
+use App\Models\DebitOrder;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class BearerToken
 {
+    private DebitOrder $debitOrder;
     private $clientId;
     private $clientSecret;
-    private $baseUrl;
+    private string $tokenUrl;
 
-    public function __construct($clientId, $clientSecret, $baseUrl)
+    public function __construct($debitOrder)
     {
-        $this->clientId = $clientId;
-        $this->clientSecret = $clientSecret;
-        $this->baseUrl = $baseUrl;
+        $this->debitOrder = $debitOrder;
+        $this->tokenUrl = env("JUMENA_PAYMENT_TOKEN_URL");
     }
 
     public function generate()
@@ -26,9 +27,21 @@ class BearerToken
             'Content-Type' => 'application/json',
         ];
 
+        //set clientId and ClientSecret
+        if ($this->debitOrder->periodicity === "DAILY") {
+            $this->clientId = env("JUMENA_DAILY_CLIENT_ID");
+            $this->clientSecret = env("JUMENA_DAILY_CLIENT_SECRET");
+        } else if ($this->debitOrder->periodicity === "WEEKLY") {
+            $this->clientId = env("JUMENA_WEEKLY_CLIENT_ID");
+            $this->clientSecret = env("JUMENA_WEEKLY_CLIENT_SECRET");
+        } else if ($this->debitOrder->periodicity === "MONTHLY") {
+            $this->clientId = env("JUMENA_MONTHLY_CLIENT_ID");
+            $this->clientSecret = env("JUMENA_MONTHLY_CLIENT_SECRET");
+        }
+
         // Send the POST request using Laravel's HTTP client
         $response = Http::withHeaders($headers)->post(
-            $this->baseUrl,
+            $this->tokenUrl,
             [
                 "client_id" => $this->clientId,
                 "client_secret" => $this->clientSecret,

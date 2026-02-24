@@ -155,6 +155,21 @@ class BankPayloadService
         return $payload;
     }
 
+    //create YAS Mandate Payload
+    public function yasMandateRegistrationPayload(DebitOrder $debitOrder)
+    {
+        $customerAccount = $debitOrder->customerAccount;
+
+        //create payload
+        $payload = [
+            "orderId" => "SOLO-{$debitOrder->reference}",
+            "customerMsisdn" => $customerAccount->phone,
+            "amount" => $debitOrder->installment_amount
+        ];
+
+        return $payload;
+    }
+
     //mandate status Payload
     public function mandateStatusPayload(DebitOrder $debitOrder)
     {

@@ -61,8 +61,6 @@ class MandateActionService
 
             //arr response
             $arrResponse = $this->bankApi->mandateRegistrationRequest($payload);
-            Log::debug("== arrResponse ==");
-            Log::debug($arrResponse[0]);
 
             if ($arrResponse) {
                 $success = true;
@@ -73,6 +71,32 @@ class MandateActionService
                     'success' => $success,
                     'response_code' => $response_code,
                     'remarks' => $remarks
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'response_code' => 500,
+                    'remarks' => 'Unable to register mandate'
+                ]);
+            }
+        } else if ($debitOrder->channel == "YAS") {
+            //create payload
+            $payload = $this->payloadService->yasMandateRegistrationPayload($debitOrder);
+
+            //arr response
+            $arrResponse = $this->bankApi->yasMandateRegistrationRequest($payload, $debitOrder);
+
+            if ($arrResponse) {
+                $success = true;
+                $response_code = $arrResponse[0];
+                $remarks = $arrResponse[1];
+                $redirect_url = $arrResponse[2] ?? null;
+
+                return response()->json([
+                    'success' => $success,
+                    'response_code' => $response_code,
+                    'remarks' => $remarks,
+                    'redirect_url' => $redirect_url
                 ]);
             } else {
                 return response()->json([

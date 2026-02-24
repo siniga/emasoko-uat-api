@@ -78,7 +78,10 @@
 
                     if (!response.ok) {
                         // Manually throw error to enter .catch
-                        throw {status: response.status, data};
+                        throw {
+                            status: response.status,
+                            data
+                        };
                     }
 
                     //check if response is success
@@ -92,26 +95,44 @@
                                 this.status = 201;
 
                                 //display message
-                                $('#message_wrp_1').html("<div class='alert alert-success rounded-sm'>" + data.success_msg + "</div>");
+                                $('#message_wrp_1').html("<div class='alert alert-success rounded-sm'>" +
+                                    data.success_msg + "</div>");
 
                                 //TODO: redirect to success page
 
                             } else {
                                 //display message
-                                $('#message_wrp').html("<div class='alert alert-danger rounded-sm'>" + data.success_msg + "</div>");
+                                $('#message_wrp').html("<div class='alert alert-danger rounded-sm'>" + data
+                                    .success_msg + "</div>");
                             }
-                        } else if(data.channel == "CRDB") {
+                        } else if (data.channel == "CRDB") {
                             if (data.response_code == 201) {
-                               this.status = 201;
-                               
-                               //display message
-                                $('#message_wrp').html("<div class='alert alert-success rounded-sm'>" + data.success_msg + "</div>");
+                                this.status = 201;
+
+                                //display message
+                                $('#message_wrp').html("<div class='alert alert-success rounded-sm'>" + data
+                                    .success_msg + "</div>");
+                            }
+                        } else if (data.channel == "YAS") {
+                            if (data.response_code == 201) {
+                                this.status = 201;
+                                const url = data.redirect_url;
+
+                                //display message
+                                $('#message_wrp').html("<div class='alert alert-success rounded-sm'>" + data
+                                    .success_msg + "</div>");
+
+                                //redirect to URL
+                                setTimeout(function() {
+                                    window.location.href = url;
+                                }, 2000);
                             }
                         } else {
                             //other channels
                         }
                     } else if (data.success == false) {
-                        $('#message_wrp').html("<div class='alert alert-danger rounded-sm'>" + data.success_msg + "</div>");
+                        $('#message_wrp').html("<div class='alert alert-danger rounded-sm'>" + data
+                            .success_msg + "</div>");
                     }
                 }).catch(error => {
                     console.error("Error caught:", error);
@@ -155,7 +176,8 @@
                     if (!response.ok) {
                         // Manually throw error to enter .catch
                         throw {
-                            status: response.status, data
+                            status: response.status,
+                            data
                         };
                     }
 
@@ -168,17 +190,20 @@
                                 this.status = 201;
 
                                 //display message
-                                $('#message_wrp_1').html("<div class='alert alert-success rounded-sm'>" + data.success_msg + "</div>");
+                                $('#message_wrp_1').html("<div class='alert alert-success rounded-sm'>" +
+                                    data.success_msg + "</div>");
 
                             } else {
                                 //display message
-                                $('#message_wrp_1').html("<div class='alert alert-danger rounded-sm'>" + data.success_msg + "</div>");
+                                $('#message_wrp_1').html("<div class='alert alert-danger rounded-sm'>" +
+                                    data.success_msg + "</div>");
                             }
                         } else {
                             //check for other channels
                         }
                     } else if (data.success == false) {
-                        $('#message_wrp_1').html("<div class='alert alert-danger rounded-sm'>" + data.success_msg + "</div>");
+                        $('#message_wrp_1').html("<div class='alert alert-danger rounded-sm'>" + data
+                            .success_msg + "</div>");
                     }
                 }).catch(error => {
                     console.error("Error caught:", error);
@@ -228,23 +253,26 @@
                                 this.status = 202;
 
                                 //display message
-                                $('#message_wrp_1').html("<div class='alert alert-success rounded-sm'>" + data.success_msg + "</div>");
+                                $('#message_wrp_1').html("<div class='alert alert-success rounded-sm'>" +
+                                    data.success_msg + "</div>");
 
                                 //Redirect to success page
                                 var redirectionURL = '/payment-mandate/show/' + this.uuid;
 
-                                setTimeout(function () {
+                                setTimeout(function() {
                                     window.location.href = redirectionURL
                                 }, 2000);
                             } else {
                                 //display message
-                                $('#message_wrp').html("<div class='alert alert-danger rounded-sm'>" + data.success_msg + "</div>");
+                                $('#message_wrp').html("<div class='alert alert-danger rounded-sm'>" + data
+                                    .success_msg + "</div>");
                             }
                         } else {
                             //check for other channels
                         }
                     } else if (data.success == false) {
-                        $('#message_wrp_1').html("<div class='alert alert-danger rounded-sm'>" + data.success_msg + "</div>");
+                        $('#message_wrp_1').html("<div class='alert alert-danger rounded-sm'>" + data
+                            .success_msg + "</div>");
                     }
                 }).catch(error => {
                     console.error("Error caught:", error);

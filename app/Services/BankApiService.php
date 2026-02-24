@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use App\Classes\Authentication;
+use App\Classes\BearerToken;
 use App\Jobs\SendSMSJob;
 use App\Models\CollectionBatch;
 use App\Models\DebitOrder;
@@ -18,6 +19,7 @@ use Exception;
 class BankApiService
 {
     private $auth;
+    private $tigoAuth;
     private $deduction_service;
 
     public function __construct()
@@ -238,6 +240,74 @@ class BankApiService
             return [500, 'No response from NMB endpoint.'];
         }
     }
+
+    //yas mandate registration
+    public function yasMandateRegistrationRequest($data, $debitOrder)
+    {
+        //responce code
+        $response_code = 200;
+        $redirect_url = "";
+        $remarks = "";
+
+        //request id
+        $requestId = Str::uuid()->toString();
+
+        //authentication
+        $this->tigoAuth = new BearerToken($debitOrder);
+
+        //token
+        $bearerToken = $this->tigoAuth->generate();
+        Log::debug("== Bearer Token ==");
+        Log::debug($bearerToken);
+
+        //headers
+        $headers = [
+            'Authorization' => 'Bearer ' . $bearerToken,
+            'Content-Type' => 'application/json',
+            'Accept' => 'application/json',
+            'X-Idempotency-Key' => $requestId
+        ];
+
+        //API URL
+        $API_URL = env("JUMENA_PAYMENT_SESSION_URL");
+
+        //push payload => NMB Direct Debits
+        $response = Http::withHeaders($headers)->post($API_URL, $data);
+
+        //decode the response 
+        $response = json_decode($response, true);
+
+        //logging response
+        Log::debug('== YAS MandateRegistration Response ==');
+        Log::debug($response);
+
+        if ($response) {
+            // Separate status code
+            if (strtoupper($response['status']) == "PENDING") {
+                $response_code = 201;
+                $remarks = "Mandate created";
+                $redirect_url = $response['redirect_url'];
+
+                $debitOrder->status = 201;
+                $debitOrder->request_id = $response['session_id'];
+                $debitOrder->remarks = 'Payment session created';
+                $debitOrder->save();
+            } else {
+                $response_code = 500;
+                $remarks = 'Unexpected status: ' . $response['status'];
+
+                $debitOrder->status = 500;
+                $debitOrder->remarks = $remarks;
+                $debitOrder->save();
+            }
+
+            return [$response_code, $remarks, $redirect_url];
+        } else {
+            Log::debug("No response from NMB end");
+            return [500, 'No response from Jumena endpoint.'];
+        }
+    }
+
 
     //mandate cancellation 
     public function mandateStatusRequest($data)
