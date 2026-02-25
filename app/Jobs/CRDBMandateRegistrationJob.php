@@ -114,7 +114,7 @@ class CRDBMandateRegistrationJob implements ShouldQueue
             if ($reference) {
                 $debitOrder->crdb_request_id = $responseId;
                 $debitOrder->crdb_reference = $reference;
-                $debitOrder->remarks = preg_replace('/[^A-Za-z0-9\-]/', '', $statusDesc) ?: 'No StatusDesc in response';
+                $debitOrder->remarks = $statusDesc ?: 'No StatusDesc in response';
             }
         } elseif ($statusCode === 1001) {
             // get error metadata

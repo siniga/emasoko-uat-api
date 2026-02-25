@@ -106,6 +106,15 @@ class DebitOrder extends Model
         return $this->belongsTo(User::class, "cancellationApprovedBy", "id");
     }
 
+    public function getRemarksMessageAttribute()
+    {
+        $decoded = json_decode($this->remarks, true);
+
+        return is_array($decoded)
+            ? reset($decoded)
+            : $this->remarks;
+    }
+
     public function getPartnerAccountAttribute()
     {
         return PartnerAccount::toBase()

@@ -59,8 +59,8 @@ class MandateController extends Controller
         //create payload
         $payload = [
             "orderId" => "SOLO-1702202626166",
-            "customerMsisdn" => "255717705746",
-            "amount" => 1000
+            "customerMsisdn" => "255658123898",
+            "amount" => 1500
         ];
 
         Log::debug("== YAS Payload ==");
