@@ -47,7 +47,7 @@ class AuthController extends Controller
     public function token(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'username' => 'required|string',
+            'partnerId' => 'required|string',
             'password' => 'required|string'
         ]);
 
@@ -59,7 +59,7 @@ class AuthController extends Controller
             ]);
         }
 
-        if (Auth::attempt(['username' => $request->username, 'password' => $request->password])) {
+        if (Auth::attempt(['username' => $request->partnerId, 'password' => $request->password])) {
             $user = User::findOrFail(Auth::user()->id);
 
             // check if the user is api enabled and logout the user if not
