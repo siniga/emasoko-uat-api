@@ -8,7 +8,8 @@
                 status: "{{ $debit_order->status }}",
                 channel: "{{ $debit_order->channel }}",
                 deleted: "{{ $debit_order->deleted }}",
-                remarks: "{{ $debit_order->remarks }}",
+                // remarks: "{{ $debit_order->remarks }}",
+                remarks: @js($debit_order->remarks_message),
                 approved: "{{ $debit_order->approved }}",
                 verifyTxt: "<i class='bx bx-check-square'></i> Verify OTP",
 

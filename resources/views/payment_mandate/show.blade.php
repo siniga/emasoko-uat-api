@@ -82,13 +82,13 @@
 
                                         <div class="dropdown-divider"></div>
 
-                                        <template
+                                        <!-- <template
                                             x-if="status==201 || status==249 || status==403 || status==430 || status==405 || status==500 || status==501">
                                             <a class="dropdown-item text-sm"
                                                 href="{{ route('payment-mandate.delete', $debit_order->uuid) }}">
                                                 Delete Mandate
                                             </a>
-                                        </template>
+                                        </template> -->
                                     </div>
                                 </div>
 
@@ -329,7 +329,7 @@
 
                                         <th>Created By</th>
                                         <td>
-                                            <span>{{ $debit_order->userCreated->name }}</span>
+                                            <span>{{ $debit_order->userCreated->name ?? '' }}</span>
                                         </td>
                                     </tr>
                                 </table>
