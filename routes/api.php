@@ -82,8 +82,8 @@ Route::post('v1/mandate/crdb/request', [CRDBMandateController::class, 'request']
 Route::post('v1/mandate/crdb/response', [CRDBMandateController::class, 'response']);
 
 Route::prefix('v1/disbursements')->group(function () {
-    Route::post('/batch', [DisbursementController::class, 'postBatch']);
-    Route::post('/callback', [DisbursementController::class, 'callback']);
+    Route::post('/crdb/batch', [DisbursementController::class, 'postBatch']);
+    Route::post('/crdb/callback', [DisbursementController::class, 'callback']);
 });
 
 //YAS APIs

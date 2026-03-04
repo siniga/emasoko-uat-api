@@ -77,8 +77,6 @@ class DisbursementController extends Controller
             batchApproval: $data['batchApproval'] ?? 'N'
         );
 
-        return $dto;
-
         //post the batch
         $batch = $svc->createAndPost($dto);
 
