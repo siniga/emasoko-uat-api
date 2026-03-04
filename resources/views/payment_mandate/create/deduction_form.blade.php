@@ -73,7 +73,7 @@
                         <input type="hidden" name="confirm_new_mandate" id="confirm_new_mandate" value="0">
 
                         <section>
-                            @if ($provider == null)
+                            @if ($provider == null && $providers)
                                 <div class="row">
                                     <div class="col-lg-6 col-md-6">
                                         <div class="mb-3">
@@ -146,10 +146,24 @@
                                 <div class="col-lg-3 col-md-3 col-sm-3 col-12">
                                     <div class="mb-3">
                                         <label>Frequency of Installment <span class="text-danger">*</span></label>
-                                        @php
-                                            $options = ['MONTHLY' => 'Monthly'];
-                                            $options = ['' => '-- Select --'] + $options;
-                                        @endphp
+                                        @if ($customer_account->accountType->name == 'MNO')
+                                            @php
+                                                $options = [
+                                                    '' => '-- Select --',
+                                                    'DAILY' => 'Daily',
+                                                    'WEEKLY' => 'Weekly',
+                                                    'MONTHLY' => 'Monthly',
+                                                    'YEARLY' => 'Yearly',
+                                                ];
+                                            @endphp
+                                        @elseif($customer_account->accountType->name == 'BANK')
+                                            @php
+                                                $options = [
+                                                    '' => '-- Select --',
+                                                    'MONTHLY' => 'Monthly',
+                                                ];
+                                            @endphp
+                                        @endif
 
                                         {{ Form::select('periodicity', $options, old('periodicity', $debit_order->periodicity ?? ''), ['class' => 'form-control', 'id="periodicity" x-on:change="numberOfInstallment();"']) }}
                                         <span class="text-danger">{{ $errors->first('periodicity') }}</span>

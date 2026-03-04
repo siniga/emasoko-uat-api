@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\Airtel\CollectionController as AirtelCollectionCont
 use App\Http\Controllers\Api\Airtel\MandateController as AirtelMandateController;
 use App\Http\Controllers\Api\ExternalApp\CollectionController;
 use App\Http\Controllers\Api\CompanyController;
+use App\Http\Controllers\Api\Crdb\DisbursementController;
 use App\Http\Controllers\Api\NMB\CorporateController;
 use App\Http\Controllers\Api\CRDB\MandateController as CRDBMandateController;
 use App\Http\Controllers\Api\ExternalApp\AuthController;
@@ -79,6 +80,11 @@ Route::post('v1/mandate/crdb/cancel', [CRDBMandateController::class, 'cancel']);
 Route::post('v1/mandate/crdb/callback', [CRDBMandateController::class, 'callback']);
 Route::post('v1/mandate/crdb/request', [CRDBMandateController::class, 'request']);
 Route::post('v1/mandate/crdb/response', [CRDBMandateController::class, 'response']);
+
+Route::prefix('v1/disbursements')->group(function () {
+    Route::post('/crdb/batch', [DisbursementController::class, 'postBatch']);
+    Route::post('/crdb/callback', [DisbursementController::class, 'callback']);
+});
 
 //YAS APIs
 Route::post('v1/mandate/yas', [YasMandateController::class, 'create']);

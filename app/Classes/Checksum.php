@@ -39,10 +39,6 @@ class Checksum
     /**
      * Generate a checksum using SHA-256 algorithm
      * 
-     * @param string $data
-     * @param string $salt
-     * @return string
-     * @throws Exception
      */
     public function generateChecksum(string $data): string
     {

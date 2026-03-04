@@ -41,6 +41,7 @@ class MandateController extends Controller
         $installmentAmount = $request->installmentAmount;
         $periodicity = $request->periodicity;
 
+        //request id
         $requestId = Str::uuid()->toString();
 
         //token
@@ -67,7 +68,7 @@ class MandateController extends Controller
         Log::debug($payload);
 
         //API URL
-        $API_URL = "https://jumena-pay.tech-vault.com/v1/payment-sessions";
+        $API_URL = "";
 
         //push payload => NMB Direct Debits
         $response = Http::withHeaders($headers)->post($API_URL, $payload);

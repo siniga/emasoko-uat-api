@@ -116,7 +116,7 @@
 
                             <div class="col-lg-3 col-md-3 col-12" id="account_number_phone" style="display: none;">
                                 <div class="mb-3">
-                                    <label>MNO Phone <span class="text-danger">*</span></label>
+                                    <label>Phone <span class="text-danger">*</span></label>
                                     {{ Form::text('account_number_phone', old('account_number_phone', $customer_account ? reverse_casting_phone($customer_account->phone) : ''), ['class="form-control"', 'placeholder="Enter phone number..."']) }}
                                     <span class="text-danger">{{ $errors->first('account_number_phone') }}</span>
                                 </div>
@@ -198,7 +198,7 @@
                     $('.bank_mno_name').html('Bank Name <span class="text-danger">*</span>');
 
                     //hide or show
-                    $('#account_name').css('display', '')
+                    //$('#account_name').css('display', '')
                     $('#account_number').css('display', '')
                     $('#bank_code').css('display', '')
                     $('#account_number_phone').css('display', 'none')
@@ -207,7 +207,7 @@
                     $('.bank_mno_name').html('MNO Name <span class="text-danger">*</span>');
 
                     //hide or show
-                    $('#account_name').css('display', 'none')
+                    //$('#account_name').css('display', 'none')
                     $('#account_number').css('display', 'none')
                     $('#bank_code').css('display', 'none')
                     $('#account_number_phone').css('display', '')
@@ -225,7 +225,7 @@
                     $('.bank_mno_name').html('Bank Name <span class="text-danger">*</span>');
 
                     //hide or show
-                    $('#account_name').css('display', '')
+                    //$('#account_name').css('display', '')
                     $('#account_number').css('display', '')
                     $('#bank_code').css('display', '')
                     $('#account_number_phone').css('display', 'none')
@@ -234,7 +234,7 @@
                     $('.bank_mno_name').html('MNO Name <span class="text-danger">*</span>');
 
                     //hide or show
-                    $('#account_name').css('display', 'none')
+                    //$('#account_name').css('display', 'none')
                     $('#account_number').css('display', 'none')
                     $('#bank_code').css('display', 'none')
                     $('#account_number_phone').css('display', '')
