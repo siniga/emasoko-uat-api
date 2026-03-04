@@ -271,7 +271,7 @@ class BankApiService
         //API URL
         $API_URL = env("JUMENA_PAYMENT_SESSION_URL");
 
-        //push payload => NMB Direct Debits
+        //push payload => JUMENA Direct Debits
         $response = Http::withHeaders($headers)->post($API_URL, $data);
 
         //decode the response 

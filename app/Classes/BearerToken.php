@@ -13,7 +13,7 @@ class BearerToken
     private $clientSecret;
     private string $tokenUrl;
 
-    public function __construct($debitOrder)
+    public function __construct($debitOrder = null)
     {
         $this->debitOrder = $debitOrder;
         $this->tokenUrl = env("JUMENA_PAYMENT_TOKEN_URL");
