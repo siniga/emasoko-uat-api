@@ -31,7 +31,7 @@ class MandateRegistrationController extends Controller
     public function __construct(protected DeductionService $deductionService, protected BankPayloadService $payloadService, protected Messaging $messaging, protected BankApiService $bankApi) {}
 
     //Filter Mandates
-    protected function all(Request $request)
+    public function all(Request $request)
     {
         //debit orders
         $debit_orders = DebitOrder::filterCondition();
@@ -57,7 +57,7 @@ class MandateRegistrationController extends Controller
     }
 
     //APP
-    protected function getById(Request $request)
+    public function getById(Request $request)
     {
         // debit order
         $debit_order = DebitOrder::where(['uuid' => $request->mandate_uuid]);
@@ -88,19 +88,29 @@ class MandateRegistrationController extends Controller
         $validator = Validator::make($request->all(), [
             'channel' => 'required', //BANK or MNO
             'payment_channel' => 'required', //NMB, CRDB, VODACOM, TIGO
-            'account_name' => 'required_if:debit_type,==,BANK',
-            'account_number' => 'required_if:debit_type,==,BANK',
+            'account_name' => 'required_if:channel,BANK',
+            'account_number' => 'required_if:channel,BANK',
             'phone' => 'required',
             'NIN' => 'required',
             'address' => 'required',
             'total_amount' => 'required',
             'debit_type' => 'required', //FIXED or DYNAMIC
-            'min_installment_amount' => 'required_if:debit_type,==,DYNAMIC',
-            'min_installment_amount' => 'required_if:debit_type,==,DYNAMIC',
-            'installment_amount' => 'required_if:debit_type,==,FIXED',
+            'min_installment_amount' => 'required_if:debit_type,DYNAMIC',
+            'max_installment_amount' => 'required_if:debit_type,DYNAMIC',
+            'installment_amount' => 'required_if:debit_type,FIXED',
             'periodicity' => 'required', //MONTHLY, WEEKLY, DAILY, YEARLY
-            'deduction_start_date' => 'required'
+            'deduction_start_date' => 'required|date|after_or_equal:today'
         ]);
+
+        $validator->after(function ($validator) use ($request) {
+            if ($request->debit_type === 'DYNAMIC') {
+                $min = floatval(str_replace(',', '', $request->input('min_installment_amount')));
+                $max = floatval(str_replace(',', '', $request->input('max_installment_amount')));
+                if ($min > $max) {
+                    $validator->errors()->add('max_installment_amount', 'Maximum installment amount should not be less than minimum deduction amount');
+                }
+            }
+        });
 
         if ($validator->fails()) {
             return response()->json([
@@ -242,7 +252,7 @@ class MandateRegistrationController extends Controller
                 $requestId = Str::uuid()->toString();
 
                 //create payload
-                $payload = $this->payloadService->CRDBMandatePayload($debit_order, $requestId);
+                $payload = $this->payloadService->CRDBMandateRegistrationPayload($debit_order, $requestId);
 
                 //create data
                 $data['payload'] = $payload;
@@ -404,7 +414,7 @@ class MandateRegistrationController extends Controller
     }
 
     //APP
-    protected function archive_mandate(Request $request)
+    public function archive_mandate(Request $request)
     {
         // debit order
         $debit_order = DebitOrder::where(['uuid' => $request->mandate_uuid]);
@@ -430,7 +440,7 @@ class MandateRegistrationController extends Controller
     }
 
     //APP
-    protected function cancel_mandate(Request $request)
+    public function cancel_mandate(Request $request)
     {
         // debit order
         $debit_order = DebitOrder::where(['uuid' => $request->mandate_uuid]);
@@ -457,7 +467,7 @@ class MandateRegistrationController extends Controller
         ]);
     }
 
-    protected function delete_mandate(Request $request)
+    public function delete_mandate(Request $request)
     {
         // debit order
         $debit_order = DebitOrder::where(['uuid' => $request->mandate_uuid]);

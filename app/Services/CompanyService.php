@@ -25,9 +25,19 @@ use Illuminate\Support\Facades\Auth;
 class CompanyService
 {
     private $app_variable;
-    public function __construct()
+    public function __construct() {}
+
+    protected function appVariable(): AppVariable
     {
-        $this->app_variable = AppVariable::first();
+        if (!$this->app_variable) {
+            $this->app_variable = AppVariable::first();
+        }
+
+        if (!$this->app_variable) {
+            throw new \RuntimeException('App variables are not initialized');
+        }
+
+        return $this->app_variable;
     }
 
     //create company information
@@ -291,15 +301,16 @@ class CompanyService
     //get customer code
     public function getCustomerCode()
     {
-        static $number = $this->app_variable->cur_customer_code;
+        $appVariable = $this->appVariable();
+        static $number = $appVariable->cur_customer_code;
 
         $number++;
         $next_customer_code = str_pad($number, 9, '0', STR_PAD_LEFT);
 
         //update app variable
-        $this->app_variable->cur_customer_code = $number;
-        $this->app_variable->next_customer_code = $next_customer_code;
-        $this->app_variable->save();
+        $appVariable->cur_customer_code = $number;
+        $appVariable->next_customer_code = $next_customer_code;
+        $appVariable->save();
 
         return $next_customer_code;
     }

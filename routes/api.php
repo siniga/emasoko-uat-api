@@ -65,7 +65,7 @@ Route::get('regions', [CompanyController::class, 'regions']);
 Route::post('mandate/airtel', [AirtelMandateController::class, 'create']);
 Route::post('mandate/airtel/status', [AirtelMandateController::class, 'query_status']);
 Route::post('mandate/airtel/cancel', [AirtelMandateController::class, 'cancel']);
-Route::post('mandate/airtel/callback', [AirtelMandateController::class, 'callback']);
+Route::post('mandate/airtel/callback', [AirtelMandateController::class, 'callback'])->middleware('verify.callback:airtel');
 
 Route::post('collection/airtel', [AirtelCollectionController::class, 'create']);
 Route::post('collection/airtel/inquiry', [AirtelCollectionController::class, 'inquiry']);
@@ -77,19 +77,19 @@ Route::post('collection/airtel/recovery-refund', [AirtelCollectionController::cl
 //CRDB APIs
 Route::post('v1/mandate/crdb', [CRDBMandateController::class, 'create']);
 Route::post('v1/mandate/crdb/cancel', [CRDBMandateController::class, 'cancel']);
-Route::post('v1/mandate/crdb/callback', [CRDBMandateController::class, 'callback']);
+Route::post('v1/mandate/crdb/callback', [CRDBMandateController::class, 'callback'])->middleware('verify.callback:crdb');
 Route::post('v1/mandate/crdb/request', [CRDBMandateController::class, 'request']);
 Route::post('v1/mandate/crdb/response', [CRDBMandateController::class, 'response']);
 
 Route::prefix('v1/disbursements')->group(function () {
     Route::post('/crdb/batch', [DisbursementController::class, 'postBatch']);
-    Route::post('/crdb/callback', [DisbursementController::class, 'callback']);
+    Route::post('/crdb/callback', [DisbursementController::class, 'callback'])->middleware('verify.callback:crdb');
 });
 
 //YAS APIs
 Route::post('v1/mandate/yas', [YasMandateController::class, 'create']);
 Route::post('v1/mandate/yas/cancel', [YasMandateController::class, 'cancel']);
-Route::post('v1/mandate/yas/callback', [YasMandateController::class, 'callback']);
+Route::post('v1/mandate/yas/callback', [YasMandateController::class, 'callback'])->middleware('verify.callback:yas');
 
 /*
 |--------------------------------------------------------------------------
@@ -119,6 +119,7 @@ Route::middleware('auth:api')->group(function () {
     Route::post('v1/collections/actual', [PaymentCollectionController::class, 'actual_collections']);
 });
 
+//mobile app
 Route::middleware('auth:api')->group(function () {
     Route::get('v1/sp-homepage', [MobileAppController::class, 'summaries']);
     Route::get('v1/debit-orders', [MobileAppController::class, 'debit_orders']);

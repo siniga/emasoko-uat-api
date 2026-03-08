@@ -30,7 +30,7 @@ class PaymentMandateController extends Controller
     public function __construct(protected DeductionService $deductionService, protected BankPayloadService $payloadService, protected BankApiService $bankApi) {}
 
     //Filter Mandates
-    protected function all(Request $request)
+    public function all(Request $request)
     {
         //all request
         $requests = $request->all();
@@ -54,7 +54,7 @@ class PaymentMandateController extends Controller
     }
 
     //get mandate by reference
-    protected function getMandate(Request $request)
+    public function getMandate(Request $request)
     {
         // debit order
         $debit_order = DebitOrder::where(['reference' => $request->reference])->first();
@@ -76,7 +76,7 @@ class PaymentMandateController extends Controller
     }
 
     //create payment mandate
-    protected function create(Request $request)
+    public function create(Request $request)
     {
         //post data
         $total_amount = floatval(str_replace(',', '', $request->input('total_amount')));
@@ -89,8 +89,8 @@ class PaymentMandateController extends Controller
             'channel' => 'required', //BANK or MNO
             'payment_channel' => 'required', //NMB, CRDB, VODACOM, TIGO
             'corporate_reference' => 'required',
-            'account_name' => 'required_if:debit_type,==,BANK',
-            'account_number' => 'required_if:debit_type,==,BANK',
+            'account_name' => 'required_if:channel,BANK',
+            'account_number' => 'required_if:channel,BANK',
             'phone' => 'required',
             'NIN' => 'required',
             'address' => 'required',
@@ -104,16 +104,16 @@ class PaymentMandateController extends Controller
             ],
             'debit_type' => 'required', //FIXED or DYNAMIC
             'installment_amount' => [
-                'required_if:debit_type,==,FIXED',
+                'required_if:debit_type,FIXED',
                 function ($attribute, $value, $fail) use ($installment_amount) {
                     if ($installment_amount < 1000) {
                         return $fail('Installment amount should be greater than or equal to 1,000');
                     }
                 }
             ],
-            'min_installment_amount' => 'required_if:debit_type,==,DYNAMIC',
+            'min_installment_amount' => 'required_if:debit_type,DYNAMIC',
             'max_installment_amount' => [
-                'required_if:debit_type,==,DYNAMIC',
+                'required_if:debit_type,DYNAMIC',
                 function ($attribute, $value, $fail) use ($min_installment_amount, $max_installment_amount) {
                     if ($min_installment_amount > $max_installment_amount) {
                         return $fail('Maximum installment amount should not be less than minimum deduction amount');
@@ -297,7 +297,7 @@ class PaymentMandateController extends Controller
     }
 
     //OTP Verification
-    protected function verifyOtp(Request $request)
+    public function verifyOtp(Request $request)
     {
         //validation
         $validator = Validator::make($request->all(), [
@@ -384,7 +384,7 @@ class PaymentMandateController extends Controller
     }
 
     //create OTP
-    protected function createOtp(Request $request)
+    public function createOtp(Request $request)
     {
         //validation
         $validator = Validator::make($request->all(), [
@@ -469,7 +469,7 @@ class PaymentMandateController extends Controller
     }
 
     //query mandate status
-    protected function fetchStatus(Request $request)
+    public function fetchStatus(Request $request)
     {
         //validation
         $validator = Validator::make($request->all(), [
@@ -547,7 +547,7 @@ class PaymentMandateController extends Controller
     }
 
     //mandate cancellation
-    protected function cancellation(Request $request)
+    public function cancellation(Request $request)
     {
         //validation
         $validator = Validator::make($request->all(), [

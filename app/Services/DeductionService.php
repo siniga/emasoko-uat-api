@@ -22,9 +22,19 @@ use Illuminate\Support\Collection;
 class DeductionService
 {
     private $app_variable;
-    public function __construct()
+    public function __construct() {}
+
+    protected function appVariable(): AppVariable
     {
-        $this->app_variable = AppVariable::first();
+        if (!$this->app_variable) {
+            $this->app_variable = AppVariable::first();
+        }
+
+        if (!$this->app_variable) {
+            throw new Exception('App variables are not initialized');
+        }
+
+        return $this->app_variable;
     }
 
     // check if customer account has active debit order
@@ -215,41 +225,21 @@ class DeductionService
     {
         //1. Get debit order details
         $debit_type = $debitOrder->debit_type;
-        $periodicity = $debitOrder->periodicity;
-        $start_date = $debitOrder->start_date;
-
-        $last_installment_date = null;
-        $number_of_installment = $debitOrder->installment_number;
-        $total_amount = $debitOrder->total_amount;
-
-        //dates
-        $dayOfMonth = date('d', strtotime($start_date));
-
-        // 2. Set addition number of days from periodicity
-        $number_of_days = "+0 day";
-        if ($periodicity == "ANNUALLY")
-            $number_of_days = "+1 year";
-        if ($periodicity == "MONTHLY")
-            $number_of_days = '+30 day';
-        else if ($periodicity == "WEEKLY")
-            $number_of_days = '+1 week';
-        else if ($periodicity == "DAILY")
-            $number_of_days = "+1 day";
 
         //3. Delete all installments
         $deleted_installment = Installment::where('debit_order_id', $debitOrder->id)->delete();
 
         //4. Create FIXED and DYNAMIC installments
         if ($debit_type == "FIXED")
-            $this->fixedInstallment($debitOrder, $number_of_days);
+            $this->fixedInstallment($debitOrder);
         else if ($debit_type == "DYNAMIC")
-            $this->fixedInstallment($debitOrder, $number_of_days);
+            $this->dynamicInstallment($debitOrder);
 
         return 200;
     }
 
     //create fixed installment
-    protected function fixedInstallment(DebitOrder $debitOrder, $numberOfDays)
+    protected function fixedInstallment(DebitOrder $debitOrder)
     {
         $periodicity = $debitOrder->periodicity;
         $startDate = Carbon::parse($debitOrder->start_date);
@@ -271,7 +261,7 @@ class DeductionService
                     // Set same day, fallback to last valid day of month
                     $installmentDate->day = min($dayOfMonth, $installmentDate->daysInMonth);
                 } else {
-                    $installmentDate = $lastInstallmentDate->copy()->addDays($numberOfDays);
+                    $installmentDate = $this->advanceInstallmentDate($lastInstallmentDate, $periodicity, $dayOfMonth);
                 }
             }
 
@@ -298,42 +288,24 @@ class DeductionService
         }
     }
     //create dynamic installment
-    protected function dynamicInstallment(DebitOrder $debitOrder, $numberOfDays)
+    protected function dynamicInstallment(DebitOrder $debitOrder)
     {
         $periodicity = $debitOrder->periodicity;
-        $start_date = $debitOrder->start_date;
-
-        $last_installment_date = null;
+        $startDate = Carbon::parse($debitOrder->start_date);
         $number_of_installment = $debitOrder->installment_number;
         $total_amount = $debitOrder->total_amount;
 
-        //dates
-        $dayOfMonth = date('d', strtotime($start_date));
+        $dayOfMonth = $startDate->day;
+        $lastInstallmentDate = $startDate->copy();
 
         $sum_installment_amount = 0;
         for ($i = 1; $i <= $number_of_installment; $i++) {
-            if ($last_installment_date == null) {
-                $installment_date = date('Y-m-d', strtotime($start_date));
-
-                //SUMMATION installment Amount
+            if ($i === 1) {
+                $installmentDate = $lastInstallmentDate->copy();
                 $sum_installment_amount += $debitOrder->max_installment_amount;
-
-                //PAID Amount
                 $paid_amount = $debitOrder->max_installment_amount;
-
-                //assign last installment date
-                $last_installment_date =  $installment_date;
             } else {
-                $installment_date = date('Y-m-d', strtotime($last_installment_date . $numberOfDays));
-
-                //formating all the dates if periodicity = "MONTHLY"
-                if ($periodicity == "MONTHLY") {
-                    $year = date('Y', strtotime($installment_date));
-                    $month = date('m', strtotime($installment_date));
-
-                    $date = Carbon::createFromDate($year, $month, $dayOfMonth);
-                    $installment_date = $date->format('Y-m-d'); // Format as dd-mm-yyyy
-                }
+                $installmentDate = $this->advanceInstallmentDate($lastInstallmentDate, $periodicity, $dayOfMonth);
 
                 //SUMMATION installment Amount
                 $sum_installment_amount += $debitOrder->max_installment_amount;
@@ -343,10 +315,10 @@ class DeductionService
                     $paid_amount = $total_amount - ($sum_installment_amount - $debitOrder->max_installment_amount);
                 else
                     $paid_amount = $debitOrder->max_installment_amount;
-
-                //assign last installment date
-                $last_installment_date =  $installment_date;
             }
+
+            //assign last installment date
+            $lastInstallmentDate = $installmentDate->copy();
 
             //check for paid amount and min 
             $min_paid_amount = $debitOrder->min_installment_amount;
@@ -363,10 +335,31 @@ class DeductionService
                     'installment_amount' => $paid_amount,
                     'current_balance' => 0,
                     'outstanding_amount' => $paid_amount,
-                    'payment_date' => $installment_date
+                    'payment_date' => $installmentDate->toDateString()
                 ]
             );
             $installment->save();
+        }
+    }
+
+    protected function advanceInstallmentDate(Carbon $currentDate, string $periodicity, int $dayOfMonth): Carbon
+    {
+        $periodicity = strtoupper($periodicity);
+        $date = $currentDate->copy();
+
+        switch ($periodicity) {
+            case 'ANNUALLY':
+            case 'YEARLY':
+                return $date->addYear();
+            case 'WEEKLY':
+                return $date->addWeek();
+            case 'DAILY':
+                return $date->addDay();
+            case 'MONTHLY':
+            default:
+                $date->addMonthNoOverflow();
+                $date->day = min($dayOfMonth, $date->daysInMonth);
+                return $date;
         }
     }
 
@@ -646,15 +639,13 @@ class DeductionService
     //get mandate reference
     public function getMandateReference()
     {
-        //app variable
-        static $number = $this->app_variable->cur_mandate_reference;
+        $appVariable = $this->appVariable();
 
-        $number++;
-        $cur_mandate_reference = $number;
+        $cur_mandate_reference = ((int) $appVariable->cur_mandate_reference) + 1;
 
         //update app variable
-        $this->app_variable->cur_mandate_reference = $cur_mandate_reference;
-        $this->app_variable->save();
+        $appVariable->cur_mandate_reference = $cur_mandate_reference;
+        $appVariable->save();
 
         return $cur_mandate_reference;
     }
@@ -662,15 +653,13 @@ class DeductionService
     //get collection reference
     public function getCollectionReference()
     {
-        //app variable
-        static $number = $this->app_variable->cur_collection_reference;
+        $appVariable = $this->appVariable();
 
-        $number++;
-        $cur_collection_reference = $number;
+        $cur_collection_reference = ((int) $appVariable->cur_collection_reference) + 1;
 
         //update app variable
-        $this->app_variable->cur_collection_reference = $cur_collection_reference;
-        $this->app_variable->save();
+        $appVariable->cur_collection_reference = $cur_collection_reference;
+        $appVariable->save();
 
         return $cur_collection_reference;
     }
