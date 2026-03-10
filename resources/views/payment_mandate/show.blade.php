@@ -338,33 +338,66 @@
                                     <table class="table table-nowrap align-middle table-bordered">
                                         <thead>
                                             <tr>
-                                                <td colspan="4" class="font-weight-600 text-uppercase">
+                                                <td colspan="6" class="font-weight-600 text-uppercase">
                                                     Deduction History
                                                 </td>
+                                            </tr>
+                                            <tr>
+                                                <th>Deduction Date</th>
+                                                <th>Collection Date</th>
+                                                <th>Installment Amt</th>
+                                                <th>PaidAmt</th>
+                                                <th>OutstandingAmt</th>
+                                                <th>Status</th>
                                             </tr>
                                         </thead>
 
                                         <tbody>
-                                            <tr>
-                                                @foreach ($debit_order->installments as $val)
-                                                    <td class="text-center">
-                                                        {{ date('d-m', strtotime($val->payment_date)) }}</td>
-                                                @endforeach
-                                            </tr>
+                                            @php
+                                                $installments = $debit_order->installments->sortBy('payment_date')->values();
+                                            @endphp
 
-                                            <tr>
-                                                @foreach ($debit_order->installments as $val)
-                                                    <td class="text-center">
-                                                        @if ($val->status == 'OPEN')
-                                                            <i class='bx bxs-x-square bx-sm text-warning'></i>
-                                                        @elseif($val->status == 'FAILED')
-                                                            <i class='bx bxs-x-square bx-sm text-danger'></i>
-                                                        @elseif($val->status == 'CLOSED' || $val->status == 'SUCCESS')
-                                                            <i class='bx bxs-check-square bx-sm text-success'></i>
+                                            @forelse ($installments as $index => $val)
+                                                @php
+                                                    $status = strtoupper($val->status ?? 'OPEN');
+                                                    $isPaid = in_array($status, ['CLOSED', 'SUCCESS']);
+                                                    $isPartial = $status === 'PARTIAL_PAID';
+                                                    $isUnpaid = in_array($status, ['OPEN', 'FAILED', 'FUNDSCHECK']);
+                                                @endphp
+                                                <tr>
+                                                    <td>{{ date('d-m-Y', strtotime($val->payment_date)) }}</td>
+                                                    <td>
+                                                        @if ($val->effective_payment_date)
+                                                            {{ date('d-m-Y', strtotime($val->effective_payment_date)) }}
+                                                        @else
+                                                            -
                                                         @endif
                                                     </td>
-                                                @endforeach
-                                            </tr>
+                                                    <td>{{ number_format($val->installment_amount ?? 0) }}</td>
+                                                    <td>{{ number_format($val->current_balance ?? 0) }}</td>
+                                                    <td>{{ number_format($val->outstanding_amount ?? 0) }}</td>
+                                                    <td>
+                                                        @if ($isPaid)
+                                                            <span class="badge badge-pill badge-soft-success">Paid</span>
+                                                        @elseif($isPartial)
+                                                            <span
+                                                                class="badge badge-pill badge-soft-warning">Partial
+                                                                Paid</span>
+                                                        @elseif($isUnpaid)
+                                                            <span
+                                                                class="badge badge-pill badge-soft-danger">Unpaid</span>
+                                                        @else
+                                                            <span
+                                                                class="badge badge-pill badge-soft-secondary">{{ $status }}</span>
+                                                        @endif
+                                                    </td>
+                                                </tr>
+                                            @empty
+                                                <tr>
+                                                    <td colspan="6" class="text-center text-muted">No deduction history
+                                                        found.</td>
+                                                </tr>
+                                            @endforelse
                                         </tbody>
                                     </table>
                                 </div>
