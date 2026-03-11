@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Http\Resources\InstallmentResource;
-use App\Jobs\CollectionCallbackJob;
+use App\Jobs\ApiCallbackJob;
 use App\Jobs\SendSMSJob;
 use App\Models\AppVariable;
 use App\Models\DebitOrder;
@@ -579,13 +579,13 @@ class DeductionService
                 if ($debitOrder->partner->callback_url && $debitOrder->partner->callback_url != "") {
                     //dispatch callback job
                     $callback_data = [
-                        'status' => $installment->status,
+                        'callback_type' => "COLLECTION_STATUS",
                         'callback_url' => $debitOrder->partner->callback_url,
                         'collection' => InstallmentResource::collection($installment),
                     ];
 
                     // call CollectionCallbackJob
-                    dispatch(new CollectionCallbackJob($callback_data));
+                    dispatch(new ApiCallbackJob($callback_data));
                 }
             }
         } else if ($installment->status == 'CLOSED') {

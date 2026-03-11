@@ -11,7 +11,7 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-class CollectionCallbackJob implements ShouldQueue
+class ApiCallbackJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -39,13 +39,15 @@ class CollectionCallbackJob implements ShouldQueue
         $headers = ['Content-Type' => 'application/json'];
 
         //Create Payload
-        $payload = [
-            "collection" => $this->data['collection'],
-            "status" => $this->data['status'],
-        ];
+        $payload["callback_type"] = $this->data['callback_type'];
+
+        if ($this->data['callback_type'] == "MANDATE_STATUS")
+            $payload['mandate'] = $this->data['mandate'];
+        else if ($this->data['callback_type'] == "COLLECTION_STATUS")
+            $payload['collection'] = $this->data['collection'];
 
         //Create Payload
-        Log::debug('== CollectionPayload Request ==');
+        Log::debug('== Callback Payload Request ==');
         Log::debug($payload);
 
         //API URL 
@@ -58,7 +60,7 @@ class CollectionCallbackJob implements ShouldQueue
         $response = json_decode($response, true);
 
         //logging response
-        Log::debug('== CollectionCallback Response ==');
+        Log::debug('== Callback Response ==');
         Log::debug($response);
     }
 }

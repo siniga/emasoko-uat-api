@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api\CRDB;
 
 use App\Classes\Checksum;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\MandateResource;
+use App\Jobs\ApiCallbackJob;
 use App\Models\DebitOrder;
 use App\Models\Installment;
 use App\Models\InstallmentPayment;
@@ -219,6 +221,19 @@ class MandateController extends Controller
 
                     //Log response
                     Log::debug("== Failed to approve CRDB Mandate ==");
+                }
+
+                if ($debitOrder->partner->callback_url && $debitOrder->partner->callback_url != "") {
+                    //dispatch callback job
+                    $debitOrder->refresh();
+                    $callback_data = [
+                        'callback_type' => "MANDATE_STATUS",
+                        'callback_url' => $debitOrder->partner->callback_url,
+                        'mandate' => MandateResource::collection($debitOrder),
+                    ];
+
+                    // call ApiCallbackJob
+                    dispatch(new ApiCallbackJob($callback_data));
                 }
             }
         } else if ($callback_type == "PAYMENT_STATUS") {
