@@ -112,6 +112,7 @@ Route::middleware('auth:api')->group(function () {
     Route::post('v1/mandate/otp/verify', [PaymentMandateController::class, 'verifyOtp']);
     Route::post('v1/mandate/status', [PaymentMandateController::class, 'fetchStatus']);
     Route::post('v1/mandate/cancellation', [PaymentMandateController::class, 'cancellation']);
+    Route::post('v1/mandate/summaries', [PaymentMandateController::class, 'summaries']);
 
     //Collections APIs
     Route::post('v1/collections/all', [PaymentCollectionController::class, 'all']);

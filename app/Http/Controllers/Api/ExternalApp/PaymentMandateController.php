@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Log;
 use App\Jobs\MandateRegistrationJob;
 use App\Jobs\CRDBMandateRegistrationJob;
 use App\Models\Account;
+use App\Models\Installment;
 use App\Models\Partner;
 use App\Models\PartnerAccount;
 use App\Services\MandateActionService;
@@ -29,6 +30,71 @@ use Barryvdh\DomPDF\Facade\Pdf;
 class PaymentMandateController extends Controller
 {
     public function __construct(protected MandateActionService $mandateActionService, protected DeductionService $deductionService, protected BankPayloadService $payloadService, protected BankApiService $bankApi) {}
+
+    //summaries
+    public function summaries(Request $request)
+    {
+        $approvedStatuses = [0, 1, 2]; // status
+
+        //current year and month
+        $current_year = date('Y');
+        $current_month = date('m');
+        $channel = $request->channel;
+
+        //query
+        $debit_orders = DebitOrder::mandateApprovalStats($channel);
+
+        // Map over all approved statuses to ensure complete results
+        $mandates = collect($approvedStatuses)->map(function ($status) use ($debit_orders) {
+            $order = $debit_orders->firstWhere('approved', $status);
+            return [
+                'approved' => $status,
+                'number_of_mandate' => $order ? $order->number_of_mandate : 0,
+                'total_amount' => $order ? $order->total_amount : 0,
+            ];
+        });
+
+        //total number of mandates
+        $total_number_of_mandate = $mandates[0]['number_of_mandate'] + $mandates[1]['number_of_mandate'] + $mandates[2]['number_of_mandate'];
+
+        //summation of mandate values
+        $total_mandate_value = $mandates[0]['total_amount'] + $mandates[1]['total_amount'] + $mandates[2]['total_amount'];
+
+        // This Month’s Collection
+        $this_month = Installment::thisMonthStats($current_month, $current_year, $channel);
+
+        // Today’s Collection
+        $today = Installment::todayStats(now()->toDateString(), $channel);
+
+        //stats
+        $stats  = [
+            //number of mandates
+            'number_of_pending_mandate' =>  $mandates[0]['number_of_mandate'],
+            'number_of_approved_mandate' =>  $mandates[1]['number_of_mandate'],
+            'number_of_failed_mandate' =>  $mandates[2]['number_of_mandate'],
+            'total_number_of_mandate' => $total_number_of_mandate,
+
+            //mandates values
+            'pending_mandate_value' => $mandates[0]['total_amount'],
+            'approved_mandate_value' => $mandates[1]['total_amount'],
+            'failed_mandate_value' => $mandates[2]['total_amount'],
+            'total_mandate_value' => $total_mandate_value,
+
+            //this month and today collection
+            'month' => date('F'),
+            'this_month_expected' => $this_month->total_amount,
+            'this_month_paid' => $this_month->paid_amount,
+            'today_expected' => $today->total_amount,
+            'today_paid' => $today->paid_amount
+        ];
+
+        //response
+        return response()->json([
+            'success' => true,
+            'response_code' => 200,
+            'data' => $stats,
+        ]);
+    }
 
     //Filter Mandates
     public function all(Request $request)
