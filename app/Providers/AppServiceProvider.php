@@ -39,6 +39,7 @@ class AppServiceProvider extends ServiceProvider
             return in_array($route->uri, [
                 'api/v1/login',
                 'api/v1/token',
+                'api/v1/mandate/summaries',
                 'api/v1/mandate/all',
                 'api/v1/mandate/{reference}',
                 'api/v1/mandate/create',
