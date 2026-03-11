@@ -30,7 +30,22 @@ return [
         /*
          * Description rendered on the home page of the API documentation (`/docs/api`).
          */
-        'description' => 'eMakato API Documentation',
+        'description' => implode("\n", [
+            '## Overview',
+            'This documentation covers the External App APIs used to authenticate, manage payment mandates, and view collections.',
+            '',
+            '## API Groups',
+            '- **Auth**: obtain an access token using `POST /v1/login` and `POST /v1/token`.',
+            '- **PaymentMandate**: create and manage mandates, OTP, status checks, and cancellation.',
+            '- **PaymentCollection**: view all collections, filter by mandate reference, and retrieve actual collections.',
+            '',
+            '## Authentication Flow',
+            '1. Call `POST /v1/login` (or `POST /v1/token`) to get an API token.',
+            '2. Send the token in authorized requests to mandate and collection endpoints.',
+            '',
+            '## Response Format',
+            'Most endpoints return `success`, `response_code`, and a payload object/array depending on the operation.',
+        ]),
     ],
 
     /*

@@ -23,11 +23,12 @@ use App\Jobs\CRDBMandateRegistrationJob;
 use App\Models\Account;
 use App\Models\Partner;
 use App\Models\PartnerAccount;
+use App\Services\MandateActionService;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class PaymentMandateController extends Controller
 {
-    public function __construct(protected DeductionService $deductionService, protected BankPayloadService $payloadService, protected BankApiService $bankApi) {}
+    public function __construct(protected MandateActionService $mandateActionService, protected DeductionService $deductionService, protected BankPayloadService $payloadService, protected BankApiService $bankApi) {}
 
     //Filter Mandates
     public function all(Request $request)
@@ -78,12 +79,6 @@ class PaymentMandateController extends Controller
     //create payment mandate
     public function create(Request $request)
     {
-        //post data
-        $total_amount = floatval(str_replace(',', '', $request->input('total_amount')));
-        $installment_amount = floatval(str_replace(',', '', $request->input('installment_amount')));
-        $min_installment_amount = floatval(str_replace(',', '', $request->input('min_installment_amount')));
-        $max_installment_amount = floatval(str_replace(',', '', $request->input('max_installment_amount')));
-
         //validation
         $validator = Validator::make($request->all(), [
             'channel' => 'required', //BANK or MNO
@@ -96,8 +91,9 @@ class PaymentMandateController extends Controller
             'address' => 'required',
             'total_amount' => [
                 'required',
-                function ($attribute, $value, $fail) use ($total_amount) {
-                    if ($total_amount < 1000) {
+                function ($attribute, $value, $fail) {
+                    $amount = floatval(str_replace(',', '', (string) $value));
+                    if ($amount < 1000) {
                         return $fail('Total amount should be greater than or equal to 1,000');
                     }
                 }
@@ -105,8 +101,9 @@ class PaymentMandateController extends Controller
             'debit_type' => 'required', //FIXED or DYNAMIC
             'installment_amount' => [
                 'required_if:debit_type,FIXED',
-                function ($attribute, $value, $fail) use ($installment_amount) {
-                    if ($installment_amount < 1000) {
+                function ($attribute, $value, $fail) {
+                    $amount = floatval(str_replace(',', '', (string) $value));
+                    if ($amount < 1000) {
                         return $fail('Installment amount should be greater than or equal to 1,000');
                     }
                 }
@@ -114,7 +111,9 @@ class PaymentMandateController extends Controller
             'min_installment_amount' => 'required_if:debit_type,DYNAMIC',
             'max_installment_amount' => [
                 'required_if:debit_type,DYNAMIC',
-                function ($attribute, $value, $fail) use ($min_installment_amount, $max_installment_amount) {
+                function ($attribute, $value, $fail) use ($request) {
+                    $min_installment_amount = floatval(str_replace(',', '', (string) $request->input('min_installment_amount')));
+                    $max_installment_amount = floatval(str_replace(',', '', (string) $value));
                     if ($min_installment_amount > $max_installment_amount) {
                         return $fail('Maximum installment amount should not be less than minimum deduction amount');
                     }
@@ -131,6 +130,12 @@ class PaymentMandateController extends Controller
                 'error_msg' => $validator->errors()
             ], 422);
         }
+
+        //post data
+        $total_amount = floatval(str_replace(',', '', $request->input('total_amount')));
+        $installment_amount = floatval(str_replace(',', '', $request->input('installment_amount')));
+        $min_installment_amount = floatval(str_replace(',', '', $request->input('min_installment_amount')));
+        $max_installment_amount = floatval(str_replace(',', '', $request->input('max_installment_amount')));
 
         //Create or Update mandate
         //1.1: Detect account_type id
@@ -205,32 +210,32 @@ class PaymentMandateController extends Controller
         }
 
         //1.9: Create Debit Order
-        $debit_order = new DebitOrder();
-        $debit_order->uuid = Str::uuid();
-        $debit_order->partner_id = $partner_id;
-        $debit_order->reference = Carbon::now()->format('dmY') . $this->deductionService->getMandateReference();
-        $debit_order->customer_account_id = $customer_account->id;
-        $debit_order->channel = $customer_account->account->slug;
-        $debit_order->total_amount = $total_amount;
-        $debit_order->outstanding_amount = $total_amount;
-        $debit_order->debit_type = $request->debit_type;
-        $debit_order->installment_amount = $installment_amount;
-        $debit_order->min_installment_amount = $min_installment_amount;
-        $debit_order->max_installment_amount = $max_installment_amount;
-        $debit_order->periodicity = $request->periodicity;
-        $debit_order->installment_number = $this->deductionService->calculateNumberOfInstallments($request->debit_type, $total_amount, $installment_amount, $max_installment_amount);
-        $debit_order->start_date = Carbon::parse($request->deduction_start_date)->format('Y-m-d');
-        $debit_order->next_debit_date = Carbon::parse($request->deduction_start_date)->format('Y-m-d');
-        $debit_order->deduction_end_date = "totalLoanCovered";
-        $debit_order->otp_code = $otp_code;
-        $debit_order->approved = 0;
-        $debit_order->created_by = Auth::user()->id;
-        $debit_order->save();
+        $debitOrder = new DebitOrder();
+        $debitOrder->uuid = Str::uuid();
+        $debitOrder->partner_id = $partner_id;
+        $debitOrder->reference = Carbon::now()->format('dmY') . $this->deductionService->getMandateReference();
+        $debitOrder->customer_account_id = $customer_account->id;
+        $debitOrder->channel = $customer_account->account->slug;
+        $debitOrder->total_amount = $total_amount;
+        $debitOrder->outstanding_amount = $total_amount;
+        $debitOrder->debit_type = $request->debit_type;
+        $debitOrder->installment_amount = $installment_amount;
+        $debitOrder->min_installment_amount = $min_installment_amount;
+        $debitOrder->max_installment_amount = $max_installment_amount;
+        $debitOrder->periodicity = $request->periodicity;
+        $debitOrder->installment_number = $this->deductionService->calculateNumberOfInstallments($request->debit_type, $total_amount, $installment_amount, $max_installment_amount);
+        $debitOrder->start_date = Carbon::parse($request->deduction_start_date)->format('Y-m-d');
+        $debitOrder->next_debit_date = Carbon::parse($request->deduction_start_date)->format('Y-m-d');
+        $debitOrder->deduction_end_date = "totalLoanCovered";
+        $debitOrder->otp_code = $otp_code;
+        $debitOrder->approved = 0;
+        $debitOrder->created_by = Auth::user()->id;
+        $debitOrder->save();
 
-        if ($debit_order) {
+        if ($debitOrder) {
             // add debit end date
-            $debit_order->end_date = $this->deductionService->calculateEndDate($debit_order);
-            $debit_order->save();
+            $debitOrder->end_date = $this->deductionService->calculateEndDate($debitOrder);
+            $debitOrder->save();
 
             // Link customer with service provider
             $customer_partner = CustomerPartner::firstOrNew(
@@ -243,49 +248,35 @@ class PaymentMandateController extends Controller
             $customer_partner->save();
 
             //create evidence of aggrement
-            $filename = $this->createEvidence($debit_order);
-            $debit_order->aggrement_evidence = $filename;
-            $debit_order->status = 100;
-            $debit_order->save();
+            $filename = $this->createEvidence($debitOrder);
+            $debitOrder->aggrement_evidence = $filename;
+            $debitOrder->status = 100;
+            $debitOrder->save();
 
-            //2: Mandate registration => NMB or CRDB
-            //2.1: check if account is NMB/CRDB/EcoBank/NBC
-            if ($request->payment_channel == "NMB") {
-                //create payload
-                $payload = $this->payloadService->mandateRegistrationPayload($debit_order);
+            //mandate registration
+            $jsonResponse = $this->mandateActionService->registerMandate($debitOrder);
+            $response = $jsonResponse->getData(true);
 
-                //arr response
-                $arr_response = $this->bankApi->mandateRegistrationRequest($payload);
+            //success = True or False
+            $success = $response['success'];
 
-                if ($arr_response) {
-                    $response_code = $arr_response[0];
-                    if ($response_code == 200 || $response_code == 201) {
-                        //return success message
-                        return response()->json([
-                            'success' => true,
-                            'response_code' => 201,
-                            'success_msg' => "Mandate created successfully.",
-                            'data' => [
-                                'status' => 'success',
-                                'mandateReference' => $debit_order->reference,
-                            ]
-                        ]);
-                    } else {
-                        // error response
-                        return response()->json([
-                            'success' => false,
-                            'response_code' => 500,
-                            'error_msg' => $arr_response[1]
-                        ]);
-                    }
-                } else {
-                    // error response
-                    return response()->json([
-                        'success' => false,
-                        'response_code' => 500,
-                        'error_msg' => "API system error, contact eMakato support team."
-                    ]);
-                }
+            if ($success == true) {
+                return response()->json([
+                    'success' => true,
+                    'response_code' => 201,
+                    'success_msg' => "Mandate created successfully.",
+                    'data' => [
+                        'status' => 'success',
+                        'mandateReference' => $debitOrder->reference,
+                    ]
+                ]);
+            } else {
+                // error response
+                return response()->json([
+                    'success' => false,
+                    'response_code' => 500,
+                    'error_msg' => $response['remarks']
+                ]);
             }
         } else {
             return response()->json([
@@ -495,7 +486,7 @@ class PaymentMandateController extends Controller
             ]);
         }
 
-        //declare channel and remarks
+        //declare response
         $success = true;
         $status = 'success';
         $response_code = 200;
@@ -516,13 +507,6 @@ class PaymentMandateController extends Controller
                 // Create debit order installments IF response code = 240
                 if ($response_code == 240) {
                     $this->deductionService->createInstallment($debit_order);
-
-                    //update response code
-                    $response_code = 202;
-                } else {
-                    $success = false;
-                    $response_code = 500;
-                    $status = 'failed';
                 }
             } else {
                 $success = false;
@@ -532,6 +516,12 @@ class PaymentMandateController extends Controller
             }
         }
 
+        // Always use shared status mapping for both NMB and non-NMB channels.
+        $debit_order->refresh();
+        $mandate_status_badge = mandate_status_badge($debit_order);
+        $mandate_status_text = $mandate_status_badge ? trim(strip_tags($mandate_status_badge)) : 'Unknown Status';
+        $remarks = $debit_order->remarks;
+
         //response
         return response()->json(
             [
@@ -540,6 +530,7 @@ class PaymentMandateController extends Controller
                 "message" => $remarks,
                 'data' => [
                     'status' => $status,
+                    'mandateStatus' => $mandate_status_text,
                     'mandateReference' => $debit_order->reference,
                 ]
             ]
@@ -582,39 +573,14 @@ class PaymentMandateController extends Controller
         $debit_order->cancellationApprovedAt = date('Y-m-d H:i:s');
         $debit_order->save();
 
-        //declare channel and remarks
+        //return response
         $success = true;
         $status = 'success';
-        $response_code = 200;
-        $remarks = "";
+        $response_code = 201;
+        $remarks = "Mandate cancellation request sent successfully. Wait for few minutes for the cancellation to take effect.";
 
-        //check if account is NMB/CRDB/EcoBank/NBC
-        if ($debit_order->channel == "NMB") {
-            //create payload
-            $payload = $this->payloadService->mandateCancellationPayload($debit_order);
-
-            //api response
-            $arr_response = $this->bankApi->mandateCancellationRequest($payload);
-
-            if ($arr_response) {
-                $response_code = $arr_response[0];
-                $remarks = $arr_response[1];
-
-                if ($response_code == 201) {
-                    //update response code
-                    $response_code = 201;
-                } else {
-                    $success = false;
-                    $status = 'failed';
-                    $response_code = 500;
-                }
-            } else {
-                $success = false;
-                $status = 'failed';
-                $remarks = "API system error, contact eMakato support team.";
-                $response_code = 500;
-            }
-        }
+        // request mandate cancellation in background
+        $this->mandateActionService->cancelMandate($debit_order);
 
         //response
         return response()->json(
