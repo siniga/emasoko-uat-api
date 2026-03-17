@@ -205,6 +205,7 @@ class MandateController extends Controller
                 if (strtolower($approved) == "approved") {
                     $debitOrder->approved = 1;
                     $debitOrder->status = 240;
+                    $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_ACTIVE;
                     $debitOrder->remarks = "Mandate approved";
                     $debitOrder->save();
 
@@ -216,6 +217,7 @@ class MandateController extends Controller
                 } else {
                     // Failed debit orders
                     $debitOrder->status = 500;
+                    $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_FAILED;
                     $debitOrder->remarks = "Failed to approve mandate.";
                     $debitOrder->save();
 

@@ -85,10 +85,7 @@
     }
 
     .provider-section {
-        border: 1px solid #e7edf6;
-        border-radius: 18px;
-        background: #fbfcfe;
-        padding: 1.2rem;
+        padding: 0;
         margin-bottom: 1.25rem;
     }
 
@@ -104,39 +101,38 @@
         margin-bottom: 0.15rem;
         color: var(--provider-primary);
         font-weight: 700;
+        font-size: 1rem;
     }
 
     .provider-section__head p {
         margin-bottom: 0;
         color: var(--provider-muted);
+        font-size: 0.86rem;
     }
 
-    .provider-kv {
+    .provider-grid {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 0.85rem;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.9rem 1rem;
     }
 
-    .provider-kv__item {
-        border: 1px solid #e4ebf5;
-        border-radius: 14px;
-        background: #fff;
-        padding: 0.7rem 0.85rem;
+    .provider-grid__item {
+        border-bottom: 1px dashed #e5ebf5;
+        padding-bottom: 0.65rem;
     }
 
-    .provider-kv__label {
+    .provider-grid__label {
         display: block;
-        font-size: 0.72rem;
+        font-size: 0.76rem;
         color: var(--provider-muted);
         text-transform: uppercase;
         letter-spacing: 0.04em;
-        margin-bottom: 0.2rem;
+        margin-bottom: 0.25rem;
     }
 
-    .provider-kv__value {
-        color: var(--provider-primary);
+    .provider-grid__value {
+        color: #243b5a;
         font-weight: 600;
-        font-size: 0.94rem;
         word-break: break-word;
     }
 
@@ -162,24 +158,47 @@
         color: var(--provider-muted);
     }
 
-    .provider-kv--compact {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+    .provider-actions {
+        display: flex;
+        justify-content: flex-end;
+        position: relative;
+        z-index: 2;
     }
 
-    .provider-kv__item--wide {
+    .provider-actions .btn-group .btn {
+        border-color: #d7e3f4;
+        color: var(--provider-primary);
+        background: #f8fbff;
+        font-weight: 600;
+    }
+
+    .provider-actions .btn-group .btn:hover,
+    .provider-actions .btn-group .btn:focus {
+        background: #edf4ff;
+        color: var(--provider-primary);
+    }
+
+    .provider-actions .dropdown-menu {
+        border: 1px solid #dde7f5;
+        border-radius: 14px;
+        padding: 0.45rem 0;
+        box-shadow: 0 16px 36px rgba(21, 53, 103, 0.12);
+    }
+
+    .provider-actions .dropdown-item {
+        padding: 0.55rem 1rem;
+    }
+
+    .provider-grid__item--wide {
         grid-column: span 2;
     }
 
     @media (max-width: 767.98px) {
-        .provider-kv {
+        .provider-grid {
             grid-template-columns: 1fr;
         }
 
-        .provider-kv--compact {
-            grid-template-columns: 1fr;
-        }
-
-        .provider-kv__item--wide {
+        .provider-grid__item--wide {
             grid-column: span 1;
         }
     }
@@ -212,21 +231,72 @@
             <div class="col-lg-12">
                 <div class="card provider-hero mb-4">
                     <div class="provider-hero__body">
-                        <span class="provider-kicker">Service Provider Profile</span>
-                        <h2 class="provider-title">{{ $company->business_name }}</h2>
-                        <p class="provider-subtitle">Operational view of provider setup, mandate footprint, collection performance, and approval readiness.</p>
-                        <div class="provider-meta">
-                            <span class="provider-meta__pill"><strong>Reference:</strong> {{ $company->reference }}</span>
-                            <span class="provider-meta__pill"><strong>Category:</strong> {{ $company->partnerCategory->name ?? '-' }}</span>
-                            <span class="provider-meta__pill"><strong>Status:</strong>
-                                @if ($company->approved == 1)
-                                    Approved
-                                @elseif($company->approved == 99)
-                                    Failed
-                                @else
-                                    Pending Review
-                                @endif
-                            </span>
+                        <div class="row align-items-center">
+                            <div class="col-lg-8">
+                                <span class="provider-kicker">Service Provider Profile</span>
+                                <h2 class="provider-title">{{ $company->business_name }}</h2>
+                                <p class="provider-subtitle">Operational view of provider setup, mandate footprint, collection performance, and approval readiness.</p>
+                                <div class="provider-meta">
+                                    <span class="provider-meta__pill"><strong>Reference:</strong> {{ $company->reference }}</span>
+                                    <span class="provider-meta__pill"><strong>Category:</strong> {{ $company->partnerCategory->name ?? '-' }}</span>
+                                    <span class="provider-meta__pill"><strong>Status:</strong>
+                                        @if ($company->approved == 1)
+                                            Approved
+                                        @elseif($company->approved == 99)
+                                            Failed
+                                        @else
+                                            Pending Review
+                                        @endif
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-lg-4 mt-3 mt-lg-0">
+                                <div class="provider-actions">
+                                    <div class="btn-group">
+                                        <button class="btn btn-sm btn-light" type="button">
+                                            Provider Actions
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-light dropdown-toggle dropdown-toggle-split"
+                                            data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="mdi mdi-chevron-down font-size-14"></i>
+                                        </button>
+                                        <div class="dropdown-menu dropdown-menu-end">
+                                            <a href="{{ route('companies.collection-account', $company->uuid) }}"
+                                                class="dropdown-item">
+                                                <i class="fas fa-plus me-2"></i> New Collection Account
+                                            </a>
+
+                                            <template x-if="approved==0 || approved==99">
+                                                <a href="{{ route('companies.registration', $company->uuid) }}"
+                                                    class="dropdown-item">
+                                                    <i class="fa fa-pen me-2"></i> Update Information
+                                                </a>
+                                            </template>
+
+                                            <template x-if="approved==0 || approved==99">
+                                                <button type="button" class="dropdown-item text-danger"
+                                                    x-on:click="openRejectModal();" x-transition x-cloak>
+                                                    <i class="fa fa-times me-2"></i> Reject Registration
+                                                </button>
+                                            </template>
+
+                                            @if ($is_verified_false > 0)
+                                                <button type="button" class="dropdown-item text-success"
+                                                    x-on:click="approveRegistration()">
+                                                    <i class="fa fa-check me-2"></i> <span x-text="formLoading ? 'Approving Registration....' : 'Approve Registration'"></span>
+                                                </button>
+                                            @endif
+
+                                            @if ($is_nmb_verified_false > 0)
+                                                <button type="button" class="dropdown-item"
+                                                    x-on:click="fetchRegistrationStatus('{{ $company->uuid }}')">
+                                                    <i class="fa fa-refresh me-2"></i> <span x-text="formLoading ? 'Get Registration status....' : 'Get Status'"></span>
+                                                </button>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -279,85 +349,42 @@
                         <!-- success message -->
                         <div id="message_wrp"></div>
 
-                        <div class="d-flex justify-content-end mb-3">
-                            <div class="dropdown">
-                                <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown"
-                                    aria-expanded="false">
-                                    <i class="bx bx-cog me-1"></i> Actions
-                                </button>
-                                <div class="dropdown-menu dropdown-menu-end">
-                                    <a href="{{ route('companies.collection-account', $company->uuid) }}"
-                                        class="dropdown-item">
-                                        <i class="fas fa-plus me-2"></i> New Collection Account
-                                    </a>
-
-                                    <template x-if="approved==0 || approved==99">
-                                        <a href="{{ route('companies.registration', $company->uuid) }}"
-                                            class="dropdown-item">
-                                            <i class="fa fa-pen me-2"></i> Update Information
-                                        </a>
-                                    </template>
-
-                                    <template x-if="approved==0 || approved==99">
-                                        <button type="button" class="dropdown-item text-danger"
-                                            x-on:click="openRejectModal();" x-transition x-cloak>
-                                            <i class="fa fa-times me-2"></i> Reject Registration
-                                        </button>
-                                    </template>
-
-                                    @if ($is_verified_false > 0)
-                                        <button type="button" class="dropdown-item text-success"
-                                            x-on:click="approveRegistration()">
-                                            <i class="fa fa-check me-2"></i> <span x-text="formLoading ? 'Approving Registration....' : 'Approve Registration'"></span>
-                                        </button>
-                                    @endif
-
-                                    @if ($is_nmb_verified_false > 0)
-                                        <button type="button" class="dropdown-item"
-                                            x-on:click="fetchRegistrationStatus('{{ $company->uuid }}')">
-                                            <i class="fa fa-refresh me-2"></i> <span x-text="formLoading ? 'Get Registration status....' : 'Get Status'"></span>
-                                        </button>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-
                         <div class="provider-section">
                             <div class="provider-section__head">
                                 <div>
                                     <h5>Provider Overview</h5>
-                                    <p>Compact identity and approval snapshot for this service provider.</p>
+                                    <p>Core service provider identity arranged in the same overview style as mandate details.</p>
                                 </div>
                             </div>
 
-                            <div class="provider-kv provider-kv--compact">
-                                <div class="provider-kv__item provider-kv__item--wide">
-                                    <span class="provider-kv__label">Business Name</span>
-                                    <span class="provider-kv__value">{{ $company->business_name }}</span>
+                            <div class="provider-grid">
+                                <div class="provider-grid__item provider-grid__item--wide">
+                                    <span class="provider-grid__label">Business Name</span>
+                                    <span class="provider-grid__value">{{ $company->business_name }}</span>
                                 </div>
-                                <div class="provider-kv__item">
-                                    <span class="provider-kv__label">Business Category</span>
-                                    <span class="provider-kv__value">{{ $company->partnerCategory->name ?? '-' }}</span>
+                                <div class="provider-grid__item">
+                                    <span class="provider-grid__label">Business Category</span>
+                                    <span class="provider-grid__value">{{ $company->partnerCategory->name ?? '-' }}</span>
                                 </div>
-                                <div class="provider-kv__item">
-                                    <span class="provider-kv__label">Corporate Reference</span>
-                                    <span class="provider-kv__value">{{ $company->reference }}</span>
+                                <div class="provider-grid__item">
+                                    <span class="provider-grid__label">Corporate Reference</span>
+                                    <span class="provider-grid__value">{{ $company->reference }}</span>
                                 </div>
-                                <div class="provider-kv__item">
-                                    <span class="provider-kv__label">Corporate ShortCode</span>
-                                    <span class="provider-kv__value">{{ $company->short_code }}</span>
+                                <div class="provider-grid__item">
+                                    <span class="provider-grid__label">Corporate ShortCode</span>
+                                    <span class="provider-grid__value">{{ $company->short_code }}</span>
                                 </div>
-                                <div class="provider-kv__item">
-                                    <span class="provider-kv__label">TIN Number</span>
-                                    <span class="provider-kv__value">{{ $company->tin_number }}</span>
+                                <div class="provider-grid__item">
+                                    <span class="provider-grid__label">TIN Number</span>
+                                    <span class="provider-grid__value">{{ $company->tin_number }}</span>
                                 </div>
-                                <div class="provider-kv__item">
-                                    <span class="provider-kv__label">Year of Incorporation</span>
-                                    <span class="provider-kv__value">{{ $company->year_of_incorporation }}</span>
+                                <div class="provider-grid__item">
+                                    <span class="provider-grid__label">Year of Incorporation</span>
+                                    <span class="provider-grid__value">{{ $company->year_of_incorporation }}</span>
                                 </div>
-                                <div class="provider-kv__item">
-                                    <span class="provider-kv__label">eMakato Status</span>
-                                    <span class="provider-kv__value" id="company-status">
+                                <div class="provider-grid__item">
+                                    <span class="provider-grid__label">eMakato Status</span>
+                                    <span class="provider-grid__value" id="company-status">
                                         <template x-if="approved==0">
                                             <span class="badge badge-soft-warning">Pending Review</span>
                                         </template>
@@ -369,17 +396,17 @@
                                         </template>
                                     </span>
                                 </div>
-                                <div class="provider-kv__item">
-                                    <span class="provider-kv__label">Created On</span>
-                                    <span class="provider-kv__value">{{ date('M d, Y H:i', strtotime($company->created_at)) }}</span>
+                                <div class="provider-grid__item">
+                                    <span class="provider-grid__label">Created On</span>
+                                    <span class="provider-grid__value">{{ date('M d, Y H:i', strtotime($company->created_at)) }}</span>
                                 </div>
-                                <div class="provider-kv__item">
-                                    <span class="provider-kv__label">Email</span>
-                                    <span class="provider-kv__value">{{ $company->email ?? '-' }}</span>
+                                <div class="provider-grid__item">
+                                    <span class="provider-grid__label">Email</span>
+                                    <span class="provider-grid__value">{{ $company->email ?? '-' }}</span>
                                 </div>
-                                <div class="provider-kv__item">
-                                    <span class="provider-kv__label">Phone</span>
-                                    <span class="provider-kv__value">{{ $company->phone }}</span>
+                                <div class="provider-grid__item">
+                                    <span class="provider-grid__label">Phone</span>
+                                    <span class="provider-grid__value">{{ $company->phone }}</span>
                                 </div>
                             </div>
                         </div>
@@ -392,18 +419,18 @@
                                 </div>
                             </div>
 
-                            <div class="provider-kv">
-                                <div class="provider-kv__item">
-                                    <span class="provider-kv__label">Postal Address</span>
-                                    <span class="provider-kv__value">{{ $company->postal_address ?? '-' }}</span>
+                            <div class="provider-grid">
+                                <div class="provider-grid__item">
+                                    <span class="provider-grid__label">Postal Address</span>
+                                    <span class="provider-grid__value">{{ $company->postal_address ?? '-' }}</span>
                                 </div>
-                                <div class="provider-kv__item">
-                                    <span class="provider-kv__label">Physical Address</span>
-                                    <span class="provider-kv__value">{{ $company->physical_address }}</span>
+                                <div class="provider-grid__item">
+                                    <span class="provider-grid__label">Physical Address</span>
+                                    <span class="provider-grid__value">{{ $company->physical_address }}</span>
                                 </div>
-                                <div class="provider-kv__item provider-kv__item--wide" style="grid-column: 1 / -1;">
-                                    <span class="provider-kv__label">Remarks</span>
-                                    <span class="provider-kv__value" x-text="remarks || '-'"></span>
+                                <div class="provider-grid__item provider-grid__item--wide" style="grid-column: 1 / -1;">
+                                    <span class="provider-grid__label">Remarks</span>
+                                    <span class="provider-grid__value" x-text="remarks || '-'"></span>
                                 </div>
                             </div>
                         </div>

@@ -66,6 +66,48 @@
         font-weight: 700;
         border-color: #dce7fa;
     }
+
+    .ca-row-actions {
+        position: relative;
+    }
+
+    .ca-row-actions .dropdown-toggle {
+        border: 0;
+        background: transparent;
+        color: var(--ca-primary);
+        border-radius: 999px;
+        width: 28px;
+        height: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+    }
+
+    .ca-row-actions .dropdown-toggle:hover,
+    .ca-row-actions .dropdown-toggle:focus {
+        background: #edf4ff;
+        color: var(--ca-primary);
+        box-shadow: none;
+        border-color: transparent;
+    }
+
+    .ca-row-actions .dropdown-toggle::after {
+        display: none;
+    }
+
+    .ca-row-actions .dropdown-menu {
+        min-width: 10rem;
+        border: 1px solid #dfe8f4;
+        box-shadow: 0 16px 30px rgba(21, 53, 103, 0.12);
+        border-radius: 12px;
+        padding: 0.35rem 0;
+    }
+
+    .ca-row-actions .dropdown-item {
+        font-size: 0.875rem;
+        padding: 0.55rem 0.9rem;
+    }
 </style>
 
 @section('content')
@@ -290,21 +332,20 @@
                                                 <td>{{ $values->account_number ?? $values->phone }}</td>
                                                 <td>{{ $values->phone }}</td>
                                                 <td>{{ date('d-m-Y H:i', strtotime($values->created_at)) }}</td>
-                                                <td>
-                                                    <a href="{{ route('customer-accounts.show', $values->id) }}"
-                                                        title="View" class="btn btn-xss">
-                                                        <i class="bx bxs-folder-open"></i>
-                                                    </a>
-
-                                                    {{-- <a href="{{ route('customer-accounts.edit', $values->id) }}"
-                                                        title="Edit" class="btn btn-xss">
-                                                        <i class="bx bx-edit text-secondary"></i>
-                                                    </a>
-
-                                                    <a href="{{ route('customer-accounts.delete', $values->id) }}"
-                                                        title="Delete" class="btn btn-xss delete">
-                                                        <i class="bx bx-trash text-danger"></i>
-                                                    </a> --}}
+                                                <td class="text-center">
+                                                    <div class="dropdown ca-row-actions">
+                                                        <button class="btn dropdown-toggle" type="button"
+                                                            data-bs-toggle="dropdown" aria-expanded="false"
+                                                            title="Account Actions">
+                                                            <i class="bx bx-dots-vertical-rounded fs-5"></i>
+                                                        </button>
+                                                        <div class="dropdown-menu dropdown-menu-end">
+                                                            <a href="{{ route('customer-accounts.show', $values->id) }}"
+                                                                class="dropdown-item">
+                                                                View Details
+                                                            </a>
+                                                        </div>
+                                                    </div>
                                                 </td>
                                             </tr>
                                             @php $serial++; @endphp

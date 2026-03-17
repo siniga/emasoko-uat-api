@@ -20,38 +20,21 @@ if (!function_exists('get_pending_debit_orders')) {
 if (!function_exists('mandate_status_badge')) {
     function mandate_status_badge($values)
     {
-        // Highest priority flags
-        if (in_array($values->approved, [0, 1, 2]) && $values->cancelled == 1) {
-            return badge('Cancelled', 'danger');
-        }
+        $lifecycleStatus = $values->resolved_lifecycle_status ?? $values->lifecycle_status ?? DebitOrder::LIFECYCLE_DRAFT;
 
-        if (in_array($values->approved, [0, 1, 2]) && $values->closed == 1) {
-            return badge('Closed', 'closed');
-        }
-
-        // Approved = 1
-        if ($values->approved == 1 && $values->status == 240) {
-            return badge('Active', 'success');
-        }
-
-        // Approved = 0 or 2 (shared logic)
-        if (in_array((int) $values->approved, [0, 2], true)) {
-            // cast status
-            $status = (int) $values->status;
-
-            return match ($status) {
-                100, 403, 404 => badge('Pending Registration', 'danger'),
-                200           => badge('Under Review', 'info'),
-                201           => badge('Pending Verification', 'info'),
-                202           => badge('Verified', 'info'),
-                249           => badge('Processing', 'warning'),
-                405           => badge('Cancelled', 'danger'),
-                430, 500      => badge('Failed Verification', 'danger'),
-                default       => badge('Unknown Status', 'secondary'),
-            };
-        }
-
-        return null;
+        return match ($lifecycleStatus) {
+            DebitOrder::LIFECYCLE_DRAFT => badge('Draft', 'secondary'),
+            DebitOrder::LIFECYCLE_SUBMITTED => badge('Submitted', 'info'),
+            DebitOrder::LIFECYCLE_AWAITING_OTP => badge('Awaiting OTP', 'warning'),
+            DebitOrder::LIFECYCLE_VERIFIED => badge('Verified', 'info'),
+            DebitOrder::LIFECYCLE_ACTIVE => badge('Active', 'success'),
+            DebitOrder::LIFECYCLE_CANCELLATION_REQUESTED => badge('Cancellation Requested', 'warning'),
+            DebitOrder::LIFECYCLE_CANCELLED => badge('Cancelled', 'danger'),
+            DebitOrder::LIFECYCLE_CLOSED => badge('Closed', 'closed'),
+            DebitOrder::LIFECYCLE_ARCHIVED => badge('Archived', 'secondary'),
+            DebitOrder::LIFECYCLE_FAILED => badge('Failed', 'danger'),
+            default => badge(ucwords(str_replace('_', ' ', (string) $lifecycleStatus)), 'secondary'),
+        };
     }
 }
 

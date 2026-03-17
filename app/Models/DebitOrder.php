@@ -14,6 +14,17 @@ class DebitOrder extends Model
     use HasFactory;
     protected $guarded = [];
 
+    public const LIFECYCLE_DRAFT = 'draft';
+    public const LIFECYCLE_SUBMITTED = 'submitted';
+    public const LIFECYCLE_AWAITING_OTP = 'awaiting_otp';
+    public const LIFECYCLE_VERIFIED = 'verified';
+    public const LIFECYCLE_ACTIVE = 'active';
+    public const LIFECYCLE_CANCELLATION_REQUESTED = 'cancellation_requested';
+    public const LIFECYCLE_CANCELLED = 'cancelled';
+    public const LIFECYCLE_CLOSED = 'closed';
+    public const LIFECYCLE_ARCHIVED = 'archived';
+    public const LIFECYCLE_FAILED = 'failed';
+
     //filter condition
     public static function filterCondition()
     {
@@ -115,6 +126,46 @@ class DebitOrder extends Model
             : $this->remarks;
     }
 
+    public function getResolvedLifecycleStatusAttribute(): string
+    {
+        if (!empty($this->lifecycle_status)) {
+            return $this->lifecycle_status;
+        }
+
+        if ((int) $this->archived === 1) {
+            return self::LIFECYCLE_ARCHIVED;
+        }
+
+        if ((int) $this->closed === 1 || strtoupper((string) $this->contract_status) === 'CLOSED') {
+            return self::LIFECYCLE_CLOSED;
+        }
+
+        if ((int) $this->cancelled === 1) {
+            return self::LIFECYCLE_CANCELLED;
+        }
+
+        if ($this->debitOrderRequests()->where('request_type', 'CANCELLATION')->where('status', 'PENDING')->exists()) {
+            return self::LIFECYCLE_CANCELLATION_REQUESTED;
+        }
+
+        return match ((int) $this->status) {
+            240 => self::LIFECYCLE_ACTIVE,
+            202 => self::LIFECYCLE_VERIFIED,
+            201 => self::LIFECYCLE_AWAITING_OTP,
+            200, 249 => self::LIFECYCLE_SUBMITTED,
+            403, 404, 405, 430, 500, 501 => self::LIFECYCLE_FAILED,
+            100 => self::LIFECYCLE_DRAFT,
+            default => self::LIFECYCLE_DRAFT,
+        };
+    }
+
+    public function setLifecycleStatus(string $status): self
+    {
+        $this->lifecycle_status = $status;
+
+        return $this;
+    }
+
     public function getPartnerAccountAttribute()
     {
         return PartnerAccount::toBase()
@@ -173,21 +224,7 @@ class DebitOrder extends Model
                 $query->where('debit_orders.partner_id', '=', $partner_id);
             })
             ->when($status, function ($query) use ($status) {
-                switch ($status) {
-                    case 'pending':
-                        $approved = 0;
-                        break;
-                    case 'approved':
-                        $approved = 1;
-                        break;
-                    case 'failed':
-                        $approved = 2;
-                        break;
-                    default:
-                        $approved = 0;
-                }
-
-                $query->where('debit_orders.approved', $approved);
+                $query->where('debit_orders.lifecycle_status', $status);
             })
             ->when($account_type_id, function ($query) use ($account_type_id) {
                 $query->whereHas("customerAccount", function ($q) use ($account_type_id) {

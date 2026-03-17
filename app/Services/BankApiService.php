@@ -221,6 +221,7 @@ class BankApiService
                 $remarks = $response['data']['response'][0]['responseDescription'];
 
                 $debit_order->status = 201; //created
+                $debit_order->lifecycle_status = DebitOrder::LIFECYCLE_AWAITING_OTP;
                 $debit_order->otp_reference = $response['data']['otpCaseReference'];
             } else if (strtolower($response['status']) == "fail") {
                 $response_code = $response['data']['response'][0]['responseCode'];
@@ -228,6 +229,7 @@ class BankApiService
 
                 //update debit order status
                 $debit_order->status = 500;
+                $debit_order->lifecycle_status = DebitOrder::LIFECYCLE_FAILED;
             }
 
             $debit_order->http_response_code = $response['data']['response'][0]['responseCode'];
@@ -289,6 +291,7 @@ class BankApiService
                 $redirect_url = $response['redirect_url'];
 
                 $debitOrder->status = 201;
+                $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_AWAITING_OTP;
                 $debitOrder->request_id = $response['session_id'];
                 $debitOrder->remarks = 'Payment session created';
                 $debitOrder->save();
@@ -297,6 +300,7 @@ class BankApiService
                 $remarks = 'Unexpected status: ' . $response['status'];
 
                 $debitOrder->status = 500;
+                $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_FAILED;
                 $debitOrder->remarks = $remarks;
                 $debitOrder->save();
             }
@@ -363,10 +367,12 @@ class BankApiService
                 $debit_order->status = $response['data']['response'][0]['responseCode'];
 
                 //update debit order => approved
-                if ($response_code == 240)
+                if ($response_code == 240) {
                     $debit_order->approved = 1;
-                else
+                    $debit_order->lifecycle_status = DebitOrder::LIFECYCLE_ACTIVE;
+                } else {
                     $debit_order->approved = 0;
+                }
             } else if (strtolower($response['status']) == "fail") {
                 $response_code = $response['data']['response'][0]['responseCode'];
                 $remarks = $response['data']['response'][0]['responseDescription'];
@@ -374,6 +380,7 @@ class BankApiService
                 //update status and status
                 $debit_order->status = 500;
                 $debit_order->approved = 0;
+                $debit_order->lifecycle_status = DebitOrder::LIFECYCLE_FAILED;
             }
 
             $debit_order->http_response_code = $response_code;
@@ -441,6 +448,7 @@ class BankApiService
                 if ($response_code == 201) {
                     $debit_order->cancelled = 1; // Mark as cancelled
                     $debit_order->deleted = 1; // Mark as deleted
+                    $debit_order->lifecycle_status = DebitOrder::LIFECYCLE_CANCELLED;
                 }
             } else if (strtolower($response['status']) == "fail") {
                 $response_code = $response['data']['response'][0]['responseCode'];
@@ -581,12 +589,14 @@ class BankApiService
 
                 //update debit order status
                 $debit_order->status = 202; //otp verified
+                $debit_order->lifecycle_status = DebitOrder::LIFECYCLE_VERIFIED;
             } else if (strtolower($response['status']) == "fail") {
                 $response_code = $response['data']['response'][0]['responseCode'];
                 $remarks = $response['data']['response'][0]['responseDescription'];
 
                 //update debit order status
                 $debit_order->status = 500;
+                $debit_order->lifecycle_status = DebitOrder::LIFECYCLE_FAILED;
             }
 
             $debit_order->http_response_code = $response['data']['response'][0]['responseCode'];

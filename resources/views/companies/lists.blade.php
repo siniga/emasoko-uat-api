@@ -72,6 +72,48 @@
         font-weight: 700;
         border-color: #dce7fa;
     }
+
+    .sp-row-actions {
+        position: relative;
+    }
+
+    .sp-row-actions .dropdown-toggle {
+        border: 0;
+        background: transparent;
+        color: var(--sp-list-primary);
+        border-radius: 999px;
+        width: 28px;
+        height: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+    }
+
+    .sp-row-actions .dropdown-toggle:hover,
+    .sp-row-actions .dropdown-toggle:focus {
+        background: #edf4ff;
+        color: var(--sp-list-primary);
+        box-shadow: none;
+        border-color: transparent;
+    }
+
+    .sp-row-actions .dropdown-toggle::after {
+        display: none;
+    }
+
+    .sp-row-actions .dropdown-menu {
+        min-width: 10rem;
+        border: 1px solid #dfe8f4;
+        box-shadow: 0 16px 30px rgba(21, 53, 103, 0.12);
+        border-radius: 12px;
+        padding: 0.35rem 0;
+    }
+
+    .sp-row-actions .dropdown-item {
+        font-size: 0.875rem;
+        padding: 0.55rem 0.9rem;
+    }
 </style>
 
 @section('content')
@@ -327,30 +369,39 @@
                                                         <span class="badge badge-soft-danger">Failed</span>
                                                     @endif
                                                 </td>
-                                                <td>
-                                                    @if ($company->complete == 1)
-                                                        <a href="{{ route('companies.details', $company->uuid) }}"
-                                                            title="View" class="btn btn-xss">
-                                                            <i class="bx bxs-folder-open"></i>
-                                                        </a>
-                                                    @elseif($company->complete == 0)
-                                                        <a href="{{ route('companies.registration', $company->uuid) }}"
-                                                            title="View" class="btn btn-xss">
-                                                            <i class='bx bxs-plus-square bx-xs'></i>
-                                                        </a>
-                                                    @endif
+                                                <td class="text-center">
+                                                    <div class="dropdown sp-row-actions">
+                                                        <button class="btn dropdown-toggle" type="button"
+                                                            data-bs-toggle="dropdown" aria-expanded="false"
+                                                            title="Provider Actions">
+                                                            <i class="bx bx-dots-vertical-rounded fs-5"></i>
+                                                        </button>
+                                                        <div class="dropdown-menu dropdown-menu-end">
+                                                            @if ($company->complete == 1)
+                                                                <a href="{{ route('companies.details', $company->uuid) }}"
+                                                                    class="dropdown-item">
+                                                                    View Details
+                                                                </a>
+                                                            @elseif($company->complete == 0)
+                                                                <a href="{{ route('companies.registration', $company->uuid) }}"
+                                                                    class="dropdown-item">
+                                                                    Continue Registration
+                                                                </a>
+                                                            @endif
 
-                                                    <a href="{{ route('companies.edit', $company->uuid) }}" title="Edit"
-                                                        class="btn btn-xss">
-                                                        <i class="bx bx-edit text-secondary"></i>
-                                                    </a>
+                                                            <a href="{{ route('companies.edit', $company->uuid) }}"
+                                                                class="dropdown-item">
+                                                                Edit
+                                                            </a>
 
-                                                    @if ($company->approved == 0 || $company->approved == 99)
-                                                        <a href="{{ route('companies.delete', $company->uuid) }}"
-                                                            title="Delete" class="btn btn-xss delete">
-                                                            <i class="bx bx-trash text-danger"></i>
-                                                        </a>
-                                                    @endif
+                                                            @if ($company->approved == 0 || $company->approved == 99)
+                                                                <a href="{{ route('companies.delete', $company->uuid) }}"
+                                                                    class="dropdown-item text-danger delete">
+                                                                    Delete
+                                                                </a>
+                                                            @endif
+                                                        </div>
+                                                    </div>
                                                 </td>
                                             </tr>
                                             @php $serial++; @endphp

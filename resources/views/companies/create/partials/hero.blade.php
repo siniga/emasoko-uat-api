@@ -28,17 +28,19 @@
             @endif
 
             <div class="sp-stepper">
-                @foreach ($steps as $number => $step)
-                    @php
-                        $state = $number < $currentStep ? 'done' : ($number === $currentStep ? 'current' : 'upcoming');
-                    @endphp
-                    <div class="sp-step {{ $state === 'done' ? 'sp-step--done' : '' }} {{ $state === 'current' ? 'sp-step--current' : '' }}">
-                        <span class="sp-step__number">{{ $number }}</span>
-                        <span class="sp-step__title">{{ $step['title'] }}</span>
-                        <span class="sp-step__meta">{{ $step['meta'] }}</span>
-                    </div>
-                @endforeach
+    @foreach ($steps as $number => $step)
+        @php
+            $state = $number < $currentStep ? 'done' : ($number === $currentStep ? 'current' : 'upcoming');
+        @endphp
+        <div class="sp-step {{ $state === 'done' ? 'sp-step--done' : '' }} {{ $state === 'current' ? 'sp-step--current' : '' }}">
+            <span class="sp-step__number">{{ $number }}</span>
+            <div>
+                <span class="sp-step__title">{{ $step['title'] }}</span>
+                <span class="sp-step__meta">{{ $step['meta'] }}</span>
             </div>
+        </div>
+    @endforeach
+</div>
         </div>
     </div>
 </div>

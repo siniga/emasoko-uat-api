@@ -1,5 +1,28 @@
 <?php
 
+if (!function_exists('mask_account_number')) {
+    function mask_account_number($value, int $visibleStart = 3, int $visibleEnd = 3, string $mask = '*')
+    {
+        $value = trim((string) $value);
+
+        if ($value === '') {
+            return '';
+        }
+
+        $length = strlen($value);
+
+        if ($length <= ($visibleStart + $visibleEnd)) {
+            return str_repeat($mask, max($length, 1));
+        }
+
+        $start = substr($value, 0, $visibleStart);
+        $end = substr($value, -$visibleEnd);
+        $maskedLength = $length - ($visibleStart + $visibleEnd);
+
+        return $start . str_repeat($mask, $maskedLength) . $end;
+    }
+}
+
 use App\Models\Partner;
 
 if (!function_exists('calculate_end_date')) {

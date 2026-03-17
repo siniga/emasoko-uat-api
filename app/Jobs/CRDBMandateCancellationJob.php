@@ -106,11 +106,13 @@ class CRDBMandateCancellationJob implements ShouldQueue
         if ($statusCode === 1000) {
             $debitOrder->cancelled = 1;
             $debitOrder->deleted = 1;
+            $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_CANCELLED;
             $debitOrder->remarks = "Mandate cancelled successfully";
         } elseif ($statusCode === 1001) {
             if (isset($response['ErrorMetadata']['400'])) {
                 $debitOrder->cancelled = 1;
                 $debitOrder->deleted = 1;
+                $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_CANCELLED;
                 $debitOrder->remarks = "Mandate cancelled successfully";
             }
         } else {

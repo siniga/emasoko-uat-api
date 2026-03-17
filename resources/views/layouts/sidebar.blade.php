@@ -7,6 +7,19 @@
             <!-- Left Menu Start -->
             <ul class="metismenu list-unstyled" id="side-menu">
                 {{-- <li class="menu-title" key="t-menu">@lang('translation.Menu')</li> --}}
+                @php
+                    $mandateApprovalRoutes = [
+                        'payment-mandate.request-cancellation',
+                        'payment-mandate.approve-cancellation',
+                        'payment-mandate.request-deletion',
+                        'payment-mandate.approve-deletion',
+                        'payment-mandate.request-archive',
+                        'payment-mandate.approve-archive',
+                        'payment-mandate.request-closing',
+                        'payment-mandate.approve-closing',
+                    ];
+                    $mandateApprovalsOpen = Route::is(...$mandateApprovalRoutes);
+                @endphp
 
                 <li class="{{ Route::is('dashboard') ? 'mm-active' : '' }}">
                     <a href="{{ route('dashboard') }}" class="waves-effect">
@@ -65,16 +78,39 @@
                 </li>
 
                 @if (Auth::user()->hasRole(['admin']))
-                    <li class="{{ Route::is('payment-mandate.request-cancellation', 'payment-mandate.request-closing') ? 'mm-active' : '' }}">
-                        <a href="javascript: void(0);" class="has-arrow waves-effect">
+                    <li class="{{ $mandateApprovalsOpen ? 'mm-active' : '' }}">
+                        <a href="javascript: void(0);"
+                            class="has-arrow waves-effect {{ $mandateApprovalsOpen ? 'mm-active' : '' }}"
+                            aria-expanded="{{ $mandateApprovalsOpen ? 'true' : 'false' }}">
                             <i class='bx bx-list-check'></i>
                             <span>Mandates Approvals</span>
                         </a>
-                        <ul class="sub-menu" aria-expanded="false">
-                            <li><a href="{{ route('payment-mandate.approve-cancellation') }}">Cancellation</a></li>
-                            <li><a href="{{ route('payment-mandate.approve-deletion') }}">Deletion</a></li>
-                            <li><a href="{{ route('payment-mandate.approve-archive') }}">Archive</a></li>
-                            <li><a href="{{ route('payment-mandate.approve-closing') }}">Closing</a></li>
+                        <ul class="sub-menu" aria-expanded="{{ $mandateApprovalsOpen ? 'true' : 'false' }}"
+                            style="{{ $mandateApprovalsOpen ? 'display: block;' : '' }}">
+                            <li class="{{ Route::is('payment-mandate.request-cancellation', 'payment-mandate.approve-cancellation') ? 'mm-active' : '' }}">
+                                <a href="{{ route('payment-mandate.approve-cancellation') }}"
+                                    class="{{ Route::is('payment-mandate.request-cancellation', 'payment-mandate.approve-cancellation') ? 'active' : '' }}">
+                                    Cancellation
+                                </a>
+                            </li>
+                            <li class="{{ Route::is('payment-mandate.request-deletion', 'payment-mandate.approve-deletion') ? 'mm-active' : '' }}">
+                                <a href="{{ route('payment-mandate.approve-deletion') }}"
+                                    class="{{ Route::is('payment-mandate.request-deletion', 'payment-mandate.approve-deletion') ? 'active' : '' }}">
+                                    Deletion
+                                </a>
+                            </li>
+                            <li class="{{ Route::is('payment-mandate.request-archive', 'payment-mandate.approve-archive') ? 'mm-active' : '' }}">
+                                <a href="{{ route('payment-mandate.approve-archive') }}"
+                                    class="{{ Route::is('payment-mandate.request-archive', 'payment-mandate.approve-archive') ? 'active' : '' }}">
+                                    Archive
+                                </a>
+                            </li>
+                            <li class="{{ Route::is('payment-mandate.request-closing', 'payment-mandate.approve-closing') ? 'mm-active' : '' }}">
+                                <a href="{{ route('payment-mandate.approve-closing') }}"
+                                    class="{{ Route::is('payment-mandate.request-closing', 'payment-mandate.approve-closing') ? 'active' : '' }}">
+                                    Closing
+                                </a>
+                            </li>
                         </ul>
                     </li>
                 @endif
