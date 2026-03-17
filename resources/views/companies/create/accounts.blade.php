@@ -4,6 +4,8 @@
     Register Service Provider
 @endsection
 
+@include('companies.create.partials.styles')
+
 @section('content')
     <div class="row">
         <div class="col-12">
@@ -22,46 +24,18 @@
         </div>
     </div>
 
+    @include('companies.create.partials.hero', [
+        'currentStep' => 3,
+        'heading' => 'Configure collection accounts',
+        'subtitle' => 'Set up the bank or MNO accounts used to receive collections, including customer code, corporate limit, and currency.',
+        'company' => $company,
+    ])
+
     <div class="row">
         <div class="col-lg-12">
-            <div class="card">
-                <div class="card-body">
-                    <!--./form wizard -->
-                    <div class="stepwizard mb-4">
-                        <div class="stepwizard-row setup-panel">
-                            <div class="stepwizard-step bg-success">
-                                <a href="#step-1" type="button" class="btn btn-success btn-circle text-white">1</a>
-                                <span class="text-white">Company Information</span>
-                            </div>
-
-                            <div class="stepwizard-step bg-success">
-                                <a href="#step-2" type="button" class="btn btn-success btn-circle text-white"
-                                    disabled="disabled">2</a>
-                                <span class="text-white">Company Documents</span>
-                            </div>
-
-                            <div class="stepwizard-step bg-primary">
-                                <a href="#step-2" type="button" class="btn btn-secondary btn-circle"
-                                    disabled="disabled">3</a>
-                                <span class="text-white">Collection Accounts</span>
-                            </div>
-
-                            <div class="stepwizard-step">
-                                <a href="#step-2" type="button" class="btn btn-default btn-circle"
-                                    disabled="disabled">4</a>
-                                <span>Authorized Representative</span>
-                            </div>
-
-                            <div class="stepwizard-step">
-                                <a href="#step-5" type="button" class="btn btn-default btn-circle"
-                                    disabled="disabled">5</a>
-                                <span>Company Preview</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!--form message => success or danger -->
-                    <div class="form-message"></div>
+            <div class="card sp-card">
+                <div class="card-body sp-card__body">
+                    <div class="form-message sp-form-message"></div>
 
                     <form action="#" id="companyForm" enctype="multipart/form-data" autocomplete="off">
                         <input type="hidden" name="partner_id" value="{{ $company->id }}">
@@ -69,11 +43,9 @@
 
                         <!-- Company Documents -->
                         <section data-step="3">
-                            <div class="row">
-                                <div class="col-lg-12">
-                                    <h5 class="text-capitalize">Company Collection Accounts</h5>
-                                </div>
-                            </div>
+                            <div class="sp-section">
+                                <div class="sp-section__title">Collection Account Setup</div>
+                                <div class="sp-section__hint">Provide at least one active collection account. Add more accounts if the provider settles across multiple channels or currencies.</div>
 
                             @if ($company->partnerAccounts->isNotEmpty())
                                 @foreach ($company->partnerAccounts as $data)
@@ -294,14 +266,14 @@
 
                             <div class="field_wrapper"></div>
 
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <div class="mb-3 text-sm-end d-none d-sm-block">
+                            <div class="sp-actionbar">
+                                <div class="sp-actionbar__meta">Step 3 of 5. Make sure the account setup is complete before capturing the authorized representative.</div>
+                                <div class="d-flex gap-2">
                                         <a href="{{ route('companies.register-documents', $company->uuid) }}"
-                                            class="btn btn-info text-medium">Previous</a>
-                                        <button type="submit" id="submitButton" class="btn btn-primary">Next</button>
-                                    </div>
+                                            class="btn btn-outline-secondary text-medium">Previous</a>
+                                        <button type="submit" id="submitButton" class="btn btn-primary">Save and Continue</button>
                                 </div>
+                            </div>
                             </div>
                         </section>
                     </form>

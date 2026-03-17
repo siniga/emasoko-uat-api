@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\BIController;
 use App\Http\Controllers\DashboardChartController;
 use App\Http\Controllers\Auth\AuthOtpController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
@@ -62,6 +63,7 @@ Route::get('auth/logout', [LoginController::class, 'logout'])->name('auth.logout
 //After Login
 Route::any('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 Route::any('index', [DashboardController::class, 'index'])->name('index');
+Route::any('bi/dashboard', [BIController::class, 'index'])->name('bi.dashboard');
 
 //charts
 Route::get('charts/mandate-values', [DashboardChartController::class, 'mandate_values']);

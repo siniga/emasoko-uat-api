@@ -4,6 +4,67 @@
     New Collection Account
 @endsection
 
+@include('companies.create.partials.styles')
+
+<style>
+    .account-shell .sp-stepper {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .account-note {
+        border: 1px solid #dbe7fb;
+        border-radius: 14px;
+        background: #edf4ff;
+        padding: 1rem 1.1rem;
+        color: #274160;
+        margin-bottom: 1rem;
+    }
+
+    .account-grid {
+        display: grid;
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+        gap: 1rem;
+    }
+
+    .account-grid__col-3 {
+        grid-column: span 3;
+    }
+
+    .account-grid__col-2 {
+        grid-column: span 2;
+    }
+
+    .account-grid__col-4 {
+        grid-column: span 4;
+    }
+
+    .account-grid__col-6 {
+        grid-column: span 6;
+    }
+
+    .account-grid__col-12 {
+        grid-column: span 12;
+    }
+
+    @media (max-width: 991.98px) {
+        .account-shell .sp-stepper {
+            grid-template-columns: 1fr;
+        }
+
+        .account-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .account-grid__col-3,
+        .account-grid__col-2,
+        .account-grid__col-4,
+        .account-grid__col-6,
+        .account-grid__col-12 {
+            grid-column: span 1;
+        }
+    }
+</style>
+
 @section('content')
     <div class="row">
         <div class="col-12">
@@ -22,26 +83,42 @@
         </div>
     </div>
 
-    <div class="row">
+    <div class="account-shell">
+        <div class="card sp-hero mb-4">
+            <div class="sp-hero__body">
+                <span class="sp-kicker">Collection Account Setup</span>
+                <h2 class="sp-title">Add a collection account for {{ $company->business_name }}</h2>
+                <p class="sp-subtitle">Configure the bank or MNO account used to receive collections for this service provider. The account will be submitted for verification after save.</p>
+
+                <div class="sp-badges">
+                    <span class="sp-badge"><strong>Reference:</strong> {{ $company->reference }}</span>
+                    <span class="sp-badge"><strong>Provider:</strong> {{ $company->business_name }}</span>
+                    <span class="sp-badge"><strong>Existing Accounts:</strong> {{ number_format($company->partnerAccounts->count()) }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
         <div class="col-lg-12">
-            <div class="card">
-                <div class="card-body">
-                    <!--form message => success or danger -->
-                    <div class="form-message"></div>
+            <div class="card sp-card">
+                <div class="card-body sp-card__body">
+                    <div class="form-message sp-form-message"></div>
 
                     <form action="#" id="companyForm" enctype="multipart/form-data" autocomplete="off">
                         <input type="hidden" name="partner_id" value="{{ $company->id }}">
                         <input type="hidden" name="partner_uuid" value="{{ $company->uuid }}">
 
                         <section>
-                            <div class="row mb-3">
-                                <div class="col-lg-12">
-                                    <h5 class="text-uppercase">Company Collection Accounts</h5>
-                                </div>
-                            </div>
+                            <div class="sp-section">
+                                <div class="sp-section__title">Settlement Account Details</div>
+                                <div class="sp-section__hint">Enter the account that should receive collections. Bank/MNO will adjust automatically based on the selected account type.</div>
 
-                            <div class="row field-input">
-                                <div class="col-lg-3 col-md-3 col-12">
+                                <div class="account-note">
+                                    Use a verified settlement account with the correct customer number and corporate limit. This helps reduce approval delays and duplicate account submissions.
+                                </div>
+
+                            <div class="account-grid field-input">
+                                <div class="account-grid__col-3">
                                     <div class="mb-3">
                                         <label for="basicpill-namecard-input">Account Type <span
                                                 class="text-danger">*</span></label>
@@ -64,7 +141,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-lg-3 col-md-3 col-12">
+                                <div class="account-grid__col-3">
                                     <div class="mb-3">
                                         <label class="bank_mno_name">Bank Name <span class="text-danger">*</span></label>
                                         @php $options = []; @endphp
@@ -83,7 +160,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-lg-6 col-md-6 col-12">
+                                <div class="account-grid__col-6">
                                     <div class="mb-3">
                                         <label for="basicpill-namecard-input">Account Name<span
                                                 class="text-danger">*</span></label>
@@ -92,7 +169,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-lg-3 col-md-3 col-12">
+                                <div class="account-grid__col-3">
                                     <div class="mb-3">
                                         <label for="basicpill-namecard-input">Account Number <span
                                                 class="text-danger">*</span></label>
@@ -101,7 +178,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-lg-3 col-md-3 col-12">
+                                <div class="account-grid__col-3">
                                     <div class="mb-3">
                                         <label>Customer Number <span class="text-danger">*</span></label>
                                         {{ Form::text('customer_code', old('corporate_limit'), ['class="form-control"', 'placeholder="Customer number..."']) }}
@@ -109,7 +186,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-lg-4 col-md-4 col-12">
+                                <div class="account-grid__col-4">
                                     <div class="mb-3">
                                         <label>Corporate Limit (<small>Withdraw amount in a day</small>) <span
                                                 class="text-danger">*</span></label>
@@ -118,7 +195,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-lg-2 col-md-2 col-12">
+                                <div class="account-grid__col-2">
                                     <div class="mb-3">
                                         <label class="currency_id">Currency <span class="text-danger">*</span></label>
                                         @php $options = []; @endphp
@@ -138,19 +215,20 @@
                                 </div>
                             </div>
 
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <div class="mb-3 text-sm-end d-none d-sm-block">
+                            <div class="sp-actionbar">
+                                <div class="sp-actionbar__meta">Once saved, this account will appear under the provider profile and can proceed to verification.</div>
+                                <div class="d-flex gap-2">
                                         <a href="{{ route('companies.details', $company->uuid ?? '') }}"
-                                            class="btn btn-outline-danger btn-xs text-medium">Cancel</a>
-                                        <button type="submit" id="submitButton" class="btn btn-primary">Submit</button>
-                                    </div>
+                                            class="btn btn-outline-danger btn-xs text-medium">Back to Provider</a>
+                                        <button type="submit" id="submitButton" class="btn btn-primary">Save Account</button>
                                 </div>
+                            </div>
                             </div>
                         </section>
                     </form>
                 </div>
             </div>
+        </div>
         </div>
     </div>
     <!-- end row -->
@@ -213,7 +291,7 @@
                 submitHandler: function(form, e) {
                     e.preventDefault();
                     // Change submit button text
-                    $('#submitButton').text('Submitting...');
+                    $('#submitButton').text('Saving...');
                     // Form data
                     const formData = new FormData(form);
                     // Append token
@@ -228,8 +306,6 @@
                         cache: false,
                         timeout: 800000,
                         success: function(response) {
-                            console.log(response);
-
                             if (response['success'] == false) {
                                 // Display failed message
                                 $('.form-message').html(
@@ -238,7 +314,7 @@
                             } else if (response['success'] == true) {
                                 // Display success message
                                 $('.form-message').html(
-                                    "<div class='alert alert-success py-2.5 px-2'>Service provider collection account(s) submitted</div>"
+                                    "<div class='alert alert-success py-2.5 px-2'>Service provider collection account submitted successfully.</div>"
                                 );
 
                                 // Set timer
@@ -249,20 +325,20 @@
                         },
                         error: function(error) {
                             //display errors
-                            if (jQuery.type(error.responseJson.errors) == "object") {
+                            if (error.responseJSON && jQuery.type(error.responseJSON.errors) == "object") {
                                 $('.form-message').html('');
-                                $.each(error.responseJson.errors, function(key, value) {
+                                $.each(error.responseJSON.errors, function(key, value) {
                                     $('.form-message').append(
                                         '<div class="alert alert-danger">' +
                                         value + '</div>');
                                 });
                             } else {
                                 $('.form-message').html('<div class="alert alert-danger">' +
-                                    error.responseJson.errors + '</div>');
+                                    ((error.responseJSON && error.responseJSON.errors) || 'Failed to save collection account.') + '</div>');
                             }
 
                             //change submit button
-                            $('#submitButton').text('Next');
+                            $('#submitButton').text('Save Account');
                         }
                     });
                     return false;

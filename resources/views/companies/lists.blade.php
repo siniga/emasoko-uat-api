@@ -129,6 +129,50 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <div class="border-top pt-3 mt-2">
+                                <div class="d-flex flex-wrap align-items-center justify-content-between mb-2">
+                                    <h5 class="mb-2 mb-md-0">Filtered Summary</h5>
+                                    <span class="text-muted">These numbers follow the current filters.</span>
+                                </div>
+
+                                <div class="row g-3">
+                                    <div class="col-md-3">
+                                        <div class="rounded px-3 py-3 h-100 bg-soft-primary border border-primary border-opacity-25">
+                                            <div class="text-primary fw-medium mb-1">Total Providers</div>
+                                            <h5 class="mb-0 text-primary">{{ number_format($companyStats['total']) }}</h5>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-3">
+                                        <div class="rounded px-3 py-3 h-100 bg-soft-success border border-success border-opacity-25">
+                                            <div class="text-success fw-medium mb-1">Approved</div>
+                                            <h5 class="mb-0 text-success">{{ number_format($companyStats['approved']) }}</h5>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-2">
+                                        <div class="rounded px-3 py-3 h-100 bg-soft-warning border border-warning border-opacity-25">
+                                            <div class="text-warning fw-medium mb-1">Pending</div>
+                                            <h5 class="mb-0 text-warning">{{ number_format($companyStats['pending']) }}</h5>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-2">
+                                        <div class="rounded px-3 py-3 h-100 bg-soft-danger border border-danger border-opacity-25">
+                                            <div class="text-danger fw-medium mb-1">Failed</div>
+                                            <h5 class="mb-0 text-danger">{{ number_format($companyStats['failed']) }}</h5>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-2">
+                                        <div class="rounded px-3 py-3 h-100 bg-soft-info border border-info border-opacity-25">
+                                            <div class="text-info fw-medium mb-1">Verified Accounts</div>
+                                            <h5 class="mb-0 text-info">{{ number_format($companyStats['verified_accounts']) }}</h5>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                             {{ Form::close() }}
                         </div>
                     </div>

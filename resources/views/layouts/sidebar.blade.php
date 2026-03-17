@@ -8,16 +8,23 @@
             <ul class="metismenu list-unstyled" id="side-menu">
                 {{-- <li class="menu-title" key="t-menu">@lang('translation.Menu')</li> --}}
 
-                <li>
+                <li class="{{ Route::is('dashboard') ? 'mm-active' : '' }}">
                     <a href="{{ route('dashboard') }}" class="waves-effect">
                         <i class="bx bx-home"></i>
                         <span key="t-dashboards">Dashboard</span>
                     </a>
                 </li>
 
+                {{-- <li class="{{ Route::is('bi.dashboard') ? 'mm-active' : '' }}">
+                    <a href="{{ route('bi.dashboard') }}" class="waves-effect">
+                        <i class="bx bx-line-chart"></i>
+                        <span>BI Dashboard</span>
+                    </a>
+                </li> --}}
+
                 @if (Auth::user()->hasRole(['admin']) || Auth::user()->hasRole(['Partner']))
                     <li
-                        class="{{ Route::is('companies.lists', 'companies.registration', 'companies.register-documents', 'companies.register-accounts', 'companies.register-staff', 'companies.register-authorized-person', 'companies.preview', 'companies.details', 'companies.edit') ? 'mm-active' : '' }}">
+                        class="{{ Route::is('companies.lists', 'companies.registration', 'companies.register-documents', 'companies.register-accounts', 'companies.register-staff', 'companies.register-authorized-person', 'companies.preview', 'companies.details', 'companies.edit', 'companies.collection-account') ? 'mm-active' : '' }}">
                         <a href="{{ route('companies.lists') }}" class="waves-effect ">
                             <i class="bx bx-building"></i>
                             <span key="t-layouts">Service Providers</span>

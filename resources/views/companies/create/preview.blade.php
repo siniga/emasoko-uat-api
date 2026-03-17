@@ -1,14 +1,95 @@
 @extends('layouts.master')
 
-<style>
-    .table th {
-        background-color: #E1F5FE !important;
-    }
-</style>
-
 @section('title')
     Register Service Provider
 @endsection
+
+@include('companies.create.partials.styles')
+
+<style>
+    .sp-overview-card {
+        border: 1px solid #e3ebf7;
+        border-radius: 16px;
+        padding: 1rem 1.1rem;
+        background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+        height: 100%;
+    }
+
+    .sp-overview-card__label {
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #6b7c93;
+        margin-bottom: 0.45rem;
+    }
+
+    .sp-overview-card__value {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #153567;
+    }
+
+    .sp-kv {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.85rem;
+    }
+
+    .sp-kv__item {
+        border: 1px solid #e8edf5;
+        border-radius: 14px;
+        background: #fff;
+        padding: 0.95rem 1rem;
+    }
+
+    .sp-kv__label {
+        display: block;
+        font-size: 0.78rem;
+        color: #6b7c93;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-bottom: 0.35rem;
+    }
+
+    .sp-kv__value {
+        color: #153567;
+        font-weight: 600;
+        word-break: break-word;
+    }
+
+    .sp-section-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .sp-section-head__copy h5 {
+        margin-bottom: 0.2rem;
+        color: #153567;
+        font-weight: 700;
+    }
+
+    .sp-section-head__copy p {
+        margin-bottom: 0;
+        color: #6b7c93;
+    }
+
+    .sp-empty {
+        border: 1px dashed #d7e2f0;
+        border-radius: 14px;
+        background: #fbfcfe;
+        color: #6b7c93;
+        padding: 1rem 1.1rem;
+    }
+
+    @media (max-width: 767.98px) {
+        .sp-kv {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
 
 @section('content')
     <div class="row">
@@ -28,122 +109,140 @@
         </div>
     </div>
 
+    @include('companies.create.partials.hero', [
+        'currentStep' => 5,
+        'heading' => 'Review the service provider setup',
+        'subtitle' => 'Confirm the registration package before saving the draft or submitting it for approval.',
+        'company' => $company,
+    ])
+
     <div class="row" x-data="initData()">
         <div class="col-lg-12">
-            <div class="card">
-                <div class="card-body">
-                    <!--./form wizard -->
-                    <div class="stepwizard mb-4">
-                        <div class="stepwizard-row setup-panel">
-
-                            <div class="stepwizard-step bg-success">
-                                <a href="#step-1" type="button" class="btn btn-success btn-circle text-white">1</a>
-                                <span class="text-white">Company Information</span>
-                            </div>
-
-                            <div class="stepwizard-step bg-success">
-                                <a href="#step-2" type="button" class="btn btn-success btn-circle text-white"
-                                    disabled="disabled">2</a>
-                                <span class="text-white">Company Documents</span>
-                            </div>
-
-                            <div class="stepwizard-step bg-success">
-                                <a href="#step-2" type="button" class="btn btn-success btn-circle text-white"
-                                    disabled="disabled">3</a>
-                                <span class="text-white">Collection Accounts</span>
-                            </div>
-
-                            <div class="stepwizard-step bg-success">
-                                <a href="#step-2" type="button" class="btn btn-success btn-circle text-white"
-                                    disabled="disabled">4</a>
-                                <span class="text-white">Authorized Representative</span>
-                            </div>
-
-                            <div class="stepwizard-step bg-primary">
-                                <a href="#step-5" type="button" class="btn btn-secondary btn-circle text-white"
-                                    disabled="disabled">5</a>
-                                <span class="text-white">Company Preview</span>
-                            </div>
-                        </div>
-                    </div>
-
-
+            <div class="card sp-card">
+                <div class="card-body sp-card__body">
                     <form @submit.prevent="">
                         <input type="hidden" name="id" x-model="formData.id">
                         <input type="hidden" name="uuid" x-model="formData.uuid">
 
                         <section>
-                            <div class="row">
-                                <div class="col-lg-12">
-                                    <table class="table table-stripped table-bordered">
-                                        <tr>
-                                            <td colspan="4" class="font-weight-600 text-uppercase">
-                                                Service Provider Information
-                                            </td>
-                                        </tr>
+                            <div class="sp-section">
+                                <div class="sp-section-head">
+                                    <div class="sp-section-head__copy">
+                                        <h5>Readiness Summary</h5>
+                                        <p>Use this checkpoint to confirm the service provider package is complete before saving or submitting.</p>
+                                    </div>
+                                    <div>
+                                        <span class="badge bg-soft-primary text-primary">Preview Step</span>
+                                    </div>
+                                </div>
 
-                                        <tr>
-                                            <th width=25%>Business Name</th>
-                                            <td width=25%>
-                                                <span>{{ $company->business_name }}</span>
-                                            </td>
-
-                                            <th>Business Category</th>
-                                            <td>
-                                                <span>{{ $company->partnerCategory->name ?? '' }}</span>
-                                            </td>
-                                        </tr>
-
-                                        <tr>
-                                            <th>TIN Number</th>
-                                            <td>{{ $company->tin_number }}</td>
-
-                                            <th>Year of Incorporation</th>
-                                            <td>
-                                                {{ $company->year_of_incorporation }}
-                                            </td>
-                                        </tr>
-
-                                        <tr>
-                                            <th>Number of Staff</th>
-                                            <td>{{ $company->number_of_staff }}</td>
-
-                                            <th>Contacts</th>
-                                            <td>
-                                                Email: {{ $company->email }}<br />
-                                                Phone: {{ $company->phone }}
-                                            </td>
-                                        </tr>
-
-                                        <tr>
-                                            <th>Region</th>
-                                            <td>{{ $company->region->name ?? '' }}</td>
-
-                                            <th>Physical Address</th>
-                                            <td>
-                                                {{ $company->address }}
-                                            </td>
-                                        </tr>
-
-                                    </table>
+                                <div class="row g-3">
+                                    <div class="col-md-3">
+                                        <div class="sp-overview-card">
+                                            <div class="sp-overview-card__label">Documents</div>
+                                            <div class="sp-overview-card__value">{{ number_format($company->partnerDocuments->count()) }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="sp-overview-card">
+                                            <div class="sp-overview-card__label">Accounts</div>
+                                            <div class="sp-overview-card__value">{{ number_format($company->partnerAccounts->count()) }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="sp-overview-card">
+                                            <div class="sp-overview-card__label">Representatives</div>
+                                            <div class="sp-overview-card__value">{{ number_format($company->partnerStaff->count()) }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="sp-overview-card">
+                                            <div class="sp-overview-card__label">Current Status</div>
+                                            <div class="sp-overview-card__value">
+                                                @if ($company->approved == 1)
+                                                    Approved
+                                                @elseif($company->approved == 99)
+                                                    Failed
+                                                @else
+                                                    Draft
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div class="row">
-                                <div class="col-lg-12">
-                                    @if ($company->partnerDocuments->isNotEmpty())
-                                        <table class="table table-nowrap align-middle table-bordered">
+                            <div class="sp-section">
+                                <div class="sp-section-head">
+                                    <div class="sp-section-head__copy">
+                                        <h5>Service Provider Information</h5>
+                                        <p>Core identity and address information captured during onboarding.</p>
+                                    </div>
+                                </div>
+
+                                <div class="sp-kv">
+                                    <div class="sp-kv__item">
+                                        <span class="sp-kv__label">Business Name</span>
+                                        <span class="sp-kv__value">{{ $company->business_name }}</span>
+                                    </div>
+                                    <div class="sp-kv__item">
+                                        <span class="sp-kv__label">Business Category</span>
+                                        <span class="sp-kv__value">{{ $company->partnerCategory->name ?? '-' }}</span>
+                                    </div>
+                                    <div class="sp-kv__item">
+                                        <span class="sp-kv__label">TIN Number</span>
+                                        <span class="sp-kv__value">{{ $company->tin_number }}</span>
+                                    </div>
+                                    <div class="sp-kv__item">
+                                        <span class="sp-kv__label">Year of Incorporation</span>
+                                        <span class="sp-kv__value">{{ $company->year_of_incorporation }}</span>
+                                    </div>
+                                    <div class="sp-kv__item">
+                                        <span class="sp-kv__label">Number of Staff</span>
+                                        <span class="sp-kv__value">{{ $company->number_of_staff }}</span>
+                                    </div>
+                                    <div class="sp-kv__item">
+                                        <span class="sp-kv__label">Region</span>
+                                        <span class="sp-kv__value">{{ $company->region->name ?? '-' }}</span>
+                                    </div>
+                                    <div class="sp-kv__item">
+                                        <span class="sp-kv__label">Email</span>
+                                        <span class="sp-kv__value">{{ $company->email }}</span>
+                                    </div>
+                                    <div class="sp-kv__item">
+                                        <span class="sp-kv__label">Phone</span>
+                                        <span class="sp-kv__value">{{ $company->phone }}</span>
+                                    </div>
+                                    <div class="sp-kv__item">
+                                        <span class="sp-kv__label">Postal Address</span>
+                                        <span class="sp-kv__value">{{ $company->postal_address ?? '-' }}</span>
+                                    </div>
+                                    <div class="sp-kv__item">
+                                        <span class="sp-kv__label">Physical Address</span>
+                                        <span class="sp-kv__value">{{ $company->physical_address ?? '-' }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="sp-section">
+                                <div class="sp-section-head">
+                                    <div class="sp-section-head__copy">
+                                        <h5>Supporting Documents</h5>
+                                        <p>Files uploaded for compliance and provider due diligence.</p>
+                                    </div>
+                                    <div>
+                                        <span class="badge bg-soft-info text-info">{{ number_format($company->partnerDocuments->count()) }} files</span>
+                                    </div>
+                                </div>
+
+                                @if ($company->partnerDocuments->isNotEmpty())
+                                    <div class="table-responsive sp-table">
+                                        <table class="table table-nowrap align-middle table-bordered mb-0">
                                             <thead>
                                                 <tr>
-                                                    <td colspan="3" class="font-weight-600 text-uppercase">
-                                                        Service Provider Documents
-                                                    </td>
-                                                </tr>
-
-                                                <tr>
-                                                    <th width="3%">#</th>
-                                                    <th width="60%">Name</th>
-                                                    <th width="30%">Attachment</th>
+                                                    <th width="6%">#</th>
+                                                    <th width="54%">Document Name</th>
+                                                    <th width="40%">Attachment</th>
                                                 </tr>
                                             </thead>
 
@@ -158,38 +257,45 @@
                                                                     href="{{ asset('assets/uploads/docs/' . $val->attachment) }}">
                                                                     {{ $val->attachment }}
                                                                 </a>
+                                                            @else
+                                                                -
                                                             @endif
                                                         </td>
                                                     </tr>
                                                 @endforeach
                                             </tbody>
                                         </table>
-                                    @else
-                                        <div class="alert alert-danger">No any document at the moment!</div>
-                                    @endif
-                                </div>
+                                    </div>
+                                @else
+                                    <div class="sp-empty">No document has been added to this registration yet.</div>
+                                @endif
                             </div>
 
-                            <div class="row">
-                                <div class="col-lg-12">
-                                    @if ($company->partnerAccounts->isNotEmpty())
-                                        <table class="table table-nowrap align-middle table-bordered">
+                            <div class="sp-section">
+                                <div class="sp-section-head">
+                                    <div class="sp-section-head__copy">
+                                        <h5>Collection Accounts</h5>
+                                        <p>Accounts configured to receive collections and support operational settlement.</p>
+                                    </div>
+                                    <div>
+                                        <span class="badge bg-soft-success text-success">{{ number_format($company->partnerAccounts->count()) }} accounts</span>
+                                    </div>
+                                </div>
+
+                                @if ($company->partnerAccounts->isNotEmpty())
+                                    <div class="table-responsive sp-table">
+                                        <table class="table table-nowrap align-middle table-bordered mb-0">
                                             <thead>
                                                 <tr>
-                                                    <td colspan="6" class="font-weight-600 text-uppercase">
-                                                        Service Provider Collection Accounts
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <th width="3%">#</th>
-                                                    <th width="20%">Account Type</th>
-                                                    <th width="20%">Bank/Institutions</th>
-                                                    <th width="25%">Account Name</th>
-                                                    <th width="10%">Account Number</th>
-                                                    <th width="10%">Customer Number</th>
-                                                    <th width="10%">Branch Code</th>
-                                                    <th width="15%">Corporate Limit</th>
-                                                    <th width="10%">Currency</th>
+                                                    <th width="6%">#</th>
+                                                    <th>Account Type</th>
+                                                    <th>Bank/Institution</th>
+                                                    <th>Account Name</th>
+                                                    <th>Account Number</th>
+                                                    <th>Customer Number</th>
+                                                    <th>Branch Code</th>
+                                                    <th class="text-end">Corporate Limit</th>
+                                                    <th>Currency</th>
                                                 </tr>
                                             </thead>
 
@@ -203,36 +309,40 @@
                                                         <td>{{ $val->account_number ?? '' }}</td>
                                                         <td>{{ $val->customer_code ?? '' }}</td>
                                                         <td>{{ $val->branch_code ?? '' }}</td>
-                                                        <td>{{ number_format($val->corporate_limit) ?? '' }}</td>
+                                                        <td class="text-end">{{ number_format($val->corporate_limit) ?? '' }}</td>
                                                         <td>{{ $val->currency->short_code ?? '' }}</td>
                                                     </tr>
                                                 @endforeach
                                             </tbody>
                                         </table>
-                                    @else
-                                        <div class="alert alert-danger">No any account at the moment!</div>
-                                    @endif
-                                </div>
+                                    </div>
+                                @else
+                                    <div class="sp-empty">No collection account has been added to this registration yet.</div>
+                                @endif
                             </div>
 
-                            <div class="row">
-                                <div class="col-lg-12">
-                                    @if ($company->partnerStaff->isNotEmpty())
-                                        <table class="table table-nowrap align-middle table-bordered">
+                            <div class="sp-section">
+                                <div class="sp-section-head">
+                                    <div class="sp-section-head__copy">
+                                        <h5>Authorized Representatives</h5>
+                                        <p>Contacts who will handle approvals and formal follow-up for the provider.</p>
+                                    </div>
+                                    <div>
+                                        <span class="badge bg-soft-warning text-warning">{{ number_format($company->partnerStaff->count()) }} contacts</span>
+                                    </div>
+                                </div>
+
+                                @if ($company->partnerStaff->isNotEmpty())
+                                    <div class="table-responsive sp-table">
+                                        <table class="table table-nowrap align-middle table-bordered mb-0">
                                             <thead>
                                                 <tr>
-                                                    <td colspan="4" class="font-weight-600 text-uppercase">
-                                                        Authorized Representative
-                                                    </td>
-                                                </tr>
-
-                                                <tr>
-                                                    <th width="3%">#</th>
-                                                    <th width="20%">Staff Name</th>
-                                                    <th width="20%">NIDA Number</th>
-                                                    <th width="25%">Email</th>
-                                                    <th width="20%">Phone</th>
-                                                    <th width="20%">Title</th>
+                                                    <th width="6%">#</th>
+                                                    <th>Staff Name</th>
+                                                    <th>NIDA Number</th>
+                                                    <th>Email</th>
+                                                    <th>Phone</th>
+                                                    <th>Title</th>
                                                 </tr>
                                             </thead>
 
@@ -249,43 +359,42 @@
                                                 @endforeach
                                             </tbody>
                                         </table>
-                                    @else
-                                        <div class="alert alert-danger">No any staff at the moment!</div>
-                                    @endif
-                                </div>
+                                    </div>
+                                @else
+                                    <div class="sp-empty">No authorized representative has been added to this registration yet.</div>
+                                @endif
                             </div>
 
                             <div id="message_wrp"></div>
 
                             <template x-if="complete=='0' || complete=='1'">
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <div class="mb-3 text-sm-end d-none d-sm-block">
-                                            <template x-if="approved==0">
-                                                <a href="{{ route('companies.cancel-registration', $company->uuid) }}"
-                                                    class="btn btn-danger cancel text-medium mx-1">Cancel
-                                                </a>
-                                            </template>
+                                <div class="sp-actionbar">
+                                    <div class="sp-actionbar__meta">Final step. Save this draft for later or submit it for approval when the package is complete.</div>
+                                    <div class="d-flex flex-wrap gap-2 justify-content-end">
+                                        <template x-if="approved==0">
+                                            <a href="{{ route('companies.cancel-registration', $company->uuid) }}"
+                                                class="btn btn-danger cancel text-medium">Cancel
+                                            </a>
+                                        </template>
 
-                                            <template x-if="approved==0 || approved==99">
-                                                <a href="{{ route('companies.registration', $company->uuid) }}"
-                                                    class="btn btn-info text-medium mx-1">Edit
-                                                </a>
-                                            </template>
+                                        <template x-if="approved==0 || approved==99">
+                                            <a href="{{ route('companies.registration', $company->uuid) }}"
+                                                class="btn btn-outline-primary text-medium">Edit
+                                            </a>
+                                        </template>
 
-                                            <template x-if="approved==0">
-                                                <button type="submit" name="save"
-                                                    class="btn btn-secondary text-medium mx-1" x-text="buttonSave"
-                                                    :disabled="saveLoading" x-on:click="savingForm();">
-                                                </button>
-                                            </template>
+                                        <template x-if="approved==0">
+                                            <button type="submit" name="save"
+                                                class="btn btn-secondary text-medium" x-text="buttonSave"
+                                                :disabled="saveLoading" x-on:click="savingForm();">
+                                            </button>
+                                        </template>
 
-                                            <template x-if="approved==0 || approved==99">
-                                                <button type="submit" name="submit" class="btn btn-success text-medium"
-                                                    x-text="buttonSubmit" :disabled="submitLoading"
-                                                    x-on:click="submitForm();"></button>
-                                            </template>
-                                        </div>
+                                        <template x-if="approved==0 || approved==99">
+                                            <button type="submit" name="submit" class="btn btn-success text-medium"
+                                                x-text="buttonSubmit" :disabled="submitLoading"
+                                                x-on:click="submitForm();"></button>
+                                        </template>
                                     </div>
                                 </div>
                             </template>

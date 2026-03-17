@@ -16,6 +16,8 @@ use App\Models\AccountType;
 use App\Models\Country;
 use App\Models\Currency;
 use App\Models\DocumentCategory;
+use App\Models\DebitOrder;
+use App\Models\Installment;
 use App\Models\Partner;
 use App\Models\PartnerAccount;
 use App\Models\PartnerApproval;
@@ -61,24 +63,34 @@ class CompanyController extends Controller
         //companies
         $companies = Partner::filterCondition();
 
+        //all request
+        $requests = $request->all();
+
         if (isset($_POST['filter'])) {
-            //all request
-            $requests = $request->all();
             Log::debug($requests);
 
             $companies = $companies->when($requests, function ($query) use ($requests) {
                 $query->withFilters($requests);
             });
+        }
 
-            //number of companies
-            $number_of_companies = $companies->count();
+        $companyStats = [
+            'total' => (clone $companies)->count(),
+            'approved' => (clone $companies)->where('approved', 1)->count(),
+            'pending' => (clone $companies)->where('approved', 0)->count(),
+            'failed' => (clone $companies)->where('approved', 99)->count(),
+            'verified_accounts' => (clone $companies)->whereHas('partnerAccounts', function ($query) {
+                $query->where('is_verified', 1);
+            })->count(),
+        ];
 
-            //companies
+        //number of companies
+        $number_of_companies = $companyStats['total'];
+
+        //companies
+        if (isset($_POST['filter'])) {
             $companies = $companies->get();
         } else {
-            //number of companies
-            $number_of_companies = $companies->count();
-            //companies
             $companies = $companies->paginate(50);
         }
 
@@ -97,7 +109,7 @@ class CompanyController extends Controller
         ];
 
         //render view
-        return view('companies.lists', compact('title', 'companies', 'number_of_companies', 'regions', 'categories', 'post_data'));
+        return view('companies.lists', compact('title', 'companies', 'number_of_companies', 'companyStats', 'regions', 'categories', 'post_data'));
     }
 
     //export xls
@@ -604,8 +616,60 @@ class CompanyController extends Controller
         //nmb is verified_false partner accounts
         $is_nmb_verified_false = PartnerAccount::where(['partner_id' => $company->id, 'is_verified' => 0, 'channel' => 'NMB'])->count();
 
+        $currentMonth = (int) now()->format('m');
+        $currentYear = (int) now()->format('Y');
+        $today = now()->toDateString();
+
+        $mandateBase = DebitOrder::query()
+            ->where('partner_id', $company->id)
+            ->where('deleted', 0);
+
+        $installmentBase = Installment::query()
+            ->whereHas('debitOrder', function ($query) use ($company) {
+                $query->where('partner_id', $company->id)
+                    ->where('approved', 1)
+                    ->where('status', 240)
+                    ->where('deleted', 0);
+            });
+
+        $monthlyCollection = Installment::monthlyCollectionStats($company->id, $currentMonth, $currentYear, 240, 0, null);
+        $todayCollection = Installment::todayCollectionStats($company->id, $today, 240, 0, null);
+
+        $overdue = (clone $installmentBase)
+            ->whereHas('debitOrder', function ($query) {
+                $query->where('contract_status', 'OPEN');
+            })
+            ->whereDate('payment_date', '<', $today)
+            ->whereIn('status', ['OPEN', 'FAILED', 'FUNDSCHECK'])
+            ->selectRaw('COUNT(*) as overdue_count')
+            ->selectRaw('COALESCE(SUM(outstanding_amount), 0) as overdue_amount')
+            ->first();
+
+        $summaryStats = [
+            'documents' => $company->partnerDocuments->count(),
+            'accounts' => $company->partnerAccounts->count(),
+            'verified_accounts' => $company->partnerAccounts->where('is_verified', 1)->count(),
+            'representatives' => $company->partnerStaff->count(),
+            'total_mandates' => (clone $mandateBase)->count(),
+            'active_mandates' => (clone $mandateBase)
+                ->where('approved', 1)
+                ->where('status', 240)
+                ->where('contract_status', 'OPEN')
+                ->count(),
+            'this_month_expected' => (float) $monthlyCollection->total_amount,
+            'this_month_collected' => (float) $monthlyCollection->paid_amount,
+            'today_expected' => (float) $todayCollection->total_amount,
+            'today_collected' => (float) $todayCollection->paid_amount,
+            'overdue_count' => (int) $overdue->overdue_count,
+            'overdue_amount' => (float) $overdue->overdue_amount,
+        ];
+
+        $summaryStats['collection_rate'] = $summaryStats['this_month_expected'] > 0
+            ? round(($summaryStats['this_month_collected'] / $summaryStats['this_month_expected']) * 100, 2)
+            : 0;
+
         //render view
-        return view('companies.show', compact('title', 'company', 'is_verified_false', 'is_nmb_verified_false'));
+        return view('companies.show', compact('title', 'company', 'is_verified_false', 'is_nmb_verified_false', 'summaryStats'));
     }
 
     //create invoice

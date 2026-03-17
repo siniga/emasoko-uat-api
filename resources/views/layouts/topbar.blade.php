@@ -30,14 +30,19 @@
             </button>
 
             <!-- App Search-->
-            @if (Route::is('dashboard'))
-                <form action="{{ $form_action }}" method="POST" class="app-search d-none d-lg-block" id="channel-form">
+            @if (Route::is('dashboard') || Route::is('bi.dashboard'))
+                @php
+                    $channelFormAction = $form_action ?? (Route::is('bi.dashboard') ? route('bi.dashboard') : route('dashboard'));
+                    $channelOptions = $payment_channels ?? collect();
+                @endphp
+
+                <form action="{{ $channelFormAction }}" method="POST" class="app-search d-none d-lg-block" id="channel-form">
                     @csrf
                     <div class="position-relative">
                         <div class="form-group mb-0">
                             <select class="form-select" id="channel-select" name="channel">
                                 <option value="">-- All Channels --</option>
-                                @foreach($payment_channels as $channel)
+                                @foreach($channelOptions as $channel)
                                     <option value="{{ $channel->slug }}" {{ request('channel') === $channel->slug ? 'selected' : '' }}>{{ $channel->slug }}</option>
                                 @endforeach
                             </select>
