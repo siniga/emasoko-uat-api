@@ -4,7 +4,72 @@
     Customer Accounts
 @endsection
 
+<style>
+    .ca-shell {
+        --ca-primary: #153567;
+        --ca-border: #dce6f5;
+        --ca-muted: #6b7c93;
+    }
+
+    .ca-summary {
+        border: 1px solid var(--ca-border);
+        border-radius: 16px;
+        background: linear-gradient(180deg, #fff 0%, #f8fbff 100%);
+        padding: 1rem;
+        height: 100%;
+    }
+
+    .ca-summary__label {
+        font-size: 0.76rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--ca-muted);
+        margin-bottom: 0.35rem;
+    }
+
+    .ca-summary__value {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--ca-primary);
+    }
+
+    .ca-filter {
+        border: 1px solid #e7edf6;
+        border-radius: 16px;
+        background: #fbfcfe;
+        padding: 1.2rem;
+        box-shadow: 0 16px 40px rgba(29, 53, 87, 0.08);
+    }
+
+    .ca-filter__title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--ca-primary);
+        margin-bottom: 0.2rem;
+    }
+
+    .ca-filter__hint {
+        color: var(--ca-muted);
+        font-size: 0.88rem;
+        margin-bottom: 1rem;
+    }
+
+    .ca-table {
+        border-radius: 16px;
+        overflow: hidden;
+        border: 1px solid #dfE8F4;
+    }
+
+    .ca-table thead th {
+        background: #edf4ff;
+        color: var(--ca-primary);
+        font-weight: 700;
+        border-color: #dce7fa;
+    }
+</style>
+
 @section('content')
+    <div class="ca-shell">
     <div class="row">
         <div class="col-12">
             <div class="page-title-box d-sm-flex align-items-center justify-content-between">
@@ -23,8 +88,9 @@
 
     <div class="row">
         <div class="col-lg-12">
-            <div class="card">
-                <div class="card-body">
+            <div class="ca-filter mb-4">
+                    <div class="ca-filter__title">Filter Accounts</div>
+                    <div class="ca-filter__hint">Narrow the customer account portfolio by date, payment channel, provider, account status, or customer keyword.</div>
                     <div class="row">
                         <div class="col-lg-12">
                             {!! Form::open(['url' => route('customer-accounts.lists'), 'method' => 'POST', 'class' => 'form-horizontal']) !!}
@@ -112,10 +178,45 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <div class="border-top pt-3 mt-2">
+                                <div class="d-flex flex-wrap align-items-center justify-content-between mb-3">
+                                    <div>
+                                        <div class="ca-filter__title mb-1">Filtered Summary</div>
+                                        <div class="ca-filter__hint mb-0">These totals follow the filters currently applied above.</div>
+                                    </div>
+                                </div>
+
+                                <div class="row g-3">
+                                    <div class="col-md-3">
+                                        <div class="ca-summary">
+                                            <div class="ca-summary__label">Total Accounts</div>
+                                            <div class="ca-summary__value">{{ number_format($listStats['total']) }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="ca-summary">
+                                            <div class="ca-summary__label">Approved</div>
+                                            <div class="ca-summary__value text-success">{{ number_format($listStats['approved']) }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="ca-summary">
+                                            <div class="ca-summary__label">Partial Approved</div>
+                                            <div class="ca-summary__value text-warning">{{ number_format($listStats['partial']) }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="ca-summary">
+                                            <div class="ca-summary__label">Rejected</div>
+                                            <div class="ca-summary__value text-danger">{{ number_format($listStats['rejected']) }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                             {{ Form::close() }}
                         </div>
                     </div>
-                </div>
             </div>
 
             <div class="card">
@@ -160,7 +261,7 @@
                                 </div>
                             </div>
 
-                            <div class="table-responsive">
+                            <div class="table-responsive ca-table">
                                 <table class="table table-bordered dt-responsive  nowrap w-100" id="dynamicTable">
                                     <thead>
                                         <tr>
@@ -181,6 +282,9 @@
                                                 <td>
                                                     {{ strtoupper($values->account_name) ?? $values->phone }}<br>
                                                     ID: {{ $values->customer->id_number ?? 'NIL' }}
+                                                    <br>
+                                                    Provider:
+                                                    {{ optional(optional(optional($values->createdBy)->partners)->first())->partner->business_name ?? 'NIL' }}
                                                 </td>
                                                 <td>{{ $values->account->name ?? 'NIL' }}</td>
                                                 <td>{{ $values->account_number ?? $values->phone }}</td>
@@ -221,6 +325,7 @@
                 </div>
             </div>
         </div>
+    </div>
     </div>
     <!-- end row -->
 @endsection

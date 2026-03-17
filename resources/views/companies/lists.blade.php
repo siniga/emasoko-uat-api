@@ -4,7 +4,78 @@
     Service Providers
 @endsection
 
+<style>
+    .sp-list-shell {
+        --sp-list-primary: #153567;
+        --sp-list-border: #dce6f5;
+        --sp-list-muted: #6b7c93;
+    }
+
+    .sp-list-summary {
+        border: 1px solid var(--sp-list-border);
+        border-radius: 16px;
+        background: linear-gradient(180deg, #fff 0%, #f8fbff 100%);
+        padding: 1rem;
+        height: 100%;
+    }
+
+    .sp-list-summary__label {
+        font-size: 0.76rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--sp-list-muted);
+        margin-bottom: 0.35rem;
+    }
+
+    .sp-list-summary__value {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--sp-list-primary);
+    }
+
+    .sp-list-filter {
+        border: 1px solid #e7edf6;
+        border-radius: 16px;
+        background: #fbfcfe;
+        padding: 1.2rem;
+        box-shadow: 0 16px 40px rgba(29, 53, 87, 0.08);
+    }
+
+    .sp-list-filter__title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--sp-list-primary);
+        margin-bottom: 0.2rem;
+    }
+
+    .sp-list-filter__hint {
+        color: var(--sp-list-muted);
+        font-size: 0.88rem;
+        margin-bottom: 1rem;
+    }
+
+    .sp-list-card {
+        border: 1px solid var(--sp-list-border);
+        border-radius: 18px;
+        box-shadow: 0 16px 40px rgba(29, 53, 87, 0.08);
+    }
+
+    .sp-list-table {
+        border-radius: 16px;
+        overflow: hidden;
+        border: 1px solid #dfe8f4;
+    }
+
+    .sp-list-table thead th {
+        background: #edf4ff;
+        color: var(--sp-list-primary);
+        font-weight: 700;
+        border-color: #dce7fa;
+    }
+</style>
+
 @section('content')
+    <div class="sp-list-shell">
     <div class="row">
         <div class="col-12">
             <div class="page-title-box d-sm-flex align-items-center justify-content-between">
@@ -22,8 +93,9 @@
 
     <div class="row">
         <div class="col-lg-12">
-            <div class="card">
-                <div class="card-body">
+            <div class="sp-list-filter mb-4">
+                    <div class="sp-list-filter__title">Filter Service Providers</div>
+                    <div class="sp-list-filter__hint">Narrow the service provider portfolio by date, category, region, approval state, account verification status, or search keyword.</div>
                     <div class="row">
                         <div class="col-lg-12">
                             {!! Form::open(['url' => route('companies.lists'), 'method' => 'POST', 'class' => 'form-horizontal']) !!}
@@ -131,44 +203,46 @@
                             </div>
 
                             <div class="border-top pt-3 mt-2">
-                                <div class="d-flex flex-wrap align-items-center justify-content-between mb-2">
-                                    <h5 class="mb-2 mb-md-0">Filtered Summary</h5>
-                                    <span class="text-muted">These numbers follow the current filters.</span>
+                                <div class="d-flex flex-wrap align-items-center justify-content-between mb-3">
+                                    <div>
+                                        <div class="sp-list-filter__title mb-1">Filtered Summary</div>
+                                        <div class="sp-list-filter__hint mb-0">These numbers follow the current filters.</div>
+                                    </div>
                                 </div>
 
                                 <div class="row g-3">
                                     <div class="col-md-3">
-                                        <div class="rounded px-3 py-3 h-100 bg-soft-primary border border-primary border-opacity-25">
-                                            <div class="text-primary fw-medium mb-1">Total Providers</div>
-                                            <h5 class="mb-0 text-primary">{{ number_format($companyStats['total']) }}</h5>
+                                        <div class="sp-list-summary">
+                                            <div class="sp-list-summary__label">Total Providers</div>
+                                            <div class="sp-list-summary__value">{{ number_format($companyStats['total']) }}</div>
                                         </div>
                                     </div>
 
                                     <div class="col-md-3">
-                                        <div class="rounded px-3 py-3 h-100 bg-soft-success border border-success border-opacity-25">
-                                            <div class="text-success fw-medium mb-1">Approved</div>
-                                            <h5 class="mb-0 text-success">{{ number_format($companyStats['approved']) }}</h5>
+                                        <div class="sp-list-summary">
+                                            <div class="sp-list-summary__label">Approved</div>
+                                            <div class="sp-list-summary__value text-success">{{ number_format($companyStats['approved']) }}</div>
                                         </div>
                                     </div>
 
                                     <div class="col-md-2">
-                                        <div class="rounded px-3 py-3 h-100 bg-soft-warning border border-warning border-opacity-25">
-                                            <div class="text-warning fw-medium mb-1">Pending</div>
-                                            <h5 class="mb-0 text-warning">{{ number_format($companyStats['pending']) }}</h5>
+                                        <div class="sp-list-summary">
+                                            <div class="sp-list-summary__label">Pending</div>
+                                            <div class="sp-list-summary__value text-warning">{{ number_format($companyStats['pending']) }}</div>
                                         </div>
                                     </div>
 
                                     <div class="col-md-2">
-                                        <div class="rounded px-3 py-3 h-100 bg-soft-danger border border-danger border-opacity-25">
-                                            <div class="text-danger fw-medium mb-1">Failed</div>
-                                            <h5 class="mb-0 text-danger">{{ number_format($companyStats['failed']) }}</h5>
+                                        <div class="sp-list-summary">
+                                            <div class="sp-list-summary__label">Failed</div>
+                                            <div class="sp-list-summary__value text-danger">{{ number_format($companyStats['failed']) }}</div>
                                         </div>
                                     </div>
 
                                     <div class="col-md-2">
-                                        <div class="rounded px-3 py-3 h-100 bg-soft-info border border-info border-opacity-25">
-                                            <div class="text-info fw-medium mb-1">Verified Accounts</div>
-                                            <h5 class="mb-0 text-info">{{ number_format($companyStats['verified_accounts']) }}</h5>
+                                        <div class="sp-list-summary">
+                                            <div class="sp-list-summary__label">Verified Accounts</div>
+                                            <div class="sp-list-summary__value text-info">{{ number_format($companyStats['verified_accounts']) }}</div>
                                         </div>
                                     </div>
                                 </div>
@@ -176,10 +250,9 @@
                             {{ Form::close() }}
                         </div>
                     </div>
-                </div>
             </div>
 
-            <div class="card">
+            <div class="card sp-list-card">
                 <div class="card-body">
                     <div class="table-responsive">
                         <div class="row">
@@ -218,7 +291,7 @@
                         </div>
 
                         @if (isset($companies) && $companies->isNotEmpty())
-                            <div class="table-responsive">
+                            <div class="table-responsive sp-list-table">
                                 <table class="table table-bordered dt-responsive  nowrap w-100" id="dynamicTable">
                                     <thead>
                                         <tr>
@@ -298,6 +371,7 @@
                 </div>
             </div>
         </div>
+    </div>
     </div>
     <!-- end row -->
 @endsection
