@@ -115,7 +115,7 @@
                     </li>
                 @endif
 
-                <li class="{{ Route::is('collections.batches', 'collections.show') ? 'mm-active' : '' }}">
+                <li class="{{ Route::has('collections') ? 'mm-active' : '' }}">
                     <a href="{{ route('collections.batches') }}" class="waves-effect">
                         <i class="bx bx-wallet"></i>
                         <span key="t-layouts">Collection Batches</span>

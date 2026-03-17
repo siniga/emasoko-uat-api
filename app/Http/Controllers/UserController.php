@@ -34,6 +34,8 @@ class UserController extends Controller
         $title = 'Users';
         //has_allowed('roles', 'lists');
 
+        $baseUsersQuery = User::query()->with('roles', 'partners.partner');
+
         if (isset($_POST['filter'])) {
             //request 
             $start_date  = $request->start_at ?? null;
@@ -43,7 +45,7 @@ class UserController extends Controller
             $keyword     = $request->keyword ?? null;
 
             //users
-            $users = User::orderBy('name');
+            $users = (clone $baseUsersQuery)->orderBy('name');
 
             //start date and end data
             if ($request->has('start_at') || $request->has('end_at')) {
@@ -78,16 +80,73 @@ class UserController extends Controller
             //keyword
             if ($request->has('keyword')) {
                 $users = $users->when($keyword, function ($query) use ($keyword) {
-                    $query->where(DB::raw('LOWER(name)'), 'like', "%" . strtolower($keyword) . "%")
-                        ->orWhere(DB::raw('LOWER(phone)'), 'like', "%" . strtolower($keyword) . "%");
+                    $query->where(function ($q) use ($keyword) {
+                        $q->where(DB::raw('LOWER(name)'), 'like', "%" . strtolower($keyword) . "%")
+                            ->orWhere(DB::raw('LOWER(phone)'), 'like', "%" . strtolower($keyword) . "%")
+                            ->orWhere(DB::raw('LOWER(email)'), 'like', "%" . strtolower($keyword) . "%");
+                    });
                 });
             }
 
             //users
             $users = $users->get();
         } else {
-            $users = User::paginate(50);
+            $users = (clone $baseUsersQuery)->orderBy('name')->paginate(50);
         }
+
+        $statsQuery = (clone $baseUsersQuery);
+
+        if (isset($_POST['filter'])) {
+            $start_date  = $request->start_at ?? null;
+            $end_date    = $request->end_at ?? null;
+            $partner_id  = $request->partner_id ?? null;
+            $status      = $request->status ?? null;
+            $keyword     = $request->keyword ?? null;
+
+            if ($request->has('start_at') || $request->has('end_at')) {
+                $statsQuery = $statsQuery->when($start_date, function ($query) use ($start_date, $end_date) {
+                    if ($start_date != null && $end_date != null)
+                        $query->whereBetween('users.created_at', [$start_date, $end_date]);
+
+                    else if ($start_date != null)
+                        $query->where('users.created_at', '>=', $start_date);
+
+                    else if ($end_date != null)
+                        $query->where('users.created_at', '<=', $end_date);
+                });
+            }
+
+            if ($request->has('status')) {
+                $statsQuery = $statsQuery->when($status, function ($query) use ($status) {
+                    $query->where('users.active', '=', $status);
+                });
+            }
+
+            if ($request->has('partner_id')) {
+                $statsQuery = $statsQuery->when($partner_id, function ($query) use ($partner_id) {
+                    $query->whereHas("partners", function ($q) use ($partner_id) {
+                        $q->where('partner_id', '=', $partner_id);
+                    });
+                });
+            }
+
+            if ($request->has('keyword')) {
+                $statsQuery = $statsQuery->when($keyword, function ($query) use ($keyword) {
+                    $query->where(function ($q) use ($keyword) {
+                        $q->where(DB::raw('LOWER(name)'), 'like', "%" . strtolower($keyword) . "%")
+                            ->orWhere(DB::raw('LOWER(phone)'), 'like', "%" . strtolower($keyword) . "%")
+                            ->orWhere(DB::raw('LOWER(email)'), 'like', "%" . strtolower($keyword) . "%");
+                    });
+                });
+            }
+        }
+
+        $listStats = [
+            'total' => (clone $statsQuery)->count(),
+            'active' => (clone $statsQuery)->where('active', 1)->count(),
+            'inactive' => (clone $statsQuery)->where('active', 0)->count(),
+            'api_users' => (clone $statsQuery)->where('is_api_user', 1)->count(),
+        ];
 
         //post data
         $post_data = [
@@ -95,14 +154,14 @@ class UserController extends Controller
             'end_at' => $request->end_at ?? null,
             'partner_id' => $request->partner_id ?? null,
             'status' => $request->status ?? null,
-            'keyword' => $request->keyword ?? null
+            'keyword' => $request->keyword ?? null,
         ];
 
         //service provider
         $providers = Partner::orderBy('business_name')->get();
 
         //render view
-        return view('users.lists', compact('users', 'providers', 'post_data', 'title'));
+        return view('users.lists', compact('users', 'providers', 'post_data', 'title', 'listStats'));
     }
 
     public function create()
@@ -135,6 +194,7 @@ class UserController extends Controller
             'name' => $request->input('name'),
             'email' => $request->input('email'),
             'phone' => $request->input('phone'),
+            'username' => $request->input('is_api_user') ? $request->input('username') : null,
             'password' => Hash::make($password),
             'otp_password' => base64_encode($password),
             'is_api_user' => $request->input('is_api_user') ? 1 : 0,
@@ -145,9 +205,11 @@ class UserController extends Controller
         //insert or create role
         $user->roles()->attach($request->input('role_id'));
 
+        $providerIds = collect($request->input('provider_ids', []))->filter()->unique()->values();
+
         //service provider
-        if ($request->input('role_id') == 2 || $request->input('role_id') == 4) {
-            foreach ($request->input('provider_ids') as $provider_id) {
+        if ($request->input('role_id') == 2 || $request->input('role_id') == 4 || ($request->input('is_api_user') && $providerIds->isNotEmpty())) {
+            foreach ($providerIds as $provider_id) {
                 //partner
                 $partner = Partner::where(['id' => $provider_id])->first();
 
@@ -221,6 +283,7 @@ class UserController extends Controller
                 'role_id' => 'required',
                 'provider_ids' => 'required_if:role_id,==,2,4',
                 'company_id' => 'required_if:role_id,==,6',
+                'username' => 'required_if:is_api_user,1|nullable|string|max:255|unique:users,username,' . $id,
             ],
             [
                 'name.required' => 'Full name is required',
@@ -229,6 +292,8 @@ class UserController extends Controller
                 'role_id.required' => 'Role required',
                 'provider_ids.required_if' => 'Service providers required',
                 'company_id.required_if' => 'eMakato partner is required',
+                'username.required_if' => 'Username is required for API users',
+                'username.unique' => 'Username must be unique',
             ]
         );
 
@@ -254,6 +319,7 @@ class UserController extends Controller
         $user->email = $request->input('email');
         $user->phone = $request->input('phone');
         $user->is_api_user = $request->input('is_api_user') ? 1 : 0;
+        $user->username = $request->input('is_api_user') ? $request->input('username') : null;
 
         if ($request->input('password') != null || $request->input('password') != '') {
             $user->password = Hash::make($password);
@@ -268,13 +334,15 @@ class UserController extends Controller
         //insert or create role
         $user->roles()->attach($request->input('role_id'));
 
+        $providerIds = collect($request->input('provider_ids', []))->filter()->unique()->values();
+
         //service provider
-        if ($request->input('role_id') == 2 || $request->input('role_id') == 4) {
+        if ($request->input('role_id') == 2 || $request->input('role_id') == 4 || ($request->input('is_api_user') && $providerIds->isNotEmpty())) {
             //deactivate all the partners by user_id
             $deactivate_pt = PartnerUser::where('user_id', '=', $user->id)->update(['authorize' => 0]);
 
             //activate selected users
-            foreach ($request->input('provider_ids') as $provider_id) {
+            foreach ($providerIds as $provider_id) {
                 //partner
                 $partner = Partner::where(['id' => $provider_id])->first();
 

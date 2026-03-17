@@ -91,6 +91,7 @@ class User extends Authenticatable
             'role_id' => 'required',
             'provider_ids' => 'required_if:role_id,==,2,4',
             'company_id' => 'required_if:role_id,==,6',
+            'username' => 'required_if:is_api_user,1|nullable|string|max:255|unique:users,username',
             'password' => 'required|string|min:8',
             'password_confirm' => 'required|same:password'
         ];
@@ -107,6 +108,8 @@ class User extends Authenticatable
             'role_id.required' => 'Role required',
             'provider_ids.required_if' => 'Service providers is required',
             'company_id.required_if' => 'eMakato partner is required',
+            'username.required_if' => 'Username is required for API users',
+            'username.unique' => 'Username must be unique',
             'password.required' => 'Password is required',
             'password_confirm.required' => 'Confirm password is required',
             'password_confirm.same:password' => 'Password must match',
