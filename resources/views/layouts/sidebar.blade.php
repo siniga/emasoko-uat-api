@@ -18,10 +18,58 @@
                         'payment-mandate.request-closing',
                         'payment-mandate.approve-closing',
                     ];
+                    $dashboardOpen = Route::is('dashboard') || request()->is('dashboard');
+                    $providersOpen =
+                        Route::is(
+                            'companies.lists',
+                            'companies.registration',
+                            'companies.register-documents',
+                            'companies.register-accounts',
+                            'companies.register-staff',
+                            'companies.register-authorized-person',
+                            'companies.preview',
+                            'companies.details',
+                            'companies.edit',
+                            'companies.collection-account',
+                        ) ||
+                        request()->is('companies') ||
+                        request()->is('companies/*');
+                    $customerAccountsOpen =
+                        Route::is(
+                            'customer-accounts.lists',
+                            'customer-accounts.index',
+                            'customer-accounts.delete',
+                            'customer-accounts.create',
+                            'customer-accounts.edit',
+                            'customer-accounts.show',
+                        ) ||
+                        request()->is('customer-accounts') ||
+                        request()->is('customer-accounts/*');
+                    $createMandateOpen = Route::is(
+                        'payment-mandate.create-account',
+                        'payment-mandate.create-deduction',
+                        'payment-mandate.preview',
+                    );
+                    $paymentMandateOpen =
+                        Route::is(
+                            'payment-mandate.lists',
+                            'payment-mandate.show',
+                            'payment-mandate.edit',
+                            'payment-mandate.delete',
+                        );
                     $mandateApprovalsOpen = Route::is(...$mandateApprovalRoutes);
+                    $collectionRoutesOpen =
+                        Route::is('collections.*') || request()->is('collections') || request()->is('collections/*');
+                    $reportsOpen = Route::is('reports.lists') || request()->is('reports') || request()->is('reports/*');
+                    $usersOpen =
+                        Route::is('users.lists', 'users.create', 'users.edit', 'users.show', 'users.change-status') ||
+                        request()->is('users') ||
+                        request()->is('users/*');
+                    $usersOtpOpen =
+                        Route::is('users.view-otp') || request()->is('users/view-otp') || request()->is('users/otp');
                 @endphp
 
-                <li class="{{ Route::is('dashboard') ? 'mm-active' : '' }}">
+                <li class="{{ $dashboardOpen ? 'mm-active' : '' }}">
                     <a href="{{ route('dashboard') }}" class="waves-effect">
                         <i class="bx bx-home"></i>
                         <span key="t-dashboards">Dashboard</span>
@@ -36,8 +84,7 @@
                 </li> --}}
 
                 @if (Auth::user()->hasRole(['admin']) || Auth::user()->hasRole(['Partner']))
-                    <li
-                        class="{{ Route::is('companies.lists', 'companies.registration', 'companies.register-documents', 'companies.register-accounts', 'companies.register-staff', 'companies.register-authorized-person', 'companies.preview', 'companies.details', 'companies.edit', 'companies.collection-account') ? 'mm-active' : '' }}">
+                    <li class="{{ $providersOpen ? 'mm-active' : '' }}">
                         <a href="{{ route('companies.lists') }}" class="waves-effect ">
                             <i class="bx bx-building"></i>
                             <span key="t-layouts">Service Providers</span>
@@ -53,8 +100,7 @@
                     </li>
 
                     @if (Auth::user()->hasRole(['admin']))
-                        <li
-                            class="{{ Route::is('customer-accounts.lists', 'customer-accounts.index', 'customer-accounts.delete', 'customer-accounts.create', 'customer-accounts.edit', 'customer-accounts.show') ? 'mm-active' : '' }}">
+                        <li class="{{ $customerAccountsOpen ? 'mm-active' : '' }}">
                             <a href="{{ route('customer-accounts.lists') }}" class="waves-effect">
                                 <i class='bx bxs-user-badge'></i>
                                 <span key="t-layouts">Customer Accounts</span>
@@ -63,14 +109,14 @@
                     @endif
                 @endif
 
-                <li class="{{ Route::is('payment-mandate.create-account') ? 'mm-active' : '' }}">
+                <li class="{{ $createMandateOpen ? 'mm-active' : '' }}">
                     <a href="{{ route('payment-mandate.create-account') }}" class="waves-effect">
                         <i class="bx bx-user-plus"></i>
                         <span key="t-layouts">Create Mandate</span>
                     </a>
                 </li>
 
-                <li class="{{ Route::is('payment-mandate.lists', 'payment-mandate.create-deduction', 'payment-mandate.preview', 'payment-mandate.show', 'payment-mandate.edit', 'payment-mandate.delete') ? "mm-active" : ""}}">
+                <li class="{{ $paymentMandateOpen ? 'mm-active' : '' }}">
                     <a href="{{ route('payment-mandate.lists') }}" class="waves-effect">
                         <i class="bx bxs-wallet-alt"></i>
                         <span key="t-layouts">Payment Mandate</span>
@@ -87,27 +133,23 @@
                         </a>
                         <ul class="sub-menu" aria-expanded="{{ $mandateApprovalsOpen ? 'true' : 'false' }}"
                             style="{{ $mandateApprovalsOpen ? 'display: block;' : '' }}">
-                            <li class="{{ Route::is('payment-mandate.request-cancellation', 'payment-mandate.approve-cancellation') ? 'mm-active' : '' }}">
-                                <a href="{{ route('payment-mandate.approve-cancellation') }}"
-                                    class="{{ Route::is('payment-mandate.request-cancellation', 'payment-mandate.approve-cancellation') ? 'active' : '' }}">
+                            <li>
+                                <a href="{{ route('payment-mandate.approve-cancellation') }}">
                                     Cancellation
                                 </a>
                             </li>
-                            <li class="{{ Route::is('payment-mandate.request-deletion', 'payment-mandate.approve-deletion') ? 'mm-active' : '' }}">
-                                <a href="{{ route('payment-mandate.approve-deletion') }}"
-                                    class="{{ Route::is('payment-mandate.request-deletion', 'payment-mandate.approve-deletion') ? 'active' : '' }}">
+                            <li>
+                                <a href="{{ route('payment-mandate.approve-deletion') }}">
                                     Deletion
                                 </a>
                             </li>
-                            <li class="{{ Route::is('payment-mandate.request-archive', 'payment-mandate.approve-archive') ? 'mm-active' : '' }}">
-                                <a href="{{ route('payment-mandate.approve-archive') }}"
-                                    class="{{ Route::is('payment-mandate.request-archive', 'payment-mandate.approve-archive') ? 'active' : '' }}">
+                            <li>
+                                <a href="{{ route('payment-mandate.approve-archive') }}">
                                     Archive
                                 </a>
                             </li>
-                            <li class="{{ Route::is('payment-mandate.request-closing', 'payment-mandate.approve-closing') ? 'mm-active' : '' }}">
-                                <a href="{{ route('payment-mandate.approve-closing') }}"
-                                    class="{{ Route::is('payment-mandate.request-closing', 'payment-mandate.approve-closing') ? 'active' : '' }}">
+                            <li>
+                                <a href="{{ route('payment-mandate.approve-closing') }}">
                                     Closing
                                 </a>
                             </li>
@@ -115,14 +157,14 @@
                     </li>
                 @endif
 
-                <li class="{{ Route::has('collections') ? 'mm-active' : '' }}">
+                <li class="{{ $collectionRoutesOpen ? 'mm-active' : '' }}">
                     <a href="{{ route('collections.batches') }}" class="waves-effect">
                         <i class="bx bx-wallet"></i>
                         <span key="t-layouts">Collection Batches</span>
                     </a>
                 </li>
 
-                <li class="{{ Route::is('reports.lists') ? 'mm-active' : '' }}">
+                <li class="{{ $reportsOpen ? 'mm-active' : '' }}">
                     <a href="{{ route('reports.lists') }}" class="waves-effect">
                         <i class='bx bxs-report'></i>
                         <span key="t-layouts">Reports</span>
@@ -132,15 +174,14 @@
                 @if (Auth::user()->hasRole(['admin']) || Auth::user()->hasRole(['Partner']))
                     <li class="menu-title" key="t-apps">Authentication</li>
 
-                    <li
-                        class="{{ Route::is('users.lists', 'users.create', 'users.edit', 'users.show', 'users.change-status') ? 'mm-active' : '' }}">
+                    <li class="{{ $usersOpen ? 'mm-active' : '' }}">
                         <a href="{{ route('users.lists') }}" class="waves-effect">
                             <i class="bx bx-user-plus"></i>
                             <span key="t-chat">Users</span>
                         </a>
                     </li>
 
-                    <li class="{{ Route::is('users.view-otp') ? 'mm-active' : '' }}">
+                    <li class="{{ $usersOtpOpen ? 'mm-active' : '' }}">
                         <a href="{{ route('users.view-otp') }}" class="waves-effect">
                             <i class='bx bx-info-circle'></i>
                             <span key="t-chat">Users OTP</span>

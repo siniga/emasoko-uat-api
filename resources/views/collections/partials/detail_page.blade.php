@@ -180,7 +180,7 @@
                                     <td class="text-end">{{ number_format($val['last_paid_amount'], 2) }}</td>
                                     <td class="text-end">{{ number_format($val['outstanding_amount'], 2) }}</td>
                                     <td>{{ $val['payment_date'] ?? '-' }}</td>
-                                    <td>{{ $val['effective_payment_date'] ?? '-' }}</td>
+                                    <td>{{ strtoupper($val['status']) === 'OPEN' ? '-' : ($val['effective_payment_date'] ?? '-') }}</td>
                                     <td>
                                         @php $normalizedStatus = strtoupper($val['status']); @endphp
                                         @if ($normalizedStatus === 'CLOSED')
