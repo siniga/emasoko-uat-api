@@ -218,7 +218,9 @@ Route::post('collections/store', [CollectionController::class, 'store'])->name('
 Route::get('collections/show/{id}', [CollectionController::class, 'show'])->name('collections.show');
 Route::get('collections/export-created/{id}', [CollectionController::class, 'export_created'])->name('collections.export-created');
 Route::get('collections/export-processed/{id}', [CollectionController::class, 'export_processed'])->name('collections.export-processed');
-Route::get('collections/create-failed/{id}', [CollectionController::class, 'create_failed'])->name('collections.create-failed');
+Route::get('collections/create-failed/{id?}', [CollectionController::class, 'create_failed'])->name('collections.create-failed');
+Route::post('collections/store-failed', [CollectionController::class, 'store_failed'])->name('collections.store-failed');
+Route::get('collections/create-monthly-failed', [CollectionController::class, 'create_monthly_failed'])->name('collections.create-monthly-failed');
 Route::get('collections/archive/{id}', [CollectionController::class, 'archive'])->name('collections.archive');
 Route::post('collections/upload', [CollectionController::class, 'upload'])->name('collections.upload');
 Route::post('collections/fetch-status', [CollectionController::class, 'fetch_status'])->name('collections.fetch-status');

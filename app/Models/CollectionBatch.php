@@ -15,6 +15,17 @@ class CollectionBatch extends Model
     protected $guarded = [];
     public $incrementing = false;
 
+    public const LIFECYCLE_DRAFT = 'draft';
+    public const LIFECYCLE_READY = 'ready';
+    public const LIFECYCLE_QUEUED_FOR_PUSH = 'queued_for_push';
+    public const LIFECYCLE_PUSHED = 'pushed';
+    public const LIFECYCLE_STATUS_PENDING = 'status_pending';
+    public const LIFECYCLE_PARTIALLY_PROCESSED = 'partially_processed';
+    public const LIFECYCLE_PROCESSED_SUCCESS = 'processed_success';
+    public const LIFECYCLE_PROCESSED_FAILED = 'processed_failed';
+    public const LIFECYCLE_RECREATED = 'recreated';
+    public const LIFECYCLE_ARCHIVED = 'archived';
+
     public static function boot()
     {
         parent::boot();
@@ -86,12 +97,169 @@ class CollectionBatch extends Model
         return $this->belongsTo(Partner::class, "partner_id");
     }
 
+    public function installments()
+    {
+        return $this->hasManyThrough(
+            Installment::class,
+            CollectionDebitOrder::class,
+            'collection_batch_id',
+            'id',
+            'id',
+            'installment_id'
+        );
+    }
+
+    public function getInstallmentIdListAttribute(): array
+    {
+        $lineIds = $this->debits()
+            ->whereNotNull('installment_id')
+            ->pluck('installment_id')
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->values()
+            ->all();
+
+        if (!empty($lineIds)) {
+            return $lineIds;
+        }
+
+        if (empty($this->installment_ids)) {
+            return [];
+        }
+
+        return collect(explode(',', (string) $this->installment_ids))
+            ->filter()
+            ->map(fn ($id) => (int) trim($id))
+            ->values()
+            ->all();
+    }
+
+    public function getResolvedLifecycleStatusAttribute(): string
+    {
+        if (!empty($this->lifecycle_status)) {
+            return $this->lifecycle_status;
+        }
+
+        if ((int) $this->deleted === 1) {
+            return self::LIFECYCLE_ARCHIVED;
+        }
+
+        if ((int) $this->recreated === 1) {
+            return self::LIFECYCLE_RECREATED;
+        }
+
+        if ((int) $this->failed === 1) {
+            return self::LIFECYCLE_PROCESSED_FAILED;
+        }
+
+        if ((int) $this->processed === 1) {
+            return self::LIFECYCLE_PROCESSED_SUCCESS;
+        }
+
+        if ((int) $this->pushed === 1) {
+            return self::LIFECYCLE_PUSHED;
+        }
+
+        return self::LIFECYCLE_READY;
+    }
+
+    public function setLifecycleStatus(string $status): self
+    {
+        $this->lifecycle_status = $status;
+
+        return $this;
+    }
+
+    public function canBePushed(): bool
+    {
+        return in_array($this->resolved_lifecycle_status, [
+            self::LIFECYCLE_READY,
+            self::LIFECYCLE_QUEUED_FOR_PUSH,
+        ], true) && !empty($this->request_csv);
+    }
+
+    public function canFetchStatus(): bool
+    {
+        return in_array($this->resolved_lifecycle_status, [
+            self::LIFECYCLE_PUSHED,
+            self::LIFECYCLE_STATUS_PENDING,
+            self::LIFECYCLE_PARTIALLY_PROCESSED,
+        ], true);
+    }
+
+    public function getLifecycleLabelAttribute(): string
+    {
+        return match ($this->resolved_lifecycle_status) {
+            self::LIFECYCLE_READY => 'Ready',
+            self::LIFECYCLE_QUEUED_FOR_PUSH => 'Queued for Push',
+            self::LIFECYCLE_PUSHED => 'Uploaded',
+            self::LIFECYCLE_STATUS_PENDING => 'Awaiting Status',
+            self::LIFECYCLE_PARTIALLY_PROCESSED => 'Partially Processed',
+            self::LIFECYCLE_PROCESSED_SUCCESS => 'Processed Success',
+            self::LIFECYCLE_PROCESSED_FAILED => 'Processed Failed',
+            self::LIFECYCLE_RECREATED => 'Recreated',
+            self::LIFECYCLE_ARCHIVED => 'Archived',
+            default => 'Draft',
+        };
+    }
+
+    public function getLifecycleBadgeClassAttribute(): string
+    {
+        return match ($this->resolved_lifecycle_status) {
+            self::LIFECYCLE_READY => 'badge-soft-primary',
+            self::LIFECYCLE_QUEUED_FOR_PUSH => 'badge-soft-info',
+            self::LIFECYCLE_PUSHED => 'badge-soft-info',
+            self::LIFECYCLE_STATUS_PENDING => 'badge-soft-warning',
+            self::LIFECYCLE_PARTIALLY_PROCESSED => 'badge-soft-warning',
+            self::LIFECYCLE_PROCESSED_SUCCESS => 'badge-soft-success',
+            self::LIFECYCLE_PROCESSED_FAILED => 'badge-soft-danger',
+            self::LIFECYCLE_RECREATED => 'badge-soft-secondary',
+            self::LIFECYCLE_ARCHIVED => 'badge-soft-dark',
+            default => 'badge-soft-secondary',
+        };
+    }
+
+    public function getUploadStateLabelAttribute(): string
+    {
+        return match ($this->resolved_lifecycle_status) {
+            self::LIFECYCLE_QUEUED_FOR_PUSH => 'Queued',
+            self::LIFECYCLE_PUSHED,
+            self::LIFECYCLE_STATUS_PENDING,
+            self::LIFECYCLE_PARTIALLY_PROCESSED,
+            self::LIFECYCLE_PROCESSED_SUCCESS,
+            self::LIFECYCLE_PROCESSED_FAILED,
+            self::LIFECYCLE_RECREATED => 'Uploaded',
+            default => 'Pending',
+        };
+    }
+
+    public function getProcessingStateLabelAttribute(): string
+    {
+        return match ($this->resolved_lifecycle_status) {
+            self::LIFECYCLE_STATUS_PENDING => 'Awaiting Status',
+            self::LIFECYCLE_PARTIALLY_PROCESSED => 'In Progress',
+            self::LIFECYCLE_PROCESSED_SUCCESS,
+            self::LIFECYCLE_PROCESSED_FAILED => 'Completed',
+            default => 'Pending',
+        };
+    }
+
+    public function isWorkflowComplete(): bool
+    {
+        return in_array($this->resolved_lifecycle_status, [
+            self::LIFECYCLE_PROCESSED_SUCCESS,
+            self::LIFECYCLE_PROCESSED_FAILED,
+            self::LIFECYCLE_RECREATED,
+            self::LIFECYCLE_ARCHIVED,
+        ], true);
+    }
+
     public function scopeWithFilters($query, $request)
     {
         $start_date        = $request['start_at'] ?? null;
         $end_date          = $request['end_at'] ?? null;
         $partner_id        = $request['partner_id'] ?? null;
-        $status            = $request['cl_status'] ?? null;
+        $status            = $request['cl_status'] ?? $request['status'] ?? null;
         $mandate_reference = $request['mandate_reference'] ?? null;
 
         return $query->when($start_date, function ($query) use ($start_date, $end_date) {

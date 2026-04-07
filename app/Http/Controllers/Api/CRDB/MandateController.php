@@ -8,8 +8,9 @@ use App\Http\Resources\MandateResource;
 use App\Jobs\ApiCallbackJob;
 use App\Models\DebitOrder;
 use App\Models\Installment;
-use App\Models\InstallmentPayment;
+use App\Models\PaymentSettlement;
 use App\Services\DeductionService;
+use App\Services\SettlementPostingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -20,7 +21,10 @@ class MandateController extends Controller
 {
     private $auth;
 
-    public function __construct(protected DeductionService $deductionService)
+    public function __construct(
+        protected DeductionService $deductionService,
+        protected SettlementPostingService $settlementPostingService
+    )
     {
         $this->auth = new Checksum();
     }
@@ -260,58 +264,101 @@ class MandateController extends Controller
                     $transactionReference = $request['data']['transactionReference'];
                     $transactionDateTime = $request['data']['transactionDateTime'];
 
-                    // check if payment reference exists in installments payment
-                    $installment_payments = InstallmentPayment::where([
-                        'mandate_reference' => $debitOrder->reference,
-                        'payment_reference' => $transactionReference
-                    ]);
-
-                    if (!$installment_payments->exists()) {
-                        // create installment payment
-                        $installment_payment = new InstallmentPayment();
-                        $installment_payment->mandate_reference = $debitOrder->reference;
-                        $installment_payment->payment_reference = $transactionReference;
-                        $installment_payment->amount = $amount;
-                        $installment_payment->payment_at = date('Y-m-d', strtotime($collectionDate));
-                        $installment_payment->save();
-
-                        // check if installment  exists
+                    if (!PaymentSettlement::where([
+                        'channel' => 'CRDB',
+                        'payment_reference' => $transactionReference,
+                    ])->exists()) {
                         $installments = Installment::where('debit_order_id', "=", $debitOrder->id)
                             ->whereMonth('payment_date', "=", date('m', strtotime($collectionDate)))
                             ->whereYear('payment_date', "=", date('Y', strtotime($collectionDate)));
 
                         if ($installments->exists()) {
-                            // get installment
                             $installment = $installments->first();
-
-                            //updated installment
-                            $installment->last_paid_amount = $amount;
-                            $installment->payment_reference = $transactionReference;
-                            $installment->effective_payment_date = date('Y-m-d', strtotime($collectionDate));
-                            $installment->remarks = "Amount paid";
-                            $installment->save();
-
-                            // process installment
-                            $this->deductionService->processInstallment($installment);
                         } else {
-                            //1.0 calculate installment amount
                             $installment_amount = $this->deductionService->getInstallmentAmount($debitOrder);
                             $last_installment_order = $this->deductionService->getLastInstallmentOrder($debitOrder);
 
-                            //1.0 create new installment with payment details
-                            $new_installment = new Installment();
-                            $new_installment->debit_order_id = $debitOrder->id;
-                            $new_installment->installment_order = $last_installment_order + 1;
-                            $new_installment->installment_amount = $installment_amount;
-                            $new_installment->payment_date = date('Y-m-d', strtotime($collectionDate));
-                            $new_installment->last_paid_amount = $amount;
-                            $new_installment->payment_reference = $transactionReference;
-                            $new_installment->effective_payment_date = date('Y-m-d', strtotime($collectionDate));
-                            $new_installment->remarks = "Amount paid";
-                            $new_installment->save();
+                            $installment = new Installment();
+                            $installment->debit_order_id = $debitOrder->id;
+                            $installment->installment_order = $last_installment_order + 1;
+                            $installment->installment_amount = $installment_amount;
+                            $installment->current_balance = 0;
+                            $installment->outstanding_amount = $installment_amount;
+                            $installment->payment_date = date('Y-m-d', strtotime($collectionDate));
+                            $installment->remarks = "CRDB amount paid";
+                            $installment->save();
+                        }
 
-                            //2.0 then process payment installment
-                            $this->deductionService->processInstallment($new_installment);
+                        $openingBalance = (float) ($installment->outstanding_amount ?? 0);
+                        $paymentAmount = (float) $amount;
+                        $rawPayloadHash = md5(json_encode($request->all()));
+
+                        if ($openingBalance <= 0) {
+                            $this->settlementPostingService->postUnallocated([
+                                'channel' => 'CRDB',
+                                'debit_order' => $debitOrder,
+                                'installment' => $installment,
+                                'amount' => $paymentAmount,
+                                'raw_status' => strtoupper((string) $transferResponse),
+                                'normalized_status' => PaymentSettlement::STATUS_UNALLOCATED,
+                                'settlement_type' => 'OVERPAYMENT_UNALLOCATED',
+                                'remarks' => 'Duplicate or extra deduction after installment already covered',
+                                'effective_payment_date' => date('Y-m-d', strtotime($collectionDate)),
+                                'transaction_at' => $transactionDateTime ?: $collectionDate,
+                                'payment_reference' => $transactionReference,
+                                'external_reference' => $transactionReference,
+                                'raw_payload_hash' => $rawPayloadHash,
+                            ]);
+                        } elseif ($paymentAmount > $openingBalance) {
+                            $this->settlementPostingService->post([
+                                'channel' => 'CRDB',
+                                'debit_order' => $debitOrder,
+                                'installment' => $installment,
+                                'amount' => $openingBalance,
+                                'raw_status' => strtoupper((string) $transferResponse),
+                                'normalized_status' => PaymentSettlement::STATUS_SUCCESS,
+                                'remarks' => 'Applied capped amount from CRDB payment',
+                                'effective_payment_date' => date('Y-m-d', strtotime($collectionDate)),
+                                'transaction_at' => $transactionDateTime ?: $collectionDate,
+                                'payment_reference' => $transactionReference,
+                                'external_reference' => $transactionReference,
+                                'raw_payload_hash' => $rawPayloadHash,
+                            ]);
+
+                            $this->settlementPostingService->postUnallocated([
+                                'channel' => 'CRDB',
+                                'debit_order' => $debitOrder,
+                                'installment' => $installment,
+                                'amount' => $paymentAmount - $openingBalance,
+                                'raw_status' => strtoupper((string) $transferResponse),
+                                'normalized_status' => PaymentSettlement::STATUS_UNALLOCATED,
+                                'settlement_type' => 'OVERPAYMENT_UNALLOCATED',
+                                'remarks' => 'Excess deduction held for reconciliation',
+                                'effective_payment_date' => date('Y-m-d', strtotime($collectionDate)),
+                                'transaction_at' => $transactionDateTime ?: $collectionDate,
+                                'payment_reference' => $transactionReference . '-EXCESS',
+                                'external_reference' => $transactionReference,
+                                'raw_payload_hash' => $rawPayloadHash,
+                            ]);
+                        } else {
+                            $normalizedStatus = $paymentAmount > 0 && $paymentAmount < $openingBalance
+                                ? PaymentSettlement::STATUS_PARTIAL
+                                : PaymentSettlement::STATUS_SUCCESS;
+
+                            $this->settlementPostingService->post([
+                                'channel' => 'CRDB',
+                                'debit_order' => $debitOrder,
+                                'installment' => $installment,
+                                'amount' => $paymentAmount,
+                                'raw_status' => strtoupper((string) $transferResponse),
+                                'normalized_status' => $normalizedStatus,
+                                'remarks' => 'Amount paid',
+                                'effective_payment_date' => date('Y-m-d', strtotime($collectionDate)),
+                                'transaction_at' => $transactionDateTime ?: $collectionDate,
+                                'payment_reference' => $transactionReference,
+                                'external_reference' => $transactionReference,
+                                'raw_payload_hash' => $rawPayloadHash,
+                            ]);
                         }
                     }
                 } else if (strtolower($transferResponse) == "insufficient_amount") {
@@ -322,9 +369,20 @@ class MandateController extends Controller
 
                     if ($installments->exists()) {
                         $installment = $installments->first();
-                        $installment->status = "FAILED";
-                        $installment->remarks = "Insufficient funds";
-                        $installment->save();
+
+                        $this->settlementPostingService->post([
+                            'channel' => 'CRDB',
+                            'debit_order' => $debitOrder,
+                            'installment' => $installment,
+                            'amount' => 0,
+                            'raw_status' => strtoupper((string) $transferResponse),
+                            'normalized_status' => PaymentSettlement::STATUS_FAILED,
+                            'remarks' => 'Insufficient funds',
+                            'effective_payment_date' => date('Y-m-d', strtotime($collectionDate)),
+                            'transaction_at' => $collectionDate,
+                            'payment_reference' => "CRDB-FAILED-{$debitOrder->id}-" . date('Ym', strtotime($collectionDate)),
+                            'raw_payload_hash' => md5(json_encode($request->all())),
+                        ]);
 
                         Log::debug("== update installment : insufficient amount ===");
                         Log::debug($installment->toArray());

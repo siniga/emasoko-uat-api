@@ -13,6 +13,7 @@ use App\Services\Reports\Mappers\PartnerPerformanceReportMapper;
 use App\Services\Reports\Mappers\ReportMapper;
 use App\Models\DebitOrder;
 use App\Models\Installment;
+use App\Models\PaymentSettlement;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -389,20 +390,61 @@ class ReportQueryService
 
     protected function accountingRecords(array $filters): Collection
     {
-        return $this->expectedCollectionBaseQuery($filters)
+        $query = PaymentSettlement::query()
             ->with([
-                'debitOrder:id,reference,partner_id,customer_account_id,start_date,end_date',
+                'debitOrder:id,reference,partner_id,customer_account_id,start_date,end_date,channel',
                 'debitOrder.partner:id,business_name',
                 'debitOrder.customerAccount:id,customer_id,account_id,account_name,account_number',
                 'debitOrder.customerAccount.customer:id,first_name,middle_name,last_name,fullname',
                 'debitOrder.customerAccount.account:id,name',
+                'installment:id,debit_order_id,payment_date,outstanding_amount',
             ])
+            ->whereIn('normalized_status', ['SUCCESS', 'PARTIAL', 'FAILED', 'FUNDSCHECK', 'UNALLOCATED']);
+
+        $this->applyDateRange($query, 'effective_payment_date', $filters['start_at'], $filters['end_at']);
+
+        $query->when($filters['partner_id'] ?? null, function ($q, $partnerId) {
+            $q->whereHas('debitOrder', function ($debitOrderQuery) use ($partnerId) {
+                $debitOrderQuery->where('partner_id', $partnerId);
+            });
+        });
+
+        $query->when($filters['account_id'] ?? null, function ($q, $accountId) {
+            $q->whereHas('debitOrder.customerAccount', function ($accountQuery) use ($accountId) {
+                $accountQuery->where('account_id', $accountId);
+            });
+        });
+
+        $query->when($filters['account_type_id'] ?? null, function ($q, $accountTypeId) {
+            $q->whereHas('debitOrder.customerAccount', function ($accountQuery) use ($accountTypeId) {
+                $accountQuery->where('account_type_id', $accountTypeId);
+            });
+        });
+
+        $query->when($filters['collection_status'] ?? null, function ($q, $status) {
+            $mapped = match ($status) {
+                'paid' => ['SUCCESS'],
+                'failed' => ['FAILED'],
+                'fund_check' => ['FUNDSCHECK'],
+                default => null,
+            };
+
+            if ($mapped) {
+                $q->whereIn('normalized_status', $mapped);
+            }
+        });
+
+        return $query
+            ->orderBy('effective_payment_date', 'ASC')
             ->get()
-            ->map(function (Installment $record) {
-                $status = strtoupper((string) $record->status);
+            ->map(function (PaymentSettlement $record) {
+                $status = strtoupper((string) $record->normalized_status);
 
                 $entryClassification = match ($status) {
                     'CLOSED' => 'CLEARED',
+                    'SUCCESS' => 'CLEARED',
+                    'PARTIAL' => 'PARTIAL',
+                    'UNALLOCATED' => 'RECONCILIATION',
                     'PARTIAL_PAID' => 'PARTIAL',
                     'FAILED', 'FUNDSCHECK' => 'EXCEPTION',
                     default => 'RECEIVABLE',
@@ -410,17 +452,17 @@ class ReportQueryService
 
                 return [
                     'provider_name' => $record->debitOrder->partner->business_name ?? '',
-                    'mandate_reference' => $record->debitOrder->reference ?? '',
+                    'mandate_reference' => $record->mandate_reference ?? $record->debitOrder->reference ?? '',
                     'customer_name' => trim((string) (optional($record->debitOrder->customerAccount->customer)->full_name ?? optional($record->debitOrder->customerAccount->customer)->fullname ?? '')),
                     'account_number' => $record->debitOrder->customerAccount->account_number ?? '',
-                    'payment_channel' => $record->debitOrder->customerAccount->account->name ?? '',
-                    'due_date' => $record->payment_date,
+                    'payment_channel' => $record->channel ?: ($record->debitOrder->customerAccount->account->name ?? ''),
+                    'due_date' => optional($record->installment)->payment_date,
                     'effective_date' => $record->effective_payment_date,
-                    'expected_amount' => (float) ($record->installment_amount ?? 0),
-                    'paid_amount' => (float) ($record->current_balance ?? 0),
-                    'outstanding_amount' => (float) ($record->outstanding_amount ?? 0),
+                    'expected_amount' => (float) ($record->expected_amount ?? 0),
+                    'paid_amount' => (float) ($record->paid_amount ?? 0),
+                    'outstanding_amount' => (float) ($record->closing_installment_balance ?? optional($record->installment)->outstanding_amount ?? 0),
                     'collection_status' => $status,
-                    'entry_classification' => $entryClassification,
+                    'entry_classification' => $record->settlement_type ?: $entryClassification,
                     'remarks' => $record->remarks ?? '',
                 ];
             })

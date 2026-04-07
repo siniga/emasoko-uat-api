@@ -4,7 +4,7 @@ namespace App\Jobs;
 
 use App\Classes\Authentication;
 use App\Models\CollectionBatch;
-use App\Models\Installment;
+use App\Models\CollectionDebitOrder;
 use App\Services\DeductionService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
@@ -16,7 +16,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 
-class PushCollectionJob implements ShouldQueue
+class PushCollectionJob implements ShouldQueue, ShouldBeUnique
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -25,16 +25,19 @@ class PushCollectionJob implements ShouldQueue
      *
      * @return void
      */
-    protected $data;
-    protected $installments;
+    protected $batchId;
     private $auth;
 
 
-    public function __construct($data, $installments)
+    public function __construct(string $batchId)
     {
-        $this->data = $data;
-        $this->installments = $installments;
+        $this->batchId = $batchId;
         $this->auth = new Authentication();
+    }
+
+    public function uniqueId(): string
+    {
+        return $this->batchId;
     }
 
     /**
@@ -46,6 +49,11 @@ class PushCollectionJob implements ShouldQueue
     {
         //initialize deduction service
         $deduction_service = new DeductionService();
+        $collection_batch = CollectionBatch::find($this->batchId);
+
+        if (!$collection_batch || !$collection_batch->canBePushed()) {
+            return;
+        }
 
         //create authentication token
         $AUTH_BEARER_TOKEN = $this->auth->generateToken();
@@ -53,13 +61,30 @@ class PushCollectionJob implements ShouldQueue
         //Create Headers
         $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer ' . $AUTH_BEARER_TOKEN];
 
+        $correlationId = Str::uuid()->toString();
+
         //Create Payload
+        $payloadData = [
+            "collectionReference" => $collection_batch->collectionReference,
+            "corporateReference" => $collection_batch->corporateReference,
+            "selectedPostingDate" => \Carbon\Carbon::parse($collection_batch->selectedPostingDate)->format('Y-m-d H:i:s'),
+            "createdBy" => \App\Services\BankPayloadService::userNameFormat($collection_batch->createdUser),
+            "verifiedBy" => \App\Services\BankPayloadService::userNameFormat($collection_batch->createdUser),
+            "createdDate" => \Carbon\Carbon::parse($collection_batch->createdDate)->format('Y-m-d H:i:s'),
+            "verifyDate" => \Carbon\Carbon::parse($collection_batch->verifyDate)->format('Y-m-d H:i:s'),
+            "file" => [
+                "fileName" => "Payment_Collection_{$collection_batch->id}",
+                "fileType" => "CSV",
+                "fileData" => content_to_base64($collection_batch->request_csv),
+            ],
+        ];
+
         $payload = [
             "user" => "EMakato",
-            "correlationId" => Str::uuid()->toString(),
+            "correlationId" => $correlationId,
             "targetService" => "CollectionCreate",
             "status" => "Create",
-            "data" => $this->data
+            "data" => $payloadData
         ];
 
         //Create Payload
@@ -79,9 +104,6 @@ class PushCollectionJob implements ShouldQueue
             'body'    => $response->body(),   // raw string
         ]);
 
-        //update collection batch 
-        $collection_batch = CollectionBatch::where('collectionReference', '=', $payload['data']['collectionReference'])->first();
-
         //decode the response 
         $response = json_decode($response, true);
 
@@ -92,26 +114,24 @@ class PushCollectionJob implements ShouldQueue
         if ($response) {
             if (strtolower($response['status']) == "success") {
                 $response_code = $response['data']['response'][0]['responseCode'];
-                $remarks = $response['data']['response'][0]['responseDescription'];
 
                 //update collection batch
                 $collection_batch->status = $response['data']['response'][0]['responseCode'];
                 $collection_batch->http_response_code = $response['data']['response'][0]['responseCode'];
                 $collection_batch->remarks = $response['data']['response'][0]['responseDescription'];
                 $collection_batch->pushed = 1;
+                $collection_batch->last_pushed_at = now();
+                $collection_batch->push_correlation_id = $correlationId;
+                $collection_batch->lifecycle_status = CollectionBatch::LIFECYCLE_PUSHED;
                 $collection_batch->save();
 
                 //update debit order => approved
                 if ($response_code == 200 || $response_code == 201) {
-                    //update installments
-                    foreach ($this->installments as $key => $v) {
-                        $installment = Installment::findOrFail($v);
-                        $installment->pushed = 1;
-                        $installment->save();
-
-                        //update debit order next debit order
-                        $deduction_service->updateNextDebitDate($installment->debitOrder);
-                    }
+                    CollectionDebitOrder::where('collection_batch_id', $collection_batch->id)->update([
+                        'status' => 'PUSHED',
+                        'bank_status' => 'PUSHED',
+                        'pushed_at' => now(),
+                    ]);
                 }
             } else if (strtolower($response['status']) == "fail") {
                 $response_code = $response['data']['response'][0]['responseCode'];
@@ -121,6 +141,7 @@ class PushCollectionJob implements ShouldQueue
                 $collection_batch->status = 500;
                 $collection_batch->http_response_code = $response_code;
                 $collection_batch->remarks = $remarks;
+                $collection_batch->lifecycle_status = CollectionBatch::LIFECYCLE_READY;
                 $collection_batch->save();
 
                 Log::debug('== Failed to create collection batch ==');

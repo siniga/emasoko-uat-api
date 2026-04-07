@@ -72,6 +72,18 @@ class DebitOrder extends Model
         return $query->where('status', '=', 'active');
     }
 
+    public function scopeEligibleForCollection($query, ?string $channel = null)
+    {
+        return $query
+            ->where('debit_orders.approved', 1)
+            ->where('debit_orders.deleted', 0)
+            ->where('debit_orders.contract_status', 'OPEN')
+            ->where('debit_orders.lifecycle_status', self::LIFECYCLE_ACTIVE)
+            ->when($channel !== null, function ($q) use ($channel) {
+                $q->where('debit_orders.channel', $channel);
+            });
+    }
+
     public function installments()
     {
         return $this->hasMany(Installment::class, 'debit_order_id', 'id');

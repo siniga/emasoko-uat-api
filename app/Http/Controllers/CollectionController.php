@@ -19,6 +19,7 @@ use App\Models\InstallmentPayment;
 use App\Models\Partner;
 use App\Models\User;
 use App\Services\BankApiService;
+use App\Services\CollectionBatchService;
 use App\Services\BankPayloadService;
 use App\Services\CollectionAnalyticsService;
 use App\Services\DeductionService;
@@ -39,7 +40,8 @@ class CollectionController extends Controller
         protected BankPayloadService $payloadService,
         protected BankApiService $bankApi,
         protected DeductionService $deductionService,
-        protected CollectionAnalyticsService $collectionAnalytics
+        protected CollectionAnalyticsService $collectionAnalytics,
+        protected CollectionBatchService $collectionBatchService
     )
     {
         $this->middleware('auth');
@@ -85,6 +87,8 @@ class CollectionController extends Controller
             'collections' => (clone $statsQuery)->sum('number_of_collections'),
         ];
 
+        $monthlyFailedEligibility = $this->collectionBatchService->lastMonthFailedBatchEligibility();
+
         $post_data = [
             'start_at' => $request->start_at ?? null,
             'end_at' => $request->end_at ?? null,
@@ -94,7 +98,7 @@ class CollectionController extends Controller
         ];
 
         //render view
-        return view('collections.batches', compact('title', 'batches', 'providers', 'number_of_batches', 'post_data', 'listStats'));
+        return view('collections.batches', compact('title', 'batches', 'providers', 'number_of_batches', 'post_data', 'listStats', 'monthlyFailedEligibility'));
     }
 
     public function create(Request $request)
@@ -114,75 +118,15 @@ class CollectionController extends Controller
 
             // initialize deduction service
             $partner = Partner::whereHas('debitOrders', function ($query) use ($debit_date) {
-                return $query->where(['contract_status' => 'OPEN', 'channel' => 'NMB', 'approved' => 1, 'status' => 240, 'deleted' => 0])
+                return $query->eligibleForCollection('NMB')
                     ->whereDate('next_debit_date', "=", $debit_date);
             })->where(['partners.id' => $partner_id, 'partners.status' => 202]);
 
             if ($partner->count() > 0) {
                 $partner = $partner->first();
+                $arr_installments = $this->collectionBatchService->previewInstallments($partner, $debit_date, 250);
 
-                //installments
-                $installments = $this->deductionService->getInstallments($partner, $debit_date, 250);
-
-                if ($installments) {
-                    foreach ($installments as $installment) {
-                        //account details
-                        $account_name = strtoupper($installment->debitOrder->customerAccount->account_name);
-                        $account_number = $installment->debitOrder->customerAccount->account_number;
-                        $mandate_reference = $installment->debitOrder->reference;
-                        $debit_order_id = $installment->debitOrder->id;
-                        $periodicity = $installment->debitOrder->periodicity;
-                        $installment_id = $installment->id;
-                        $payment_amount = $installment->installment_amount;
-                        $current_balance = $installment->current_balance;
-                        $outstanding_amount = $installment->outstanding_amount;
-                        $payment_date = $installment->payment_date;
-                        $debit_start_date = Carbon::parse($installment->debitOrder->start_date);
-                        $debit_end_date = Carbon::parse($installment->debitOrder->end_date);
-
-                        //debit status
-                        $deleted = $installment->debitOrder->deleted;
-                        $contract_status = $installment->debitOrder->contract_status;
-
-                        //1.0 check if periodicity == MONTHLY and deleted = 0
-                        if ($periodicity == "MONTHLY" && $contract_status == "OPEN" && $deleted == 0) {
-                            //2.0: Check if mandate start date <= today
-                            if ($debit_start_date->lte(Carbon::now())) {
-                                //2.1: check if debit mandate expire
-                                if ($debit_end_date->gte(Carbon::now())) {
-                                    //3.0: check if account exists in this batch
-                                    if (!in_array($account_number, $arr_accounts)) {
-                                        // 3.1: create new collection date from previous month
-                                        $collection_date = $this->deductionService->createCollectionDate($payment_date);
-
-                                        //4.0: check if the mandate reference is exists for this month
-                                        $collection_debit_order = CollectionDebitOrder::where(['debit_order_id' => $debit_order_id])
-                                            ->whereMonth('payment_at', Carbon::parse($collection_date)->format('m'))
-                                            ->whereYear('payment_at', Carbon::parse($collection_date)->format('Y'));
-
-                                        if (!$collection_debit_order->exists()) {
-                                            //append account in array
-                                            array_push($arr_accounts, $account_number);
-
-                                            //append array installments
-                                            $arr_installments[] = [
-                                                'id' => $installment_id,
-                                                'reference' => $mandate_reference,
-                                                'account_name' => $account_name,
-                                                'account_number' => $account_number,
-                                                'amount' => $payment_amount,
-                                                'current_balance' => $current_balance,
-                                                'outstanding_amount' => $outstanding_amount,
-                                                'payment_date' => $payment_date,
-                                                'collection_date' => $collection_date
-                                            ];
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                } else {
+                if (empty($arr_installments)) {
                     return Redirect::route('collections.create')->with('danger', 'No any collection on this ' . $debit_date);
                 }
             }
@@ -208,124 +152,17 @@ class CollectionController extends Controller
     public function store(Request $request)
     {
         if ($request->selected_partner_id && $request->installment_ids) {
-
-            //initiate batch collection date
-            $batch_collection_date = Carbon::now();
-
-            //1. Find partner information
-            $partner = Partner::findOrFail($request->selected_partner_id);
-
-            //2.0 Create collection batch based on partner 
-            $batch = CollectionBatch::create([
-                'partner_id' => $partner->id,
-                "collectionReference" => $this->deductionService->getCollectionReference(),
-                "corporateReference" => $partner->reference,
-                "selectedPostingDate" => Carbon::now(),
-                "createdBy" => Auth::user()->id,
-                "verifiedBy" => Auth::user()->id,
-                "createdDate" => Carbon::now(),
-                "verifyDate" => Carbon::now(),
-            ]);
-
-            if ($batch->wasRecentlyCreated) {
-                //2.1 Declare variables
-                $number_of_collections = 0;
-                $arr_installments = [];
-                $arr_accounts = [];
-
-                //3. Create CSV file based installment
-                $csv = "SERIAL No.;BANK CODE;BRANCH NAME;EMPLOYEE NUMBER;CUSTOMER NAME;ACCOUNT NO;AMOUNT\n";
-                $success = 0;
-                foreach ($request->installment_ids as $id) {
-                    //Query Installment
-                    $installment = Installment::findOrFail($id);
-
-                    //Account Information
-                    $account_name = strtoupper($installment->debitOrder->customerAccount->account_name);
-                    $account_number = $installment->debitOrder->customerAccount->account_number;
-                    $mandate_reference = $installment->debitOrder->reference;
-                    $debit_order_id = $installment->debitOrder->id;
-                    $periodicity = $installment->debitOrder->periodicity;
-                    $installment_id = $installment->id;
-                    $payment_amount = $installment->installment_amount;
-                    $payment_date = $installment->payment_date;
-                    $debit_start_date = Carbon::parse($installment->debitOrder->start_date);
-                    $debit_end_date = Carbon::parse($installment->debitOrder->end_date);
-
-                    //debit status
-                    $deleted = $installment->debitOrder->deleted;
-                    $contract_status = $installment->debitOrder->contract_status;
-
-                    //Batch Collection Date
-                    $batch_collection_date = $installment->payment_date;
-
-                    //1.0 check if periodicity == MONTHLY
-                    if ($periodicity == "MONTHLY" && $contract_status == "OPEN" && $deleted == 0) {
-                        //2.0: Check if mandate start date <= today
-                        if ($debit_start_date->lte(Carbon::now())) {
-                            //2.1: check if debit mandate expire
-                            if ($debit_end_date->gte(Carbon::now())) {
-                                //3.0: check if account exists in this batch
-                                if (!in_array($account_number, $arr_accounts)) {
-                                    // 3.1: create new collection date from previous month
-                                    $collection_date = $this->deductionService->createCollectionDate($payment_date);
-
-                                    //4.0: check if the mandate reference debited this month
-                                    $collection_debit_order = CollectionDebitOrder::where(['debit_order_id' => $debit_order_id])
-                                        ->whereMonth('payment_at', Carbon::parse($collection_date)->format('m'))
-                                        ->whereYear('payment_at', Carbon::parse($collection_date)->format('Y'));
-
-                                    if (!$collection_debit_order->exists()) {
-                                        //create csv file
-                                        $csv .= "{$installment_id};016;NMB;{$mandate_reference};{$account_name};{$account_number};{$payment_amount}\n";
-
-                                        //append account in array
-                                        array_push($arr_accounts, $account_number);
-
-                                        //update array installments
-                                        array_push($arr_installments, $installment->id);
-
-                                        //update installment status => created = 1 and effective payment date
-                                        $installment->effective_payment_date = $collection_date;
-                                        $installment->created = 1;
-                                        $installment->save();
-
-                                        // create collection debit order
-                                        CollectionDebitOrder::create([
-                                            'collection_batch_id' => $batch->id,
-                                            'debit_order_id' => $debit_order_id,
-                                            'installment_id' => $installment_id,
-                                            'status' => 'CREATED',
-                                            'payment_at' => $collection_date
-                                        ]);
-
-                                        //increment number of collections
-                                        $number_of_collections += 1;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                //4. Save csv payload in database
-                if ($arr_installments) {
-                    $batch->request_csv = $csv;
-                    $batch->collectionDate = $batch_collection_date;
-                    $batch->number_of_collections = $number_of_collections;
-                    $batch->installment_ids = implode(",", $arr_installments);
-                    $batch->save();
-
-                    //increment success
-                    $success += 1;
-                }
-            }
+            $batch = $this->collectionBatchService->createManualBatch(
+                (int) $request->selected_partner_id,
+                array_map('intval', $request->installment_ids),
+                Auth::user()
+            );
 
             //Batch Information
-            $collection_reference = $batch->collectionReference;
+            $collection_reference = $batch?->collectionReference;
 
             //send Notification of batch creation
-            if ($success > 0) {
+            if ($batch) {
                 $message = "Collection batch number " . $collection_reference . " created. Review and approve to the next stage.";
                 $arr_phone = [255717705746, 255656314330];
 
@@ -337,7 +174,11 @@ class CollectionController extends Controller
             }
 
             //redirect
-            return Redirect::route('collections.create')->with('success', 'Collection batch created, Preview and Approve to next stage.');
+            if ($batch) {
+                return Redirect::route('collections.create')->with('success', 'Collection batch created, Preview and Approve to next stage.');
+            }
+
+            return Redirect::route('collections.create')->with('danger', 'No eligible collection selected.');
         } else {
             //redirect
             return Redirect::route('collections.create')->with('danger', 'No any collection selected.');
@@ -363,7 +204,7 @@ class CollectionController extends Controller
         //installments
         $arr_installments = [];
         $number_of_failed_installments = 0;
-        $installment_ids = explode(',', $batch->installment_ids);
+        $installment_ids = $batch->installment_id_list;
 
         $installments = Installment::whereIn('id', $installment_ids);
 
@@ -408,7 +249,7 @@ class CollectionController extends Controller
         $batch = CollectionBatch::where(['id' => $id])->firstOrFail();
 
         //installments
-        $installment_ids = explode(',', $batch->installment_ids);
+        $installment_ids = $batch->installment_id_list;
         $installments = Installment::whereIn('id', $installment_ids);
 
         if ($installments->count() > 0) {
@@ -444,7 +285,7 @@ class CollectionController extends Controller
         $batch = CollectionBatch::where(['id' => $id])->firstOrFail();
 
         //installments
-        $installment_ids = explode(',', $batch->installment_ids);
+        $installment_ids = $batch->installment_id_list;
         $installments = Installment::whereIn('id', $installment_ids);
 
         if ($installments->count() > 0) {
@@ -489,16 +330,8 @@ class CollectionController extends Controller
         //collection batch
         $collection_batch = CollectionBatch::where(['id' => $request->batch_id])->firstOrFail();
 
-        if (!empty($collection_batch->request_csv)) {
-            //1. Create parameters
-            $csv = $collection_batch->request_csv;
-            $arr_installments = explode(",", $collection_batch->installment_ids);
-
-            //2. Create payload for collection 
-            $payload = $this->payloadService->collectionPayload($collection_batch, $csv);
-
-            //3. BackgroundJob for creating collection batches
-            dispatch(new PushCollectionJob($payload, $arr_installments));
+        if ($collection_batch->canBePushed()) {
+            dispatch(new PushCollectionJob($collection_batch->id));
         }
 
         //response
@@ -512,162 +345,123 @@ class CollectionController extends Controller
         //batch
         $batch = CollectionBatch::where(['id' => $id])->firstOrFail();
         $batch->deleted = 1;
+        $batch->lifecycle_status = CollectionBatch::LIFECYCLE_ARCHIVED;
         $batch->save();
 
         //redirect
         return Redirect::route('collections.batches')->with('success', 'Collection batch archived');
     }
 
-    public function create_failed($id)
+    public function create_failed($id = null)
     {
-        $title = 'Create Failed Debit Mandate';
+        $title = 'Create Failed Collection Batch';
+        $selectedBatchId = $id;
 
-        try {
-            //collection batch
-            $collection_batch = CollectionBatch::findOrFail($id);
-
-            // validate the date before creating new collection dates
-            $current_month = now()->month; //current month
-            $batch_month = Carbon::parse($collection_batch->collectionDate)->format('m');
-            $diff = $current_month - $batch_month;
-
-            if ($diff > 1 || $diff < 1) {
-                return Redirect::route('collections.show', $id)->with('danger', 'Failed to create batch, check batch collection date');
-            }
-
-            //installment_ids
-            $installment_ids = explode(",", $collection_batch->installment_ids);
-
-            //find installments where status=FAILED
-            $installments = Installment::whereIn('id', $installment_ids)->where(function ($q) {
-                $q->orWhere('status', 'FAILED')
-                    ->orWhere('status', 'FUNDSCHECK');
-            })->where('remarks', '!=', 'Account Is Valid')->get();
-
-            if ($installments->isNotEmpty()) {
-                //1. Create new collection batch
-                //1.0 Create and format next month collection date
-                $collectionDate = Carbon::parse($collection_batch->collectionDate);
-                $nextMonthCollectionDate = $collectionDate->copy()->addMonth();
-
-                //create statement
-                $batch = CollectionBatch::create([
-                    "partner_id" => $collection_batch->partner->id,
-                    "collectionReference" => $this->deductionService->getCollectionReference(),
-                    "corporateReference" => $collection_batch->corporateReference,
-                    "selectedPostingDate" => Carbon::now(),
-                    "createdBy" => 1,
-                    "verifiedBy" => 1,
-                    "collectionDate" => $nextMonthCollectionDate->toDateString(),
-                    "createdDate" => Carbon::now(),
-                    "verifyDate" => Carbon::now(),
-                ]);
-
-                if ($batch->wasRecentlyCreated) {
-                    //2.1 Declare variables
-                    $number_of_collections = 0;
-                    $arr_installments = [];
-                    $arr_accounts = [];
-
-                    //3. Create CSV file based installment
-                    $csv = "SERIAL No.;BANK CODE;BRANCH NAME;EMPLOYEE NUMBER;CUSTOMER NAME;ACCOUNT NO;AMOUNT\n";
-
-                    foreach ($installments as $installment) {
-                        //debit order information
-                        $account_name = strtoupper($installment->debitOrder->customerAccount->account_name);
-                        $account_number = $installment->debitOrder->customerAccount->account_number;
-                        $mandate_reference = $installment->debitOrder->reference;
-                        $debit_order_id = $installment->debitOrder->id;
-                        $periodicity = $installment->debitOrder->periodicity;
-                        $installment_id = $installment->id;
-                        $payment_amount = $installment->installment_amount;
-                        $payment_date = $installment->payment_date;
-                        $debit_start_date = Carbon::parse($installment->debitOrder->start_date);
-                        $debit_end_date = Carbon::parse($installment->debitOrder->end_date);
-                        $deleted = $installment->debitOrder->deleted;
-                        $contract_status = $installment->debitOrder->contract_status;
-
-                        //1.0: check if periodicity == MONTHLY and deleted = 0
-                        if ($periodicity == "MONTHLY" && $contract_status == "OPEN" && $deleted == 0) {
-                            //2.0: Check if mandate start date <= today
-                            if ($debit_start_date->lte(Carbon::now())) {
-                                //2.1: check if debit mandate expire
-                                if ($debit_end_date->gte(Carbon::now())) {
-                                    //3.0: check if account exists in this batch
-                                    if (!in_array($account_number, $arr_accounts)) {
-                                        //4.0: check if the mandate reference debited this month
-                                        $collection_debit_order = CollectionDebitOrder::where(['debit_order_id' => $debit_order_id, 'status' => 'CREATED'])
-                                            ->whereMonth('payment_at', Carbon::parse($payment_date)->format('m'));
-
-                                        if ($collection_debit_order->count() == 1) {
-                                            //create csv file
-                                            $csv .= "{$installment_id};016;NMB;{$mandate_reference};{$account_name};{$account_number};{$payment_amount}\n";
-
-                                            //append account in array
-                                            array_push($arr_accounts, $account_number);
-
-                                            //update array installments
-                                            array_push($arr_installments, $installment_id);
-
-                                            // Convert to Carbon instance if it's not already
-                                            $paymentDate = Carbon::parse($payment_date);
-
-                                            //same day next month
-                                            $nextMonthPaymentDate = $paymentDate->copy()->addMonth();
-
-                                            // create collection debit order
-                                            $create_collection_debit_order = CollectionDebitOrder::create([
-                                                'collection_batch_id' => $batch->id,
-                                                'debit_order_id' => $debit_order_id,
-                                                'status' => 'CREATED',
-                                                'payment_at' => $nextMonthPaymentDate->toDateString()
-                                            ]);
-
-                                            //increment number of collections
-                                            $number_of_collections += 1;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    //check if installments is not null
-                    if ($arr_installments) {
-                        $batch->request_csv = $csv;
-                        $batch->number_of_collections = $number_of_collections;
-                        $batch->installment_ids = implode(",", $arr_installments);
-                        //$batch->recreated = 1;
-                        $batch->save();
-
-                        //Batch Information
-                        $collection_reference = $batch->collectionReference;
-
-                        //send Notification of batch creation
-                        $message = "Collection batch number " . $collection_reference . " created. Review and approve to the next stage.";
-                        $arr_phone = [255717705746, 255656314330];
-
-                        foreach ($arr_phone as $phone) {
-                            //send sms
-                            $data = ["phone" => $phone, "message" => $message];
-                            dispatch(new SendSMSJob($data));
-                        }
-                    } else {
-                        $batch->delete();
-                    }
+        $batches = CollectionBatch::filterCondition()
+            ->where('recreated', 0)
+            ->where(function ($query) {
+                $query->where('failed', 1)
+                    ->orWhere(function ($inner) {
+                        $inner->where('processed', 1)->where('number_of_failed', '>', 0);
+                    });
+            })
+            ->orderByDesc('collectionDate')
+            ->get()
+            ->filter(function ($batch) {
+                if (empty($batch->collectionDate)) {
+                    return false;
                 }
 
-                //update existing collection batch
-                $collection_batch->recreated = 1;
-                $collection_batch->save();
-            }
-        } catch (ModelNotFoundException $e) {
-            Log::debug(get_class_methods($e));
-            Log::debug($e);
+                $currentMonth = now()->month;
+                $batchMonth = (int) Carbon::parse($batch->collectionDate)->format('m');
+
+                return ($currentMonth - $batchMonth) === 1;
+            })
+            ->values();
+
+        $rows = $batches->map(function ($batch) {
+            $installments = Installment::whereIn('id', $batch->installment_id_list)->get();
+            $failedCount = $installments->whereIn('status', ['FAILED', 'FUNDSCHECK'])->count();
+
+            return [
+                'id' => $batch->id,
+                'collectionReference' => $batch->collectionReference,
+                'partner_name' => $batch->partner->business_name ?? 'NIL',
+                'collectionDate' => $batch->collectionDate,
+                'created_at' => $batch->created_at,
+                'number_of_collections' => $batch->number_of_collections ?? 0,
+                'number_of_failed' => $batch->number_of_failed ?: $failedCount,
+                'remarks' => $batch->remarks,
+            ];
+        });
+
+        return view('collections.create_failed', compact('title', 'rows', 'selectedBatchId'));
+    }
+
+    public function store_failed(Request $request)
+    {
+        $batchIds = collect($request->input('batch_ids', []))
+            ->filter()
+            ->map(fn ($id) => (string) $id)
+            ->values();
+
+        if ($batchIds->isEmpty()) {
+            return Redirect::route('collections.create-failed')->with('danger', 'Select at least one batch to recreate.');
         }
 
-        //redirect
-        return Redirect::route('collections.batches')->with('success', 'Collection batch created, review and approve to the next stage.');
+        $success = 0;
+        $references = [];
+
+        foreach ($batchIds as $batchId) {
+            $collectionBatch = CollectionBatch::find($batchId);
+
+            if (!$collectionBatch) {
+                continue;
+            }
+
+            $batch = $this->collectionBatchService->recreateFailedBatch($collectionBatch, Auth::user());
+
+            if ($batch) {
+                $success++;
+                $references[] = $batch->collectionReference;
+            }
+        }
+
+        if ($success === 0) {
+            return Redirect::route('collections.create-failed')->with('warning', 'No failed collection batch was created from the selected rows.');
+        }
+
+        $message = "Collection batch" . ($success > 1 ? 'es' : '') . " " . implode(', ', $references) . " created. Review and approve to the next stage.";
+        $arr_phone = [255717705746, 255656314330];
+
+        foreach ($arr_phone as $phone) {
+            $data = ["phone" => $phone, "message" => $message];
+            dispatch(new SendSMSJob($data));
+        }
+
+        return Redirect::route('collections.batches')->with('success', "Created {$success} failed collection batch(es) successfully.");
+    }
+
+    public function create_monthly_failed()
+    {
+        $previousMonth = now()->subMonth();
+        $eligibility = $this->collectionBatchService->lastMonthFailedBatchEligibility();
+
+        if (!$eligibility['allowed']) {
+            return Redirect::route('collections.batches')->with('warning', $eligibility['reason']);
+        }
+
+        $count = $this->collectionBatchService->recreateFailedBatchesForMonth(
+            (int) $previousMonth->format('m'),
+            (int) $previousMonth->format('Y'),
+            Auth::user()
+        );
+
+        if ($count === 0) {
+            return Redirect::route('collections.batches')->with('warning', 'No failed collection batches were eligible for monthly recreation.');
+        }
+
+        return Redirect::route('collections.batches')->with('success', "Created {$count} failed collection batch(es) for " . $previousMonth->format('F Y') . '.');
     }
 
     public function fetch_status(Request $request)
@@ -677,11 +471,9 @@ class CollectionController extends Controller
         //Collection batch
         $collection_batch = CollectionBatch::where(['id' => $request->batch_id])->firstOrFail();
 
-        //Create payload
-        $payload = $this->payloadService->collectionStatusPayload($collection_batch);
-
-        //BackgroundJob for creating collection batches
-        dispatch(new CollectionStatusJob($payload));
+        if ($collection_batch->canFetchStatus()) {
+            dispatch(new CollectionStatusJob($collection_batch->id));
+        }
 
         //response
         return response()->json(['success' => true, 'success_msg' => "Collection status successful fetched."], 200);

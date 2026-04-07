@@ -38,18 +38,8 @@
                         <div class="mt-2">
                             <span class="pm-chip">{{ $batch->corporateReference ?? 'NIL' }}</span>
                             <span class="pm-chip">{{ number_format($batch->number_of_collections) }} collections</span>
-                            <span class="pm-chip">{{ $batch->pushed ? 'Uploaded' : 'Pending Upload' }}</span>
-                            <span class="pm-chip">
-                                @if ($batch->processed == 1 && $batch->failed == 0)
-                                    Pass
-                                @elseif($batch->processed == 1 && $batch->failed == 1)
-                                    Failed
-                                @elseif($batch->pushed == 1)
-                                    Processing
-                                @else
-                                    Pending
-                                @endif
-                            </span>
+                            <span class="pm-chip">{{ $batch->upload_state_label }}</span>
+                            <span class="pm-chip">{{ $batch->lifecycle_label }}</span>
                         </div>
                     </div>
                 </div>
@@ -75,6 +65,12 @@
                     </div>
 
                     <div class="pm-actions">
+                        @if ($show_create_button && $number_of_failed_installments > 0)
+                            <a href="{{ route('collections.create-failed', $batch->id) }}" class="btn btn-outline-primary btn-sm">
+                                <i class="bx bx-repeat"></i> Create Failed Batch
+                            </a>
+                        @endif
+
                         <template x-if="deleted==0">
                             <template
                                 x-if="status==100 || status ==200 || status ==230 || status ==235 || status ==239 || status==249 || status==403 || status==405 || status==500 || status==501">
@@ -84,18 +80,14 @@
                             </template>
                         </template>
 
-                        @if (Auth::user()->hasRole(['admin']))
-                            <template x-if="pushed==0">
-                                <button x-html="btnPush" class="btn btn-outline-light btn-sm"
-                                    x-on:click="pushCollectionBatch();"></button>
-                            </template>
+                        @if (Auth::user()->hasRole(['admin']) && $batch->canBePushed())
+                            <button x-html="btnPush" class="btn btn-outline-light btn-sm"
+                                x-on:click="pushCollectionBatch();"></button>
                         @endif
 
-                        @if (Auth::user()->hasRole(['admin']))
-                            <template x-if="pushed==1">
-                                <button x-html="btnStatus" class="btn btn-success btn-sm"
-                                    x-on:click="fetchCollectionStatus();"></button>
-                            </template>
+                        @if (Auth::user()->hasRole(['admin']) && $batch->canFetchStatus())
+                            <button x-html="btnStatus" class="btn btn-success btn-sm"
+                                x-on:click="fetchCollectionStatus();"></button>
                         @endif
                     </div>
                 </div>
@@ -131,15 +123,15 @@
                     </div>
                     <div class="pm-grid__item">
                         <div class="pm-grid__label">Upload State</div>
-                        <div class="pm-grid__value">{{ $batch->pushed ? 'Uploaded' : 'Pending Upload' }}</div>
+                        <div class="pm-grid__value">{{ $batch->upload_state_label }}</div>
                     </div>
                     <div class="pm-grid__item">
                         <div class="pm-grid__label">Processing State</div>
-                        <div class="pm-grid__value">{{ $batch->processed ? 'Processed' : 'Pending Processing' }}</div>
+                        <div class="pm-grid__value">{{ $batch->processing_state_label }}</div>
                     </div>
                     <div class="pm-grid__item">
-                        <div class="pm-grid__label">Failed Flag</div>
-                        <div class="pm-grid__value">{{ $batch->failed ? 'Failed' : 'No Failure' }}</div>
+                        <div class="pm-grid__label">Workflow Lifecycle</div>
+                        <div class="pm-grid__value">{{ $batch->lifecycle_label }}</div>
                     </div>
                     <div class="pm-grid__item">
                         <div class="pm-grid__label">Recreated Batch</div>
@@ -153,7 +145,7 @@
             </div>
         </div>
 
-            @if (($batch->created == 1 && $batch->pushed == 0) || ($batch->pushed == 1 && $batch->processed == 0))
+            @if (!$batch->isWorkflowComplete())
                 <div class="card pm-card mb-4">
                     <div class="card-body">
                         <div class="pm-card__head">
@@ -201,7 +193,7 @@
                 </div>
             @endif
 
-            @if ($batch->pushed == 1 && $batch->processed == 1)
+            @if ($batch->isWorkflowComplete())
                 <div class="card pm-card">
                     <div class="card-body">
                         <div class="pm-card__head">

@@ -6,11 +6,14 @@ use App\Http\Resources\InstallmentResource;
 use App\Jobs\ApiCallbackJob;
 use App\Jobs\SendSMSJob;
 use App\Models\AppVariable;
+use App\Models\CollectionBatch;
+use App\Models\CollectionDebitOrder;
 use App\Models\DebitOrder;
 use App\Models\Partner;
 use App\Models\PartnerAccount;
 use App\Models\Installment;
 use App\Models\InstallmentPayment;
+use App\Models\PaymentSettlement;
 use Carbon\Carbon;
 use DateTime;
 use Exception;
@@ -23,6 +26,11 @@ class DeductionService
 {
     private $app_variable;
     public function __construct() {}
+
+    protected function settlementPosting(): SettlementPostingService
+    {
+        return app(SettlementPostingService::class);
+    }
 
     protected function appVariable(): AppVariable
     {
@@ -173,11 +181,7 @@ class DeductionService
 
         // Stream debit orders in chunks to avoid loading everything at once
         DebitOrder::query()
-            ->where('approved', 1)
-            ->where('status', 240)
-            ->where('channel', 'NMB')
-            ->where('contract_status', 'OPEN')
-            ->where('deleted', 0)
+            ->eligibleForCollection('NMB')
             ->whereDate('next_debit_date', $current_date)
             ->whereHas('partner', function ($q) use ($partner) {
                 $q->where('partners.id', $partner->id);
@@ -363,7 +367,7 @@ class DeductionService
         }
     }
 
-    public function updateInstallments($data)
+    public function updateInstallments(CollectionBatch $batch, $data)
     {
         //Convert the data into an array of rows
         $rows = explode("\n", $data);
@@ -390,6 +394,13 @@ class DeductionService
 
             //check if installment exists AND channel == "NMB"
             if ($installment && $installment->debitOrder->channel == "NMB") {
+                $line = $this->resolveCollectionLine($batch, $installment);
+                $responseHash = md5(trim($row));
+
+                if ($line && $line->response_hash === $responseHash && $line->processed_at) {
+                    continue;
+                }
+
                 //check if installment status != CLOSED
                 if ($installment->status != "CLOSED") {
                     //installment amount
@@ -402,15 +413,24 @@ class DeductionService
 
                     //check for status
                     if ($status == "FAIL" || $status == "FUNDSCHECK") {
-                        //status
-                        if ($status == "FAIL")
-                            $installment->status = "FAILED";
-                        else if ($status == "FUNDSCHECK")
-                            $installment->status = "FUNDSCHECK";
+                        $normalizedStatus = $status == "FUNDSCHECK"
+                            ? PaymentSettlement::STATUS_FUNDSCHECK
+                            : PaymentSettlement::STATUS_FAILED;
 
-                        //remarks
-                        $installment->remarks = $message;
-                        $installment->save();
+                        $this->settlementPosting()->post([
+                            'channel' => 'NMB',
+                            'batch' => $batch,
+                            'line' => $line,
+                            'debit_order' => $installment->debitOrder,
+                            'installment' => $installment,
+                            'amount' => 0,
+                            'raw_status' => $status,
+                            'normalized_status' => $normalizedStatus,
+                            'remarks' => $message,
+                            'effective_payment_date' => $installment->effective_payment_date ?: now()->toDateString(),
+                            'payment_reference' => "COL-{$batch->collectionReference}-{$installment->id}",
+                            'raw_payload_hash' => $responseHash,
+                        ]);
 
                         //increment failed installments
                         $failed_installments += 1;
@@ -427,35 +447,41 @@ class DeductionService
 
                         }
                     } else if ($status == "SUCCESS") {
-                        //Generate a unique payment reference
-                        $payment_reference = $this->uniquePaymentReference(12);
+                        $openingBalance = (float) ($installment->outstanding_amount ?? 0);
+                        $normalizedStatus = $amount > 0 && $amount < $openingBalance
+                            ? PaymentSettlement::STATUS_PARTIAL
+                            : PaymentSettlement::STATUS_SUCCESS;
 
-                        //4. Create or update installment payment
-                        $payment = InstallmentPayment::firstOrNew(
-                            [
-                                'mandate_reference' => $installment->debitOrder->reference,
-                                'payment_reference' => $payment_reference,
-                            ]
-                        );
-                        $payment->amount = $amount;
-                        $payment->payment_at = date('Y-m-d');
-                        $payment->save();
-
-                        //updated status of installment
-                        $installment->payment_reference = $payment_reference;
-                        $installment->last_paid_amount = $amount;
-                        $installment->remarks = $message;
-                        $installment->save();
+                        $this->settlementPosting()->post([
+                            'channel' => 'NMB',
+                            'batch' => $batch,
+                            'line' => $line,
+                            'debit_order' => $installment->debitOrder,
+                            'installment' => $installment,
+                            'amount' => $amount,
+                            'raw_status' => $status,
+                            'normalized_status' => $normalizedStatus,
+                            'remarks' => $message,
+                            'effective_payment_date' => $installment->effective_payment_date ?: date('Y-m-d'),
+                            'payment_reference' => "COL-{$batch->collectionReference}-{$installment->id}",
+                            'raw_payload_hash' => $responseHash,
+                        ]);
 
                         //increment success installments
                         $success_installments += 1;
-
-                        //process calculation for installment and debit order.
-                        $this->processInstallment($installment);
                     } else {
                         //updated status of installment
                         $installment->status = $status;
                         $installment->save();
+
+                        if ($line) {
+                            $line->status = $status;
+                            $line->bank_status = $status;
+                            $line->bank_message = $message;
+                            $line->response_hash = $responseHash;
+                            $line->processed_at = now();
+                            $line->save();
+                        }
                     }
                 }
             }
@@ -464,7 +490,7 @@ class DeductionService
         return [$success_installments, $failed_installments];
     }
 
-    public function updateFailedInstallments($data)
+    public function updateFailedInstallments(CollectionBatch $batch, $data)
     {
         //Convert the data into an array of rows
         $rows = explode("\n", $data);
@@ -490,15 +516,32 @@ class DeductionService
 
             //check if installment exists AND channel == "NMB"
             if ($installment && $installment->debitOrder->channel == "NMB") {
+                $line = $this->resolveCollectionLine($batch, $installment);
+                $responseHash = md5(trim($row));
+
+                if ($line && $line->response_hash === $responseHash && $line->processed_at) {
+                    continue;
+                }
+
                 //check if installment status != CLOSED
                 if ($installment->status != "CLOSED") {
                     //status and paid amount
                     $message = ucwords(strtolower($fields[8]));
 
-                    //updated status of installment
-                    $installment->status = "FAILED";
-                    $installment->remarks = $message;
-                    $installment->save();
+                    $this->settlementPosting()->post([
+                        'channel' => 'NMB',
+                        'batch' => $batch,
+                        'line' => $line,
+                        'debit_order' => $installment->debitOrder,
+                        'installment' => $installment,
+                        'amount' => 0,
+                        'raw_status' => 'FAILED',
+                        'normalized_status' => PaymentSettlement::STATUS_FAILED,
+                        'remarks' => $message,
+                        'effective_payment_date' => $installment->effective_payment_date ?: now()->toDateString(),
+                        'payment_reference' => "COL-{$batch->collectionReference}-{$installment->id}",
+                        'raw_payload_hash' => $responseHash,
+                    ]);
 
                     //increment failed installments
                     $failed_installments += 1;
@@ -510,8 +553,9 @@ class DeductionService
     }
 
     //process installment
-    public function processInstallment(Installment $installment)
+    public function processInstallment(Installment $installment, ?CollectionDebitOrder $line = null)
     {
+        // Legacy entry point. New settlement posting should go through SettlementPostingService.
         //installment status
         $installment_status = strtoupper($installment->status);
         $amount = $installment->last_paid_amount; //paid amount
@@ -547,6 +591,9 @@ class DeductionService
                 $current_balance = $debitOrder->current_balance + $amount;
                 $debitOrder->outstanding_amount = $outstanding_amount;
                 $debitOrder->current_balance = $current_balance;
+                if (isset($debitOrder->paid_amount)) {
+                    $debitOrder->paid_amount = ($debitOrder->paid_amount ?? 0) + $amount;
+                }
 
                 //6. Update contract status = outstanding amount <= 0
                 if ($outstanding_amount <= 0)
@@ -554,6 +601,7 @@ class DeductionService
 
                 //save debit order
                 $debitOrder->save();
+                $this->updateNextDebitDate($debitOrder);
 
                 //installment amount
                 $paid_amount = $installment->last_paid_amount;
@@ -595,23 +643,53 @@ class DeductionService
         return 200;
     }
 
+    protected function resolveCollectionLine(CollectionBatch $batch, Installment $installment): ?CollectionDebitOrder
+    {
+        return CollectionDebitOrder::where('collection_batch_id', $batch->id)
+            ->where('installment_id', $installment->id)
+            ->latest('id')
+            ->first();
+    }
+
+    public function syncNextDebitDate(DebitOrder $debitOrder, ?Carbon $referenceDate = null): ?string
+    {
+        try {
+            $referenceDate = $referenceDate ?: now();
+            $startOfMonth = $referenceDate->copy()->startOfMonth()->toDateString();
+
+            $currentCycleInstallment = $debitOrder->installments()
+                ->where('status', '!=', 'CLOSED')
+                ->whereDate('payment_date', '>=', $startOfMonth)
+                ->orderBy('payment_date', 'asc')
+                ->first();
+
+            $nextInstallment = $currentCycleInstallment ?: $debitOrder->installments()
+                ->where('status', '!=', 'CLOSED')
+                ->orderBy('payment_date', 'asc')
+                ->first();
+
+            $debitOrder = DebitOrder::findOrFail($debitOrder->id);
+
+            if ($nextInstallment) {
+                $debitOrder->next_debit_date = Carbon::parse($nextInstallment->payment_date)->toDateString();
+            } else {
+                $debitOrder->next_debit_date = null;
+                $debitOrder->contract_status = 'CLOSED';
+            }
+
+            $debitOrder->save();
+
+            return $debitOrder->next_debit_date;
+        } catch (Exception $e) {
+            Log::debug("Invalid date format: " . $e->getMessage());
+            return null;
+        }
+    }
+
     //update debit date
     public function updateNextDebitDate(DebitOrder $debitOrder)
     {
-        try {
-            //next payment date
-            $date = new DateTime($debitOrder->next_debit_date);
-            $date->modify('+1 month');
-            $new_payment_date = $date->format('Y-m-d');
-
-            //update debit order
-            $debit_id = $debitOrder->id;
-            $debit_order = DebitOrder::findOrFail($debit_id);
-            $debit_order->next_debit_date = $new_payment_date;
-            $debit_order->save();
-        } catch (Exception $e) {
-            Log::debug("Invalid date format: " . $e->getMessage());
-        }
+        return $this->syncNextDebitDate($debitOrder);
     }
 
     //get installment amount from debit type

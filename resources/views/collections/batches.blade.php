@@ -133,12 +133,34 @@
 
                             <div class="col-md-6">
                                 <div class="text-sm-end d-none d-sm-block">
+                                    <a class="btn btn-outline-primary btn-sm" href="{{ route('collections.create-failed') }}">
+                                        <i class="bx bx-list-check"></i> Create Failed
+                                    </a>
+                                    @if (($monthlyFailedEligibility['allowed'] ?? false) === true)
+                                        <a class="btn btn-outline-secondary btn-sm" href="{{ route('collections.create-monthly-failed') }}">
+                                            <i class="bx bx-refresh"></i>
+                                            Create Failed {{ $monthlyFailedEligibility['month_label'] ?? '' }}
+                                            ({{ number_format($monthlyFailedEligibility['eligible_count'] ?? 0) }})
+                                        </a>
+                                    @else
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" disabled
+                                            title="{{ $monthlyFailedEligibility['reason'] ?? 'Not available' }}">
+                                            <i class="bx bx-refresh"></i>
+                                            Create Failed {{ $monthlyFailedEligibility['month_label'] ?? '' }}
+                                        </button>
+                                    @endif
                                     <a class="btn btn-primary btn-sm" href="{{ route('collections.create') }}">
                                         <i class="bx bx-plus"></i> Create Batch
                                     </a>
                                 </div>
                             </div>
                         </div>
+
+                        @if (!empty($monthlyFailedEligibility['reason']))
+                            <div class="alert alert-info py-2 px-3 mb-3">
+                                {{ $monthlyFailedEligibility['reason'] }}
+                            </div>
+                        @endif
 
                         @if (isset($batches) && $batches->isNotEmpty())
                             <div class="table-responsive sp-list-table">
@@ -148,9 +170,9 @@
                                             <th width="3%">#</th>
                                             <th width="22%">Service Provider</th>
                                             <th>Reference</th>
-                                            <th>Uploaded</th>
-                                            <th>Processed</th>
-                                            <th>Outcome</th>
+                                            <th>Upload State</th>
+                                            <th>Processing State</th>
+                                            <th>Workflow</th>
                                             <th>Collections</th>
                                             <th>Collection Date</th>
                                             <th>Created Date</th>
@@ -165,31 +187,19 @@
                                                 <td>{{ $values->partner->business_name }}</td>
                                                 <td>{{ $values->collectionReference ?? '' }}</td>
                                                 <td>
-                                                    @if ($values->pushed == 0)
-                                                        <span class="badge badge-soft-danger">No</span>
-                                                    @else
-                                                        <span class="badge badge-soft-success">Yes</span>
-                                                    @endif
+                                                    <span class="badge {{ $values->pushed ? 'badge-soft-success' : 'badge-soft-secondary' }}">
+                                                        {{ $values->upload_state_label }}
+                                                    </span>
                                                 </td>
                                                 <td>
-                                                    @if ($values->pushed == 0)
-                                                        <span class="badge badge-soft-danger">No</span>
-                                                    @elseif($values->processed == 0)
-                                                        <span class="badge badge-soft-warning">In Progress</span>
-                                                    @else
-                                                        <span class="badge badge-soft-success">Yes</span>
-                                                    @endif
+                                                    <span class="badge {{ $values->processed ? 'badge-soft-success' : 'badge-soft-warning' }}">
+                                                        {{ $values->processing_state_label }}
+                                                    </span>
                                                 </td>
                                                 <td>
-                                                    @if ($values->pushed == 0 && $values->failed == 0)
-                                                        <span class="badge badge-soft-warning">In Progress</span>
-                                                    @elseif($values->processed == 1 && $values->failed == 0)
-                                                        <span class="badge badge-soft-success">Pass</span>
-                                                    @elseif($values->processed == 1 && $values->failed == 1)
-                                                        <span class="badge badge-soft-danger">Failed</span>
-                                                    @else
-                                                        <span class="badge badge-soft-secondary">Pending</span>
-                                                    @endif
+                                                    <span class="badge {{ $values->lifecycle_badge_class }}">
+                                                        {{ $values->lifecycle_label }}
+                                                    </span>
                                                 </td>
                                                 <td class="text-sm-end">{{ number_format($values->number_of_collections) }}</td>
                                                 <td>{{ date('d-m-Y', strtotime($values->collectionDate)) }}</td>
