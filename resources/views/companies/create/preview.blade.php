@@ -7,7 +7,7 @@
 @include('companies.create.partials.styles')
 
 @section('css')
-    <link href="{{ URL::asset('/assets/css/companies-show.css') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ URL::asset('/assets/css/blade-show.css') }}" rel="stylesheet" type="text/css" />
 @endsection
 
 @section('content')
@@ -50,34 +50,34 @@
                                 </div>
                             </div>
 
-                            <div class="provider-grid">
-                                <div class="provider-grid__item provider-grid__item--wide">
-                                    <span class="provider-grid__label">Business Name</span>
-                                    <span class="provider-grid__value">{{ $company->business_name }}</span>
+                            <div class="detail-grid">
+                                <div class="detail-grid__item detail-grid__item--wide">
+                                    <span class="detail-grid__label">Business Name</span>
+                                    <span class="detail-grid__value">{{ $company->business_name }}</span>
                                 </div>
-                                <div class="provider-grid__item">
-                                    <span class="provider-grid__label">Business Category</span>
-                                    <span class="provider-grid__value">{{ $company->partnerCategory->name ?? '-' }}</span>
+                                <div class="detail-grid__item">
+                                    <span class="detail-grid__label">Business Category</span>
+                                    <span class="detail-grid__value">{{ $company->partnerCategory->name ?? '-' }}</span>
                                 </div>
-                                <div class="provider-grid__item">
-                                    <span class="provider-grid__label">Corporate Reference</span>
-                                    <span class="provider-grid__value">{{ $company->reference }}</span>
+                                <div class="detail-grid__item">
+                                    <span class="detail-grid__label">Corporate Reference</span>
+                                    <span class="detail-grid__value">{{ $company->reference }}</span>
                                 </div>
-                                <div class="provider-grid__item">
-                                    <span class="provider-grid__label">Corporate ShortCode</span>
-                                    <span class="provider-grid__value">{{ $company->short_code }}</span>
+                                <div class="detail-grid__item">
+                                    <span class="detail-grid__label">Corporate ShortCode</span>
+                                    <span class="detail-grid__value">{{ $company->short_code }}</span>
                                 </div>
-                                <div class="provider-grid__item">
-                                    <span class="provider-grid__label">TIN Number</span>
-                                    <span class="provider-grid__value">{{ $company->tin_number }}</span>
+                                <div class="detail-grid__item">
+                                    <span class="detail-grid__label">TIN Number</span>
+                                    <span class="detail-grid__value">{{ $company->tin_number }}</span>
                                 </div>
-                                <div class="provider-grid__item">
-                                    <span class="provider-grid__label">Year of Incorporation</span>
-                                    <span class="provider-grid__value">{{ $company->year_of_incorporation }}</span>
+                                <div class="detail-grid__item">
+                                    <span class="detail-grid__label">Year of Incorporation</span>
+                                    <span class="detail-grid__value">{{ $company->year_of_incorporation }}</span>
                                 </div>
-                                <div class="provider-grid__item">
-                                    <span class="provider-grid__label">eMakato Status</span>
-                                    <span class="provider-grid__value" id="company-status">
+                                <div class="detail-grid__item">
+                                    <span class="detail-grid__label">eMakato Status</span>
+                                    <span class="detail-grid__value" id="company-status">
                                         <template x-if="approved==0">
                                             <span class="badge badge-soft-warning">Pending Review</span>
                                         </template>
@@ -89,17 +89,17 @@
                                         </template>
                                     </span>
                                 </div>
-                                <div class="provider-grid__item">
-                                    <span class="provider-grid__label">Created On</span>
-                                    <span class="provider-grid__value">{{ date('M d, Y H:i', strtotime($company->created_at)) }}</span>
+                                <div class="detail-grid__item">
+                                    <span class="detail-grid__label">Created On</span>
+                                    <span class="detail-grid__value">{{ date('M d, Y H:i', strtotime($company->created_at)) }}</span>
                                 </div>
-                                <div class="provider-grid__item">
-                                    <span class="provider-grid__label">Email</span>
-                                    <span class="provider-grid__value">{{ $company->email ?? '-' }}</span>
+                                <div class="detail-grid__item">
+                                    <span class="detail-grid__label">Email</span>
+                                    <span class="detail-grid__value">{{ $company->email ?? '-' }}</span>
                                 </div>
-                                <div class="provider-grid__item">
-                                    <span class="provider-grid__label">Phone</span>
-                                    <span class="provider-grid__value">{{ $company->phone }}</span>
+                                <div class="detail-grid__item">
+                                    <span class="detail-grid__label">Phone</span>
+                                    <span class="detail-grid__value">{{ $company->phone }}</span>
                                 </div>
                             </div>
                         </div>
@@ -111,9 +111,6 @@
                                 <div class="sp-section-head__copy">
                                     <h5>Supporting Documents</h5>
                                     <p>Files uploaded for compliance and provider due diligence.</p>
-                                </div>
-                                <div>
-                                    <span class="badge bg-soft-info text-info">{{ number_format($company->partnerDocuments->count()) }} files</span>
                                 </div>
                             </div>
 
@@ -159,9 +156,6 @@
                                 <div class="sp-section-head__copy">
                                     <h5>Collection Accounts</h5>
                                     <p>Accounts configured to receive collections and support operational settlement.</p>
-                                </div>
-                                <div>
-                                    <span class="badge bg-soft-success text-success">{{ number_format($company->partnerAccounts->count()) }} accounts</span>
                                 </div>
                             </div>
 
@@ -211,9 +205,6 @@
                                 <div class="sp-section-head__copy">
                                     <h5>Authorized Representatives</h5>
                                     <p>Contacts who will handle approvals and formal follow-up for the provider.</p>
-                                </div>
-                                <div>
-                                    <span class="badge bg-soft-warning text-warning">{{ number_format($company->partnerStaff->count()) }} contacts</span>
                                 </div>
                             </div>
 

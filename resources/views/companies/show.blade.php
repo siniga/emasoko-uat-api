@@ -5,7 +5,7 @@
 @endsection
 
 @section('css')
-    <link href="{{ URL::asset('/assets/css/companies-show.css') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ URL::asset('/assets/css/blade-show.css') }}" rel="stylesheet" type="text/css" />
 @endsection
 
 @section('content')
@@ -26,20 +26,20 @@
         </div>
     </div>
 
-    <div class="provider-shell" x-data="initData()">
+    <div class="detail-shell" x-data="initData()">
         <div class="row">
             <div class="col-lg-12">
-                <div class="card provider-hero mb-4">
-                    <div class="provider-hero__body">
+                <div class="card detail-hero mb-4">
+                    <div class="detail-hero__body">
                         <div class="row align-items-center">
                             <div class="col-lg-12 col-12">
-                                <span class="provider-kicker">Service Provider Profile</span>
-                                <h2 class="provider-title">{{ $company->business_name }}</h2>
-                                <p class="provider-subtitle">Operational view of provider setup, mandate footprint, collection performance, and approval readiness.</p>
-                                <div class="provider-meta">
-                                    <span class="provider-meta__pill"><strong>Reference:</strong> {{ $company->reference }}</span>
-                                    <span class="provider-meta__pill"><strong>Category:</strong> {{ $company->partnerCategory->name ?? '-' }}</span>
-                                    <span class="provider-meta__pill"><strong>Status:</strong>
+                                <span class="detail-kicker">Service Provider Profile</span>
+                                <h2 class="detail-title">{{ $company->business_name }}</h2>
+                                <p class="detail-subtitle">Operational view of provider setup, mandate footprint, collection performance, and approval readiness.</p>
+                                <div class="detail-meta">
+                                    <span class="detail-meta__pill"><strong>Reference:</strong> {{ $company->reference }}</span>
+                                    <span class="detail-meta__pill"><strong>Category:</strong> {{ $company->partnerCategory->name ?? '-' }}</span>
+                                    <span class="detail-meta__pill"><strong>Status:</strong>
                                         @if ($company->approved == 1)
                                             Approved
                                         @elseif($company->approved == 99)
@@ -58,56 +58,56 @@
 
         <div class="row mb-3">
             <div class="col-md-3">
-                <div class="provider-summary shadow h-96 py-2">
-                    <div class="provider-summary__label">Total Mandates</div>
-                    <div class="provider-summary__split">
-                        <div class="provider-summary__metric">
-                            <div class="provider-summary__value">{{ number_format($summaryStats['total_mandates_amount']) }}</div>
+                <div class="detail-summary shadow h-96 py-2">
+                    <div class="detail-summary__label">Total Mandates</div>
+                    <div class="detail-summary__split">
+                        <div class="detail-summary__metric">
+                            <div class="detail-summary__value">{{ number_format($summaryStats['total_mandates_amount']) }}</div>
                         </div>
-                        <div class="provider-summary__metric provider-summary__metric--count">
-                            <div class="provider-summary__value">{{ number_format($summaryStats['total_mandates']) }}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-3">
-                <div class="provider-summary bg-success-1 shadow h-96 py-2">
-                    <div class="provider-summary__label">Active Mandates</div>
-                    <div class="provider-summary__split">
-                        <div class="provider-summary__metric">
-                            <div class="provider-summary__value">{{ number_format($summaryStats['active_mandates_amount']) }}</div>
-                        </div>
-                        <div class="provider-summary__metric provider-summary__metric--count">
-                            <div class="provider-summary__value">{{ number_format($summaryStats['active_mandates']) }}</div>
+                        <div class="detail-summary__metric detail-summary__metric--count">
+                            <div class="detail-summary__value">{{ number_format($summaryStats['total_mandates']) }}</div>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div class="col-md-3">
-                <div class="provider-summary bg-danger-1 shadow h-96 py-2">
-                    <div class="provider-summary__label">Pending Mandates</div>
-                    <div class="provider-summary__split">
-                        <div class="provider-summary__metric">
-                            <div class="provider-summary__value">{{ number_format($summaryStats['pending_mandates_amount']) }}</div>
+                <div class="detail-summary bg-success-1 shadow h-96 py-2">
+                    <div class="detail-summary__label">Active Mandates</div>
+                    <div class="detail-summary__split">
+                        <div class="detail-summary__metric">
+                            <div class="detail-summary__value">{{ number_format($summaryStats['active_mandates_amount']) }}</div>
                         </div>
-                        <div class="provider-summary__metric provider-summary__metric--count">
-                            <div class="provider-summary__value">{{ number_format($summaryStats['pending_mandates']) }}</div>
+                        <div class="detail-summary__metric detail-summary__metric--count">
+                            <div class="detail-summary__value">{{ number_format($summaryStats['active_mandates']) }}</div>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div class="col-md-3">
-                <div class="provider-summary bg-danger shadow h-96 py-2">
-                    <div class="provider-summary__label">Failed Mandates</div>
-                    <div class="provider-summary__split">
-                        <div class="provider-summary__metric">
-                            <div class="provider-summary__value">{{ number_format($summaryStats['failed_mandates_amount']) }}</div>
+                <div class="detail-summary bg-danger-1 shadow h-96 py-2">
+                    <div class="detail-summary__label">Pending Mandates</div>
+                    <div class="detail-summary__split">
+                        <div class="detail-summary__metric">
+                            <div class="detail-summary__value">{{ number_format($summaryStats['pending_mandates_amount']) }}</div>
                         </div>
-                        <div class="provider-summary__metric provider-summary__metric--count">
-                            <div class="provider-summary__value">{{ number_format($summaryStats['failed_mandates']) }}</div>
+                        <div class="detail-summary__metric detail-summary__metric--count">
+                            <div class="detail-summary__value">{{ number_format($summaryStats['pending_mandates']) }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="detail-summary bg-danger shadow h-96 py-2">
+                    <div class="detail-summary__label">Failed Mandates</div>
+                    <div class="detail-summary__split">
+                        <div class="detail-summary__metric">
+                            <div class="detail-summary__value">{{ number_format($summaryStats['failed_mandates_amount']) }}</div>
+                        </div>
+                        <div class="detail-summary__metric detail-summary__metric--count">
+                            <div class="detail-summary__value">{{ number_format($summaryStats['failed_mandates']) }}</div>
                         </div>
                     </div>
                 </div>
@@ -116,40 +116,40 @@
 
         <div class="row mb-3">
             <div class="col-md-3">
-                <div class="provider-summary shadow h-96 py-2">
-                    <div class="provider-summary__label">Expected ({{ $summaryStats['current_month_label'] }})</div>
-                    <div class="provider-summary__value">{{ number_format($summaryStats['this_month_expected']) }}</div>
+                <div class="detail-summary shadow h-96 py-2">
+                    <div class="detail-summary__label">Expected ({{ $summaryStats['current_month_label'] }})</div>
+                    <div class="detail-summary__value">{{ number_format($summaryStats['this_month_expected']) }}</div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="provider-summary bg-success-1 shadow h-96 py-2">
-                    <div class="provider-summary__label">Collected ({{ $summaryStats['current_month_label'] }})</div>
-                    <div class="provider-summary__value">{{ number_format($summaryStats['this_month_collected']) }}</div>
+                <div class="detail-summary bg-success-1 shadow h-96 py-2">
+                    <div class="detail-summary__label">Collected ({{ $summaryStats['current_month_label'] }})</div>
+                    <div class="detail-summary__value">{{ number_format($summaryStats['this_month_collected']) }}</div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="provider-summary bg-info shadow h-96 py-2">
-                    <div class="provider-summary__label">Collection Rate</div>
-                    <div class="provider-summary__value">{{ number_format($summaryStats['collection_rate'], 2) }}%</div>
+                <div class="detail-summary bg-info shadow h-96 py-2">
+                    <div class="detail-summary__label">Collection Rate</div>
+                    <div class="detail-summary__value">{{ number_format($summaryStats['collection_rate'], 2) }}%</div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="provider-summary bg-danger shadow h-96 py-2">
-                    <div class="provider-summary__label">Overdue Amount</div>
-                    <div class="provider-summary__value">{{ number_format($summaryStats['overdue_amount']) }}</div>
+                <div class="detail-summary bg-danger shadow h-96 py-2">
+                    <div class="detail-summary__label">Overdue Amount</div>
+                    <div class="detail-summary__value">{{ number_format($summaryStats['overdue_amount']) }}</div>
                 </div>
             </div>
         </div>
 
         <div class="row">
             <div class="col-lg-12">
-                <div class="card provider-card">
+                <div class="card detail-card">
                     <div class="card-body">
                         <!-- success message -->
                         <div id="message_wrp"></div>
 
-                        <div class="provider-section">
-                            <div class="provider-section__head">
+                        <div class="detail-section">
+                            <div class="detail-section__head">
                                 <div>
                                     <h5>Provider Overview</h5>
                                     <p>Core service provider identity arranged in the same overview style as mandate details.</p>
@@ -201,34 +201,34 @@
                                 </div>
                             </div>
 
-                            <div class="provider-grid">
-                                <div class="provider-grid__item provider-grid__item--wide">
-                                    <span class="provider-grid__label">Business Name</span>
-                                    <span class="provider-grid__value">{{ $company->business_name }}</span>
+                            <div class="detail-grid">
+                                <div class="detail-grid__item detail-grid__item--wide">
+                                    <span class="detail-grid__label">Business Name</span>
+                                    <span class="detail-grid__value">{{ $company->business_name }}</span>
                                 </div>
-                                <div class="provider-grid__item">
-                                    <span class="provider-grid__label">Business Category</span>
-                                    <span class="provider-grid__value">{{ $company->partnerCategory->name ?? '-' }}</span>
+                                <div class="detail-grid__item">
+                                    <span class="detail-grid__label">Business Category</span>
+                                    <span class="detail-grid__value">{{ $company->partnerCategory->name ?? '-' }}</span>
                                 </div>
-                                <div class="provider-grid__item">
-                                    <span class="provider-grid__label">Corporate Reference</span>
-                                    <span class="provider-grid__value">{{ $company->reference }}</span>
+                                <div class="detail-grid__item">
+                                    <span class="detail-grid__label">Corporate Reference</span>
+                                    <span class="detail-grid__value">{{ $company->reference }}</span>
                                 </div>
-                                <div class="provider-grid__item">
-                                    <span class="provider-grid__label">Corporate ShortCode</span>
-                                    <span class="provider-grid__value">{{ $company->short_code }}</span>
+                                <div class="detail-grid__item">
+                                    <span class="detail-grid__label">Corporate ShortCode</span>
+                                    <span class="detail-grid__value">{{ $company->short_code }}</span>
                                 </div>
-                                <div class="provider-grid__item">
-                                    <span class="provider-grid__label">TIN Number</span>
-                                    <span class="provider-grid__value">{{ $company->tin_number }}</span>
+                                <div class="detail-grid__item">
+                                    <span class="detail-grid__label">TIN Number</span>
+                                    <span class="detail-grid__value">{{ $company->tin_number }}</span>
                                 </div>
-                                <div class="provider-grid__item">
-                                    <span class="provider-grid__label">Year of Incorporation</span>
-                                    <span class="provider-grid__value">{{ $company->year_of_incorporation }}</span>
+                                <div class="detail-grid__item">
+                                    <span class="detail-grid__label">Year of Incorporation</span>
+                                    <span class="detail-grid__value">{{ $company->year_of_incorporation }}</span>
                                 </div>
-                                <div class="provider-grid__item">
-                                    <span class="provider-grid__label">eMakato Status</span>
-                                    <span class="provider-grid__value" id="company-status">
+                                <div class="detail-grid__item">
+                                    <span class="detail-grid__label">eMakato Status</span>
+                                    <span class="detail-grid__value" id="company-status">
                                         <template x-if="approved==0">
                                             <span class="badge badge-soft-warning">Pending Review</span>
                                         </template>
@@ -240,48 +240,48 @@
                                         </template>
                                     </span>
                                 </div>
-                                <div class="provider-grid__item">
-                                    <span class="provider-grid__label">Created On</span>
-                                    <span class="provider-grid__value">{{ date('M d, Y H:i', strtotime($company->created_at)) }}</span>
+                                <div class="detail-grid__item">
+                                    <span class="detail-grid__label">Created On</span>
+                                    <span class="detail-grid__value">{{ date('M d, Y H:i', strtotime($company->created_at)) }}</span>
                                 </div>
-                                <div class="provider-grid__item">
-                                    <span class="provider-grid__label">Email</span>
-                                    <span class="provider-grid__value">{{ $company->email ?? '-' }}</span>
+                                <div class="detail-grid__item">
+                                    <span class="detail-grid__label">Email</span>
+                                    <span class="detail-grid__value">{{ $company->email ?? '-' }}</span>
                                 </div>
-                                <div class="provider-grid__item">
-                                    <span class="provider-grid__label">Phone</span>
-                                    <span class="provider-grid__value">{{ $company->phone }}</span>
+                                <div class="detail-grid__item">
+                                    <span class="detail-grid__label">Phone</span>
+                                    <span class="detail-grid__value">{{ $company->phone }}</span>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="provider-section">
-                            <div class="provider-section__head">
+                        <div class="detail-section">
+                            <div class="detail-section__head">
                                 <div>
                                     <h5>Additional Details</h5>
                                     <p>Address and review notes for this provider.</p>
                                 </div>
                             </div>
 
-                            <div class="provider-grid">
-                                <div class="provider-grid__item">
-                                    <span class="provider-grid__label">Postal Address</span>
-                                    <span class="provider-grid__value">{{ $company->postal_address ?? '-' }}</span>
+                            <div class="detail-grid">
+                                <div class="detail-grid__item">
+                                    <span class="detail-grid__label">Postal Address</span>
+                                    <span class="detail-grid__value">{{ $company->postal_address ?? '-' }}</span>
                                 </div>
-                                <div class="provider-grid__item">
-                                    <span class="provider-grid__label">Physical Address</span>
-                                    <span class="provider-grid__value">{{ $company->physical_address }}</span>
+                                <div class="detail-grid__item">
+                                    <span class="detail-grid__label">Physical Address</span>
+                                    <span class="detail-grid__value">{{ $company->physical_address }}</span>
                                 </div>
-                                <div class="provider-grid__item provider-grid__item--wide" style="grid-column: 1 / -1;">
-                                    <span class="provider-grid__label">Remarks</span>
-                                    <span class="provider-grid__value" x-text="remarks || '-'"></span>
+                                <div class="detail-grid__item detail-grid__item--wide" style="grid-column: 1 / -1;">
+                                    <span class="detail-grid__label">Remarks</span>
+                                    <span class="detail-grid__value" x-text="remarks || '-'"></span>
                                 </div>
                             </div>
                         </div>
 
                         @if ($company->partnerAccounts->isNotEmpty())
-                            <div class="provider-section">
-                                <div class="provider-section__head">
+                            <div class="detail-section">
+                                <div class="detail-section__head">
                                     <div>
                                         <h5>Collection Accounts</h5>
                                         <p>Configured settlement accounts and their verification state.</p>
@@ -327,12 +327,12 @@
                                 </div>
                             </div>
                         @else
-                            <div class="provider-empty mb-4">No collection account has been added for this service provider yet.</div>
+                            <div class="detail-empty mb-4">No collection account has been added for this service provider yet.</div>
                         @endif
 
                         @if ($company->partnerDocuments->isNotEmpty())
-                            <div class="provider-section">
-                                <div class="provider-section__head">
+                            <div class="detail-section">
+                                <div class="detail-section__head">
                                     <div>
                                         <h5>Documents</h5>
                                         <p>Compliance files and uploaded provider records.</p>
@@ -373,12 +373,12 @@
                                 </div>
                             </div>
                         @else
-                            <div class="provider-empty mb-4">No document has been uploaded for this service provider yet.</div>
+                            <div class="detail-empty mb-4">No document has been uploaded for this service provider yet.</div>
                         @endif
 
                         @if ($company->partnerStaff->isNotEmpty())
-                            <div class="provider-section">
-                                <div class="provider-section__head">
+                            <div class="detail-section">
+                                <div class="detail-section__head">
                                     <div>
                                         <h5>Authorized Representatives</h5>
                                         <p>Contacts assigned to operate and approve on behalf of this provider.</p>
@@ -414,7 +414,7 @@
                                 </div>
                             </div>
                         @else
-                            <div class="provider-empty">No authorized representative has been recorded for this service provider yet.</div>
+                            <div class="detail-empty">No authorized representative has been recorded for this service provider yet.</div>
                         @endif
                     </div>
                 </div>

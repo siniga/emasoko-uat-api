@@ -67,8 +67,6 @@ class CompanyController extends Controller
         $requests = $request->all();
 
         if (isset($_POST['filter'])) {
-            Log::debug($requests);
-
             $companies = $companies->when($requests, function ($query) use ($requests) {
                 $query->withFilters($requests);
             });

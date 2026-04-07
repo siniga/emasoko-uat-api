@@ -4,10 +4,6 @@
     Service Providers
 @endsection
 
-{{-- @section('css')
-    <link href="{{ URL::asset('/assets/css/companies-lists.css') }}" rel="stylesheet" type="text/css" />
-@endsection --}}
-
 @section('content')
     <div class="sp-list-shell">
         <div class="row">
@@ -129,7 +125,7 @@
                                                 <i class='bx bx-reset'></i> Clear
                                             </button>
 
-                                            <button type="submit" name="filter" class="btn btn-secondary">
+                                            <button type="submit" name="filter" class="btn btn-primary">
                                                 <i class="bx bx-search"></i> Filter Data
                                             </button>
                                         </div>
