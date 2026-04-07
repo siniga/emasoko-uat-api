@@ -34,16 +34,25 @@
                 @php
                     $channelFormAction = $form_action ?? (Route::is('bi.dashboard') ? route('bi.dashboard') : route('dashboard'));
                     $channelOptions = $payment_channels ?? collect();
+                    $selectedYear = request()->filled('year') ? request('year') : '';
+                    $currentYear = date('Y');
                 @endphp
 
                 <form action="{{ $channelFormAction }}" method="POST" class="app-search d-none d-lg-block" id="channel-form">
                     @csrf
                     <div class="position-relative">
-                        <div class="form-group mb-0">
+                        <div class="form-group mb-0 d-flex gap-2">
                             <select class="form-select" id="channel-select" name="channel">
                                 <option value="">-- All Channels --</option>
                                 @foreach($channelOptions as $channel)
                                     <option value="{{ $channel->slug }}" {{ request('channel') === $channel->slug ? 'selected' : '' }}>{{ $channel->slug }}</option>
+                                @endforeach
+                            </select>
+
+                            <select class="form-select" id="year-select" name="year">
+                                <option value="">-- All Years --</option>
+                                @foreach(range(2024, $currentYear + 5) as $year)
+                                    <option value="{{ $year }}" {{ (int) $selectedYear === (int) $year ? 'selected' : '' }}>{{ $year }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -52,6 +61,10 @@
 
                 <script>
                     document.getElementById('channel-select').addEventListener('change', function() {
+                        this.form.submit();
+                    });
+
+                    document.getElementById('year-select').addEventListener('change', function() {
                         this.form.submit();
                     });
                 </script>

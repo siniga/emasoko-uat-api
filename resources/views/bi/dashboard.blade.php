@@ -4,6 +4,186 @@
     BI Dashboard
 @endsection
 
+@section('css')
+    <style>
+        .bi-kpi-card {
+            border-radius: 18px;
+            border: 1px solid #dce6f5;
+            box-shadow: 0 16px 36px rgba(21, 53, 103, 0.08);
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+
+        .bi-kpi-card .card-body {
+            padding: 1rem 1.1rem;
+        }
+
+        .bi-kpi-card__row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .bi-kpi-card__label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: rgba(255, 255, 255, 0.84);
+            margin-bottom: 0.35rem;
+        }
+
+        .bi-kpi-card__value,
+        .bi-kpi-card__side {
+            color: #fff;
+            font-size: 1.4rem;
+            font-weight: 800;
+            line-height: 1.1;
+        }
+
+        .bi-kpi-card__meta {
+            margin-top: 0.55rem;
+            color: rgba(255, 255, 255, 0.78);
+            font-size: 0.82rem;
+        }
+
+        .bi-kpi-card--primary {
+            background: linear-gradient(135deg, #153567 0%, #1f4a88 100%);
+        }
+
+        .bi-kpi-card--success {
+            background: linear-gradient(135deg, #156f52 0%, #1f9b74 100%);
+        }
+
+        .bi-kpi-card--info {
+            background: linear-gradient(135deg, #01579b 0%, #0288d1 100%);
+        }
+
+        .bi-kpi-card--warning {
+            background: linear-gradient(135deg, #9c5a05 0%, #d17b0f 100%);
+        }
+
+        .bi-snapshot-card {
+            border: 1px solid #dce6f5;
+            border-radius: 16px;
+            box-shadow: 0 14px 30px rgba(21, 53, 103, 0.08);
+            margin-bottom: 1.5rem;
+        }
+
+        .bi-snapshot-card .card-body {
+            padding: 1rem;
+        }
+
+        .bi-snapshot-card__label {
+            color: #7b8798;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 0.35rem;
+        }
+
+        .bi-snapshot-card__value {
+            color: #153567;
+            font-size: 1.55rem;
+            font-weight: 800;
+            margin-bottom: 0.35rem;
+            line-height: 1.1;
+        }
+
+        .bi-snapshot-card__meta {
+            color: #6b7c93;
+            font-size: 0.84rem;
+            margin-bottom: 0;
+        }
+
+        .bi-chart-card {
+            border: 1px solid #dce6f5;
+            border-radius: 18px;
+            box-shadow: 0 16px 36px rgba(21, 53, 103, 0.08);
+        }
+
+        .bi-chart-card .card-body {
+            padding: 1.2rem;
+        }
+
+        .bi-chart-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .bi-chart-title {
+            color: #153567;
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 0.15rem;
+        }
+
+        .bi-chart-hint {
+            color: #6b7c93;
+            font-size: 0.88rem;
+            margin-bottom: 0;
+        }
+
+        .bi-pipeline__item + .bi-pipeline__item {
+            margin-top: 1rem;
+        }
+
+        .bi-pipeline__row {
+            display: flex;
+            justify-content: space-between;
+            gap: 0.75rem;
+            margin-bottom: 0.35rem;
+            align-items: baseline;
+        }
+
+        .bi-pipeline__label {
+            color: #424242;
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .bi-pipeline__value {
+            font-size: 0.86rem;
+            font-weight: 700;
+        }
+
+        .bi-pipeline__value.pipeline-primary { color: #1565C0; }
+        .bi-pipeline__value.pipeline-success { color: #2E7D32; }
+        .bi-pipeline__value.pipeline-warning { color: #C49000; }
+        .bi-pipeline__value.pipeline-danger { color: #C62828; }
+
+        .bi-pipeline__track {
+            height: 8px;
+            background: #edf1f7;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .bi-pipeline__bar {
+            height: 100%;
+            border-radius: 999px;
+        }
+
+        .bi-pipeline__bar.pipeline-primary { background: #1565C0; }
+        .bi-pipeline__bar.pipeline-success { background: #2E7D32; }
+        .bi-pipeline__bar.pipeline-warning { background: #F9A825; }
+        .bi-pipeline__bar.pipeline-danger { background: #C62828; }
+
+        .bi-pipeline__footer {
+            margin-top: 1rem;
+            padding-top: 0.9rem;
+            border-top: 1px solid #e7edf6;
+            color: #6b7c93;
+            font-size: 0.84rem;
+        }
+    </style>
+@endsection
+
 @section('content')
     <div class="row">
         <div class="col-12">
@@ -25,16 +205,16 @@
 
     <div class="row">
         <div class="col-md-3">
-            <div class="card border-left-info bg-primary shadow h-96 py-2">
+            <div class="card bi-kpi-card bi-kpi-card--primary">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
+                    <div class="bi-kpi-card__row">
                         <div>
-                            <div class="text-xss font-weight-600 text-white mb-1">Active Mandates</div>
-                            <div class="h5 mb-0 font-weight-700 text-white">{{ number_format($stats['active_mandate_count']) }}</div>
-                            <div class="text-white-50 mt-2">Portfolio value {{ number_format($stats['approved_mandate_value']) }}</div>
+                            <div class="bi-kpi-card__label">Active Mandates</div>
+                            <div class="bi-kpi-card__value">{{ number_format($stats['approved_mandate_value']) }}</div>
+                            <div class="bi-kpi-card__meta">Portfolio value in live approved mandates</div>
                         </div>
-                        <div class="col-auto">
-                            <i class="bx bx-check-shield fa-3x text-white"></i>
+                        <div class="text-end">
+                            <div class="bi-kpi-card__side">{{ number_format($stats['active_mandate_count']) }}</div>
                         </div>
                     </div>
                 </div>
@@ -42,16 +222,16 @@
         </div>
 
         <div class="col-md-3">
-            <div class="card border-left-info bg-success-1 shadow h-96 py-2">
+            <div class="card bi-kpi-card bi-kpi-card--success">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
+                    <div class="bi-kpi-card__row">
                         <div>
-                            <div class="text-xss font-weight-600 text-white mb-1">Expected Collection ({{ $stats['month'] }})</div>
-                            <div class="h5 mb-0 font-weight-700 text-white">{{ number_format($stats['this_month_expected']) }}</div>
-                            <div class="text-white-50 mt-2">{{ number_format($stats['today_expected']) }} due today</div>
+                            <div class="bi-kpi-card__label">Expected Collection ({{ $stats['month'] }})</div>
+                            <div class="bi-kpi-card__value">{{ number_format($stats['this_month_expected']) }}</div>
+                            <div class="bi-kpi-card__meta">{{ number_format($stats['today_expected']) }} due today</div>
                         </div>
-                        <div class="col-auto">
-                            <i class="bx bx-calendar-event fa-3x text-white"></i>
+                        <div class="text-end">
+                            <div class="bi-kpi-card__side">{{ number_format($stats['today_expected']) }}</div>
                         </div>
                     </div>
                 </div>
@@ -59,16 +239,16 @@
         </div>
 
         <div class="col-md-3">
-            <div class="card border-left-info bg-info shadow h-96 py-2">
+            <div class="card bi-kpi-card bi-kpi-card--info">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
+                    <div class="bi-kpi-card__row">
                         <div>
-                            <div class="text-xss font-weight-600 text-white mb-1">Actual Collection ({{ $stats['month'] }})</div>
-                            <div class="h5 mb-0 font-weight-700 text-white">{{ number_format($stats['this_month_paid']) }}</div>
-                            <div class="text-white-50 mt-2">{{ number_format($stats['today_paid']) }} collected today</div>
+                            <div class="bi-kpi-card__label">Actual Collection ({{ $stats['month'] }})</div>
+                            <div class="bi-kpi-card__value">{{ number_format($stats['this_month_paid']) }}</div>
+                            <div class="bi-kpi-card__meta">{{ number_format($stats['today_paid']) }} collected today</div>
                         </div>
-                        <div class="col-auto">
-                            <i class="bx bx-wallet-alt fa-3x text-white"></i>
+                        <div class="text-end">
+                            <div class="bi-kpi-card__side">{{ number_format($stats['today_paid']) }}</div>
                         </div>
                     </div>
                 </div>
@@ -76,16 +256,16 @@
         </div>
 
         <div class="col-md-3">
-            <div class="card border-left-info bg-warning shadow h-96 py-2">
+            <div class="card bi-kpi-card bi-kpi-card--warning">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
+                    <div class="bi-kpi-card__row">
                         <div>
-                            <div class="text-xss font-weight-600 text-white mb-1">Overdue Outstanding</div>
-                            <div class="h5 mb-0 font-weight-700 text-white">{{ number_format($stats['overdue_unpaid_amount']) }}</div>
-                            <div class="text-white-50 mt-2">{{ number_format($stats['overdue_unpaid_count']) }} overdue installments</div>
+                            <div class="bi-kpi-card__label">Overdue Outstanding</div>
+                            <div class="bi-kpi-card__value">{{ number_format($stats['overdue_unpaid_amount']) }}</div>
+                            <div class="bi-kpi-card__meta">{{ number_format($stats['overdue_unpaid_count']) }} overdue installments</div>
                         </div>
-                        <div class="col-auto">
-                            <i class="bx bx-error-circle fa-3x text-white"></i>
+                        <div class="text-end">
+                            <div class="bi-kpi-card__side">{{ number_format($stats['overdue_unpaid_count']) }}</div>
                         </div>
                     </div>
                 </div>
@@ -95,61 +275,41 @@
 
     <div class="row">
         <div class="col-md-3">
-            <div class="card shadow h-96 py-2">
+            <div class="card bi-snapshot-card">
                 <div class="card-body">
-                    <div class="text-muted text-uppercase fw-semibold font-size-11 mb-1">Today Collection Rate</div>
-                    <div class="d-flex align-items-end justify-content-between">
-                        <div>
-                            <h3 class="mb-1">{{ number_format($stats['today_rate'], 2) }}%</h3>
-                            <div class="text-muted">Expected {{ number_format($stats['today_expected']) }}</div>
-                        </div>
-                        <span class="badge bg-soft-primary text-primary">Actual {{ number_format($stats['today_paid']) }}</span>
-                    </div>
+                    <div class="bi-snapshot-card__label">Today Collection Rate</div>
+                    <div class="bi-snapshot-card__value">{{ number_format($stats['today_rate'], 2) }}%</div>
+                    <p class="bi-snapshot-card__meta">Expected {{ number_format($stats['today_expected']) }} · Actual {{ number_format($stats['today_paid']) }}</p>
                 </div>
             </div>
         </div>
 
         <div class="col-md-3">
-            <div class="card shadow h-96 py-2">
+            <div class="card bi-snapshot-card">
                 <div class="card-body">
-                    <div class="text-muted text-uppercase fw-semibold font-size-11 mb-1">Month Collection Rate</div>
-                    <div class="d-flex align-items-end justify-content-between">
-                        <div>
-                            <h3 class="mb-1">{{ number_format($stats['this_month_rate'], 2) }}%</h3>
-                            <div class="text-muted">Expected {{ number_format($stats['this_month_expected']) }}</div>
-                        </div>
-                        <span class="badge bg-soft-success text-success">Actual {{ number_format($stats['this_month_paid']) }}</span>
-                    </div>
+                    <div class="bi-snapshot-card__label">Month Collection Rate</div>
+                    <div class="bi-snapshot-card__value">{{ number_format($stats['this_month_rate'], 2) }}%</div>
+                    <p class="bi-snapshot-card__meta">Expected {{ number_format($stats['this_month_expected']) }} · Actual {{ number_format($stats['this_month_paid']) }}</p>
                 </div>
             </div>
         </div>
 
         <div class="col-md-3">
-            <div class="card shadow h-96 py-2">
+            <div class="card bi-snapshot-card">
                 <div class="card-body">
-                    <div class="text-muted text-uppercase fw-semibold font-size-11 mb-1">Partial Paid Exposure</div>
-                    <div class="d-flex align-items-end justify-content-between">
-                        <div>
-                            <h3 class="mb-1">{{ number_format($stats['partial_paid_amount']) }}</h3>
-                            <div class="text-muted">{{ number_format($stats['partial_paid_count']) }} installments need follow-up</div>
-                        </div>
-                        <span class="badge bg-soft-warning text-warning">Partial</span>
-                    </div>
+                    <div class="bi-snapshot-card__label">Partial Paid Exposure</div>
+                    <div class="bi-snapshot-card__value">{{ number_format($stats['partial_paid_amount']) }}</div>
+                    <p class="bi-snapshot-card__meta">{{ number_format($stats['partial_paid_count']) }} installments need follow-up</p>
                 </div>
             </div>
         </div>
 
         <div class="col-md-3">
-            <div class="card shadow h-96 py-2">
+            <div class="card bi-snapshot-card">
                 <div class="card-body">
-                    <div class="text-muted text-uppercase fw-semibold font-size-11 mb-1">Failed Today</div>
-                    <div class="d-flex align-items-end justify-content-between">
-                        <div>
-                            <h3 class="mb-1">{{ number_format($stats['failed_today_amount']) }}</h3>
-                            <div class="text-muted">{{ number_format($stats['failed_today_count']) }} deductions failed today</div>
-                        </div>
-                        <span class="badge bg-soft-danger text-danger">Attention</span>
-                    </div>
+                    <div class="bi-snapshot-card__label">Failed Today</div>
+                    <div class="bi-snapshot-card__value">{{ number_format($stats['failed_today_amount']) }}</div>
+                    <p class="bi-snapshot-card__meta">{{ number_format($stats['failed_today_count']) }} deductions failed today</p>
                 </div>
             </div>
         </div>
@@ -189,22 +349,23 @@
 
     <div class="row">
         <div class="col-xl-8">
-            <div class="card">
+            <div class="card bi-chart-card">
                 <div class="card-body">
-                    <div class="clearfix">
-                        <div class="float-end">
-                            <div class="input-group input-group-sm">
+                    <div class="bi-chart-head">
+                        <div>
+                            <h4 class="bi-chart-title">Payment Mandate Values</h4>
+                            <p class="bi-chart-hint">Monthly trend of total, approved, pending, and failed mandate values.</p>
+                        </div>
+                        <div class="input-group input-group-sm" style="max-width: 220px;">
                                 <select class="form-select form-select-sm" id="mandate-value-select-year">
                                     @php $currentYear = date('Y'); @endphp
                                     <option value="">Select</option>
                                     @foreach (range(2024, $currentYear) as $value)
-                                        <option value="{{ $value }}">{{ $value }}</option>
+                                        <option value="{{ $value }}" {{ (int) $postData['year'] === (int) $value ? 'selected' : '' }}>{{ $value }}</option>
                                     @endforeach
                                 </select>
-                                <label class="input-group-text">Year</label>
-                            </div>
+                            <label class="input-group-text">Year</label>
                         </div>
-                        <h4 class="card-title mb-3">Payment Mandate Values</h4>
                     </div>
 
                     <div id="mandate-value-chart"></div>
@@ -213,38 +374,32 @@
         </div>
 
         <div class="col-xl-4">
-            <div class="card">
+            <div class="card bi-chart-card">
                 <div class="card-body">
-                    <h4 class="card-title mb-4">Payment Mandate Rates</h4>
-                    <div id="consent-rate-chart" class="apex-charts"></div>
-                    <div class="text-center text-muted">
-                        <div class="row">
-                            <div class="col-4">
-                                <div class="my-2">
-                                    <p class="text-xs">
-                                        <i class="mdi mdi-circle text-success-1 my-1"></i> Approved :
-                                        {{ $stats['number_of_approved_mandate'] }}
-                                    </p>
+                    <div class="bi-chart-head">
+                        <div>
+                            <h4 class="bi-chart-title">Mandate Pipeline - Live</h4>
+                            <p class="bi-chart-hint">Current portfolio split by total mandate value.</p>
+                        </div>
+                    </div>
+                    <div class="bi-pipeline">
+                        @foreach ($mandatePipeline as $item)
+                            <div class="bi-pipeline__item">
+                                <div class="bi-pipeline__row">
+                                    <span class="bi-pipeline__label">{{ $item['label'] }}</span>
+                                    <span class="bi-pipeline__value pipeline-{{ $item['tone'] }}">
+                                        {{ format_short_amount($item['amount']) }} TZS · {{ number_format($item['percent'], 1) }}%
+                                    </span>
+                                </div>
+                                <div class="bi-pipeline__track">
+                                    <div class="bi-pipeline__bar pipeline-{{ $item['tone'] }}" style="width: {{ min(max($item['percent'], 0), 100) }}%"></div>
                                 </div>
                             </div>
+                        @endforeach
 
-                            <div class="col-4">
-                                <div class="my-2">
-                                    <p class="text-xs">
-                                        <i class="mdi mdi-circle text-warning my-1"></i> Pending :
-                                        {{ $stats['number_of_pending_mandate'] }}
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div class="col-4">
-                                <div class="my-2">
-                                    <p class="text-xs">
-                                        <i class="mdi mdi-circle text-danger my-1"></i> Failed :
-                                        {{ $stats['number_of_failed_mandate'] }}
-                                    </p>
-                                </div>
-                            </div>
+                        <div class="bi-pipeline__footer">
+                            Total mandate value: <strong>{{ format_short_amount($stats['total_mandate_value']) }} TZS</strong><br>
+                            Highest single: <strong>{{ format_short_amount($highestSingleMandate) }} TZS</strong>
                         </div>
                     </div>
                 </div>
@@ -254,22 +409,23 @@
 
     <div class="row">
         <div class="col-xl-8">
-            <div class="card">
+            <div class="card bi-chart-card">
                 <div class="card-body">
-                    <div class="clearfix">
-                        <div class="float-end">
-                            <div class="input-group input-group-sm">
-                                <select class="form-select form-select-sm" id="collected-mandate-value-select-year">
-                                    @php $currentYear = date('Y'); @endphp
-                                    <option value="">Select</option>
-                                    @foreach (range(2024, $currentYear + 5) as $value)
-                                        <option value="{{ $value }}">{{ $value }}</option>
-                                    @endforeach
-                                </select>
-                                <label class="input-group-text">Year</label>
-                            </div>
+                    <div class="bi-chart-head">
+                        <div>
+                            <h4 class="bi-chart-title">Expected vs Collected</h4>
+                            <p class="bi-chart-hint">Monthly scheduled collections against actual deductions.</p>
                         </div>
-                        <h4 class="card-title mb-3">Expected vs Collected</h4>
+                        <div class="input-group input-group-sm" style="max-width: 220px;">
+                            <select class="form-select form-select-sm" id="collected-mandate-value-select-year">
+                                @php $currentYear = date('Y'); @endphp
+                                <option value="">Select</option>
+                                @foreach (range(2024, $currentYear + 5) as $value)
+                                    <option value="{{ $value }}" {{ (int) $postData['year'] === (int) $value ? 'selected' : '' }}>{{ $value }}</option>
+                                @endforeach
+                            </select>
+                            <label class="input-group-text">Year</label>
+                        </div>
                     </div>
 
                     <div id="collected-mandate-value-chart"></div>
@@ -278,15 +434,16 @@
         </div>
 
         <div class="col-xl-4">
-            <div class="card">
+            <div class="card bi-chart-card">
                 <div class="card-body">
-                    <div class="clearfix">
-                        <div class="float-end">
-                            <div class="input-group input-group-sm">
-                                <input type="date" name="start_at" class="form-control" id="collected-mandate-value-weekly-date" />
-                            </div>
+                    <div class="bi-chart-head">
+                        <div>
+                            <h4 class="bi-chart-title">Weekly Collections</h4>
+                            <p class="bi-chart-hint">Short-term movement of due versus collected amounts.</p>
                         </div>
-                        <h4 class="card-title mb-3">Weekly Collections</h4>
+                        <div class="input-group input-group-sm" style="max-width: 220px;">
+                            <input type="date" name="start_at" class="form-control" id="collected-mandate-value-weekly-date" />
+                        </div>
                     </div>
 
                     <div id="collected-mandate-value-weekly-chart"></div>

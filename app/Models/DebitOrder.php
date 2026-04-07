@@ -186,7 +186,7 @@ class DebitOrder extends Model
             ->first();
     }
 
-    public static function mandateApprovalStats($channel = null)
+    public static function mandateApprovalStats($channel = null, $year = null)
     {
         return self::filterCondition()
             ->select([
@@ -200,6 +200,9 @@ class DebitOrder extends Model
             })
             ->when($channel != null, function ($q) use ($channel) {
                 $q->where('debit_orders.channel', $channel);
+            })
+            ->when($year != null, function ($q) use ($year) {
+                $q->whereYear('debit_orders.created_at', $year);
             })
             ->groupBy('debit_orders.approved')
             ->orderBy('debit_orders.approved')

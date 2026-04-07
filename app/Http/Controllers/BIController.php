@@ -22,12 +22,16 @@ class BIController extends Controller
         $title = 'BI Dashboard';
         $channel = $request->channel;
         $today = Carbon::today();
+        $selectedYear = $request->filled('year') ? (int) $request->year : null;
         $currentYear = (int) $today->format('Y');
         $currentMonth = (int) $today->format('m');
+        $collectionYear = $selectedYear ?? $currentYear;
+        $selectedDay = min((int) $today->day, Carbon::create($collectionYear, $currentMonth, 1)->daysInMonth);
+        $selectedToday = Carbon::create($collectionYear, $currentMonth, $selectedDay)->toDateString();
 
-        $mandates = $this->buildMandateSummary($channel);
-        $thisMonth = Installment::thisMonthStats($currentMonth, $currentYear, $channel);
-        $todayStats = Installment::todayStats($today->toDateString(), $channel);
+        $mandates = $this->buildMandateSummary($channel, $selectedYear);
+        $thisMonth = Installment::thisMonthStats($currentMonth, $collectionYear, $channel);
+        $todayStats = Installment::todayStats($selectedToday, $channel);
 
         $openOperationalInstallments = $this->operationalInstallments($channel, true);
         $allOperationalInstallments = $this->operationalInstallments($channel, false);
@@ -112,14 +116,54 @@ class BIController extends Controller
             'upcoming_next_7_days_amount' => (float) $upcoming->upcoming_amount,
         ];
 
+        $pipelineTotal = (float) $mandates['total_value'];
+        $highestSingleMandate = DebitOrder::filterCondition()
+            ->whereHas('partner', function ($q) {
+                $q->where('partners.approved', 1);
+            })
+            ->when($channel, function ($q) use ($channel) {
+                $q->where('debit_orders.channel', $channel);
+            })
+            ->max('total_amount') ?? 0;
+
+        $mandatePipeline = [
+            [
+                'label' => 'Total Mandate',
+                'amount' => (float) $stats['total_mandate_value'],
+                'percent' => 100,
+                'tone' => 'primary',
+            ],
+            [
+                'label' => 'Approved',
+                'amount' => (float) $stats['approved_mandate_value'],
+                'percent' => $pipelineTotal > 0 ? $this->percentage($stats['approved_mandate_value'], $pipelineTotal) : 0,
+                'tone' => 'success',
+            ],
+            [
+                'label' => 'Pending',
+                'amount' => (float) $stats['pending_mandate_value'],
+                'percent' => $pipelineTotal > 0 ? $this->percentage($stats['pending_mandate_value'], $pipelineTotal) : 0,
+                'tone' => 'warning',
+            ],
+            [
+                'label' => 'Failed',
+                'amount' => (float) $stats['failed_mandate_value'],
+                'percent' => $pipelineTotal > 0 ? $this->percentage($stats['failed_mandate_value'], $pipelineTotal) : 0,
+                'tone' => 'danger',
+            ],
+        ];
+
         $postData = [
-            'year' => $currentYear,
+            'year' => $selectedYear ?? $currentYear,
             'month' => $currentMonth,
             'channel' => $channel,
         ];
 
         $paymentChannels = Account::where('active', 1)->get();
         $formAction = route('bi.dashboard');
+        $payment_channels = $paymentChannels;
+        $form_action = $formAction;
+        $post_data = $postData;
 
         return view('bi.dashboard', compact(
             'title',
@@ -129,7 +173,12 @@ class BIController extends Controller
             'partnerAttention',
             'paymentChannels',
             'formAction',
-            'postData'
+            'postData',
+            'mandatePipeline',
+            'highestSingleMandate',
+            'payment_channels',
+            'form_action',
+            'post_data'
         ));
     }
 
@@ -152,10 +201,10 @@ class BIController extends Controller
             });
     }
 
-    private function buildMandateSummary(?string $channel): array
+    private function buildMandateSummary(?string $channel, ?int $year = null): array
     {
         $approvedStatuses = [0, 1, 2];
-        $debitOrders = DebitOrder::mandateApprovalStats($channel);
+        $debitOrders = DebitOrder::mandateApprovalStats($channel, $year);
 
         $mandates = collect($approvedStatuses)->mapWithKeys(function ($status) use ($debitOrders) {
             $order = $debitOrders->firstWhere('approved', $status);

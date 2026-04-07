@@ -93,10 +93,11 @@ const fetchMandatesPostedVsDeducted = (year) => {
 //Filters
 const filters = window.DASHBOARD_FILTERS || {};
 const channel = filters.channel;
+const selectedYear = filters.year || "";
 console.log('Dashboard Channel:', channel);
 
 //Payment mandate value
-$.getJSON("charts/mandate-values", { channel: channel }, (data) => {
+$.getJSON("charts/mandate-values", { channel: channel, year: selectedYear }, (data) => {
     if (data.error == false) {
         var arr_month = [];
         var arr_total = [];
@@ -327,7 +328,7 @@ $.getJSON("charts/mandate-percentages", { channel: channel }, (data) => {
 });
 
 //Expected and collected Mandates
-$.getJSON("charts/collected-mandate", { channel: channel }, (data) => {
+$.getJSON("charts/collected-mandate", { channel: channel, year: selectedYear }, (data) => {
     if (data.error == false) {
         var arr_month = [];
         var arr_total = [];
@@ -500,7 +501,7 @@ $("#collected-mandate-value-select-year").on("change", function (e) {
     });
 });
 
-fetchMandatesPostedVsDeducted(filters.year || "");
+fetchMandatesPostedVsDeducted(selectedYear);
 
 $("#mandates-posted-vs-deducted-select-year").on("change", function (e) {
     e.preventDefault;

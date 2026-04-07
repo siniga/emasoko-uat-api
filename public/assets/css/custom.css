@@ -280,6 +280,31 @@ Border Colors
   border-color: #0D47A1 !important;
 }
 
+.border-left-primary {
+  --accent-color: #153567;
+  border-left: 0.36rem solid var(--accent-color) !important;
+}
+
+.border-left-secondary {
+  --accent-color: #1976D2;
+  border-left: 0.36rem solid var(--accent-color) !important;
+}
+
+.border-left-success {
+  --accent-color: #388E3C;
+  border-left: 0.36rem solid var(--accent-color) !important;
+}
+
+.border-left-warning {
+  --accent-color: #F57C00;
+  border-left: 0.36rem solid var(--accent-color) !important;
+}
+
+.border-left-danger {
+  --accent-color: #C62828;
+  border-left: 0.36rem solid var(--accent-color) !important;
+}
+
 .badge-soft-closed {
   background-color: #FFE0B2 !important;
   color: #F57C00 !important;

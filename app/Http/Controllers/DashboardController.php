@@ -6,7 +6,9 @@ use App\Models\Account;
 use App\Models\DebitOrder;
 use App\Models\Installment;
 use App\Models\Partner;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -28,12 +30,17 @@ class DashboardController extends Controller
         $approvedStatuses = [0, 1, 2]; // status
 
         //current year and month
-        $current_year = date('Y');
+        $selected_year = $request->filled('year') ? (int) $request->year : null;
+        $current_year = (int) date('Y');
         $current_month = date('m');
         $channel = $request->channel;
+        $today = now();
+        $collection_year = $selected_year ?? $current_year;
+        $selected_day = min((int) $today->day, Carbon::create($collection_year, (int) $today->month, 1)->daysInMonth);
+        $selected_today = Carbon::create($collection_year, (int) $today->month, $selected_day)->toDateString();
 
         //query
-        $debit_orders = DebitOrder::mandateApprovalStats($channel);
+        $debit_orders = DebitOrder::mandateApprovalStats($channel, $selected_year);
 
         // Map over all approved statuses to ensure complete results
         $mandates = collect($approvedStatuses)->map(function ($status) use ($debit_orders) {
@@ -52,14 +59,15 @@ class DashboardController extends Controller
         $total_mandate_value = $mandates[0]['total_amount'] + $mandates[1]['total_amount'] + $mandates[2]['total_amount'];
 
         // This Month’s Collection
-        $this_month = Installment::thisMonthStats($current_month, $current_year, $channel);
+        $this_month = Installment::thisMonthStats($current_month, $collection_year, $channel);
 
         // Today’s Collection
-        $today = Installment::todayStats(now()->toDateString(), $channel);
+        $today = Installment::todayStats($selected_today, $channel);
 
         //form action
         $payment_channels = Account::where('active', '=', 1)->get();
         $form_action = route('dashboard');
+        $userId = auth()->id() ?? 0;
 
         //stats
         $stats  = [
@@ -76,22 +84,118 @@ class DashboardController extends Controller
             'total_mandate_value' => $total_mandate_value,
 
             //this month and today collection
-            'month' => date('F'),
+            'month' => date('F', mktime(0, 0, 0, (int) $current_month, 1)),
             'this_month_expected' => $this_month->total_amount,
             'this_month_paid' => $this_month->paid_amount,
             'today_expected' => $today->total_amount,
             'today_paid' => $today->paid_amount
         ];
 
+        $dashboardSupplementary = Cache::remember(
+            "dashboard:supplementary:{$userId}:" . ($channel ?: 'all') . ':' . ($selected_year ?: 'all-years') . ":{$current_month}",
+            now()->addMinutes(5),
+            function () use ($channel, $selected_year, $current_month, $collection_year) {
+                $yearSummaryQuery = Installment::filterCondition()
+                    ->join('debit_orders', 'debit_orders.id', '=', 'installments.debit_order_id')
+                    ->join('partners', 'partners.id', '=', 'debit_orders.partner_id')
+                    ->where('debit_orders.approved', 1)
+                    ->where('partners.approved', 1)
+                    ->when($channel != null, function ($query) use ($channel) {
+                        $query->where('debit_orders.channel', $channel);
+                    });
+
+                $year_summary = (clone $yearSummaryQuery)
+                    ->selectRaw('COALESCE(SUM(installments.installment_amount), 0) as expected_amount')
+                    ->selectRaw("COALESCE(SUM(CASE
+                        WHEN installments.status IN ('CLOSED', 'PARTIAL_PAID')
+                        THEN installments.current_balance ELSE 0 END), 0) as paid_amount")
+                    ->when($selected_year != null, function ($query) use ($selected_year) {
+                        $query->whereYear('installments.payment_date', $selected_year);
+                    })
+                    ->first();
+
+                $service_provider_count = Partner::filterCondition()->count();
+
+                $active_service_provider_count = Partner::filterCondition()
+                    ->where('approved', 1)
+                    ->count();
+
+                $highest_single_mandate = DebitOrder::filterCondition()
+                    ->whereHas('partner', function ($q) {
+                        $q->where('partners.approved', 1);
+                    })
+                    ->when($channel != null, function ($q) use ($channel) {
+                        $q->where('debit_orders.channel', $channel);
+                    })
+                    ->max('total_amount') ?? 0;
+
+                $channelAmounts = Installment::filterCondition()
+                    ->join('debit_orders', 'debit_orders.id', '=', 'installments.debit_order_id')
+                    ->join('partners', 'partners.id', '=', 'debit_orders.partner_id')
+                    ->where('debit_orders.approved', 1)
+                    ->where('partners.approved', 1)
+                    ->when($channel != null, function ($q) use ($channel) {
+                        $q->where('debit_orders.channel', $channel);
+                    })
+                    ->select([
+                        'debit_orders.channel',
+                        DB::raw("COALESCE(SUM(CASE
+                            WHEN MONTH(installments.payment_date) = {$current_month}
+                            AND YEAR(installments.payment_date) = {$collection_year}
+                            THEN installments.installment_amount ELSE 0 END), 0) as expected_amount"),
+                        DB::raw("COALESCE(SUM(CASE
+                            WHEN MONTH(installments.effective_payment_date) = {$current_month}
+                            AND YEAR(installments.effective_payment_date) = {$collection_year}
+                            AND installments.status IN ('CLOSED', 'PARTIAL_PAID')
+                            THEN installments.current_balance ELSE 0 END), 0) as paid_amount"),
+                    ])
+                    ->groupBy('debit_orders.channel')
+                    ->get()
+                    ->keyBy('channel');
+
+                $mandateCountByChannel = DebitOrder::filterCondition()
+                    ->select([
+                        'debit_orders.channel',
+                        DB::raw('COUNT(debit_orders.id) as mandates'),
+                    ])
+                    ->where('debit_orders.approved', 1)
+                    ->whereHas('partner', function ($q) {
+                        $q->where('partners.approved', 1);
+                    })
+                    ->when($channel != null, function ($q) use ($channel) {
+                        $q->where('debit_orders.channel', $channel);
+                    })
+                    ->groupBy('debit_orders.channel')
+                    ->get()
+                    ->pluck('mandates', 'channel');
+
+                return [
+                    'year_summary' => [
+                        'expected_amount' => (float) ($year_summary->expected_amount ?? 0),
+                        'paid_amount' => (float) ($year_summary->paid_amount ?? 0),
+                    ],
+                    'service_provider_count' => (int) $service_provider_count,
+                    'active_service_provider_count' => (int) $active_service_provider_count,
+                    'highest_single_mandate' => (float) $highest_single_mandate,
+                    'channel_amounts' => $channelAmounts->map(function ($row) {
+                        return [
+                            'expected_amount' => (float) ($row->expected_amount ?? 0),
+                            'paid_amount' => (float) ($row->paid_amount ?? 0),
+                        ];
+                    })->toArray(),
+                    'channel_mandates' => $mandateCountByChannel->map(fn ($value) => (int) $value)->toArray(),
+                ];
+            }
+        );
+
+        $year_summary = (object) $dashboardSupplementary['year_summary'];
+        $year_success_rate = (float) ($year_summary->expected_amount ?? 0) > 0
+            ? round((((float) $year_summary->paid_amount) / ((float) $year_summary->expected_amount)) * 100, 2)
+            : 0;
+        $service_provider_count = (int) ($dashboardSupplementary['service_provider_count'] ?? 0);
+        $active_service_provider_count = (int) ($dashboardSupplementary['active_service_provider_count'] ?? 0);
         $pipeline_total = (float) $total_mandate_value;
-        $highest_single_mandate = DebitOrder::filterCondition()
-            ->whereHas('partner', function ($q) {
-                $q->where('partners.approved', 1);
-            })
-            ->when($channel != null, function ($q) use ($channel) {
-                $q->where('debit_orders.channel', $channel);
-            })
-            ->max('total_amount') ?? 0;
+        $highest_single_mandate = (float) $dashboardSupplementary['highest_single_mandate'];
 
         $mandate_pipeline = [
             [
@@ -120,68 +224,15 @@ class DashboardController extends Controller
             ],
         ];
 
-        $channelBaseQuery = Installment::filterCondition()
-            ->join('debit_orders', 'debit_orders.id', '=', 'installments.debit_order_id')
-            ->where('debit_orders.approved', 1)
-            ->whereHas('debitOrder', function ($query) {
-                $query->whereHas('partner', function ($q) {
-                    $q->where('partners.approved', 1);
-                });
-            });
-
-        $expectedByChannel = (clone $channelBaseQuery)
-            ->select([
-                'debit_orders.channel',
-                DB::raw("COALESCE(SUM(CASE
-                    WHEN MONTH(installments.payment_date) = {$current_month}
-                    AND YEAR(installments.payment_date) = {$current_year}
-                    THEN installments.installment_amount ELSE 0 END), 0) as expected_amount"),
-            ])
-            ->when($channel != null, function ($q) use ($channel) {
-                $q->where('debit_orders.channel', $channel);
-            })
-            ->groupBy('debit_orders.channel')
-            ->pluck('expected_amount', 'debit_orders.channel');
-
-        $paidByChannel = (clone $channelBaseQuery)
-            ->select([
-                'debit_orders.channel',
-                DB::raw("COALESCE(SUM(CASE
-                    WHEN MONTH(installments.effective_payment_date) = {$current_month}
-                    AND YEAR(installments.effective_payment_date) = {$current_year}
-                    AND installments.status IN ('CLOSED', 'PARTIAL_PAID')
-                    THEN installments.current_balance ELSE 0 END), 0) as paid_amount"),
-            ])
-            ->when($channel != null, function ($q) use ($channel) {
-                $q->where('debit_orders.channel', $channel);
-            })
-            ->groupBy('debit_orders.channel')
-            ->pluck('paid_amount', 'debit_orders.channel');
-
-        $mandateCountByChannel = DebitOrder::filterCondition()
-            ->select([
-                'debit_orders.channel',
-                DB::raw('COUNT(debit_orders.id) as mandates'),
-            ])
-            ->where('debit_orders.approved', 1)
-            ->whereHas('partner', function ($q) {
-                $q->where('partners.approved', 1);
-            })
-            ->when($channel != null, function ($q) use ($channel) {
-                $q->where('debit_orders.channel', $channel);
-            })
-            ->groupBy('debit_orders.channel')
-            ->pluck('mandates', 'debit_orders.channel');
-
         $bank_channel_performance = $payment_channels
             ->when($channel != null, function ($collection) use ($channel) {
                 return $collection->where('slug', $channel);
             })
-            ->map(function ($paymentChannel) use ($expectedByChannel, $paidByChannel, $mandateCountByChannel) {
+            ->map(function ($paymentChannel) use ($dashboardSupplementary) {
                 $slug = $paymentChannel->slug;
-                $expected = (float) ($expectedByChannel[$slug] ?? 0);
-                $paid = (float) ($paidByChannel[$slug] ?? 0);
-                $mandates = (int) ($mandateCountByChannel[$slug] ?? 0);
+                $expected = (float) ($dashboardSupplementary['channel_amounts'][$slug]['expected_amount'] ?? 0);
+                $paid = (float) ($dashboardSupplementary['channel_amounts'][$slug]['paid_amount'] ?? 0);
+                $mandates = (int) ($dashboardSupplementary['channel_mandates'][$slug] ?? 0);
                 $rate = $expected > 0 ? round(($paid / $expected) * 100) : null;
                 $isLive = $expected > 0 || $paid > 0;
 
@@ -200,7 +251,7 @@ class DashboardController extends Controller
             ->values();
 
         //post data
-        $post_data = ['year' => $current_year, 'month' => $current_month, 'channel' => $channel];
+        $post_data = ['year' => $selected_year ?? $current_year, 'month' => $current_month, 'channel' => $channel];
 
         //render view
         return view('dashboard', compact(
@@ -211,7 +262,12 @@ class DashboardController extends Controller
             'post_data',
             'mandate_pipeline',
             'highest_single_mandate',
-            'bank_channel_performance'
+            'bank_channel_performance',
+            'year_summary',
+            'year_success_rate',
+            'current_year',
+            'service_provider_count',
+            'active_service_provider_count'
         ));
     }
 }
