@@ -64,7 +64,7 @@
                                                 @endforeach
                                                 @php
                                                     $account_type_options = $options;
-                                                    $options = ['' => 'Select'] + $options;
+                                                    $options = ['' => '-- Select --'] + $options;
                                                 @endphp
 
                                                 {{ Form::select('account_type_id[]', $options, old('account_type_id[]', $data->account_type_id), ['class' => 'form-control account_type_id', 'id' => 'account_type_id']) }}
@@ -84,7 +84,7 @@
                                                 @endforeach
                                                 @php
                                                     $account_options = $options;
-                                                    $options = ['' => 'Select'] + $options;
+                                                    $options = ['' => '-- Select --'] + $options;
 
                                                 @endphp
 
@@ -137,7 +137,7 @@
                                                 @endforeach
                                                 @php
                                                     $currency_options = $options;
-                                                    $options = ['' => 'Select'] + $options;
+                                                    $options = ['' => '-- Select --'] + $options;
                                                 @endphp
 
                                                 {{ Form::select('currency_id[]', $options, old('currency_id[]', $data->currency_id), ['class' => 'form-control currency_id', 'id' => 'currency_id']) }}
@@ -172,7 +172,7 @@
                                             @endforeach
                                             @php
                                                 $account_type_options = $options;
-                                                $options = ['' => 'Select'] + $options;
+                                                $options = ['' => '-- Select --'] + $options;
                                             @endphp
 
                                             {{ Form::select('account_type_id[]', $options, old('account_type_id[]'), ['class' => 'form-control account_type_id', 'id' => 'account_type_id']) }}
@@ -192,7 +192,7 @@
                                             @endforeach
                                             @php
                                                 $account_options = $options;
-                                                $options = ['' => 'Select'] + $options;
+                                                $options = ['' => '-- Select --'] + $options;
                                             @endphp
 
                                             {{ Form::select('account_id[]', $options, old('account_id[]'), ['class' => 'form-control account_id', 'id' => 'account_id']) }}
@@ -245,7 +245,7 @@
                                             @endforeach
                                             @php
                                                 $currency_options = $options;
-                                                $options = ['' => 'Select'] + $options;
+                                                $options = ['' => '-- Select --'] + $options;
                                             @endphp
 
                                             {{ Form::select('currency_id[]', $options, old('currency_id[]'), ['class' => 'form-control currency_id', 'id' => 'currency_id']) }}
@@ -329,7 +329,7 @@
                     <div class="mb-3">
                         <label>Account Type <span class="text-danger">*</span></label>
                         <select name="account_type_id[]" class="form-control account_type_id">
-                            <option value=''>Select</option>
+                            <option value=''>-- Select --</option>
                             ${Object.keys(account_types).map(key => `<option value='${key}'>${account_types[key]}</option>`).join('')}
                         </select>
                         <span class="formError"></span>
@@ -340,7 +340,7 @@
                     <div class="mb-3">
                         <label class="bank_mno_name">Bank Name <span class="text-danger">*</span></label>
                         <select name="account_id[]" class="form-control account_id">
-                            <option value=''>Select</option>
+                            <option value=''>-- Select --</option>
                             ${Object.keys(accounts).map(key => `<option value='${key}'>${accounts[key]}</option>`).join('')}
                         </select>
                         <span class="formError"></span>
@@ -383,7 +383,7 @@
                     <div class="mb-3">
                         <label class="currency_id">Currency <span class="text-danger">*</span></label>
                         <select name="currency_id[]" class="form-control currency_id">
-                            <option value=''>Select</option>
+                            <option value=''>-- Select --</option>
                             ${Object.keys(currencies).map(key => `<option value='${key}'>${currencies[key]}</option>`).join('')}
                         </select>
                         <span class="formError"></span>

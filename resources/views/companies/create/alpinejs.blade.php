@@ -33,7 +33,6 @@
                         body: JSON.stringify(this.formData),
                     }).then(response => response.json())
                     .then(responseJson => {
-                        console.log(responseJson);
                         //change complete status
                         this.complete = 1;
 
@@ -44,7 +43,7 @@
 
                         //set timer
                         setTimeout(function() {
-                            window.location.href = "/companies/details/" + responseJson.uuid;
+                            window.location.href = "/companies/show/" + responseJson.uuid;
                         }, 1000);
 
                     }).catch(() => {
@@ -77,7 +76,6 @@
                         body: JSON.stringify(this.formData),
                     }).then(response => response.json())
                     .then(responseJson => {
-                        console.log(responseJson);
                         //change complete status
                         this.complete = 0;
 
@@ -88,7 +86,7 @@
 
                         //set timer
                         setTimeout(function() {
-                            window.location.href = "/companies/details/" + response.uuid;
+                            window.location.href = "/companies/show/" + response.uuid;
                         }, 1000);
                     }).catch(() => {
                         this.formMessage = "Something went wrong.";

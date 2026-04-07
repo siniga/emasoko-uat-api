@@ -50,7 +50,7 @@
                             <div class="row">
                                 <div class="col-lg-12">
                                     <div class="mb-3">
-                                        <div class="table-responsive sp-table">
+                                        <div class="table-responsive">
                                             <table class="table table-nowrap align-middle table-bordered mb-0">
                                                 <thead>
                                                     <tr>

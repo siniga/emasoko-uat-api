@@ -96,7 +96,6 @@
                         body: JSON.stringify(this.formData),
                     }).then(response => response.json())
                     .then(responseJson => {
-                        console.log(responseJson);
                         this.httpStatus = responseJson.status
 
                         if (this.httpStatus == 200) {
@@ -148,7 +147,7 @@
                         body: JSON.stringify(this.formData),
                     }).then(response => response.json())
                     .then(responseJson => {
-                        this.httpStatus = responseJson.http_response_code
+                        this.httpStatus = responseJson.status
                         this.remarks = responseJson.remarks;
 
                         if (this.httpStatus == 200) {

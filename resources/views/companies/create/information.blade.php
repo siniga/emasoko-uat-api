@@ -66,7 +66,7 @@
                                             @endphp
                                         @endforeach
                                         @php
-                                            $options = ['' => 'Select'] + $options;
+                                            $options = ['' => '-- Select --'] + $options;
                                         @endphp
 
                                         {{ Form::select('category_id', $options, old('category_id', $company->partner_category_id ?? ''), ['class' => 'form-control', 'id' => 'category_id']) }}
@@ -102,8 +102,8 @@
                                             @php $year_options[$v] = $v; @endphp
                                         @endforeach
 
-                                        @php $year_options = ['' => 'Select'] + $year_options; @endphp
-                                        {{ Form::select('year_of_incorporation', $year_options, old('year_of_incorporation', $company->year_of_incorporation ?? ''), ['class' => 'form-control']) }}
+                                        @php $year_options = ['' => '-- Select --'] + $year_options; @endphp
+                                        {{ Form::select('year_of_incorporation', $year_options, old('year_of_incorporation', $company->year_of_incorporation ?? ''), ['class' => 'form-control select2']) }}
                                         <span class="formError"></span>
                                     </div>
                                 </div>
@@ -111,7 +111,7 @@
                                 <div class="col-lg-3">
                                     <div class="mb-3">
                                         <label>Number of Staff <span class="text-danger">*</span></label>
-                                        {{ Form::number('number_of_staff', old('number_of_staff', $company->number_of_staff ?? ''), ['class="form-control"', 'placeholder="Write number of staff..."', 'min' => 1]) }}
+                                        {{ Form::number('number_of_staff', old('number_of_staff', $company->number_of_staff ?? 1), ['class="form-control"', 'placeholder="Write number of staff..."', 'min' => 1]) }}
                                         <span class="formError"></span>
                                     </div>
                                 </div>
@@ -128,7 +128,7 @@
                                 <div class="col-lg-6">
                                     <label>Company Phone <span class="text-danger">*</span></label>
                                     <div class="row">
-                                        <div class="col-md-4">
+                                        <div class="col-md-6">
                                             @php $options = []; @endphp
                                             @foreach ($arr_countries as $key => $country)
                                                 @php
@@ -139,7 +139,7 @@
                                             <span class="formError"></span>
                                         </div>
 
-                                        <div class="col-md-8">
+                                        <div class="col-md-6">
                                             {{ Form::number('company_phone', old('company_phone', $company->phone ?? ''), ['class="form-control"', 'placeholder="Write phone..."']) }}
                                             <span class="formError"></span>
                                         </div>
@@ -157,7 +157,7 @@
                                             @endphp
                                         @endforeach
                                         @php
-                                            $options = ['' => 'Select'] + $options;
+                                            $options = ['' => '-- Select --'] + $options;
                                         @endphp
 
                                         {{ Form::select('region_id', $options, old('region_id', $company->region_id ?? ''), ['class' => 'form-control select2', 'id' => 'region_id']) }}

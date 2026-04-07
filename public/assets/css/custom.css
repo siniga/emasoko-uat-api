@@ -336,6 +336,44 @@ Button
   border-color: #1565C0;
 }
 
+/*===============================================
+Filtering 
+===============================================*/
+.sp-list-shell {
+    --sp-list-primary: #153567;
+    --sp-list-border: #dce6f5;
+    --sp-list-muted: #424242;
+}
+
+.sp-list-filter {
+    border: 1px solid #e7edf6;
+    border-radius: 5px;
+    background: #fbfcfe;
+    padding: 1.2rem;
+    box-shadow: 0 16px 40px rgba(29, 53, 87, 0.08);
+}
+
+.sp-list-summary {
+    border: 1px solid var(--sp-list-border);
+    border-radius: 5px;
+    background: linear-gradient(180deg, #fff 0%, #f8fbff 100%);
+    padding: 1rem;
+    height: 100%;
+}
+
+.sp-list-summary__label {
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: capitalize;
+    color: var(--sp-list-muted);
+    margin-bottom: 0.35rem;
+}
+
+.sp-list-summary__value {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--sp-list-primary);
+}
 
 /*===============================================
 Tables
@@ -440,6 +478,49 @@ table.table>:not(:last-child)>:last-child>* {
 
 #my-table table tr td {
   border: 1px solid #dcdcdc !important;
+}
+
+
+.sp-row-actions {
+    position: relative;
+}
+
+.sp-row-actions .dropdown-toggle {
+    border: 0;
+    background: transparent;
+    color: var(--sp-list-primary);
+    border-radius: 999px;
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.sp-row-actions .dropdown-toggle:hover,
+.sp-row-actions .dropdown-toggle:focus {
+    background: #edf4ff;
+    color: var(--sp-list-primary);
+    box-shadow: none;
+    border-color: transparent;
+}
+
+.sp-row-actions .dropdown-toggle::after {
+    display: none;
+}
+
+.sp-row-actions .dropdown-menu {
+    min-width: 10rem;
+    border: 1px solid #dfe8f4;
+    /* box-shadow: 0 16px 30px rgba(21, 53, 103, 0.12); */
+    border-radius: 0px;
+    padding: 0.35rem 0;
+}
+
+.sp-row-actions .dropdown-item {
+    font-size: 12px;
+    padding: 0.55rem 0.9rem;
 }
 
 

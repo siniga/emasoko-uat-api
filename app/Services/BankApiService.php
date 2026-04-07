@@ -96,7 +96,8 @@ class BankApiService
     {
         //responce code
         $is_verified = 0;
-        $response_code = 200;
+        $http_status_code = 200;
+        $status = 'pending_approval';
         $remarks = "";
 
         //create authentication token
@@ -144,17 +145,17 @@ class BankApiService
             // check for response code
             if ($response_code == 240) {
                 $is_verified = 1;
-                $response_code = 202;
+                $status = 'active';
             } else {
-                $response_code = 203;
+                $status = 'not_active';
             }
         } else if (strtolower($response['status']) == "fail") {
-            $response_code = 500;
+            $http_status_code = 500;
             $remarks = $response['data']['response'][0]['responseDescription'];
         }
 
         // update partner
-        $partner->status = $response_code;
+        $partner->status = $status;
         $partner->http_response_code = $response['data']['response'][0]['responseCode'];
         $partner->remarks = $response['data']['response'][0]['responseDescription'];
         $partner->save();
@@ -164,7 +165,7 @@ class BankApiService
         $nmb_partner_account->remarks = $remarks;
         $nmb_partner_account->save();
 
-        return [$response_code, $remarks];
+        return [$http_status_code, $remarks];
     }
 
     //mandate registartion

@@ -236,7 +236,7 @@ class CompanyService
             $partner->complete = 1;
             $partner->approved = 1; //approved
             $partner->remarks = "Service provider registration approved by eMakato Team";
-            $partner->status = 200; //OK
+            $partner->status = 'pending_approval';
             $partner->updated_by = auth()->id();
             $partner->save();
 

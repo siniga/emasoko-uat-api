@@ -100,7 +100,7 @@ Route::post('reset-password', [ForgotPasswordController::class, 'submitResetPass
 
 //companies
 Route::any('companies/lists', [CompanyController::class, 'index'])->name('companies.lists');
-Route::get('companies/details/{uuid}', [CompanyController::class, 'show'])->name('companies.details');
+Route::get('companies/show/{uuid}', [CompanyController::class, 'show'])->name('companies.show');
 Route::get('companies/edit/{uuid}', [CompanyController::class, 'edit'])->name('companies.edit');
 Route::post('companies/update/{uuid}', [CompanyController::class, 'update'])->name('companies.update');
 Route::get('companies/delete/{uuid}', [CompanyController::class, 'destroy'])->name('companies.delete');
