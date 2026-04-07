@@ -202,6 +202,7 @@ Route::get('payment-mandate/send-remainder/{uuid}', [PaymentMandateActionControl
 
 //actions
 Route::any('payment-mandate/request-cancellation', [PaymentMandateApprovalController::class, 'request_cancellation'])->name('payment-mandate.request-cancellation');
+Route::get('payment-mandate/approvals/{tab?}', [PaymentMandateApprovalController::class, 'approvals'])->name('payment-mandate.approvals');
 Route::any('payment-mandate/approve-cancellation', [PaymentMandateApprovalController::class, 'approve_cancellation'])->name('payment-mandate.approve-cancellation');
 Route::any('payment-mandate/request-deletion', [PaymentMandateApprovalController::class, 'request_deletion'])->name('payment-mandate.request-deletion');
 Route::any('payment-mandate/approve-deletion', [PaymentMandateApprovalController::class, 'approve_deletion'])->name('payment-mandate.approve-deletion');

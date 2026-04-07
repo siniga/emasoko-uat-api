@@ -128,12 +128,12 @@
                                 </div>
 
                                 <template x-if="canVerifyOtp()">
-                                    <button x-html="verifyTxt" title="Verify OTP" class="btn btn-outline-light btn-sm"
+                                    <button x-html="verifyTxt" title="Verify OTP" class="btn btn-success btn-sm"
                                         x-on:click="verifyButton();"></button>
                                 </template>
 
                                 <template x-if="canFetchStatus()">
-                                    <button x-html="btnStatus" title="Get Mandate Status" class="btn btn-outline-light btn-sm"
+                                    <button x-html="btnStatus" title="Get Mandate Status" class="btn btn-success btn-sm"
                                         x-on:click="fetchMandateStatus();"></button>
                                 </template>
                             </div>

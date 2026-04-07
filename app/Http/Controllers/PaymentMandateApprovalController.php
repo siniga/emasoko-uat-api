@@ -14,6 +14,112 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class PaymentMandateApprovalController extends BasePaymentMandateController
 {
+    private function approvalTabConfig(): array
+    {
+        return [
+            'cancellation' => [
+                'pageTitle' => 'Approve Mandate Cancellation',
+                'pageSubtitle' => 'Review pending mandate cancellation requests and approve only the records that are ready to move out of the active collection cycle.',
+                'guidanceText' => 'Use this page to review cancellation requests submitted by operations teams. Select only mandates that have been validated and are safe to cancel.',
+                'tableTitle' => 'Pending Cancellation Requests',
+                'tableHint' => 'Select one or more requests below, then approve them in a single step.',
+                'actionRoute' => 'payment-mandate.approve-cancellation',
+                'actionName' => 'approve_cancellation',
+                'actionValue' => 'approve_cancellation',
+                'buttonLabel' => 'Approve Cancellation',
+                'buttonIcon' => 'bx-chevrons-right',
+                'requestLabel' => 'Cancellation',
+                'emptyMessage' => 'No cancellation requests at the moment!',
+                'requestType' => 'CANCELLATION',
+                'tabLabel' => 'Cancellation',
+            ],
+            'deletion' => [
+                'pageTitle' => 'Approve Mandate Deletion',
+                'pageSubtitle' => 'Review deletion requests carefully before approval. This step should be reserved for mandates that should be removed from the operational dataset.',
+                'guidanceText' => 'Deletion is a stronger action than cancellation or closing. Confirm the request is valid and that the mandate should no longer remain in active operational use.',
+                'tableTitle' => 'Pending Deletion Requests',
+                'tableHint' => 'Select one or more requests below, then approve them in a single step.',
+                'actionRoute' => 'payment-mandate.approve-deletion',
+                'actionName' => 'approve_deletion',
+                'actionValue' => 'approve_deletion',
+                'buttonLabel' => 'Approve Deletion',
+                'buttonIcon' => 'bx-trash',
+                'requestLabel' => 'Deletion',
+                'emptyMessage' => 'No deletion requests at the moment!',
+                'requestType' => 'DELETION',
+                'tabLabel' => 'Deletion',
+            ],
+            'archive' => [
+                'pageTitle' => 'Approve Mandate Archive',
+                'pageSubtitle' => 'Archive requests help move completed or inactive mandates out of the day-to-day portfolio while preserving their historical record.',
+                'guidanceText' => 'Use archive approval for mandates that no longer need active operational attention but should remain available for reporting and audit history.',
+                'tableTitle' => 'Pending Archive Requests',
+                'tableHint' => 'Select one or more requests below, then approve them in a single step.',
+                'actionRoute' => 'payment-mandate.approve-archive',
+                'actionName' => 'approve_request',
+                'actionValue' => 'approve_request',
+                'buttonLabel' => 'Approve Archive',
+                'buttonIcon' => 'bx-archive-in',
+                'requestLabel' => 'Archive',
+                'emptyMessage' => 'No archive requests at the moment!',
+                'requestType' => 'ARCHIVE',
+                'tabLabel' => 'Archive',
+            ],
+            'closing' => [
+                'pageTitle' => 'Approve Mandate Closing',
+                'pageSubtitle' => 'Review closing requests for mandates that have reached the end of their operational lifecycle and should be marked as closed.',
+                'guidanceText' => 'Approve closing only when the mandate has completed its intended lifecycle and there are no remaining operational actions expected on it.',
+                'tableTitle' => 'Pending Closing Requests',
+                'tableHint' => 'Select one or more requests below, then approve them in a single step.',
+                'actionRoute' => 'payment-mandate.approve-closing',
+                'actionName' => 'approve_closing',
+                'actionValue' => 'approve_closing',
+                'buttonLabel' => 'Approve Closing',
+                'buttonIcon' => 'bx-window-close',
+                'requestLabel' => 'Closing',
+                'emptyMessage' => 'No closing requests at the moment!',
+                'requestType' => 'CLOSING',
+                'tabLabel' => 'Closing',
+            ],
+        ];
+    }
+
+    private function renderApprovalPage(string $tabKey)
+    {
+        $tabs = $this->approvalTabConfig();
+        abort_unless(isset($tabs[$tabKey]), 404);
+
+        $requestCounts = DebitOrderRequest::query()
+            ->where('status', 'PENDING')
+            ->whereIn('request_type', ['CANCELLATION', 'DELETION', 'ARCHIVE', 'CLOSING'])
+            ->selectRaw('request_type, COUNT(*) as total')
+            ->groupBy('request_type')
+            ->pluck('total', 'request_type');
+
+        foreach ($tabs as $key => &$tab) {
+            $tab['count'] = (int) ($requestCounts[$tab['requestType']] ?? 0);
+        }
+        unset($tab);
+
+        $config = $tabs[$tabKey];
+        $dd_requests = DebitOrderRequest::with('debitOrder')
+            ->where('request_type', $config['requestType'])
+            ->where('status', 'PENDING')
+            ->get();
+
+        return view('payment_mandate.approvals', array_merge($config, [
+            'title' => 'Mandate Approvals',
+            'dd_requests' => $dd_requests,
+            'approvalTabs' => $tabs,
+            'activeTab' => $tabKey,
+        ]));
+    }
+
+    public function approvals(string $tab = 'cancellation')
+    {
+        return $this->renderApprovalPage($tab);
+    }
+
     public function request_cancellation(Request $request)
     {
         $title = 'Request payment mandate cancellation';
@@ -84,8 +190,6 @@ class PaymentMandateApprovalController extends BasePaymentMandateController
 
     public function approve_cancellation(Request $request)
     {
-        $title = 'Approve payment mandate cancellation';
-
         if ($request->isMethod('post')) {
             if (!$request->has('request_id')) {
                 return back()->with('danger', 'No payment mandate selected for cancellation.');
@@ -99,10 +203,7 @@ class PaymentMandateApprovalController extends BasePaymentMandateController
             return Redirect::route('payment-mandate.approve-cancellation')->with('success', 'Payment mandate cancellation request approved successfully.');
         }
 
-        $dd_requests = DebitOrderRequest::with('debitOrder')
-            ->where('request_type', 'CANCELLATION')->where('status', 'PENDING')->get();
-
-        return view('payment_mandate.approve_cancellation', compact('title', 'dd_requests'));
+        return $this->renderApprovalPage('cancellation');
     }
 
     public function request_deletion(Request $request)
@@ -186,8 +287,6 @@ class PaymentMandateApprovalController extends BasePaymentMandateController
 
     public function approve_deletion(Request $request)
     {
-        $title = 'Approve payment mandate cancellation';
-
         if ($request->isMethod('post')) {
             if (!$request->has('request_id')) {
                 return back()->with('danger', 'No payment mandate selected for deletion.');
@@ -201,10 +300,7 @@ class PaymentMandateApprovalController extends BasePaymentMandateController
             return Redirect::route('payment-mandate.approve-deletion')->with('success', 'Payment mandate deletion request approved successfully.');
         }
 
-        $dd_requests = DebitOrderRequest::with('debitOrder')
-            ->where('request_type', 'DELETION')->where('status', 'PENDING')->get();
-
-        return view('payment_mandate.approve_deletion', compact('title', 'dd_requests'));
+        return $this->renderApprovalPage('deletion');
     }
 
     public function request_closing(Request $request)
@@ -277,8 +373,6 @@ class PaymentMandateApprovalController extends BasePaymentMandateController
 
     public function approve_closing(Request $request)
     {
-        $title = 'Approve payment mandate closing';
-
         if ($request->isMethod('post')) {
             if (!$request->has('request_id')) {
                 return back()->with('danger', 'No payment mandate selected for closing.');
@@ -292,10 +386,7 @@ class PaymentMandateApprovalController extends BasePaymentMandateController
             return Redirect::route('payment-mandate.approve-closing')->with('success', 'Payment mandate closing request approved successfully.');
         }
 
-        $dd_requests = DebitOrderRequest::with('debitOrder')
-            ->where('request_type', 'CLOSING')->where('status', 'PENDING')->get();
-
-        return view('payment_mandate.approve_closing', compact('title', 'dd_requests'));
+        return $this->renderApprovalPage('closing');
     }
 
     public function request_archive($uuid)
@@ -308,8 +399,6 @@ class PaymentMandateApprovalController extends BasePaymentMandateController
 
     public function approve_archive(Request $request)
     {
-        $title = 'Approve payment mandate archive';
-
         if ($request->isMethod('post')) {
             if (!$request->has('request_id')) {
                 return back()->with('danger', 'No payment mandate selected for archive.');
@@ -323,9 +412,6 @@ class PaymentMandateApprovalController extends BasePaymentMandateController
             return Redirect::route('payment-mandate.approve-archive')->with('success', 'Payment mandate archive request approved successfully.');
         }
 
-        $dd_requests = DebitOrderRequest::with('debitOrder')
-            ->where('request_type', 'ARCHIVE')->where('status', 'PENDING')->get();
-
-        return view('payment_mandate.approve_archive', compact('title', 'dd_requests'));
+        return $this->renderApprovalPage('archive');
     }
 }

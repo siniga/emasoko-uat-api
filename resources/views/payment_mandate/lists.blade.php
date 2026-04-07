@@ -212,12 +212,10 @@
                                                             href="{{ route('payment-mandate.request-cancellation') }}">Request
                                                             Cancellation</a>
                                                         <a class="dropdown-item text-sm"
-                                                            href="{{ route('payment-mandate.request-closing') }}">Request Mandate
-                                                            Close</a>
+                                                            href="{{ route('payment-mandate.request-closing') }}">Request Closing</a>
                                                         <div class="dropdown-divider"></div>
                                                         <a class="dropdown-item text-sm"
-                                                            href="{{ route('payment-mandate.request-deletion') }}">Request
-                                                            Deletion</a>
+                                                            href="{{ route('payment-mandate.request-deletion') }}">Request Deletion</a>
                                                     </div>
                                                 </div>
                                             @endif

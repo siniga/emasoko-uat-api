@@ -299,6 +299,20 @@ Button
   transition: all 300ms ease;
 }
 
+.btn-md {
+  padding: 0.5rem 1.2rem;
+  font-size: 0.8rem;
+  line-height: 1.2;
+  border-radius: 0.24rem;
+}
+
+.btn-sm {
+  padding: .480rem .84rem !important;
+  font-size: 0.72rem;
+  line-height: 1.2;
+  border-radius: 0.24rem;
+}
+
 .btn-primary {
   background: #153567;
   border-color: #153567;

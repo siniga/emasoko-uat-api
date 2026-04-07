@@ -9,6 +9,7 @@
                 {{-- <li class="menu-title" key="t-menu">@lang('translation.Menu')</li> --}}
                 @php
                     $mandateApprovalRoutes = [
+                        'payment-mandate.approvals',
                         'payment-mandate.request-cancellation',
                         'payment-mandate.approve-cancellation',
                         'payment-mandate.request-deletion',
@@ -58,6 +59,9 @@
                             'payment-mandate.delete',
                         );
                     $mandateApprovalsOpen = Route::is(...$mandateApprovalRoutes);
+                    $mandateApprovalCount = \App\Models\DebitOrderRequest::where('status', 'PENDING')
+                        ->whereIn('request_type', ['CANCELLATION', 'DELETION', 'ARCHIVE', 'CLOSING'])
+                        ->count();
                     $collectionRoutesOpen =
                         Route::is('collections.*') || request()->is('collections') || request()->is('collections/*');
                     $reportsOpen = Route::is('reports.lists') || request()->is('reports') || request()->is('reports/*');
@@ -125,35 +129,13 @@
 
                 @if (Auth::user()->hasRole(['admin']))
                     <li class="{{ $mandateApprovalsOpen ? 'mm-active' : '' }}">
-                        <a href="javascript: void(0);"
-                            class="has-arrow waves-effect {{ $mandateApprovalsOpen ? 'mm-active' : '' }}"
-                            aria-expanded="{{ $mandateApprovalsOpen ? 'true' : 'false' }}">
+                        <a href="{{ route('payment-mandate.approvals') }}" class="waves-effect">
                             <i class='bx bx-list-check'></i>
-                            <span>Mandates Approvals</span>
+                            <span>Approvals</span>
+                            @if ($mandateApprovalCount > 0)
+                                <span class="badge bg-danger">{{ number_format($mandateApprovalCount) }}</span>
+                            @endif
                         </a>
-                        <ul class="sub-menu" aria-expanded="{{ $mandateApprovalsOpen ? 'true' : 'false' }}"
-                            style="{{ $mandateApprovalsOpen ? 'display: block;' : '' }}">
-                            <li>
-                                <a href="{{ route('payment-mandate.approve-cancellation') }}">
-                                    Cancellation
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('payment-mandate.approve-deletion') }}">
-                                    Deletion
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('payment-mandate.approve-archive') }}">
-                                    Archive
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('payment-mandate.approve-closing') }}">
-                                    Closing
-                                </a>
-                            </li>
-                        </ul>
                     </li>
                 @endif
 
