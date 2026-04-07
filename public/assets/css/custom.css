@@ -169,7 +169,7 @@ Sidebar
   font-size: 1.25rem;
   line-height: 1.40625rem;
   vertical-align: middle;
-  color: #545a6d;
+  color: #153567;
   -webkit-transition: all .4s;
   transition: all .4s
 }
@@ -211,7 +211,6 @@ Sidebar
   font-size: 13px
 }
 
-
 .mm-active .active,
 .mm-active .active i,
 .mm-active>a,
@@ -219,7 +218,7 @@ Sidebar
 .mm-active>i {
   background-color: #153567;
   color: #FFFFFF !important;
-  border-radius: 20px;
+  border-radius: 6px;
 }
 
 /*===============================================|
