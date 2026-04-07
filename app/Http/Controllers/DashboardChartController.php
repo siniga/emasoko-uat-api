@@ -31,52 +31,47 @@ class DashboardChartController extends Controller
             $year = $request->year;
 
 
-        //declare variable
-        $data_array = [];
         $approvedStatuses = [0, 1, 2];
 
+        $grouped = DebitOrder::filterCondition()
+            ->select([
+                DB::raw('MONTH(debit_orders.created_at) as month_number'),
+                'debit_orders.approved',
+                DB::raw('COALESCE(SUM(debit_orders.total_amount), 0) as total_amount'),
+            ])
+            ->whereIn('debit_orders.approved', $approvedStatuses)
+            ->when($channel != null, function ($q) use ($channel) {
+                $q->where('debit_orders.channel', $channel);
+            })
+            ->whereYear('debit_orders.created_at', $year)
+            ->whereHas('partner', function ($q) {
+                $q->where('partners.status', 202);
+            })
+            ->groupBy(DB::raw('MONTH(debit_orders.created_at)'), 'debit_orders.approved')
+            ->orderBy(DB::raw('MONTH(debit_orders.created_at)'))
+            ->orderBy('debit_orders.approved')
+            ->get()
+            ->groupBy('month_number');
+
+        $data_array = [];
         for ($i = 1; $i <= 12; $i++) {
-            $month = date('m', mktime(0, 0, 0, $i, 10));
+            $monthRows = collect($grouped->get($i, []));
+            $results = collect($approvedStatuses)->map(function ($status) use ($monthRows) {
+                $order = $monthRows->firstWhere('approved', $status);
 
-            //query
-            $debit_orders = DebitOrder::filterCondition()->select('debit_orders.approved', DB::raw('COALESCE(SUM(debit_orders.total_amount), 0) as total_amount'))
-                ->where(function ($query) {
-                    $query->whereIn('debit_orders.approved', [0, 1, 2]);
-                })
-                ->when($channel != null, function ($q) use ($channel) {
-                    $q->where('debit_orders.channel', $channel);
-                })
-                ->whereHas('partner', function ($q) {
-                    $q->where('partners.status', 202);
-                })->groupBy('debit_orders.approved')->orderBy('debit_orders.approved')->toBase();
-
-            $debit_orders = $debit_orders->whereMonth('created_at', $month)->whereYear('created_at', $year)->get();
-
-            // Map over all approved statuses to ensure complete results
-            $results = collect($approvedStatuses)->map(function ($status) use ($debit_orders) {
-                $order = $debit_orders->firstWhere('approved', $status);
                 return [
                     'approved' => $status,
-                    'total_amount' => $order ? $order->total_amount : 0,
+                    'total_amount' => $order ? (float) $order->total_amount : 0,
                 ];
             });
 
-            //pending
             $pending_amount = $results[0]['total_amount'];
-
-            //approved 
             $approved_amount = $results[1]['total_amount'];
-
-            //rejected
             $rejected_amount = $results[2]['total_amount'];
-
-            ///aggregate mandate
             $total_amount = $pending_amount + $approved_amount + $rejected_amount;
 
-            //create data array
             $data_array[] = [
-                // "month" => date("F", mktime(0, 0, 0, $month, 10)) . ',' . $year,
-                "month" => date("M", mktime(0, 0, 0, $month, 10)),
+                "month" => date("M", mktime(0, 0, 0, $i, 10)),
                 "total" => (int) $total_amount,
                 "approved" => (int) $approved_amount,
                 "rejected" => (int) $rejected_amount,
@@ -158,23 +153,49 @@ class DashboardChartController extends Controller
         if ($request->has('year'))
             $year = $request->year;
 
-        //declare variable
+        $expectedByMonth = Installment::filterCondition()
+            ->select([
+                DB::raw('MONTH(installments.payment_date) as month_number'),
+                DB::raw('COALESCE(SUM(installments.installment_amount), 0) as total_amount'),
+            ])
+            ->whereYear('installments.payment_date', $year)
+            ->whereHas('debitOrder', function ($query) use ($channel) {
+                $query->where(['debit_orders.approved' => 1])
+                    ->when(!is_null($channel), function ($query) use ($channel) {
+                        $query->where('debit_orders.channel', $channel);
+                    })
+                    ->whereHas('partner', function ($q) {
+                        $q->where('partners.approved', 1);
+                    });
+            })
+            ->groupBy(DB::raw('MONTH(installments.payment_date)'))
+            ->pluck('total_amount', 'month_number');
+
+        $paidByMonth = Installment::filterCondition()
+            ->select([
+                DB::raw('MONTH(installments.effective_payment_date) as month_number'),
+                DB::raw('COALESCE(SUM(installments.current_balance), 0) as paid_amount'),
+            ])
+            ->whereYear('installments.effective_payment_date', $year)
+            ->whereIn('installments.status', ['CLOSED', 'PARTIAL_PAID'])
+            ->whereHas('debitOrder', function ($query) use ($channel) {
+                $query->where(['debit_orders.approved' => 1])
+                    ->when(!is_null($channel), function ($query) use ($channel) {
+                        $query->where('debit_orders.channel', $channel);
+                    })
+                    ->whereHas('partner', function ($q) {
+                        $q->where('partners.approved', 1);
+                    });
+            })
+            ->groupBy(DB::raw('MONTH(installments.effective_payment_date)'))
+            ->pluck('paid_amount', 'month_number');
+
         $data_array = [];
-
         for ($i = 1; $i <= 12; $i++) {
-            $month = date('m', mktime(0, 0, 0, $i, 10));
-
-            $installments = Installment::thisMonthStats($month, $year, $channel);
-
-            //total amount
-            $total_amount = $installments->total_amount;
-            $paid_amount = $installments->paid_amount;
-
-            //create data array
             $data_array[] = [
-                "month" => date("M", mktime(0, 0, 0, $month, 10)),
-                "total" => (int) $total_amount,
-                "paid" => (int) $paid_amount,
+                "month" => date("M", mktime(0, 0, 0, $i, 10)),
+                "total" => (int) ($expectedByMonth[$i] ?? 0),
+                "paid" => (int) ($paidByMonth[$i] ?? 0),
             ];
         }
 
@@ -200,22 +221,52 @@ class DashboardChartController extends Controller
         //get dates
         $dates = $this->get_dates($current_date);
 
-        //declare variable
+        $startDate = min($dates);
+        $endDate = max($dates);
+
+        $expectedByDate = Installment::filterCondition()
+            ->select([
+                DB::raw('DATE(installments.payment_date) as day_date'),
+                DB::raw('COALESCE(SUM(installments.installment_amount), 0) as total_amount'),
+            ])
+            ->whereBetween('installments.payment_date', [$startDate, $endDate])
+            ->whereHas('debitOrder', function ($query) use ($channel) {
+                $query->where(['debit_orders.approved' => 1])
+                    ->when(!is_null($channel), function ($query) use ($channel) {
+                        $query->where('debit_orders.channel', $channel);
+                    })
+                    ->whereHas('partner', function ($q) {
+                        $q->where('partners.approved', 1);
+                    });
+            })
+            ->groupBy(DB::raw('DATE(installments.payment_date)'))
+            ->pluck('total_amount', 'day_date');
+
+        $paidByDate = Installment::filterCondition()
+            ->select([
+                DB::raw('DATE(installments.effective_payment_date) as day_date'),
+                DB::raw('COALESCE(SUM(installments.current_balance), 0) as paid_amount'),
+            ])
+            ->whereBetween('installments.effective_payment_date', [$startDate, $endDate])
+            ->whereIn('installments.status', ['CLOSED', 'PARTIAL_PAID'])
+            ->whereHas('debitOrder', function ($query) use ($channel) {
+                $query->where(['debit_orders.approved' => 1])
+                    ->when(!is_null($channel), function ($query) use ($channel) {
+                        $query->where('debit_orders.channel', $channel);
+                    })
+                    ->whereHas('partner', function ($q) {
+                        $q->where('partners.approved', 1);
+                    });
+            })
+            ->groupBy(DB::raw('DATE(installments.effective_payment_date)'))
+            ->pluck('paid_amount', 'day_date');
+
         $data_array = [];
-
-        foreach ($dates as $key => $v) {
-            //get installments
-            $installments = Installment::todayStats($v, $channel);
-
-            //total amount
-            $total_amount = $installments->total_amount;
-            $paid_amount = $installments->paid_amount;
-
-            //create data array
+        foreach ($dates as $v) {
             $data_array[] = [
                 "date" => date("d-m", strtotime($v)),
-                "total" => (int) $total_amount,
-                "paid" => (int) $paid_amount,
+                "total" => (int) ($expectedByDate[$v] ?? 0),
+                "paid" => (int) ($paidByDate[$v] ?? 0),
             ];
         }
 
