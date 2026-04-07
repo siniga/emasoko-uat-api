@@ -29,12 +29,6 @@
                 <div class="pmc-kicker">Payment Mandate Setup</div>
                 <div class="pmc-title">Step 2: Define Deduction Terms</div>
                 <p class="pmc-subtitle">Configure the mandate amount, schedule, and frequency exactly as the customer is consenting to.</p>
-                <div class="pmc-chip-wrap">
-                    <span class="pmc-chip">{{ $provider->partner->business_name ?? 'Select Provider' }}</span>
-                    <span class="pmc-chip">{{ $customer_account->accountType->name ?? 'NIL' }}</span>
-                    <span class="pmc-chip">{{ $customer_account->account_name ?? $customer_account->phone ?? 'NIL' }}</span>
-                </div>
-
                 @include('payment_mandate.create.partials.stepper', ['currentStep' => 2])
             </div>
         </div>
@@ -46,10 +40,6 @@
                 @elseif(session()->get('danger'))
                     <div class="alert alert-danger mb-2">{{ session()->get('danger') }}</div>
                 @endif
-
-                <div class="pmc-note">
-                    Keep the schedule realistic for the selected channel. For bank mandates, monthly collection is typically the safest option. For MNO, shorter cycles are available when the business case supports them.
-                </div>
 
                 {{ Form::open(['url' => route('payment-mandate.store-deduction'), 'class' => 'form-horizontal', 'enctype' => 'multipart/form-data']) }}
                 @method('POST')

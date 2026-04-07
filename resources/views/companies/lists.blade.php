@@ -267,24 +267,24 @@
                                                                 @if ($company->complete == 1)
                                                                     <a href="{{ route('companies.show', $company->uuid) }}"
                                                                         class="dropdown-item">
-                                                                        View
+                                                                        <i class='bx bxs-folder-open'></i> View
                                                                     </a>
                                                                 @elseif($company->complete == 0)
                                                                     <a href="{{ route('companies.registration', $company->uuid) }}"
                                                                         class="dropdown-item">
-                                                                        Continue Registration
+                                                                        <i class='bx bx-plus' ></i>Continue Registration
                                                                     </a>
                                                                 @endif
 
                                                                 <a href="{{ route('companies.edit', $company->uuid) }}"
                                                                     class="dropdown-item">
-                                                                    Edit
+                                                                    <i class='bx bxs-pencil'></i> Edit
                                                                 </a>
 
                                                                 @if ($company->approved == 0 || $company->approved == 99)
                                                                     <a href="{{ route('companies.delete', $company->uuid) }}"
                                                                         class="dropdown-item text-danger delete">
-                                                                        Delete
+                                                                        <i class='bx bx-trash'></i> Delete
                                                                     </a>
                                                                 @endif
                                                             </div>

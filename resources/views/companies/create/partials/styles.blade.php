@@ -143,9 +143,9 @@
     }
 
     .sp-section__title {
-        font-size: 0.95rem;
-        font-weight: 700;
-        color: var(--sp-primary);
+        font-size: 14px;
+        font-weight: 600;
+        color: #153567 !important;
         margin-bottom: 0.2rem;
     }
 

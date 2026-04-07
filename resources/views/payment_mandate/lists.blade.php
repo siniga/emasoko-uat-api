@@ -4,114 +4,8 @@
     Payment Mandate
 @endsection
 
-<style>
-    .ca-shell {
-        --ca-primary: #153567;
-        --ca-border: #dce6f5;
-        --ca-muted: #6b7c93;
-    }
-
-    .ca-summary {
-        border: 1px solid var(--ca-border);
-        border-radius: 16px;
-        background: linear-gradient(180deg, #fff 0%, #f8fbff 100%);
-        padding: 1rem;
-        height: 100%;
-    }
-
-    .ca-summary__label {
-        font-size: 0.76rem;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        color: var(--ca-muted);
-        margin-bottom: 0.35rem;
-    }
-
-    .ca-summary__value {
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: var(--ca-primary);
-    }
-
-    .ca-filter {
-        border: 1px solid #e7edf6;
-        border-radius: 16px;
-        background: #fbfcfe;
-        padding: 1.2rem;
-        box-shadow: 0 16px 40px rgba(29, 53, 87, 0.08);
-    }
-
-    .ca-filter__title {
-        font-size: 1rem;
-        font-weight: 700;
-        color: var(--ca-primary);
-        margin-bottom: 0.2rem;
-    }
-
-    .ca-filter__hint {
-        color: var(--ca-muted);
-        font-size: 0.88rem;
-        margin-bottom: 1rem;
-    }
-
-    .ca-table {
-        border-radius: 16px;
-        overflow: hidden;
-        border: 1px solid #dfe8f4;
-    }
-
-    .ca-table thead th {
-        background: #edf4ff;
-        color: var(--ca-primary);
-        font-weight: 700;
-        border-color: #dce7fa;
-    }
-
-    .ca-row-actions {
-        position: relative;
-    }
-
-    .ca-row-actions .dropdown-toggle {
-        border: 0;
-        background: transparent;
-        color: var(--ca-primary);
-        border-radius: 999px;
-        width: 28px;
-        height: 28px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0;
-    }
-
-    .ca-row-actions .dropdown-toggle:hover,
-    .ca-row-actions .dropdown-toggle:focus {
-        background: #edf4ff;
-        color: var(--ca-primary);
-        box-shadow: none;
-        border-color: transparent;
-    }
-
-    .ca-row-actions .dropdown-toggle::after {
-        display: none;
-    }
-
-    .ca-row-actions .dropdown-menu {
-        min-width: 10rem;
-        border: 1px solid #dfe8f4;
-        box-shadow: 0 16px 30px rgba(21, 53, 103, 0.12);
-        border-radius: 12px;
-        padding: 0.35rem 0;
-    }
-
-    .ca-row-actions .dropdown-item {
-        font-size: 0.875rem;
-        padding: 0.55rem 0.9rem;
-    }
-</style>
-
 @section('content')
-    <div class="ca-shell">
+    <div class="sp-list-shell">
         @component('components.breadcrumb')
             @slot('li_1')
                 Dashboard
@@ -123,10 +17,7 @@
 
         <div class="row">
             <div class="col-lg-12">
-                <div class="ca-filter mb-4">
-                    <div class="ca-filter__title">Filter Payment Mandates</div>
-                    <div class="ca-filter__hint">Narrow the mandate portfolio by date, lifecycle, payment channel, provider, or mandate keyword.</div>
-
+                <div class="sp-list-filter mb-4">
                     {!! Form::open(['url' => route('payment-mandate.lists'), 'method' => 'POST', 'class' => 'form-horizontal']) !!}
                     {{ Form::token() }}
 
@@ -212,17 +103,21 @@
                             </div>
                         </div>
 
-                        <div class="col-lg-6">
+                        <div class="col-lg-5">
                             <div class="mb-3">
-                                {{ Form::text('keyword', old('keyword', $post_data['keyword']), ['class' => 'form-control', 'placeholder' => 'Search by account holder, account number, or mandate reference']) }}
+                                {{ Form::text('keyword', old('keyword', $post_data['keyword']), ['class' => 'form-control', 'placeholder' => 'Search by account name, account number, or mandate reference']) }}
                             </div>
                         </div>
 
-                        <div class="col-lg-2">
+                        <div class="col-lg-3">
                             <div class="mb-3">
                                 <div class="text-sm-end d-none d-sm-block">
+                                    <button type="reset" name="reset" class="btn btn-outline-danger">
+                                        <i class='bx bx-reset'></i> Clear
+                                    </button>
+
                                     <button type="submit" name="filter" class="btn btn-secondary">
-                                        <i class="bx bx-search"></i> Filter
+                                        <i class="bx bx-search"></i> Filter Data
                                     </button>
                                 </div>
                             </div>
@@ -230,48 +125,41 @@
                     </div>
 
                     <div class="border-top pt-3 mt-2">
-                        <div class="d-flex flex-wrap align-items-center justify-content-between mb-3">
-                            <div>
-                                <div class="ca-filter__title mb-1">Filtered Summary</div>
-                                <div class="ca-filter__hint mb-0">These totals follow the filters currently applied above.</div>
-                            </div>
-                        </div>
-
                         <div class="row g-3">
                             <div class="col-md-2">
-                                <div class="ca-summary">
-                                    <div class="ca-summary__label">Total Mandates</div>
-                                    <div class="ca-summary__value">{{ number_format($listStats['total'] ?? 0) }}</div>
+                                <div class="sp-list-summary">
+                                    <div class="sp-list-summary__label">Total Mandates</div>
+                                    <div class="sp-list-summary__value">{{ number_format($listStats['total'] ?? 0) }}</div>
                                 </div>
                             </div>
                             <div class="col-md-2">
-                                <div class="ca-summary">
-                                    <div class="ca-summary__label">Draft</div>
-                                    <div class="ca-summary__value">{{ number_format($listStats['draft'] ?? 0) }}</div>
+                                <div class="sp-list-summary">
+                                    <div class="sp-list-summary__label">Draft</div>
+                                    <div class="sp-list-summary__value">{{ number_format($listStats['draft'] ?? 0) }}</div>
                                 </div>
                             </div>
                             <div class="col-md-2">
-                                <div class="ca-summary">
-                                    <div class="ca-summary__label">Submitted</div>
-                                    <div class="ca-summary__value text-info">{{ number_format($listStats['submitted'] ?? 0) }}</div>
+                                <div class="sp-list-summary">
+                                    <div class="sp-list-summary__label">Submitted</div>
+                                    <div class="sp-list-summary__value text-info">{{ number_format($listStats['submitted'] ?? 0) }}</div>
                                 </div>
                             </div>
                             <div class="col-md-2">
-                                <div class="ca-summary">
-                                    <div class="ca-summary__label">Awaiting OTP</div>
-                                    <div class="ca-summary__value text-warning">{{ number_format($listStats['awaiting_otp'] ?? 0) }}</div>
+                                <div class="sp-list-summary">
+                                    <div class="sp-list-summary__label">Awaiting OTP</div>
+                                    <div class="sp-list-summary__value text-warning">{{ number_format($listStats['awaiting_otp'] ?? 0) }}</div>
                                 </div>
                             </div>
                             <div class="col-md-2">
-                                <div class="ca-summary">
-                                    <div class="ca-summary__label">Active</div>
-                                    <div class="ca-summary__value text-success">{{ number_format($listStats['active'] ?? 0) }}</div>
+                                <div class="sp-list-summary">
+                                    <div class="sp-list-summary__label">Active</div>
+                                    <div class="sp-list-summary__value text-success">{{ number_format($listStats['active'] ?? 0) }}</div>
                                 </div>
                             </div>
                             <div class="col-md-2">
-                                <div class="ca-summary">
-                                    <div class="ca-summary__label">Failed</div>
-                                    <div class="ca-summary__value text-danger">{{ number_format($listStats['failed'] ?? 0) }}</div>
+                                <div class="sp-list-summary">
+                                    <div class="sp-list-summary__label">Failed</div>
+                                    <div class="sp-list-summary__value text-danger">{{ number_format($listStats['failed'] ?? 0) }}</div>
                                 </div>
                             </div>
                         </div>
@@ -346,7 +234,7 @@
                                     </div>
                                 </div>
 
-                                <div class="table-responsive ca-table">
+                                <div class="table-responsive sp-list-table">
                                     <table class="table table-bordered dt-responsive nowrap w-100" id="dynamicTable">
                                         <thead>
                                             <tr>
@@ -388,7 +276,7 @@
                                                     <td>{!! mandate_status_badge($values) !!}</td>
                                                     <td>{{ date('d-m-Y H:i', strtotime($values->created_at)) }}</td>
                                                     <td class="text-center">
-                                                        <div class="dropdown ca-row-actions">
+                                                        <div class="dropdown sp-row-actions">
                                                             <button class="btn dropdown-toggle" type="button"
                                                                 data-bs-toggle="dropdown" aria-expanded="false"
                                                                 title="Mandate Actions">
@@ -398,26 +286,26 @@
                                                                 @if ($canPreview)
                                                                     <a href="{{ route('payment-mandate.preview', $values->uuid) }}"
                                                                         class="dropdown-item">
-                                                                        Preview
+                                                                        <i class='bx bxs-folder-open'></i> Preview
                                                                     </a>
                                                                 @else
                                                                     <a href="{{ route('payment-mandate.show', $values->uuid) }}"
                                                                         class="dropdown-item">
-                                                                        View Details
+                                                                        <i class='bx bxs-folder-open'></i> View
                                                                     </a>
                                                                 @endif
 
                                                                 @if ($canEdit)
                                                                     <a href="{{ route('payment-mandate.edit', $values->uuid) }}"
                                                                         class="dropdown-item">
-                                                                        Edit
+                                                                        <i class='bx bxs-pencil'></i> Edit
                                                                     </a>
                                                                 @endif
 
                                                                 @if ($canDelete)
                                                                     <a href="{{ route('payment-mandate.delete', $values->uuid) }}"
                                                                         class="dropdown-item text-danger delete">
-                                                                        Delete
+                                                                        <i class='bx bx-trash' ></i> Delete
                                                                     </a>
                                                                 @endif
                                                             </div>

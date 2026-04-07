@@ -29,11 +29,6 @@
                 <div class="pmc-kicker">Payment Mandate Setup</div>
                 <div class="pmc-title">Step 3: Review and Submit</div>
                 <p class="pmc-subtitle">Review the customer account and deduction terms before saving, submitting, or starting OTP consent.</p>
-                <div class="pmc-chip-wrap">
-                    <span class="pmc-chip">{{ $debit_order->partner->business_name ?? 'NIL' }}</span>
-                    <span class="pmc-chip">{{ $customer_account->accountType->name ?? 'NIL' }}</span>
-                    <span class="pmc-chip">{{ $debit_order->reference ?? 'NIL' }}</span>
-                </div>
 
                 @include('payment_mandate.create.partials.stepper', ['currentStep' => 3])
             </div>
@@ -41,33 +36,6 @@
 
         <div class="card pmc-card">
             <div class="card-body">
-                <div class="row g-3 mb-4">
-                    <div class="col-lg-3 col-md-6">
-                        <div class="pmc-summary">
-                            <div class="pmc-summary__label">Total Amount</div>
-                            <div class="pmc-summary__value">{{ number_format($debit_order->total_amount ?? 0) }}</div>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-md-6">
-                        <div class="pmc-summary">
-                            <div class="pmc-summary__label">Installments</div>
-                            <div class="pmc-summary__value">{{ number_format($debit_order->installment_number ?? 0) }}</div>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-md-6">
-                        <div class="pmc-summary">
-                            <div class="pmc-summary__label">Frequency</div>
-                            <div class="pmc-summary__value">{{ $debit_order->periodicity ?? 'NIL' }}</div>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-md-6">
-                        <div class="pmc-summary">
-                            <div class="pmc-summary__label">Lifecycle</div>
-                            <div class="pmc-summary__value text-capitalize">{{ str_replace('_', ' ', $debit_order->lifecycle_status ?? $debit_order->resolved_lifecycle_status) }}</div>
-                        </div>
-                    </div>
-                </div>
-
                 <form @submit.prevent="" autocomplete="off">
                     <section>
                         <div id="message_wrp" class="message_wrp"></div>

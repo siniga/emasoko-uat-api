@@ -29,22 +29,12 @@
                 <div class="pmc-kicker">Payment Mandate Setup</div>
                 <div class="pmc-title">Step 1: Channel and Customer Details</div>
                 <p class="pmc-subtitle">Start with the deduction channel, customer identity, and the account that will be used for the mandate.</p>
-                <div class="pmc-chip-wrap">
-                    <span class="pmc-chip">{{ $customer_account->accountType->name ?? 'NIL' }}</span>
-                    <span class="pmc-chip">{{ $customer_account->account->name ?? 'NIL' }}</span>
-                    <span class="pmc-chip">{{ $customer_account->account_name ?? $customer_account->phone ?? 'NIL' }}</span>
-                </div>
-
                 @include('payment_mandate.create.partials.stepper', ['currentStep' => 1])
             </div>
         </div>
 
         <div class="card pmc-card">
             <div class="card-body">
-                <div class="pmc-note">
-                    Capture the payer profile exactly as it appears on the bank or mobile wallet account. This reduces verification failures later in the flow.
-                </div>
-
                 {{ Form::open(['url' => route('payment-mandate.store-account'), 'method' => 'POST', 'class' => 'form-horizontal']) }}
                 {{ Form::token() }}
                 <input type="hidden" name="customer_account_id" value="{{ $customer_account->id ?? null }}">

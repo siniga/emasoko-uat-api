@@ -14,7 +14,7 @@
     .pmc-hero {
         background: linear-gradient(135deg, #153567 0%, #1e4a8b 100%);
         border: 0;
-        border-radius: 18px;
+        border-radius: 6px;
         overflow: hidden;
         box-shadow: 0 14px 34px rgba(21, 53, 103, 0.12);
         color: #fff;
@@ -33,7 +33,7 @@
 
     .pmc-card {
         border: 1px solid var(--pmc-border);
-        border-radius: 18px;
+        border-radius: 6px;
         box-shadow: 0 14px 32px rgba(25, 52, 93, 0.07);
     }
 
@@ -154,9 +154,9 @@
     }
 
     .pmc-section__title {
-        font-size: 0.95rem;
-        font-weight: 700;
-        color: var(--pmc-primary);
+        font-size: 14px;
+        font-weight: 600;
+        color: #153567 !important;
         margin-bottom: 0.2rem;
     }
 
@@ -204,7 +204,7 @@
 
     .pmc-summary {
         border: 1px solid var(--pmc-border);
-        border-radius: 14px;
+        border-radius: 6px;
         background: linear-gradient(180deg, #fff 0%, var(--pmc-surface) 100%);
         padding: 1rem 1.05rem;
         height: 100%;
@@ -225,9 +225,9 @@
     }
 
     .pmc-table {
-        border-radius: 16px;
+        border-radius: 6px;
         overflow: hidden;
-        border: 1px solid #dfe8f4;
+        /* border: 1px solid #dfe8f4; */
         margin-bottom: 0;
     }
 
