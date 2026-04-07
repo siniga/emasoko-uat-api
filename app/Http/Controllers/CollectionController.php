@@ -89,6 +89,8 @@ class CollectionController extends Controller
             'start_at' => $request->start_at ?? null,
             'end_at' => $request->end_at ?? null,
             'partner_id' => $request->partner_id ?? null,
+            'cl_status' => $request->cl_status ?? null,
+            'mandate_reference' => $request->mandate_reference ?? null,
         ];
 
         //render view

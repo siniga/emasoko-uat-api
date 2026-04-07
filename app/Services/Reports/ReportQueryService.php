@@ -3,6 +3,9 @@
 namespace App\Services\Reports;
 
 use App\Services\Reports\Mappers\CollectionReportMapper;
+use App\Services\Reports\Mappers\CrbReportMapper;
+use App\Services\Reports\Mappers\AccountingReportMapper;
+use App\Services\Reports\Mappers\DelinquentAgeAnalysisReportMapper;
 use App\Services\Reports\Mappers\MandateLifecycleReportMapper;
 use App\Services\Reports\Mappers\MandateReportMapper;
 use App\Services\Reports\Mappers\OverdueInstallmentReportMapper;
@@ -22,6 +25,9 @@ class ReportQueryService
     public const TYPE_OVERDUE_INSTALLMENTS = 'OVERDUE_INSTALLMENTS';
     public const TYPE_PARTNER_PERFORMANCE = 'PARTNER_PERFORMANCE';
     public const TYPE_MANDATE_LIFECYCLE = 'MANDATE_LIFECYCLE';
+    public const TYPE_CRB_REPORT = 'CRB_REPORT';
+    public const TYPE_ACCOUNTING_REPORT = 'ACCOUNTING_REPORT';
+    public const TYPE_DELINQUENT_AGE_ANALYSIS = 'DELINQUENT_AGE_ANALYSIS';
 
     public function reportDefinitions(): array
     {
@@ -54,6 +60,21 @@ class ReportQueryService
             self::TYPE_MANDATE_LIFECYCLE => [
                 'label' => 'Mandate Lifecycle Summary',
                 'description' => 'Lifecycle distribution of mandates using app-owned mandate statuses.',
+                'status_filter' => 'none',
+            ],
+            self::TYPE_CRB_REPORT => [
+                'label' => 'CRB Report',
+                'description' => 'Borrower exposure extract showing customer identity, mandate exposure, and delinquency classification.',
+                'status_filter' => 'mandate',
+            ],
+            self::TYPE_ACCOUNTING_REPORT => [
+                'label' => 'Accounting Report',
+                'description' => 'Operational accounting-style report for expected, paid, and outstanding collection lines.',
+                'status_filter' => 'collection',
+            ],
+            self::TYPE_DELINQUENT_AGE_ANALYSIS => [
+                'label' => 'Delinquent Age Analysis',
+                'description' => 'Ageing-based delinquency report with days past due, buckets, and highlight levels.',
                 'status_filter' => 'none',
             ],
         ];
@@ -133,6 +154,9 @@ class ReportQueryService
             self::TYPE_OVERDUE_INSTALLMENTS => "Overdue_Installments_{$stamp}.xlsx",
             self::TYPE_PARTNER_PERFORMANCE => "Partner_Performance_{$stamp}.xlsx",
             self::TYPE_MANDATE_LIFECYCLE => "Mandate_Lifecycle_Summary_{$stamp}.xlsx",
+            self::TYPE_CRB_REPORT => "CRB_Report_{$stamp}.xlsx",
+            self::TYPE_ACCOUNTING_REPORT => "Accounting_Report_{$stamp}.xlsx",
+            self::TYPE_DELINQUENT_AGE_ANALYSIS => "Delinquent_Age_Analysis_{$stamp}.xlsx",
             default => "Report_{$stamp}.xlsx",
         };
     }
@@ -146,6 +170,9 @@ class ReportQueryService
             self::TYPE_OVERDUE_INSTALLMENTS => $this->overdueInstallmentsBaseQuery($filters)->orderBy('installments.payment_date', 'ASC')->get(),
             self::TYPE_PARTNER_PERFORMANCE => $this->partnerPerformanceRecords($filters),
             self::TYPE_MANDATE_LIFECYCLE => $this->mandateLifecycleRecords($filters),
+            self::TYPE_CRB_REPORT => $this->crbRecords($filters),
+            self::TYPE_ACCOUNTING_REPORT => $this->accountingRecords($filters),
+            self::TYPE_DELINQUENT_AGE_ANALYSIS => $this->delinquentAgeAnalysisRecords($filters),
             default => collect(),
         };
     }
@@ -159,6 +186,9 @@ class ReportQueryService
             self::TYPE_OVERDUE_INSTALLMENTS => new OverdueInstallmentReportMapper(),
             self::TYPE_PARTNER_PERFORMANCE => new PartnerPerformanceReportMapper(),
             self::TYPE_MANDATE_LIFECYCLE => new MandateLifecycleReportMapper(),
+            self::TYPE_CRB_REPORT => new CrbReportMapper(),
+            self::TYPE_ACCOUNTING_REPORT => new AccountingReportMapper(),
+            self::TYPE_DELINQUENT_AGE_ANALYSIS => new DelinquentAgeAnalysisReportMapper(),
             default => new MandateReportMapper(),
         };
     }
@@ -308,6 +338,151 @@ class ReportQueryService
                 ];
             })
             ->values();
+    }
+
+    protected function crbRecords(array $filters): Collection
+    {
+        return $this->mandateBaseQuery($filters)
+            ->with([
+                'partner:id,business_name',
+                'customerAccount:id,customer_id,account_number,account_name,phone',
+                'customerAccount.customer:id,first_name,middle_name,last_name,fullname,dob,id_number,address',
+                'installments:id,debit_order_id,payment_date,outstanding_amount,status',
+            ])
+            ->get()
+            ->map(function (DebitOrder $record) {
+                $customer = optional($record->customerAccount)->customer;
+                $openOverdues = $record->installments
+                    ->filter(function ($installment) {
+                        return !in_array($installment->status, ['CLOSED', 'PARTIAL_PAID'], true)
+                            && !empty($installment->payment_date)
+                            && Carbon::parse($installment->payment_date)->lt(now()->startOfDay());
+                    });
+
+                $maxDaysPastDue = $openOverdues->max(function ($installment) {
+                    return Carbon::parse($installment->payment_date)->startOfDay()->diffInDays(now()->startOfDay());
+                }) ?? 0;
+
+                return [
+                    'provider_name' => $record->partner->business_name ?? '',
+                    'customer_name' => trim((string) ($customer->full_name ?? $customer->fullname ?? '')),
+                    'id_number' => $customer->id_number ?? '',
+                    'phone' => $record->customerAccount->phone ?? '',
+                    'account_number' => $record->customerAccount->account_number ?? '',
+                    'mandate_reference' => $record->reference,
+                    'facility_status' => strtoupper(str_replace('_', ' ', $record->resolved_lifecycle_status)),
+                    'total_exposure' => (float) ($record->total_amount ?? 0),
+                    'paid_amount' => (float) ($record->current_balance ?? 0),
+                    'outstanding_amount' => (float) ($record->outstanding_amount ?? 0),
+                    'installment_amount' => (float) ($record->installment_amount == 0 ? $record->max_installment_amount : $record->installment_amount),
+                    'start_date' => $record->start_date,
+                    'end_date' => $record->end_date,
+                    'overdue_installments' => $openOverdues->count(),
+                    'max_days_past_due' => (int) $maxDaysPastDue,
+                    'crb_classification' => $this->delinquencyHighlight($maxDaysPastDue),
+                    'customer_address' => $customer->address ?? '',
+                    'dob' => $customer->dob ?? null,
+                ];
+            })
+            ->values();
+    }
+
+    protected function accountingRecords(array $filters): Collection
+    {
+        return $this->expectedCollectionBaseQuery($filters)
+            ->with([
+                'debitOrder:id,reference,partner_id,customer_account_id,start_date,end_date',
+                'debitOrder.partner:id,business_name',
+                'debitOrder.customerAccount:id,customer_id,account_id,account_name,account_number',
+                'debitOrder.customerAccount.customer:id,first_name,middle_name,last_name,fullname',
+                'debitOrder.customerAccount.account:id,name',
+            ])
+            ->get()
+            ->map(function (Installment $record) {
+                $status = strtoupper((string) $record->status);
+
+                $entryClassification = match ($status) {
+                    'CLOSED' => 'CLEARED',
+                    'PARTIAL_PAID' => 'PARTIAL',
+                    'FAILED', 'FUNDSCHECK' => 'EXCEPTION',
+                    default => 'RECEIVABLE',
+                };
+
+                return [
+                    'provider_name' => $record->debitOrder->partner->business_name ?? '',
+                    'mandate_reference' => $record->debitOrder->reference ?? '',
+                    'customer_name' => trim((string) (optional($record->debitOrder->customerAccount->customer)->full_name ?? optional($record->debitOrder->customerAccount->customer)->fullname ?? '')),
+                    'account_number' => $record->debitOrder->customerAccount->account_number ?? '',
+                    'payment_channel' => $record->debitOrder->customerAccount->account->name ?? '',
+                    'due_date' => $record->payment_date,
+                    'effective_date' => $record->effective_payment_date,
+                    'expected_amount' => (float) ($record->installment_amount ?? 0),
+                    'paid_amount' => (float) ($record->current_balance ?? 0),
+                    'outstanding_amount' => (float) ($record->outstanding_amount ?? 0),
+                    'collection_status' => $status,
+                    'entry_classification' => $entryClassification,
+                    'remarks' => $record->remarks ?? '',
+                ];
+            })
+            ->values();
+    }
+
+    protected function delinquentAgeAnalysisRecords(array $filters): Collection
+    {
+        return $this->overdueInstallmentsBaseQuery($filters)
+            ->with([
+                'debitOrder:id,reference,partner_id,customer_account_id',
+                'debitOrder.partner:id,business_name',
+                'debitOrder.customerAccount:id,customer_id,account_name,account_number',
+                'debitOrder.customerAccount.customer:id,first_name,middle_name,last_name,fullname,id_number,address',
+            ])
+            ->get()
+            ->map(function (Installment $record) {
+                $daysPastDue = !empty($record->payment_date)
+                    ? Carbon::parse($record->payment_date)->startOfDay()->diffInDays(now()->startOfDay())
+                    : 0;
+
+                return [
+                    'provider_name' => $record->debitOrder->partner->business_name ?? '',
+                    'mandate_reference' => $record->debitOrder->reference ?? '',
+                    'customer_name' => trim((string) (optional($record->debitOrder->customerAccount->customer)->full_name ?? optional($record->debitOrder->customerAccount->customer)->fullname ?? '')),
+                    'id_number' => $record->debitOrder->customerAccount->customer->id_number ?? '',
+                    'account_number' => $record->debitOrder->customerAccount->account_number ?? '',
+                    'due_date' => $record->payment_date,
+                    'days_past_due' => $daysPastDue,
+                    'age_bucket' => $this->ageBucket($daysPastDue),
+                    'risk_highlight' => $this->delinquencyHighlight($daysPastDue),
+                    'installment_amount' => (float) ($record->installment_amount ?? 0),
+                    'outstanding_amount' => (float) ($record->outstanding_amount ?? 0),
+                    'status' => strtoupper((string) $record->status),
+                    'customer_address' => $record->debitOrder->customerAccount->customer->address ?? '',
+                ];
+            })
+            ->values();
+    }
+
+    protected function ageBucket(int $daysPastDue): string
+    {
+        return match (true) {
+            $daysPastDue <= 0 => 'CURRENT',
+            $daysPastDue <= 30 => '1-30 DAYS',
+            $daysPastDue <= 60 => '31-60 DAYS',
+            $daysPastDue <= 90 => '61-90 DAYS',
+            $daysPastDue <= 180 => '91-180 DAYS',
+            default => '180+ DAYS',
+        };
+    }
+
+    protected function delinquencyHighlight(int $daysPastDue): string
+    {
+        return match (true) {
+            $daysPastDue <= 0 => 'CURRENT',
+            $daysPastDue <= 30 => 'WATCHLIST',
+            $daysPastDue <= 60 => 'SPECIAL MENTION',
+            $daysPastDue <= 90 => 'SUBSTANDARD',
+            $daysPastDue <= 180 => 'DOUBTFUL',
+            default => 'LOSS',
+        };
     }
 
     protected function applyMandateFilters(Builder $query, array $filters): void

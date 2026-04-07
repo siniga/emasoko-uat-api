@@ -91,6 +91,7 @@ class CollectionBatch extends Model
         $start_date        = $request['start_at'] ?? null;
         $end_date          = $request['end_at'] ?? null;
         $partner_id        = $request['partner_id'] ?? null;
+        $status            = $request['cl_status'] ?? null;
         $mandate_reference = $request['mandate_reference'] ?? null;
 
         return $query->when($start_date, function ($query) use ($start_date, $end_date) {
@@ -111,6 +112,15 @@ class CollectionBatch extends Model
         })
             ->when($partner_id, function ($query) use ($partner_id) {
                 $query->where('collection_batches.partner_id', $partner_id);
+            })
+            ->when($status, function ($query) use ($status) {
+                if ($status === 'uploaded') {
+                    $query->where('collection_batches.pushed', 1);
+                } elseif ($status === 'processed') {
+                    $query->where('collection_batches.processed', 1);
+                } elseif ($status === 'failed') {
+                    $query->where('collection_batches.failed', 1);
+                }
             })
             ->when($mandate_reference, function ($query) use ($mandate_reference) {
                 $ids = \App\Models\Installment::query()

@@ -4,98 +4,15 @@
     Reports
 @endsection
 
-<style>
-    [x-cloak] {
-        display: none !important;
-    }
-
-    .rp-shell {
-        --rp-primary: #153567;
-        --rp-muted: #6b7c93;
-        --rp-border: #dce6f5;
-    }
-
-    .rp-filter {
-        border: 1px solid #e7edf6;
-        border-radius: 18px;
-        background: #fbfcfe;
-        padding: 1.25rem;
-        box-shadow: 0 16px 40px rgba(29, 53, 87, 0.08);
-    }
-
-    .rp-filter__title {
-        font-size: 1rem;
-        font-weight: 700;
-        color: var(--rp-primary);
-        margin-bottom: 0.25rem;
-    }
-
-    .rp-filter__hint {
-        color: var(--rp-muted);
-        font-size: 0.9rem;
-        margin-bottom: 1rem;
-    }
-
-    .rp-type-card {
-        border: 1px solid var(--rp-border);
-        border-radius: 14px;
-        background: linear-gradient(180deg, #fff 0%, #f8fbff 100%);
-        padding: 1rem;
-        height: 100%;
-    }
-
-    .rp-type-card__label {
-        color: var(--rp-primary);
-        font-size: 0.95rem;
-        font-weight: 700;
-        margin-bottom: 0.25rem;
-    }
-
-    .rp-type-card__text {
-        color: var(--rp-muted);
-        font-size: 0.86rem;
-        margin-bottom: 0;
-    }
-
-    .rp-summary {
-        border: 1px solid var(--rp-border);
-        border-radius: 14px;
-        background: linear-gradient(180deg, #fff 0%, #f8fbff 100%);
-        padding: 1rem;
-        height: 100%;
-    }
-
-    .rp-summary__label {
-        font-size: 0.76rem;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        color: var(--rp-muted);
-        margin-bottom: 0.35rem;
-    }
-
-    .rp-summary__value {
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: var(--rp-primary);
-    }
-
-    .rp-table {
-        border-radius: 16px;
-        overflow: hidden;
-        border: 1px solid #dfe8f4;
-    }
-
-    .rp-table thead th {
-        background: #edf4ff;
-        color: var(--rp-primary);
-        font-weight: 700;
-        border-color: #dce7fa;
-        white-space: nowrap;
-    }
-</style>
+@section('css')
+    <link href="{{ URL::asset('/assets/css/reports-index.css') }}" rel="stylesheet" type="text/css" />
+@endsection
 
 @section('content')
-    <div class="rp-shell" x-data="reportForm({ reportType: '{{ $filters['report_type'] ?? '' }}' })" x-init="init()">
+    <div class="rp-shell" x-data="reportForm({
+        reportType: '{{ $filters['report_type'] ?? '' }}',
+        reportDefinitions: @js($reportDefinitions)
+    })" x-init="init()">
         @component('components.breadcrumb')
             @slot('li_1')
                 Dashboard
@@ -108,105 +25,125 @@
         <div class="row">
             <div class="col-lg-12">
                 <div class="rp-filter">
-                    <div class="rp-filter__title">Reporting Workspace</div>
-                    <div class="rp-filter__hint">Generate consistent exports from shared report queries for mandate portfolio, expected collection, and actual collection performance.</div>
+                    <div class="rp-filter__head">
+                        <div>
+                            <div class="rp-filter__title">Reporting</div>
+                            <div class="rp-filter__hint">Choose a report card to open a focused filter modal, then preview or export the result.</div>
+                        </div>
 
-                    <div class="row g-3 mb-4">
-                        @foreach ($reportDefinitions as $definition)
-                            <div class="col-lg-4">
-                                <div class="rp-type-card">
+                        <div class="rp-filter__actions">
+                            <button type="button" class="btn btn-secondary btn-sm" x-show="reportType" x-cloak
+                                @click="openReportModal(reportType)">
+                                <i class="bx bx-slider-alt"></i> Edit Filters
+                            </button>
+                            <a href="{{ route('reports.lists') }}" class="btn btn-outline-danger btn-sm">
+                                <i class="bx bx-reset"></i> Clear Filters
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-2">
+                        @foreach ($reportDefinitions as $key => $definition)
+                            <div class="col-lg-4 col-md-4 col-12 mb-0">
+                                <label class="rp-type-card {{ ($filters['report_type'] ?? '') === $key ? 'rp-type-card--active' : '' }}"
+                                    :class="reportType === '{{ $key }}' ? 'rp-type-card--active' : ''"
+                                    @click="openReportModal('{{ $key }}')">
                                     <div class="rp-type-card__label">{{ $definition['label'] }}</div>
                                     <p class="rp-type-card__text">{{ $definition['description'] }}</p>
-                                </div>
+                                </label>
                             </div>
                         @endforeach
                     </div>
 
-                    {!! Form::open(['url' => route('reports.lists'), 'method' => 'POST', 'class' => 'form-horizontal']) !!}
-                    {{ Form::token() }}
+                    <div class="rp-selection" x-show="selectedDefinition()" x-cloak>
+                        <div class="rp-selection__label">Selected Report</div>
+                        <div class="rp-selection__value" x-text="selectedDefinition()?.label || ''"></div>
+                        <div class="rp-selection__hint" x-text="selectedDefinition()?.description || ''"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-                    <div class="row">
-                        <div class="col-lg-3">
-                            <div class="mb-3">
-                                @php
-                                    $reportTypeOptions = ['' => '-- Report Type --'];
-                                    foreach ($reportDefinitions as $key => $definition) {
-                                        $reportTypeOptions[$key] = $definition['label'];
-                                    }
-                                @endphp
-                                {{ Form::select('report_type', $reportTypeOptions, old('report_type', $filters['report_type']), ['id' => 'report_type', 'class' => 'form-control', 'x-model' => 'reportType', '@change' => 'syncStatusFilter()', 'required' => '']) }}
-                            </div>
+        <div class="modal fade" id="reportFilterModal" tabindex="-1" aria-hidden="true" x-ref="reportFilterModal">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content rp-modal">
+                    <div class="modal-header rp-modal__head">
+                        <div>
+                            <h5 class="modal-title rp-modal__title" x-text="selectedDefinition()?.label || 'Report Filters'"></h5>
+                            <p class="rp-modal__hint mb-0" x-text="modalHint()"></p>
                         </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        {!! Form::open(['url' => route('reports.lists'), 'method' => 'POST', 'class' => 'form-horizontal']) !!}
+                        {{ Form::token() }}
+                        <input type="hidden" name="report_type" :value="reportType">
 
-                        <div class="col-lg-3" x-show="statusFilter === 'mandate'" x-cloak>
-                            <div class="mb-3">
+                        <div class="row g-3">
+                            <div class="col-lg-6" x-show="showField('mandate_status')" x-cloak>
+                                <label class="rp-field__label">Mandate Status</label>
                                 {{ Form::select('mandate_status', ['' => '-- Mandate status --'] + $mandateStatusOptions, old('mandate_status', $filters['mandate_status']), ['class' => 'form-control']) }}
                             </div>
-                        </div>
 
-                        <div class="col-lg-3" x-show="statusFilter === 'collection'" x-cloak>
-                            <div class="mb-3">
+                            <div class="col-lg-6" x-show="showField('collection_status')" x-cloak>
+                                <label class="rp-field__label">Collection Status</label>
                                 {{ Form::select('collection_status', ['' => '-- Collection status --'] + $collectionStatusOptions, old('collection_status', $filters['collection_status']), ['class' => 'form-control']) }}
                             </div>
-                        </div>
 
-                        <div class="col-lg-3">
-                            <div class="mb-3">
-                                {{ Form::date('start_at', old('start_at', $filters['start_at']), ['class' => 'form-control', 'required' => '']) }}
+                            <div class="col-lg-6" x-show="showField('start_at')" x-cloak>
+                                <label class="rp-field__label" x-text="dateStartLabel()"></label>
+                                {{ Form::date('start_at', old('start_at', $filters['start_at']), ['class' => 'form-control']) }}
                             </div>
-                        </div>
 
-                        <div class="col-lg-3">
-                            <div class="mb-3">
-                                {{ Form::date('end_at', old('end_at', $filters['end_at']), ['class' => 'form-control', 'required' => '']) }}
+                            <div class="col-lg-6" x-show="showField('end_at')" x-cloak>
+                                <label class="rp-field__label" x-text="dateEndLabel()"></label>
+                                {{ Form::date('end_at', old('end_at', $filters['end_at']), ['class' => 'form-control']) }}
                             </div>
-                        </div>
-                    </div>
 
-                    <div class="row">
-                        <div class="col-lg-3">
-                            <div class="mb-3">
+                            <div class="col-lg-6" x-show="showField('account_type_id')" x-cloak>
                                 @php
                                     $accountTypeOptions = ['' => '-- Payment Channel --'];
                                     foreach ($account_types as $val) {
                                         $accountTypeOptions[$val->id] = $val->name;
                                     }
                                 @endphp
+                                <label for="account_type_id" class="rp-field__label">Payment Channel</label>
                                 {{ Form::select('account_type_id', $accountTypeOptions, old('account_type_id', $filters['account_type_id']), ['class' => 'form-control account_type_id', 'id' => 'account_type_id', '@change' => 'loadAccounts']) }}
                             </div>
-                        </div>
 
-                        <div class="col-lg-3">
-                            <div class="mb-3">
+                            <div class="col-lg-6" x-show="showField('account_id')" x-cloak>
                                 @php
                                     $accountOptions = ['' => '-- Bank/MNO name --'];
                                     foreach ($accounts as $val) {
                                         $accountOptions[$val->id] = $val->name;
                                     }
                                 @endphp
+                                <label for="account_id" class="rp-field__label">Bank/MNO</label>
                                 {{ Form::select('account_id', $accountOptions, old('account_id', $filters['account_id']), ['class' => 'form-control account_id', 'id' => 'account_id', 'x-ref' => 'accountId']) }}
                             </div>
-                        </div>
 
-                        <div class="col-lg-6">
-                            <div class="mb-3">
+                            <div class="col-lg-12" x-show="showField('partner_id')" x-cloak>
                                 @php
                                     $partnerOptions = ['' => '-- Service Provider --'];
                                     foreach ($partners as $val) {
                                         $partnerOptions[$val->id] = $val->business_name;
                                     }
                                 @endphp
-                                {{ Form::select('partner_id', $partnerOptions, old('partner_id', $filters['partner_id']), ['class' => 'form-control select2', 'id' => 'partner_id']) }}
+                                <label for="partner_id" class="rp-field__label">Service Provider</label>
+                                {{ Form::select('partner_id', $partnerOptions, old('partner_id', $filters['partner_id']), ['class' => 'form-control select2', 'id' => 'partner_id', 'x-ref' => 'partnerId']) }}
                             </div>
                         </div>
-                    </div>
 
-                    <div class="text-sm-end d-none d-sm-block">
-                        <button type="submit" name="preview" value="preview" class="btn btn-secondary">
-                            <i class="bx bx-search-alt"></i> Preview Report
-                        </button>
+                        <div class="rp-modal__actions">
+                            <button type="button" class="btn btn-outline-danger" @click="clearModalFields()">
+                                <i class="bx bx-reset"></i> Reset Modal Filters
+                            </button>
+                            <button type="submit" name="preview" value="preview" class="btn btn-secondary">
+                                <i class="bx bx-search-alt"></i> Preview Report
+                            </button>
+                        </div>
+                        {{ Form::close() }}
                     </div>
-                    {{ Form::close() }}
                 </div>
             </div>
         </div>
@@ -214,12 +151,12 @@
         @if ($reportPreview)
             <div class="row mt-4">
                 <div class="col-lg-12">
-                    <div class="card">
+                    <div class="card rp-preview-card">
                         <div class="card-body">
-                            <div class="d-flex flex-wrap justify-content-between align-items-start mb-4">
+                            <div class="rp-preview-head">
                                 <div>
-                                    <h5 class="mb-1" style="color:#153567;">{{ $reportPreview['title'] }}</h5>
-                                    <p class="text-muted mb-0">
+                                    <div class="rp-preview-head__title">{{ $reportPreview['title'] }}</div>
+                                    <p class="rp-preview-head__hint">
                                         {{ number_format($reportPreview['total_records']) }} record(s) matched the selected filters.
                                         @if ($reportPreview['preview_limited'])
                                             Showing the first 100 rows in preview.
@@ -227,7 +164,7 @@
                                     </p>
                                 </div>
 
-                                <div>
+                                <div class="rp-preview-head__actions">
                                     {!! Form::open(['url' => route('reports.lists'), 'method' => 'POST']) !!}
                                     {{ Form::token() }}
                                     @foreach ($filters as $key => $value)
@@ -254,7 +191,7 @@
                                 @endforeach
                             </div>
 
-                            <div class="table-responsive rp-table">
+                            <div class="table-responsive">
                                 <table class="table table-bordered mb-0">
                                     <thead>
                                         <tr>
@@ -293,29 +230,123 @@
         function reportForm(config = {}) {
             return {
                 reportType: config.reportType || '',
-                statusFilter: '',
+                reportDefinitions: config.reportDefinitions || {},
+                modal: null,
                 init() {
-                    this.syncStatusFilter();
+                    const modalElement = this.$refs.reportFilterModal;
+                    if (modalElement) {
+                        this.modal = new bootstrap.Modal(modalElement);
+                    }
+
+                    this.$nextTick(() => {
+                        this.initModalSelects();
+                    });
                 },
-                syncStatusFilter() {
-                    if (this.reportType === 'MANDATE') {
-                        this.statusFilter = 'mandate';
-                    } else if (this.reportType === 'EXPECTED_COLLECTION' || this.reportType === 'ACTUAL_COLLECTION') {
-                        this.statusFilter = 'collection';
-                    } else {
-                        this.statusFilter = '';
+                selectedDefinition() {
+                    return this.reportDefinitions[this.reportType] || null;
+                },
+                openReportModal(type) {
+                    this.reportType = type;
+                    if (this.modal) {
+                        this.modal.show();
+                    }
+
+                    this.$nextTick(() => {
+                        this.initModalSelects();
+                    });
+                },
+                initModalSelects() {
+                    const modalElement = this.$refs.reportFilterModal;
+                    const partnerElement = this.$refs.partnerId;
+
+                    if (!modalElement || !partnerElement || typeof $ === 'undefined' || !$.fn.select2) {
+                        return;
+                    }
+
+                    const $partner = $(partnerElement);
+
+                    if ($partner.hasClass('select2-hidden-accessible')) {
+                        $partner.select2('destroy');
+                    }
+
+                    $partner.select2({
+                        dropdownParent: $(modalElement),
+                        width: '100%',
+                    });
+                },
+                showField(field) {
+                    const fieldMap = {
+                        MANDATE: ['mandate_status', 'start_at', 'end_at', 'account_type_id', 'account_id', 'partner_id'],
+                        EXPECTED_COLLECTION: ['collection_status', 'start_at', 'end_at', 'account_type_id', 'account_id', 'partner_id'],
+                        ACTUAL_COLLECTION: ['start_at', 'end_at', 'account_type_id', 'account_id', 'partner_id'],
+                        OVERDUE_INSTALLMENTS: ['start_at', 'end_at', 'account_type_id', 'account_id', 'partner_id'],
+                        PARTNER_PERFORMANCE: ['start_at', 'end_at', 'account_type_id', 'account_id', 'partner_id'],
+                        MANDATE_LIFECYCLE: ['start_at', 'end_at', 'account_type_id', 'account_id', 'partner_id'],
+                        CRB_REPORT: ['mandate_status', 'start_at', 'end_at', 'account_type_id', 'account_id', 'partner_id'],
+                        ACCOUNTING_REPORT: ['collection_status', 'start_at', 'end_at', 'account_type_id', 'account_id', 'partner_id'],
+                        DELINQUENT_AGE_ANALYSIS: ['start_at', 'end_at', 'account_type_id', 'account_id', 'partner_id'],
+                    };
+
+                    return (fieldMap[this.reportType] || []).includes(field);
+                },
+                modalHint() {
+                    return this.selectedDefinition()?.description || 'Adjust the filters for the selected report before previewing or exporting.';
+                },
+                dateStartLabel() {
+                    if (this.reportType === 'ACTUAL_COLLECTION' || this.reportType === 'ACCOUNTING_REPORT') {
+                        return 'Collection Start Date';
+                    }
+                    if (this.reportType === 'DELINQUENT_AGE_ANALYSIS') {
+                        return 'Due Date From';
+                    }
+                    return 'Start Date';
+                },
+                dateEndLabel() {
+                    if (this.reportType === 'ACTUAL_COLLECTION' || this.reportType === 'ACCOUNTING_REPORT') {
+                        return 'Collection End Date';
+                    }
+                    if (this.reportType === 'DELINQUENT_AGE_ANALYSIS') {
+                        return 'Due Date To';
+                    }
+                    return 'End Date';
+                },
+                clearModalFields() {
+                    const modalElement = this.$refs.reportFilterModal;
+                    if (!modalElement) {
+                        return;
+                    }
+
+                    modalElement.querySelectorAll('select, input[type="date"], input[type="text"]').forEach((element) => {
+                        if (element.name === 'report_type') {
+                            return;
+                        }
+
+                        element.value = '';
+                    });
+
+                    if (this.$refs.partnerId && typeof $ !== 'undefined' && $.fn.select2) {
+                        $(this.$refs.partnerId).val('').trigger('change');
+                    }
+
+                    if (this.$refs.accountId) {
+                        this.$refs.accountId.innerHTML = '<option value="">-- Bank/MNO name --</option>';
                     }
                 },
                 async loadAccounts(event) {
                     const accountTypeId = event.target.value;
-                    if (!accountTypeId || !this.$refs.accountId) {
+                    if (!this.$refs.accountId) {
+                        return;
+                    }
+
+                    if (!accountTypeId) {
+                        this.$refs.accountId.innerHTML = '<option value="">-- Bank/MNO name --</option>';
                         return;
                     }
 
                     const response = await fetch('/account-types/' + accountTypeId);
                     this.$refs.accountId.innerHTML = await response.text();
                 }
-            }
+            };
         }
     </script>
 @endsection
