@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\ExternalApp;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\PollNmbMandateStatusJob;
 use App\Http\Resources\MandateResource;
 use App\Models\Customer;
 use App\Models\CustomerAccount;
@@ -411,6 +412,8 @@ class PaymentMandateController extends Controller
                 $remarks = $arr_response[1];
 
                 if ($response_code == 202) {
+                    PollNmbMandateStatusJob::dispatch($debit_order->id)->delay(now()->addSeconds(30));
+
                     //update response code
                     $response_code = 202;
                 } else {

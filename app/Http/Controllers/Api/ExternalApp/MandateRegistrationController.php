@@ -6,6 +6,7 @@ use App\Classes\Messaging;
 use App\Http\Controllers\Controller;
 use App\Jobs\CRDBMandateRegistrationJob;
 use App\Jobs\MandateRegistrationJob;
+use App\Jobs\PollNmbMandateStatusJob;
 use App\Models\Account;
 use App\Models\Customer;
 use App\Models\CustomerAccount;
@@ -321,6 +322,8 @@ class MandateRegistrationController extends Controller
         $http_response_code = $this->bankApi->verifyOtpRequest($payload, $accountNumber, $otpReference);
 
         if ($http_response_code == 202) {
+            PollNmbMandateStatusJob::dispatch($debit_order->id)->delay(now()->addSeconds(30));
+
             return response()->json(
                 [
                     'success' => true,

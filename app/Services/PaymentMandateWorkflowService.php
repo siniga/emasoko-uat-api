@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Jobs\PollNmbMandateStatusJob;
 use App\Models\CustomerAccount;
 use App\Models\CustomerPartner;
 use App\Models\DebitOrder;
@@ -184,6 +185,9 @@ class PaymentMandateWorkflowService
         $debitOrder->refresh();
         if ($success && $responseCode === 202) {
             $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_VERIFIED;
+            if ($debitOrder->channel === 'NMB') {
+                PollNmbMandateStatusJob::dispatch($debitOrder->id)->delay(now()->addSeconds(30));
+            }
         } elseif (!$success || $responseCode >= 400) {
             $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_FAILED;
         }
