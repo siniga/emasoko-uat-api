@@ -68,25 +68,17 @@ class PaymentMandateCreateController extends BasePaymentMandateController
             $bank_code = substr($validated['account_number'], 0, 3);
         }
 
-        $customer = Customer::firstOrNew(['phone' => $unique_phone]);
-        $customer->fullname = strtoupper($validated['account_name']);
-        $customer->email = $request->input('email');
-        $customer->id_number = $request->input('nida_number');
-        $customer->address = $request->input('address');
-        $customer->created_by = Auth::user()->id;
-        $customer->save();
-
-        $customer_account = CustomerAccount::firstOrNew(['uuid' => $customer_account_uuid]);
-        $customer_account->account_type_id = $validated['account_type_id'];
-        $customer_account->account_id = $validated['account_id'];
-        $customer_account->phone = $unique_phone;
-        $customer_account->secondary_phone = $validated['secondary_phone'];
-        $customer_account->account_name = $validated['account_name'];
-        $customer_account->account_number = $validated['account_number'];
-        $customer_account->bank_code = $bank_code;
-        $customer_account->customer_id = $customer->id;
-        $customer_account->created_by = Auth::user()->id;
-        $customer_account->save();
+        $this->paymentMandatePartyService->upsertCustomerAccount([
+            'account_type_id' => $validated['account_type_id'],
+            'account_id' => $validated['account_id'],
+            'phone' => $unique_phone,
+            'secondary_phone' => $validated['secondary_phone'],
+            'account_name' => $validated['account_name'],
+            'account_number' => $validated['account_number'],
+            'email' => $request->input('email'),
+            'id_number' => $request->input('nida_number'),
+            'address' => $request->input('address'),
+        ], Auth::id(), $customer_account_uuid);
 
         return Redirect::route('payment-mandate.create-deduction', [$customer_account_uuid, $debit_order_uuid])->with('success', 'Customer deduction channel saved');
     }
@@ -108,6 +100,13 @@ class PaymentMandateCreateController extends BasePaymentMandateController
         }
 
         $customer_account = CustomerAccount::where(['uuid' => $customer_account_uuid])->first();
+        $periodicity_options = ['' => '-- Select --'];
+
+        if ($customer_account && $customer_account->account) {
+            foreach ($customer_account->account->normalizedAllowedPeriodicities() as $periodicity) {
+                $periodicity_options[$periodicity] = ucfirst(strtolower($periodicity));
+            }
+        }
 
         $debit_order = [];
         if ($debit_order_uuid != null) {
@@ -116,7 +115,7 @@ class PaymentMandateCreateController extends BasePaymentMandateController
 
         $providers = Partner::filterCondition()->get();
 
-        return view('payment_mandate.create.deduction_form', compact('title', 'customer_account', 'debit_order', 'providers', 'provider', 'arr_debit_orders'));
+        return view('payment_mandate.create.deduction_form', compact('title', 'customer_account', 'debit_order', 'providers', 'provider', 'arr_debit_orders', 'periodicity_options'));
     }
 
     public function store_deduction(Request $request)
@@ -173,6 +172,15 @@ class PaymentMandateCreateController extends BasePaymentMandateController
                 'start_date.after' => 'Deduction start date must start from tomorrow',
             ]
         );
+
+        $customerAccount = CustomerAccount::with('account')->findOrFail($request->input('customer_account_id'));
+        $account = $customerAccount->account;
+
+        if (!$account || !$account->supportsPeriodicity($request->input('periodicity'))) {
+            return Redirect::back()
+                ->withErrors(['periodicity' => 'Selected periodicity is not supported for this payment channel.'])
+                ->withInput();
+        }
 
         $debit_order = $this->paymentMandateWorkflowService->createDraft($request->all(), Auth::id());
 

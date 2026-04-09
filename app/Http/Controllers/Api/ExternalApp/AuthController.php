@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\ExternalApp;
 
+use App\Http\Controllers\Api\ExternalApp\Concerns\RespondsWithApi;
 use App\Http\Controllers\Controller;
 use App\Models\PartnerUser;
 use App\Models\User;
@@ -12,6 +13,8 @@ use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
+    use RespondsWithApi;
+
     protected function getPartnerReference(User $user): ?string
     {
         $partnerUser = PartnerUser::with('partner')
@@ -34,31 +37,21 @@ class AuthController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'response_code' => 403,
-                'error_msg' => $validator->errors()
-            ]);
+            return $this->errorResponse('Validation failed.', $validator->errors(), 422);
         }
 
         if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
             $user = User::findOrFail(Auth::user()->id);
             $partnerReference = $this->getPartnerReference($user);
 
-            return response()->json([
-                'success' => true,
-                'response_code' => 200,
+            return $this->successResponse('Login successful.', [
                 'user' => $user,
                 'corporate_reference' => $partnerReference,
                 'token' => $user->createToken('eMakato')->accessToken,
             ]);
-        } else {
-            return response()->json([
-                'success' => false,
-                'response_code' => 400,
-                'error_msg' => 'Invalid credentials'
-            ]);
         }
+
+        return $this->errorResponse('Invalid credentials.', null, 401);
     }
 
     public function token(Request $request)
@@ -69,11 +62,7 @@ class AuthController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'response_code' => 403,
-                'error_msg' => $validator->errors()
-            ]);
+            return $this->errorResponse('Validation failed.', $validator->errors(), 422);
         }
 
         if (Auth::attempt(['username' => $request->partnerId, 'password' => $request->password])) {
@@ -84,26 +73,15 @@ class AuthController extends Controller
             if (!$user->is_api_user) {
                 Auth::logout();
 
-                //response if the user is not api enabled
-                return response()->json([
-                    'success' => false,
-                    'response_code' => 403,
-                    'error_msg' => 'API access is not enabled for this user.'
-                ]);
+                return $this->errorResponse('API access is not enabled for this user.', null, 403);
             }
 
-            return response()->json([
-                'success' => true,
-                'response_code' => 200,
+            return $this->successResponse('Token generated successfully.', [
                 'corporate_reference' => $partnerReference,
                 'token' => $user->createToken('eMakato')->accessToken,
             ]);
-        } else {
-            return response()->json([
-                'success' => false,
-                'response_code' => 400,
-                'error_msg' => 'Invalid credentials'
-            ]);
         }
+
+        return $this->errorResponse('Invalid credentials.', null, 401);
     }
 }

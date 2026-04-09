@@ -93,6 +93,19 @@
                     <div class="row">
                         <div class="col-lg-12 col-12">
                             <div class="mb-3">
+                                <label>Allowed Periodicities <span class="red">*</span></label>
+                                {{ Form::select('allowed_periodicities[]', $periodicity_options, old('allowed_periodicities', $account->normalizedAllowedPeriodicities()), ['class' => 'form-control', 'multiple' => true, 'size' => 5, 'required']) }}
+                                <span class="invalid-feedback d-block">{{ $errors->first('allowed_periodicities') }}</span>
+                                <small class="text-muted">One payment channel can support more than one periodicity.</small>
+                            </div>
+                        </div>
+                        <!--./col-lg-12 -->
+                    </div>
+                    <!--./row -->
+
+                    <div class="row">
+                        <div class="col-lg-12 col-12">
+                            <div class="mb-3">
                                 <label>Description <span class="red">*</span></label>
                                 {{ Form::textarea('description', old('description', $account->description), ['class="form-control"', 'placeholder="Write payment channel description..."', 'rows="3"', 'required']) }}
                                 <span class="invalid-feedback">{{ $errors->first('description') }}</span>

@@ -9,6 +9,7 @@ use App\Services\BankPayloadService;
 use App\Services\DeductionService;
 use App\Services\MandateActionService;
 use App\Services\PaymentMandateQueryService;
+use App\Services\PaymentMandatePartyService;
 use App\Services\PaymentMandateWorkflowService;
 
 abstract class BasePaymentMandateController extends Controller
@@ -20,7 +21,8 @@ abstract class BasePaymentMandateController extends Controller
         protected Messaging $messaging,
         protected BankApiService $bankApi,
         protected PaymentMandateWorkflowService $paymentMandateWorkflowService,
-        protected PaymentMandateQueryService $paymentMandateQueryService
+        protected PaymentMandateQueryService $paymentMandateQueryService,
+        protected PaymentMandatePartyService $paymentMandatePartyService
     ) {
         $this->middleware('auth');
     }

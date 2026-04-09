@@ -98,57 +98,20 @@ class DeductionService
     // calculate debit end date
     public function calculateEndDate(DebitOrder $debitOrder)
     {
-        //1. Get debit order details
-        $periodicity = $debitOrder->periodicity;
-        $start_date = $debitOrder->start_date;
+        $startDate = Carbon::parse($debitOrder->start_date);
+        $installmentCount = (int) $debitOrder->installment_number;
+        $dayOfMonth = $startDate->day;
+        $lastInstallmentDate = $startDate->copy();
 
-        $last_installment_date = null;
-        $number_of_installment = $debitOrder->installment_number;
-
-        //dates
-        $dayOfMonth = date('d', strtotime($start_date));
-
-        //TODO:Check for each channel 
-
-        // 2. Set addition number of days from periodicity
-        $number_of_days = "+0 day";
-        if ($periodicity == "ANNUALLY")
-            $number_of_days = "+1 year";
-        if ($periodicity == "MONTHLY")
-            $number_of_days = '+30 day';
-        else if ($periodicity == "WEEKLY")
-            $number_of_days = '+1 week';
-        else if ($periodicity == "DAILY")
-            $number_of_days = "+1 day";
-
-
-        for ($i = 1; $i <= $number_of_installment; $i++) {
-            if ($last_installment_date == null) {
-                $installment_date = date('Y-m-d', strtotime($start_date));
-
-                //assign last installment date
-                $last_installment_date =  $installment_date;
-            } else {
-                $installment_date = date('Y-m-d', strtotime($last_installment_date . $number_of_days));
-
-                //formating all the dates if periodicity = "MONTHLY"
-                if ($periodicity == "MONTHLY") {
-                    $year = date('Y', strtotime($installment_date));
-                    $month = date('m', strtotime($installment_date));
-
-                    $date = Carbon::createFromDate($year, $month, $dayOfMonth);
-                    $installment_date = $date->format('Y-m-d'); // Format as dd-mm-yyyy
-                }
-
-                //assign last installment date
-                $last_installment_date =  $installment_date;
-            }
+        for ($i = 2; $i <= $installmentCount; $i++) {
+            $lastInstallmentDate = $this->advanceInstallmentDate(
+                $lastInstallmentDate,
+                (string) $debitOrder->periodicity,
+                $dayOfMonth
+            );
         }
 
-        //add buffer of 2 year
-        $debit_end_date = date('Y-m-d', strtotime($last_installment_date . " +2 year"));
-
-        return $debit_end_date;
+        return $lastInstallmentDate->copy()->addYears(2)->toDateString();
     }
 
     //create new collection date
@@ -225,136 +188,254 @@ class DeductionService
     }
 
     //create debit order installments
-    public function createInstallment(DebitOrder $debitOrder)
+    public function createInstallment(DebitOrder $debitOrder, bool $forceRegenerate = false)
     {
-        //1. Get debit order details
-        $debit_type = $debitOrder->debit_type;
+        $this->validateInstallmentGenerationInputs($debitOrder);
 
-        //3. Delete all installments
-        $deleted_installment = Installment::where('debit_order_id', $debitOrder->id)->delete();
+        return DB::transaction(function () use ($debitOrder, $forceRegenerate) {
+            $debitOrder = DebitOrder::query()->lockForUpdate()->findOrFail($debitOrder->id);
 
-        //4. Create FIXED and DYNAMIC installments
-        if ($debit_type == "FIXED")
-            $this->fixedInstallment($debitOrder);
-        else if ($debit_type == "DYNAMIC")
-            $this->dynamicInstallment($debitOrder);
+            $existingInstallments = Installment::where('debit_order_id', $debitOrder->id)
+                ->orderBy('installment_order')
+                ->get();
 
-        return 200;
+            if ($existingInstallments->isNotEmpty()) {
+                $hasOperationalHistory = $this->hasInstallmentOperationalHistory($debitOrder, $existingInstallments);
+
+                if ($hasOperationalHistory && !$forceRegenerate) {
+                    Log::warning('Skipping installment regeneration because operational history exists.', [
+                        'debit_order_id' => $debitOrder->id,
+                        'reference' => $debitOrder->reference,
+                    ]);
+
+                    return 200;
+                }
+
+                if ($hasOperationalHistory && $forceRegenerate) {
+                    throw new Exception("Cannot force regenerate installments for mandate {$debitOrder->reference} because operational history already exists.");
+                }
+            }
+
+            $scheduleRows = $this->buildInstallmentSchedule($debitOrder);
+            $validOrders = [];
+
+            foreach ($scheduleRows as $row) {
+                $validOrders[] = $row['installment_order'];
+
+                Installment::updateOrCreate(
+                    [
+                        'debit_order_id' => $debitOrder->id,
+                        'installment_order' => $row['installment_order'],
+                    ],
+                    $row
+                );
+            }
+
+            if ($existingInstallments->isNotEmpty()) {
+                Installment::where('debit_order_id', $debitOrder->id)
+                    ->whereNotIn('installment_order', $validOrders)
+                    ->delete();
+            }
+
+            return 200;
+        });
     }
 
     //create fixed installment
     protected function fixedInstallment(DebitOrder $debitOrder)
     {
+        foreach ($this->buildFixedInstallmentRows($debitOrder) as $row) {
+            Installment::updateOrCreate(
+                ['debit_order_id' => $debitOrder->id, 'installment_order' => $row['installment_order']],
+                $row
+            );
+        }
+    }
+    
+    //create dynamic installment
+    protected function dynamicInstallment(DebitOrder $debitOrder)
+    {
+        foreach ($this->buildDynamicInstallmentRows($debitOrder) as $row) {
+            Installment::updateOrCreate(
+                ['debit_order_id' => $debitOrder->id, 'installment_order' => $row['installment_order']],
+                $row
+            );
+        }
+    }
+
+    protected function buildInstallmentSchedule(DebitOrder $debitOrder): array
+    {
+        return match (strtoupper((string) $debitOrder->debit_type)) {
+            'FIXED' => $this->buildFixedInstallmentRows($debitOrder),
+            'DYNAMIC' => $this->buildDynamicInstallmentRows($debitOrder),
+            default => throw new Exception("Unsupported debit type [{$debitOrder->debit_type}] for mandate {$debitOrder->reference}."),
+        };
+    }
+
+    protected function buildFixedInstallmentRows(DebitOrder $debitOrder): array
+    {
         $periodicity = $debitOrder->periodicity;
         $startDate = Carbon::parse($debitOrder->start_date);
         $dayOfMonth = $startDate->day;
-
         $lastInstallmentDate = $startDate->copy();
-        $installmentCount = $debitOrder->installment_number;
-        $totalAmount = $debitOrder->total_amount;
-        $installmentAmount = $debitOrder->installment_amount;
-
+        $installmentCount = (int) $debitOrder->installment_number;
+        $totalAmount = (float) $debitOrder->total_amount;
+        $installmentAmount = (float) $debitOrder->installment_amount;
         $sumInstallmentAmount = 0;
+        $rows = [];
 
         for ($i = 1; $i <= $installmentCount; $i++) {
             if ($i === 1) {
                 $installmentDate = $lastInstallmentDate->copy();
             } else {
-                if ($periodicity === "MONTHLY") {
-                    $installmentDate = $lastInstallmentDate->copy()->addMonthNoOverflow();
-                    // Set same day, fallback to last valid day of month
-                    $installmentDate->day = min($dayOfMonth, $installmentDate->daysInMonth);
-                } else {
-                    $installmentDate = $this->advanceInstallmentDate($lastInstallmentDate, $periodicity, $dayOfMonth);
-                }
+                $installmentDate = strtoupper($periodicity) === 'MONTHLY'
+                    ? $lastInstallmentDate->copy()->addMonthNoOverflow()->setDay(min($dayOfMonth, $lastInstallmentDate->copy()->addMonthNoOverflow()->daysInMonth))
+                    : $this->advanceInstallmentDate($lastInstallmentDate, $periodicity, $dayOfMonth);
             }
 
             $sumInstallmentAmount += $installmentAmount;
-
-            // Calculate paid amount safely
-            $paidAmount = ($sumInstallmentAmount > $totalAmount)
+            $scheduledAmount = ($sumInstallmentAmount > $totalAmount)
                 ? $totalAmount - ($sumInstallmentAmount - $installmentAmount)
                 : $installmentAmount;
 
-            // Save for next iteration
             $lastInstallmentDate = $installmentDate->copy();
-
-            // Create or update installment
-            Installment::updateOrCreate(
-                ['debit_order_id' => $debitOrder->id, 'installment_order' => $i],
-                [
-                    'installment_amount' => $paidAmount,
-                    'current_balance' => 0,
-                    'outstanding_amount' => $paidAmount,
-                    'payment_date' => $installmentDate->toDateString()
-                ]
-            );
+            $rows[] = $this->buildInstallmentAttributes($i, $scheduledAmount, $installmentDate);
         }
+
+        return $rows;
     }
-    //create dynamic installment
-    protected function dynamicInstallment(DebitOrder $debitOrder)
+
+    protected function buildDynamicInstallmentRows(DebitOrder $debitOrder): array
     {
         $periodicity = $debitOrder->periodicity;
         $startDate = Carbon::parse($debitOrder->start_date);
-        $number_of_installment = $debitOrder->installment_number;
-        $total_amount = $debitOrder->total_amount;
-
+        $installmentCount = (int) $debitOrder->installment_number;
+        $totalAmount = (float) $debitOrder->total_amount;
+        $maxInstallmentAmount = (float) $debitOrder->max_installment_amount;
+        $minInstallmentAmount = (float) $debitOrder->min_installment_amount;
         $dayOfMonth = $startDate->day;
         $lastInstallmentDate = $startDate->copy();
+        $sumInstallmentAmount = 0;
+        $rows = [];
 
-        $sum_installment_amount = 0;
-        for ($i = 1; $i <= $number_of_installment; $i++) {
-            if ($i === 1) {
-                $installmentDate = $lastInstallmentDate->copy();
-                $sum_installment_amount += $debitOrder->max_installment_amount;
-                $paid_amount = $debitOrder->max_installment_amount;
-            } else {
-                $installmentDate = $this->advanceInstallmentDate($lastInstallmentDate, $periodicity, $dayOfMonth);
+        for ($i = 1; $i <= $installmentCount; $i++) {
+            $installmentDate = $i === 1
+                ? $lastInstallmentDate->copy()
+                : $this->advanceInstallmentDate($lastInstallmentDate, $periodicity, $dayOfMonth);
 
-                //SUMMATION installment Amount
-                $sum_installment_amount += $debitOrder->max_installment_amount;
+            $sumInstallmentAmount += $maxInstallmentAmount;
+            $scheduledAmount = ($sumInstallmentAmount > $totalAmount)
+                ? $totalAmount - ($sumInstallmentAmount - $maxInstallmentAmount)
+                : $maxInstallmentAmount;
 
-                //PAID Amount
-                if ($sum_installment_amount > $total_amount)
-                    $paid_amount = $total_amount - ($sum_installment_amount - $debitOrder->max_installment_amount);
-                else
-                    $paid_amount = $debitOrder->max_installment_amount;
-            }
-
-            //assign last installment date
             $lastInstallmentDate = $installmentDate->copy();
 
-            //check for paid amount and min 
-            $min_paid_amount = $debitOrder->min_installment_amount;
-
-            if ($min_paid_amount > $paid_amount)
-                $min_paid_amount = $paid_amount;
-
-            //3. Create Installment deduction
-            $installment = Installment::firstOrNew(
-                ['debit_order_id' => $debitOrder->id, 'installment_order' => $i],
-                [
-                    'min_installment_amount' => $min_paid_amount,
-                    'max_installment_amount' => $paid_amount,
-                    'installment_amount' => $paid_amount,
-                    'current_balance' => 0,
-                    'outstanding_amount' => $paid_amount,
-                    'payment_date' => $installmentDate->toDateString()
-                ]
+            $rows[] = $this->buildInstallmentAttributes(
+                $i,
+                $scheduledAmount,
+                $installmentDate,
+                min($minInstallmentAmount, $scheduledAmount),
+                $scheduledAmount
             );
-            $installment->save();
         }
+
+        return $rows;
+    }
+
+    protected function buildInstallmentAttributes(
+        int $order,
+        float $amount,
+        Carbon $paymentDate,
+        ?float $minInstallmentAmount = null,
+        ?float $maxInstallmentAmount = null
+    ): array {
+        return [
+            'installment_order' => $order,
+            'min_installment_amount' => $minInstallmentAmount,
+            'max_installment_amount' => $maxInstallmentAmount,
+            'installment_amount' => $amount,
+            'current_balance' => 0,
+            'outstanding_amount' => $amount,
+            'payment_date' => $paymentDate->toDateString(),
+            'status' => 'OPEN',
+            'remarks' => null,
+            'effective_payment_date' => null,
+            'payment_reference' => null,
+            'created' => 0,
+        ];
+    }
+
+    protected function validateInstallmentGenerationInputs(DebitOrder $debitOrder): void
+    {
+        if (!$debitOrder->start_date) {
+            throw new Exception("Mandate {$debitOrder->reference} is missing start date.");
+        }
+
+        if ((int) $debitOrder->installment_number <= 0) {
+            throw new Exception("Mandate {$debitOrder->reference} has invalid installment count.");
+        }
+
+        if ((float) $debitOrder->total_amount <= 0) {
+            throw new Exception("Mandate {$debitOrder->reference} has invalid total amount.");
+        }
+
+        if (strtoupper((string) $debitOrder->debit_type) === 'FIXED' && (float) $debitOrder->installment_amount <= 0) {
+            throw new Exception("Mandate {$debitOrder->reference} has invalid fixed installment amount.");
+        }
+
+        if (strtoupper((string) $debitOrder->debit_type) === 'DYNAMIC') {
+            if ((float) $debitOrder->max_installment_amount <= 0) {
+                throw new Exception("Mandate {$debitOrder->reference} has invalid maximum installment amount.");
+            }
+
+            if ((float) $debitOrder->min_installment_amount > (float) $debitOrder->max_installment_amount) {
+                throw new Exception("Mandate {$debitOrder->reference} has minimum installment amount greater than maximum.");
+            }
+        }
+    }
+
+    protected function hasInstallmentOperationalHistory(DebitOrder $debitOrder, Collection $existingInstallments): bool
+    {
+        $installmentIds = $existingInstallments->pluck('id')->filter()->values();
+
+        if ($installmentIds->isEmpty()) {
+            return false;
+        }
+
+        if (CollectionDebitOrder::where('debit_order_id', $debitOrder->id)->exists()) {
+            return true;
+        }
+
+        if (PaymentSettlement::where('debit_order_id', $debitOrder->id)->exists()) {
+            return true;
+        }
+
+        if (InstallmentPayment::whereIn('installment_id', $installmentIds)->exists()) {
+            return true;
+        }
+
+        return $existingInstallments->contains(function ($installment) {
+            return strtoupper((string) ($installment->status ?? 'OPEN')) !== 'OPEN'
+                || (float) ($installment->current_balance ?? 0) > 0
+                || !is_null($installment->effective_payment_date)
+                || !is_null($installment->payment_reference)
+                || (int) ($installment->created ?? 0) === 1;
+        });
     }
 
     protected function advanceInstallmentDate(Carbon $currentDate, string $periodicity, int $dayOfMonth): Carbon
     {
-        $periodicity = strtoupper($periodicity);
+        $periodicity = $this->normalizePeriodicity($periodicity);
         $date = $currentDate->copy();
 
         switch ($periodicity) {
             case 'ANNUALLY':
             case 'YEARLY':
                 return $date->addYear();
+            case 'QUARTERLY':
+                $date->addMonthsNoOverflow(3);
+                $date->day = min($dayOfMonth, $date->daysInMonth);
+                return $date;
             case 'WEEKLY':
                 return $date->addWeek();
             case 'DAILY':
@@ -365,6 +446,18 @@ class DeductionService
                 $date->day = min($dayOfMonth, $date->daysInMonth);
                 return $date;
         }
+    }
+
+    protected function normalizePeriodicity(string $periodicity): string
+    {
+        return match (strtoupper(trim($periodicity))) {
+            'DAILY' => 'DAILY',
+            'WEEKLY' => 'WEEKLY',
+            'MONTHLY' => 'MONTHLY',
+            'QUARTELY', 'QUARTERLY' => 'QUARTERLY',
+            'ANNUALLY', 'YEARLY' => 'YEARLY',
+            default => 'MONTHLY',
+        };
     }
 
     public function updateInstallments(CollectionBatch $batch, $data)

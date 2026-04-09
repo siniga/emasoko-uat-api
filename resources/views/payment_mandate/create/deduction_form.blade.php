@@ -133,27 +133,14 @@
                             <div class="col-lg-3 col-md-6 col-sm-6 col-12">
                                 <div class="mb-3">
                                     <label>Frequency of Installment <span class="text-danger">*</span></label>
-                                    @if ($customer_account->accountType->name == 'MNO')
-                                        @php
-                                            $options = [
-                                                '' => '-- Select --',
-                                                'DAILY' => 'Daily',
-                                                'WEEKLY' => 'Weekly',
-                                                'MONTHLY' => 'Monthly',
-                                                'YEARLY' => 'Yearly',
-                                            ];
-                                        @endphp
-                                    @elseif($customer_account->accountType->name == 'BANK')
-                                        @php
-                                            $options = [
-                                                '' => '-- Select --',
-                                                'MONTHLY' => 'Monthly',
-                                            ];
-                                        @endphp
-                                    @endif
-
-                                    {{ Form::select('periodicity', $options, old('periodicity', $debit_order->periodicity ?? ''), ['class' => 'form-control', 'id' => 'periodicity', '@change' => 'numberOfInstallment()']) }}
+                                    {{ Form::select('periodicity', $periodicity_options, old('periodicity', $debit_order->periodicity ?? ''), ['class' => 'form-control', 'id' => 'periodicity', '@change' => 'numberOfInstallment()']) }}
                                     <span class="text-danger">{{ $errors->first('periodicity') }}</span>
+                                    @if ($customer_account && $customer_account->account)
+                                        <small class="text-muted d-block mt-1">
+                                            Allowed for {{ $customer_account->account->name }}:
+                                            {{ implode(', ', $customer_account->account->normalizedAllowedPeriodicities()) }}
+                                        </small>
+                                    @endif
                                 </div>
                             </div>
 

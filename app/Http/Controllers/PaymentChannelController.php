@@ -37,8 +37,9 @@ class PaymentChannelController extends Controller
 
         //account types
         $account_types = AccountType::all();
+        $periodicity_options = Account::periodicityOptions();
 
-        return view('payment_channels.create', compact('title', 'account_types'));
+        return view('payment_channels.create', compact('title', 'account_types', 'periodicity_options'));
     }
 
     /**
@@ -57,12 +58,15 @@ class PaymentChannelController extends Controller
                 'name' => 'required|unique:accounts',
                 'status' => 'required',
                 'description' => 'required|string',
+                'allowed_periodicities' => 'required|array|min:1',
+                'allowed_periodicities.*' => 'required|string|in:DAILY,WEEKLY,MONTHLY,QUARTERLY,YEARLY',
             ],
             [
                 'account_type_id.required' => 'Payment Channel required',
                 'name.required' => 'Name required',
                 'status.required' => 'Status required',
-                'description.required' => 'Description required'
+                'description.required' => 'Description required',
+                'allowed_periodicities.required' => 'At least one periodicity required',
             ]
         );
 
@@ -72,6 +76,7 @@ class PaymentChannelController extends Controller
         $account->name = $request->input('name');
         $account->active = $request->input('status');
         $account->description = $request->input('description');
+        $account->allowed_periodicities = array_values($request->input('allowed_periodicities', []));
         $account->save();
 
         //redirect
@@ -105,8 +110,9 @@ class PaymentChannelController extends Controller
 
         //account types
         $account_types = AccountType::all();
+        $periodicity_options = Account::periodicityOptions();
 
-        return view('payment_channels.edit', compact('account', 'account_types', 'title'));
+        return view('payment_channels.edit', compact('account', 'account_types', 'title', 'periodicity_options'));
     }
 
     /**
@@ -126,12 +132,15 @@ class PaymentChannelController extends Controller
                 'name' => 'required',
                 'status' => 'required',
                 'description' => 'required|string',
+                'allowed_periodicities' => 'required|array|min:1',
+                'allowed_periodicities.*' => 'required|string|in:DAILY,WEEKLY,MONTHLY,QUARTERLY,YEARLY',
             ],
             [
                 'account_type_id.required' => 'Payment Channel required',
                 'name.required' => 'Name required',
                 'status.required' => 'Status required',
-                'description.required' => 'Description required'
+                'description.required' => 'Description required',
+                'allowed_periodicities.required' => 'At least one periodicity required',
             ]
         );
 
@@ -141,6 +150,7 @@ class PaymentChannelController extends Controller
         $account->name = $request->input('name');
         $account->active = $request->input('status');
         $account->description = $request->input('description');
+        $account->allowed_periodicities = array_values($request->input('allowed_periodicities', []));
         $account->save();
 
         //redirect

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\ExternalApp;
 
+use App\Http\Controllers\Api\ExternalApp\Concerns\RespondsWithApi;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\InstallmentResource;
 use App\Models\Installment;
@@ -9,10 +10,11 @@ use App\Models\Partner;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Log;
 
 class PaymentCollectionController extends Controller
 {
+    use RespondsWithApi;
+
     public function __construct() {}
 
     //all collections
@@ -44,9 +46,7 @@ class PaymentCollectionController extends Controller
         //order
         $collections = $collections->orderBy('installments.payment_date', 'ASC')->get();
 
-        return response()->json([
-            'success' => true,
-            'response_code' => 200,
+        return $this->successResponse('Collections fetched successfully.', [
             'collections' => InstallmentResource::collection($collections),
         ]);
     }
@@ -60,11 +60,7 @@ class PaymentCollectionController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'response_code' => 403,
-                'error_msg' => $validator->errors()
-            ]);
+            return $this->errorResponse('Validation failed.', $validator->errors(), 422);
         }
 
         //collections
@@ -84,9 +80,7 @@ class PaymentCollectionController extends Controller
         //order
         $collections = $collections->orderBy('installments.payment_date', 'ASC')->get();
 
-        return response()->json([
-            'success' => true,
-            'response_code' => 200,
+        return $this->successResponse('Collections fetched successfully.', [
             'collections' => InstallmentResource::collection($collections),
         ]);
     }
@@ -142,9 +136,7 @@ class PaymentCollectionController extends Controller
         //sort array
         $arr_data = collect($arr_data)->sortBy('number_of_collection')->reverse()->toArray();
 
-        return response()->json([
-            'success' => true,
-            'response_code' => 200,
+        return $this->successResponse('Actual collections fetched successfully.', [
             'collections' => $arr_data,
         ]);
     }

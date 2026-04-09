@@ -71,6 +71,10 @@
                         request()->is('users/*');
                     $usersOtpOpen =
                         Route::is('users.view-otp') || request()->is('users/view-otp') || request()->is('users/otp');
+                    $paymentChannelsOpen =
+                        Route::is('payment-channels.index', 'payment-channels.create', 'payment-channels.edit') ||
+                        request()->is('payment-channels') ||
+                        request()->is('payment-channels/*');
                 @endphp
 
                 <li class="{{ $dashboardOpen ? 'mm-active' : '' }}">
@@ -152,6 +156,15 @@
                         <span key="t-layouts">Reports</span>
                     </a>
                 </li>
+
+                @if (Auth::user()->hasRole(['admin']))
+                    <li class="{{ $paymentChannelsOpen ? 'mm-active' : '' }}">
+                        <a href="{{ route('payment-channels.index') }}" class="waves-effect">
+                            <i class='bx bx-transfer-alt'></i>
+                            <span>Payment Channels</span>
+                        </a>
+                    </li>
+                @endif
 
                 @if (Auth::user()->hasRole(['admin']) || Auth::user()->hasRole(['Partner']))
                     <li class="menu-title" key="t-apps">Authentication</li>
