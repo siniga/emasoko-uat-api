@@ -21,7 +21,8 @@ class PaymentMandateWorkflowService
         protected DeductionService $deductionService,
         protected BankPayloadService $payloadService,
         protected BankApiService $bankApi,
-        protected MandateActionService $mandateActionService
+        protected MandateActionService $mandateActionService,
+        protected ExternalCallbackService $externalCallbackService
     ) {
     }
 
@@ -126,6 +127,13 @@ class PaymentMandateWorkflowService
             $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_SUBMITTED;
         }
         $debitOrder->save();
+        $debitOrder->refresh();
+
+        if ($response['success']) {
+            $this->externalCallbackService->dispatchMandateStatus($debitOrder, 'MANDATE_SUBMITTED');
+        } else {
+            $this->externalCallbackService->dispatchMandateStatus($debitOrder, 'MANDATE_FAILED');
+        }
 
         return [
             'success' => $response['success'],
@@ -192,6 +200,13 @@ class PaymentMandateWorkflowService
             $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_FAILED;
         }
         $debitOrder->save();
+        $debitOrder->refresh();
+
+        if ($success && $responseCode === 202) {
+            $this->externalCallbackService->dispatchMandateStatus($debitOrder, 'MANDATE_VERIFIED');
+        } elseif (!$success || $responseCode >= 400) {
+            $this->externalCallbackService->dispatchMandateStatus($debitOrder, 'MANDATE_FAILED');
+        }
 
         return [
             'success' => $success,
@@ -253,6 +268,8 @@ class PaymentMandateWorkflowService
         $this->deductionService->createInstallment($debitOrder);
         $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_ACTIVE;
         $debitOrder->save();
+        $debitOrder->refresh();
+        $this->externalCallbackService->dispatchMandateStatus($debitOrder, 'MANDATE_ACTIVE');
 
         return $debitOrder->fresh();
     }
@@ -267,6 +284,8 @@ class PaymentMandateWorkflowService
             $debitOrder->cancellationApprovedAt = now();
             $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_CANCELLATION_REQUESTED;
             $debitOrder->save();
+            $debitOrder->refresh();
+            $this->externalCallbackService->dispatchMandateStatus($debitOrder, 'MANDATE_CANCELLATION_REQUESTED');
 
             $this->mandateActionService->cancelMandate($debitOrder);
 
@@ -276,6 +295,8 @@ class PaymentMandateWorkflowService
         $request = $this->createRequest($debitOrder, 'CANCELLATION', $userId);
         $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_CANCELLATION_REQUESTED;
         $debitOrder->save();
+        $debitOrder->refresh();
+        $this->externalCallbackService->dispatchMandateStatus($debitOrder, 'MANDATE_CANCELLATION_REQUESTED');
 
         return $request;
     }
@@ -293,6 +314,8 @@ class PaymentMandateWorkflowService
             $debitOrder->deleted = 1;
             $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_CANCELLED;
             $debitOrder->save();
+            $debitOrder->refresh();
+            $this->externalCallbackService->dispatchMandateStatus($debitOrder, 'MANDATE_CANCELLED');
             $this->mandateActionService->cancelMandate($debitOrder);
         }
 

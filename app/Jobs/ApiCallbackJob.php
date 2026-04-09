@@ -2,8 +2,8 @@
 
 namespace App\Jobs;
 
+use App\Models\ExternalCallbackLog;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -35,6 +35,39 @@ class ApiCallbackJob implements ShouldQueue
      */
     public function handle()
     {
+        if (isset($this->data['callback_log_id'])) {
+            $log = ExternalCallbackLog::find($this->data['callback_log_id']);
+
+            if (!$log) {
+                return;
+            }
+
+            $headers = ['Content-Type' => 'application/json'];
+            $payload = $log->payload;
+            $response = Http::withHeaders($headers)->post($log->callback_url, $payload);
+            $decodedResponse = json_decode($response->body(), true);
+
+            $log->attempts = (int) $log->attempts + 1;
+            $log->last_response_code = $response->status();
+            $log->response_body = $decodedResponse;
+            $log->last_attempt_at = now();
+            $log->status = $response->successful() ? 'DELIVERED' : 'FAILED';
+            $log->last_error = $response->successful() ? null : $response->body();
+
+            if ($response->successful()) {
+                $log->delivered_at = now();
+            }
+
+            $log->save();
+
+            Log::debug('== External Callback Payload Request ==');
+            Log::debug($payload);
+            Log::debug('== External Callback Response ==');
+            Log::debug($decodedResponse);
+
+            return;
+        }
+
         //Create Headers
         $headers = ['Content-Type' => 'application/json'];
 

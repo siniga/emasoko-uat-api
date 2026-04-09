@@ -4,12 +4,11 @@ namespace App\Http\Controllers\Api\CRDB;
 
 use App\Classes\Checksum;
 use App\Http\Controllers\Controller;
-use App\Http\Resources\MandateResource;
-use App\Jobs\ApiCallbackJob;
 use App\Models\DebitOrder;
 use App\Models\Installment;
 use App\Models\PaymentSettlement;
 use App\Services\DeductionService;
+use App\Services\ExternalCallbackService;
 use App\Services\SettlementPostingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -23,7 +22,8 @@ class MandateController extends Controller
 
     public function __construct(
         protected DeductionService $deductionService,
-        protected SettlementPostingService $settlementPostingService
+        protected SettlementPostingService $settlementPostingService,
+        protected ExternalCallbackService $externalCallbackService
     )
     {
         $this->auth = new Checksum();
@@ -229,18 +229,11 @@ class MandateController extends Controller
                     Log::debug("== Failed to approve CRDB Mandate ==");
                 }
 
-                if ($debitOrder->partner->callback_url && $debitOrder->partner->callback_url != "") {
-                    //dispatch callback job
-                    $debitOrder->refresh();
-                    $callback_data = [
-                        'callback_type' => "MANDATE_STATUS",
-                        'callback_url' => $debitOrder->partner->callback_url,
-                        'mandate' => MandateResource::collection($debitOrder),
-                    ];
-
-                    // call ApiCallbackJob
-                    dispatch(new ApiCallbackJob($callback_data));
-                }
+                $debitOrder->refresh();
+                $this->externalCallbackService->dispatchMandateStatus(
+                    $debitOrder,
+                    strtolower($approved) == "approved" ? 'MANDATE_ACTIVE' : 'MANDATE_FAILED'
+                );
             }
         } else if ($callback_type == "PAYMENT_STATUS") {
             // mandate reference

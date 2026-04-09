@@ -6,6 +6,7 @@ use App\Models\DebitOrder;
 use App\Services\BankApiService;
 use App\Services\BankPayloadService;
 use App\Services\DeductionService;
+use App\Services\ExternalCallbackService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -28,7 +29,7 @@ class PollNmbMandateStatusJob implements ShouldQueue
         $this->maxPolls = $maxPolls;
     }
 
-    public function handle(BankPayloadService $payloadService, BankApiService $bankApi, DeductionService $deductionService): void
+    public function handle(BankPayloadService $payloadService, BankApiService $bankApi, DeductionService $deductionService, ExternalCallbackService $externalCallbackService): void
     {
         $debitOrder = DebitOrder::find($this->debitOrderId);
 
@@ -65,12 +66,30 @@ class PollNmbMandateStatusJob implements ShouldQueue
                     $deductionService->createInstallment($debitOrder);
                 }
 
+                $debitOrder->refresh();
+                $externalCallbackService->dispatchMandateStatus($debitOrder, 'MANDATE_ACTIVE', [
+                    'poll_number' => $this->pollNumber,
+                ]);
+
+                return;
+            }
+
+            if ($responseCode >= 400 || $responseCode === 500) {
+                $debitOrder->refresh();
+                $externalCallbackService->dispatchMandateStatus($debitOrder, 'MANDATE_FAILED', [
+                    'poll_number' => $this->pollNumber,
+                ]);
                 return;
             }
 
             if (in_array($responseCode, [201, 202, 200, 249], true) && $this->pollNumber < $this->maxPolls) {
                 self::dispatch($this->debitOrderId, $this->pollNumber + 1, $this->maxPolls)
                     ->delay(now()->addSeconds($this->nextDelaySeconds()));
+            } elseif ($this->pollNumber >= $this->maxPolls) {
+                $debitOrder->refresh();
+                $externalCallbackService->dispatchMandateStatus($debitOrder, 'MANDATE_STATUS_PENDING', [
+                    'poll_number' => $this->pollNumber,
+                ]);
             }
         }
     }
