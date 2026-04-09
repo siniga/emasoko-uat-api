@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Exports\DebitOrders;
 use App\Models\Account;
 use App\Models\AccountType;
+use App\Models\DebitOrder;
 use App\Models\Partner;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -48,14 +49,11 @@ class PaymentMandateListController extends BasePaymentMandateController
         $arr_debit_orders = [];
 
         foreach ($debit_orders as $val) {
-            $consent_status = 'PENDING';
-            if (intval($val->approved) == 1) {
-                $consent_status = 'APPROVED';
-            } elseif (intval($val->approved) == 2) {
-                $consent_status = 'FAILED';
-            } elseif (intval($val->approved) == 9) {
-                $consent_status = 'CANCELLED';
-            }
+            $consent_status = match ($val->summary_status) {
+                DebitOrder::SUMMARY_APPROVED => 'APPROVED',
+                DebitOrder::SUMMARY_FAILED => 'FAILED',
+                default => 'PENDING',
+            };
 
             $arr_debit_orders[] = [
                 'Business_Name' => strtoupper($val->partner->business_name),

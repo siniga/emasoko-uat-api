@@ -17,6 +17,7 @@ class Kernel extends ConsoleKernel
         Commands\PushCollectionBatch::class,
         Commands\CollectionStatusBatch::class,
         Commands\SyncDebitOrderDates::class,
+        Commands\SyncMandateLifecycleStatus::class,
     ];
 
     /**

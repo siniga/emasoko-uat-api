@@ -25,6 +25,10 @@ class DebitOrder extends Model
     public const LIFECYCLE_ARCHIVED = 'archived';
     public const LIFECYCLE_FAILED = 'failed';
 
+    public const SUMMARY_PENDING = 'pending';
+    public const SUMMARY_APPROVED = 'approved';
+    public const SUMMARY_FAILED = 'failed';
+
     //filter condition
     public static function filterCondition()
     {
@@ -169,6 +173,51 @@ class DebitOrder extends Model
             100 => self::LIFECYCLE_DRAFT,
             default => self::LIFECYCLE_DRAFT,
         };
+    }
+
+    public static function lifecycleSummaryMap(): array
+    {
+        return [
+            self::SUMMARY_PENDING => [
+                self::LIFECYCLE_DRAFT,
+                self::LIFECYCLE_SUBMITTED,
+                self::LIFECYCLE_AWAITING_OTP,
+                self::LIFECYCLE_VERIFIED,
+            ],
+            self::SUMMARY_APPROVED => [
+                self::LIFECYCLE_ACTIVE,
+                self::LIFECYCLE_CANCELLATION_REQUESTED,
+                self::LIFECYCLE_CANCELLED,
+                self::LIFECYCLE_CLOSED,
+                self::LIFECYCLE_ARCHIVED,
+            ],
+            self::SUMMARY_FAILED => [
+                self::LIFECYCLE_FAILED,
+            ],
+        ];
+    }
+
+    public static function lifecycleStatusesForSummary(string $summary): array
+    {
+        return static::lifecycleSummaryMap()[$summary] ?? [];
+    }
+
+    public function getSummaryStatusAttribute(): string
+    {
+        $resolved = $this->resolved_lifecycle_status;
+
+        foreach (static::lifecycleSummaryMap() as $summary => $statuses) {
+            if (in_array($resolved, $statuses, true)) {
+                return $summary;
+            }
+        }
+
+        return self::SUMMARY_PENDING;
+    }
+
+    public function getSummaryStatusLabelAttribute(): string
+    {
+        return strtoupper($this->summary_status);
     }
 
     public function setLifecycleStatus(string $status): self

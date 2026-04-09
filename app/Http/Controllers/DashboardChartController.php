@@ -31,15 +31,19 @@ class DashboardChartController extends Controller
             $year = $request->year;
 
 
-        $approvedStatuses = [0, 1, 2];
+        $summaryStatuses = [
+            DebitOrder::SUMMARY_PENDING,
+            DebitOrder::SUMMARY_APPROVED,
+            DebitOrder::SUMMARY_FAILED,
+        ];
 
         $grouped = DebitOrder::filterCondition()
             ->select([
                 DB::raw('MONTH(debit_orders.created_at) as month_number'),
-                'debit_orders.approved',
+                'debit_orders.lifecycle_status',
                 DB::raw('COALESCE(SUM(debit_orders.total_amount), 0) as total_amount'),
             ])
-            ->whereIn('debit_orders.approved', $approvedStatuses)
+            ->whereIn('debit_orders.lifecycle_status', array_merge(...array_values(DebitOrder::lifecycleSummaryMap())))
             ->when($channel != null, function ($q) use ($channel) {
                 $q->where('debit_orders.channel', $channel);
             })
@@ -47,27 +51,26 @@ class DashboardChartController extends Controller
             ->whereHas('partner', function ($q) {
                 $q->where('partners.status', 202);
             })
-            ->groupBy(DB::raw('MONTH(debit_orders.created_at)'), 'debit_orders.approved')
+            ->groupBy(DB::raw('MONTH(debit_orders.created_at)'), 'debit_orders.lifecycle_status')
             ->orderBy(DB::raw('MONTH(debit_orders.created_at)'))
-            ->orderBy('debit_orders.approved')
+            ->orderBy('debit_orders.lifecycle_status')
             ->get()
             ->groupBy('month_number');
 
         $data_array = [];
         for ($i = 1; $i <= 12; $i++) {
             $monthRows = collect($grouped->get($i, []));
-            $results = collect($approvedStatuses)->map(function ($status) use ($monthRows) {
-                $order = $monthRows->firstWhere('approved', $status);
+            $results = collect($summaryStatuses)->mapWithKeys(function ($summary) use ($monthRows) {
+                $amount = $monthRows
+                    ->filter(fn ($row) => in_array($row->lifecycle_status, DebitOrder::lifecycleStatusesForSummary($summary), true))
+                    ->sum('total_amount');
 
-                return [
-                    'approved' => $status,
-                    'total_amount' => $order ? (float) $order->total_amount : 0,
-                ];
+                return [$summary => (float) $amount];
             });
 
-            $pending_amount = $results[0]['total_amount'];
-            $approved_amount = $results[1]['total_amount'];
-            $rejected_amount = $results[2]['total_amount'];
+            $pending_amount = $results[DebitOrder::SUMMARY_PENDING] ?? 0;
+            $approved_amount = $results[DebitOrder::SUMMARY_APPROVED] ?? 0;
+            $rejected_amount = $results[DebitOrder::SUMMARY_FAILED] ?? 0;
             $total_amount = $pending_amount + $approved_amount + $rejected_amount;
 
             $data_array[] = [
@@ -88,44 +91,32 @@ class DashboardChartController extends Controller
     {
         //declare array
         $data_array = [];
-        $approvedStatuses = [0, 1, 2];
-
         //channel
         $channel = null;
         if ($request->has('channel'))
             $channel = $request->channel;
 
         //query
-        $debit_orders = DebitOrder::filterCondition()->select('debit_orders.approved', DB::raw('COALESCE(COUNT(debit_orders.id), 0) as number_of_approved'))
-            ->where(function ($query) {
-                $query->whereIn('debit_orders.approved', [0, 1, 2]);
-            })
+        $debit_orders = DebitOrder::filterCondition()->select('debit_orders.lifecycle_status', DB::raw('COALESCE(COUNT(debit_orders.id), 0) as number_of_approved'))
+            ->whereIn('debit_orders.lifecycle_status', array_merge(...array_values(DebitOrder::lifecycleSummaryMap())))
             ->when($channel != null, function ($q) use ($channel) {
                 $q->where('debit_orders.channel', $channel);
             })
             ->whereHas('partner', function ($q) {
                 $q->where('partners.status', 202);
-            })->groupBy('debit_orders.approved')->orderBy('debit_orders.approved')->toBase();
+            })->groupBy('debit_orders.lifecycle_status')->orderBy('debit_orders.lifecycle_status')->toBase();
 
         $debit_orders = $debit_orders->get();
 
-        // Map over all approved statuses to ensure complete results
-        $results = collect($approvedStatuses)->map(function ($status) use ($debit_orders) {
-            $order = $debit_orders->firstWhere('approved', $status);
-            return [
-                'approved' => $status,
-                'number_of_approved' => $order ? $order->number_of_approved : 0,
-            ];
-        });
-
-        //pending
-        $pending = $results[0]['number_of_approved'];
-
-        //approve 
-        $approved = $results[1]['number_of_approved'];
-
-        //rejected
-        $rejected = $results[2]['number_of_approved'];
+        $pending = collect($debit_orders)
+            ->filter(fn ($row) => in_array($row->lifecycle_status, DebitOrder::lifecycleStatusesForSummary(DebitOrder::SUMMARY_PENDING), true))
+            ->sum('number_of_approved');
+        $approved = collect($debit_orders)
+            ->filter(fn ($row) => in_array($row->lifecycle_status, DebitOrder::lifecycleStatusesForSummary(DebitOrder::SUMMARY_APPROVED), true))
+            ->sum('number_of_approved');
+        $rejected = collect($debit_orders)
+            ->filter(fn ($row) => in_array($row->lifecycle_status, DebitOrder::lifecycleStatusesForSummary(DebitOrder::SUMMARY_FAILED), true))
+            ->sum('number_of_approved');
 
         //aggregate
         $aggregate = $pending + $approved + $rejected;
@@ -161,6 +152,7 @@ class DashboardChartController extends Controller
             ->whereYear('installments.payment_date', $year)
             ->whereHas('debitOrder', function ($query) use ($channel) {
                 $query->where(['debit_orders.approved' => 1])
+                    ->whereIn('debit_orders.lifecycle_status', DebitOrder::lifecycleStatusesForSummary(DebitOrder::SUMMARY_APPROVED))
                     ->when(!is_null($channel), function ($query) use ($channel) {
                         $query->where('debit_orders.channel', $channel);
                     })
@@ -180,6 +172,7 @@ class DashboardChartController extends Controller
             ->whereIn('installments.status', ['CLOSED', 'PARTIAL_PAID'])
             ->whereHas('debitOrder', function ($query) use ($channel) {
                 $query->where(['debit_orders.approved' => 1])
+                    ->whereIn('debit_orders.lifecycle_status', DebitOrder::lifecycleStatusesForSummary(DebitOrder::SUMMARY_APPROVED))
                     ->when(!is_null($channel), function ($query) use ($channel) {
                         $query->where('debit_orders.channel', $channel);
                     })
@@ -232,6 +225,7 @@ class DashboardChartController extends Controller
             ->whereBetween('installments.payment_date', [$startDate, $endDate])
             ->whereHas('debitOrder', function ($query) use ($channel) {
                 $query->where(['debit_orders.approved' => 1])
+                    ->whereIn('debit_orders.lifecycle_status', DebitOrder::lifecycleStatusesForSummary(DebitOrder::SUMMARY_APPROVED))
                     ->when(!is_null($channel), function ($query) use ($channel) {
                         $query->where('debit_orders.channel', $channel);
                     })
@@ -251,6 +245,7 @@ class DashboardChartController extends Controller
             ->whereIn('installments.status', ['CLOSED', 'PARTIAL_PAID'])
             ->whereHas('debitOrder', function ($query) use ($channel) {
                 $query->where(['debit_orders.approved' => 1])
+                    ->whereIn('debit_orders.lifecycle_status', DebitOrder::lifecycleStatusesForSummary(DebitOrder::SUMMARY_APPROVED))
                     ->when(!is_null($channel), function ($query) use ($channel) {
                         $query->where('debit_orders.channel', $channel);
                     })
@@ -282,7 +277,11 @@ class DashboardChartController extends Controller
 
         //declare array
         $data_array = [];
-        $approvedStatuses = [0, 1, 2];
+        $summaryStatuses = [
+            DebitOrder::SUMMARY_PENDING,
+            DebitOrder::SUMMARY_APPROVED,
+            DebitOrder::SUMMARY_FAILED,
+        ];
 
         //channel
         $channel = null;
@@ -291,16 +290,15 @@ class DashboardChartController extends Controller
 
         foreach ($accounts as $key => $val) {
             //query per channel
-            $debit_orders = DebitOrder::filterCondition()->select('debit_orders.approved', DB::raw('COALESCE(COUNT(debit_orders.id), 0) as number_of_approved'))
+            $debit_orders = DebitOrder::filterCondition()->select('debit_orders.lifecycle_status', DB::raw('COALESCE(COUNT(debit_orders.id), 0) as number_of_approved'))
                 ->whereHas('customerAccount', function ($q) use ($val) {
                     $q->where('account_id', $val->id);
-                })->where(function ($query) {
-                    $query->whereIn('debit_orders.approved', [0, 1, 2]);
                 })
+                ->whereIn('debit_orders.lifecycle_status', array_merge(...array_values(DebitOrder::lifecycleSummaryMap())))
                 ->when($channel != null, function ($q) use ($channel) {
                     $q->where('debit_orders.channel', $channel);
                 })
-                ->groupBy('debit_orders.approved')->orderBy('debit_orders.approved');
+                ->groupBy('debit_orders.lifecycle_status')->orderBy('debit_orders.lifecycle_status');
 
             if ($request->has('month')) {
                 $debit_orders = $debit_orders->whereMonth('debit_orders.created_at', $request->month)
@@ -310,22 +308,17 @@ class DashboardChartController extends Controller
             $debit_orders = $debit_orders->get();
 
             // Map over all approved statuses to ensure complete results
-            $results = collect($approvedStatuses)->map(function ($status) use ($debit_orders) {
-                $order = $debit_orders->firstWhere('approved', $status);
-                return [
-                    'approved' => $status,
-                    'number_of_approved' => $order ? $order->number_of_approved : 0,
-                ];
+            $results = collect($summaryStatuses)->mapWithKeys(function ($summary) use ($debit_orders) {
+                $count = collect($debit_orders)
+                    ->filter(fn ($row) => in_array($row->lifecycle_status, DebitOrder::lifecycleStatusesForSummary($summary), true))
+                    ->sum('number_of_approved');
+
+                return [$summary => (int) $count];
             });
 
-            //pending
-            $pending = $results[0]['number_of_approved'];
-
-            //approve 
-            $approved = $results[1]['number_of_approved'];
-
-            //rejected
-            $rejected = $results[2]['number_of_approved'];
+            $pending = $results[DebitOrder::SUMMARY_PENDING] ?? 0;
+            $approved = $results[DebitOrder::SUMMARY_APPROVED] ?? 0;
+            $rejected = $results[DebitOrder::SUMMARY_FAILED] ?? 0;
 
             //create data array
             $data_array[] = [
