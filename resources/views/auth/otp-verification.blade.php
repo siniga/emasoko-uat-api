@@ -18,40 +18,40 @@
                             <div class="col-lg-6 d-none d-lg-block">
                                 <div class="auth-story">
                                     <div class="auth-story-top">
-                                        <span class="auth-badge">
-                                            <i class="mdi mdi-cellphone-key"></i>
-                                            OTP Verification
+                                         <span class="auth-badge">
+                                            <i class="mdi mdi-shield-check-outline"></i>
+                                            Direct Debit Platform
                                         </span>
 
-                                        <h2 class="auth-story-title">Verify your access before entering the workspace.</h2>
+                                        <h2 class="auth-story-title">Manage mandates and collections from one secure workspace.</h2>
 
                                         <p class="auth-story-copy">
-                                            Complete the final secure step with the one-time code sent to your registered
-                                            phone and email.
+                                            Built for teams handling direct debit operations with clear approvals,
+                                            secure access, and reliable payment workflows.
                                         </p>
                                     </div>
 
                                     <div class="auth-story-bottom">
                                         <ul class="auth-points">
                                             <li>
-                                                <i class='bx bxs-timer'></i>
+                                                <i class='bx bxs-badge-check'></i>
                                                 <span>
-                                                    <span class="auth-point-title">Time-sensitive code</span>
-                                                    <span class="auth-point-copy">Use the OTP as soon as it arrives to avoid expiration.</span>
+                                                    <span class="auth-point-title">Secure Mandate</span>
+                                                    <span class="auth-point-copy">Secure way to create debit debit.</span>
                                                 </span>
                                             </li>
                                             <li>
-                                                <i class='bx bxs-envelope'></i>
+                                                <i class='bx bxs-chart'></i>
                                                 <span>
-                                                    <span class="auth-point-title">Check both channels</span>
-                                                    <span class="auth-point-copy">Look in your phone messages and email inbox for the verification code.</span>
+                                                    <span class="auth-point-title">Collections oversight</span>
+                                                    <span class="auth-point-copy">Track mandate activity, schedules, and payment progress in one place.</span>
                                                 </span>
                                             </li>
                                             <li>
-                                                <i class='bx bxs-lock-alt'></i>
+                                                <i class='bx bxs-chart'></i>
                                                 <span>
-                                                    <span class="auth-point-title">Protected operations</span>
-                                                    <span class="auth-point-copy">This extra step helps secure mandate and collection workflows.</span>
+                                                    <span class="auth-point-title">Built for providers</span>
+                                                    <span class="auth-point-copy">Designed for service providers managing direct debit operations at scale.</span>
                                                 </span>
                                             </li>
                                         </ul>

@@ -36,8 +36,8 @@
                                             <li>
                                                 <i class='bx bxs-badge-check'></i>
                                                 <span>
-                                                    <span class="auth-point-title">Two-step access</span>
-                                                    <span class="auth-point-copy">OTP verification keeps every sign-in protected.</span>
+                                                    <span class="auth-point-title">Secure Mandate</span>
+                                                    <span class="auth-point-copy">Secure way to create debit debit.</span>
                                                 </span>
                                             </li>
                                             <li>
@@ -51,7 +51,7 @@
                                                 <i class='bx bxs-chart'></i>
                                                 <span>
                                                     <span class="auth-point-title">Built for providers</span>
-                                                    <span class="auth-point-copy">Designed for service teams managing direct debit operations at scale.</span>
+                                                    <span class="auth-point-copy">Designed for service providers managing direct debit operations at scale.</span>
                                                 </span>
                                             </li>
                                         </ul>
@@ -67,7 +67,7 @@
 
                                     <h1 class="auth-form-title">Sign in to eMakato</h1>
                                     <p class="auth-form-copy">
-                                        Enter your account credentials to request a login OTP and continue to your dashboard.
+                                        Enter your account credentials to login.
                                     </p>
 
                                     @if (session()->get('success'))
@@ -134,7 +134,7 @@
                                             <div class="d-grid">
                                                 <button class="btn btn-primary auth-submit waves-effect waves-light"
                                                     type="submit">
-                                                    Continue to OTP Verification
+                                                    Login
                                                 </button>
                                             </div>
                                         </form>

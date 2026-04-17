@@ -108,7 +108,7 @@ body.auth-body-bg {
     border-radius: 999px;
     padding: 0.52rem 0.9rem;
     font-size: 0.76rem;
-    letter-spacing: 0.06em;
+    font-weight: 600;
     text-transform: uppercase;
 }
 
@@ -228,11 +228,11 @@ body.auth-body-bg {
 }
 
 .auth-form-card {
-    border-radius: 24px;
-    padding: 1.35rem;
-    border: 1px solid #edf2f7;
+    /* border-radius: 24px;
+    padding: 1.35rem; */
+    /* border: 1px solid #edf2f7;
     background: #ffffff;
-    box-shadow: 0 16px 32px rgba(24, 49, 77, 0.06);
+    box-shadow: 0 16px 32px rgba(24, 49, 77, 0.06); */
 }
 
 .auth-pass-btn {
@@ -258,7 +258,7 @@ body.auth-body-bg {
 
 .auth-link {
     color: #1f3f73;
-    font-size: 0.80rem;
+    font-size: 0.75rem;
     font-weight: 600;
 }
 
@@ -267,8 +267,9 @@ body.auth-body-bg {
     border-radius: 16px;
     background: linear-gradient(135deg, #153567 0%, #204986 100%);
     border: 0;
-    font-weight: 600;
-    letter-spacing: 0.02em;
+    font-size: 0.75rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 1.6;
     box-shadow: 0 18px 34px rgba(21, 53, 103, 0.22);
 }
 
@@ -279,7 +280,7 @@ body.auth-body-bg {
 
 .auth-footer {
     color: #72818c;
-    font-size: 0.9rem;
+    font-size: 0.80rem;
     line-height: 1.7;
 }
 
