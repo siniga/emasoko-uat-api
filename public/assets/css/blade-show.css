@@ -79,8 +79,7 @@
     overflow: hidden;
     border: 0;
     border-radius: 5px;
-    background: linear-gradient(135deg, #153567 0%, #224b88 100%);
-    box-shadow: 0 16px 36px rgba(21, 53, 103, 0.18);
+    background: #FFFFFF;
     padding: 1.1rem 1.15rem;
     min-height: 96px;
     display: flex;
@@ -117,7 +116,7 @@
     font-size: 13px;
     font-weight: 600;
     text-transform: capitalize;
-    color: #FFFFFF !important;
+    color: #424242 !important;
     margin-bottom: 0.45rem;
 }
 
@@ -127,7 +126,7 @@
     font-size: 15px;
     line-height: 1.15;
     font-weight: 700;
-    color: #fff;
+    color: #212121;
 }
 
 .detail-summary__split {
@@ -146,7 +145,7 @@
 .detail-summary__metric--count {
     text-align: right;
     padding-left: 1rem;
-    border-left: 1px solid rgba(255, 255, 255, 0.22);
+    border-left: 1px solid #153567;
 }
 
 .detail-summary__meta {
@@ -180,7 +179,8 @@
     margin-bottom: 0.15rem;
     color: var(--detail-primary);
     font-weight: 600;
-    font-size: 1rem;
+    font-size: 0.84rem;
+    text-transform: uppercase;
 }
 
 .detail-section__head p {

@@ -25,28 +25,19 @@
         </div>
     </div>
 
-    <div class="row mb-0">
+    <div class="row mb-3">
         <div class="col-md-3">
             <a href="{{ route('payment-mandate.lists') }}">
-                <div class="card border-left-info bg-primary shadow h-96 py-2">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xss font-weight-600 text-white mb-1">
-                                    Payment Mandate
-                                </div>
-
-                                <div class="h5 mb-0 font-weight-700 text-white">
-                                    {{ number_format($stats['total_mandate_value']) }}
-                                </div>
-                            </div>
-                            <div class="col-auto">
-                                <div class="text-end">
-                                    <div class="h5 mb-0 font-weight-700 text-white">
-                                        {{ number_format($stats['total_number_of_mandate']) }}
-                                    </div>
-                                </div>
-                            </div>
+                <div class="detail-summary border-top-primary shadow h-96 py-2">
+                    <div class="detail-summary__label text-muted">Payment Mandate</div>
+                    <div class="detail-summary__split">
+                        <div class="detail-summary__metric">
+                            <div class="detail-summary__value text-primary">
+                                {{ number_format($stats['total_mandate_value']) }}</div>
+                        </div>
+                        <div class="detail-summary__metric detail-summary__metric--count">
+                            <div class="detail-summary__value text-primary">
+                                {{ number_format($stats['total_number_of_mandate']) }}</div>
                         </div>
                     </div>
                 </div>
@@ -55,25 +46,16 @@
 
         <div class="col-md-3">
             <a href="{{ route('payment-mandate.lists', ['status' => 'approved']) }}">
-                <div class="card border-left-info bg-success-1 shadow h-96 py-2">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xss font-weight-600 text-white mb-1">
-                                    Approved Mandate
-                                </div>
-
-                                <div class="h5 mb-0 font-weight-700 text-white">
-                                    {{ number_format($stats['approved_mandate_value']) }}
-                                </div>
-                            </div>
-                            <div class="col-auto">
-                                <div class="text-end">
-                                    <div class="h5 mb-0 font-weight-700 text-white">
-                                        {{ number_format($stats['number_of_approved_mandate']) }}
-                                    </div>
-                                </div>
-                            </div>
+                <div class="detail-summary border-top-success shadow h-96 py-2">
+                    <div class="detail-summary__label text-muted">Approved Mandate</div>
+                    <div class="detail-summary__split">
+                        <div class="detail-summary__metric">
+                            <div class="detail-summary__value text-success">
+                                {{ number_format($stats['approved_mandate_value']) }}</div>
+                        </div>
+                        <div class="detail-summary__metric detail-summary__metric--count">
+                            <div class="detail-summary__value text-success">
+                                {{ number_format($stats['number_of_approved_mandate']) }}</div>
                         </div>
                     </div>
                 </div>
@@ -82,25 +64,16 @@
 
         <div class="col-md-3">
             <a href="{{ route('payment-mandate.lists', ['status' => 'pending']) }}">
-                <div class="card border-left-info bg-warning shadow h-96 py-2">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xss font-weight-600 text-white mb-1">
-                                    Pending Mandate
-                                </div>
-
-                                <div class="h5 mb-0 font-weight-700 text-white">
-                                    {{ number_format($stats['pending_mandate_value']) }}
-                                </div>
-                            </div>
-                            <div class="col-auto">
-                                <div class="text-end">
-                                    <div class="h5 mb-0 font-weight-700 text-white">
-                                        {{ number_format($stats['number_of_pending_mandate']) }}
-                                    </div>
-                                </div>
-                            </div>
+                <div class="detail-summary border-top-warning shadow h-96 py-2">
+                    <div class="detail-summary__label text-muted">Pending Mandate</div>
+                    <div class="detail-summary__split">
+                        <div class="detail-summary__metric">
+                            <div class="detail-summary__value text-warning">
+                                {{ number_format($stats['pending_mandate_value']) }}</div>
+                        </div>
+                        <div class="detail-summary__metric detail-summary__metric--count">
+                            <div class="detail-summary__value text-warning">
+                                {{ number_format($stats['number_of_pending_mandate']) }}</div>
                         </div>
                     </div>
                 </div>
@@ -109,25 +82,16 @@
 
         <div class="col-md-3">
             <a href="{{ route('payment-mandate.lists', ['status' => 'failed']) }}">
-                <div class="card border-left-info bg-danger shadow h-96 py-2">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xss font-weight-600 text-white mb-1">
-                                    Failed Mandate
-                                </div>
-
-                                <div class="h5 mb-0 font-weight-700 text-white">
-                                    {{ number_format($stats['failed_mandate_value']) }}
-                                </div>
-                            </div>
-                            <div class="col-auto">
-                                <div class="text-end">
-                                    <div class="h5 mb-0 font-weight-700 text-white">
-                                        {{ number_format($stats['number_of_failed_mandate']) }}
-                                    </div>
-                                </div>
-                            </div>
+                <div class="detail-summary border-top-danger shadow h-96 py-2">
+                    <div class="detail-summary__label text-muted">Failed Mandate</div>
+                    <div class="detail-summary__split">
+                        <div class="detail-summary__metric">
+                            <div class="detail-summary__value text-danger">
+                                {{ number_format($stats['failed_mandate_value']) }}</div>
+                        </div>
+                        <div class="detail-summary__metric detail-summary__metric--count">
+                            <div class="detail-summary__value text-danger">
+                                {{ number_format($stats['number_of_failed_mandate']) }}</div>
                         </div>
                     </div>
                 </div>
@@ -135,21 +99,18 @@
         </div>
     </div>
 
-    <div class="row mb-0">
+    <div class="row mb-3">
         <div class="col-md-3">
             <a href="{{ route('collections.expected-monthly') }}">
-                <div class="card border-left-info bg-primary shadow h-96 py-2">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xss font-weight-600 text-white mb-1">
-                                    Expected Collection - {{ $stats['month'] }}
-                                </div>
-
-                                <div class="h5 mb-0 font-weight-700 text-white">
-                                    {{ number_format($stats['this_month_expected']) }}
-                                </div>
-                            </div>
+                <div class="detail-summary border-top-primary shadow h-96 py-2">
+                    <div class="detail-summary__label text-muted">Expected Collection - {{ $stats['month'] }}</div>
+                    <div class="detail-summary__split">
+                        <div class="detail-summary__metric">
+                            <div class="detail-summary__value text-primary">
+                                {{ number_format($stats['this_month_expected']) }}</div>
+                        </div>
+                        <div class="detail-summary__metric detail-summary__metric--count">
+                            <div class="detail-summary__value text-primary">0</div>
                         </div>
                     </div>
                 </div>
@@ -158,18 +119,15 @@
 
         <div class="col-md-3">
             <a href="{{ route('collections.actual-monthly') }}">
-                <div class="card border-left-info bg-success-1 shadow h-96 py-2">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xss font-weight-600 text-white mb-1">
-                                    Actual Collection - {{ $stats['month'] }}
-                                </div>
-
-                                <div class="h5 mb-0 font-weight-700 text-white">
-                                    {{ number_format($stats['this_month_paid']) }}
-                                </div>
+                <div class="detail-summary border-top-success shadow h-96 py-2">
+                    <div class="detail-summary__label text-muted">Actual Collection - {{ $stats['month'] }}</div>
+                    <div class="detail-summary__split">
+                        <div class="detail-summary__metric">
+                            <div class="detail-summary__value text-success">{{ number_format($stats['this_month_paid']) }}
                             </div>
+                        </div>
+                        <div class="detail-summary__metric detail-summary__metric--count">
+                            <div class="detail-summary__value text-success">0</div>
                         </div>
                     </div>
                 </div>
@@ -178,18 +136,16 @@
 
         <div class="col-md-3">
             <a href="{{ route('collections.expected-daily') }}">
-                <div class="card border-left-info bg-primary shadow h-96 py-2">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xss font-weight-600 text-white mb-1">
-                                    Expected Collection - Today
-                                </div>
-
-                                <div class="h5 mb-0 font-weight-700 text-white">
-                                    {{ number_format($stats['today_expected']) }}
-                                </div>
+                <div class="detail-summary border-top-primary shadow h-96 py-2">
+                    <div class="detail-summary__label text-muted">Expected Collection - Today</div>
+                    <div class="detail-summary__split">
+                        <div class="detail-summary__metric">
+                            <div class="detail-summary__value text-primary">{{ number_format($stats['today_expected']) }}
                             </div>
+                        </div>
+
+                        <div class="detail-summary__metric detail-summary__metric--count">
+                            <div class="detail-summary__value text-primary">0</div>
                         </div>
                     </div>
                 </div>
@@ -198,18 +154,15 @@
 
         <div class="col-md-3">
             <a href="{{ route('collections.actual-daily') }}">
-                <div class="card border-left-info bg-success-1 shadow h-96 py-2">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xss font-weight-600 text-white mb-1">
-                                    Actual Collection - Today
-                                </div>
+                <div class="detail-summary border-top-success shadow h-96 py-2">
+                    <div class="detail-summary__label text-muted">Actual Collection - Today</div>
+                    <div class="detail-summary__split">
+                        <div class="detail-summary__metric">
+                            <div class="detail-summary__value text-primary">{{ number_format($stats['today_paid']) }}</div>
+                        </div>
 
-                                <div class="h5 mb-0 font-weight-700 text-white">
-                                    {{ number_format($stats['today_paid']) }}
-                                </div>
-                            </div>
+                        <div class="detail-summary__metric detail-summary__metric--count">
+                            <div class="detail-summary__value text-primary">0</div>
                         </div>
                     </div>
                 </div>
@@ -217,26 +170,16 @@
         </div>
     </div>
 
-    <div class="row mb-0">
+    <div class="row mb-3">
         <div class="col-md-3">
-            <div class="card border-left-primary bg-outline-primary shadow h-96 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xss font-weight-600 text-muted mb-1">
-                                Total Subscribers
-                            </div>
-
-                            <div class="h5 mb-0 font-weight-700 text-primary">
-                                {{ number_format($service_provider_count) }}
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <div class="text-end">
-                                <div class="h5 mb-0 font-weight-700 text-success">
-                                    {{ number_format($active_service_provider_count) }}
-                                </div>
-                            </div>
+            <div class="detail-summary border-top-primary shadow h-96 py-2">
+                <div class="detail-summary__label text-muted">Total Subscribers</div>
+                <div class="detail-summary__split">
+                    <div class="detail-summary__metric">
+                        <div class="detail-summary__value text-primary">{{ number_format($service_provider_count) }}</div>
+                    </div>
+                    <div class="detail-summary__metric detail-summary__metric--count">
+                        <div class="detail-summary__value text-success">{{ number_format($active_service_provider_count) }}
                         </div>
                     </div>
                 </div>
@@ -244,75 +187,43 @@
         </div>
 
         <div class="col-md-3">
-            <div class="card border-left-success bg-outline-success shadow h-96 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xss font-weight-600 text-muted mb-1">
-                                Amount Collected
-                            </div>
-
-                            <div class="h5 mb-0 font-weight-700 text-primary">
-                                {{ format_short_amount($year_summary->paid_amount ?? 0) }}
-                            </div>
-                        </div>
-                        {{-- <div class="col-auto">
-                            <div class="text-end">
-                                <div class="h5 mb-0 font-weight-700 text-primary">
-                                    {{ format_short_amount($stats['this_month_paid']) }}
-                                </div>
-                            </div>
-                        </div> --}}
+            <div class="detail-summary border-top-success shadow h-96 py-2">
+                <div class="detail-summary__label text-muted">Amount Collected</div>
+                <div class="detail-summary__split">
+                    <div class="detail-summary__metric">
+                        <div class="detail-summary__value text-success">
+                            {{ format_short_amount($year_summary->paid_amount ?? 0) }}</div>
+                    </div>
+                    <div class="detail-summary__metric detail-summary__metric--count">
+                        <div class="detail-summary__value text-success">0</div>
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="col-md-3">
-            <div class="card border-left-warning bg-outline-success shadow h-96 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xss font-weight-600 text-muted mb-1">
-                                Avg Collection
-                            </div>
-
-                            <div class="h5 mb-0 font-weight-700 text-primary">
-                                {{ number_format($year_success_rate, 2) }}%
-                            </div>
-                        </div>
-                        {{-- <div class="col-auto">
-                            <div class="text-end">
-                                <div class="h5 mb-0 font-weight-700 text-primary">
-                                    {{ number_format($stats['today_paid'] > 0 && $stats['today_expected'] > 0 ? ($stats['today_paid'] / $stats['today_expected']) * 100 : 0, 2) }}%
-                                </div>
-                            </div>
-                        </div> --}}
+            <div class="detail-summary border-top-primary shadow h-96 py-2">
+                <div class="detail-summary__label text-muted"> Avg Collection</div>
+                <div class="detail-summary__split">
+                    <div class="detail-summary__metric">
+                        <div class="detail-summary__value text-success">{{ number_format($year_success_rate, 2) }}%</div>
+                    </div>
+                    <div class="detail-summary__metric detail-summary__metric--count">
+                        <div class="detail-summary__value text-success">0</div>
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="col-md-3">
-            <div class="card border-left-primary bg-outline-primary shadow h-96 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xss font-weight-600 text-muted mb-1">
-                                Revenue
-                            </div>
-
-                            <div class="h5 mb-0 font-weight-700 text-primary">
-                                0
-                            </div>
-                        </div>
-                        {{-- <div class="col-auto">
-                            <div class="text-end">
-                                <div class="h5 mb-0 font-weight-700 text-primary">
-                                    0
-                                </div>
-                            </div>
-                        </div> --}}
+            <div class="detail-summary border-top-success shadow h-96 py-2">
+                <div class="detail-summary__label text-muted">Revenue</div>
+                <div class="detail-summary__split">
+                    <div class="detail-summary__metric">
+                        <div class="detail-summary__value text-success">0</div>
+                    </div>
+                    <div class="detail-summary__metric detail-summary__metric--count">
+                        <div class="detail-summary__value text-success">0</div>
                     </div>
                 </div>
             </div>
@@ -330,13 +241,15 @@
                                     @php
                                         $year_options = [];
                                         $current_year = date('Y');
-                                        @endphp
+                                    @endphp
 
-                                        <option value="">Select</option>
-                                        @foreach (range(2024, $current_year) as $v)
-                                            <option value="{{ $v }}" {{ (int) $post_data['year'] === (int) $v ? 'selected' : '' }}>{{ $v }}</option>
-                                        @endforeach
-                                    </select>
+                                    <option value="">Select</option>
+                                    @foreach (range(2024, $current_year) as $v)
+                                        <option value="{{ $v }}"
+                                            {{ (int) $post_data['year'] === (int) $v ? 'selected' : '' }}>
+                                            {{ $v }}</option>
+                                    @endforeach
+                                </select>
                                 <label class="input-group-text">Year</label>
                             </div>
                         </div>
@@ -399,7 +312,9 @@
 
                                     <option value="">Select</option>
                                     @foreach (range(2024, $current_year + 5) as $v)
-                                        <option value="{{ $v }}" {{ (int) $post_data['year'] === (int) $v ? 'selected' : '' }}>{{ $v }}</option>
+                                        <option value="{{ $v }}"
+                                            {{ (int) $post_data['year'] === (int) $v ? 'selected' : '' }}>
+                                            {{ $v }}</option>
                                     @endforeach
                                 </select>
                                 <label class="input-group-text">Year</label>

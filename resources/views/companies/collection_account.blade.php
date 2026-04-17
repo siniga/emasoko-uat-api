@@ -84,151 +84,142 @@
     </div>
 
     <div class="account-shell">
-        <div class="card sp-hero mb-4">
-            <div class="sp-hero__body">
-                <span class="sp-kicker">Collection Account Setup</span>
-                <h2 class="sp-title">Add a collection account for {{ $company->business_name }}</h2>
-                <p class="sp-subtitle">Configure the bank or MNO account used to receive collections for this service provider. The account will be submitted for verification after save.</p>
-
-                <div class="sp-badges">
-                    <span class="sp-badge"><strong>Reference:</strong> {{ $company->reference }}</span>
-                    <span class="sp-badge"><strong>Provider:</strong> {{ $company->business_name }}</span>
-                    <span class="sp-badge"><strong>Existing Accounts:</strong> {{ number_format($company->partnerAccounts->count()) }}</span>
-                </div>
-            </div>
-        </div>
-
         <div class="row">
-        <div class="col-lg-12">
-            <div class="card sp-card">
-                <div class="card-body sp-card__body">
-                    <div class="form-message sp-form-message"></div>
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="form-message sp-form-message"></div>
 
-                    <form action="#" id="companyForm" enctype="multipart/form-data" autocomplete="off">
-                        <input type="hidden" name="partner_id" value="{{ $company->id }}">
-                        <input type="hidden" name="partner_uuid" value="{{ $company->uuid }}">
+                        <form action="#" id="companyForm" enctype="multipart/form-data" autocomplete="off">
+                            <input type="hidden" name="partner_id" value="{{ $company->id }}">
+                            <input type="hidden" name="partner_uuid" value="{{ $company->uuid }}">
 
-                        <section>
-                            <div class="sp-section">
-                                <div class="sp-section__title">Settlement Account Details</div>
-                                <div class="sp-section__hint">Enter the account that should receive collections. Bank/MNO will adjust automatically based on the selected account type.</div>
+                            <section>
+                                <div class="sp-section">
+                                    <div class="sp-section__title">Settlement Account Details</div>
+                                    <div class="sp-section__hint">Enter the account that should receive collections.
+                                        Bank/MNO will adjust automatically based on the selected account type.</div>
 
-                                <div class="account-note">
-                                    Use a verified settlement account with the correct customer number and corporate limit. This helps reduce approval delays and duplicate account submissions.
-                                </div>
+                                    <div class="account-note">
+                                        Use a verified settlement account with the correct customer number and corporate
+                                        limit. This helps reduce approval delays and duplicate account submissions.
+                                    </div>
 
-                            <div class="account-grid field-input">
-                                <div class="account-grid__col-3">
-                                    <div class="mb-3">
-                                        <label for="basicpill-namecard-input">Account Type <span
-                                                class="text-danger">*</span></label>
-                                        @php
-                                            $account_type_options = [];
-                                            $options = [];
-                                        @endphp
-                                        @foreach ($account_types as $val)
-                                            @php
-                                                $options[$val->id] = $val->name;
-                                            @endphp
-                                        @endforeach
-                                        @php
-                                            $account_type_options = $options;
-                                            $options = ['' => 'Select'] + $options;
-                                        @endphp
+                                    <div class="account-grid field-input">
+                                        <div class="account-grid__col-3">
+                                            <div class="mb-3">
+                                                <label for="basicpill-namecard-input">Account Type <span
+                                                        class="text-danger">*</span></label>
+                                                @php
+                                                    $account_type_options = [];
+                                                    $options = [];
+                                                @endphp
+                                                @foreach ($account_types as $val)
+                                                    @php
+                                                        $options[$val->id] = $val->name;
+                                                    @endphp
+                                                @endforeach
+                                                @php
+                                                    $account_type_options = $options;
+                                                    $options = ['' => 'Select'] + $options;
+                                                @endphp
 
-                                        {{ Form::select('account_type_id', $options, old('account_type_id'), ['class' => 'form-control account_type_id', 'id' => 'account_type_id']) }}
-                                        <span class="formError"></span>
+                                                {{ Form::select('account_type_id', $options, old('account_type_id'), ['class' => 'form-control account_type_id', 'id' => 'account_type_id']) }}
+                                                <span class="formError"></span>
+                                            </div>
+                                        </div>
+
+                                        <div class="account-grid__col-3">
+                                            <div class="mb-3">
+                                                <label class="bank_mno_name">Bank Name <span
+                                                        class="text-danger">*</span></label>
+                                                @php $options = []; @endphp
+                                                @foreach ($accounts as $val)
+                                                    @php
+                                                        $options[$val->id] = $val->name;
+                                                    @endphp
+                                                @endforeach
+                                                @php
+                                                    $account_options = $options;
+                                                    $options = ['' => 'Select'] + $options;
+                                                @endphp
+
+                                                {{ Form::select('account_id', $options, old('account_id'), ['class' => 'form-control account_id', 'id' => 'account_id']) }}
+                                                <span class="formError"></span>
+                                            </div>
+                                        </div>
+
+                                        <div class="account-grid__col-6">
+                                            <div class="mb-3">
+                                                <label for="basicpill-namecard-input">Account Name<span
+                                                        class="text-danger">*</span></label>
+                                                {{ Form::text('account_name', old('account_name'), ['class="form-control"', 'placeholder="Write account name..."']) }}
+                                                <span class="formError"></span>
+                                            </div>
+                                        </div>
+
+                                        <div class="account-grid__col-3">
+                                            <div class="mb-3">
+                                                <label for="basicpill-namecard-input">Account Number <span
+                                                        class="text-danger">*</span></label>
+                                                {{ Form::text('account_number', old('account_number'), ['class="form-control"', 'placeholder="Account number..."']) }}
+                                                <span class="formError"></span>
+                                            </div>
+                                        </div>
+
+                                        <div class="account-grid__col-3">
+                                            <div class="mb-3">
+                                                <label>Customer Number <span class="text-danger">*</span></label>
+                                                {{ Form::text('customer_code', old('corporate_limit'), ['class="form-control"', 'placeholder="Customer number..."']) }}
+                                                <span class="formError"></span>
+                                            </div>
+                                        </div>
+
+                                        <div class="account-grid__col-4">
+                                            <div class="mb-3">
+                                                <label>Corporate Limit (<small>Withdraw amount in a day</small>) <span
+                                                        class="text-danger">*</span></label>
+                                                {{ Form::text('corporate_limit', old('corporate_limit'), ['class="form-control number-separator"', 'placeholder="Write corporate limit..."']) }}
+                                                <span class="formError"></span>
+                                            </div>
+                                        </div>
+
+                                        <div class="account-grid__col-2">
+                                            <div class="mb-3">
+                                                <label class="currency_id">Currency <span
+                                                        class="text-danger">*</span></label>
+                                                @php $options = []; @endphp
+                                                @foreach ($currencies as $val)
+                                                    @php
+                                                        $options[$val->id] = $val->name;
+                                                    @endphp
+                                                @endforeach
+                                                @php
+                                                    $currency_options = $options;
+                                                    $options = ['' => 'Select'] + $options;
+                                                @endphp
+
+                                                {{ Form::select('currency_id', $options, old('currency_id'), ['class' => 'form-control currency_id', 'id' => 'currency_id']) }}
+                                                <span class="formError"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="sp-actionbar">
+                                        <div class="sp-actionbar__meta"></div>
+                                        <div class="d-flex gap-2">
+                                            <a href="{{ route('companies.show', $company->uuid ?? '') }}"
+                                                class="btn btn-outline-danger btn-xs text-medium">Cancel</a>
+                                            <button type="submit" id="submitButton" class="btn btn-primary">Save
+                                                Account</button>
+                                        </div>
                                     </div>
                                 </div>
-
-                                <div class="account-grid__col-3">
-                                    <div class="mb-3">
-                                        <label class="bank_mno_name">Bank Name <span class="text-danger">*</span></label>
-                                        @php $options = []; @endphp
-                                        @foreach ($accounts as $val)
-                                            @php
-                                                $options[$val->id] = $val->name;
-                                            @endphp
-                                        @endforeach
-                                        @php
-                                            $account_options = $options;
-                                            $options = ['' => 'Select'] + $options;
-                                        @endphp
-
-                                        {{ Form::select('account_id', $options, old('account_id'), ['class' => 'form-control account_id', 'id' => 'account_id']) }}
-                                        <span class="formError"></span>
-                                    </div>
-                                </div>
-
-                                <div class="account-grid__col-6">
-                                    <div class="mb-3">
-                                        <label for="basicpill-namecard-input">Account Name<span
-                                                class="text-danger">*</span></label>
-                                        {{ Form::text('account_name', old('account_name'), ['class="form-control"', 'placeholder="Write account name..."']) }}
-                                        <span class="formError"></span>
-                                    </div>
-                                </div>
-
-                                <div class="account-grid__col-3">
-                                    <div class="mb-3">
-                                        <label for="basicpill-namecard-input">Account Number <span
-                                                class="text-danger">*</span></label>
-                                        {{ Form::text('account_number', old('account_number'), ['class="form-control"', 'placeholder="Account number..."']) }}
-                                        <span class="formError"></span>
-                                    </div>
-                                </div>
-
-                                <div class="account-grid__col-3">
-                                    <div class="mb-3">
-                                        <label>Customer Number <span class="text-danger">*</span></label>
-                                        {{ Form::text('customer_code', old('corporate_limit'), ['class="form-control"', 'placeholder="Customer number..."']) }}
-                                        <span class="formError"></span>
-                                    </div>
-                                </div>
-
-                                <div class="account-grid__col-4">
-                                    <div class="mb-3">
-                                        <label>Corporate Limit (<small>Withdraw amount in a day</small>) <span
-                                                class="text-danger">*</span></label>
-                                        {{ Form::text('corporate_limit', old('corporate_limit'), ['class="form-control number-separator"', 'placeholder="Write corporate limit..."']) }}
-                                        <span class="formError"></span>
-                                    </div>
-                                </div>
-
-                                <div class="account-grid__col-2">
-                                    <div class="mb-3">
-                                        <label class="currency_id">Currency <span class="text-danger">*</span></label>
-                                        @php $options = []; @endphp
-                                        @foreach ($currencies as $val)
-                                            @php
-                                                $options[$val->id] = $val->name;
-                                            @endphp
-                                        @endforeach
-                                        @php
-                                            $currency_options = $options;
-                                            $options = ['' => 'Select'] + $options;
-                                        @endphp
-
-                                        {{ Form::select('currency_id', $options, old('currency_id'), ['class' => 'form-control currency_id', 'id' => 'currency_id']) }}
-                                        <span class="formError"></span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="sp-actionbar">
-                                <div class="sp-actionbar__meta">Once saved, this account will appear under the provider profile and can proceed to verification.</div>
-                                <div class="d-flex gap-2">
-                                        <a href="{{ route('companies.details', $company->uuid ?? '') }}"
-                                            class="btn btn-outline-danger btn-xs text-medium">Back to Provider</a>
-                                        <button type="submit" id="submitButton" class="btn btn-primary">Save Account</button>
-                                </div>
-                            </div>
-                            </div>
-                        </section>
-                    </form>
+                            </section>
+                        </form>
+                    </div>
                 </div>
             </div>
-        </div>
         </div>
     </div>
     <!-- end row -->
@@ -309,7 +300,8 @@
                             if (response['success'] == false) {
                                 // Display failed message
                                 $('.form-message').html(
-                                    "<div class='alert alert-danger py-2.5 px-2'>" + response['message'] + "</div>"
+                                    "<div class='alert alert-danger py-2.5 px-2'>" +
+                                    response['message'] + "</div>"
                                 );
                             } else if (response['success'] == true) {
                                 // Display success message
@@ -319,13 +311,15 @@
 
                                 // Set timer
                                 setTimeout(function() {
-                                    window.location.href = "/companies/details/" + response.uuid;
+                                    window.location.href = "/companies/details/" +
+                                        response.uuid;
                                 }, 300);
                             }
                         },
                         error: function(error) {
                             //display errors
-                            if (error.responseJSON && jQuery.type(error.responseJSON.errors) == "object") {
+                            if (error.responseJSON && jQuery.type(error.responseJSON
+                                .errors) == "object") {
                                 $('.form-message').html('');
                                 $.each(error.responseJSON.errors, function(key, value) {
                                     $('.form-message').append(
@@ -334,7 +328,9 @@
                                 });
                             } else {
                                 $('.form-message').html('<div class="alert alert-danger">' +
-                                    ((error.responseJSON && error.responseJSON.errors) || 'Failed to save collection account.') + '</div>');
+                                    ((error.responseJSON && error.responseJSON
+                                        .errors) || 'Failed to save collection account.'
+                                        ) + '</div>');
                             }
 
                             //change submit button

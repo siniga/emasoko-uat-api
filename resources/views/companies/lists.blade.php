@@ -136,42 +136,50 @@
                             <div class="border-top pt-3 mt-2">
                                 <div class="row g-3">
                                     <div class="col-md-3">
-                                        <div class="sp-list-summary">
-                                            <div class="sp-list-summary__label">Total Providers</div>
-                                            <div class="sp-list-summary__value">{{ number_format($companyStats['total']) }}
+                                        <div class="detail-summary border-top-primary shadow h-96 py-2">
+                                            <div class="detail-summary__label text-muted">Total Subscribers</div>
+                                            <div class="detail-summary__split">
+                                                <div class="detail-summary__metric">
+                                                    <div class="detail-summary__value text-primary">
+                                                         {{ number_format($companyStats['total']) }}</div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
 
                                     <div class="col-md-3">
-                                        <div class="sp-list-summary">
-                                            <div class="sp-list-summary__label">Approved</div>
-                                            <div class="sp-list-summary__value text-success">
-                                                {{ number_format($companyStats['approved']) }}</div>
+                                        <div class="detail-summary border-top-success shadow h-96 py-2">
+                                            <div class="detail-summary__label text-muted">Approved</div>
+                                            <div class="detail-summary__split">
+                                                <div class="detail-summary__metric">
+                                                    <div class="detail-summary__value text-success">
+                                                        {{ number_format($companyStats['approved']) }}</div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <div class="col-md-2">
-                                        <div class="sp-list-summary">
-                                            <div class="sp-list-summary__label">Pending</div>
-                                            <div class="sp-list-summary__value text-warning">
-                                                {{ number_format($companyStats['pending']) }}</div>
+                                    <div class="col-md-3">
+                                        <div class="detail-summary border-top-warning shadow h-96 py-2">
+                                            <div class="detail-summary__label text-muted">Pending</div>
+                                            <div class="detail-summary__split">
+                                                <div class="detail-summary__metric">
+                                                    <div class="detail-summary__value text-warning">
+                                                        {{ number_format($companyStats['pending']) }}</div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <div class="col-md-2">
-                                        <div class="sp-list-summary">
-                                            <div class="sp-list-summary__label">Failed</div>
-                                            <div class="sp-list-summary__value text-danger">
-                                                {{ number_format($companyStats['failed']) }}</div>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-2">
-                                        <div class="sp-list-summary">
-                                            <div class="sp-list-summary__label">Verified Accounts</div>
-                                            <div class="sp-list-summary__value text-info">
-                                                {{ number_format($companyStats['verified_accounts']) }}</div>
+                                    <div class="col-md-3">
+                                        <div class="detail-summary border-top-danger shadow h-96 py-2">
+                                            <div class="detail-summary__label text-muted"> Failed</div>
+                                            <div class="detail-summary__split">
+                                                <div class="detail-summary__metric">
+                                                    <div class="detail-summary__value text-danger">
+                                                        {{ number_format($companyStats['failed']) }}</div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -272,7 +280,7 @@
                                                                 @elseif($company->complete == 0)
                                                                     <a href="{{ route('companies.registration', $company->uuid) }}"
                                                                         class="dropdown-item">
-                                                                        <i class='bx bx-plus' ></i>Continue Registration
+                                                                        <i class='bx bx-plus'></i>Continue Registration
                                                                     </a>
                                                                 @endif
 

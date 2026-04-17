@@ -12,13 +12,13 @@
     <div class="row">
         <div class="col-12">
             <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                <h4 class="mb-sm-0 font-size-18">Service Provider Information</h4>
+                <h4 class="mb-sm-0 font-size-18">{{ $company->business_name }}</h4>
 
                 <div class="page-title-right">
                     <ol class="breadcrumb m-0">
                         <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
                         <li class="breadcrumb-item"><a href="{{ route('companies.lists') }}">Service Providers</a></li>
-                        <li class="breadcrumb-item active">Provider Information</li>
+                        <li class="breadcrumb-item active">{{ $company->business_name }}</li>
                     </ol>
                 </div>
 
@@ -27,29 +27,58 @@
     </div>
 
     <div class="detail-shell" x-data="initData()">
-        <div class="row">
-            <div class="col-lg-12">
-                <div class="card detail-hero mb-4">
-                    <div class="detail-hero__body">
-                        <div class="row align-items-center">
-                            <div class="col-lg-12 col-12">
-                                <span class="detail-kicker">Service Provider Profile</span>
-                                <h2 class="detail-title">{{ $company->business_name }}</h2>
-                                <p class="detail-subtitle">Operational view of provider setup, mandate footprint, collection performance, and approval readiness.</p>
-                                <div class="detail-meta">
-                                    <span class="detail-meta__pill"><strong>Reference:</strong> {{ $company->reference }}</span>
-                                    <span class="detail-meta__pill"><strong>Category:</strong> {{ $company->partnerCategory->name ?? '-' }}</span>
-                                    <span class="detail-meta__pill"><strong>Status:</strong>
-                                        @if ($company->approved == 1)
-                                            Approved
-                                        @elseif($company->approved == 99)
-                                            Failed
-                                        @else
-                                            Pending Review
-                                        @endif
-                                    </span>
-                                </div>
-                            </div>
+        <div class="row mb-3">
+            <div class="col-md-3">
+                <div class="detail-summary border-top-primary shadow h-96 py-2">
+                    <div class="detail-summary__label text-muted">Total Mandates</div>
+                    <div class="detail-summary__split">
+                        <div class="detail-summary__metric">
+                            <div class="detail-summary__value text-primary">{{ number_format($summaryStats['total_mandates_amount']) }}</div>
+                        </div>
+                        <div class="detail-summary__metric detail-summary__metric--count">
+                            <div class="detail-summary__value text-primary">{{ number_format($summaryStats['total_mandates']) }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="detail-summary border-top-success shadow h-96 py-2">
+                    <div class="detail-summary__label text-muted">Active Mandates</div>
+                    <div class="detail-summary__split">
+                        <div class="detail-summary__metric">
+                            <div class="detail-summary__value text-success">{{ number_format($summaryStats['active_mandates_amount']) }}</div>
+                        </div>
+                        <div class="detail-summary__metric detail-summary__metric--count">
+                            <div class="detail-summary__value text-success">{{ number_format($summaryStats['active_mandates']) }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="detail-summary border-top-warning shadow h-96 py-2">
+                    <div class="detail-summary__label text-muted">Pending Mandates</div>
+                    <div class="detail-summary__split">
+                        <div class="detail-summary__metric">
+                            <div class="detail-summary__value text-warning">{{ number_format($summaryStats['pending_mandates_amount']) }}</div>
+                        </div>
+                        <div class="detail-summary__metric detail-summary__metric--count">
+                            <div class="detail-summary__value text-warning">{{ number_format($summaryStats['pending_mandates']) }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="detail-summary border-top-danger shadow h-96 py-2">
+                    <div class="detail-summary__label text-muted">Failed Mandates</div>
+                    <div class="detail-summary__split">
+                        <div class="detail-summary__metric">
+                            <div class="detail-summary__value text-danger">{{ number_format($summaryStats['failed_mandates_amount']) }}</div>
+                        </div>
+                        <div class="detail-summary__metric detail-summary__metric--count">
+                            <div class="detail-summary__value text-danger">{{ number_format($summaryStats['failed_mandates']) }}</div>
                         </div>
                     </div>
                 </div>
@@ -58,85 +87,27 @@
 
         <div class="row mb-3">
             <div class="col-md-3">
-                <div class="detail-summary shadow h-96 py-2">
-                    <div class="detail-summary__label">Total Mandates</div>
-                    <div class="detail-summary__split">
-                        <div class="detail-summary__metric">
-                            <div class="detail-summary__value">{{ number_format($summaryStats['total_mandates_amount']) }}</div>
-                        </div>
-                        <div class="detail-summary__metric detail-summary__metric--count">
-                            <div class="detail-summary__value">{{ number_format($summaryStats['total_mandates']) }}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-3">
-                <div class="detail-summary bg-success-1 shadow h-96 py-2">
-                    <div class="detail-summary__label">Active Mandates</div>
-                    <div class="detail-summary__split">
-                        <div class="detail-summary__metric">
-                            <div class="detail-summary__value">{{ number_format($summaryStats['active_mandates_amount']) }}</div>
-                        </div>
-                        <div class="detail-summary__metric detail-summary__metric--count">
-                            <div class="detail-summary__value">{{ number_format($summaryStats['active_mandates']) }}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-3">
-                <div class="detail-summary bg-danger-1 shadow h-96 py-2">
-                    <div class="detail-summary__label">Pending Mandates</div>
-                    <div class="detail-summary__split">
-                        <div class="detail-summary__metric">
-                            <div class="detail-summary__value">{{ number_format($summaryStats['pending_mandates_amount']) }}</div>
-                        </div>
-                        <div class="detail-summary__metric detail-summary__metric--count">
-                            <div class="detail-summary__value">{{ number_format($summaryStats['pending_mandates']) }}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-3">
-                <div class="detail-summary bg-danger shadow h-96 py-2">
-                    <div class="detail-summary__label">Failed Mandates</div>
-                    <div class="detail-summary__split">
-                        <div class="detail-summary__metric">
-                            <div class="detail-summary__value">{{ number_format($summaryStats['failed_mandates_amount']) }}</div>
-                        </div>
-                        <div class="detail-summary__metric detail-summary__metric--count">
-                            <div class="detail-summary__value">{{ number_format($summaryStats['failed_mandates']) }}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row mb-3">
-            <div class="col-md-3">
-                <div class="detail-summary shadow h-96 py-2">
+                <div class="detail-summary border-top-primary shadow h-96 py-2">
                     <div class="detail-summary__label">Expected ({{ $summaryStats['current_month_label'] }})</div>
-                    <div class="detail-summary__value">{{ number_format($summaryStats['this_month_expected']) }}</div>
+                    <div class="detail-summary__value text-primary">{{ number_format($summaryStats['this_month_expected']) }}</div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="detail-summary bg-success-1 shadow h-96 py-2">
+                <div class="detail-summary border-top-success shadow h-96 py-2">
                     <div class="detail-summary__label">Collected ({{ $summaryStats['current_month_label'] }})</div>
-                    <div class="detail-summary__value">{{ number_format($summaryStats['this_month_collected']) }}</div>
+                    <div class="detail-summary__value text-success">{{ number_format($summaryStats['this_month_collected']) }}</div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="detail-summary bg-info shadow h-96 py-2">
+                <div class="detail-summary border-top-primary shadow h-96 py-2">
                     <div class="detail-summary__label">Collection Rate</div>
                     <div class="detail-summary__value">{{ number_format($summaryStats['collection_rate'], 2) }}%</div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="detail-summary bg-danger shadow h-96 py-2">
+                <div class="detail-summary border-top-danger shadow h-96 py-2">
                     <div class="detail-summary__label">Overdue Amount</div>
-                    <div class="detail-summary__value">{{ number_format($summaryStats['overdue_amount']) }}</div>
+                    <div class="detail-summary__value text-danger">{{ number_format($summaryStats['overdue_amount']) }}</div>
                 </div>
             </div>
         </div>

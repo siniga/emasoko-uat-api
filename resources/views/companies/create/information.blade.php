@@ -45,7 +45,6 @@
                         <section data-step="0">
                             <div class="sp-section">
                                 <div class="sp-section__title">Business Information</div>
-                                <div class="sp-section__hint">Capture the legal identity used for onboarding, verification, and settlement setup.</div>
 
                                 <div class="row">
                                 <div class="col-lg-6">
@@ -86,7 +85,6 @@
 
                             <div class="sp-section">
                                 <div class="sp-section__title">Address Details</div>
-                                <div class="sp-section__hint">Use the main operating address that supports field verification and correspondence.</div>
 
                             <div class="row mb-3">
                                 <div class="col-lg-3">
@@ -182,7 +180,7 @@
                             </div>
 
                             <div class="sp-actionbar">
-                                <div class="sp-actionbar__meta">Step 1 of 5. Save the core profile before continuing to documents.</div>
+                                <div class="sp-actionbar__meta">Step 1 of 5. Save the profile before continuing to documents.</div>
                                 <div class="d-flex gap-2">
                                         <a href="{{ route('companies.lists') }}"
                                             class="btn btn-outline-danger btn-xs text-medium">

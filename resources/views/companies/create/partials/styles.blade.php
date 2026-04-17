@@ -10,13 +10,12 @@
     .sp-hero {
         background: linear-gradient(135deg, #153567 0%, #1e4a8b 100%);
         border: 0;
-        border-radius: 18px;
+        border-radius: 6px;
         overflow: hidden;
-        box-shadow: 0 14px 34px rgba(21, 53, 103, 0.12);
     }
 
     .sp-hero__body {
-        padding: 1.15rem 1.2rem;
+        padding: 0.64rem 1.2rem;
     }
 
     .sp-kicker {
@@ -68,7 +67,7 @@
         display: grid;
         grid-template-columns: repeat(5, minmax(0, 1fr));
         gap: 0.55rem;
-        margin-top: 1rem;
+        margin-top: 0rem;
     }
 
     .sp-step {
@@ -131,22 +130,20 @@
     }
 
     .sp-card__body {
-        padding: 1.15rem 1.2rem;
+        padding: 1.15rem 1.0rem;
     }
 
     .sp-section {
-        border: 1px solid #e8edf5;
-        border-radius: 14px;
-        background: linear-gradient(180deg, #ffffff 0%, var(--sp-surface) 100%);
-        padding: 1rem;
-        margin-bottom: 1.25rem;
+        border: 0;
+        border-radius: 0;
     }
 
     .sp-section__title {
         font-size: 14px;
         font-weight: 600;
+        text-transform: uppercase;
         color: #153567 !important;
-        margin-bottom: 0.2rem;
+        margin-bottom: 0.5rem;
     }
 
     .sp-section__hint {
