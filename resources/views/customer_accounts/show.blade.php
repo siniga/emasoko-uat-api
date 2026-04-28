@@ -28,47 +28,29 @@
             </div>
         </div>
 
-        <div class="card detail-hero mb-4">
-            <div class="detail-hero__body">
-                <div class="row align-items-center">
-                    <div class="col-lg-8">
-                        <span class="detail-kicker">Customer Account Profile</span>
-                        <h2 class="detail-title">{{ $customer_account->account_name ?? $customer_account->phone }}</h2>
-                        <p class="detail-subtitle">Review account holder details, connected payment channel, and linked
-                            mandates from one customer account workspace.</p>
-                        <div class="detail-meta">
-                            <span class="detail-chip">{{ $customer_account->accountType->name ?? 'NIL' }}</span>
-                            <span class="detail-chip">{{ $customer_account->account->name ?? 'NIL' }}</span>
-                            <span class="detail-chip">{{ $customer_account->status ?? 'NIL' }}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <div class="row mb-4">
             <div class="col-md-3">
-                <div class="detail-summary shadow h-96 py-2">
-                    <div class="detail-summary__label">Mandates</div>
-                    <div class="detail-summary__value">{{ number_format($detailStats['mandates_total']) }}</div>
+                <div class="detail-summary border-top-primary shadow h-96 py-2">
+                    <div class="detail-summary__label text-muted">Mandates</div>
+                    <div class="detail-summary__value text-primary">{{ number_format($detailStats['mandates_total']) }}</div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="detail-summary bg-success-1 shadow h-96 py-2">
-                    <div class="detail-summary__label">Approved Mandates</div>
-                    <div class="detail-summary__value">{{ number_format($detailStats['mandates_approved']) }}</div>
+                <div class="detail-summary border-top-success shadow h-96 py-2">
+                    <div class="detail-summary__label text-muted">Approved Mandates</div>
+                    <div class="detail-summary__value text-success">{{ number_format($detailStats['mandates_approved']) }}</div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="detail-summary bg-danger-1 shadow h-96 py-2">
-                    <div class="detail-summary__label">Pending Mandates</div>
-                    <div class="detail-summary__value">{{ number_format($detailStats['mandates_pending']) }}</div>
+                <div class="detail-summary border-top-warning shadow h-96 py-2">
+                    <div class="detail-summary__label text-muted">Pending Mandates</div>
+                    <div class="detail-summary__value text-warning">{{ number_format($detailStats['mandates_pending']) }}</div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="detail-summary bg-danger shadow h-96 py-2">
-                    <div class="detail-summary__label">Approved Value</div>
-                    <div class="detail-summary__value">{{ number_format($detailStats['mandates_approved_value']) }}</div>
+                <div class="detail-summary border-top-success shadow h-96 py-2">
+                    <div class="detail-summary__label text-muted">Approved Value</div>
+                    <div class="detail-summary__value text-success">{{ number_format($detailStats['mandates_approved_value']) }}</div>
                 </div>
             </div>
         </div>

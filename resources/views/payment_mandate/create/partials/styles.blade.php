@@ -51,8 +51,7 @@
         background: rgba(255, 255, 255, 0.12);
         color: #fff;
         font-size: 0.8rem;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
+        text-transform: capitalize;
     }
 
     .pmc-title {

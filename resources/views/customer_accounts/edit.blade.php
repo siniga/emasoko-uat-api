@@ -4,120 +4,9 @@
     Edit Customer Account
 @endsection
 
-<style>
-    .cae-shell {
-        --cae-primary: #153567;
-        --cae-border: #dce6f5;
-        --cae-muted: #6b7c93;
-    }
-
-    .cae-hero {
-        border: 0;
-        border-radius: 20px;
-        background: linear-gradient(135deg, #153567 0%, #1f4b8b 100%);
-        box-shadow: 0 18px 40px rgba(21, 53, 103, 0.18);
-        overflow: hidden;
-    }
-
-    .cae-hero__body {
-        padding: 1.5rem;
-    }
-
-    .cae-kicker {
-        display: inline-flex;
-        align-items: center;
-        padding: 0.35rem 0.8rem;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.12);
-        color: #fff;
-        font-size: 0.78rem;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-    }
-
-    .cae-title {
-        color: #fff;
-        font-size: 1.65rem;
-        font-weight: 700;
-        margin: 0.9rem 0 0.45rem;
-    }
-
-    .cae-subtitle {
-        color: rgba(255, 255, 255, 0.8);
-        margin-bottom: 0;
-        max-width: 760px;
-    }
-
-    .cae-card {
-        border: 1px solid var(--cae-border);
-        border-radius: 18px;
-        box-shadow: 0 16px 40px rgba(29, 53, 87, 0.08);
-    }
-
-    .cae-section {
-        border: 1px solid #e7edf6;
-        border-radius: 16px;
-        background: #fbfcfe;
-        padding: 1.2rem;
-        margin-bottom: 1.25rem;
-    }
-
-    .cae-section__title {
-        font-size: 1rem;
-        font-weight: 700;
-        color: var(--cae-primary);
-        margin-bottom: 0.2rem;
-    }
-
-    .cae-section__hint {
-        color: var(--cae-muted);
-        font-size: 0.88rem;
-        margin-bottom: 1rem;
-    }
-
-    .cae-summary {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.75rem;
-        margin-top: 1rem;
-    }
-
-    .cae-summary__pill {
-        padding: 0.45rem 0.8rem;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.12);
-        color: #fff;
-        font-size: 0.84rem;
-    }
-
-    .cae-actionbar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1rem;
-        padding-top: 1rem;
-        border-top: 1px solid #edf2f8;
-    }
-
-    .cae-actionbar__meta {
-        color: var(--cae-muted);
-        font-size: 0.9rem;
-    }
-
-    @media (max-width: 767.98px) {
-        .cae-actionbar {
-            flex-direction: column;
-            align-items: stretch;
-        }
-
-        .cae-actionbar .btn {
-            width: 100%;
-        }
-    }
-</style>
+@include('companies.create.partials.styles')
 
 @section('content')
-    <div class="cae-shell">
     <div class="row">
         <div class="col-12">
             <div class="page-title-box d-sm-flex align-items-center justify-content-between">
@@ -136,23 +25,10 @@
         </div>
     </div>
 
-    <div class="card cae-hero mb-4">
-        <div class="cae-hero__body">
-            <span class="cae-kicker">Customer Account Maintenance</span>
-            <h2 class="cae-title">Edit {{ $customer_account->account_name ?? $customer_account->phone }}</h2>
-            <p class="cae-subtitle">Update the customer account profile, channel details, and customer contact information while keeping mandate creation aligned to the correct settlement details.</p>
-            <div class="cae-summary">
-                <span class="cae-summary__pill"><strong>Channel:</strong> {{ $customer_account->accountType->name ?? '-' }}</span>
-                <span class="cae-summary__pill"><strong>Provider:</strong> {{ $customer_account->account->name ?? '-' }}</span>
-                <span class="cae-summary__pill"><strong>Status:</strong> {{ ucfirst($customer_account->status ?? 'draft') }}</span>
-            </div>
-        </div>
-    </div>
-
     <div class="row">
         <div class="col-lg-12">
-            <div class="card cae-card">
-                <div class="card-body">
+            <div class="card sp-card">
+                <div class="card-body sp-card__body">
 
                     <!--./row -->
                     <div class="row">
@@ -161,9 +37,8 @@
                             @method('PUT')
                             {{ Form::token() }}
 
-                            <div class="cae-section">
-                                <div class="cae-section__title">Account Channel Details</div>
-                                <div class="cae-section__hint">Choose the payment channel and update the linked bank or MNO account information used for this customer.</div>
+                            <div class="sp-section">
+                                <div class="sp-section__title">Account Channel Details</div>
 
                                 <div class="row ">
                                     <div class="col-lg-4">
@@ -190,7 +65,8 @@
 
                                     <div class="col-lg-4">
                                         <div class="mb-3">
-                                            <label class="bank_mno_name">Bank Name/MNO <span class="text-danger">*</span></label>
+                                            <label class="bank_mno_name">Bank Name/MNO <span
+                                                    class="text-danger">*</span></label>
                                             @php $options = []; @endphp
                                             @foreach ($accounts as $val)
                                                 @php
@@ -240,9 +116,8 @@
                                 </div>
                             </div>
 
-                            <div class="cae-section">
-                                <div class="cae-section__title">Customer Details</div>
-                                <div class="cae-section__hint">Keep customer identity and contact information synchronized with the account profile.</div>
+                            <div class="sp-section">
+                                <div class="sp-section__title">Customer Details</div>
 
                                 <div class="row">
                                     <div class="col-lg-4">
@@ -268,17 +143,17 @@
                                 </div>
                             </div>
 
-                            <div class="cae-actionbar">
-                                <div class="cae-actionbar__meta">Save only after confirming the correct channel, provider, and customer identifiers. Approved accounts remain locked from edit.</div>
+                            <div class="sp-actionbar">
+                                <div class="sp-actionbar__meta"></div>
                                 <div class="d-flex gap-2">
-                                        <a href="{{ route('customer-accounts.lists') }}"
-                                            class="btn btn-outline-danger btn-xs text-medium">
-                                            Cancel
-                                        </a>
+                                    <a href="{{ route('customer-accounts.lists') }}"
+                                        class="btn btn-outline-danger btn-xs text-medium">
+                                        Cancel
+                                    </a>
 
-                                        <button type="submit" class="btn btn-primary">
-                                            Save Changes
-                                        </button>
+                                    <button type="submit" class="btn btn-primary">
+                                        Save
+                                    </button>
                                 </div>
                             </div>
                             {{ Form::close() }}
@@ -287,7 +162,6 @@
                 </div>
             </div>
         </div>
-    </div>
     </div>
     <!-- end row -->
 @endsection
