@@ -24,7 +24,7 @@
                         </div><br />
                     @endif
 
-                    {{ Form::open(['url' => route('payment-channels.update', $account->id), 'method' => 'PUT', 'class' => 'form-horizontal needs-validation', 'novalidate']) }}
+                    {{ Form::open(['url' => route('payment-channels.update', $account->id), 'method' => 'PUT', 'class' => 'form-horizontal needs-validation', 'novalidate', 'files' => true]) }}
                     {{ Form::token() }}
 
                     <div class="row">
@@ -87,6 +87,27 @@
                             <!--./form-group -->
                         </div>
                         <!--./col -->
+                    </div>
+                    <!--./row -->
+
+                    <div class="row">
+                        <div class="col-lg-12 col-12">
+                            <div class="mb-3">
+                                <label>Channel Logo</label>
+                                {{ Form::file('logo', ['class' => 'form-control', 'accept' => '.jpg,.jpeg,.png,.webp,.svg']) }}
+                                <span class="invalid-feedback d-block">{{ $errors->first('logo') }}</span>
+                                <small class="text-muted">Optional. Upload a new file only if you want to replace the current logo.</small>
+                            </div>
+                        </div>
+
+                        @if (!empty($account->logo))
+                            <div class="col-lg-12 col-12">
+                                <div class="mb-3">
+                                    <label class="d-block">Current Logo</label>
+                                    <img src="{{ asset($account->logo) }}" alt="{{ $account->name }}" class="img-thumbnail" style="max-height: 72px;">
+                                </div>
+                            </div>
+                        @endif
                     </div>
                     <!--./row -->
 

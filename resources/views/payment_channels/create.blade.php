@@ -24,7 +24,7 @@
                         </div><br />
                     @endif
 
-                    {{ Form::open(['url' => route('payment-channels.store'), 'method' => 'POST', 'class' => 'form-horizontal needs-validation', 'novalidate']) }}
+                    {{ Form::open(['url' => route('payment-channels.store'), 'method' => 'POST', 'class' => 'form-horizontal needs-validation', 'novalidate', 'files' => true]) }}
                     {{ Form::token() }}
 
                     <div class="row">
@@ -87,6 +87,18 @@
                             <!--./form-group -->
                         </div>
                         <!--./col -->
+                    </div>
+                    <!--./row -->
+
+                    <div class="row">
+                        <div class="col-lg-12 col-12">
+                            <div class="mb-3">
+                                <label>Channel Logo</label>
+                                {{ Form::file('logo', ['class' => 'form-control', 'accept' => '.jpg,.jpeg,.png,.webp,.svg']) }}
+                                <span class="invalid-feedback d-block">{{ $errors->first('logo') }}</span>
+                                <small class="text-muted">Optional. Upload JPG, PNG, WEBP, or SVG up to 2MB.</small>
+                            </div>
+                        </div>
                     </div>
                     <!--./row -->
 

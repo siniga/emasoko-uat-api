@@ -44,6 +44,7 @@
                                 <thead>
                                     <tr>
                                         <th width="3%">#</th>
+                                        <th>Logo</th>
                                         <th>Type</th>
                                         <th>Name</th>
                                         <th>Slug</th>
@@ -57,6 +58,13 @@
                                     @foreach ($accounts as $values)
                                         <tr>
                                             <td>{{ $serial }}</td>
+                                            <td>
+                                                @if (!empty($values->logo))
+                                                    <img src="{{ asset($values->logo) }}" alt="{{ $values->name }}" class="img-thumbnail" style="max-height: 40px;">
+                                                @else
+                                                    <span class="text-muted">No logo</span>
+                                                @endif
+                                            </td>
                                             <td>{{ $values->accountType->name }}</td>
                                             <td>{{ $values->name }}</td>
                                             <td>{{ $values->slug }}</td>
@@ -95,4 +103,3 @@
     <!-- end row -->
 
 @endsection
-
