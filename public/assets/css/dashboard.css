@@ -198,7 +198,7 @@
 .dashboard-channel-item__badge {
     width: 44px;
     height: 44px;
-    border-radius: 12px;
+    border-radius: 999px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -206,7 +206,16 @@
     font-weight: 800;
     color: #3f4a5c;
     background: #f4f7fc;
-    border: 1px solid #e5ebf5;
+    border: 0;
+    overflow: hidden;
+}
+
+.dashboard-channel-item__logo {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 0.35rem;
+    background: #fff;
 }
 
 .dashboard-channel-item__name {

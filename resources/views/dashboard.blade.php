@@ -402,7 +402,13 @@
                     <div class="dashboard-channel-list">
                         @foreach ($bank_channel_performance as $channelItem)
                             <div class="dashboard-channel-item">
-                                <div class="dashboard-channel-item__badge">{{ $channelItem['slug'] }}</div>
+                                <div class="dashboard-channel-item__badge">
+                                    @if (!empty($channelItem['logo']))
+                                        <img src="{{ $channelItem['logo'] }}" alt="{{ $channelItem['name'] }}" class="dashboard-channel-item__logo">
+                                    @else
+                                        {{ $channelItem['slug'] }}
+                                    @endif
+                                </div>
 
                                 <div>
                                     <div class="dashboard-channel-item__name">{{ $channelItem['name'] }}</div>

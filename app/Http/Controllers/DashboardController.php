@@ -10,7 +10,6 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class DashboardController extends Controller
 {
@@ -169,6 +168,23 @@ class DashboardController extends Controller
                     ->get()
                     ->pluck('mandates', 'channel');
 
+                $channelAmounts = $channelAmounts
+                    ->mapWithKeys(function ($row, $channelKey) {
+                        return [
+                            $this->normalizeChannelLookupKey($channelKey) => [
+                                'expected_amount' => (float) ($row->expected_amount ?? 0),
+                                'paid_amount' => (float) ($row->paid_amount ?? 0),
+                            ],
+                        ];
+                    })
+                    ->toArray();
+
+                $mandateCountByChannel = $mandateCountByChannel
+                    ->mapWithKeys(function ($value, $channelKey) {
+                        return [$this->normalizeChannelLookupKey($channelKey) => (int) $value];
+                    })
+                    ->toArray();
+
                 return [
                     'year_summary' => [
                         'expected_amount' => (float) ($year_summary->expected_amount ?? 0),
@@ -177,13 +193,8 @@ class DashboardController extends Controller
                     'service_provider_count' => (int) $service_provider_count,
                     'active_service_provider_count' => (int) $active_service_provider_count,
                     'highest_single_mandate' => (float) $highest_single_mandate,
-                    'channel_amounts' => $channelAmounts->map(function ($row) {
-                        return [
-                            'expected_amount' => (float) ($row->expected_amount ?? 0),
-                            'paid_amount' => (float) ($row->paid_amount ?? 0),
-                        ];
-                    })->toArray(),
-                    'channel_mandates' => $mandateCountByChannel->map(fn ($value) => (int) $value)->toArray(),
+                    'channel_amounts' => $channelAmounts,
+                    'channel_mandates' => $mandateCountByChannel,
                 ];
             }
         );
@@ -229,18 +240,19 @@ class DashboardController extends Controller
                 return $collection->where('slug', $channel);
             })
             ->map(function ($paymentChannel) use ($dashboardSupplementary) {
-                $slug = $paymentChannel->slug;
-                $expected = (float) ($dashboardSupplementary['channel_amounts'][$slug]['expected_amount'] ?? 0);
-                $paid = (float) ($dashboardSupplementary['channel_amounts'][$slug]['paid_amount'] ?? 0);
-                $mandates = (int) ($dashboardSupplementary['channel_mandates'][$slug] ?? 0);
+                $lookupKey = $this->normalizeChannelLookupKey($paymentChannel->slug ?: $paymentChannel->name);
+                $expected = (float) ($dashboardSupplementary['channel_amounts'][$lookupKey]['expected_amount'] ?? 0);
+                $paid = (float) ($dashboardSupplementary['channel_amounts'][$lookupKey]['paid_amount'] ?? 0);
+                $mandates = (int) ($dashboardSupplementary['channel_mandates'][$lookupKey] ?? 0);
                 $rate = $expected > 0 ? round(($paid / $expected) * 100) : null;
                 $isLive = $expected > 0 || $paid > 0;
 
                 return [
-                    'slug' => strtoupper(substr((string) $slug, 0, 3)),
+                    'slug' => strtoupper(substr((string) ($paymentChannel->slug ?: $paymentChannel->name), 0, 3)),
+                    'logo' => $paymentChannel->logo ? asset($paymentChannel->logo) : null,
                     'name' => $paymentChannel->name,
                     'subtitle' => $isLive
-                        ? 'Monthly success · ' . number_format($mandates) . ' mandates'
+                        ? 'Monthly success · ' . number_format($mandates) . ' mandates · TZS ' . number_format($paid, 0)
                         : 'Onboarding',
                     'rate' => $rate,
                     'status' => $isLive ? $rate . '%' : 'Soon',
@@ -269,5 +281,13 @@ class DashboardController extends Controller
             'service_provider_count',
             'active_service_provider_count'
         ));
+    }
+
+    private function normalizeChannelLookupKey(?string $value): string
+    {
+        $normalized = strtoupper((string) $value);
+        $normalized = preg_replace('/[^A-Z0-9]/', '', $normalized);
+
+        return $normalized ?: 'UNKNOWN';
     }
 }
