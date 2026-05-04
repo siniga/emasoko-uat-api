@@ -17,7 +17,7 @@
 
         <div class="row">
             <div class="col-lg-12">
-                <div class="sp-list-filter mb-4">
+                <div class="sp-list-filter mb-3">
                     {!! Form::open(['url' => route('payment-mandate.lists'), 'method' => 'POST', 'class' => 'form-horizontal']) !!}
                     {{ Form::token() }}
 
@@ -43,7 +43,8 @@
                                         \App\Models\DebitOrder::LIFECYCLE_AWAITING_OTP => 'Awaiting OTP',
                                         \App\Models\DebitOrder::LIFECYCLE_VERIFIED => 'Verified',
                                         \App\Models\DebitOrder::LIFECYCLE_ACTIVE => 'Active',
-                                        \App\Models\DebitOrder::LIFECYCLE_CANCELLATION_REQUESTED => 'Cancellation Requested',
+                                        \App\Models\DebitOrder::LIFECYCLE_CANCELLATION_REQUESTED =>
+                                            'Cancellation Requested',
                                         \App\Models\DebitOrder::LIFECYCLE_CANCELLED => 'Cancelled',
                                         \App\Models\DebitOrder::LIFECYCLE_CLOSED => 'Closed',
                                         \App\Models\DebitOrder::LIFECYCLE_ARCHIVED => 'Archived',
@@ -123,48 +124,52 @@
                             </div>
                         </div>
                     </div>
+                    {{ Form::close() }}
+                </div>
 
-                    <div class="border-top pt-3 mt-2">
-                        <div class="row g-3">
-                            <div class="col-md-2">
-                                <div class="detail-summary border-top-primary shadow h-96 py-2">
-                                    <div class="detail-summary__label text-muted">Total Mandates</div>
-                                    <div class="detail-summary__value text-primary">{{ number_format($listStats['total'] ?? 0) }}</div>
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="detail-summary border-top-draft shadow h-96 py-2">
-                                    <div class="detail-summary__label">Draft</div>
-                                    <div class="detail-summary__value text-draft">{{ number_format($listStats['draft'] ?? 0) }}</div>
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="detail-summary border-top-secondary shadow h-96 py-2">
-                                    <div class="detail-summary__label">Submitted</div>
-                                    <div class="detail-summary__value text-secondary">{{ number_format($listStats['submitted'] ?? 0) }}</div>
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="detail-summary border-top-warning shadow h-96 py-2">
-                                    <div class="detail-summary__label">Awaiting OTP</div>
-                                    <div class="detail-summary__value text-warning">{{ number_format($listStats['awaiting_otp'] ?? 0) }}</div>
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="detail-summary border-top-success shadow h-96 py-2">
-                                    <div class="detail-summary__label">Active</div>
-                                    <div class="detail-summary__value text-success">{{ number_format($listStats['active'] ?? 0) }}</div>
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="detail-summary border-top-danger shadow h-96 py-2">
-                                    <div class="detail-summary__label">Failed</div>
-                                    <div class="detail-summary__value text-danger">{{ number_format($listStats['failed'] ?? 0) }}</div>
-                                </div>
+                <div class="row mb-3">
+                    <div class="col-md-2">
+                        <div class="detail-summary shadow h-96 py-2">
+                            <div class="detail-summary__label text-muted">Total Mandates</div>
+                            <div class="detail-summary__value text-primary">{{ number_format($listStats['total'] ?? 0) }}
                             </div>
                         </div>
                     </div>
-                    {{ Form::close() }}
+                    <div class="col-md-2">
+                        <div class="detail-summary shadow h-96 py-2">
+                            <div class="detail-summary__label">Draft</div>
+                            <div class="detail-summary__value text-draft">{{ number_format($listStats['draft'] ?? 0) }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="detail-summary shadow h-96 py-2">
+                            <div class="detail-summary__label">Submitted</div>
+                            <div class="detail-summary__value text-secondary">
+                                {{ number_format($listStats['submitted'] ?? 0) }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="detail-summary shadow h-96 py-2">
+                            <div class="detail-summary__label">Awaiting OTP</div>
+                            <div class="detail-summary__value text-warning">
+                                {{ number_format($listStats['awaiting_otp'] ?? 0) }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="detail-summary shadow h-96 py-2">
+                            <div class="detail-summary__label">Active</div>
+                            <div class="detail-summary__value text-success">{{ number_format($listStats['active'] ?? 0) }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="detail-summary shadow h-96 py-2">
+                            <div class="detail-summary__label">Failed</div>
+                            <div class="detail-summary__value text-danger">{{ number_format($listStats['failed'] ?? 0) }}
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="card">
@@ -212,15 +217,18 @@
                                                             href="{{ route('payment-mandate.request-cancellation') }}">Request
                                                             Cancellation</a>
                                                         <a class="dropdown-item text-sm"
-                                                            href="{{ route('payment-mandate.request-closing') }}">Request Closing</a>
+                                                            href="{{ route('payment-mandate.request-closing') }}">Request
+                                                            Closing</a>
                                                         <div class="dropdown-divider"></div>
                                                         <a class="dropdown-item text-sm"
-                                                            href="{{ route('payment-mandate.request-deletion') }}">Request Deletion</a>
+                                                            href="{{ route('payment-mandate.request-deletion') }}">Request
+                                                            Deletion</a>
                                                     </div>
                                                 </div>
                                             @endif
 
-                                            <a class="btn btn-primary btn-sm" href="{{ route('payment-mandate.create-account') }}">
+                                            <a class="btn btn-primary btn-sm"
+                                                href="{{ route('payment-mandate.create-account') }}">
                                                 <i class="bx bx-list-plus"></i> Create New
                                             </a>
 
@@ -250,17 +258,27 @@
                                             @php $serial = 1; @endphp
                                             @foreach ($debit_orders as $values)
                                                 @php
-                                                    $lifecycle = $values->lifecycle_status ?? $values->resolved_lifecycle_status;
-                                                    $canPreview = $lifecycle === \App\Models\DebitOrder::LIFECYCLE_DRAFT;
-                                                    $canEdit = in_array($lifecycle, [
-                                                        \App\Models\DebitOrder::LIFECYCLE_DRAFT,
-                                                        \App\Models\DebitOrder::LIFECYCLE_SUBMITTED,
-                                                        \App\Models\DebitOrder::LIFECYCLE_FAILED,
-                                                    ], true);
-                                                    $canDelete = in_array($lifecycle, [
-                                                        \App\Models\DebitOrder::LIFECYCLE_DRAFT,
-                                                        \App\Models\DebitOrder::LIFECYCLE_SUBMITTED,
-                                                    ], true);
+                                                    $lifecycle =
+                                                        $values->lifecycle_status ?? $values->resolved_lifecycle_status;
+                                                    $canPreview =
+                                                        $lifecycle === \App\Models\DebitOrder::LIFECYCLE_DRAFT;
+                                                    $canEdit = in_array(
+                                                        $lifecycle,
+                                                        [
+                                                            \App\Models\DebitOrder::LIFECYCLE_DRAFT,
+                                                            \App\Models\DebitOrder::LIFECYCLE_SUBMITTED,
+                                                            \App\Models\DebitOrder::LIFECYCLE_FAILED,
+                                                        ],
+                                                        true,
+                                                    );
+                                                    $canDelete = in_array(
+                                                        $lifecycle,
+                                                        [
+                                                            \App\Models\DebitOrder::LIFECYCLE_DRAFT,
+                                                            \App\Models\DebitOrder::LIFECYCLE_SUBMITTED,
+                                                        ],
+                                                        true,
+                                                    );
                                                 @endphp
                                                 <tr>
                                                     <td>{{ $serial }}</td>
@@ -269,7 +287,8 @@
                                                         ID: {{ $values->customerAccount->customer->id_number ?? 'NIL' }}
                                                     </td>
                                                     <td>{{ $values->customerAccount->account->name ?? 'NIL' }}</td>
-                                                    <td>{{ mask_account_number($values->customerAccount->account_number ?? $values->customerAccount->phone) }}</td>
+                                                    <td>{{ mask_account_number($values->customerAccount->account_number ?? $values->customerAccount->phone) }}
+                                                    </td>
                                                     <td>{{ $values->reference }}</td>
                                                     <td>{!! mandate_status_badge($values) !!}</td>
                                                     <td>{{ date('d-m-Y H:i', strtotime($values->created_at)) }}</td>
@@ -303,7 +322,7 @@
                                                                 @if ($canDelete)
                                                                     <a href="{{ route('payment-mandate.delete', $values->uuid) }}"
                                                                         class="dropdown-item text-danger delete">
-                                                                        <i class='bx bx-trash' ></i> Delete
+                                                                        <i class='bx bx-trash'></i> Delete
                                                                     </a>
                                                                 @endif
                                                             </div>

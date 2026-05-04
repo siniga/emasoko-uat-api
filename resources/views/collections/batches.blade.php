@@ -17,7 +17,7 @@
 
         <div class="row">
             <div class="col-lg-12">
-                <div class="sp-list-filter mb-4">
+                <div class="sp-list-filter mb-3">
                     {!! Form::open(['url' => route('collections.batches'), 'method' => 'POST', 'class' => 'form-horizontal']) !!}
                     {{ Form::token() }}
 
@@ -78,47 +78,45 @@
                             </div>
                         </div>
                     </div>
+                    {{ Form::close() }}
+                </div>
 
-                    <div class="border-top pt-3 mt-3">
-                        <div class="row g-3">
-                            <div class="col-md-2">
-                                <div class="detail-summary border-top-primary shadow h-96 py-2">
-                                    <div class="detail-summary__label text-muted">Total Batches</div>
-                                    <div class="detail-summary__value text-primary">
-                                        {{ number_format($listStats['total'] ?? 0) }}</div>
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="detail-summary border-top-secondary shadow h-96 py-2">
-                                    <div class="detail-summary__label text-muted">Uploaded</div>
-                                    <div class="detail-summary__value text-secondary">
-                                        {{ number_format($listStats['uploaded'] ?? 0) }}</div>
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="detail-summary border-top-success shadow h-96 py-2">
-                                    <div class="detail-summary__label text-muted">Processed</div>
-                                    <div class="detail-summary__value text-success">
-                                        {{ number_format($listStats['processed'] ?? 0) }}</div>
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="detail-summary border-top-danger shadow h-96 py-2">
-                                    <div class="detail-summary__label text-muted">Failed</div>
-                                    <div class="detail-summary__value text-danger">
-                                        {{ number_format($listStats['failed'] ?? 0) }}</div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="detail-summary border-top-draft shadow h-96 py-2">
-                                    <div class="detail-summary__label text-muted">Total No. of Collections</div>
-                                    <div class="detail-summary__value text-draft">
-                                        {{ number_format($listStats['collections'] ?? 0) }}</div>
-                                </div>
-                            </div>
+                <div class="row mb-3">
+                    <div class="col-md-2">
+                        <div class="detail-summary shadow h-96 py-2">
+                            <div class="detail-summary__label text-muted">Total Batches</div>
+                            <div class="detail-summary__value text-primary">
+                                {{ number_format($listStats['total'] ?? 0) }}</div>
                         </div>
                     </div>
-                    {{ Form::close() }}
+                    <div class="col-md-2">
+                        <div class="detail-summary shadow h-96 py-2">
+                            <div class="detail-summary__label text-muted">Uploaded</div>
+                            <div class="detail-summary__value text-secondary">
+                                {{ number_format($listStats['uploaded'] ?? 0) }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="detail-summary shadow h-96 py-2">
+                            <div class="detail-summary__label text-muted">Processed</div>
+                            <div class="detail-summary__value text-success">
+                                {{ number_format($listStats['processed'] ?? 0) }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="detail-summary shadow h-96 py-2">
+                            <div class="detail-summary__label text-muted">Failed</div>
+                            <div class="detail-summary__value text-danger">
+                                {{ number_format($listStats['failed'] ?? 0) }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="detail-summary shadow h-96 py-2">
+                            <div class="detail-summary__label text-muted">Total No. of Collections</div>
+                            <div class="detail-summary__value text-draft">
+                                {{ number_format($listStats['collections'] ?? 0) }}</div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="card">

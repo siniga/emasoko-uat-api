@@ -21,7 +21,7 @@
 
         <div class="row">
             <div class="col-lg-12">
-                <div class="sp-list-filter mb-4">
+                <div class="sp-list-filter mb-3">
                     {!! Form::open(['url' => route('users.lists'), 'method' => 'POST', 'class' => 'form-horizontal']) !!}
                     {{ Form::token() }}
 
@@ -71,36 +71,36 @@
                             </div>
                         </div>
                     </div>
+                    {{ Form::close() }}
+                </div>
 
-                    <div class="border-top pt-3 mt-2">
-                        <div class="row g-3">
-                            <div class="col-md-3">
-                                <div class="detail-summary border-top-primary shadow h-96 py-2">
-                                    <div class="detail-summary__label text-muted">Total Users</div>
-                                    <div class="detail-summary__value text-primary">{{ number_format($listStats['total']) }}</div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="detail-summary border-top-success shadow h-96 py-2">
-                                    <div class="detail-summary__label text-muted">Active</div>
-                                    <div class="detail-summary__value text-success">{{ number_format($listStats['active']) }}</div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="detail-summary border-top-danger shadow h-96 py-2">
-                                    <div class="detail-summary__label text-muted">Inactive</div>
-                                    <div class="detail-summary__value text-danger">{{ number_format($listStats['inactive']) }}</div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="detail-summary border-top-secondary shadow h-96 py-2">
-                                    <div class="detail-summary__label text-muted">API Users</div>
-                                    <div class="detail-summary__value text-secondary">{{ number_format($listStats['api_users']) }}</div>
-                                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <div class="detail-summary shadow h-96 py-2">
+                            <div class="detail-summary__label text-muted">Total Users</div>
+                            <div class="detail-summary__value text-primary">{{ number_format($listStats['total']) }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="detail-summary shadow h-96 py-2">
+                            <div class="detail-summary__label text-muted">Active</div>
+                            <div class="detail-summary__value text-success">{{ number_format($listStats['active']) }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="detail-summary shadow h-96 py-2">
+                            <div class="detail-summary__label text-muted">Inactive</div>
+                            <div class="detail-summary__value text-danger">{{ number_format($listStats['inactive']) }}
                             </div>
                         </div>
                     </div>
-                    {{ Form::close() }}
+                    <div class="col-md-3">
+                        <div class="detail-summary shadow h-96 py-2">
+                            <div class="detail-summary__label text-muted">API Users</div>
+                            <div class="detail-summary__value text-secondary">{{ number_format($listStats['api_users']) }}
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="card sp-list-card">
@@ -143,7 +143,9 @@
                                         @php $serial = 1; @endphp
                                         @foreach ($users as $values)
                                             @php
-                                                $primaryPartner = optional(optional($values->partners)->where('authorize', 1)->first())->partner;
+                                                $primaryPartner = optional(
+                                                    optional($values->partners)->where('authorize', 1)->first(),
+                                                )->partner;
                                             @endphp
                                             <tr>
                                                 <td>{{ $serial }}</td>

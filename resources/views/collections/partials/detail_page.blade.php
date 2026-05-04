@@ -25,9 +25,6 @@
     <div class="collection-detail-hero mb-4">
         <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
             <div>
-                <div class="collection-detail-hero__eyebrow">
-                    {{ $isActualCollection ? 'Actual Collection Detail' : 'Expected Collection Detail' }}
-                </div>
                 <div class="collection-detail-hero__title">{{ strtoupper($partner->business_name) }}</div>
                 <p class="collection-detail-hero__hint">
                     {{ $isActualCollection
@@ -46,26 +43,26 @@
 
     <div class="row g-3 mb-4">
         <div class="col-md-3 col-xl-2">
-            <div class="detail-summary border-top-secondary shadow h-96 py-2">
+            <div class="detail-summary shadow h-96 py-2">
                 <div class="detail-summary__label text-muted">{{ $collectionsLabel }}</div>
                 <div class="detail-summary__value text-secondary">{{ number_format($listStats['collections'] ?? 0) }}
                 </div>
             </div>
         </div>
         <div class="col-md-3 col-xl-2">
-            <div class="detail-summary border-top-success shadow h-96 py-2">
+            <div class="detail-summary shadow h-96 py-2">
                 <div class="detail-summary__label text-muted">{{ $secondaryCountLabel }}</div>
                 <div class="detail-summary__value text-success">{{ number_format($secondaryCountValue) }}</div>
             </div>
         </div>
         <div class="col-md-3 col-xl-2">
-            <div class="detail-summary border-top-danger shadow h-96 py-2">
+            <div class="detail-summary shadow h-96 py-2">
                 <div class="detail-summary__label text-muted">{{ $tertiaryCountLabel }}</div>
                 <div class="detail-summary__value text-danger">{{ number_format($tertiaryCountValue) }}</div>
             </div>
         </div>
         <div class="col-md-3 col-xl-2">
-            <div class="detail-summary border-top-primary shadow h-96 py-2">
+            <div class="detail-summary shadow h-96 py-2">
                 <div class="detail-summary__label text-muted">Expected Amount</div>
                 <div class="detail-summary__value text-primary">
                     {{ number_format($listStats['expected_amount'] ?? 0, 2) }}</div>
@@ -73,7 +70,7 @@
         </div>
 
         <div class="col-md-4 col-xl-4">
-            <div class="detail-summary border-top-success shadow h-96 py-2">
+            <div class="detail-summary shadow h-96 py-2">
                 <div class="detail-summary__split">
                     <div class="detail-summary__metric">
                         <div class="detail-summary__label text-muted">{{ $paidAmountLabel }}</div>

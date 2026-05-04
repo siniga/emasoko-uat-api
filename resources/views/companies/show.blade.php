@@ -29,7 +29,7 @@
     <div class="detail-shell" x-data="initData()">
         <div class="row mb-3">
             <div class="col-md-3">
-                <div class="detail-summary border-top-primary shadow h-96 py-2">
+                <div class="detail-summary shadow h-96 py-2">
                     <div class="detail-summary__label text-muted">Total Mandates</div>
                     <div class="detail-summary__split">
                         <div class="detail-summary__metric">
@@ -43,7 +43,7 @@
             </div>
 
             <div class="col-md-3">
-                <div class="detail-summary border-top-success shadow h-96 py-2">
+                <div class="detail-summary shadow h-96 py-2">
                     <div class="detail-summary__label text-muted">Active Mandates</div>
                     <div class="detail-summary__split">
                         <div class="detail-summary__metric">
@@ -57,7 +57,7 @@
             </div>
 
             <div class="col-md-3">
-                <div class="detail-summary border-top-warning shadow h-96 py-2">
+                <div class="detail-summary shadow h-96 py-2">
                     <div class="detail-summary__label text-muted">Pending Mandates</div>
                     <div class="detail-summary__split">
                         <div class="detail-summary__metric">
@@ -71,7 +71,7 @@
             </div>
 
             <div class="col-md-3">
-                <div class="detail-summary border-top-danger shadow h-96 py-2">
+                <div class="detail-summary shadow h-96 py-2">
                     <div class="detail-summary__label text-muted">Failed Mandates</div>
                     <div class="detail-summary__split">
                         <div class="detail-summary__metric">
@@ -87,25 +87,25 @@
 
         <div class="row mb-3">
             <div class="col-md-3">
-                <div class="detail-summary border-top-primary shadow h-96 py-2">
+                <div class="detail-summary shadow h-96 py-2">
                     <div class="detail-summary__label">Expected ({{ $summaryStats['current_month_label'] }})</div>
                     <div class="detail-summary__value text-primary">{{ number_format($summaryStats['this_month_expected']) }}</div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="detail-summary border-top-success shadow h-96 py-2">
+                <div class="detail-summary shadow h-96 py-2">
                     <div class="detail-summary__label">Collected ({{ $summaryStats['current_month_label'] }})</div>
                     <div class="detail-summary__value text-success">{{ number_format($summaryStats['this_month_collected']) }}</div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="detail-summary border-top-primary shadow h-96 py-2">
+                <div class="detail-summary shadow h-96 py-2">
                     <div class="detail-summary__label">Collection Rate</div>
                     <div class="detail-summary__value">{{ number_format($summaryStats['collection_rate'], 2) }}%</div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="detail-summary border-top-danger shadow h-96 py-2">
+                <div class="detail-summary shadow h-96 py-2">
                     <div class="detail-summary__label">Overdue Amount</div>
                     <div class="detail-summary__value text-danger">{{ number_format($summaryStats['overdue_amount']) }}</div>
                 </div>

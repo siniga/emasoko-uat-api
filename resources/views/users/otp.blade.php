@@ -19,34 +19,32 @@
             @endslot
         @endcomponent
 
-        <div class="sp-list-filter mb-4">
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <div class="detail-summary border-top-primary shadow h-96 py-2">
-                        <div class="detail-summary__label text-muted">Active OTPs</div>
-                        <div class="detail-summary__value text-primary">{{ number_format($listStats['active']) }}</div>
+        <div class="row mb-3">
+            <div class="col-md-3">
+                <div class="detail-summary shadow h-96 py-2">
+                    <div class="detail-summary__label text-muted">Active OTPs</div>
+                    <div class="detail-summary__value text-primary">{{ number_format($listStats['active']) }}</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-summary shadow h-96 py-2">
+                    <div class="detail-summary__label text-muted">Expiring Today</div>
+                    <div class="detail-summary__value text-warning">{{ number_format($listStats['expiring_today']) }}</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-summary shadow h-96 py-2">
+                    <div class="detail-summary__label text-muted">Latest Created</div>
+                    <div class="detail-summary__value text-draft">
+                        {{ $listStats['latest_created_at'] ? date('d-m-Y H:i', strtotime($listStats['latest_created_at'])) : 'NIL' }}
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="detail-summary border-top-warning shadow h-96 py-2">
-                        <div class="detail-summary__label text-muted">Expiring Today</div>
-                        <div class="detail-summary__value text-warning">{{ number_format($listStats['expiring_today']) }}</div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="detail-summary border-top-draft shadow h-96 py-2">
-                        <div class="detail-summary__label text-muted">Latest Created</div>
-                        <div class="detail-summary__value text-draft">
-                            {{ $listStats['latest_created_at'] ? date('d-m-Y H:i', strtotime($listStats['latest_created_at'])) : 'NIL' }}
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="detail-summary border-top-success shadow h-96 py-2">
-                        <div class="detail-summary__label text-muted">Latest Expiry</div>
-                        <div class="detail-summary__value text-success">
-                            {{ $listStats['latest_expire_at'] ? date('d-m-Y H:i', strtotime($listStats['latest_expire_at'])) : 'NIL' }}
-                        </div>
+            </div>
+            <div class="col-md-3">
+                <div class="detail-summary shadow h-96 py-2">
+                    <div class="detail-summary__label text-muted">Latest Expiry</div>
+                    <div class="detail-summary__value text-success">
+                        {{ $listStats['latest_expire_at'] ? date('d-m-Y H:i', strtotime($listStats['latest_expire_at'])) : 'NIL' }}
                     </div>
                 </div>
             </div>
@@ -57,7 +55,8 @@
                 @if (isset($users_otp) && $users_otp->count())
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <span class="font-weight-500">No. of OTP records: {{ number_format($users_otp->count()) }}</span>
+                            <span class="font-weight-500">No. of OTP records:
+                                {{ number_format($users_otp->count()) }}</span>
                         </div>
                     </div>
 
@@ -77,7 +76,9 @@
                             <tbody>
                                 @foreach ($users_otp as $index => $values)
                                     @php
-                                        $expiresAt = $values->expire_at ? \Carbon\Carbon::parse($values->expire_at) : null;
+                                        $expiresAt = $values->expire_at
+                                            ? \Carbon\Carbon::parse($values->expire_at)
+                                            : null;
                                         $minutesLeft = $expiresAt ? now()->diffInMinutes($expiresAt, false) : null;
                                     @endphp
                                     <tr>

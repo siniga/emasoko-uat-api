@@ -27,7 +27,7 @@
 
     <div class="row">
         <div class="col-lg-12">
-            <div class="sp-list-filter collection-summary-filter mb-4">
+            <div class="sp-list-filter collection-summary-filter mb-3">
                 {!! Form::open(['url' => route($filterRoute), 'method' => 'POST', 'class' => 'form-horizontal']) !!}
                 {{ Form::token() }}
 
@@ -94,57 +94,55 @@
                         </div>
                     </div>
                 </div>
+                {{ Form::close() }}
+            </div>
 
-                <div class="border-top pt-3 mt-2">
-                    <div class="row g-3">
-                        <div class="col-md-2 col-xl-2">
-                            <div class="detail-summary border-top-secondary shadow h-96 py-2">
-                                <div class="detail-summary__label text-muted">{{ $collectionsLabel }}</div>
-                                <div class="detail-summary__value text-secondary">
-                                    {{ number_format($listStats['collections'] ?? 0) }}</div>
-                            </div>
+            <div class="row mb-3">
+                <div class="col-md-2 col-xl-2">
+                    <div class="detail-summary shadow h-96 py-2">
+                        <div class="detail-summary__label text-muted">{{ $collectionsLabel }}</div>
+                        <div class="detail-summary__value text-secondary">
+                            {{ number_format($listStats['collections'] ?? 0) }}</div>
+                    </div>
+                </div>
+                <div class="col-md-2 col-xl-2">
+                    <div class="detail-summary shadow h-96 py-2">
+                        <div class="detail-summary__label text-muted">{{ $secondaryCountLabel }}</div>
+                        <div class="detail-summary__value text-success">
+                            {{ number_format($secondaryCountValue) }}</div>
+                    </div>
+                </div>
+                <div class="col-md-2 col-xl-2">
+                    <div class="detail-summary shadow h-96 py-2">
+                        <div class="detail-summary__label text-muted">{{ $tertiaryCountLabel }}</div>
+                        <div class="detail-summary__value text-danger">{{ number_format($tertiaryCountValue) }}
                         </div>
-                        <div class="col-md-2 col-xl-2">
-                            <div class="detail-summary border-top-success shadow h-96 py-2">
-                                <div class="detail-summary__label text-muted">{{ $secondaryCountLabel }}</div>
+                    </div>
+                </div>
+
+                <div class="col-md-2 col-xl-2">
+                    <div class="detail-summary shadow h-96 py-2">
+                        <div class="detail-summary__label text-muted">Expected Amount</div>
+                        <div class="detail-summary__value text-primary">
+                            {{ number_format($listStats['expected_amount'] ?? 0, 2) }}</div>
+                    </div>
+                </div>
+                <div class="col-md-4 col-xl-4">
+                    <div class="detail-summary shadow h-96 py-2">
+                        <div class="detail-summary__split">
+                            <div class="detail-summary__metric">
+                                <div class="detail-summary__label text-muted">{{ $paidAmountLabel }}</div>
                                 <div class="detail-summary__value text-success">
-                                    {{ number_format($secondaryCountValue) }}</div>
+                                    {{ number_format($listStats['paid_amount'] ?? 0, 2) }}</div>
                             </div>
-                        </div>
-                        <div class="col-md-2 col-xl-2">
-                            <div class="detail-summary border-top-danger shadow h-96 py-2">
-                                <div class="detail-summary__label text-muted">{{ $tertiaryCountLabel }}</div>
-                                <div class="detail-summary__value text-danger">{{ number_format($tertiaryCountValue) }}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-md-2 col-xl-2">
-                            <div class="detail-summary border-top-primary shadow h-96 py-2">
-                                <div class="detail-summary__label text-muted">Expected Amount</div>
-                                <div class="detail-summary__value text-primary">
-                                    {{ number_format($listStats['expected_amount'] ?? 0, 2) }}</div>
-                            </div>
-                        </div>
-                        <div class="col-md-4 col-xl-4">
-                            <div class="detail-summary border-top-success shadow h-96 py-2">
-                                <div class="detail-summary__split">
-                                    <div class="detail-summary__metric">
-                                        <div class="detail-summary__label text-muted">{{ $paidAmountLabel }}</div>
-                                        <div class="detail-summary__value text-success">
-                                            {{ number_format($listStats['paid_amount'] ?? 0, 2) }}</div>
-                                    </div>
-                                    <div class="detail-summary__metric detail-summary__metric--count">
-                                        <div class="detail-summary__label text-muted">Success Rate</div>
-                                        <div class="detail-summary__value text-success">
-                                            {{ number_format($listStats['success_rate'] ?? 0, 2) }}%</div>
-                                    </div>
-                                </div>
+                            <div class="detail-summary__metric detail-summary__metric--count">
+                                <div class="detail-summary__label text-muted">Success Rate</div>
+                                <div class="detail-summary__value text-success">
+                                    {{ number_format($listStats['success_rate'] ?? 0, 2) }}%</div>
                             </div>
                         </div>
                     </div>
                 </div>
-                {{ Form::close() }}
             </div>
 
             <div class="card sp-list-card">

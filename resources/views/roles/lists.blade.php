@@ -23,25 +23,25 @@
             <div class="border-top-0">
                 <div class="row g-3">
                     <div class="col-md-3">
-                        <div class="detail-summary border-top-primary shadow h-96 py-2">
+                        <div class="detail-summary shadow h-96 py-2">
                             <div class="detail-summary__label text-muted">Total Roles</div>
                             <div class="detail-summary__value text-primary">{{ number_format($listStats['total'] ?? 0) }}</div>
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <div class="detail-summary border-top-success shadow h-96 py-2">
+                        <div class="detail-summary shadow h-96 py-2">
                             <div class="detail-summary__label text-muted">Configured</div>
                             <div class="detail-summary__value text-success">{{ number_format($listStats['configured'] ?? 0) }}</div>
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <div class="detail-summary border-top-warning shadow h-96 py-2">
+                        <div class="detail-summary shadow h-96 py-2">
                             <div class="detail-summary__label text-muted">Without Permissions</div>
                             <div class="detail-summary__value text-warning">{{ number_format($listStats['without_permissions'] ?? 0) }}</div>
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <div class="detail-summary border-top-secondary shadow h-96 py-2">
+                        <div class="detail-summary shadow h-96 py-2">
                             <div class="detail-summary__label text-muted">Assigned Methods</div>
                             <div class="detail-summary__value text-secondary">{{ number_format($listStats['assigned_methods'] ?? 0) }}</div>
                         </div>

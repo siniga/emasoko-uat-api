@@ -107,7 +107,7 @@
     <div class="bi-pane is-active" data-bi-pane="growth">
         <div class="row mb-3">
             <div class="col-md-3">
-                <div class="detail-summary border-top-primary shadow h-96 py-2">
+                <div class="detail-summary shadow h-96 py-2">
                     <div class="detail-summary__label text-muted">Approved Service Providers</div>
                     <div class="detail-summary__value text-primary">{{ number_format($growthSummary['partners_count']) }}
                     </div>
@@ -115,7 +115,7 @@
             </div>
 
             <div class="col-md-3">
-                <div class="detail-summary border-top-success shadow h-96 py-2">
+                <div class="detail-summary shadow h-96 py-2">
                     <div class="detail-summary__label text-muted">Active Mandates</div>
                     <div class="detail-summary__value text-success">
                         {{ number_format($growthSummary['active_mandate_count']) }}</div>
@@ -125,7 +125,7 @@
             </div>
 
             <div class="col-md-3">
-                <div class="detail-summary border-top-primary shadow h-96 py-2">
+                <div class="detail-summary shadow h-96 py-2">
                     <div class="detail-summary__label text-muted">Expected Collections</div>
                     <div class="detail-summary__value text-primary">{{ number_format($growthSummary['period_expected']) }}
                     </div>
@@ -133,7 +133,7 @@
             </div>
 
             <div class="col-md-3">
-                <div class="detail-summary border-top-success shadow h-96 py-2">
+                <div class="detail-summary shadow h-96 py-2">
                     <div class="detail-summary__label text-muted">Collected Amount</div>
                     <div class="detail-summary__value text-success">{{ number_format($growthSummary['period_collected']) }}
                     </div>
@@ -223,23 +223,23 @@
 
     <div class="bi-pane" data-bi-pane="reconciliation">
         <div class="bi-recon-kpi-grid">
-            <div class="detail-summary border-top-primary shadow h-96 py-2">
+            <div class="detail-summary shadow h-96 py-2">
                 <div class="detail-summary__label text-muted">Total mandates</div>
                 <div class="detail-summary__value text-primary">{{ number_format($reconciliationSummary['total_count']) }}</div>
             </div>
-            <div class="detail-summary border-top-success shadow h-96 py-2">
+            <div class="detail-summary shadow h-96 py-2">
                 <div class="detail-summary__label text-muted">Collected</div>
                 <div class="detail-summary__value text-success">{{ number_format($reconciliationSummary['collected_count']) }}</div>
                 <div class="detail-summary__sub">{{ number_format($reconciliationSummary['collected_percent'], 1) }}% ·
                     TZS {{ number_format($reconciliationSummary['collected_amount']) }}</div>
             </div>
-            <div class="detail-summary border-top-danger shadow h-96 py-2">
+            <div class="detail-summary shadow h-96 py-2">
                 <div class="detail-summary__label text-muted">Failed</div>
                 <div class="detail-summary__value text-danger">{{ number_format($reconciliationSummary['failed_count']) }}</div>
                 <div class="detail-summary__sub">{{ number_format($reconciliationSummary['failed_percent'], 1) }}% · TZS
                     {{ number_format($reconciliationSummary['failed_amount']) }}</div>
             </div>
-            <div class="detail-summary border-top-warning shadow h-96 py-2">
+            <div class="detail-summary shadow h-96 py-2">
                 <div class="detail-summary__label text-muted">Pending</div>
                 <div class="detail-summary__value text-warning">{{ number_format($reconciliationSummary['pending_count']) }}</div>
                 <div class="detail-summary__sub">{{ number_format($reconciliationSummary['pending_percent'], 1) }}% · TZS

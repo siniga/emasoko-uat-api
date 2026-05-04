@@ -30,25 +30,25 @@
 
         <div class="row mb-4">
             <div class="col-md-3">
-                <div class="detail-summary border-top-primary shadow h-96 py-2">
+                <div class="detail-summary shadow h-96 py-2">
                     <div class="detail-summary__label text-muted">Mandates</div>
                     <div class="detail-summary__value text-primary">{{ number_format($detailStats['mandates_total']) }}</div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="detail-summary border-top-success shadow h-96 py-2">
+                <div class="detail-summary shadow h-96 py-2">
                     <div class="detail-summary__label text-muted">Approved Mandates</div>
                     <div class="detail-summary__value text-success">{{ number_format($detailStats['mandates_approved']) }}</div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="detail-summary border-top-warning shadow h-96 py-2">
+                <div class="detail-summary shadow h-96 py-2">
                     <div class="detail-summary__label text-muted">Pending Mandates</div>
                     <div class="detail-summary__value text-warning">{{ number_format($detailStats['mandates_pending']) }}</div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="detail-summary border-top-success shadow h-96 py-2">
+                <div class="detail-summary shadow h-96 py-2">
                     <div class="detail-summary__label text-muted">Approved Value</div>
                     <div class="detail-summary__value text-success">{{ number_format($detailStats['mandates_approved_value']) }}</div>
                 </div>

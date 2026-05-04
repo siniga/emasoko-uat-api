@@ -28,7 +28,7 @@
     <div class="row mb-3">
         <div class="col-md-3">
             <a href="{{ route('payment-mandate.lists') }}">
-                <div class="detail-summary border-top-primary shadow h-96 py-2">
+                <div class="detail-summary shadow h-96 py-2">
                     <div class="detail-summary__label text-muted">Payment Mandate</div>
                     <div class="detail-summary__split">
                         <div class="detail-summary__metric">
@@ -46,7 +46,7 @@
 
         <div class="col-md-3">
             <a href="{{ route('payment-mandate.lists', ['status' => 'approved']) }}">
-                <div class="detail-summary border-top-success shadow h-96 py-2">
+                <div class="detail-summary shadow h-96 py-2">
                     <div class="detail-summary__label text-muted">Approved Mandate</div>
                     <div class="detail-summary__split">
                         <div class="detail-summary__metric">
@@ -64,7 +64,7 @@
 
         <div class="col-md-3">
             <a href="{{ route('payment-mandate.lists', ['status' => 'pending']) }}">
-                <div class="detail-summary border-top-warning shadow h-96 py-2">
+                <div class="detail-summary shadow h-96 py-2">
                     <div class="detail-summary__label text-muted">Pending Mandate</div>
                     <div class="detail-summary__split">
                         <div class="detail-summary__metric">
@@ -82,7 +82,7 @@
 
         <div class="col-md-3">
             <a href="{{ route('payment-mandate.lists', ['status' => 'failed']) }}">
-                <div class="detail-summary border-top-danger shadow h-96 py-2">
+                <div class="detail-summary shadow h-96 py-2">
                     <div class="detail-summary__label text-muted">Failed Mandate</div>
                     <div class="detail-summary__split">
                         <div class="detail-summary__metric">
@@ -102,7 +102,7 @@
     <div class="row mb-3">
         <div class="col-md-3">
             <a href="{{ route('collections.expected-monthly') }}">
-                <div class="detail-summary border-top-primary shadow h-96 py-2">
+                <div class="detail-summary shadow h-96 py-2">
                     <div class="detail-summary__label text-muted">Expected Collection - {{ $stats['month'] }}</div>
                     <div class="detail-summary__split">
                         <div class="detail-summary__metric">
@@ -119,7 +119,7 @@
 
         <div class="col-md-3">
             <a href="{{ route('collections.actual-monthly') }}">
-                <div class="detail-summary border-top-success shadow h-96 py-2">
+                <div class="detail-summary shadow h-96 py-2">
                     <div class="detail-summary__label text-muted">Actual Collection - {{ $stats['month'] }}</div>
                     <div class="detail-summary__split">
                         <div class="detail-summary__metric">
@@ -136,7 +136,7 @@
 
         <div class="col-md-3">
             <a href="{{ route('collections.expected-daily') }}">
-                <div class="detail-summary border-top-primary shadow h-96 py-2">
+                <div class="detail-summary shadow h-96 py-2">
                     <div class="detail-summary__label text-muted">Expected Collection - Today</div>
                     <div class="detail-summary__split">
                         <div class="detail-summary__metric">
@@ -154,7 +154,7 @@
 
         <div class="col-md-3">
             <a href="{{ route('collections.actual-daily') }}">
-                <div class="detail-summary border-top-success shadow h-96 py-2">
+                <div class="detail-summary shadow h-96 py-2">
                     <div class="detail-summary__label text-muted">Actual Collection - Today</div>
                     <div class="detail-summary__split">
                         <div class="detail-summary__metric">
@@ -172,7 +172,7 @@
 
     <div class="row mb-3">
         <div class="col-md-3">
-            <div class="detail-summary border-top-primary shadow h-96 py-2">
+            <div class="detail-summary shadow h-96 py-2">
                 <div class="detail-summary__label text-muted">Total Subscribers</div>
                 <div class="detail-summary__split">
                     <div class="detail-summary__metric">
@@ -187,7 +187,7 @@
         </div>
 
         <div class="col-md-3">
-            <div class="detail-summary border-top-success shadow h-96 py-2">
+            <div class="detail-summary shadow h-96 py-2">
                 <div class="detail-summary__label text-muted">Amount Collected</div>
                 <div class="detail-summary__split">
                     <div class="detail-summary__metric">
@@ -202,7 +202,7 @@
         </div>
 
         <div class="col-md-3">
-            <div class="detail-summary border-top-primary shadow h-96 py-2">
+            <div class="detail-summary shadow h-96 py-2">
                 <div class="detail-summary__label text-muted"> Avg Collection</div>
                 <div class="detail-summary__split">
                     <div class="detail-summary__metric">
@@ -216,7 +216,7 @@
         </div>
 
         <div class="col-md-3">
-            <div class="detail-summary border-top-success shadow h-96 py-2">
+            <div class="detail-summary shadow h-96 py-2">
                 <div class="detail-summary__label text-muted">Revenue</div>
                 <div class="detail-summary__split">
                     <div class="detail-summary__metric">
