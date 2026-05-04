@@ -11,6 +11,7 @@
 @php
     $filterRoute = 'collections.expected-daily';
     $detailRoute = 'collections.expected-daily-detail';
+    $summaryExportRoute = 'collections.export-expected-daily-summary';
 @endphp
 
 @section('content')

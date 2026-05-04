@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Classes\Messaging;
 use App\Exports\CollectionCreatedExport;
 use App\Exports\CollectionProcessedExport;
-use App\Exports\CollectionPayments;
 use App\Http\Requests\CollectionRequest;
 use App\Jobs\CollectionStatusJob;
 use App\Jobs\PushCollectionJob;
@@ -23,6 +22,7 @@ use App\Services\CollectionBatchService;
 use App\Services\BankPayloadService;
 use App\Services\CollectionAnalyticsService;
 use App\Services\DeductionService;
+use App\Services\Reports\ReportExportService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
@@ -41,7 +41,8 @@ class CollectionController extends Controller
         protected BankApiService $bankApi,
         protected DeductionService $deductionService,
         protected CollectionAnalyticsService $collectionAnalytics,
-        protected CollectionBatchService $collectionBatchService
+        protected CollectionBatchService $collectionBatchService,
+        protected ReportExportService $reportExportService
     )
     {
         $this->middleware('auth');
@@ -539,16 +540,25 @@ class CollectionController extends Controller
     public function export_expected_monthly($uuid, Request $request)
     {
         $post_data = $this->collectionAnalytics->defaultFilters(CollectionAnalyticsService::PERIOD_MONTHLY, $request->all());
-        $partner = Partner::where(['uuid' => $uuid])->firstOrFail();
-        $arr_installments = $this->collectionAnalytics->exportRows(
+        return $this->downloadCollectionDetailExport(
             CollectionAnalyticsService::TYPE_EXPECTED,
             CollectionAnalyticsService::PERIOD_MONTHLY,
             $uuid,
-            $post_data
+            $post_data,
+            $request->input('format', 'xls')
         );
-        $filename = "Expected_Collection_" . date('F', mktime(0, 0, 0, $post_data['month'], 1)) . "_" . $partner->business_name . ".xlsx";
+    }
 
-        return Excel::download(new CollectionPayments($arr_installments), $filename);
+    public function export_expected_monthly_summary(Request $request)
+    {
+        $post_data = $this->collectionAnalytics->defaultFilters(CollectionAnalyticsService::PERIOD_MONTHLY, $request->all());
+
+        return $this->downloadCollectionSummaryExport(
+            CollectionAnalyticsService::TYPE_EXPECTED,
+            CollectionAnalyticsService::PERIOD_MONTHLY,
+            $post_data,
+            $request->input('format', 'xls')
+        );
     }
 
     public function actual_monthly(Request $request)
@@ -611,17 +621,25 @@ class CollectionController extends Controller
     public function export_actual_monthly($uuid, Request $request)
     {
         $post_data = $this->collectionAnalytics->defaultFilters(CollectionAnalyticsService::PERIOD_MONTHLY, $request->all());
-        $partner = Partner::where(['uuid' => $uuid])->firstOrFail();
-        $arr_installments = $this->collectionAnalytics->exportRows(
+        return $this->downloadCollectionDetailExport(
             CollectionAnalyticsService::TYPE_ACTUAL,
             CollectionAnalyticsService::PERIOD_MONTHLY,
             $uuid,
-            $post_data
+            $post_data,
+            $request->input('format', 'xls')
         );
-        $current_month_year = date('F', mktime(0, 0, 0, $post_data['month'], 1)) . '_' . $post_data['year'];
-        $filename = "Actual_Collection_" . $current_month_year . "_" . $partner->business_name . ".xlsx";
+    }
 
-        return Excel::download(new CollectionPayments($arr_installments), $filename);
+    public function export_actual_monthly_summary(Request $request)
+    {
+        $post_data = $this->collectionAnalytics->defaultFilters(CollectionAnalyticsService::PERIOD_MONTHLY, $request->all());
+
+        return $this->downloadCollectionSummaryExport(
+            CollectionAnalyticsService::TYPE_ACTUAL,
+            CollectionAnalyticsService::PERIOD_MONTHLY,
+            $post_data,
+            $request->input('format', 'xls')
+        );
     }
 
     public function expected_daily(Request $request)
@@ -682,16 +700,25 @@ class CollectionController extends Controller
     public function export_expected_daily($uuid, Request $request)
     {
         $post_data = $this->collectionAnalytics->defaultFilters(CollectionAnalyticsService::PERIOD_DAILY, $request->all());
-        $partner = Partner::where(['uuid' => $uuid])->firstOrFail();
-        $arr_installments = $this->collectionAnalytics->exportRows(
+        return $this->downloadCollectionDetailExport(
             CollectionAnalyticsService::TYPE_EXPECTED,
             CollectionAnalyticsService::PERIOD_DAILY,
             $uuid,
-            $post_data
+            $post_data,
+            $request->input('format', 'xls')
         );
-        $filename = "Expected_Collection_" . date('d_m_Y', strtotime($post_data['payment_at'])) . "_" . $partner->business_name . ".xlsx";
+    }
 
-        return Excel::download(new CollectionPayments($arr_installments), $filename);
+    public function export_expected_daily_summary(Request $request)
+    {
+        $post_data = $this->collectionAnalytics->defaultFilters(CollectionAnalyticsService::PERIOD_DAILY, $request->all());
+
+        return $this->downloadCollectionSummaryExport(
+            CollectionAnalyticsService::TYPE_EXPECTED,
+            CollectionAnalyticsService::PERIOD_DAILY,
+            $post_data,
+            $request->input('format', 'xls')
+        );
     }
 
     public function actual_daily(Request $request)
@@ -752,16 +779,173 @@ class CollectionController extends Controller
     public function export_actual_daily($uuid, Request $request)
     {
         $post_data = $this->collectionAnalytics->defaultFilters(CollectionAnalyticsService::PERIOD_DAILY, $request->all());
-        $partner = Partner::where(['uuid' => $uuid])->firstOrFail();
-        $arr_installments = $this->collectionAnalytics->exportRows(
+        return $this->downloadCollectionDetailExport(
             CollectionAnalyticsService::TYPE_ACTUAL,
             CollectionAnalyticsService::PERIOD_DAILY,
             $uuid,
-            $post_data
+            $post_data,
+            $request->input('format', 'xls')
         );
-        $filename = "Actual_Collection_" . date('d_m_Y', strtotime($post_data['payment_at'])) . "_" . $partner->business_name . ".xlsx";
+    }
 
-        return Excel::download(new CollectionPayments($arr_installments), $filename);
+    public function export_actual_daily_summary(Request $request)
+    {
+        $post_data = $this->collectionAnalytics->defaultFilters(CollectionAnalyticsService::PERIOD_DAILY, $request->all());
+
+        return $this->downloadCollectionSummaryExport(
+            CollectionAnalyticsService::TYPE_ACTUAL,
+            CollectionAnalyticsService::PERIOD_DAILY,
+            $post_data,
+            $request->input('format', 'xls')
+        );
+    }
+
+    protected function downloadCollectionSummaryExport(string $type, string $period, array $filters, string $format)
+    {
+        $title = $this->collectionSummaryTitle($type, $period, $filters);
+        $filename = $this->collectionSummaryFilename($type, $period, $filters, $format);
+        $payload = $this->collectionSummaryExportPayload($type, $period, $filters);
+
+        return strtolower($format) === 'pdf'
+            ? $this->reportExportService->downloadPdf($title, $payload['headings'], $payload['rows'], $filename)
+            : $this->reportExportService->downloadXls($payload['headings'], $payload['rows'], $filename);
+    }
+
+    protected function downloadCollectionDetailExport(string $type, string $period, string $partnerUuid, array $filters, string $format)
+    {
+        $title = $this->collectionDetailTitle($type, $period, $filters);
+        $filename = $this->collectionDetailFilename($type, $period, $partnerUuid, $filters, $format);
+        $payload = $this->collectionDetailExportPayload($type, $period, $partnerUuid, $filters);
+
+        return strtolower($format) === 'pdf'
+            ? $this->reportExportService->downloadPdf($title, $payload['headings'], $payload['rows'], $filename)
+            : $this->reportExportService->downloadXls($payload['headings'], $payload['rows'], $filename);
+    }
+
+    protected function collectionSummaryExportPayload(string $type, string $period, array $filters): array
+    {
+        $summary = $this->collectionAnalytics->summary($type, $period, $filters);
+        $isActualCollection = $type === CollectionAnalyticsService::TYPE_ACTUAL;
+        $collectionsLabel = $isActualCollection ? 'Settled Records' : 'Collections';
+        $secondaryCountLabel = $isActualCollection ? 'Paid In Full' : 'Success';
+        $tertiaryCountLabel = $isActualCollection ? 'Partial Paid' : 'Failed';
+        $paidAmountLabel = $isActualCollection ? 'Settled Amount' : 'Paid Amount';
+        $secondaryRowKey = $isActualCollection ? 'fully_paid_count' : 'success_count';
+        $tertiaryRowKey = $isActualCollection ? 'partial_paid_count' : 'failed_count';
+
+        $headings = [
+            'Service Provider',
+            $collectionsLabel,
+            $secondaryCountLabel,
+            $tertiaryCountLabel,
+            'Expected Amount',
+            $paidAmountLabel,
+            'Outstanding Amount',
+            'Success Rate (%)',
+        ];
+
+        $rows = collect($summary['rows'])->map(function (array $row) use ($secondaryRowKey, $tertiaryRowKey) {
+            return [
+                strtoupper((string) $row['partner_name']),
+                (int) $row['number_of_collection'],
+                (int) ($row[$secondaryRowKey] ?? 0),
+                (int) ($row[$tertiaryRowKey] ?? 0),
+                round((float) $row['total_amount'], 2),
+                round((float) $row['paid_amount'], 2),
+                round((float) $row['outstanding_amount'], 2),
+                round((float) $row['percent'], 2),
+            ];
+        })->values()->all();
+
+        return compact('headings', 'rows');
+    }
+
+    protected function collectionDetailExportPayload(string $type, string $period, string $partnerUuid, array $filters): array
+    {
+        $detail = $this->collectionAnalytics->detail($type, $period, $partnerUuid, $filters);
+        $isActualCollection = $type === CollectionAnalyticsService::TYPE_ACTUAL;
+        $paidAmountLabel = $isActualCollection ? 'Settled Amount' : 'Paid Amount';
+
+        $headings = [
+            'Service Provider',
+            'Mandate Reference',
+            'Payment Channel',
+            'Account Name',
+            'Account Number',
+            'Expected Amount',
+            $paidAmountLabel,
+            'Current Balance',
+            'Outstanding Amount',
+            'Deduction Date',
+            'Collection Date',
+            'Status',
+            'Remarks',
+        ];
+
+        $rows = collect($detail['rows'])->map(function (array $row) {
+            return [
+                $row['business_name'],
+                $row['reference'],
+                $row['channel'],
+                $row['account_name'],
+                $row['account_number'],
+                round((float) $row['amount'], 2),
+                round((float) $row['last_paid_amount'], 2),
+                round((float) $row['current_balance'], 2),
+                round((float) $row['outstanding_amount'], 2),
+                $row['payment_date'],
+                $row['effective_payment_date'],
+                strtoupper((string) $row['status']) === 'CLOSED' ? 'FULLY PAID' : (strtoupper((string) $row['status']) === 'PARTIAL_PAID' ? 'PARTIAL PAID' : $row['status_label']),
+                $row['remarks'],
+            ];
+        })->values()->all();
+
+        return compact('headings', 'rows');
+    }
+
+    protected function collectionSummaryTitle(string $type, string $period, array $filters): string
+    {
+        if ($period === CollectionAnalyticsService::PERIOD_MONTHLY) {
+            $displayMonth = date('F', mktime(0, 0, 0, $filters['month'], 1));
+            return ($type === CollectionAnalyticsService::TYPE_ACTUAL ? 'Actual' : 'Expected') . " {$displayMonth} Collection Summary - {$filters['year']}";
+        }
+
+        return ($type === CollectionAnalyticsService::TYPE_ACTUAL ? 'Actual' : 'Expected') . ' Daily Collection Summary - ' . Carbon::parse($filters['payment_at'])->format('d F, Y');
+    }
+
+    protected function collectionDetailTitle(string $type, string $period, array $filters): string
+    {
+        if ($period === CollectionAnalyticsService::PERIOD_MONTHLY) {
+            $displayMonth = date('F', mktime(0, 0, 0, $filters['month'], 1));
+            return ($type === CollectionAnalyticsService::TYPE_ACTUAL ? 'Actual' : 'Expected') . " {$displayMonth} Collection Detail - {$filters['year']}";
+        }
+
+        return ($type === CollectionAnalyticsService::TYPE_ACTUAL ? 'Actual' : 'Expected') . ' Daily Collection Detail - ' . Carbon::parse($filters['payment_at'])->format('d F, Y');
+    }
+
+    protected function collectionSummaryFilename(string $type, string $period, array $filters, string $format): string
+    {
+        $extension = strtolower($format) === 'pdf' ? 'pdf' : 'xlsx';
+        $prefix = $type === CollectionAnalyticsService::TYPE_ACTUAL ? 'Actual_Collection_Summary_' : 'Expected_Collection_Summary_';
+
+        if ($period === CollectionAnalyticsService::PERIOD_MONTHLY) {
+            return $prefix . date('F', mktime(0, 0, 0, $filters['month'], 1)) . '_' . $filters['year'] . '.' . $extension;
+        }
+
+        return $prefix . date('d_m_Y', strtotime($filters['payment_at'])) . '.' . $extension;
+    }
+
+    protected function collectionDetailFilename(string $type, string $period, string $partnerUuid, array $filters, string $format): string
+    {
+        $partner = Partner::where(['uuid' => $partnerUuid])->firstOrFail();
+        $extension = strtolower($format) === 'pdf' ? 'pdf' : 'xlsx';
+        $prefix = $type === CollectionAnalyticsService::TYPE_ACTUAL ? 'Actual_Collection_' : 'Expected_Collection_';
+
+        if ($period === CollectionAnalyticsService::PERIOD_MONTHLY) {
+            return $prefix . date('F', mktime(0, 0, 0, $filters['month'], 1)) . '_' . $filters['year'] . '_' . $partner->business_name . '.' . $extension;
+        }
+
+        return $prefix . date('d_m_Y', strtotime($filters['payment_at'])) . '_' . $partner->business_name . '.' . $extension;
     }
 
     public function reconciliation(Request $request)

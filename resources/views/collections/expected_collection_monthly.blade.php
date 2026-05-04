@@ -11,6 +11,7 @@
 @php
     $filterRoute = 'collections.expected-monthly';
     $detailRoute = 'collections.expected-monthly-detail';
+    $summaryExportRoute = 'collections.export-expected-monthly-summary';
 @endphp
 
 @section('content')

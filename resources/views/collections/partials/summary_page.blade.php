@@ -149,6 +149,21 @@
 
             <div class="card sp-list-card">
                 <div class="card-body">
+                    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+                        <div></div>
+
+                        <div class="text-sm-end">
+                            <a href="{{ route($summaryExportRoute, array_merge($post_data, ['format' => 'xls'])) }}"
+                                class="btn btn-success btn-sm">
+                                <i class="bx bx-export"></i> Export XLS
+                            </a>
+                            <a href="{{ route($summaryExportRoute, array_merge($post_data, ['format' => 'pdf'])) }}"
+                                class="btn btn-outline-danger btn-sm ms-sm-2 mt-2 mt-sm-0">
+                                <i class="bx bxs-file-pdf"></i> Export PDF
+                            </a>
+                        </div>
+                    </div>
+
                     <div class="table-responsive sp-list-table collection-summary-table">
                         <table class="table table-bordered align-middle mb-0">
                             <thead>

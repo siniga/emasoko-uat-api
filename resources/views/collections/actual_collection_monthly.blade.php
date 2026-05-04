@@ -11,6 +11,7 @@
 @php
     $filterRoute = 'collections.actual-monthly';
     $detailRoute = 'collections.actual-monthly-detail';
+    $summaryExportRoute = 'collections.export-actual-monthly-summary';
 @endphp
 
 @section('content')

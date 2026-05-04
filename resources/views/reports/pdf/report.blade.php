@@ -180,7 +180,7 @@
                         @if ($logoBase64)
                             <img src="{{ $logoBase64 }}" alt="eMakato Logo" class="brand-logo">
                         @endif
-                        <div class="brand-name">eMakato Reporting Workspace</div>
+                        <div class="brand-name">eMakato Report</div>
                         <div class="brand-subtitle">
                             Direct debit operations, collection performance,
                             and mandate intelligence generated from the core reporting module.
@@ -198,26 +198,11 @@
                             <div class="report-meta-row">
                                 <span class="meta-label">Rows:</span> {{ number_format(count($rows)) }}
                             </div>
-                            <div class="report-meta-row">
-                                <span class="meta-label">Format:</span> PDF Export
-                            </div>
+
                         </div>
                     </td>
                 </tr>
             </table>
-        </div>
-
-        <div class="report-title-bar">
-            <div class="report-title">{{ $title }}</div>
-            <p class="report-subtitle">
-                This document presents the exported report in a structured, printable format aligned with the
-                eMakato reporting workspace.
-            </p>
-        </div>
-
-        <div class="report-summary">
-            Showing <span class="summary-highlight">{{ number_format(count($rows)) }}</span> exported record(s)
-            with <span class="summary-highlight">{{ number_format(count($headings)) }}</span> data column(s).
         </div>
 
         <table>

@@ -11,6 +11,7 @@
 @php
     $filterRoute = 'collections.actual-daily';
     $detailRoute = 'collections.actual-daily-detail';
+    $summaryExportRoute = 'collections.export-actual-daily-summary';
 @endphp
 
 @section('content')
