@@ -224,9 +224,8 @@
     }
 
     .pmc-table {
-        border-radius: 6px;
+        border-radius: 0;
         overflow: hidden;
-        /* border: 1px solid #dfe8f4; */
         margin-bottom: 0;
     }
 
@@ -259,10 +258,6 @@
 
     .pmc-shell .row.g-3 {
         --bs-gutter-y: 0.8rem;
-    }
-
-    .pmc-shell .btn {
-        border-radius: 10px;
     }
 
     .pmc-shell .select2-container .select2-selection--single {

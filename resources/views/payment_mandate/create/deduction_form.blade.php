@@ -26,9 +26,8 @@
 
         <div class="card pmc-hero mb-4">
             <div class="card-body">
-                <div class="pmc-kicker">Payment Mandate Setup</div>
+                <div class="pmc-kicker">New Mandate Creation</div>
                 <div class="pmc-title">Step 2: Define Deduction Terms</div>
-                <p class="pmc-subtitle">Configure the mandate amount, schedule, and frequency exactly as the customer is consenting to.</p>
                 @include('payment_mandate.create.partials.stepper', ['currentStep' => 2])
             </div>
         </div>

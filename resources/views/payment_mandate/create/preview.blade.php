@@ -26,10 +26,8 @@
     <div class="pmc-shell" x-data="initData();">
         <div class="card pmc-hero mb-4">
             <div class="card-body">
-                <div class="pmc-kicker">Payment Mandate Setup</div>
+                <div class="pmc-kicker">New Mandate Creation</div>
                 <div class="pmc-title">Step 3: Review and Submit</div>
-                <p class="pmc-subtitle">Review the customer account and deduction terms before saving, submitting, or starting OTP consent.</p>
-
                 @include('payment_mandate.create.partials.stepper', ['currentStep' => 3])
             </div>
         </div>
