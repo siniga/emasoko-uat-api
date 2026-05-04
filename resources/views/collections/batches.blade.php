@@ -43,15 +43,20 @@
                                 {{ Form::date('end_at', old('end_at', $post_data['end_at']), ['class' => 'form-control']) }}
                             </div>
                         </div>
-                    
+
                         <div class="col-lg-3">
                             <div class="mb-3">
-                                {{ Form::select('cl_status', [
-                                    '' => '-- Status --',
-                                    'uploaded' => 'Uploaded',
-                                    'processed' => 'Processed',
-                                    'failed' => 'Failed',
-                                ], old('cl_status'), ['class' => 'form-control select2', 'id' => 'cl_status']) }}
+                                {{ Form::select(
+                                    'cl_status',
+                                    [
+                                        '' => '-- Status --',
+                                        'uploaded' => 'Uploaded',
+                                        'processed' => 'Processed',
+                                        'failed' => 'Failed',
+                                    ],
+                                    old('cl_status'),
+                                    ['class' => 'form-control select2', 'id' => 'cl_status'],
+                                ) }}
                             </div>
                         </div>
 
@@ -77,33 +82,38 @@
                     <div class="border-top pt-3 mt-3">
                         <div class="row g-3">
                             <div class="col-md-2">
-                                <div class="sp-list-summary">
-                                    <div class="sp-list-summary__label">Total Batches</div>
-                                    <div class="sp-list-summary__value">{{ number_format($listStats['total'] ?? 0) }}</div>
+                                <div class="detail-summary border-top-primary shadow h-96 py-2">
+                                    <div class="detail-summary__label text-muted">Total Batches</div>
+                                    <div class="detail-summary__value text-primary">
+                                        {{ number_format($listStats['total'] ?? 0) }}</div>
                                 </div>
                             </div>
                             <div class="col-md-2">
-                                <div class="sp-list-summary">
-                                    <div class="sp-list-summary__label">Uploaded</div>
-                                    <div class="sp-list-summary__value text-info">{{ number_format($listStats['uploaded'] ?? 0) }}</div>
+                                <div class="detail-summary border-top-secondary shadow h-96 py-2">
+                                    <div class="detail-summary__label text-muted">Uploaded</div>
+                                    <div class="detail-summary__value text-secondary">
+                                        {{ number_format($listStats['uploaded'] ?? 0) }}</div>
                                 </div>
                             </div>
                             <div class="col-md-2">
-                                <div class="sp-list-summary">
-                                    <div class="sp-list-summary__label">Processed</div>
-                                    <div class="sp-list-summary__value text-success">{{ number_format($listStats['processed'] ?? 0) }}</div>
+                                <div class="detail-summary border-top-success shadow h-96 py-2">
+                                    <div class="detail-summary__label text-muted">Processed</div>
+                                    <div class="detail-summary__value text-success">
+                                        {{ number_format($listStats['processed'] ?? 0) }}</div>
                                 </div>
                             </div>
                             <div class="col-md-2">
-                                <div class="sp-list-summary">
-                                    <div class="sp-list-summary__label">Failed</div>
-                                    <div class="sp-list-summary__value text-danger">{{ number_format($listStats['failed'] ?? 0) }}</div>
+                                <div class="detail-summary border-top-danger shadow h-96 py-2">
+                                    <div class="detail-summary__label text-muted">Failed</div>
+                                    <div class="detail-summary__value text-danger">
+                                        {{ number_format($listStats['failed'] ?? 0) }}</div>
                                 </div>
                             </div>
                             <div class="col-md-4">
-                                <div class="sp-list-summary">
-                                    <div class="sp-list-summary__label">Total No. of Collections</div>
-                                    <div class="sp-list-summary__value">{{ number_format($listStats['collections'] ?? 0) }}</div>
+                                <div class="detail-summary border-top-draft shadow h-96 py-2">
+                                    <div class="detail-summary__label text-muted">Total No. of Collections</div>
+                                    <div class="detail-summary__value text-draft">
+                                        {{ number_format($listStats['collections'] ?? 0) }}</div>
                                 </div>
                             </div>
                         </div>
@@ -126,31 +136,33 @@
                         </div>
 
                         <div class="row mb-3">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <span class="font-weight-500">No. of collection batches:
                                     {{ number_format($number_of_batches) }}</span>
                             </div>
 
-                            <div class="col-md-6">
+                            <div class="col-md-8 text-sm-end">
                                 <div class="text-sm-end d-none d-sm-block">
-                                    <a class="btn btn-outline-primary btn-sm" href="{{ route('collections.create-failed') }}">
-                                        <i class="bx bx-list-check"></i> Create Failed
-                                    </a>
                                     @if (($monthlyFailedEligibility['allowed'] ?? false) === true)
-                                        <a class="btn btn-outline-secondary btn-sm" href="{{ route('collections.create-monthly-failed') }}">
-                                            <i class="bx bx-refresh"></i>
+                                        <a class="btn btn-outline-primary btn-sm"
+                                            href="{{ route('collections.create-monthly-failed') }}">
+                                            <i class='bx bxs-bookmark-plus'></i>
                                             Create Failed {{ $monthlyFailedEligibility['month_label'] ?? '' }}
                                             ({{ number_format($monthlyFailedEligibility['eligible_count'] ?? 0) }})
                                         </a>
                                     @else
                                         <button type="button" class="btn btn-outline-secondary btn-sm" disabled
                                             title="{{ $monthlyFailedEligibility['reason'] ?? 'Not available' }}">
-                                            <i class="bx bx-refresh"></i>
+                                            <i class='bx bxs-bookmark-plus'></i>
                                             Create Failed {{ $monthlyFailedEligibility['month_label'] ?? '' }}
                                         </button>
                                     @endif
                                     <a class="btn btn-primary btn-sm" href="{{ route('collections.create') }}">
-                                        <i class="bx bx-plus"></i> Create Batch
+                                        <i class="bx bx-list-plus"></i> Create Collection Batch
+                                    </a>
+
+                                    <a class="btn btn-secondary btn-sm" href="{{ route('collections.create-failed') }}">
+                                        <i class="bx bx-list-check"></i> Create Failed Batches
                                     </a>
                                 </div>
                             </div>
@@ -187,12 +199,14 @@
                                                 <td>{{ $values->partner->business_name }}</td>
                                                 <td>{{ $values->collectionReference ?? '' }}</td>
                                                 <td>
-                                                    <span class="badge {{ $values->pushed ? 'badge-soft-success' : 'badge-soft-secondary' }}">
+                                                    <span
+                                                        class="badge {{ $values->pushed ? 'badge-soft-success' : 'badge-soft-secondary' }}">
                                                         {{ $values->upload_state_label }}
                                                     </span>
                                                 </td>
                                                 <td>
-                                                    <span class="badge {{ $values->processed ? 'badge-soft-success' : 'badge-soft-warning' }}">
+                                                    <span
+                                                        class="badge {{ $values->processed ? 'badge-soft-success' : 'badge-soft-warning' }}">
                                                         {{ $values->processing_state_label }}
                                                     </span>
                                                 </td>
@@ -201,7 +215,8 @@
                                                         {{ $values->lifecycle_label }}
                                                     </span>
                                                 </td>
-                                                <td class="text-sm-end">{{ number_format($values->number_of_collections) }}</td>
+                                                <td class="text-sm-end">{{ number_format($values->number_of_collections) }}
+                                                </td>
                                                 <td>{{ date('d-m-Y', strtotime($values->collectionDate)) }}</td>
                                                 <td>{{ date('d-m-Y', strtotime($values->created_at)) }}</td>
                                                 <td class="text-center">

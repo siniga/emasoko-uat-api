@@ -26,25 +26,6 @@
                 </div>
             </div>
         </div>
-        
-        <div class="card pm-hero mb-4">
-            <div class="card-body p-4">
-                <div class="pm-card__head mb-0">
-                    <div>
-                        <div class="pm-hero__label">Collection Batch</div>
-                        <div class="pm-hero__title">{{ $batch->collectionReference }}</div>
-                        <div class="pm-hero__meta">{{ $batch->partner->business_name ?? 'NIL' }} | Collection date {{ date('d-m-Y', strtotime($batch->collectionDate)) }}</div>
-
-                        <div class="mt-2">
-                            <span class="pm-chip">{{ $batch->corporateReference ?? 'NIL' }}</span>
-                            <span class="pm-chip">{{ number_format($batch->number_of_collections) }} collections</span>
-                            <span class="pm-chip">{{ $batch->upload_state_label }}</span>
-                            <span class="pm-chip">{{ $batch->lifecycle_label }}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <div id="message_wrp" class="mb-3"></div>
 
@@ -81,7 +62,7 @@
                         </template>
 
                         @if (Auth::user()->hasRole(['admin']) && $batch->canBePushed())
-                            <button x-html="btnPush" class="btn btn-outline-light btn-sm"
+                            <button x-html="btnPush" class="btn btn-primary btn-sm"
                                 x-on:click="pushCollectionBatch();"></button>
                         @endif
 

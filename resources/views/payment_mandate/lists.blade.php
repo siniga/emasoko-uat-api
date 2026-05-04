@@ -127,39 +127,39 @@
                     <div class="border-top pt-3 mt-2">
                         <div class="row g-3">
                             <div class="col-md-2">
-                                <div class="sp-list-summary">
-                                    <div class="sp-list-summary__label">Total Mandates</div>
-                                    <div class="sp-list-summary__value">{{ number_format($listStats['total'] ?? 0) }}</div>
+                                <div class="detail-summary border-top-primary shadow h-96 py-2">
+                                    <div class="detail-summary__label text-muted">Total Mandates</div>
+                                    <div class="detail-summary__value text-primary">{{ number_format($listStats['total'] ?? 0) }}</div>
                                 </div>
                             </div>
                             <div class="col-md-2">
-                                <div class="sp-list-summary">
-                                    <div class="sp-list-summary__label">Draft</div>
-                                    <div class="sp-list-summary__value">{{ number_format($listStats['draft'] ?? 0) }}</div>
+                                <div class="detail-summary border-top-draft shadow h-96 py-2">
+                                    <div class="detail-summary__label">Draft</div>
+                                    <div class="detail-summary__value text-draft">{{ number_format($listStats['draft'] ?? 0) }}</div>
                                 </div>
                             </div>
                             <div class="col-md-2">
-                                <div class="sp-list-summary">
-                                    <div class="sp-list-summary__label">Submitted</div>
-                                    <div class="sp-list-summary__value text-info">{{ number_format($listStats['submitted'] ?? 0) }}</div>
+                                <div class="detail-summary border-top-secondary shadow h-96 py-2">
+                                    <div class="detail-summary__label">Submitted</div>
+                                    <div class="detail-summary__value text-secondary">{{ number_format($listStats['submitted'] ?? 0) }}</div>
                                 </div>
                             </div>
                             <div class="col-md-2">
-                                <div class="sp-list-summary">
-                                    <div class="sp-list-summary__label">Awaiting OTP</div>
-                                    <div class="sp-list-summary__value text-warning">{{ number_format($listStats['awaiting_otp'] ?? 0) }}</div>
+                                <div class="detail-summary border-top-warning shadow h-96 py-2">
+                                    <div class="detail-summary__label">Awaiting OTP</div>
+                                    <div class="detail-summary__value text-warning">{{ number_format($listStats['awaiting_otp'] ?? 0) }}</div>
                                 </div>
                             </div>
                             <div class="col-md-2">
-                                <div class="sp-list-summary">
-                                    <div class="sp-list-summary__label">Active</div>
-                                    <div class="sp-list-summary__value text-success">{{ number_format($listStats['active'] ?? 0) }}</div>
+                                <div class="detail-summary border-top-success shadow h-96 py-2">
+                                    <div class="detail-summary__label">Active</div>
+                                    <div class="detail-summary__value text-success">{{ number_format($listStats['active'] ?? 0) }}</div>
                                 </div>
                             </div>
                             <div class="col-md-2">
-                                <div class="sp-list-summary">
-                                    <div class="sp-list-summary__label">Failed</div>
-                                    <div class="sp-list-summary__value text-danger">{{ number_format($listStats['failed'] ?? 0) }}</div>
+                                <div class="detail-summary border-top-danger shadow h-96 py-2">
+                                    <div class="detail-summary__label">Failed</div>
+                                    <div class="detail-summary__value text-danger">{{ number_format($listStats['failed'] ?? 0) }}</div>
                                 </div>
                             </div>
                         </div>

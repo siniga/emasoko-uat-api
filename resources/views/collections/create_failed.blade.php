@@ -19,10 +19,8 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-start mb-3">
                     <div>
-                        <h4 class="mb-1">Select Failed Collection Batches</h4>
                         <p class="text-muted mb-0">Choose one or more eligible failed batches to recreate for the next cycle.</p>
                     </div>
-                    <a href="{{ route('collections.batches') }}" class="btn btn-outline-secondary btn-sm">Back to Batches</a>
                 </div>
 
                 @if (session()->get('success'))
@@ -38,19 +36,18 @@
                     {{ Form::token() }}
 
                     <div class="table-responsive">
-                        <table class="table table-bordered align-middle mb-0">
+                        <table class="table table-bordered dt-responsive nowrap w-100 mb-0" id="dynamicTable">
                             <thead>
                                 <tr>
-                                    <th width="4%">
+                                    <th width="4%" class="text-center">
                                         <input type="checkbox" class="form-check-input" id="check-all">
                                     </th>
-                                    <th>Reference</th>
+                                    <th width="22%">Reference</th>
                                     <th>Service Provider</th>
                                     <th>Collections</th>
                                     <th>Failed</th>
                                     <th>Collection Date</th>
                                     <th>Created Date</th>
-                                    <th>Remarks</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -72,7 +69,6 @@
                                         <td class="text-sm-end text-danger fw-semibold">{{ number_format($row['number_of_failed']) }}</td>
                                         <td>{{ date('d-m-Y', strtotime($row['collectionDate'])) }}</td>
                                         <td>{{ date('d-m-Y', strtotime($row['created_at'])) }}</td>
-                                        <td>{{ $row['remarks'] ?: 'No remarks' }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -81,7 +77,7 @@
 
                     <div class="d-flex justify-content-end gap-2 mt-3">
                         <a href="{{ route('collections.batches') }}" class="btn btn-outline-danger">Cancel</a>
-                        <button type="submit" class="btn btn-primary">Create Failed Collection Batch</button>
+                        <button type="submit" class="btn btn-primary">Create Batches</button>
                     </div>
                     {!! Form::close() !!}
                 @else

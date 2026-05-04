@@ -69,9 +69,15 @@ h6 {
   color: #153567 !important;
 }
 
-.text-secondary {
-  color: #2e2d2d !important;
+.text-draft {
+  color: #616161 !important;
 }
+
+.text-secondary {
+  color: #1976D2 !important;
+}
+
+#616161
 
 .text-warning {
   color: #FF6F00 !important;
@@ -286,6 +292,16 @@ Border Colors
 
 .border-top-primary {
   --accent-color: #153567;
+  border-top: 0.32rem solid var(--accent-color) !important;
+}
+
+.border-left-draft {
+  --accent-color: #616161;
+  border-left: 0.32rem solid var(--accent-color) !important;
+}
+
+.border-top-draft {
+  --accent-color: #616161;
   border-top: 0.32rem solid var(--accent-color) !important;
 }
 

@@ -26,65 +26,7 @@
             </div>
         </div>
 
-        <div class="card pm-hero mb-4">
-            <div class="card-body p-4">
-                <div class="row align-items-center">
-                    <div class="col-lg-12 col-12">
-                        <div class="pm-hero__label">Mandate Overview</div>
-                        <div class="pm-hero__title">{{ $debit_order->reference ?? 'NIL' }}</div>
-                        <div class="pm-hero__meta">{{ $debit_order->partner->business_name ?? 'NIL' }} | {{ $debit_order->customerAccount->account_name ?? 'NIL' }}</div>
-
-                        <div class="mt-2">
-                            <span class="pm-chip">{{ $debit_order->customerAccount->account->name ?? 'NIL' }}</span>
-                            <span class="pm-chip">{{ $debit_order->periodicity ?? 'NIL' }}</span>
-                            <span class="pm-chip">{{ $debit_order->debit_type ?? 'NIL' }}</span>
-                            <span class="pm-chip">{!! strip_tags(mandate_status_badge($debit_order)) !!}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <div id="message_wrp" class="mb-3"></div>
-
-        <div class="row g-3 mb-4">
-            <div class="col-lg-2 col-md-4 col-6">
-                <div class="detail-summary bg-primary shadow h-96 py-2">
-                    <div class="detail-summary__label">Installments</div>
-                    <div class="detail-summary__value">{{ number_format($installmentStats['total'] ?? 0) }}</div>
-                </div>
-            </div>
-            <div class="col-lg-2 col-md-4 col-6">
-                <div class="detail-summary bg-success shadow h-96 py-2">
-                    <div class="detail-summary__label">Paid</div>
-                    <div class="detail-summary__value">{{ number_format($installmentStats['paid'] ?? 0) }}</div>
-                </div>
-            </div>
-            <div class="col-lg-2 col-md-4 col-6">
-                <div class="detail-summary bg-warning shadow h-96 py-2">
-                    <div class="detail-summary__label">Partial</div>
-                    <div class="detail-summary__value">{{ number_format($installmentStats['partial'] ?? 0) }}</div>
-                </div>
-            </div>
-            <div class="col-lg-2 col-md-4 col-6">
-                <div class="detail-summary bg-danger-1 shadow h-96 py-2">
-                    <div class="detail-summary__label">Unpaid</div>
-                    <div class="detail-summary__value">{{ number_format($installmentStats['unpaid'] ?? 0) }}</div>
-                </div>
-            </div>
-            <div class="col-lg-2 col-md-6 col-6">
-                <div class="detail-summary bg-success shadow h-96 py-2">
-                    <div class="detail-summary__label">Paid Amount</div>
-                    <div class="detail-summary__value">{{ number_format($installmentStats['paid_amount'] ?? 0) }}</div>
-                </div>
-            </div>
-            <div class="col-lg-2 col-md-6 col-6">
-                <div class="detail-summary bg-danger shadow h-96 py-2">
-                    <div class="detail-summary__label">Outstanding</div>
-                    <div class="detail-summary__value">{{ number_format($installmentStats['outstanding_amount'] ?? 0) }}</div>
-                </div>
-            </div>
-        </div>
 
         <div class="row g-4">
             <div class="col-lg-12">

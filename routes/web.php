@@ -94,6 +94,9 @@ Route::middleware('auth')->group(function () {
     Route::post('reset-password', [ForgotPasswordController::class, 'submitResetPasswordForm'])->name('reset.password.post');
 
     //companies
+    Route::prefix('companies')->group(function () {
+    });
+
     Route::any('companies/lists', [CompanyController::class, 'index'])->name('companies.lists');
     Route::get('companies/show/{uuid}', [CompanyController::class, 'show'])->name('companies.show');
     Route::get('companies/edit/{uuid}', [CompanyController::class, 'edit'])->name('companies.edit');
@@ -162,6 +165,10 @@ Route::middleware('auth')->group(function () {
     Route::get('payment-channels/{id}/delete', [PaymentChannelController::class, 'delete'])->name('payment-channels.delete');
 
     //payment mandate
+    Route::prefix('payment-mandate')->group(function () {
+    });
+
+    //payment mandate
     Route::any('payment-mandate/lists', [PaymentMandateListController::class, 'lists'])->name('payment-mandate.lists');
     Route::get('payment-mandate/export-xls', [PaymentMandateListController::class, 'export_xls'])->name('payment-mandate.export-xls');
     Route::get('payment-mandate/export-pdf', [PaymentMandateListController::class, 'export_pdf'])->name('payment-mandate.export-pdf');
@@ -207,6 +214,9 @@ Route::middleware('auth')->group(function () {
     Route::any('payment-mandate/approve-archive', [PaymentMandateApprovalController::class, 'approve_archive'])->name('payment-mandate.approve-archive');
 
     //collection batches
+    Route::prefix('collections')->group(function () {
+    });
+
     Route::any('collections/batches', [CollectionController::class, 'batches'])->name('collections.batches');
     Route::any('collections/create', [CollectionController::class, 'create'])->name('collections.create');
     Route::post('collections/store', [CollectionController::class, 'store'])->name('collections.store');
@@ -251,12 +261,18 @@ Route::middleware('auth')->group(function () {
     Route::get('tasks/lists', [TaskController::class, 'lists'])->name('tasks.lists');
 
     //users
+    Route::prefix('users')->group(function () {
+    });
+
     Route::get('users/{id}/change-status', [UserController::class, 'change_status'])->name('users.change-status');
     Route::put('users/{id}/store-status', [UserController::class, 'store_status'])->name('users.store-status');
     Route::get('users/{id}/delete', [UserController::class, 'delete'])->name('users.delete');
     Route::get('users/view/otp', [UserController::class, 'view_otp'])->name('users.view-otp');
 
     //roles
+    Route::prefix('roles')->group(function () {
+    });
+
     Route::get('roles/{id}/assign-perms', [RoleController::class, 'assign_perms'])->name('roles.assign-perms');
     Route::post('roles/{id}/store-perms', [RoleController::class, 'store_perms'])->name('roles.store-perms');
 });
