@@ -70,7 +70,7 @@
                                 </div>
 
                                 <template x-if="canVerifyOtp()">
-                                    <button x-html="verifyTxt" title="Verify OTP" class="btn btn-success btn-sm"
+                                    <button x-html="verifyTxt" title="Verify OTP" class="btn btn-outline-primary btn-sm"
                                         x-on:click="verifyButton();"></button>
                                 </template>
 
