@@ -77,10 +77,8 @@ h6 {
   color: #1976D2 !important;
 }
 
-#616161
-
 .text-warning {
-  color: #FF6F00 !important;
+  color: #d97706 !important;
 }
 
 .text-danger {
@@ -407,6 +405,14 @@ Detail summary
     line-height: 1.15;
     font-weight: 700;
     color: #212121;
+}
+
+.detail-summary__sub {
+    position: relative;
+    z-index: 1;
+    font-size: 12px;
+    font-weight: 500;
+    color: #424242;
 }
 
 .detail-summary__split {

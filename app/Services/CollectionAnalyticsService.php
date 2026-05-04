@@ -17,6 +17,10 @@ class CollectionAnalyticsService
     public const PERIOD_DAILY = 'daily';
 
     protected const ACTUAL_STATUSES = ['CLOSED', 'PARTIAL_PAID'];
+    protected const SUCCESS_STATUSES = ['CLOSED', 'PARTIAL_PAID'];
+    protected const FAILED_STATUSES = ['FAILED', 'FUNDSCHECK'];
+    protected const FULLY_PAID_STATUSES = ['CLOSED'];
+    protected const PARTIAL_PAID_STATUSES = ['PARTIAL_PAID'];
 
     public function paymentChannels()
     {
@@ -34,11 +38,19 @@ class CollectionAnalyticsService
                 $expectedAmount = (float) $items->sum('installment_amount');
                 $paidAmount = (float) $items->sum('current_balance');
                 $outstandingAmount = (float) $items->sum(fn (Installment $installment) => $this->derivedOutstanding($installment));
+                $successCount = $this->countSuccessfulCollections($items);
+                $failedCount = $this->countFailedCollections($items);
+                $fullyPaidCount = $this->countFullyPaidCollections($items);
+                $partialPaidCount = $this->countPartialPaidCollections($items);
 
                 return [
                     'uuid' => $partner->uuid ?? null,
                     'partner_name' => $partner->business_name ?? 'Unknown',
                     'number_of_collection' => $items->count(),
+                    'success_count' => $successCount,
+                    'failed_count' => $failedCount,
+                    'fully_paid_count' => $fullyPaidCount,
+                    'partial_paid_count' => $partialPaidCount,
                     'total_amount' => $expectedAmount,
                     'paid_amount' => $paidAmount,
                     'outstanding_amount' => $outstandingAmount,
@@ -58,6 +70,10 @@ class CollectionAnalyticsService
             'stats' => [
                 'providers' => $rows->count(),
                 'collections' => (int) $rows->sum('number_of_collection'),
+                'success_collections' => (int) $rows->sum('success_count'),
+                'failed_collections' => (int) $rows->sum('failed_count'),
+                'fully_paid_collections' => (int) $rows->sum('fully_paid_count'),
+                'partial_paid_collections' => (int) $rows->sum('partial_paid_count'),
                 'expected_amount' => (float) $rows->sum('total_amount'),
                 'paid_amount' => (float) $rows->sum('paid_amount'),
                 'outstanding_amount' => (float) $rows->sum('outstanding_amount'),
@@ -82,6 +98,10 @@ class CollectionAnalyticsService
             'rows' => $rows->all(),
             'stats' => [
                 'collections' => $records->count(),
+                'success_collections' => $this->countSuccessfulCollections($records),
+                'failed_collections' => $this->countFailedCollections($records),
+                'fully_paid_collections' => $this->countFullyPaidCollections($records),
+                'partial_paid_collections' => $this->countPartialPaidCollections($records),
                 'expected_amount' => (float) $records->sum('installment_amount'),
                 'paid_amount' => (float) $records->sum('current_balance'),
                 'outstanding_amount' => (float) $records->sum(fn (Installment $installment) => $this->derivedOutstanding($installment)),
@@ -238,5 +258,41 @@ class CollectionAnalyticsService
     protected function derivedOutstanding(Installment $installment): float
     {
         return max((float) $installment->installment_amount - (float) $installment->current_balance, 0);
+    }
+
+    protected function countSuccessfulCollections(Collection $records): int
+    {
+        return $records->filter(fn (Installment $installment) => in_array(
+            strtoupper((string) $installment->status),
+            self::SUCCESS_STATUSES,
+            true
+        ))->count();
+    }
+
+    protected function countFailedCollections(Collection $records): int
+    {
+        return $records->filter(fn (Installment $installment) => in_array(
+            strtoupper((string) $installment->status),
+            self::FAILED_STATUSES,
+            true
+        ))->count();
+    }
+
+    protected function countFullyPaidCollections(Collection $records): int
+    {
+        return $records->filter(fn (Installment $installment) => in_array(
+            strtoupper((string) $installment->status),
+            self::FULLY_PAID_STATUSES,
+            true
+        ))->count();
+    }
+
+    protected function countPartialPaidCollections(Collection $records): int
+    {
+        return $records->filter(fn (Installment $installment) => in_array(
+            strtoupper((string) $installment->status),
+            self::PARTIAL_PAID_STATUSES,
+            true
+        ))->count();
     }
 }

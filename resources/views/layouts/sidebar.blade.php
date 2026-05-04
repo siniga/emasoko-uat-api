@@ -84,12 +84,14 @@
                     </a>
                 </li>
 
-                {{-- <li class="{{ Route::is('bi.dashboard') ? 'mm-active' : '' }}">
-                    <a href="{{ route('bi.dashboard') }}" class="waves-effect">
-                        <i class="bx bx-line-chart"></i>
-                        <span>BI Dashboard</span>
-                    </a>
-                </li> --}}
+                @if (Auth::user()->hasRole(['admin']) || Auth::user()->hasRole(['Partner']))
+                    <li class="{{ Route::is('bi.dashboard') ? 'mm-active' : '' }}">
+                        <a href="{{ route('bi.dashboard') }}" class="waves-effect">
+                            <i class="bx bx-line-chart"></i>
+                            <span>BI Dashboard</span>
+                        </a>
+                    </li>
+                 @endif
 
                 @if (Auth::user()->hasRole(['admin']) || Auth::user()->hasRole(['Partner']))
                     <li class="{{ $providersOpen ? 'mm-active' : '' }}">

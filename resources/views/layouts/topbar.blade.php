@@ -30,7 +30,7 @@
             </button>
 
             <!-- App Search-->
-            @if (Route::is('dashboard') || Route::is('bi.dashboard'))
+            @if (Route::is('dashboard'))
                 @php
                     $channelFormAction = $form_action ?? (Route::is('bi.dashboard') ? route('bi.dashboard') : route('dashboard'));
                     $channelOptions = $payment_channels ?? collect();

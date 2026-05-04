@@ -4,6 +4,10 @@
     {{ $title }}
 @endsection
 
+@section('css')
+    <link href="{{ URL::asset('/assets/css/collection-summary.css') }}" rel="stylesheet" type="text/css" />
+@endsection
+
 @php
     $filterRoute = 'collections.actual-monthly';
     $detailRoute = 'collections.actual-monthly-detail';

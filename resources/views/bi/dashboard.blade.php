@@ -5,193 +5,15 @@
 @endsection
 
 @section('css')
-    <style>
-        .bi-kpi-card {
-            border-radius: 18px;
-            border: 1px solid #dce6f5;
-            box-shadow: 0 16px 36px rgba(21, 53, 103, 0.08);
-            overflow: hidden;
-            margin-bottom: 1.5rem;
-        }
-
-        .bi-kpi-card .card-body {
-            padding: 1rem 1.1rem;
-        }
-
-        .bi-kpi-card__row {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 1rem;
-        }
-
-        .bi-kpi-card__label {
-            font-size: 0.72rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: rgba(255, 255, 255, 0.84);
-            margin-bottom: 0.35rem;
-        }
-
-        .bi-kpi-card__value,
-        .bi-kpi-card__side {
-            color: #fff;
-            font-size: 1.4rem;
-            font-weight: 800;
-            line-height: 1.1;
-        }
-
-        .bi-kpi-card__meta {
-            margin-top: 0.55rem;
-            color: rgba(255, 255, 255, 0.78);
-            font-size: 0.82rem;
-        }
-
-        .bi-kpi-card--primary {
-            background: linear-gradient(135deg, #153567 0%, #1f4a88 100%);
-        }
-
-        .bi-kpi-card--success {
-            background: linear-gradient(135deg, #156f52 0%, #1f9b74 100%);
-        }
-
-        .bi-kpi-card--info {
-            background: linear-gradient(135deg, #01579b 0%, #0288d1 100%);
-        }
-
-        .bi-kpi-card--warning {
-            background: linear-gradient(135deg, #9c5a05 0%, #d17b0f 100%);
-        }
-
-        .bi-snapshot-card {
-            border: 1px solid #dce6f5;
-            border-radius: 16px;
-            box-shadow: 0 14px 30px rgba(21, 53, 103, 0.08);
-            margin-bottom: 1.5rem;
-        }
-
-        .bi-snapshot-card .card-body {
-            padding: 1rem;
-        }
-
-        .bi-snapshot-card__label {
-            color: #7b8798;
-            font-size: 0.72rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            margin-bottom: 0.35rem;
-        }
-
-        .bi-snapshot-card__value {
-            color: #153567;
-            font-size: 1.55rem;
-            font-weight: 800;
-            margin-bottom: 0.35rem;
-            line-height: 1.1;
-        }
-
-        .bi-snapshot-card__meta {
-            color: #6b7c93;
-            font-size: 0.84rem;
-            margin-bottom: 0;
-        }
-
-        .bi-chart-card {
-            border: 1px solid #dce6f5;
-            border-radius: 18px;
-            box-shadow: 0 16px 36px rgba(21, 53, 103, 0.08);
-        }
-
-        .bi-chart-card .card-body {
-            padding: 1.2rem;
-        }
-
-        .bi-chart-head {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 1rem;
-            margin-bottom: 1rem;
-        }
-
-        .bi-chart-title {
-            color: #153567;
-            font-size: 1rem;
-            font-weight: 700;
-            margin-bottom: 0.15rem;
-        }
-
-        .bi-chart-hint {
-            color: #6b7c93;
-            font-size: 0.88rem;
-            margin-bottom: 0;
-        }
-
-        .bi-pipeline__item + .bi-pipeline__item {
-            margin-top: 1rem;
-        }
-
-        .bi-pipeline__row {
-            display: flex;
-            justify-content: space-between;
-            gap: 0.75rem;
-            margin-bottom: 0.35rem;
-            align-items: baseline;
-        }
-
-        .bi-pipeline__label {
-            color: #424242;
-            font-size: 0.9rem;
-            font-weight: 700;
-        }
-
-        .bi-pipeline__value {
-            font-size: 0.86rem;
-            font-weight: 700;
-        }
-
-        .bi-pipeline__value.pipeline-primary { color: #1565C0; }
-        .bi-pipeline__value.pipeline-success { color: #2E7D32; }
-        .bi-pipeline__value.pipeline-warning { color: #C49000; }
-        .bi-pipeline__value.pipeline-danger { color: #C62828; }
-
-        .bi-pipeline__track {
-            height: 8px;
-            background: #edf1f7;
-            border-radius: 999px;
-            overflow: hidden;
-        }
-
-        .bi-pipeline__bar {
-            height: 100%;
-            border-radius: 999px;
-        }
-
-        .bi-pipeline__bar.pipeline-primary { background: #1565C0; }
-        .bi-pipeline__bar.pipeline-success { background: #2E7D32; }
-        .bi-pipeline__bar.pipeline-warning { background: #F9A825; }
-        .bi-pipeline__bar.pipeline-danger { background: #C62828; }
-
-        .bi-pipeline__footer {
-            margin-top: 1rem;
-            padding-top: 0.9rem;
-            border-top: 1px solid #e7edf6;
-            color: #6b7c93;
-            font-size: 0.84rem;
-        }
-    </style>
+    <link href="{{ URL::asset('/assets/css/dashboard.css') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ URL::asset('/assets/css/bi-dashboard.css') }}" rel="stylesheet" type="text/css" />
 @endsection
 
 @section('content')
     <div class="row">
         <div class="col-12">
             <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                <div>
-                    <h4 class="mb-sm-0 font-size-18">BI Dashboard : {{ request('channel') ?? 'All Channels' }}</h4>
-                    <p class="text-muted mb-0 mt-1">Operational view for collection health, exceptions, and short-term cash visibility.</p>
-                </div>
+                <h4 class="mb-sm-0 font-size-18">BI Dashboard : {{ $headerMeta }}</h4>
 
                 <div class="page-title-right">
                     <ol class="breadcrumb m-0">
@@ -203,401 +25,286 @@
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-md-3">
-            <div class="card bi-kpi-card bi-kpi-card--primary">
-                <div class="card-body">
-                    <div class="bi-kpi-card__row">
-                        <div>
-                            <div class="bi-kpi-card__label">Active Mandates</div>
-                            <div class="bi-kpi-card__value">{{ number_format($stats['approved_mandate_value']) }}</div>
-                            <div class="bi-kpi-card__meta">Portfolio value in live approved mandates</div>
-                        </div>
-                        <div class="text-end">
-                            <div class="bi-kpi-card__side">{{ number_format($stats['active_mandate_count']) }}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card bi-kpi-card bi-kpi-card--success">
-                <div class="card-body">
-                    <div class="bi-kpi-card__row">
-                        <div>
-                            <div class="bi-kpi-card__label">Expected Collection ({{ $stats['month'] }})</div>
-                            <div class="bi-kpi-card__value">{{ number_format($stats['this_month_expected']) }}</div>
-                            <div class="bi-kpi-card__meta">{{ number_format($stats['today_expected']) }} due today</div>
-                        </div>
-                        <div class="text-end">
-                            <div class="bi-kpi-card__side">{{ number_format($stats['today_expected']) }}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card bi-kpi-card bi-kpi-card--info">
-                <div class="card-body">
-                    <div class="bi-kpi-card__row">
-                        <div>
-                            <div class="bi-kpi-card__label">Actual Collection ({{ $stats['month'] }})</div>
-                            <div class="bi-kpi-card__value">{{ number_format($stats['this_month_paid']) }}</div>
-                            <div class="bi-kpi-card__meta">{{ number_format($stats['today_paid']) }} collected today</div>
-                        </div>
-                        <div class="text-end">
-                            <div class="bi-kpi-card__side">{{ number_format($stats['today_paid']) }}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card bi-kpi-card bi-kpi-card--warning">
-                <div class="card-body">
-                    <div class="bi-kpi-card__row">
-                        <div>
-                            <div class="bi-kpi-card__label">Overdue Outstanding</div>
-                            <div class="bi-kpi-card__value">{{ number_format($stats['overdue_unpaid_amount']) }}</div>
-                            <div class="bi-kpi-card__meta">{{ number_format($stats['overdue_unpaid_count']) }} overdue installments</div>
-                        </div>
-                        <div class="text-end">
-                            <div class="bi-kpi-card__side">{{ number_format($stats['overdue_unpaid_count']) }}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-md-3">
-            <div class="card bi-snapshot-card">
-                <div class="card-body">
-                    <div class="bi-snapshot-card__label">Today Collection Rate</div>
-                    <div class="bi-snapshot-card__value">{{ number_format($stats['today_rate'], 2) }}%</div>
-                    <p class="bi-snapshot-card__meta">Expected {{ number_format($stats['today_expected']) }} · Actual {{ number_format($stats['today_paid']) }}</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card bi-snapshot-card">
-                <div class="card-body">
-                    <div class="bi-snapshot-card__label">Month Collection Rate</div>
-                    <div class="bi-snapshot-card__value">{{ number_format($stats['this_month_rate'], 2) }}%</div>
-                    <p class="bi-snapshot-card__meta">Expected {{ number_format($stats['this_month_expected']) }} · Actual {{ number_format($stats['this_month_paid']) }}</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card bi-snapshot-card">
-                <div class="card-body">
-                    <div class="bi-snapshot-card__label">Partial Paid Exposure</div>
-                    <div class="bi-snapshot-card__value">{{ number_format($stats['partial_paid_amount']) }}</div>
-                    <p class="bi-snapshot-card__meta">{{ number_format($stats['partial_paid_count']) }} installments need follow-up</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card bi-snapshot-card">
-                <div class="card-body">
-                    <div class="bi-snapshot-card__label">Failed Today</div>
-                    <div class="bi-snapshot-card__value">{{ number_format($stats['failed_today_amount']) }}</div>
-                    <p class="bi-snapshot-card__meta">{{ number_format($stats['failed_today_count']) }} deductions failed today</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-md-4">
-            <div class="card shadow h-96 py-2">
-                <div class="card-body">
-                    <div class="text-muted text-uppercase fw-semibold font-size-11 mb-1">Next 7 Days Pipeline</div>
-                    <h3 class="mb-1">{{ number_format($stats['upcoming_next_7_days_amount']) }}</h3>
-                    <div class="text-muted">{{ number_format($stats['upcoming_next_7_days_count']) }} installments due from tomorrow</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card shadow h-96 py-2">
-                <div class="card-body">
-                    <div class="text-muted text-uppercase fw-semibold font-size-11 mb-1">Pending Mandates</div>
-                    <h3 class="mb-1">{{ number_format($stats['number_of_pending_mandate']) }}</h3>
-                    <div class="text-muted">Value {{ number_format($stats['pending_mandate_value']) }}</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card shadow h-96 py-2">
-                <div class="card-body">
-                    <div class="text-muted text-uppercase fw-semibold font-size-11 mb-1">Failed Mandates</div>
-                    <h3 class="mb-1">{{ number_format($stats['number_of_failed_mandate']) }}</h3>
-                    <div class="text-muted">Value {{ number_format($stats['failed_mandate_value']) }}</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-xl-8">
-            <div class="card bi-chart-card">
-                <div class="card-body">
-                    <div class="bi-chart-head">
-                        <div>
-                            <h4 class="bi-chart-title">Payment Mandate Values</h4>
-                            <p class="bi-chart-hint">Monthly trend of total, approved, pending, and failed mandate values.</p>
-                        </div>
-                        <div class="input-group input-group-sm" style="max-width: 220px;">
-                                <select class="form-select form-select-sm" id="mandate-value-select-year">
-                                    @php $currentYear = date('Y'); @endphp
-                                    <option value="">Select</option>
-                                    @foreach (range(2024, $currentYear) as $value)
-                                        <option value="{{ $value }}" {{ (int) $postData['year'] === (int) $value ? 'selected' : '' }}>{{ $value }}</option>
-                                    @endforeach
-                                </select>
-                            <label class="input-group-text">Year</label>
-                        </div>
-                    </div>
-
-                    <div id="mandate-value-chart"></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-4">
-            <div class="card bi-chart-card">
-                <div class="card-body">
-                    <div class="bi-chart-head">
-                        <div>
-                            <h4 class="bi-chart-title">Mandate Pipeline - Live</h4>
-                            <p class="bi-chart-hint">Current portfolio split by total mandate value.</p>
-                        </div>
-                    </div>
-                    <div class="bi-pipeline">
-                        @foreach ($mandatePipeline as $item)
-                            <div class="bi-pipeline__item">
-                                <div class="bi-pipeline__row">
-                                    <span class="bi-pipeline__label">{{ $item['label'] }}</span>
-                                    <span class="bi-pipeline__value pipeline-{{ $item['tone'] }}">
-                                        {{ format_short_amount($item['amount']) }} TZS · {{ number_format($item['percent'], 1) }}%
-                                    </span>
-                                </div>
-                                <div class="bi-pipeline__track">
-                                    <div class="bi-pipeline__bar pipeline-{{ $item['tone'] }}" style="width: {{ min(max($item['percent'], 0), 100) }}%"></div>
-                                </div>
-                            </div>
+    <div class="sp-list-filter mb-3">
+        <form action="{{ route('bi.dashboard') }}" method="GET">
+            <input type="hidden" name="active_tab" value="{{ request('active_tab', 'growth') }}" data-bi-active-tab-input>
+            <div class="row g-3">
+                <div class="col-xl-2 col-lg-3 col-md-6">
+                    <select class="form-select" id="bi_year" name="year">
+                        @foreach (range(date('Y') - 3, date('Y') + 1) as $yearOption)
+                            <option value="{{ $yearOption }}"
+                                {{ (int) ($filters['year'] ?? 0) === (int) $yearOption ? 'selected' : '' }}>
+                                {{ $yearOption }}
+                            </option>
                         @endforeach
+                    </select>
+                </div>
 
-                        <div class="bi-pipeline__footer">
-                            Total mandate value: <strong>{{ format_short_amount($stats['total_mandate_value']) }} TZS</strong><br>
-                            Highest single: <strong>{{ format_short_amount($highestSingleMandate) }} TZS</strong>
-                        </div>
+                <div class="col-xl-2 col-lg-3 col-md-6">
+                    <select class="form-select" id="bi_month" name="month">
+                        <option value="">-- All Months --</option>
+                        @foreach (range(1, 12) as $monthOption)
+                            <option value="{{ $monthOption }}"
+                                {{ (int) ($filters['month'] ?? 0) === (int) $monthOption ? 'selected' : '' }}>
+                                {{ date('F', mktime(0, 0, 0, $monthOption, 1)) }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="col-xl-2 col-lg-3 col-md-6">
+                    <select class="form-select" id="bi_channel" name="channel">
+                        <option value="">-- All Channels --</option>
+                        @foreach ($paymentChannels as $paymentChannel)
+                            <option value="{{ $paymentChannel->slug }}"
+                                {{ ($filters['channel'] ?? '') === $paymentChannel->slug ? 'selected' : '' }}>
+                                {{ $paymentChannel->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="col-xl-4 col-lg-4 col-md-6">
+                    <select class="form-select" id="subscriber_id" name="subscriber_id">
+                        <option value="">-- All Service Providers --</option>
+                        @foreach ($subscriberOptions as $subscriberOption)
+                            <option value="{{ $subscriberOption->id }}"
+                                {{ (int) ($reconciliationFilters['subscriber_id'] ?? 0) === (int) $subscriberOption->id ? 'selected' : '' }}>
+                                {{ $subscriberOption->business_name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="col-xl-2 col-lg-3 col-md-6">
+                    <select class="form-select" id="recon_status" name="recon_status">
+                        <option value="">-- All Statuses --</option>
+                        <option value="COLLECTED" {{ ($reconciliationFilters['recon_status'] ?? '') === 'COLLECTED' ? 'selected' : '' }}>Collected</option>
+                        <option value="FAILED" {{ ($reconciliationFilters['recon_status'] ?? '') === 'FAILED' ? 'selected' : '' }}>Failed</option>
+                        <option value="PENDING" {{ ($reconciliationFilters['recon_status'] ?? '') === 'PENDING' ? 'selected' : '' }}>Pending</option>
+                    </select>
+                </div>
+
+                <div class="col-12">
+                    <div class="d-flex flex-wrap gap-2 justify-content-lg-end">
+                        <a href="{{ route('bi.dashboard') }}" class="btn btn-outline-danger" data-bi-clear-link>
+                            <i class='bx bx-reset'></i> Clear
+                        </a>
+                        <button type="submit" class="btn btn-secondary">
+                            <i class="bx bx-search"></i> Apply Filters
+                        </button>
                     </div>
                 </div>
             </div>
-        </div>
+        </form>
     </div>
 
-    <div class="row">
-        <div class="col-xl-8">
-            <div class="card bi-chart-card">
-                <div class="card-body">
-                    <div class="bi-chart-head">
-                        <div>
-                            <h4 class="bi-chart-title">Expected vs Collected</h4>
-                            <p class="bi-chart-hint">Monthly scheduled collections against actual deductions.</p>
-                        </div>
-                        <div class="input-group input-group-sm" style="max-width: 220px;">
-                            <select class="form-select form-select-sm" id="collected-mandate-value-select-year">
-                                @php $currentYear = date('Y'); @endphp
-                                <option value="">Select</option>
-                                @foreach (range(2024, $currentYear + 5) as $value)
-                                    <option value="{{ $value }}" {{ (int) $postData['year'] === (int) $value ? 'selected' : '' }}>{{ $value }}</option>
-                                @endforeach
+    <div class="bi-tab-bar mb-3">
+        <button type="button" class="bi-tab is-active" data-bi-tab="growth">Growth Tracker</button>
+        <button type="button" class="bi-tab" data-bi-tab="reconciliation">Subscriber Reconciliation</button>
+    </div>
+
+    <div class="bi-pane is-active" data-bi-pane="growth">
+        <div class="row mb-3">
+            <div class="col-md-3">
+                <div class="detail-summary border-top-primary shadow h-96 py-2">
+                    <div class="detail-summary__label text-muted">Approved Service Providers</div>
+                    <div class="detail-summary__value text-primary">{{ number_format($growthSummary['partners_count']) }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="detail-summary border-top-success shadow h-96 py-2">
+                    <div class="detail-summary__label text-muted">Active Mandates</div>
+                    <div class="detail-summary__value text-success">
+                        {{ number_format($growthSummary['active_mandate_count']) }}</div>
+                    <div class="detail-summary__meta">Value {{ number_format($growthSummary['active_mandate_value']) }} TZS
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="detail-summary border-top-primary shadow h-96 py-2">
+                    <div class="detail-summary__label text-muted">Expected Collections</div>
+                    <div class="detail-summary__value text-primary">{{ number_format($growthSummary['period_expected']) }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="detail-summary border-top-success shadow h-96 py-2">
+                    <div class="detail-summary__label text-muted">Collected Amount</div>
+                    <div class="detail-summary__value text-success">{{ number_format($growthSummary['period_collected']) }}
+                    </div>
+                    <div class="detail-summary__meta">{{ number_format($growthSummary['period_success_rate'], 2) }}%
+                        success rate</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12">
+                <div class="card dashboard-report-panel">
+                    <div class="card-body">
+                        <div class="dashboard-report-panel__head">
+                            <div>
+                                <div class="card-title" id="bi-growth-title">Expected vs collected</div>
+                                <p class="dashboard-report-panel__hint">Switch between collection, mandate value, success
+                                    rate, and new mandate views.</p>
+                            </div>
+
+                            <select id="bi-growth-view" class="form-select form-select-sm bi-inline-select">
+                                <option value="collections">Expected vs collected</option>
+                                <option value="mandates">Mandate values</option>
+                                <option value="success_rate">Collection success rate</option>
+                                <option value="new_mandates">New mandates</option>
                             </select>
-                            <label class="input-group-text">Year</label>
                         </div>
-                    </div>
 
-                    <div id="collected-mandate-value-chart"></div>
+                        <div id="bi-growth-chart" class="apex-charts"></div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-xl-4">
-            <div class="card bi-chart-card">
-                <div class="card-body">
-                    <div class="bi-chart-head">
-                        <div>
-                            <h4 class="bi-chart-title">Weekly Collections</h4>
-                            <p class="bi-chart-hint">Short-term movement of due versus collected amounts.</p>
-                        </div>
-                        <div class="input-group input-group-sm" style="max-width: 220px;">
-                            <input type="date" name="start_at" class="form-control" id="collected-mandate-value-weekly-date" />
+        <div class="row">
+            <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
+                <div class="card dashboard-report-panel">
+                    <div class="card-body">
+                        <div class="card-title mb-4">Mandate Pipeline</div>
+
+                        <div class="dashboard-pipeline">
+                            @foreach ($mandatePipeline as $item)
+                                <div class="dashboard-pipeline__item">
+                                    <div class="dashboard-pipeline__row">
+                                        <span class="dashboard-pipeline__label">{{ $item['label'] }}</span>
+                                        <span class="dashboard-pipeline__value pipeline-{{ $item['tone'] }}">
+                                            {{ format_short_amount($item['amount']) }} TZS ·
+                                            {{ number_format($item['percent'], 1) }}%
+                                        </span>
+                                    </div>
+                                    <div class="dashboard-pipeline__track">
+                                        <div class="dashboard-pipeline__bar pipeline-{{ $item['tone'] }}"
+                                            style="width: {{ min(max($item['percent'], 0), 100) }}%"></div>
+                                    </div>
+                                </div>
+                            @endforeach
+
+                            <div class="dashboard-pipeline__footer">
+                                Total mandate value:
+                                <strong>{{ format_short_amount(collect($mandatePipeline)->sum('amount')) }}
+                                    TZS</strong><br>
+                                Highest single: <strong>{{ format_short_amount($highestSingleMandate) }} TZS</strong><br>
+                                Overall success:
+                                <strong>{{ number_format($growthSummary['year_success_rate'], 2) }}%</strong>
+                            </div>
                         </div>
                     </div>
-
-                    <div id="collected-mandate-value-weekly-chart"></div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <div class="row">
-        <div class="col-xl-12">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h4 class="card-title mb-0">Partners Needing Attention</h4>
-                        <span class="text-muted">{{ $stats['month'] }} performance view</span>
-                    </div>
+            <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
+                <div class="card dashboard-report-panel">
+                    <div class="card-body">
+                        <div class="dashboard-report-panel__head">
+                            <div>
+                                <div class="card-title">Payment Channel Mix</div>
+                                <p class="dashboard-report-panel__hint">Active mandate distribution by payment channel.</p>
+                            </div>
+                        </div>
 
-                    <div class="table-responsive">
-                        <table class="table table-bordered align-middle mb-0">
-                            <thead>
-                                <tr>
-                                    <th width="4%">#</th>
-                                    <th>Service Provider</th>
-                                    <th class="text-end">Expected Amount</th>
-                                    <th class="text-end">Collected Amount</th>
-                                    <th class="text-end">Outstanding Amount</th>
-                                    <th class="text-end">Rate (%)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse ($partnerAttention as $index => $partner)
-                                    <tr>
-                                        <td>{{ $index + 1 }}</td>
-                                        <td>
-                                            <a href="{{ route('collections.actual-monthly-detail', $partner['uuid']) }}?month={{ $postData['month'] }}&year={{ $postData['year'] }}"
-                                                class="fw-semibold">
-                                                {{ strtoupper($partner['partner_name']) }}
-                                            </a>
-                                        </td>
-                                        <td class="text-end">{{ number_format($partner['expected_amount']) }}</td>
-                                        <td class="text-end">{{ number_format($partner['collected_amount']) }}</td>
-                                        <td class="text-end">{{ number_format($partner['outstanding_amount']) }}</td>
-                                        <td class="text-end">
-                                            <span class="badge {{ $partner['rate'] >= 80 ? 'bg-soft-success text-success' : ($partner['rate'] >= 50 ? 'bg-soft-warning text-warning' : 'bg-soft-danger text-danger') }}">
-                                                {{ number_format($partner['rate'], 2) }}%
-                                            </span>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="6" class="text-center text-muted">No partner performance data available for the selected channel.</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
+                        <div id="bi-channel-mix-chart" class="apex-charts"></div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-xl-6">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h4 class="card-title mb-0">Recent Successful Collections</h4>
-                        <span class="badge bg-soft-success text-success">Cash movement</span>
-                    </div>
-
-                    <div class="table-responsive">
-                        <table class="table table-sm table-hover align-middle mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Reference</th>
-                                    <th>Service Provider</th>
-                                    <th>Collection Date</th>
-                                    <th class="text-end">Paid</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse ($recentSuccessful as $installment)
-                                    <tr>
-                                        <td>
-                                            <a href="{{ route('payment-mandate.show', $installment->debitOrder->uuid) }}" class="fw-semibold">
-                                                {{ $installment->debitOrder->reference }}
-                                            </a>
-                                        </td>
-                                        <td>{{ optional($installment->debitOrder->partner)->business_name }}</td>
-                                        <td>{{ $installment->effective_payment_date ? \Carbon\Carbon::parse($installment->effective_payment_date)->format('d M Y') : '-' }}</td>
-                                        <td class="text-end">{{ number_format($installment->current_balance) }}</td>
-                                        <td>
-                                            <span class="badge {{ $installment->status === 'CLOSED' ? 'bg-soft-success text-success' : 'bg-soft-warning text-warning' }}">
-                                                {{ str_replace('_', ' ', $installment->status) }}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="5" class="text-center text-muted">No recent successful collection activity found.</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+    <div class="bi-pane" data-bi-pane="reconciliation">
+        <div class="bi-recon-kpi-grid">
+            <div class="detail-summary border-top-primary shadow h-96 py-2">
+                <div class="detail-summary__label text-muted">Total mandates</div>
+                <div class="detail-summary__value text-primary">{{ number_format($reconciliationSummary['total_count']) }}</div>
+            </div>
+            <div class="detail-summary border-top-success shadow h-96 py-2">
+                <div class="detail-summary__label text-muted">Collected</div>
+                <div class="detail-summary__value text-success">{{ number_format($reconciliationSummary['collected_count']) }}</div>
+                <div class="detail-summary__sub">{{ number_format($reconciliationSummary['collected_percent'], 1) }}% ·
+                    TZS {{ number_format($reconciliationSummary['collected_amount']) }}</div>
+            </div>
+            <div class="detail-summary border-top-danger shadow h-96 py-2">
+                <div class="detail-summary__label text-muted">Failed</div>
+                <div class="detail-summary__value text-danger">{{ number_format($reconciliationSummary['failed_count']) }}</div>
+                <div class="detail-summary__sub">{{ number_format($reconciliationSummary['failed_percent'], 1) }}% · TZS
+                    {{ number_format($reconciliationSummary['failed_amount']) }}</div>
+            </div>
+            <div class="detail-summary border-top-warning shadow h-96 py-2">
+                <div class="detail-summary__label text-muted">Pending</div>
+                <div class="detail-summary__value text-warning">{{ number_format($reconciliationSummary['pending_count']) }}</div>
+                <div class="detail-summary__sub">{{ number_format($reconciliationSummary['pending_percent'], 1) }}% · TZS
+                    {{ number_format($reconciliationSummary['pending_amount']) }}</div>
             </div>
         </div>
 
-        <div class="col-xl-6">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h4 class="card-title mb-0">Recent Failed Deductions</h4>
-                        <span class="badge bg-soft-danger text-danger">Exceptions</span>
+        <div class="card dashboard-report-panel">
+            <div class="card-body">
+                <div class="dashboard-report-panel__head">
+                    <div>
+                        <div class="card-title">
+                            {{ $selectedSubscriberName ?: 'All Subscribers' }} — {{ $headerMeta }} reconciliation detail
+                        </div>
                     </div>
+                </div>
 
-                    <div class="table-responsive">
-                        <table class="table table-sm table-hover align-middle mb-0">
-                            <thead>
+                <div class="table-responsive">
+                    <table class="table table-bordered align-middle mb-0 bi-recon-table">
+                        <thead>
+                            <tr>
+                                <th>Borrower</th>
+                                <th>Loan #</th>
+                                <th class="text-end">Scheduled (TZS)</th>
+                                <th class="text-end">Collected (TZS)</th>
+                                <th>Payment Date</th>
+                                <th>Channel</th>
+                                <th>eMakato Ref</th>
+                                <th>Status</th>
+                                <th>Settlement</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($reconciliationDetail as $detail)
                                 <tr>
-                                    <th>Reference</th>
-                                    <th>Service Provider</th>
-                                    <th>Due Date</th>
-                                    <th class="text-end">Amount</th>
-                                    <th>Status</th>
+                                    <td class="fw-semibold">
+                                        {{ strtoupper($detail['borrower_name']) }}<br/>
+                                        {{ $detail['national_id'] }}
+                                    </td>
+                                    <td>{{ $detail['loan_reference'] }}</td>
+                                    <td class="text-end">{{ number_format($detail['scheduled_amount']) }}</td>
+                                    <td class="text-end">{{ number_format($detail['collected_amount']) }}</td>
+                                    <td>{{ $detail['payment_date'] }}</td>
+                                    <td>{{ $detail['channel'] }}</td>
+                                    <td>{{ $detail['emakato_reference'] }}</td>
+                                    <td>
+                                        <span
+                                            class="badge {{ in_array($detail['status'], ['CLOSED', 'PARTIAL_PAID'], true) ? 'badge-soft-success' : (in_array($detail['status'], ['FAILED', 'FUNDSCHECK'], true) ? 'badge-soft-danger' : 'badge-soft-warning') }}">
+                                            {{ str_replace('_', ' ', $detail['status']) }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge {{ $detail['statement_matched'] ? 'badge-soft-success' : 'badge-soft-danger' }}">
+                                            {{ $detail['statement_matched'] ? 'Matched' : 'Pending' }}
+                                        </span>
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                @forelse ($recentFailed as $installment)
-                                    <tr>
-                                        <td>
-                                            <a href="{{ route('payment-mandate.show', $installment->debitOrder->uuid) }}" class="fw-semibold">
-                                                {{ $installment->debitOrder->reference }}
-                                            </a>
-                                        </td>
-                                        <td>{{ optional($installment->debitOrder->partner)->business_name }}</td>
-                                        <td>{{ $installment->payment_date ? \Carbon\Carbon::parse($installment->payment_date)->format('d M Y') : '-' }}</td>
-                                        <td class="text-end">{{ number_format($installment->installment_amount) }}</td>
-                                        <td>
-                                            <span class="badge bg-soft-danger text-danger">
-                                                {{ str_replace('_', ' ', $installment->status) }}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="5" class="text-center text-muted">No recent failed deductions found.</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
+                            @empty
+                                <tr>
+                                    <td colspan="10" class="text-center text-muted">No reconciliation detail found for
+                                        the selected filters.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -607,7 +314,7 @@
 @section('script')
     <script src="{{ URL::asset('/assets/libs/apexcharts/apexcharts.min.js') }}"></script>
     <script>
-        window.DASHBOARD_FILTERS = @json($postData);
+        window.BI_DASHBOARD_PAYLOAD = @json($chartPayload);
     </script>
-    <script src="{{ URL::asset('/assets/js/charts/dashboard.js') }}"></script>
+    <script src="{{ URL::asset('/assets/js/bi-dashboard.js') }}"></script>
 @endsection

@@ -240,18 +240,18 @@ Route::middleware('auth')->group(function () {
     //Route::get('collections/reconciliation', [CollectionController::class, 'reconciliation'])->name('collections.reconciliation');
     Route::get('collections/reconciliation-crdb', [CollectionController::class, 'reconciliation_crdb'])->name('collections.reconciliation-crdb');
 
-    Route::any('collections/expected-monthly', [CollectionController::class, 'expected_monthly'])->name('collections.expected-monthly');
-    Route::get('collections/expected-monthly/{uuid}', [CollectionController::class, 'expected_monthly_detail'])->name('collections.expected-monthly-detail');
+    Route::any('collections/expected/monthly', [CollectionController::class, 'expected_monthly'])->name('collections.expected-monthly');
+    Route::get('collections/expected/monthly/{uuid}', [CollectionController::class, 'expected_monthly_detail'])->name('collections.expected-monthly-detail');
     Route::get('collections/export-expected-monthly/{uuid}', [CollectionController::class, 'export_expected_monthly'])->name('collections.export-expected-monthly');
-    Route::any('collections/actual-monthly', [CollectionController::class, 'actual_monthly'])->name('collections.actual-monthly');
-    Route::get('collections/actual-monthly/{uuid}', [CollectionController::class, 'actual_monthly_detail'])->name('collections.actual-monthly-detail');
+    Route::any('collections/actual/monthly', [CollectionController::class, 'actual_monthly'])->name('collections.actual-monthly');
+    Route::get('collections/actual/monthly/{uuid}', [CollectionController::class, 'actual_monthly_detail'])->name('collections.actual-monthly-detail');
     Route::get('collections/export-actual-monthly/{uuid}', [CollectionController::class, 'export_actual_monthly'])->name('collections.export-actual-monthly');
 
-    Route::any('collections/expected-daily', [CollectionController::class, 'expected_daily'])->name('collections.expected-daily');
-    Route::get('collections/expected-daily/{uuid}', [CollectionController::class, 'expected_daily_detail'])->name('collections.expected-daily-detail');
+    Route::any('collections/expected/daily', [CollectionController::class, 'expected_daily'])->name('collections.expected-daily');
+    Route::get('collections/expected/daily/{uuid}', [CollectionController::class, 'expected_daily_detail'])->name('collections.expected-daily-detail');
     Route::get('collections/export-expected-daily/{uuid}', [CollectionController::class, 'export_expected_daily'])->name('collections.export-expected-daily');
-    Route::any('collections/actual-daily', [CollectionController::class, 'actual_daily'])->name('collections.actual-daily');
-    Route::get('collections/actual-daily/{uuid}', [CollectionController::class, 'actual_daily_detail'])->name('collections.actual-daily-detail');
+    Route::any('collections/actual/daily', [CollectionController::class, 'actual_daily'])->name('collections.actual-daily');
+    Route::get('collections/actual/daily/{uuid}', [CollectionController::class, 'actual_daily_detail'])->name('collections.actual-daily-detail');
     Route::any('collections/export-actual-daily/{uuid}', [CollectionController::class, 'export_actual_daily'])->name('collections.export-actual-daily');
 
     //reports
