@@ -226,6 +226,25 @@ Sidebar
   border-radius: 6px;
 }
 
+.vertical-collpsed .vertical-menu #sidebar-menu>ul>li>a,
+body[data-sidebar-size=small].vertical-collpsed .vertical-menu #sidebar-menu>ul>li>a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 15px 0;
+}
+
+.vertical-collpsed .vertical-menu #sidebar-menu>ul>li>a i,
+body[data-sidebar-size=small].vertical-collpsed .vertical-menu #sidebar-menu>ul>li>a i {
+  min-width: 0;
+  margin: 0;
+  padding-bottom: 0;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /*===============================================|
 Topbar
 ================================================*/

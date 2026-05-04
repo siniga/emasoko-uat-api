@@ -73,7 +73,7 @@
                                 </button>
 
                                 <button type="submit" name="filter" class="btn btn-secondary">
-                                    <i class="bx bx-search"></i> Filter
+                                    <i class="bx bx-search"></i> Apply Filters
                                 </button>
                             </div>
                         </div>

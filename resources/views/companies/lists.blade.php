@@ -125,8 +125,8 @@
                                                 <i class='bx bx-reset'></i> Clear
                                             </button>
 
-                                            <button type="submit" name="filter" class="btn btn-primary">
-                                                <i class="bx bx-search"></i> Filter Data
+                                            <button type="submit" name="filter" class="btn btn-secondary">
+                                                <i class="bx bx-search"></i> Apply Filters
                                             </button>
                                         </div>
                                     </div>

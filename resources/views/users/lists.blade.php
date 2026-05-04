@@ -57,16 +57,20 @@
                     </div>
 
                     <div class="row">
-                        <div class="col-lg-9">
+                        <div class="col-lg-6">
                             <div class="mb-3">
                                 {{ Form::text('keyword', old('keyword', $post_data['keyword']), ['class' => 'form-control', 'placeholder' => 'Search by name, email, or phone...']) }}
                             </div>
                         </div>
 
-                        <div class="col-lg-3">
+                        <div class="col-lg-6">
                             <div class="mb-3 text-sm-end d-none d-sm-block">
+                                <button type="reset" name="reset" class="btn btn-outline-danger">
+                                    <i class='bx bx-reset'></i> Clear
+                                </button>
+
                                 <button type="submit" name="filter" class="btn btn-secondary">
-                                    <i class="bx bx-search"></i> Filter
+                                    <i class="bx bx-search"></i> Apply Filters
                                 </button>
                             </div>
                         </div>
