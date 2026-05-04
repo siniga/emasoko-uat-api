@@ -5,18 +5,18 @@
             <div class="navbar-brand-box">
                 <a href="#" class="logo logo-light">
                     <span class="logo-sm">
-                        <img src="{{ URL::asset('assets/images/emakato_logo_white.png') }}" alt="" height="22">
+                        <img src="{{ URL::asset('assets/images/favicon-white.png') }}" alt="" height="32">
                     </span>
                     <span class="logo-lg">
                         <img src="{{ URL::asset('assets/images/emakato_logo_white.png') }}" alt=""
-                            height="17">
+                            height="32">
                     </span>
                 </a>
 
                 <a href="#" class="logo logo-dark">
                     <span class="logo-sm">
-                        <img src="{{ URL::asset('assets/images/emakato_logo_colored.png') }}" alt=""
-                            height="12">
+                        <img src="{{ URL::asset('assets/images/favicon.png') }}" alt=""
+                            height="32">
                     </span>
                     <span class="logo-lg">
                         <img src="{{ URL::asset('assets/images/emakato_logo_colored.png') }}" alt=""
@@ -93,20 +93,20 @@
                 </div>
             </div>
 
-            <div class="dropdown d-none d-lg-inline-block ms-1">
+            {{-- <div class="dropdown d-none d-lg-inline-block ms-1">
                 <button type="button" class="btn header-item noti-icon waves-effect" data-toggle="fullscreen">
                     <i class="bx bx-fullscreen"></i>
                 </button>
-            </div>
+            </div> --}}
 
-            <div class="dropdown d-inline-block">
+            {{-- <div class="dropdown d-inline-block">
                 <button type="button" class="btn header-item noti-icon waves-effect"
                     id="page-header-notifications-dropdown" data-bs-toggle="dropdown" aria-haspopup="true"
                     aria-expanded="false">
                     <i class="bx bx-bell bx-tada"></i>
                     <span class="badge bg-danger rounded-pill"></span>
                 </button>
-            </div>
+            </div> --}}
 
             <div class="dropdown d-inline-block">
                 <button type="button" class="btn header-item waves-effect" id="page-header-user-dropdown"
@@ -119,15 +119,15 @@
                     <i class="mdi mdi-chevron-down d-none d-xl-inline-block"></i>
                 </button>
                 <div class="dropdown-menu dropdown-menu-end">
-                    <a class="dropdown-item text-primary" href="#">
-                        <i class="bx bx-user-pin font-size-16 align-middle me-1"></i> Change Password
+                    <a class="dropdown-item text-sm text-primary" href="{{ route('users.change-password') }}">
+                        <i class="bx bx-user-pin text-sm align-middle me-1"></i> Change Password
                     </a>
-                    <a class="dropdown-item text-primary" href="#">
-                        <i class="bx bx-user font-size-16 align-middle me-1"></i> My Profile
+                    <a class="dropdown-item text-sm text-primary" href="{{ route('users.profile') }}">
+                        <i class="bx bx-user text-sm align-middle me-1"></i> My Profile
                     </a>
                     <div class="dropdown-divider"></div>
-                    <a class="dropdown-item text-danger" href="{{ route('auth.logout') }}">
-                        <i class="bx bx-power-off font-size-16 align-middle me-1 text-danger"></i> Logout
+                    <a class="dropdown-item text-sm text-danger" href="{{ route('auth.logout') }}">
+                        <i class="bx bx-power-off text-sm align-middle me-1 text-danger"></i> Logout
                     </a>
                 </div>
             </div>

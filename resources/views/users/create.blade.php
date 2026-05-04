@@ -4,69 +4,12 @@
     Register User
 @endsection
 
-<style>
-    [x-cloak] {
-        display: none !important;
-    }
-
-    .user-form-shell {
-        --uf-primary: #153567;
-        --uf-muted: #6b7c93;
-    }
-
-    .user-form-hero {
-        border: 1px solid rgba(21, 53, 103, 0.14);
-        border-radius: 20px;
-        padding: 1.35rem;
-        background:
-            radial-gradient(circle at top left, rgba(255, 255, 255, 0.28), transparent 45%),
-            linear-gradient(135deg, #153567 0%, #1f4a88 100%);
-        color: #fff;
-        box-shadow: 0 22px 44px rgba(15, 40, 79, 0.18);
-    }
-
-    .user-form-hero__eyebrow {
-        font-size: 0.74rem;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        opacity: 0.8;
-        margin-bottom: 0.45rem;
-    }
-
-    .user-form-hero__title {
-        font-size: 1.55rem;
-        font-weight: 700;
-        margin-bottom: 0.45rem;
-    }
-
-    .user-form-hero__text {
-        margin-bottom: 0;
-        color: rgba(255, 255, 255, 0.84);
-        max-width: 760px;
-    }
-
-    .user-form-card {
-        border: 1px solid #e3ebf6;
-        border-radius: 18px;
-        box-shadow: 0 18px 42px rgba(29, 53, 87, 0.08);
-    }
-
-    .user-form-section__title {
-        font-size: 0.95rem;
-        font-weight: 700;
-        color: var(--uf-primary);
-        margin-bottom: 0.25rem;
-    }
-
-    .user-form-section__hint {
-        color: var(--uf-muted);
-        font-size: 0.88rem;
-        margin-bottom: 1rem;
-    }
-</style>
+@section('css')
+    <link href="{{ URL::asset('/assets/css/admin-directory.css') }}" rel="stylesheet" type="text/css" />
+@endsection
 
 @section('content')
-    <div class="user-form-shell" x-data="userRoleForm({ roleId: '{{ old('role_id') }}', isApiUser: {{ old('is_api_user') ? 'true' : 'false' }} })" x-init="init()">
+    <div class="sp-list-shell admin-directory-shell" x-data="userRoleForm({ roleId: '{{ old('role_id') }}', isApiUser: {{ old('is_api_user') ? 'true' : 'false' }} })" x-init="init()">
         @component('components.breadcrumb')
             @slot('li_1')
                 Users
@@ -76,23 +19,15 @@
             @endslot
         @endcomponent
 
-        <div class="user-form-hero mb-4">
-            <div class="user-form-hero__eyebrow">User Management</div>
-            <div class="user-form-hero__title">Register User</div>
-            <p class="user-form-hero__text">Create an internal or API user, assign the correct role, and link the account to the right provider or eMakato partner context.</p>
-        </div>
 
         <div class="row">
             <div class="col-lg-9 col-md-10 col-sm-12">
-                <div class="card user-form-card">
+                <div class="card sp-list-card">
                     <div class="card-body">
                         {{ Form::open(['url' => route('users.store'), 'method' => 'POST', 'class' => 'form-horizontal', 'novalidate']) }}
                         {{ Form::token() }}
 
-                        <div class="user-form-section mb-4">
-                            <div class="user-form-section__title">User Information</div>
-                            <div class="user-form-section__hint">Capture the user’s core identity and contact details.</div>
-
+                        <div class=" mb-4">
                             <div class="row">
                                 <div class="col-lg-6">
                                     <div class="mb-3">
@@ -120,9 +55,9 @@
                             </div>
                         </div>
 
-                        <div class="user-form-section mb-4">
-                            <div class="user-form-section__title">Access Setup</div>
-                            <div class="user-form-section__hint">Define the user role and any provider or company scope needed for that role.</div>
+                        <div class="admin-directory-section mb-4">
+                            <div class="admin-directory-section__title">Access Setup</div>
+                            <div class="admin-directory-section__hint">Define the user role and any provider or company scope needed for that role.</div>
 
                             <div class="row">
                                 <div class="col-lg-6">
@@ -156,7 +91,7 @@
                                         @foreach ($providers as $provider)
                                             @php $options[$provider->id] = $provider->business_name; @endphp
                                         @endforeach
-                                        {{ Form::select('provider_ids[]', $options, old('provider_ids'), ['class' => 'select2 form-control select2-multiple', 'id' => 'provider_id', 'multiple' => 'multiple', 'data-placeholder' => 'Choose...']) }}
+                                        {{ Form::select('provider_ids[]', $options, old('provider_ids'), ['class' => 'form-control', 'id' => 'provider_id', 'data-placeholder' => 'Choose...']) }}
                                         <span class="text-danger">{{ $errors->first('provider_ids') }}</span>
                                     </div>
                                 </div>
@@ -182,9 +117,9 @@
                             </div>
                         </div>
 
-                        <div class="user-form-section">
-                            <div class="user-form-section__title">Login Information</div>
-                            <div class="user-form-section__hint">Set the initial password for this user account.</div>
+                        <div class="admin-directory-section">
+                            <div class="admin-directory-section__title">Login Information</div>
+                            <div class="admin-directory-section__hint">Set the initial password for this user account.</div>
 
                             <div class="row">
                                 <div class="col-lg-6">
@@ -206,7 +141,7 @@
                         </div>
 
                         <div class="d-flex justify-content-end gap-2 mt-4">
-                            <a href="{{ route('users.index') }}" class="btn btn-light border">Cancel</a>
+                            <a href="{{ route('users.lists') }}" class="btn btn-outline-danger">Cancel</a>
                             <button type="submit" class="btn btn-primary">Create User</button>
                         </div>
                         {{ Form::close() }}

@@ -65,12 +65,26 @@
                     $collectionRoutesOpen =
                         Route::is('collections.*') || request()->is('collections') || request()->is('collections/*');
                     $reportsOpen = Route::is('reports.lists') || request()->is('reports') || request()->is('reports/*');
-                    $usersOpen =
-                        Route::is('users.lists', 'users.create', 'users.edit', 'users.show', 'users.change-status') ||
-                        request()->is('users') ||
-                        request()->is('users/*');
                     $usersOtpOpen =
                         Route::is('users.view-otp') || request()->is('users/view-otp') || request()->is('users/otp');
+                    $usersOpen =
+                        !$usersOtpOpen &&
+                        (Route::is(
+                            'users.lists',
+                            'users.create',
+                            'users.edit',
+                            'users.show',
+                            'users.change-status',
+                            'users.profile',
+                            'users.change-password',
+                        ) ||
+                            request()->is('users') ||
+                            request()->is('users/lists') ||
+                            request()->is('users/create') ||
+                            request()->is('users/*/edit') ||
+                            request()->is('users/*/change-status') ||
+                            request()->is('users/profile') ||
+                            request()->is('users/change-password'));
                     $paymentChannelsOpen =
                         Route::is('payment-channels.index', 'payment-channels.create', 'payment-channels.edit') ||
                         request()->is('payment-channels') ||
@@ -170,7 +184,6 @@
 
                 @if (Auth::user()->hasRole(['admin']) || Auth::user()->hasRole(['Partner']))
                     <li class="menu-title" key="t-apps">Authentication</li>
-
                     <li class="{{ $usersOpen ? 'mm-active' : '' }}">
                         <a href="{{ route('users.lists') }}" class="waves-effect">
                             <i class="bx bx-user-plus"></i>

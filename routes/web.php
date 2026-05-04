@@ -151,6 +151,10 @@ Route::middleware('auth')->group(function () {
 
     //users
     Route::any("users/lists", [UserController::class, 'index'])->name('users.lists');
+    Route::get('users/profile', [UserController::class, 'profile'])->name('users.profile');
+    Route::put('users/profile', [UserController::class, 'update_profile'])->name('users.update-profile');
+    Route::get('users/change-password', [UserController::class, 'change_password'])->name('users.change-password');
+    Route::put('users/change-password', [UserController::class, 'update_password'])->name('users.update-password');
 
     //resources routes
     Route::resources([

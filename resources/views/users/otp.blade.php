@@ -4,83 +4,109 @@
     Users OTP
 @endsection
 
-<style>
-    .us-shell {
-        --us-primary: #153567;
-    }
-
-    .us-table {
-        border-radius: 16px;
-        overflow: hidden;
-        border: 1px solid #dfe8f4;
-    }
-
-    .us-table thead th {
-        background: #edf4ff;
-        color: var(--us-primary);
-        font-weight: 700;
-        border-color: #dce7fa;
-    }
-</style>
+@section('css')
+    <link href="{{ URL::asset('/assets/css/admin-directory.css') }}" rel="stylesheet" type="text/css" />
+@endsection
 
 @section('content')
-    <div class="us-shell">
-        <div class="row">
-            <div class="col-12">
-                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                    <h4 class="mb-sm-0 font-size-18">Users OTP</h4>
+    <div class="sp-list-shell admin-directory-shell">
+        @component('components.breadcrumb')
+            @slot('li_1')
+                Users
+            @endslot
+            @slot('title')
+                Users OTP
+            @endslot
+        @endcomponent
 
-                    <div class="page-title-right">
-                        <ol class="breadcrumb m-0">
-                            <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                            <li class="breadcrumb-item active">Users OTP</li>
-                        </ol>
+        <div class="sp-list-filter mb-4">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <div class="detail-summary border-top-primary shadow h-96 py-2">
+                        <div class="detail-summary__label text-muted">Active OTPs</div>
+                        <div class="detail-summary__value text-primary">{{ number_format($listStats['active']) }}</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="detail-summary border-top-warning shadow h-96 py-2">
+                        <div class="detail-summary__label text-muted">Expiring Today</div>
+                        <div class="detail-summary__value text-warning">{{ number_format($listStats['expiring_today']) }}</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="detail-summary border-top-draft shadow h-96 py-2">
+                        <div class="detail-summary__label text-muted">Latest Created</div>
+                        <div class="detail-summary__value text-draft">
+                            {{ $listStats['latest_created_at'] ? date('d-m-Y H:i', strtotime($listStats['latest_created_at'])) : 'NIL' }}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="detail-summary border-top-success shadow h-96 py-2">
+                        <div class="detail-summary__label text-muted">Latest Expiry</div>
+                        <div class="detail-summary__value text-success">
+                            {{ $listStats['latest_expire_at'] ? date('d-m-Y H:i', strtotime($listStats['latest_expire_at'])) : 'NIL' }}
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="card">
+        <div class="card sp-list-card">
             <div class="card-body">
-                <div class="mb-3">
-                    <h5 class="mb-1" style="color:#153567;">Active OTP Records</h5>
-                    <p class="text-muted mb-0">This view shows OTP records that have not yet expired and are still relevant for current authentication support.</p>
-                </div>
-
-                <div class="table-responsive">
-                    @if (isset($users_otp) && $users_otp)
-                        <div class="table-responsive us-table">
-                            <table class="table table-hover table-bordered mb-0">
-                                <thead>
-                                    <tr>
-                                        <th width="3%">#</th>
-                                        <th width="26%">User</th>
-                                        <th width="18%">Phone</th>
-                                        <th width="18%">OTP</th>
-                                        <th width="18%">Created On</th>
-                                        <th width="17%">Expires On</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @php $serial = 1; @endphp
-                                    @foreach ($users_otp as $values)
-                                        <tr>
-                                            <td>{{ $serial }}</td>
-                                            <td>{{ optional($values->user)->name ?? 'NIL' }}</td>
-                                            <td>{{ optional($values->user)->phone ?? 'NIL' }}</td>
-                                            <td><span class="badge badge-soft-primary">{{ $values->otp }}</span></td>
-                                            <td>{{ date('d-m-Y H:i', strtotime($values->created_at)) }}</td>
-                                            <td>{{ date('d-m-Y H:i', strtotime($values->expire_at)) }}</td>
-                                        </tr>
-                                        @php $serial++; @endphp
-                                    @endforeach
-                                </tbody>
-                            </table>
+                @if (isset($users_otp) && $users_otp->count())
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <span class="font-weight-500">No. of OTP records: {{ number_format($users_otp->count()) }}</span>
                         </div>
-                    @else
-                        <div class="alert alert-danger mb-0">No user OTP created.</div>
-                    @endif
-                </div>
+                    </div>
+
+                    <div class="table-responsive sp-list-table">
+                        <table class="table table-hover table-bordered mb-0">
+                            <thead>
+                                <tr>
+                                    <th width="4%">#</th>
+                                    <th width="24%">User</th>
+                                    <th width="16%">Phone</th>
+                                    <th width="14%">OTP</th>
+                                    <th width="18%">Created On</th>
+                                    <th width="18%">Expires On</th>
+                                    <th width="6%">State</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($users_otp as $index => $values)
+                                    @php
+                                        $expiresAt = $values->expire_at ? \Carbon\Carbon::parse($values->expire_at) : null;
+                                        $minutesLeft = $expiresAt ? now()->diffInMinutes($expiresAt, false) : null;
+                                    @endphp
+                                    <tr>
+                                        <td>{{ $index + 1 }}</td>
+                                        <td>
+                                            {{ optional($values->user)->name ?? 'NIL' }}<br>
+                                            <span class="text-muted">{{ optional($values->user)->email ?? 'NIL' }}</span>
+                                        </td>
+                                        <td>{{ optional($values->user)->phone ?? 'NIL' }}</td>
+                                        <td><span class="badge badge-soft-primary">{{ $values->otp }}</span></td>
+                                        <td>{{ date('d-m-Y H:i', strtotime($values->created_at)) }}</td>
+                                        <td>{{ $expiresAt ? $expiresAt->format('d-m-Y H:i') : 'NIL' }}</td>
+                                        <td>
+                                            @if (is_null($minutesLeft))
+                                                <span class="badge badge-soft-secondary">Unknown</span>
+                                            @elseif ($minutesLeft <= 10)
+                                                <span class="badge badge-soft-warning">Expiring</span>
+                                            @else
+                                                <span class="badge badge-soft-success">Active</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @else
+                    <div class="alert alert-danger mb-0">No active user OTP records found.</div>
+                @endif
             </div>
         </div>
     </div>

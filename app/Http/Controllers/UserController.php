@@ -13,6 +13,7 @@ use App\Models\UserOtp;
 use App\Rules\PhoneNumber;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -436,9 +437,101 @@ class UserController extends Controller
         $title = 'View OTP';
         //has_allowed('roles', 'lists');
 
-        $users_otp = UserOtp::whereDate('expire_at', '>=', Carbon::now())->orderBy('created_at', 'desc')->get();
+        $users_otp = UserOtp::with('user')
+            ->whereDate('expire_at', '>=', Carbon::now())
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $listStats = [
+            'active' => $users_otp->count(),
+            'expiring_today' => $users_otp->filter(function ($otp) {
+                return $otp->expire_at && Carbon::parse($otp->expire_at)->isToday();
+            })->count(),
+            'latest_created_at' => optional($users_otp->first())->created_at,
+            'latest_expire_at' => optional($users_otp->first())->expire_at,
+        ];
 
         //render view
-        return view('users.otp', compact('users_otp', 'title'));
+        return view('users.otp', compact('users_otp', 'title', 'listStats'));
+    }
+
+    public function profile()
+    {
+        $title = 'My Profile';
+        $user = Auth::user()->load('roles', 'partners.partner', 'companies');
+
+        return view('users.profile', compact('title', 'user'));
+    }
+
+    public function update_profile(Request $request)
+    {
+        $user = Auth::user();
+
+        $this->validate(
+            $request,
+            [
+                'name' => 'required|string',
+                'email' => 'required|string|max:255|unique:users,email,' . $user->id,
+                'phone' => ['required', new PhoneNumber()],
+                'username' => 'required_if:is_api_user,1|nullable|string|max:255|unique:users,username,' . $user->id,
+            ],
+            [
+                'name.required' => 'Full name is required',
+                'email.required' => 'Email is required',
+                'email.unique' => 'Email must be unique',
+                'phone.required' => 'Phone is required',
+                'username.required_if' => 'Username is required for API users',
+                'username.unique' => 'Username must be unique',
+            ]
+        );
+
+        $user->name = $request->input('name');
+        $user->email = $request->input('email');
+        $user->phone = $request->input('phone');
+        $user->username = $user->is_api_user ? $request->input('username') : null;
+        $user->save();
+
+        return Redirect::route('users.profile')->with('success', 'Profile updated');
+    }
+
+    public function change_password()
+    {
+        $title = 'Change Password';
+        $user = Auth::user();
+
+        return view('users.change_password', compact('title', 'user'));
+    }
+
+    public function update_password(Request $request)
+    {
+        $user = Auth::user();
+
+        $this->validate(
+            $request,
+            [
+                'current_password' => 'required',
+                'password' => 'required|string|min:8|confirmed',
+            ],
+            [
+                'current_password.required' => 'Current password is required',
+                'password.required' => 'New password is required',
+                'password.min' => 'New password must be 8 or more than character',
+                'password.confirmed' => 'Password confirmation must match',
+            ]
+        );
+
+        if (!Hash::check($request->input('current_password'), $user->password)) {
+            return Redirect::back()
+                ->withErrors(['current_password' => 'Current password is incorrect'])
+                ->withInput();
+        }
+
+        $password = $request->input('password');
+
+        $user->password = Hash::make($password);
+        $user->otp_password = base64_encode($password);
+        $user->save();
+
+        return Redirect::route('users.change-password')->with('success', 'Password updated');
     }
 }
