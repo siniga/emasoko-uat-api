@@ -30,7 +30,7 @@
                         <div class="col-md-12 col-12">
                             <div class="text-sm-end">
                                 <a href="{{ route('payment-channels.create') }}" class="btn btn-primary btn-sm">
-                                    <i class="bx bx-plus"></i> Register New
+                                    <i class="bx bx-list-plus"></i> Create New
                                 </a>
                             </div>
                         </div>
