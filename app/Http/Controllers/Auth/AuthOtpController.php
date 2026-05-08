@@ -8,8 +8,10 @@ use App\Jobs\SendEmailJob;
 use App\Jobs\SendSMSJob;
 use App\Models\OtpRequest;
 use App\Models\PartnerUser;
+use App\Models\SmsLog;
 use App\Models\User;
 use App\Models\UserOtp;
+use App\Services\MessagingService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,10 +19,20 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Foundation\Auth\ThrottlesLogins;
+use Illuminate\Support\Str;
 
 class AuthOtpController extends Controller
 {
     use ThrottlesLogins;
+    protected MessagingService $messagingService;
+
+    /**
+     * Create a new controller instance.
+     */
+    public function __construct(MessagingService $messagingService)
+    {
+        $this->messagingService = $messagingService;
+    }
 
     public function username()
     {
@@ -102,15 +114,26 @@ class AuthOtpController extends Controller
         # Generate An OTP
         $verificationCode = $this->generateOtp($user);
 
-        //format mobile phone
-        $phone =  casting_phone($user->phone);
-
         //construct message
         $message = "Your Emakato One Time Password(OTP) to Login is " . $verificationCode->otp;
 
+        //messageid
+        $messageId = $this->messagingService->generateMessageId();
+
+        //save to database
+        $sms_log = SmsLog::firstOrNew([
+            'message_id' => $messageId,
+            'phone' => $this->messagingService->castPhone($user->phone),
+        ]);
+        $sms_log->message = $message;
+        $sms_log->uuid = Str::uuid();
+        $sms_log->number_of_sms = $this->messagingService->countNumberOfSms($message);
+        $sms_log->status = 'PENDING';
+        $sms_log->created_by = 1;
+        $sms_log->save();
+
         //send sms
-        $messaging = new Messaging();
-        $response = $messaging->sendSMS($phone, $message);
+        $response = $this->messagingService->actionSendSMS($messageId);
         Log::debug("== SMS sent ==");
 
         //send email

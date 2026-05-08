@@ -19,11 +19,11 @@ class CreateSmsLogsTable extends Migration
             $table->string('message_id', 30);
             $table->text('message')->nullable();
             $table->unsignedSmallInteger('number_of_sms')->nullable();
-            $table->string('recipient', 20);
+            $table->string('phone', 20);
             $table->string('sender', 11);
             $table->enum('status', ['PENDING', 'SENT', 'DELIVERED', 'FAILED'])->default('PENDING');
             $table->boolean('schedule')->default(false);
-            $table->timestamp('scheduled_at')->nullable();
+            $table->timestamp('schedule_at')->nullable();
             $table->timestamp('sent_at')->nullable();
             $table->timestamp('delivered_at')->nullable();
             $table->json('response')->nullable();

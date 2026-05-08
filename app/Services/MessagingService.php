@@ -40,6 +40,8 @@ class MessagingService
 
                 //send message by curl
                 $response = $this->sendSMSByCurl($phone, $sender, $message);
+                Log::debug("== Sending SMS in loop ==");
+                Log::debug($response);
 
                 // $responseArr = json_decode($response, true);
                 // if ($responseArr && isset($responseArr['results'][0]['status']) && $responseArr['results'][0]['status'] == '0') {

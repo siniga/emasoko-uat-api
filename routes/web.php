@@ -21,6 +21,8 @@ use App\Http\Controllers\PaymentMandateCreateController;
 use App\Http\Controllers\PaymentMandateListController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\SmsLogsController;
+use App\Http\Controllers\SmsTemplatesController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Auth;
@@ -94,8 +96,7 @@ Route::middleware('auth')->group(function () {
     Route::post('reset-password', [ForgotPasswordController::class, 'submitResetPasswordForm'])->name('reset.password.post');
 
     //companies
-    Route::prefix('companies')->group(function () {
-    });
+    Route::prefix('companies')->group(function () {});
 
     Route::any('companies/lists', [CompanyController::class, 'index'])->name('companies.lists');
     Route::get('companies/show/{uuid}', [CompanyController::class, 'show'])->name('companies.show');
@@ -169,8 +170,7 @@ Route::middleware('auth')->group(function () {
     Route::get('payment-channels/{id}/delete', [PaymentChannelController::class, 'delete'])->name('payment-channels.delete');
 
     //payment mandate
-    Route::prefix('payment-mandate')->group(function () {
-    });
+    Route::prefix('payment-mandate')->group(function () {});
 
     //payment mandate
     Route::any('payment-mandate/lists', [PaymentMandateListController::class, 'lists'])->name('payment-mandate.lists');
@@ -218,8 +218,7 @@ Route::middleware('auth')->group(function () {
     Route::any('payment-mandate/approve-archive', [PaymentMandateApprovalController::class, 'approve_archive'])->name('payment-mandate.approve-archive');
 
     //collection batches
-    Route::prefix('collections')->group(function () {
-    });
+    Route::prefix('collections')->group(function () {});
 
     Route::any('collections/batches', [CollectionController::class, 'batches'])->name('collections.batches');
     Route::any('collections/create', [CollectionController::class, 'create'])->name('collections.create');
@@ -262,6 +261,27 @@ Route::middleware('auth')->group(function () {
     Route::get('collections/actual/daily/{uuid}', [CollectionController::class, 'actual_daily_detail'])->name('collections.actual-daily-detail');
     Route::any('collections/export-actual-daily/{uuid}', [CollectionController::class, 'export_actual_daily'])->name('collections.export-actual-daily');
 
+    //messaging
+    Route::prefix('messaging')->group(function () {
+        //sms templates
+        Route::any('sms-templates/lists', [SmsTemplatesController::class, 'index'])->name('sms-templates');
+        Route::get('sms-templates/all', [SmsTemplatesController::class, 'get_all'])->name('sms-templates.all');
+        Route::get('sms-templates/{id}/get-by', [SmsTemplatesController::class, 'get_by'])->name('sms-templates.get-by');
+        Route::get('sms-templates/{id}/delete', [SmsTemplatesController::class, 'delete'])->name('sms-templates.delete');
+        Route::resource('sms-templates', SmsTemplatesController::class);
+
+        //sms logs
+        Route::any('sms-logs/lists', [SmsLogsController::class, 'index'])->name('sms-logs');
+
+        //quick sms
+        Route::get('sms-logs/quick-sms', [SmsLogsController::class, 'quick_sms'])->name('sms-logs.quick-sms');
+        Route::post('sms-logs/send-quick-sms', [SmsLogsController::class, 'send_quick_sms'])->name('sms-logs.send-quick-sms');
+
+        //file sms
+        Route::get('sms-logs/file-sms', [SmsLogsController::class, 'file_sms'])->name('sms-logs.file-sms');
+        Route::post('sms-logs/send-file-sms', [SmsLogsController::class, 'send_file_sms'])->name('sms-logs.send-file-sms');
+    });
+
     //reports
     Route::any('reports/lists', [ReportController::class, 'lists'])->name('reports.lists');
 
@@ -269,8 +289,7 @@ Route::middleware('auth')->group(function () {
     Route::get('tasks/lists', [TaskController::class, 'lists'])->name('tasks.lists');
 
     //users
-    Route::prefix('users')->group(function () {
-    });
+    Route::prefix('users')->group(function () {});
 
     Route::get('users/{id}/change-status', [UserController::class, 'change_status'])->name('users.change-status');
     Route::put('users/{id}/store-status', [UserController::class, 'store_status'])->name('users.store-status');
@@ -278,8 +297,7 @@ Route::middleware('auth')->group(function () {
     Route::get('users/view/otp', [UserController::class, 'view_otp'])->name('users.view-otp');
 
     //roles
-    Route::prefix('roles')->group(function () {
-    });
+    Route::prefix('roles')->group(function () {});
 
     Route::get('roles/{id}/assign-perms', [RoleController::class, 'assign_perms'])->name('roles.assign-perms');
     Route::post('roles/{id}/store-perms', [RoleController::class, 'store_perms'])->name('roles.store-perms');

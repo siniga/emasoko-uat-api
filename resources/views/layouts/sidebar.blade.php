@@ -51,13 +51,12 @@
                         'payment-mandate.create-deduction',
                         'payment-mandate.preview',
                     );
-                    $paymentMandateOpen =
-                        Route::is(
-                            'payment-mandate.lists',
-                            'payment-mandate.show',
-                            'payment-mandate.edit',
-                            'payment-mandate.delete',
-                        );
+                    $paymentMandateOpen = Route::is(
+                        'payment-mandate.lists',
+                        'payment-mandate.show',
+                        'payment-mandate.edit',
+                        'payment-mandate.delete',
+                    );
                     $mandateApprovalsOpen = Route::is(...$mandateApprovalRoutes);
                     $mandateApprovalCount = \App\Models\DebitOrderRequest::where('status', 'PENDING')
                         ->whereIn('request_type', ['CANCELLATION', 'DELETION', 'ARCHIVE', 'CLOSING'])
@@ -105,7 +104,7 @@
                             <span>BI Dashboard</span>
                         </a>
                     </li>
-                 @endif
+                @endif
 
                 @if (Auth::user()->hasRole(['admin']) || Auth::user()->hasRole(['Partner']))
                     <li class="{{ $providersOpen ? 'mm-active' : '' }}">
@@ -166,13 +165,6 @@
                     </a>
                 </li>
 
-                <li class="{{ $reportsOpen ? 'mm-active' : '' }}">
-                    <a href="{{ route('reports.lists') }}" class="waves-effect">
-                        <i class='bx bxs-report'></i>
-                        <span key="t-layouts">Reports</span>
-                    </a>
-                </li>
-
                 @if (Auth::user()->hasRole(['admin']))
                     <li class="{{ $paymentChannelsOpen ? 'mm-active' : '' }}">
                         <a href="{{ route('payment-channels.index') }}" class="waves-effect">
@@ -181,6 +173,20 @@
                         </a>
                     </li>
                 @endif
+
+                <li class="">
+                    <a href="{{ route('sms-logs') }}" class="waves-effect">
+                        <i class='bx bx-message-alt'></i>
+                        <span key="t-chat">Messaging</span>
+                    </a>
+                </li>
+
+                <li class="{{ $reportsOpen ? 'mm-active' : '' }}">
+                    <a href="{{ route('reports.lists') }}" class="waves-effect">
+                        <i class='bx bxs-report'></i>
+                        <span key="t-layouts">Reports</span>
+                    </a>
+                </li>
 
                 @if (Auth::user()->hasRole(['admin']) || Auth::user()->hasRole(['Partner']))
                     <li class="menu-title" key="t-apps">Authentication</li>
@@ -191,12 +197,12 @@
                         </a>
                     </li>
 
-                    <li class="{{ $usersOtpOpen ? 'mm-active' : '' }}">
+                    {{-- <li>
                         <a href="{{ route('users.view-otp') }}" class="waves-effect">
-                            <i class='bx bx-info-circle'></i>
-                            <span key="t-chat">Users OTP</span>
+                            <i class='bx bxs-data'></i>
+                            <span key="t-chat">Audit Logs</span>
                         </a>
-                    </li>
+                    </li> --}}
                 @endif
             </ul>
         </div>
