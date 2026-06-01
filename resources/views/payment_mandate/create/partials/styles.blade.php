@@ -241,7 +241,7 @@
     .pmc-actions {
         display: flex;
         justify-content: flex-end;
-        gap: 0.65rem;
+        gap: 0.32rem;
         flex-wrap: wrap;
         margin-top: 1rem;
     }

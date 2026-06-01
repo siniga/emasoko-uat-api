@@ -123,7 +123,6 @@
                             <div class="detail-section__head">
                                 <div>
                                     <h5>Provider Overview</h5>
-                                    <p>Core service provider identity arranged in the same overview style as mandate details.</p>
                                 </div>
                                 <div class="actions">
                                     <div class="btn-group">

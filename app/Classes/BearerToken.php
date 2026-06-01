@@ -11,7 +11,7 @@ class BearerToken
     private ?DebitOrder $debitOrder = null;
     private ?string $clientId = null;
     private ?string $clientSecret = null;
-    private string $tokenUrl;
+    private ?string $tokenUrl = null;
 
     public function __construct($debitOrder = null, ?string $clientId = null, ?string $clientSecret = null, ?string $tokenUrl = null)
     {
@@ -52,6 +52,10 @@ class BearerToken
 
         if (!$this->clientId || !$this->clientSecret) {
             throw new \RuntimeException('BearerToken client credentials are missing.');
+        }
+
+        if (!$this->tokenUrl) {
+            throw new \RuntimeException('BearerToken token URL is missing.');
         }
 
         // Send the POST request using Laravel's HTTP client

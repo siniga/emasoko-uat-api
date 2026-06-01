@@ -246,7 +246,7 @@
                                             <tr>
                                                 <th width="3%">#</th>
                                                 <th width="20%">Account Name</th>
-                                                <th>Bank Name/MNO</th>
+                                                <th>Payment Channel</th>
                                                 <th>Account Number</th>
                                                 <th>Mandate Reference</th>
                                                 <th>Lifecycle</th>

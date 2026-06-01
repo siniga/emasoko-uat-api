@@ -170,66 +170,6 @@
         </div>
     </div>
 
-    <div class="row mb-3">
-        <div class="col-md-3">
-            <div class="detail-summary shadow h-96 py-2">
-                <div class="detail-summary__label text-muted">Total Subscribers</div>
-                <div class="detail-summary__split">
-                    <div class="detail-summary__metric">
-                        <div class="detail-summary__value text-primary">{{ number_format($service_provider_count) }}</div>
-                    </div>
-                    <div class="detail-summary__metric detail-summary__metric--count">
-                        <div class="detail-summary__value text-success">{{ number_format($active_service_provider_count) }}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="detail-summary shadow h-96 py-2">
-                <div class="detail-summary__label text-muted">Amount Collected</div>
-                <div class="detail-summary__split">
-                    <div class="detail-summary__metric">
-                        <div class="detail-summary__value text-success">
-                            {{ format_short_amount($year_summary->paid_amount ?? 0) }}</div>
-                    </div>
-                    <div class="detail-summary__metric detail-summary__metric--count">
-                        <div class="detail-summary__value text-success">0</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="detail-summary shadow h-96 py-2">
-                <div class="detail-summary__label text-muted"> Avg Collection</div>
-                <div class="detail-summary__split">
-                    <div class="detail-summary__metric">
-                        <div class="detail-summary__value text-success">{{ number_format($year_success_rate, 2) }}%</div>
-                    </div>
-                    <div class="detail-summary__metric detail-summary__metric--count">
-                        <div class="detail-summary__value text-success">0</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="detail-summary shadow h-96 py-2">
-                <div class="detail-summary__label text-muted">Revenue</div>
-                <div class="detail-summary__split">
-                    <div class="detail-summary__metric">
-                        <div class="detail-summary__value text-success">0</div>
-                    </div>
-                    <div class="detail-summary__metric detail-summary__metric--count">
-                        <div class="detail-summary__value text-success">0</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <div class="row">
         <div class="col-xl-8">
             <div class="card">

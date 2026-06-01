@@ -45,14 +45,13 @@
                         <section data-step="3">
                             <div class="sp-section">
                                 <div class="sp-section__title">Collection Account Setup</div>
-                                <div class="sp-section__hint">Provide at least one active collection account. Add more accounts if the provider settles across multiple channels or currencies.</div>
 
                             @if ($company->partnerAccounts->isNotEmpty())
                                 @foreach ($company->partnerAccounts as $data)
                                     <div class="row field-input">
                                         <div class="col-lg-2">
                                             <div class="mb-3">
-                                                <label>Account Type <span class="text-danger">*</span></label>
+                                                <label>Channel Type <span class="text-danger">*</span></label>
                                                 @php
                                                     $account_type_options = [];
                                                     $options = [];
@@ -159,7 +158,7 @@
                                 <div class="row field-input">
                                     <div class="col-lg-2">
                                         <div class="mb-3">
-                                            <label for="basicpill-namecard-input">Account Type <span
+                                            <label for="basicpill-namecard-input">Channel Type <span
                                                     class="text-danger">*</span></label>
                                             @php
                                                 $account_type_options = [];
@@ -267,7 +266,7 @@
                             <div class="field_wrapper"></div>
 
                             <div class="sp-actionbar">
-                                <div class="sp-actionbar__meta">Step 3 of 5. Make sure the account setup is complete before capturing the authorized representative.</div>
+                                <div class="sp-actionbar__meta">Step 3 of 5. Capture channel information correctly.</div>
                                 <div class="d-flex gap-2">
                                         <a href="{{ route('companies.register-documents', $company->uuid) }}"
                                             class="btn btn-outline-secondary text-medium">Previous</a>
@@ -327,7 +326,7 @@
             <div class="row field-input row-div border-top border-primary py-4">
                 <div class="col-lg-2">
                     <div class="mb-3">
-                        <label>Account Type <span class="text-danger">*</span></label>
+                        <label>Channel Type <span class="text-danger">*</span></label>
                         <select name="account_type_id[]" class="form-control account_type_id">
                             <option value=''>-- Select --</option>
                             ${Object.keys(account_types).map(key => `<option value='${key}'>${account_types[key]}</option>`).join('')}

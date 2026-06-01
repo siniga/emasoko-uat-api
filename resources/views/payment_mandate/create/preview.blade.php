@@ -40,7 +40,6 @@
 
                         <div class="pmc-section">
                             <div class="pmc-section__title">Deduction Channel</div>
-                            <div class="pmc-section__hint">Final review of the customer account and contact details that will be used during consent and collection.</div>
                             <div class="table-responsive pmc-table">
                                 <table class="table table-bordered mb-0">
                                     <tr>
@@ -71,7 +70,6 @@
 
                         <div class="pmc-section">
                             <div class="pmc-section__title">Customer Deduction Information</div>
-                            <div class="pmc-section__hint">Final review of the commercial terms before submission to the provider or OTP verification.</div>
                             <div class="table-responsive pmc-table">
                                 <table class="table table-bordered mb-0">
                                     <tr>

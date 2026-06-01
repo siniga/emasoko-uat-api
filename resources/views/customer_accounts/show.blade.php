@@ -74,7 +74,6 @@
                             <div class="detail-section__head">
                                 <div>
                                     <h5>Account Overview</h5>
-                                    <p>Core identity and channel details arranged the same way as mandate overview.</p>
                                 </div>
 
                                 <div class="actions">
@@ -149,8 +148,7 @@
                             <div class="detail-section__head">
                                 <div>
                                     <h5>Payment Mandates</h5>
-                                    <p>Mandates linked to this account, presented in the same operational style as mandate
-                                        details.</p>
+                                    <p>Mandates linked to this account.</p>
                                 </div>
                                 <div class="detail-section__action">
                                     <a href="{{ route('payment-mandate.create-deduction', [$customer_account->uuid]) }}"

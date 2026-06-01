@@ -43,45 +43,25 @@
 
                 <section>
                     <div class="pmc-section">
-                        <div class="pmc-section__title">Account Channel</div>
-                        <div class="pmc-section__hint">Select the payment rail and account identity that will be linked to this mandate.</div>
+                        <div class="pmc-section__title">Customer Account</div>
 
                         <div class="row g-3">
                             <div class="col-lg-3 col-md-6 col-12">
                                 <div class="mb-3">
                                     <label>Payment Channel <span class="text-danger">*</span></label>
-                                    @php
-                                        $options = [];
-                                    @endphp
-                                    @foreach ($account_types as $val)
-                                        @php
-                                            $options[$val->id] = $val->name;
-                                        @endphp
-                                    @endforeach
-                                    @php
-                                        $options = ['' => '-- Select --'] + $options;
-                                    @endphp
-
-                                    {{ Form::select('account_type_id', $options, old('account_type_id', $customer_account->account_type_id ?? ''), ['class' => 'form-control', 'id' => 'account_type_id', 'x-model' => 'accountTypeId', '@change' => 'handleAccountTypeChange']) }}
-                                    <span class="text-danger">{{ $errors->first('account_type_id') }}</span>
-                                </div>
-                            </div>
-
-                            <div class="col-lg-3 col-md-6 col-12">
-                                <div class="mb-3">
-                                    <label x-html="bankMnoLabel"></label>
-                                    @php $options = []; @endphp
-                                    @foreach ($accounts as $val)
-                                        @php
-                                            $options[$val->id] = $val->name;
-                                        @endphp
-                                    @endforeach
-                                    @php
-                                        $options = ['' => '-- Select --'] + $options;
-                                    @endphp
-
-                                    {{ Form::select('account_id', $options, old('account_id', $customer_account->account_id ?? ''), ['class' => 'form-control', 'id' => 'account_id', 'x-ref' => 'accountId']) }}
+                                    <input type="hidden" name="account_type_id" x-model="accountTypeId">
+                                    <select name="account_id" class="form-control" id="account_id" x-ref="accountId" @change="handleAccountChange">
+                                        <option value="">-- Select --</option>
+                                        @foreach ($accounts as $val)
+                                            <option value="{{ $val->id }}"
+                                                data-account-type-id="{{ $val->account_type_id }}"
+                                                @selected((string) old('account_id', $customer_account->account_id ?? '') === (string) $val->id)>
+                                                {{ $val->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
                                     <span class="text-danger">{{ $errors->first('account_id') }}</span>
+                                    <span class="text-danger">{{ $errors->first('account_type_id') }}</span>
                                 </div>
                             </div>
 
@@ -97,7 +77,6 @@
 
                     <div class="pmc-section">
                         <div class="pmc-section__title">Customer Identity</div>
-                        <div class="pmc-section__hint">Use contact details that can be reached for verification, consent, and support.</div>
 
                         <div class="row g-3">
                             <div class="col-lg-3 col-md-6 col-12" x-show="showBankFields" x-cloak>
@@ -174,7 +153,6 @@
         function initData() {
             return {
                 accountTypeId: "{{ old('account_type_id', $customer_account->account_type_id ?? '') }}",
-                bankMnoLabel: 'Bank Name <span class="text-danger">*</span>',
 
                 get showBankFields() {
                     return String(this.accountTypeId) === '1';
@@ -189,37 +167,16 @@
                 },
 
                 syncAccountTypeState() {
-                    this.bankMnoLabel = String(this.accountTypeId) === '2'
-                        ? 'MNO Name <span class="text-danger">*</span>'
-                        : 'Bank Name <span class="text-danger">*</span>';
-                },
-
-                async handleAccountTypeChange() {
-                    this.syncAccountTypeState();
-
-                    if (!this.accountTypeId) {
+                    if (!this.$refs.accountId) {
                         return;
                     }
 
-                    try {
-                        const response = await fetch('/account-types/' + this.accountTypeId, {
-                            headers: {
-                                Accept: 'text/html',
-                            },
-                        });
+                    const selectedOption = this.$refs.accountId.options[this.$refs.accountId.selectedIndex];
+                    this.accountTypeId = selectedOption ? (selectedOption.dataset.accountTypeId || '') : '';
+                },
 
-                        if (!response.ok) {
-                            return;
-                        }
-
-                        const optionsHtml = await response.text();
-
-                        if (this.$refs.accountId) {
-                            this.$refs.accountId.innerHTML = optionsHtml;
-                        }
-                    } catch (error) {
-                        console.error('Failed to load accounts', error);
-                    }
+                handleAccountChange() {
+                    this.syncAccountTypeState();
                 },
             }
         }

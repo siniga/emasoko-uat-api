@@ -44,7 +44,6 @@
                         <section data-step="4">
                             <div class="sp-section">
                                 <div class="sp-section__title">Authorized Representative</div>
-                                <div class="sp-section__hint">Add the approved contact person. You can add multiple records if the service provider needs more than one authorized representative.</div>
 
                             @if ($company->partnerStaff->isNotEmpty())
                                 @foreach ($company->partnerStaff as $data)

@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CustomerAccountRequest;
 use App\Models\Account;
-use App\Models\AccountType;
 use App\Models\Customer;
 use App\Models\CustomerAccount;
 use App\Models\DebitOrder;
@@ -45,10 +44,9 @@ class PaymentMandateCreateController extends BasePaymentMandateController
             $debit_order = DebitOrder::where(['uuid' => $debit_order_id])->first();
         }
 
-        $account_types = AccountType::all();
-        $accounts = Account::where(['active' => 1])->get();
+        $accounts = Account::with('accountType')->where(['active' => 1])->orderBy('name')->get();
 
-        return view('payment_mandate.create.account_form', compact('title', 'customer_account', 'debit_order', 'account_types', 'accounts'));
+        return view('payment_mandate.create.account_form', compact('title', 'customer_account', 'debit_order', 'accounts'));
     }
 
     public function store_account(CustomerAccountRequest $request)
