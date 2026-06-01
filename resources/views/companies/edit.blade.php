@@ -303,7 +303,7 @@
 
                             // //set timer
                             setTimeout(function() {
-                                window.location.href = "/companies/details/" + responseJson.uuid;
+                                window.location.href = "/companies/show/" + responseJson.uuid;
                             }, 2000);
 
                         }).catch(() => {

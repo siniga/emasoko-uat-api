@@ -8,5 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 class SmsLog extends Model
 {
     use HasFactory;
+    protected $table = "sms_logs";
     protected $guarded = ['id'];
 }

@@ -14,6 +14,21 @@ class DebitOrder extends Model
     use HasFactory;
     protected $guarded = [];
 
+    public const LIFECYCLE_DRAFT = 'draft';
+    public const LIFECYCLE_SUBMITTED = 'submitted';
+    public const LIFECYCLE_AWAITING_OTP = 'awaiting_otp';
+    public const LIFECYCLE_VERIFIED = 'verified';
+    public const LIFECYCLE_ACTIVE = 'active';
+    public const LIFECYCLE_CANCELLATION_REQUESTED = 'cancellation_requested';
+    public const LIFECYCLE_CANCELLED = 'cancelled';
+    public const LIFECYCLE_CLOSED = 'closed';
+    public const LIFECYCLE_ARCHIVED = 'archived';
+    public const LIFECYCLE_FAILED = 'failed';
+
+    public const SUMMARY_PENDING = 'pending';
+    public const SUMMARY_APPROVED = 'approved';
+    public const SUMMARY_FAILED = 'failed';
+
     //filter condition
     public static function filterCondition()
     {
@@ -59,6 +74,18 @@ class DebitOrder extends Model
     public function scopeActive($query)
     {
         return $query->where('status', '=', 'active');
+    }
+
+    public function scopeEligibleForCollection($query, ?string $channel = null)
+    {
+        return $query
+            ->where('debit_orders.approved', 1)
+            ->where('debit_orders.deleted', 0)
+            ->where('debit_orders.contract_status', 'OPEN')
+            ->where('debit_orders.lifecycle_status', self::LIFECYCLE_ACTIVE)
+            ->when($channel !== null, function ($q) use ($channel) {
+                $q->where('debit_orders.channel', $channel);
+            });
     }
 
     public function installments()
@@ -115,6 +142,91 @@ class DebitOrder extends Model
             : $this->remarks;
     }
 
+    public function getResolvedLifecycleStatusAttribute(): string
+    {
+        if (!empty($this->lifecycle_status)) {
+            return $this->lifecycle_status;
+        }
+
+        if ((int) $this->archived === 1) {
+            return self::LIFECYCLE_ARCHIVED;
+        }
+
+        if ((int) $this->closed === 1 || strtoupper((string) $this->contract_status) === 'CLOSED') {
+            return self::LIFECYCLE_CLOSED;
+        }
+
+        if ((int) $this->cancelled === 1) {
+            return self::LIFECYCLE_CANCELLED;
+        }
+
+        if ($this->debitOrderRequests()->where('request_type', 'CANCELLATION')->where('status', 'PENDING')->exists()) {
+            return self::LIFECYCLE_CANCELLATION_REQUESTED;
+        }
+
+        return match ((int) $this->status) {
+            240 => self::LIFECYCLE_ACTIVE,
+            202 => self::LIFECYCLE_VERIFIED,
+            201 => self::LIFECYCLE_AWAITING_OTP,
+            200, 249 => self::LIFECYCLE_SUBMITTED,
+            403, 404, 405, 430, 500, 501 => self::LIFECYCLE_FAILED,
+            100 => self::LIFECYCLE_DRAFT,
+            default => self::LIFECYCLE_DRAFT,
+        };
+    }
+
+    public static function lifecycleSummaryMap(): array
+    {
+        return [
+            self::SUMMARY_PENDING => [
+                self::LIFECYCLE_DRAFT,
+                self::LIFECYCLE_SUBMITTED,
+                self::LIFECYCLE_AWAITING_OTP,
+                self::LIFECYCLE_VERIFIED,
+            ],
+            self::SUMMARY_APPROVED => [
+                self::LIFECYCLE_ACTIVE,
+                self::LIFECYCLE_CANCELLATION_REQUESTED,
+                self::LIFECYCLE_CANCELLED,
+                self::LIFECYCLE_CLOSED,
+                self::LIFECYCLE_ARCHIVED,
+            ],
+            self::SUMMARY_FAILED => [
+                self::LIFECYCLE_FAILED,
+            ],
+        ];
+    }
+
+    public static function lifecycleStatusesForSummary(string $summary): array
+    {
+        return static::lifecycleSummaryMap()[$summary] ?? [];
+    }
+
+    public function getSummaryStatusAttribute(): string
+    {
+        $resolved = $this->resolved_lifecycle_status;
+
+        foreach (static::lifecycleSummaryMap() as $summary => $statuses) {
+            if (in_array($resolved, $statuses, true)) {
+                return $summary;
+            }
+        }
+
+        return self::SUMMARY_PENDING;
+    }
+
+    public function getSummaryStatusLabelAttribute(): string
+    {
+        return strtoupper($this->summary_status);
+    }
+
+    public function setLifecycleStatus(string $status): self
+    {
+        $this->lifecycle_status = $status;
+
+        return $this;
+    }
+
     public function getPartnerAccountAttribute()
     {
         return PartnerAccount::toBase()
@@ -123,7 +235,7 @@ class DebitOrder extends Model
             ->first();
     }
 
-    public static function mandateApprovalStats($channel = null)
+    public static function mandateApprovalStats($channel = null, $year = null)
     {
         return self::filterCondition()
             ->select([
@@ -137,6 +249,9 @@ class DebitOrder extends Model
             })
             ->when($channel != null, function ($q) use ($channel) {
                 $q->where('debit_orders.channel', $channel);
+            })
+            ->when($year != null, function ($q) use ($year) {
+                $q->whereYear('debit_orders.created_at', $year);
             })
             ->groupBy('debit_orders.approved')
             ->orderBy('debit_orders.approved')
@@ -173,21 +288,7 @@ class DebitOrder extends Model
                 $query->where('debit_orders.partner_id', '=', $partner_id);
             })
             ->when($status, function ($query) use ($status) {
-                switch ($status) {
-                    case 'pending':
-                        $approved = 0;
-                        break;
-                    case 'approved':
-                        $approved = 1;
-                        break;
-                    case 'failed':
-                        $approved = 2;
-                        break;
-                    default:
-                        $approved = 0;
-                }
-
-                $query->where('debit_orders.approved', $approved);
+                $query->where('debit_orders.lifecycle_status', $status);
             })
             ->when($account_type_id, function ($query) use ($account_type_id) {
                 $query->whereHas("customerAccount", function ($q) use ($account_type_id) {

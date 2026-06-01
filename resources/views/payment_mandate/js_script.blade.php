@@ -6,6 +6,7 @@
                 eModal: "Mandate_Information",
                 debit_order_uuid: "{{ $debit_order->uuid }}",
                 status: "{{ $debit_order->status }}",
+                lifecycleStatus: "{{ $debit_order->lifecycle_status ?? $debit_order->resolved_lifecycle_status }}",
                 channel: "{{ $debit_order->channel }}",
                 deleted: "{{ $debit_order->deleted }}",
                 // remarks: "{{ $debit_order->remarks }}",
@@ -38,6 +39,43 @@
                 buttonVerify: "Verify",
                 resendBtn: "Resend",
 
+                canEdit() {
+                    return ['draft', 'submitted', 'failed'].includes(this.lifecycleStatus);
+                },
+
+                canArchive() {
+                    return this.deleted == 0 && ['draft', 'submitted', 'awaiting_otp', 'verified', 'failed'].includes(this.lifecycleStatus);
+                },
+
+                canCancel() {
+                    return ['submitted', 'awaiting_otp', 'verified', 'active', 'cancellation_requested'].includes(this.lifecycleStatus);
+                },
+
+                canVerifyOtp() {
+                    return this.channel === 'NMB' && this.lifecycleStatus === 'awaiting_otp';
+                },
+
+                canFetchStatus() {
+                    return this.channel === 'NMB' && ['submitted', 'awaiting_otp', 'verified', 'failed'].includes(this.lifecycleStatus);
+                },
+
+                lifecycleBadgeHtml() {
+                    const config = {
+                        draft: ['Draft', 'secondary'],
+                        submitted: ['Submitted', 'info'],
+                        awaiting_otp: ['Awaiting OTP', 'warning'],
+                        verified: ['Verified', 'info'],
+                        active: ['Active', 'success'],
+                        cancellation_requested: ['Cancellation Requested', 'warning'],
+                        cancelled: ['Cancelled', 'danger'],
+                        closed: ['Closed', 'closed'],
+                        archived: ['Archived', 'secondary'],
+                        failed: ['Failed', 'danger'],
+                    };
+                    const current = config[this.lifecycleStatus] || ['Unknown Status', 'secondary'];
+                    return `<span class="badge badge-pill badge-soft-${current[1]}">${current[0]}</span>`;
+                },
+
                 //approval mandate status
                 fetchMandateStatus() {
                     this.formLoading = true;
@@ -68,14 +106,17 @@
                                 //set show modal to true
                                 if (data.response_code == 240) {
                                     this.status = 240;
+                                    this.lifecycleStatus = data.lifecycle_status || 'active';
 
                                     //display message
                                     $('#message_wrp').html("<div class='alert alert-success rounded-sm'>" + data
                                         .success_msg + "</div>");
-                                } else if (http_response_code == 249 || http_response_code == 430) {
+                                } else if (data.response_code == 249 || data.response_code == 430) {
+                                    this.lifecycleStatus = data.lifecycle_status || this.lifecycleStatus;
                                     $('#message_wrp').html("<div class='alert alert-info rounded-sm'>" + data
                                         .success_msg + "</div>");
                                 } else {
+                                    this.lifecycleStatus = data.lifecycle_status || this.lifecycleStatus;
                                     $('#message_wrp').html("<div class='alert alert-danger rounded-sm'>" + data
                                         .success_msg + "</div>");
                                 }
@@ -166,12 +207,15 @@
                                 //set show modal to true
                                 if (data.response_code == 201) {
                                     this.status = 405;
+                                    this.lifecycleStatus = data.lifecycle_status || 'cancellation_requested';
 
                                     //display message
                                     $('#message_wrp_2').html("<div class='alert alert-success rounded-sm'>" + data.success_msg + "</div>");
-                                } else if (http_response_code == 249 || http_response_code == 430) {
+                                } else if (data.response_code == 249 || data.response_code == 430) {
+                                    this.lifecycleStatus = data.lifecycle_status || this.lifecycleStatus;
                                     $('#message_wrp_2').html("<div class='alert alert-info rounded-sm'>" + data.success_msg + "</div>");
                                 } else {
+                                    this.lifecycleStatus = data.lifecycle_status || this.lifecycleStatus;
                                     $('#message_wrp_2').html("<div class='alert alert-danger rounded-sm'>" + data.success_msg + "</div>");
                                 }
                             } else {
@@ -232,6 +276,7 @@
                                 //set show modal to true
                                 if (data.response_code == 201) {
                                     this.status = 201;
+                                    this.lifecycleStatus = data.lifecycle_status || 'awaiting_otp';
 
                                     //display message
                                     $('#message_wrp_1').html("<div class='alert alert-success rounded-sm'>" +
@@ -291,17 +336,18 @@
                         //check if response is success
                         if (data.success == true) {
                             //check if channel is NMB
-                            if (data.channel == "NMB") {
-                                //set show modal to true
-                                if (data.response_code == 202) {
-                                    this.status = 202;
+                        if (data.channel == "NMB") {
+                            //set show modal to true
+                            if (data.response_code == 202) {
+                                this.status = 202;
+                                this.lifecycleStatus = data.lifecycle_status || 'verified';
 
-                                    //display message
-                                    $('#message_wrp_1').html("<div class='alert alert-success rounded-sm'>" +
+                                //display message
+                                $('#message_wrp_1').html("<div class='alert alert-success rounded-sm'>" +
                                         data.success_msg + "</div>");
 
                                     //Redirect to success page
-                                    var redirectionURL = '/payment-mandate/show/' + this.uuid;
+                                    var redirectionURL = '/payment-mandate/show/' + this.debit_order_uuid;
 
                                     setTimeout(function() {
                                         window.location.href = redirectionURL

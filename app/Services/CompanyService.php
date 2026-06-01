@@ -25,9 +25,19 @@ use Illuminate\Support\Facades\Auth;
 class CompanyService
 {
     private $app_variable;
-    public function __construct()
+    public function __construct() {}
+
+    protected function appVariable(): AppVariable
     {
-        $this->app_variable = AppVariable::first();
+        if (!$this->app_variable) {
+            $this->app_variable = AppVariable::first();
+        }
+
+        if (!$this->app_variable) {
+            throw new \RuntimeException('App variables are not initialized');
+        }
+
+        return $this->app_variable;
     }
 
     //create company information
@@ -58,6 +68,7 @@ class CompanyService
         $partner->business_name = ucwords($data->business_name);
         $partner->tin_number = $data->tin_number;
         $partner->year_of_incorporation = $data->year_of_incorporation;
+        $partner->number_of_staff = (int) $data->number_of_staff;
         $partner->region_id = $data->region_id;
         $partner->phone = $phone;
         $partner->email = $data->company_email;
@@ -225,7 +236,7 @@ class CompanyService
             $partner->complete = 1;
             $partner->approved = 1; //approved
             $partner->remarks = "Service provider registration approved by eMakato Team";
-            $partner->status = 200; //OK
+            $partner->status = 'pending_approval';
             $partner->updated_by = auth()->id();
             $partner->save();
 
@@ -291,15 +302,16 @@ class CompanyService
     //get customer code
     public function getCustomerCode()
     {
-        static $number = $this->app_variable->cur_customer_code;
+        $appVariable = $this->appVariable();
+        static $number = $appVariable->cur_customer_code;
 
         $number++;
         $next_customer_code = str_pad($number, 9, '0', STR_PAD_LEFT);
 
         //update app variable
-        $this->app_variable->cur_customer_code = $number;
-        $this->app_variable->next_customer_code = $next_customer_code;
-        $this->app_variable->save();
+        $appVariable->cur_customer_code = $number;
+        $appVariable->next_customer_code = $next_customer_code;
+        $appVariable->save();
 
         return $next_customer_code;
     }

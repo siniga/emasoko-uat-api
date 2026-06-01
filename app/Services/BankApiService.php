@@ -7,6 +7,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use App\Classes\Authentication;
 use App\Classes\BearerToken;
+use App\Classes\Checksum;
 use App\Jobs\SendSMSJob;
 use App\Models\CollectionBatch;
 use App\Models\DebitOrder;
@@ -20,12 +21,13 @@ class BankApiService
 {
     private $auth;
     private $tigoAuth;
-    private $deduction_service;
+    private $crdbAuth;
+    private $deductionService;
 
     public function __construct()
     {
         $this->auth = new Authentication();
-        $this->deduction_service = new DeductionService();
+        $this->deductionService = new DeductionService();
     }
 
     //corporate registration
@@ -96,7 +98,8 @@ class BankApiService
     {
         //responce code
         $is_verified = 0;
-        $response_code = 200;
+        $http_status_code = 200;
+        $status = 'pending_approval';
         $remarks = "";
 
         //create authentication token
@@ -144,17 +147,17 @@ class BankApiService
             // check for response code
             if ($response_code == 240) {
                 $is_verified = 1;
-                $response_code = 202;
+                $status = 'active';
             } else {
-                $response_code = 203;
+                $status = 'not_active';
             }
         } else if (strtolower($response['status']) == "fail") {
-            $response_code = 500;
+            $http_status_code = 500;
             $remarks = $response['data']['response'][0]['responseDescription'];
         }
 
         // update partner
-        $partner->status = $response_code;
+        $partner->status = $status;
         $partner->http_response_code = $response['data']['response'][0]['responseCode'];
         $partner->remarks = $response['data']['response'][0]['responseDescription'];
         $partner->save();
@@ -164,14 +167,14 @@ class BankApiService
         $nmb_partner_account->remarks = $remarks;
         $nmb_partner_account->save();
 
-        return [$response_code, $remarks];
+        return [$http_status_code, $remarks];
     }
 
     //mandate registartion
     public function mandateRegistrationRequest($data)
     {
         //responce code
-        $response_code = 200;
+        $http_status_code = 200;
         $remarks = "";
 
         //create authentication token
@@ -217,28 +220,153 @@ class BankApiService
         if ($response) {
             // Separate status code
             if (strtolower($response['status']) == "success") {
-                $response_code = 201;
+                $http_status_code = 201;
                 $remarks = $response['data']['response'][0]['responseDescription'];
 
                 $debit_order->status = 201; //created
+                $debit_order->lifecycle_status = DebitOrder::LIFECYCLE_AWAITING_OTP;
                 $debit_order->otp_reference = $response['data']['otpCaseReference'];
             } else if (strtolower($response['status']) == "fail") {
-                $response_code = $response['data']['response'][0]['responseCode'];
+                $http_status_code = 500;
                 $remarks = $response['data']['response'][0]['responseDescription'];
 
                 //update debit order status
                 $debit_order->status = 500;
+                $debit_order->lifecycle_status = DebitOrder::LIFECYCLE_FAILED;
             }
 
             $debit_order->http_response_code = $response['data']['response'][0]['responseCode'];
             $debit_order->remarks = $response['data']['response'][0]['responseDescription'];
             $debit_order->save();
 
-            return [$response_code, $remarks];
+            return [$http_status_code, $remarks];
         } else {
             Log::debug("No response from NMB end");
             return [500, 'No response from NMB endpoint.'];
         }
+    }
+
+    //crdb mandate registration
+    public function crdbMandateRegistrationRequest($data)
+    {
+        //responce code
+        $http_status_code = 200;
+        $remarks = "";
+
+        //update the debit order
+        $debitOrder = DebitOrder::where('reference', '=', $data['mandateReferenceNumber'])->first();
+        if (!$debitOrder) {
+            Log::warning('Debit order not found for mandateReferenceNumber', [
+                'mandateReferenceNumber' => $this->data['mandateReferenceNumber'] ?? null
+            ]);
+            // Bail early; nothing to update
+            return [500, 'Debit order not found for mandateReferenceNumber.'];
+        }
+
+        //authentication
+        $this->crdbAuth = new Checksum();
+
+        //token
+        $bearerToken = $this->crdbAuth->generateToken();
+        Log::debug("== CRDB Bearer Token ==");
+        Log::debug($bearerToken);
+
+        //headers
+        $headers = [
+            'Channel' => env('CRDB_CHANNEL_ID'),
+            'AppId' => env('CRDB_APP_ID'),
+            'AppVersion' => '1.0.0',
+            "RequestId" => $data['requestId'],
+            'Authorization' => 'Bearer ' . $bearerToken,
+            'Content-Type' => 'application/json',
+            'Accept' => 'application/json'
+        ];
+
+        //Payload
+        Log::debug("== CRDB Payload ==");
+        Log::debug($data['payload']);
+
+        //API URL
+        $API_URL = env('CRDB_API_URL');
+
+        //push payload => NMB Direct Debits
+        $httpResponse = Http::withHeaders($headers)->post($API_URL, $data['payload']);
+
+        Log::debug('== Raw Response Body ==');
+        Log::debug($httpResponse->body());
+
+        //http response
+        $raw = $httpResponse->body();
+
+        // strip UTF-8 BOM + trim
+        $raw = preg_replace('/^\xEF\xBB\xBF/', '', trim($raw ?? ''));
+
+        // remove trailing commas before } or ] (JSON5-style but not valid JSON)
+        $sanitized = preg_replace('/,\s*(\}|\])/m', '$1', $raw);
+
+        // now decode with error reporting
+        $response = json_decode($sanitized, true);
+
+        if (!is_array($response)) {
+            $debitOrder->status = 403;
+            $debitOrder->http_response_code = $httpResponse->status();
+            $debitOrder->remarks = 'HTTP error or invalid JSON from gateway';
+            $debitOrder->save();
+
+            Log::error('MandateRegistration failed: HTTP error or invalid JSON', [
+                'json_error' => json_last_error_msg(),
+                'sample'     => Str::limit($raw, 800),
+            ]);
+            return [500, 'MandateRegistration failed: HTTP error or invalid JSON'];
+        }
+
+        // safely read values
+        $statusCode = data_get($response, 'ResponseHeader.StatusCode');
+        $statusDesc = data_get($response, 'ResponseHeader.StatusDesc');
+        $responseId = data_get($response, 'ResponseHeader.RequestId');
+        $reference  = data_get($response, 'ResponseBody.Reference');
+        Log::debug('Parsed header', compact('statusCode', 'statusDesc', 'reference'));
+
+        // Handle business logic only if StatusCode is present
+        if ($statusCode === 1000) {
+            $debitOrder->status = 201;  // success
+            if ($reference) {
+                $debitOrder->request_id = $responseId;
+                $debitOrder->otp_reference = $reference;
+                $debitOrder->remarks = preg_replace('/[^A-Za-z0-9\-]/', '', $statusDesc) ?: 'No StatusDesc in response';
+            }
+
+            //update http_status_code and remarks
+            $http_status_code = 201;
+            $remarks = preg_replace('/[^A-Za-z0-9\-]/', '', $statusDesc) ?: 'No StatusDesc in response';
+        } elseif ($statusCode === 1001) {
+            // get error metadata
+            $errorMetadata = data_get($response, 'ResponseHeader.ErrorMetadata', []);
+
+            //set update params
+            $debitOrder->status = 403;
+            $debitOrder->remarks = $errorMetadata ?: 'No StatusDesc in response';
+
+            //update http_status_code and remarks
+            $http_status_code = 500;
+            $remarks = $errorMetadata ?: 'No StatusDesc in response';
+        } else {
+            // Unknown/other code: record it for investigation
+            Log::warning('MandateRegistration returned unexpected StatusCode', [
+                'StatusCode' => $statusCode,
+                'response'    => $response,
+            ]);
+
+            //update http_status_code and remarks
+            $http_status_code = 500;
+            $remarks = 'MandateRegistration returned unexpected StatusCode';
+        }
+
+        // Persist shared fields (guard nulls)
+        $debitOrder->http_response_code = $statusCode ?? $httpResponse->status();
+        $debitOrder->save();
+
+        return [$http_status_code, $remarks];
     }
 
     //yas mandate registration
@@ -289,6 +417,7 @@ class BankApiService
                 $redirect_url = $response['redirect_url'];
 
                 $debitOrder->status = 201;
+                $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_AWAITING_OTP;
                 $debitOrder->request_id = $response['session_id'];
                 $debitOrder->remarks = 'Payment session created';
                 $debitOrder->save();
@@ -297,6 +426,7 @@ class BankApiService
                 $remarks = 'Unexpected status: ' . $response['status'];
 
                 $debitOrder->status = 500;
+                $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_FAILED;
                 $debitOrder->remarks = $remarks;
                 $debitOrder->save();
             }
@@ -307,7 +437,6 @@ class BankApiService
             return [500, 'No response from Jumena endpoint.'];
         }
     }
-
 
     //mandate cancellation 
     public function mandateStatusRequest($data)
@@ -363,10 +492,12 @@ class BankApiService
                 $debit_order->status = $response['data']['response'][0]['responseCode'];
 
                 //update debit order => approved
-                if ($response_code == 240)
+                if ($response_code == 240) {
                     $debit_order->approved = 1;
-                else
+                    $debit_order->lifecycle_status = DebitOrder::LIFECYCLE_ACTIVE;
+                } else {
                     $debit_order->approved = 0;
+                }
             } else if (strtolower($response['status']) == "fail") {
                 $response_code = $response['data']['response'][0]['responseCode'];
                 $remarks = $response['data']['response'][0]['responseDescription'];
@@ -374,6 +505,7 @@ class BankApiService
                 //update status and status
                 $debit_order->status = 500;
                 $debit_order->approved = 0;
+                $debit_order->lifecycle_status = DebitOrder::LIFECYCLE_FAILED;
             }
 
             $debit_order->http_response_code = $response_code;
@@ -441,6 +573,7 @@ class BankApiService
                 if ($response_code == 201) {
                     $debit_order->cancelled = 1; // Mark as cancelled
                     $debit_order->deleted = 1; // Mark as deleted
+                    $debit_order->lifecycle_status = DebitOrder::LIFECYCLE_CANCELLED;
                 }
             } else if (strtolower($response['status']) == "fail") {
                 $response_code = $response['data']['response'][0]['responseCode'];
@@ -581,12 +714,14 @@ class BankApiService
 
                 //update debit order status
                 $debit_order->status = 202; //otp verified
+                $debit_order->lifecycle_status = DebitOrder::LIFECYCLE_VERIFIED;
             } else if (strtolower($response['status']) == "fail") {
                 $response_code = $response['data']['response'][0]['responseCode'];
                 $remarks = $response['data']['response'][0]['responseDescription'];
 
                 //update debit order status
                 $debit_order->status = 500;
+                $debit_order->lifecycle_status = DebitOrder::LIFECYCLE_FAILED;
             }
 
             $debit_order->http_response_code = $response['data']['response'][0]['responseCode'];
@@ -712,7 +847,7 @@ class BankApiService
                     Log::debug($data);
 
                     //update installments
-                    $response = $this->deduction_service->updateInstallments($data);
+                    $response = $this->deductionService->updateInstallments($collection_batch, $data);
 
                     //3. process batch
                     $collection_batch->success = $response[0];
@@ -727,7 +862,7 @@ class BankApiService
                     Log::debug($data);
 
                     //update installments
-                    $response = $this->deduction_service->updateInstallments($data);
+                    $response = $this->deductionService->updateInstallments($collection_batch, $data);
 
                     //3. process batch
                     $collection_batch->success = $response[0];
@@ -743,7 +878,7 @@ class BankApiService
                     Log::debug($data);
 
                     //update installments
-                    $response = $this->deduction_service->updateInstallments($data);
+                    $response = $this->deductionService->updateInstallments($collection_batch, $data);
 
                     //3. process batch
                     $collection_batch->success = $response[0];

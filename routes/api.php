@@ -2,14 +2,11 @@
 
 use App\Http\Controllers\Api\Airtel\CollectionController as AirtelCollectionController;
 use App\Http\Controllers\Api\Airtel\MandateController as AirtelMandateController;
-use App\Http\Controllers\Api\ExternalApp\CollectionController;
 use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\Crdb\DisbursementController;
 use App\Http\Controllers\Api\NMB\CorporateController;
 use App\Http\Controllers\Api\CRDB\MandateController as CRDBMandateController;
 use App\Http\Controllers\Api\ExternalApp\AuthController;
-use App\Http\Controllers\Api\ExternalApp\MandateRegistrationController;
-use App\Http\Controllers\Api\ExternalApp\MobileAppController;
 use App\Http\Controllers\Api\ExternalApp\PaymentCollectionController;
 use App\Http\Controllers\Api\ExternalApp\PaymentMandateController;
 use App\Http\Controllers\Api\NMB\MandateController;
@@ -65,7 +62,7 @@ Route::get('regions', [CompanyController::class, 'regions']);
 Route::post('mandate/airtel', [AirtelMandateController::class, 'create']);
 Route::post('mandate/airtel/status', [AirtelMandateController::class, 'query_status']);
 Route::post('mandate/airtel/cancel', [AirtelMandateController::class, 'cancel']);
-Route::post('mandate/airtel/callback', [AirtelMandateController::class, 'callback']);
+Route::post('mandate/airtel/callback', [AirtelMandateController::class, 'callback'])->middleware('verify.callback:airtel');
 
 Route::post('collection/airtel', [AirtelCollectionController::class, 'create']);
 Route::post('collection/airtel/inquiry', [AirtelCollectionController::class, 'inquiry']);
@@ -77,19 +74,19 @@ Route::post('collection/airtel/recovery-refund', [AirtelCollectionController::cl
 //CRDB APIs
 Route::post('v1/mandate/crdb', [CRDBMandateController::class, 'create']);
 Route::post('v1/mandate/crdb/cancel', [CRDBMandateController::class, 'cancel']);
-Route::post('v1/mandate/crdb/callback', [CRDBMandateController::class, 'callback']);
+Route::post('v1/mandate/crdb/callback', [CRDBMandateController::class, 'callback'])->middleware('verify.callback:crdb');
 Route::post('v1/mandate/crdb/request', [CRDBMandateController::class, 'request']);
 Route::post('v1/mandate/crdb/response', [CRDBMandateController::class, 'response']);
 
 Route::prefix('v1/disbursements')->group(function () {
     Route::post('/crdb/batch', [DisbursementController::class, 'postBatch']);
-    Route::post('/crdb/callback', [DisbursementController::class, 'callback']);
+    Route::post('/crdb/callback', [DisbursementController::class, 'callback'])->middleware('verify.callback:crdb');
 });
 
 //YAS APIs
 Route::post('v1/mandate/yas', [YasMandateController::class, 'create']);
 Route::post('v1/mandate/yas/cancel', [YasMandateController::class, 'cancel']);
-Route::post('v1/mandate/yas/callback', [YasMandateController::class, 'callback']);
+Route::post('v1/mandate/yas/callback', [YasMandateController::class, 'callback'])->middleware('verify.callback:yas');
 
 /*
 |--------------------------------------------------------------------------
@@ -112,31 +109,10 @@ Route::middleware('auth:api')->group(function () {
     Route::post('v1/mandate/otp/verify', [PaymentMandateController::class, 'verifyOtp']);
     Route::post('v1/mandate/status', [PaymentMandateController::class, 'fetchStatus']);
     Route::post('v1/mandate/cancellation', [PaymentMandateController::class, 'cancellation']);
+    Route::post('v1/mandate/summaries', [PaymentMandateController::class, 'summaries']);
 
     //Collections APIs
     Route::post('v1/collections/all', [PaymentCollectionController::class, 'all']);
     Route::post('v1/collections/filtering', [PaymentCollectionController::class, 'filtering']);
     Route::post('v1/collections/actual', [PaymentCollectionController::class, 'actual_collections']);
-});
-
-Route::middleware('auth:api')->group(function () {
-    Route::get('v1/sp-homepage', [MobileAppController::class, 'summaries']);
-    Route::get('v1/debit-orders', [MobileAppController::class, 'debit_orders']);
-    Route::get('v1/debit-orders-summaries', [MobileAppController::class, 'debit_orders_summaries']);
-
-    //debit orders
-    Route::post('v1/filter-mandates', [MandateRegistrationController::class, 'all']);
-    Route::post('v1/get-mandate-by-id', [MandateRegistrationController::class, 'getById']);
-    Route::post('v1/create-mandate', [MandateRegistrationController::class, 'create']);
-    Route::post('v1/verify-otp', [MandateRegistrationController::class, 'verifyOtp']);
-    Route::post('v1/send-otp-code', [MandateRegistrationController::class, 'createOtp']);
-    Route::post('v1/archive-mandate', [MandateRegistrationController::class, 'archive_mandate']);
-    Route::post('v1/cancel-mandate', [MandateRegistrationController::class, 'cancel_mandate']);
-    Route::post('v1/delete-mandate', [MandateRegistrationController::class, 'delete_mandate']);
-
-    //collections
-    Route::get('v1/collections', [CollectionController::class, 'all']);
-    Route::get('v1/actual-collections', [CollectionController::class, 'actual_collections']);
-    Route::get('v1/monthly-collections', [CollectionController::class, 'monthly_collections']);
-    Route::get('v1/deduction-histories/{uuid}', [CollectionController::class, 'deduction_histories']);
 });

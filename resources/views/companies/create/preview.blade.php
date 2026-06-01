@@ -1,301 +1,283 @@
 @extends('layouts.master')
 
-<style>
-    .table th {
-        background-color: #E1F5FE !important;
-    }
-</style>
-
 @section('title')
     Register Service Provider
 @endsection
 
+@include('companies.create.partials.styles')
+
+@section('css')
+    <link href="{{ URL::asset('/assets/css/blade-show.css') }}" rel="stylesheet" type="text/css" />
+@endsection
+
 @section('content')
-    <div class="row">
-        <div class="col-12">
-            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                <h4 class="mb-sm-0 font-size-18">Register Service Provider</h4>
+    <div class="cp-preview" x-data="initData()">
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                    <h4 class="mb-sm-0 font-size-18">Register Service Provider</h4>
 
-                <div class="page-title-right">
-                    <ol class="breadcrumb m-0">
-                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('companies.lists') }}">Service Providers</a></li>
-                        <li class="breadcrumb-item active">Register New</li>
-                    </ol>
+                    <div class="page-title-right">
+                        <ol class="breadcrumb m-0">
+                            <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+                            <li class="breadcrumb-item"><a href="{{ route('companies.lists') }}">Service Providers</a></li>
+                            <li class="breadcrumb-item active">Register New</li>
+                        </ol>
+                    </div>
                 </div>
-
             </div>
         </div>
-    </div>
 
-    <div class="row" x-data="initData()">
-        <div class="col-lg-12">
-            <div class="card">
-                <div class="card-body">
-                    <!--./form wizard -->
-                    <div class="stepwizard mb-4">
-                        <div class="stepwizard-row setup-panel">
+        @include('companies.create.partials.hero', [
+            'currentStep' => 5,
+            'heading' => 'Review the service provider setup',
+            'subtitle' => 'Confirm the registration package before saving the draft or submitting it for approval.',
+            'company' => $company,
+        ])
 
-                            <div class="stepwizard-step bg-success">
-                                <a href="#step-1" type="button" class="btn btn-success btn-circle text-white">1</a>
-                                <span class="text-white">Company Information</span>
+        <div class="card cp-card mb-4">
+            <div class="card-body">
+                <form @submit.prevent="">
+                    <input type="hidden" name="id" x-model="formData.id">
+                    <input type="hidden" name="uuid" x-model="formData.uuid">
+
+                    <div class="card cp-card mb-4">
+                        <div class="card-body">
+                            <div class="sp-section-head">
+                                <div class="sp-section-head__copy">
+                                    <h5>Service Provider Information</h5>
+                                    <p>Core identity and address information captured during onboarding.</p>
+                                </div>
                             </div>
 
-                            <div class="stepwizard-step bg-success">
-                                <a href="#step-2" type="button" class="btn btn-success btn-circle text-white"
-                                    disabled="disabled">2</a>
-                                <span class="text-white">Company Documents</span>
-                            </div>
-
-                            <div class="stepwizard-step bg-success">
-                                <a href="#step-2" type="button" class="btn btn-success btn-circle text-white"
-                                    disabled="disabled">3</a>
-                                <span class="text-white">Collection Accounts</span>
-                            </div>
-
-                            <div class="stepwizard-step bg-success">
-                                <a href="#step-2" type="button" class="btn btn-success btn-circle text-white"
-                                    disabled="disabled">4</a>
-                                <span class="text-white">Authorized Representative</span>
-                            </div>
-
-                            <div class="stepwizard-step bg-primary">
-                                <a href="#step-5" type="button" class="btn btn-secondary btn-circle text-white"
-                                    disabled="disabled">5</a>
-                                <span class="text-white">Company Preview</span>
+                            <div class="detail-grid">
+                                <div class="detail-grid__item detail-grid__item--wide">
+                                    <span class="detail-grid__label">Business Name</span>
+                                    <span class="detail-grid__value">{{ $company->business_name }}</span>
+                                </div>
+                                <div class="detail-grid__item">
+                                    <span class="detail-grid__label">Business Category</span>
+                                    <span class="detail-grid__value">{{ $company->partnerCategory->name ?? '-' }}</span>
+                                </div>
+                                <div class="detail-grid__item">
+                                    <span class="detail-grid__label">Corporate Reference</span>
+                                    <span class="detail-grid__value">{{ $company->reference }}</span>
+                                </div>
+                                <div class="detail-grid__item">
+                                    <span class="detail-grid__label">Corporate ShortCode</span>
+                                    <span class="detail-grid__value">{{ $company->short_code }}</span>
+                                </div>
+                                <div class="detail-grid__item">
+                                    <span class="detail-grid__label">TIN Number</span>
+                                    <span class="detail-grid__value">{{ $company->tin_number }}</span>
+                                </div>
+                                <div class="detail-grid__item">
+                                    <span class="detail-grid__label">Year of Incorporation</span>
+                                    <span class="detail-grid__value">{{ $company->year_of_incorporation }}</span>
+                                </div>
+                                <div class="detail-grid__item">
+                                    <span class="detail-grid__label">eMakato Status</span>
+                                    <span class="detail-grid__value" id="company-status">
+                                        <template x-if="approved==0">
+                                            <span class="badge badge-soft-warning">Pending Review</span>
+                                        </template>
+                                        <template x-if="approved==1">
+                                            <span class="badge badge-soft-success">Approved</span>
+                                        </template>
+                                        <template x-if="approved==99">
+                                            <span class="badge badge-soft-danger">Failed</span>
+                                        </template>
+                                    </span>
+                                </div>
+                                <div class="detail-grid__item">
+                                    <span class="detail-grid__label">Created On</span>
+                                    <span class="detail-grid__value">{{ date('M d, Y H:i', strtotime($company->created_at)) }}</span>
+                                </div>
+                                <div class="detail-grid__item">
+                                    <span class="detail-grid__label">Email</span>
+                                    <span class="detail-grid__value">{{ $company->email ?? '-' }}</span>
+                                </div>
+                                <div class="detail-grid__item">
+                                    <span class="detail-grid__label">Phone</span>
+                                    <span class="detail-grid__value">{{ $company->phone }}</span>
+                                </div>
                             </div>
                         </div>
                     </div>
 
+                    <div class="card cp-card mb-4">
+                        <div class="card-body">
+                            <div class="sp-section-head">
+                                <div class="sp-section-head__copy">
+                                    <h5>Supporting Documents</h5>
+                                    <p>Files uploaded for compliance and provider due diligence.</p>
+                                </div>
+                            </div>
 
-                    <form @submit.prevent="">
-                        <input type="hidden" name="id" x-model="formData.id">
-                        <input type="hidden" name="uuid" x-model="formData.uuid">
+                            @if ($company->partnerDocuments->isNotEmpty())
+                                <div class="table-responsive">
+                                    <table class="table table-nowrap align-middle table-bordered mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th width="6%">#</th>
+                                                <th width="54%">Document Name</th>
+                                                <th width="40%">Attachment</th>
+                                            </tr>
+                                        </thead>
 
-                        <section>
-                            <div class="row">
-                                <div class="col-lg-12">
-                                    <table class="table table-stripped table-bordered">
-                                        <tr>
-                                            <td colspan="4" class="font-weight-600 text-uppercase">
-                                                Service Provider Information
-                                            </td>
-                                        </tr>
-
-                                        <tr>
-                                            <th width=25%>Business Name</th>
-                                            <td width=25%>
-                                                <span>{{ $company->business_name }}</span>
-                                            </td>
-
-                                            <th>Business Category</th>
-                                            <td>
-                                                <span>{{ $company->partnerCategory->name ?? '' }}</span>
-                                            </td>
-                                        </tr>
-
-                                        <tr>
-                                            <th>TIN Number</th>
-                                            <td>{{ $company->tin_number }}</td>
-
-                                            <th>Year of Incorporation</th>
-                                            <td>
-                                                {{ $company->year_of_incorporation }}
-                                            </td>
-                                        </tr>
-
-                                        <tr>
-                                            <th>Number of Staff</th>
-                                            <td>{{ $company->number_of_staff }}</td>
-
-                                            <th>Contacts</th>
-                                            <td>
-                                                Email: {{ $company->email }}<br />
-                                                Phone: {{ $company->phone }}
-                                            </td>
-                                        </tr>
-
-                                        <tr>
-                                            <th>Region</th>
-                                            <td>{{ $company->region->name ?? '' }}</td>
-
-                                            <th>Physical Address</th>
-                                            <td>
-                                                {{ $company->address }}
-                                            </td>
-                                        </tr>
-
+                                        <tbody>
+                                            @foreach ($company->partnerDocuments as $val)
+                                                <tr>
+                                                    <td>{{ $loop->iteration }}</td>
+                                                    <td>{{ $val->name }}</td>
+                                                    <td>
+                                                        @if ($val->attachment != null)
+                                                            <a download href="{{ asset('assets/uploads/docs/' . $val->attachment) }}">
+                                                                {{ $val->attachment }}
+                                                            </a>
+                                                        @else
+                                                            -
+                                                        @endif
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
                                     </table>
                                 </div>
-                            </div>
+                            @else
+                                <div class="sp-empty">No document has been added to this registration yet.</div>
+                            @endif
+                        </div>
+                    </div>
 
-                            <div class="row">
-                                <div class="col-lg-12">
-                                    @if ($company->partnerDocuments->isNotEmpty())
-                                        <table class="table table-nowrap align-middle table-bordered">
-                                            <thead>
-                                                <tr>
-                                                    <td colspan="3" class="font-weight-600 text-uppercase">
-                                                        Service Provider Documents
-                                                    </td>
-                                                </tr>
-
-                                                <tr>
-                                                    <th width="3%">#</th>
-                                                    <th width="60%">Name</th>
-                                                    <th width="30%">Attachment</th>
-                                                </tr>
-                                            </thead>
-
-                                            <tbody>
-                                                @foreach ($company->partnerDocuments as $val)
-                                                    <tr>
-                                                        <td>{{ $loop->iteration }}</td>
-                                                        <td>{{ $val->name }}</td>
-                                                        <td>
-                                                            @if ($val->attachment != null)
-                                                                <a download=""
-                                                                    href="{{ asset('assets/uploads/docs/' . $val->attachment) }}">
-                                                                    {{ $val->attachment }}
-                                                                </a>
-                                                            @endif
-                                                        </td>
-                                                    </tr>
-                                                @endforeach
-                                            </tbody>
-                                        </table>
-                                    @else
-                                        <div class="alert alert-danger">No any document at the moment!</div>
-                                    @endif
+                    <div class="card cp-card mb-4">
+                        <div class="card-body">
+                            <div class="sp-section-head">
+                                <div class="sp-section-head__copy">
+                                    <h5>Collection Accounts</h5>
+                                    <p>Accounts configured to receive collections and support operational settlement.</p>
                                 </div>
                             </div>
 
-                            <div class="row">
-                                <div class="col-lg-12">
-                                    @if ($company->partnerAccounts->isNotEmpty())
-                                        <table class="table table-nowrap align-middle table-bordered">
-                                            <thead>
-                                                <tr>
-                                                    <td colspan="6" class="font-weight-600 text-uppercase">
-                                                        Service Provider Collection Accounts
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <th width="3%">#</th>
-                                                    <th width="20%">Account Type</th>
-                                                    <th width="20%">Bank/Institutions</th>
-                                                    <th width="25%">Account Name</th>
-                                                    <th width="10%">Account Number</th>
-                                                    <th width="10%">Customer Number</th>
-                                                    <th width="10%">Branch Code</th>
-                                                    <th width="15%">Corporate Limit</th>
-                                                    <th width="10%">Currency</th>
-                                                </tr>
-                                            </thead>
+                            @if ($company->partnerAccounts->isNotEmpty())
+                                <div class="table-responsive">
+                                    <table class="table table-nowrap align-middle table-bordered mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th width="6%">#</th>
+                                                <th>Account Type</th>
+                                                <th>Bank/Institution</th>
+                                                <th>Account Name</th>
+                                                <th>Account Number</th>
+                                                <th>Customer Number</th>
+                                                <th>Branch Code</th>
+                                                <th class="text-end">Corporate Limit</th>
+                                                <th>Currency</th>
+                                            </tr>
+                                        </thead>
 
-                                            <tbody>
-                                                @foreach ($company->partnerAccounts as $val)
-                                                    <tr>
-                                                        <td>{{ $loop->iteration }}</td>
-                                                        <td>{{ $val->accountType->name ?? '' }}</td>
-                                                        <td>{{ $val->account->name ?? '' }}</td>
-                                                        <td>{{ $val->account_name ?? '' }}</td>
-                                                        <td>{{ $val->account_number ?? '' }}</td>
-                                                        <td>{{ $val->customer_code ?? '' }}</td>
-                                                        <td>{{ $val->branch_code ?? '' }}</td>
-                                                        <td>{{ number_format($val->corporate_limit) ?? '' }}</td>
-                                                        <td>{{ $val->currency->short_code ?? '' }}</td>
-                                                    </tr>
-                                                @endforeach
-                                            </tbody>
-                                        </table>
-                                    @else
-                                        <div class="alert alert-danger">No any account at the moment!</div>
-                                    @endif
+                                        <tbody>
+                                            @foreach ($company->partnerAccounts as $val)
+                                                <tr>
+                                                    <td>{{ $loop->iteration }}</td>
+                                                    <td>{{ $val->accountType->name ?? '' }}</td>
+                                                    <td>{{ $val->account->name ?? '' }}</td>
+                                                    <td>{{ $val->account_name ?? '' }}</td>
+                                                    <td>{{ $val->account_number ?? '' }}</td>
+                                                    <td>{{ $val->customer_code ?? '' }}</td>
+                                                    <td>{{ $val->branch_code ?? '' }}</td>
+                                                    <td class="text-end">{{ number_format($val->corporate_limit) ?? '' }}</td>
+                                                    <td>{{ $val->currency->short_code ?? '' }}</td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            @else
+                                <div class="sp-empty">No collection account has been added to this registration yet.</div>
+                            @endif
+                        </div>
+                    </div>
+
+                    <div class="card cp-card">
+                        <div class="card-body">
+                            <div class="sp-section-head">
+                                <div class="sp-section-head__copy">
+                                    <h5>Authorized Representatives</h5>
+                                    <p>Contacts who will handle approvals and formal follow-up for the provider.</p>
                                 </div>
                             </div>
 
-                            <div class="row">
-                                <div class="col-lg-12">
-                                    @if ($company->partnerStaff->isNotEmpty())
-                                        <table class="table table-nowrap align-middle table-bordered">
-                                            <thead>
-                                                <tr>
-                                                    <td colspan="4" class="font-weight-600 text-uppercase">
-                                                        Authorized Representative
-                                                    </td>
-                                                </tr>
+                            @if ($company->partnerStaff->isNotEmpty())
+                                <div class="table-responsive">
+                                    <table class="table table-nowrap align-middle table-bordered mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th width="6%">#</th>
+                                                <th>Staff Name</th>
+                                                <th>NIDA Number</th>
+                                                <th>Email</th>
+                                                <th>Phone</th>
+                                                <th>Title</th>
+                                            </tr>
+                                        </thead>
 
+                                        <tbody>
+                                            @foreach ($company->partnerStaff as $val)
                                                 <tr>
-                                                    <th width="3%">#</th>
-                                                    <th width="20%">Staff Name</th>
-                                                    <th width="20%">NIDA Number</th>
-                                                    <th width="25%">Email</th>
-                                                    <th width="20%">Phone</th>
-                                                    <th width="20%">Title</th>
+                                                    <td>{{ $loop->iteration }}</td>
+                                                    <td>{{ $val->name ?? '' }}</td>
+                                                    <td>{{ $val->NIDA_number ?? '' }}</td>
+                                                    <td>{{ $val->email ?? '' }}</td>
+                                                    <td>{{ $val->phone ?? '' }}</td>
+                                                    <td>{{ $val->title ?? '' }}</td>
                                                 </tr>
-                                            </thead>
-
-                                            <tbody>
-                                                @foreach ($company->partnerStaff as $val)
-                                                    <tr>
-                                                        <td>{{ $loop->iteration }}</td>
-                                                        <td>{{ $val->name ?? '' }}</td>
-                                                        <td>{{ $val->NIDA_number ?? '' }}</td>
-                                                        <td>{{ $val->email ?? '' }}</td>
-                                                        <td>{{ $val->phone ?? '' }}</td>
-                                                        <td>{{ $val->title ?? '' }}</td>
-                                                    </tr>
-                                                @endforeach
-                                            </tbody>
-                                        </table>
-                                    @else
-                                        <div class="alert alert-danger">No any staff at the moment!</div>
-                                    @endif
+                                            @endforeach
+                                        </tbody>
+                                    </table>
                                 </div>
-                            </div>
+                            @else
+                                <div class="sp-empty">No authorized representative has been added to this registration yet.</div>
+                            @endif
 
                             <div id="message_wrp"></div>
 
                             <template x-if="complete=='0' || complete=='1'">
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <div class="mb-3 text-sm-end d-none d-sm-block">
-                                            <template x-if="approved==0">
-                                                <a href="{{ route('companies.cancel-registration', $company->uuid) }}"
-                                                    class="btn btn-danger cancel text-medium mx-1">Cancel
-                                                </a>
-                                            </template>
+                                <div class="sp-actionbar">
+                                    <div class="sp-actionbar__meta">Final step. Save this draft for later or submit it for approval when the package is complete.</div>
+                                    <div class="d-flex flex-wrap gap-2 justify-content-end">
+                                        <template x-if="approved==0">
+                                            <a href="{{ route('companies.cancel-registration', $company->uuid) }}"
+                                                class="btn btn-danger cancel text-medium">Cancel</a>
+                                        </template>
 
-                                            <template x-if="approved==0 || approved==99">
-                                                <a href="{{ route('companies.registration', $company->uuid) }}"
-                                                    class="btn btn-info text-medium mx-1">Edit
-                                                </a>
-                                            </template>
+                                        <template x-if="approved==0 || approved==99">
+                                            <a href="{{ route('companies.registration', $company->uuid) }}"
+                                                class="btn btn-outline-primary text-medium">Edit</a>
+                                        </template>
 
-                                            <template x-if="approved==0">
-                                                <button type="submit" name="save"
-                                                    class="btn btn-secondary text-medium mx-1" x-text="buttonSave"
-                                                    :disabled="saveLoading" x-on:click="savingForm();">
-                                                </button>
-                                            </template>
+                                        <template x-if="approved==0">
+                                            <button type="submit" name="save"
+                                                class="btn btn-secondary text-medium" x-text="buttonSave"
+                                                :disabled="saveLoading" x-on:click="savingForm();">
+                                            </button>
+                                        </template>
 
-                                            <template x-if="approved==0 || approved==99">
-                                                <button type="submit" name="submit" class="btn btn-success text-medium"
-                                                    x-text="buttonSubmit" :disabled="submitLoading"
-                                                    x-on:click="submitForm();"></button>
-                                            </template>
-                                        </div>
+                                        <template x-if="approved==0 || approved==99">
+                                            <button type="submit" name="submit" class="btn btn-success text-medium"
+                                                x-text="buttonSubmit" :disabled="submitLoading"
+                                                x-on:click="submitForm();"></button>
+                                        </template>
                                     </div>
                                 </div>
                             </template>
-                        </section>
-                    </form>
-                </div>
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
-    <!-- end row -->
+    </div>
 @endsection
 
 @section('script')

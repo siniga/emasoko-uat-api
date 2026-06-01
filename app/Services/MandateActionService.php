@@ -46,15 +46,34 @@ class MandateActionService
             $data['requestId'] = $requestId;
             $data['mandateReferenceNumber'] = $debitOrder->reference;
 
-            //Create Request to CRDB
-            dispatch(new CRDBMandateRegistrationJob($data));
+            //arr response
+            $arrResponse = $this->bankApi->crdbMandateRegistrationRequest($data);
 
-            //return response
-            return response()->json([
-                'success' => true,
-                'response_code' => 201,
-                'remarks' => "Mandate registration request sent to CRDB. Go to customer SimBanking and approve mandate."
-            ]);
+            if ($arrResponse) {
+                $success = true;
+                $http_status_code = $arrResponse[0];
+                $remarks = $arrResponse[1];
+
+                if ($http_status_code == 201) {
+                    return response()->json([
+                        'success' => true,
+                        'response_code' => 201,
+                        'remarks' => $remarks
+                    ]);
+                } else if ($http_status_code == 500) {
+                    return response()->json([
+                        'success' => true,
+                        'response_code' => 500,
+                        'remarks' => $remarks
+                    ]);
+                }
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'response_code' => 500,
+                    'remarks' => 'Unable to register mandate'
+                ]);
+            }
         } else if ($debitOrder->channel == "NMB") {
             //create payload
             $payload = $this->payloadService->mandateRegistrationPayload($debitOrder);
@@ -64,14 +83,22 @@ class MandateActionService
 
             if ($arrResponse) {
                 $success = true;
-                $response_code = $arrResponse[0];
+                $http_status_code = $arrResponse[0];
                 $remarks = $arrResponse[1];
 
-                return response()->json([
-                    'success' => $success,
-                    'response_code' => $response_code,
-                    'remarks' => $remarks
-                ]);
+                if ($http_status_code == 201) {
+                    return response()->json([
+                        'success' => true,
+                        'response_code' => 201,
+                        'remarks' => $remarks
+                    ]);
+                } else if ($http_status_code == 500) {
+                    return response()->json([
+                        'success' => true,
+                        'response_code' => 500,
+                        'remarks' => $remarks
+                    ]);
+                }
             } else {
                 return response()->json([
                     'success' => false,

@@ -1,0 +1,18 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class SmsTemplate extends Model
+{
+    use HasFactory;
+    protected $table = "sms_templates";
+    protected $guarded = ['id'];
+
+    public function category()
+    {
+        return $this->belongsTo(SmsCategory::class, 'category_id');
+    }
+}

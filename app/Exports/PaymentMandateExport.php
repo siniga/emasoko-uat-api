@@ -69,12 +69,10 @@ class PaymentMandateExport implements FromQuery, WithHeadings, ShouldAutoSize, W
 
         if ($this->request->has('status') != null) {
             if ($this->request->input('status') != null) {
-                if ($this->request->input('status') == 'pending')
-                    $debit_orders = $debit_orders->where('debit_orders.approved', 0);
-                else if ($this->request->input('status') == 'approved')
-                    $debit_orders = $debit_orders->where('debit_orders.approved', 1)->where('debit_orders.status', 240);
-                else if ($this->request->input('status') == 'failed')
-                    $debit_orders = $debit_orders->where('debit_orders.approved', 2);
+                $debit_orders = $debit_orders->whereIn(
+                    'debit_orders.lifecycle_status',
+                    DebitOrder::lifecycleStatusesForSummary($this->request->input('status'))
+                );
             }
         }
 
@@ -133,13 +131,11 @@ class PaymentMandateExport implements FromQuery, WithHeadings, ShouldAutoSize, W
     public function map($debit_orders): array
     {
         //format status
-        $consent_status = "UNKNOWN";
-        if (intval($debit_orders->approved) == 0)
-            $consent_status = "PENDING";
-        else if (intval($debit_orders->approved) == 1)
-            $consent_status = "APPROVED";
-        else if (intval($debit_orders->approved) == 2)
-            $consent_status = "FAILED";
+        $consent_status = match ($debit_orders->summary_status) {
+            DebitOrder::SUMMARY_APPROVED => 'APPROVED',
+            DebitOrder::SUMMARY_FAILED => 'FAILED',
+            default => 'PENDING',
+        };
 
         return [
             strtoupper($debit_orders->customerAccount->account_name ?? ''),
