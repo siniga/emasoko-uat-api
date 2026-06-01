@@ -3,19 +3,26 @@
 namespace App\Services;
 
 use App\Jobs\CRDBMandateCancellationJob;
+use App\Jobs\SendSMSJob;
 use App\Models\CollectionBatch;
 use App\Models\CollectionDebitOrder;
 use App\Models\DebitOrder;
 use App\Models\Installment;
 use App\Models\InstallmentPayment;
 use App\Models\PaymentSettlement;
+use App\Models\SmsLog;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class SettlementPostingService
 {
+    public function __construct(protected MessagingService $messagingService)
+    {
+    }
+
     public function post(array $payload): PaymentSettlement
     {
         return DB::transaction(function () use ($payload) {
@@ -110,6 +117,10 @@ class SettlementPostingService
             $settlement->settlement_type = $settlement->settlement_type ?: $this->settlementType($settlement, $installment);
             $settlement->save();
 
+            if (in_array($normalizedStatus, [PaymentSettlement::STATUS_SUCCESS, PaymentSettlement::STATUS_PARTIAL], true)) {
+                $this->queueSuccessfulCollectionSms($debitOrder, $installment, $amount);
+            }
+
             return $settlement;
         });
     }
@@ -200,6 +211,38 @@ class SettlementPostingService
         }
 
         return $installment->status === 'CLOSED' ? 'FULL_SETTLEMENT' : 'PARTIAL_SETTLEMENT';
+    }
+
+    protected function queueSuccessfulCollectionSms(DebitOrder $debitOrder, Installment $installment, float $paidAmount): void
+    {
+        $phone = $debitOrder->customerAccount?->phone;
+
+        if (!$phone || $paidAmount <= 0) {
+            return;
+        }
+
+        $paymentDate = $installment->payment_date;
+        $outstandingAmount = number_format((float) $debitOrder->outstanding_amount);
+        $paidAmount = number_format($paidAmount);
+        $businessName = $debitOrder->partner?->business_name ?? 'mtoa huduma';
+
+        $message = "Makato ya tarehe {$paymentDate} ya kiasi cha shilingi {$paidAmount} yamekamilishwa kwa {$businessName}. Kiasi kilichobaki ni Tsh {$outstandingAmount}.";
+        $messageId = $this->messagingService->generateMessageId();
+
+        $smsLog = SmsLog::firstOrNew([
+            'message_id' => $messageId,
+            'phone' => $this->messagingService->castPhone(trim($phone)),
+        ]);
+
+        $smsLog->uuid = (string) Str::uuid();
+        $smsLog->debit_order_id = $debitOrder->id;
+        $smsLog->message = $message;
+        $smsLog->number_of_sms = $this->messagingService->countNumberOfSms($message);
+        $smsLog->status = 'PENDING';
+        $smsLog->created_by = Auth::id();
+        $smsLog->save();
+
+        dispatch(new SendSMSJob(['messageId' => $messageId]));
     }
 
     protected function defaultPaymentReference(?CollectionBatch $batch, ?Installment $installment): string

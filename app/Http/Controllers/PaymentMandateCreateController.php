@@ -55,6 +55,7 @@ class PaymentMandateCreateController extends BasePaymentMandateController
         $debit_order_uuid = $request->debit_order_uuid;
         $customer_account_uuid = $request->customer_account_uuid != null ? $request->customer_account_uuid : Str::uuid();
 
+        $unique_phone = null;
         if ($validated['account_type_id'] == 1) {
             $unique_phone = casting_phone($validated['phone']);
         } elseif ($request->input('account_type_id') == 2) {

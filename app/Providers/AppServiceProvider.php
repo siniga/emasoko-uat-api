@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\User;
+use App\Services\AuditTrailService;
 use Illuminate\Pagination\Paginator;
 
 use Illuminate\Support\ServiceProvider;
@@ -34,6 +35,7 @@ class AppServiceProvider extends ServiceProvider
     {
         //
         Paginator::useBootstrap();
+        app(AuditTrailService::class)->register($this);
 
         Scramble::routes(function (Route $route) {
             return in_array($route->uri, [

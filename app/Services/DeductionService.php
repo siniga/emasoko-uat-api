@@ -14,6 +14,7 @@ use App\Models\PartnerAccount;
 use App\Models\Installment;
 use App\Models\InstallmentPayment;
 use App\Models\PaymentSettlement;
+use App\Models\SmsLog;
 use Carbon\Carbon;
 use DateTime;
 use Exception;
@@ -21,11 +22,17 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 
 class DeductionService
 {
     private $app_variable;
-    public function __construct() {}
+    protected MessagingService $messagingService;
+
+    public function __construct()
+    {
+        $this->messagingService = app(MessagingService::class);
+    }
 
     protected function settlementPosting(): SettlementPostingService
     {
@@ -251,7 +258,7 @@ class DeductionService
             );
         }
     }
-    
+
     //create dynamic installment
     protected function dynamicInstallment(DebitOrder $debitOrder)
     {
@@ -694,7 +701,6 @@ class DeductionService
 
                 //save debit order
                 $debitOrder->save();
-                $this->updateNextDebitDate($debitOrder);
 
                 //installment amount
                 $paid_amount = $installment->last_paid_amount;
@@ -713,10 +719,26 @@ class DeductionService
                 $phone = $installment->debitOrder->customerAccount->phone;
                 $message = "Makato ya tarehe {$payment_date} ya kiasi cha shilingi {$paidAmt} yamekamilishwa kwa {$businessName}. Kiasi kilichobaki ni Tsh {$outstandingAmt}.";
 
-                //Send SMS
-                $data = ["phone" => $phone, "message" => $message];
-                dispatch(new SendSMSJob($data));
+                //message id
+                $messageId = $this->messagingService->generateMessageId();
 
+                //save sms to database
+                $sms_log = SmsLog::firstOrNew([
+                    'message_id' => $messageId,
+                    'phone' => $this->messagingService->castPhone(trim($phone)),
+                ]);
+                $sms_log->uuid = Str::uuid();
+                $sms_log->debit_order_id = $debitOrder->id;
+                $sms_log->message = $message;
+                $sms_log->number_of_sms = $this->messagingService->countNumberOfSms($message);
+                $sms_log->status = 'PENDING';
+                $sms_log->created_by = Auth::user()->id;
+                $sms_log->save();
+
+                //trigger background job for send SMS
+                dispatch(new SendSMSJob(['messageId' => $messageId]));
+
+                //check if partner has callback url
                 if ($debitOrder->partner->callback_url && $debitOrder->partner->callback_url != "") {
                     //dispatch callback job
                     $callback_data = [
@@ -729,8 +751,6 @@ class DeductionService
                     dispatch(new ApiCallbackJob($callback_data));
                 }
             }
-        } else if ($installment->status == 'CLOSED') {
-            Log::debug("Installement => Closed");
         }
 
         return 200;

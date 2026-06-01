@@ -15,14 +15,18 @@ use App\Models\CollectionDebitOrder;
 use App\Models\DebitOrder;
 use App\Models\Installment;
 use App\Models\InstallmentPayment;
+use App\Models\PaymentSettlement;
 use App\Models\Partner;
+use App\Models\SmsLog;
 use App\Models\User;
 use App\Services\BankApiService;
 use App\Services\CollectionBatchService;
 use App\Services\BankPayloadService;
 use App\Services\CollectionAnalyticsService;
 use App\Services\DeductionService;
+use App\Services\MessagingService;
 use App\Services\Reports\ReportExportService;
+use App\Services\SettlementPostingService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
@@ -32,6 +36,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Str;
 use Psy\VersionUpdater\Installer;
 
 class CollectionController extends Controller
@@ -42,9 +47,10 @@ class CollectionController extends Controller
         protected DeductionService $deductionService,
         protected CollectionAnalyticsService $collectionAnalytics,
         protected CollectionBatchService $collectionBatchService,
-        protected ReportExportService $reportExportService
-    )
-    {
+        protected ReportExportService $reportExportService,
+        protected MessagingService $messagingService,
+        protected SettlementPostingService $settlementPostingService,
+    ) {
         $this->middleware('auth');
     }
 
@@ -121,7 +127,7 @@ class CollectionController extends Controller
             $partner = Partner::whereHas('debitOrders', function ($query) use ($debit_date) {
                 return $query->eligibleForCollection('NMB')
                     ->whereDate('next_debit_date', "=", $debit_date);
-            })->where(['partners.id' => $partner_id, 'partners.status' => 202]);
+            })->where(['partners.id' => $partner_id]);
 
             if ($partner->count() > 0) {
                 $partner = $partner->first();
@@ -167,11 +173,25 @@ class CollectionController extends Controller
                 $message = "Collection batch number " . $collection_reference . " created. Review and approve to the next stage.";
                 $arr_phone = [255717705746, 255656314330];
 
+                //message id
+                $messageId = $this->messagingService->generateMessageId();
+
                 foreach ($arr_phone as $phone) {
-                    //send sms
-                    $data = ["phone" => $phone, "message" => $message];
-                    dispatch(new SendSMSJob($data));
+                    //save sms to database
+                    $sms_log = SmsLog::firstOrNew([
+                        'message_id' => $messageId,
+                        'phone' => $this->messagingService->castPhone(trim($phone)),
+                    ]);
+                    $sms_log->uuid = Str::uuid();
+                    $sms_log->message = $message;
+                    $sms_log->number_of_sms = $this->messagingService->countNumberOfSms($message);
+                    $sms_log->status = 'PENDING';
+                    $sms_log->created_by = Auth::user()->id;
+                    $sms_log->save();
                 }
+
+                //trigger background job for send SMS
+                dispatch(new SendSMSJob(['messageId' => $messageId]));
             }
 
             //redirect
@@ -403,7 +423,7 @@ class CollectionController extends Controller
     {
         $batchIds = collect($request->input('batch_ids', []))
             ->filter()
-            ->map(fn ($id) => (string) $id)
+            ->map(fn($id) => (string) $id)
             ->values();
 
         if ($batchIds->isEmpty()) {
@@ -1063,15 +1083,17 @@ class CollectionController extends Controller
                     // get installment
                     $installment = $installments->first();
 
-                    //updated installment
-                    $installment->last_paid_amount = $amount;
-                    $installment->payment_reference = $transactionReference;
-                    $installment->effective_payment_date = date('Y-m-d', strtotime($collectionDate));
-                    $installment->remarks = "Amount paid";
-                    $installment->save();
-
-                    // process installment
-                    $this->deductionService->processInstallment($installment);
+                    $this->settlementPostingService->post([
+                        'channel' => 'CRDB',
+                        'debit_order' => $debitOrder,
+                        'installment' => $installment,
+                        'amount' => $amount,
+                        'raw_status' => 'SUCCESS',
+                        'normalized_status' => PaymentSettlement::STATUS_SUCCESS,
+                        'remarks' => 'Amount paid',
+                        'effective_payment_date' => date('Y-m-d', strtotime($collectionDate)),
+                        'payment_reference' => $transactionReference,
+                    ]);
                 } else {
                     //1.0 calculate installment amount
                     $installment_amount = $this->deductionService->getInstallmentAmount($debitOrder);
@@ -1083,14 +1105,19 @@ class CollectionController extends Controller
                     $new_installment->installment_order = $last_installment_order + 1;
                     $new_installment->installment_amount = $installment_amount;
                     $new_installment->payment_date = date('Y-m-d', strtotime($collectionDate));
-                    $new_installment->last_paid_amount = $amount;
-                    $new_installment->payment_reference = $transactionReference;
-                    $new_installment->effective_payment_date = date('Y-m-d', strtotime($collectionDate));
-                    $new_installment->remarks = "Amount paid";
                     $new_installment->save();
 
-                    //2.0 then process payment installment
-                    $this->deductionService->processInstallment($new_installment);
+                    $this->settlementPostingService->post([
+                        'channel' => 'CRDB',
+                        'debit_order' => $debitOrder,
+                        'installment' => $new_installment,
+                        'amount' => $amount,
+                        'raw_status' => 'SUCCESS',
+                        'normalized_status' => PaymentSettlement::STATUS_SUCCESS,
+                        'remarks' => 'Amount paid',
+                        'effective_payment_date' => date('Y-m-d', strtotime($collectionDate)),
+                        'payment_reference' => $transactionReference,
+                    ]);
                 }
                 $success++;
             } else {
