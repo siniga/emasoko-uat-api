@@ -140,7 +140,7 @@ class MandateActionService
     {
         if ($debitOrder->channel == "CRDB") {
             //requestId
-            $requestId = $debitOrder->crdb_request_id;
+            $requestId = $debitOrder->request_id;
 
             //create payload
             $payload = $this->payloadService->CRDBMandateCancellationPayload($debitOrder, $requestId);
