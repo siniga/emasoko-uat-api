@@ -158,11 +158,11 @@
                     <div class="detail-summary__label text-muted">Actual Collection - Today</div>
                     <div class="detail-summary__split">
                         <div class="detail-summary__metric">
-                            <div class="detail-summary__value text-primary">{{ number_format($stats['today_paid']) }}</div>
+                            <div class="detail-summary__value text-success">{{ number_format($stats['today_paid']) }}</div>
                         </div>
 
                         <div class="detail-summary__metric detail-summary__metric--count">
-                            <div class="detail-summary__value text-primary">{{ number_format($stats['today_successful_collections']) }}</div>
+                            <div class="detail-summary__value text-success">{{ number_format($stats['today_successful_collections']) }}</div>
                         </div>
                     </div>
                 </div>
@@ -334,12 +334,10 @@
                     <div class="dashboard-report-panel__head">
                         <div>
                             <h4 class="card-title">Payment Channel Performance</h4>
-                            <p class="dashboard-report-panel__hint">Current month collection success by payment
-                                channel.</p>
                         </div>
                     </div>
 
-                    <div class="dashboard-channel-list">
+                    {{-- <div class="dashboard-channel-list">
                         @foreach ($bank_channel_performance as $channelItem)
                             <div class="dashboard-channel-item">
                                 <div class="dashboard-channel-item__badge">
@@ -364,7 +362,7 @@
                                 </div>
                             </div>
                         @endforeach
-                    </div>
+                    </div> --}}
                 </div>
             </div>
         </div>

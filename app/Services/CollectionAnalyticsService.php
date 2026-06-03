@@ -30,18 +30,39 @@ class CollectionAnalyticsService
     public function summary(string $type, string $period, array $filters): array
     {
         $records = $this->records($type, $period, $filters);
+        $expectedRecords = $type === self::TYPE_ACTUAL
+            ? $this->expectedPeriodRecords($period, $filters)
+            : $records;
+        $periodStatusRecords = $type === self::TYPE_EXPECTED
+            ? $this->periodStatusRecords($period, $filters)
+            : $records;
 
-        $rows = $records
-            ->groupBy(fn (Installment $installment) => optional($installment->debitOrder)->partner_id)
-            ->map(function (Collection $items) {
-                $partner = optional(optional($items->first())->debitOrder)->partner;
+        $partnerSourceRecords = $type === self::TYPE_ACTUAL
+            ? $periodStatusRecords
+            : $expectedRecords->merge($periodStatusRecords);
+        $partnerIds = $partnerSourceRecords
+            ->map(fn(Installment $installment) => optional($installment->debitOrder)->partner_id)
+            ->filter()
+            ->unique()
+            ->values();
+
+        $expectedByPartner = $expectedRecords->groupBy(fn(Installment $installment) => optional($installment->debitOrder)->partner_id);
+        $statusByPartner = $periodStatusRecords->groupBy(fn(Installment $installment) => optional($installment->debitOrder)->partner_id);
+
+        $rows = $partnerIds
+            ->map(function ($partnerId) use ($expectedByPartner, $statusByPartner) {
+                $items = $expectedByPartner->get($partnerId, collect());
+                $statusItems = $statusByPartner->get($partnerId, collect());
+                $partner = optional(optional($items->first() ?? $statusItems->first())->debitOrder)->partner;
                 $expectedAmount = (float) $items->sum('installment_amount');
-                $paidAmount = (float) $items->sum('current_balance');
-                $outstandingAmount = (float) $items->sum(fn (Installment $installment) => $this->derivedOutstanding($installment));
-                $successCount = $this->countSuccessfulCollections($items);
-                $failedCount = $this->countFailedCollections($items);
-                $fullyPaidCount = $this->countFullyPaidCollections($items);
-                $partialPaidCount = $this->countPartialPaidCollections($items);
+                $paidAmount = (float) $statusItems
+                    ->filter(fn(Installment $installment) => $this->isSuccessful($installment))
+                    ->sum('current_balance');
+                $outstandingAmount = (float) $items->sum(fn(Installment $installment) => $this->derivedOutstanding($installment));
+                $successCount = $this->countSuccessfulCollections($statusItems);
+                $failedCount = $this->countFailedCollections($statusItems);
+                $fullyPaidCount = $this->countFullyPaidCollections($statusItems);
+                $partialPaidCount = $this->countPartialPaidCollections($statusItems);
 
                 return [
                     'uuid' => $partner->uuid ?? null,
@@ -57,7 +78,12 @@ class CollectionAnalyticsService
                     'percent' => $expectedAmount > 0 ? round(($paidAmount / $expectedAmount) * 100, 2) : 0,
                 ];
             })
-            ->filter(fn (array $row) => $row['uuid'] !== null && $row['number_of_collection'] > 0)
+            ->filter(fn(array $row) => $row['uuid'] !== null && (
+                $row['number_of_collection'] > 0
+                || $row['success_count'] > 0
+                || $row['failed_count'] > 0
+                || $row['paid_amount'] > 0
+            ))
             ->sortBy([
                 ['number_of_collection', 'desc'],
                 ['total_amount', 'desc'],
@@ -88,25 +114,37 @@ class CollectionAnalyticsService
     {
         $partner = Partner::where('uuid', $partnerUuid)->firstOrFail();
         $records = $this->records($type, $period, $filters, $partner);
+        $expectedRecords = $type === self::TYPE_ACTUAL
+            ? $this->expectedPeriodRecords($period, $filters, $partner)
+            : $records;
+        $periodStatusRecords = $type === self::TYPE_EXPECTED
+            ? $this->periodStatusRecords($period, $filters, $partner)
+            : $records;
+        $displayRecords = $type === self::TYPE_EXPECTED
+            ? $records->merge($periodStatusRecords)->unique('id')->values()
+            : $records;
 
-        $rows = $records->map(function (Installment $installment) {
+        $rows = $displayRecords->map(function (Installment $installment) {
             return $this->mapInstallment($installment);
         })->values();
+        $paidAmount = (float) $periodStatusRecords
+            ->filter(fn(Installment $installment) => $this->isSuccessful($installment))
+            ->sum('current_balance');
 
         return [
             'partner' => $partner,
             'rows' => $rows->all(),
             'stats' => [
-                'collections' => $records->count(),
-                'success_collections' => $this->countSuccessfulCollections($records),
-                'failed_collections' => $this->countFailedCollections($records),
-                'fully_paid_collections' => $this->countFullyPaidCollections($records),
-                'partial_paid_collections' => $this->countPartialPaidCollections($records),
-                'expected_amount' => (float) $records->sum('installment_amount'),
-                'paid_amount' => (float) $records->sum('current_balance'),
-                'outstanding_amount' => (float) $records->sum(fn (Installment $installment) => $this->derivedOutstanding($installment)),
-                'success_rate' => $records->sum('installment_amount') > 0
-                    ? round(($records->sum('current_balance') / $records->sum('installment_amount')) * 100, 2)
+                'collections' => $expectedRecords->count(),
+                'success_collections' => $this->countSuccessfulCollections($periodStatusRecords),
+                'failed_collections' => $this->countFailedCollections($periodStatusRecords),
+                'fully_paid_collections' => $this->countFullyPaidCollections($periodStatusRecords),
+                'partial_paid_collections' => $this->countPartialPaidCollections($periodStatusRecords),
+                'expected_amount' => (float) $expectedRecords->sum('installment_amount'),
+                'paid_amount' => $paidAmount,
+                'outstanding_amount' => (float) $expectedRecords->sum(fn(Installment $installment) => $this->derivedOutstanding($installment)),
+                'success_rate' => $expectedRecords->sum('installment_amount') > 0
+                    ? round(($paidAmount / $expectedRecords->sum('installment_amount')) * 100, 2)
                     : 0,
             ],
         ];
@@ -169,6 +207,28 @@ class CollectionAnalyticsService
             ->get();
     }
 
+    protected function periodStatusRecords(string $period, array $filters, ?Partner $partner = null): Collection
+    {
+        $query = $this->baseQuery(self::TYPE_EXPECTED, $filters, $partner)
+            ->whereIn('installments.status', array_merge(self::SUCCESS_STATUSES, self::FAILED_STATUSES));
+
+        $this->applyPeriodToColumn($query, 'installments.effective_payment_date', $period, $filters);
+
+        return $query
+            ->orderBy('installments.effective_payment_date')
+            ->get();
+    }
+
+    protected function expectedPeriodRecords(string $period, array $filters, ?Partner $partner = null): Collection
+    {
+        $query = $this->baseQuery(self::TYPE_EXPECTED, $filters, $partner);
+        $this->applyPeriodToColumn($query, 'installments.payment_date', $period, $filters);
+
+        return $query
+            ->orderBy('installments.payment_date')
+            ->get();
+    }
+
     protected function baseQuery(string $type, array $filters, ?Partner $partner = null): Builder
     {
         $query = Installment::filterCondition()
@@ -204,6 +264,11 @@ class CollectionAnalyticsService
             ? 'installments.effective_payment_date'
             : 'installments.payment_date';
 
+        $this->applyPeriodToColumn($query, $dateColumn, $period, $filters);
+    }
+
+    protected function applyPeriodToColumn(Builder $query, string $dateColumn, string $period, array $filters): void
+    {
         if ($period === self::PERIOD_MONTHLY) {
             $query->whereMonth($dateColumn, $filters['month'])
                 ->whereYear($dateColumn, $filters['year']);
@@ -248,9 +313,9 @@ class CollectionAnalyticsService
         return match (strtoupper((string) $status)) {
             'CLOSED' => 'PAID',
             'PARTIAL_PAID' => 'PARTIAL PAID',
-            'FAILED' => 'FAILED',
+            'FAILED' => 'FUNDSCHECK',
             'FUNDSCHECK' => 'FUNDSCHECK',
-            'OPEN' => 'OPEN',
+            'OPEN' => 'PENDING',
             default => strtoupper((string) $status),
         };
     }
@@ -262,16 +327,12 @@ class CollectionAnalyticsService
 
     protected function countSuccessfulCollections(Collection $records): int
     {
-        return $records->filter(fn (Installment $installment) => in_array(
-            strtoupper((string) $installment->status),
-            self::SUCCESS_STATUSES,
-            true
-        ))->count();
+        return $records->filter(fn(Installment $installment) => $this->isSuccessful($installment))->count();
     }
 
     protected function countFailedCollections(Collection $records): int
     {
-        return $records->filter(fn (Installment $installment) => in_array(
+        return $records->filter(fn(Installment $installment) => in_array(
             strtoupper((string) $installment->status),
             self::FAILED_STATUSES,
             true
@@ -280,7 +341,7 @@ class CollectionAnalyticsService
 
     protected function countFullyPaidCollections(Collection $records): int
     {
-        return $records->filter(fn (Installment $installment) => in_array(
+        return $records->filter(fn(Installment $installment) => in_array(
             strtoupper((string) $installment->status),
             self::FULLY_PAID_STATUSES,
             true
@@ -289,10 +350,15 @@ class CollectionAnalyticsService
 
     protected function countPartialPaidCollections(Collection $records): int
     {
-        return $records->filter(fn (Installment $installment) => in_array(
+        return $records->filter(fn(Installment $installment) => in_array(
             strtoupper((string) $installment->status),
             self::PARTIAL_PAID_STATUSES,
             true
         ))->count();
+    }
+
+    protected function isSuccessful(Installment $installment): bool
+    {
+        return in_array(strtoupper((string) $installment->status), self::SUCCESS_STATUSES, true);
     }
 }

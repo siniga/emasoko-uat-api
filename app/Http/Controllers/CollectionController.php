@@ -503,6 +503,7 @@ class CollectionController extends Controller
     public function expected_monthly(Request $request)
     {
         $post_data = $this->collectionAnalytics->defaultFilters(CollectionAnalyticsService::PERIOD_MONTHLY, $request->all());
+
         $summary = $this->collectionAnalytics->summary(
             CollectionAnalyticsService::TYPE_EXPECTED,
             CollectionAnalyticsService::PERIOD_MONTHLY,
@@ -517,7 +518,7 @@ class CollectionController extends Controller
         $collectionType = CollectionAnalyticsService::TYPE_EXPECTED;
         $collectionPeriod = CollectionAnalyticsService::PERIOD_MONTHLY;
 
-        return view('collections.expected_collection_monthly', compact(
+        return view('collections.expected_monthly', compact(
             'title',
             'payment_channels',
             'arr_data',
@@ -546,7 +547,7 @@ class CollectionController extends Controller
         $collectionType = CollectionAnalyticsService::TYPE_EXPECTED;
         $collectionPeriod = CollectionAnalyticsService::PERIOD_MONTHLY;
 
-        return view('collections.expected_collection_monthly_detail', compact(
+        return view('collections.expected_monthly_detail', compact(
             'title',
             'partner',
             'arr_installments',
@@ -598,7 +599,7 @@ class CollectionController extends Controller
         $collectionType = CollectionAnalyticsService::TYPE_ACTUAL;
         $collectionPeriod = CollectionAnalyticsService::PERIOD_MONTHLY;
 
-        return view('collections.actual_collection_monthly', compact(
+        return view('collections.actual_monthly', compact(
             'title',
             'payment_channels',
             'arr_data',
@@ -627,7 +628,7 @@ class CollectionController extends Controller
         $collectionType = CollectionAnalyticsService::TYPE_ACTUAL;
         $collectionPeriod = CollectionAnalyticsService::PERIOD_MONTHLY;
 
-        return view('collections.actual_collection_monthly_detail', compact(
+        return view('collections.actual_monthly_detail', compact(
             'title',
             'partner',
             'arr_installments',
@@ -678,7 +679,7 @@ class CollectionController extends Controller
         $collectionType = CollectionAnalyticsService::TYPE_EXPECTED;
         $collectionPeriod = CollectionAnalyticsService::PERIOD_DAILY;
 
-        return view('collections.expected_collection_daily', compact(
+        return view('collections.expected_daily', compact(
             'title',
             'payment_channels',
             'arr_data',
@@ -706,7 +707,7 @@ class CollectionController extends Controller
         $collectionType = CollectionAnalyticsService::TYPE_EXPECTED;
         $collectionPeriod = CollectionAnalyticsService::PERIOD_DAILY;
 
-        return view('collections.expected_collection_daily_detail', compact(
+        return view('collections.expected_daily_detail', compact(
             'title',
             'partner',
             'arr_installments',
@@ -757,7 +758,7 @@ class CollectionController extends Controller
         $collectionType = CollectionAnalyticsService::TYPE_ACTUAL;
         $collectionPeriod = CollectionAnalyticsService::PERIOD_DAILY;
 
-        return view('collections.actual_collection_daily', compact(
+        return view('collections.actual_daily', compact(
             'title',
             'payment_channels',
             'arr_data',
@@ -785,7 +786,7 @@ class CollectionController extends Controller
         $collectionType = CollectionAnalyticsService::TYPE_ACTUAL;
         $collectionPeriod = CollectionAnalyticsService::PERIOD_DAILY;
 
-        return view('collections.actual_collection_daily_detail', compact(
+        return view('collections.actual_daily_detail', compact(
             'title',
             'partner',
             'arr_installments',
@@ -846,7 +847,7 @@ class CollectionController extends Controller
     {
         $summary = $this->collectionAnalytics->summary($type, $period, $filters);
         $isActualCollection = $type === CollectionAnalyticsService::TYPE_ACTUAL;
-        $collectionsLabel = $isActualCollection ? 'Settled Records' : 'Collections';
+        $collectionsLabel = 'Collections';
         $secondaryCountLabel = $isActualCollection ? 'Paid In Full' : 'Success';
         $tertiaryCountLabel = $isActualCollection ? 'Partial Paid' : 'Failed';
         $paidAmountLabel = $isActualCollection ? 'Settled Amount' : 'Paid Amount';
@@ -902,7 +903,11 @@ class CollectionController extends Controller
             'Remarks',
         ];
 
-        $rows = collect($detail['rows'])->map(function (array $row) {
+        $rows = collect($detail['rows'])->map(function (array $row) use ($isActualCollection) {
+            $paidAmount = $isActualCollection
+                ? $row['current_balance']
+                : $row['last_paid_amount'];
+
             return [
                 $row['business_name'],
                 $row['reference'],
@@ -910,7 +915,7 @@ class CollectionController extends Controller
                 $row['account_name'],
                 $row['account_number'],
                 round((float) $row['amount'], 2),
-                round((float) $row['last_paid_amount'], 2),
+                round((float) $paidAmount, 2),
                 round((float) $row['current_balance'], 2),
                 round((float) $row['outstanding_amount'], 2),
                 $row['payment_date'],

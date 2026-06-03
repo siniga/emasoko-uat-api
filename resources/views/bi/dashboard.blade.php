@@ -230,20 +230,23 @@
             <div class="detail-summary shadow h-96 py-2">
                 <div class="detail-summary__label text-muted">Collected</div>
                 <div class="detail-summary__value text-success">{{ number_format($reconciliationSummary['collected_count']) }}</div>
-                <div class="detail-summary__sub">{{ number_format($reconciliationSummary['collected_percent'], 1) }}% ·
+                <div class="detail-summary__sub">
+                {{-- {{ number_format($reconciliationSummary['collected_percent'], 1) }}% · --}}
                     TZS {{ number_format($reconciliationSummary['collected_amount']) }}</div>
             </div>
             <div class="detail-summary shadow h-96 py-2">
                 <div class="detail-summary__label text-muted">Failed</div>
                 <div class="detail-summary__value text-danger">{{ number_format($reconciliationSummary['failed_count']) }}</div>
-                <div class="detail-summary__sub">{{ number_format($reconciliationSummary['failed_percent'], 1) }}% · TZS
-                    {{ number_format($reconciliationSummary['failed_amount']) }}</div>
+                <div class="detail-summary__sub">
+                {{-- {{ number_format($reconciliationSummary['failed_percent'], 1) }}% · --}}
+                    TZS {{ number_format($reconciliationSummary['failed_amount']) }}</div>
             </div>
             <div class="detail-summary shadow h-96 py-2">
                 <div class="detail-summary__label text-muted">Pending</div>
                 <div class="detail-summary__value text-warning">{{ number_format($reconciliationSummary['pending_count']) }}</div>
-                <div class="detail-summary__sub">{{ number_format($reconciliationSummary['pending_percent'], 1) }}% · TZS
-                    {{ number_format($reconciliationSummary['pending_amount']) }}</div>
+                <div class="detail-summary__sub">
+                {{-- {{ number_format($reconciliationSummary['pending_percent'], 1) }}% · --}}
+                    TZS {{ number_format($reconciliationSummary['pending_amount']) }}</div>
             </div>
         </div>
 

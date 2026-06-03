@@ -1,6 +1,6 @@
 @php
     $isActualCollection = $collectionType === \App\Services\CollectionAnalyticsService::TYPE_ACTUAL;
-    $collectionsLabel = $isActualCollection ? 'Settled Records' : 'Collections';
+    $collectionsLabel = 'Collections';
     $secondaryCountLabel = $isActualCollection ? 'Paid In Full' : 'Success';
     $secondaryCountValue = $isActualCollection
         ? $listStats['fully_paid_collections'] ?? 0
@@ -9,7 +9,7 @@
     $tertiaryCountValue = $isActualCollection
         ? $listStats['partial_paid_collections'] ?? 0
         : $listStats['failed_collections'] ?? 0;
-    $paidAmountLabel = $isActualCollection ? 'Settled Amount' : 'Paid Amount';
+    $paidAmountLabel = $isActualCollection ? 'Settled Amt' : 'Paid Amt';
 @endphp
 
 <div class="sp-list-shell collection-detail-shell">
@@ -26,11 +26,6 @@
         <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
             <div>
                 <div class="collection-detail-hero__title">{{ strtoupper($partner->business_name) }}</div>
-                <p class="collection-detail-hero__hint">
-                    {{ $isActualCollection
-                        ? 'This view shows settled installments only, split between fully paid and partial paid records using effective collection date.'
-                        : 'This view shows all scheduled installments in the filtered period, together with success, failed, and outstanding progress so far.' }}
-                </p>
             </div>
 
             <div class="text-sm-end">
@@ -42,26 +37,22 @@
     </div>
 
     <div class="row g-3 mb-4">
-        <div class="col-md-3 col-xl-2">
+        <div class="col-md-3 col-xl-3">
             <div class="detail-summary shadow h-96 py-2">
                 <div class="detail-summary__label text-muted">{{ $collectionsLabel }}</div>
                 <div class="detail-summary__value text-secondary">{{ number_format($listStats['collections'] ?? 0) }}
                 </div>
             </div>
         </div>
-        <div class="col-md-3 col-xl-2">
+
+        <div class="col-md-3 col-xl-3">
             <div class="detail-summary shadow h-96 py-2">
                 <div class="detail-summary__label text-muted">{{ $secondaryCountLabel }}</div>
                 <div class="detail-summary__value text-success">{{ number_format($secondaryCountValue) }}</div>
             </div>
         </div>
-        <div class="col-md-3 col-xl-2">
-            <div class="detail-summary shadow h-96 py-2">
-                <div class="detail-summary__label text-muted">{{ $tertiaryCountLabel }}</div>
-                <div class="detail-summary__value text-danger">{{ number_format($tertiaryCountValue) }}</div>
-            </div>
-        </div>
-        <div class="col-md-3 col-xl-2">
+
+        <div class="col-md-3 col-xl-3">
             <div class="detail-summary shadow h-96 py-2">
                 <div class="detail-summary__label text-muted">Expected Amount</div>
                 <div class="detail-summary__value text-primary">
@@ -69,7 +60,7 @@
             </div>
         </div>
 
-        <div class="col-md-4 col-xl-4">
+        <div class="col-md-3 col-xl-3">
             <div class="detail-summary shadow h-96 py-2">
                 <div class="detail-summary__split">
                     <div class="detail-summary__metric">
@@ -78,7 +69,7 @@
                             {{ number_format($listStats['paid_amount'] ?? 0, 2) }}</div>
                     </div>
                     <div class="detail-summary__metric detail-summary__metric--count">
-                        <div class="detail-summary__label text-muted">Success Rate</div>
+                        <div class="detail-summary__label text-muted">Success</div>
                         <div class="detail-summary__value text-success">
                             {{ number_format($listStats['success_rate'] ?? 0, 2) }}%</div>
                     </div>
@@ -97,10 +88,10 @@
                         class="btn btn-outline-success btn-sm">
                         <i class="bx bx-export"></i> Export XLS
                     </a>
-                    <a href="{{ route($exportRoute, array_merge(['uuid' => $partner->uuid], $post_data, ['format' => 'pdf'])) }}"
+                    {{-- <a href="{{ route($exportRoute, array_merge(['uuid' => $partner->uuid], $post_data, ['format' => 'pdf'])) }}"
                         class="btn btn-outline-danger btn-sm">
                         <i class="bx bxs-file-pdf"></i> Export PDF
-                    </a>
+                    </a> --}}
                 </div>
             </div>
 
@@ -124,6 +115,9 @@
                         @forelse ($arr_installments as $val)
                             @php
                                 $normalizedStatus = strtoupper((string) $val['status']);
+                                $paidAmount = $isActualCollection
+                                    ? $val['current_balance']
+                                    : $val['last_paid_amount'];
                             @endphp
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
@@ -131,22 +125,20 @@
                                 <td>{{ $val['channel'] }}</td>
                                 <td>{{ $val['account_name'] }}</td>
                                 <td class="text-end">{{ number_format($val['amount'], 2) }}</td>
-                                <td class="text-end">{{ number_format($val['last_paid_amount'], 2) }}</td>
+                                <td class="text-end">{{ number_format($paidAmount, 2) }}</td>
                                 <td class="text-end">{{ number_format($val['outstanding_amount'], 2) }}</td>
                                 <td>{{ $val['payment_date'] ?? '-' }}</td>
                                 <td>{{ $normalizedStatus === 'OPEN' ? '-' : $val['effective_payment_date'] ?? '-' }}
                                 </td>
                                 <td>
                                     @if ($normalizedStatus === 'CLOSED')
-                                        <span class="badge bg-success-subtle text-success">FULLY PAID</span>
+                                        <span class="badge badge-soft-success">FULLY PAID</span>
                                     @elseif ($normalizedStatus === 'PARTIAL_PAID')
-                                        <span class="badge bg-warning-subtle text-warning">PARTIAL PAID</span>
+                                        <span class="badge badge-soft-warning">PARTIAL PAID</span>
                                     @elseif (in_array($normalizedStatus, ['FAILED', 'FUNDSCHECK'], true))
-                                        <span
-                                            class="badge bg-danger-subtle text-danger">{{ $val['status_label'] }}</span>
+                                        <span class="badge badge-soft-danger">{{ $val['status_label'] }}</span>
                                     @else
-                                        <span
-                                            class="badge bg-primary-subtle text-primary">{{ $val['status_label'] }}</span>
+                                        <span class="badge badge-soft-primary">{{ $val['status_label'] }}</span>
                                     @endif
                                 </td>
                             </tr>
@@ -160,7 +152,7 @@
                     @if (!empty($arr_installments))
                         <tfoot>
                             <tr>
-                                <th colspan="5">Total</th>
+                                <th colspan="4">Total</th>
                                 <th class="text-end">{{ number_format($listStats['expected_amount'] ?? 0, 2) }}</th>
                                 <th class="text-end">{{ number_format($listStats['paid_amount'] ?? 0, 2) }}</th>
                                 <th class="text-end">{{ number_format($listStats['outstanding_amount'] ?? 0, 2) }}</th>

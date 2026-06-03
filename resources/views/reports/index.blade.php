@@ -183,16 +183,16 @@
                             <div class="row g-3 mb-4">
                                 @foreach ($reportPreview['summary'] as $summary)
                                     <div class="col-md-3">
-                                        <div class="rp-summary">
-                                            <div class="rp-summary__label">{{ $summary['label'] }}</div>
-                                            <div class="rp-summary__value text-{{ $summary['tone'] ?? 'primary' }}">{{ $summary['value'] }}</div>
+                                        <div class="detail-summary shadow h-96 py-2">
+                                            <div class="detail-summary__label">{{ $summary['label'] }}</div>
+                                            <div class="detail-summary__value text-{{ $summary['tone'] ?? 'primary' }}">{{ $summary['value'] }}</div>
                                         </div>
                                     </div>
                                 @endforeach
                             </div>
 
                             <div class="table-responsive">
-                                <table class="table table-bordered mb-0">
+                                <table class="table table-bordered dt-responsive nowrap w-100 mb-0">
                                     <thead>
                                         <tr>
                                             @foreach ($reportPreview['headings'] as $heading)

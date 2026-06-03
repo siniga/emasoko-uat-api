@@ -1,18 +1,19 @@
 @php
     $isActualCollection = $collectionType === \App\Services\CollectionAnalyticsService::TYPE_ACTUAL;
     $isMonthlyCollection = $collectionPeriod === \App\Services\CollectionAnalyticsService::PERIOD_MONTHLY;
-    $collectionsLabel = $isActualCollection ? 'Settled Records' : 'Collections';
+    $collectionsLabel = 'Collections';
     $secondaryCountLabel = $isActualCollection ? 'Paid In Full' : 'Success';
     $secondaryCountValue = $isActualCollection
         ? $listStats['fully_paid_collections'] ?? 0
         : $listStats['success_collections'] ?? 0;
-    $tertiaryCountLabel = $isActualCollection ? 'Partial Paid' : 'Failed';
+    $tertiaryCountLabel = $isActualCollection ? 'Partial Paid' : 'Fundscheck';
     $tertiaryCountValue = $isActualCollection
         ? $listStats['partial_paid_collections'] ?? 0
         : $listStats['failed_collections'] ?? 0;
     $secondaryRowKey = $isActualCollection ? 'fully_paid_count' : 'success_count';
     $tertiaryRowKey = $isActualCollection ? 'partial_paid_count' : 'failed_count';
     $paidAmountLabel = $isActualCollection ? 'Settled Amount' : 'Paid Amount';
+    $showTertiaryColumn = $isActualCollection;
 @endphp
 
 <div class="sp-list-shell collection-summary-shell">
@@ -97,54 +98,6 @@
                 {{ Form::close() }}
             </div>
 
-            <div class="row mb-3">
-                <div class="col-md-2 col-xl-2">
-                    <div class="detail-summary shadow h-96 py-2">
-                        <div class="detail-summary__label text-muted">{{ $collectionsLabel }}</div>
-                        <div class="detail-summary__value text-secondary">
-                            {{ number_format($listStats['collections'] ?? 0) }}</div>
-                    </div>
-                </div>
-                <div class="col-md-2 col-xl-2">
-                    <div class="detail-summary shadow h-96 py-2">
-                        <div class="detail-summary__label text-muted">{{ $secondaryCountLabel }}</div>
-                        <div class="detail-summary__value text-success">
-                            {{ number_format($secondaryCountValue) }}</div>
-                    </div>
-                </div>
-                <div class="col-md-2 col-xl-2">
-                    <div class="detail-summary shadow h-96 py-2">
-                        <div class="detail-summary__label text-muted">{{ $tertiaryCountLabel }}</div>
-                        <div class="detail-summary__value text-danger">{{ number_format($tertiaryCountValue) }}
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-2 col-xl-2">
-                    <div class="detail-summary shadow h-96 py-2">
-                        <div class="detail-summary__label text-muted">Expected Amount</div>
-                        <div class="detail-summary__value text-primary">
-                            {{ number_format($listStats['expected_amount'] ?? 0, 2) }}</div>
-                    </div>
-                </div>
-                <div class="col-md-4 col-xl-4">
-                    <div class="detail-summary shadow h-96 py-2">
-                        <div class="detail-summary__split">
-                            <div class="detail-summary__metric">
-                                <div class="detail-summary__label text-muted">{{ $paidAmountLabel }}</div>
-                                <div class="detail-summary__value text-success">
-                                    {{ number_format($listStats['paid_amount'] ?? 0, 2) }}</div>
-                            </div>
-                            <div class="detail-summary__metric detail-summary__metric--count">
-                                <div class="detail-summary__label text-muted">Success Rate</div>
-                                <div class="detail-summary__value text-success">
-                                    {{ number_format($listStats['success_rate'] ?? 0, 2) }}%</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <div class="card sp-list-card">
                 <div class="card-body">
                     <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
@@ -152,13 +105,13 @@
 
                         <div class="text-sm-end">
                             <a href="{{ route($summaryExportRoute, array_merge($post_data, ['format' => 'xls'])) }}"
-                                class="btn btn-success btn-sm">
+                                class="btn btn-outline-success btn-sm">
                                 <i class="bx bx-export"></i> Export XLS
                             </a>
-                            <a href="{{ route($summaryExportRoute, array_merge($post_data, ['format' => 'pdf'])) }}"
+                            {{-- <a href="{{ route($summaryExportRoute, array_merge($post_data, ['format' => 'pdf'])) }}"
                                 class="btn btn-outline-danger btn-sm ms-sm-2 mt-2 mt-sm-0">
                                 <i class="bx bxs-file-pdf"></i> Export PDF
-                            </a>
+                            </a> --}}
                         </div>
                     </div>
 
@@ -170,11 +123,13 @@
                                     <th>Service Provider</th>
                                     <th class="text-end">{{ $collectionsLabel }}</th>
                                     <th class="text-end">{{ $secondaryCountLabel }}</th>
-                                    <th class="text-end">{{ $tertiaryCountLabel }}</th>
-                                    <th class="text-end">Expected Amount</th>
+                                    @if ($showTertiaryColumn)
+                                        <th class="text-end">{{ $tertiaryCountLabel }}</th>
+                                    @endif
+                                    <th class="text-end">Expected</th>
                                     <th class="text-end">{{ $paidAmountLabel }}</th>
                                     <th class="text-end">Outstanding</th>
-                                    <th class="text-end">Success Rate</th>
+                                    <th class="text-end">Success</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -190,8 +145,10 @@
                                         <td class="text-end">{{ number_format($values['number_of_collection']) }}</td>
                                         <td class="text-end text-success fw-semibold">
                                             {{ number_format($values[$secondaryRowKey] ?? 0) }}</td>
-                                        <td class="text-end text-danger fw-semibold">
-                                            {{ number_format($values[$tertiaryRowKey] ?? 0) }}</td>
+                                        @if ($showTertiaryColumn)
+                                            <td class="text-end text-danger fw-semibold">
+                                                {{ number_format($values[$tertiaryRowKey] ?? 0) }}</td>
+                                        @endif
                                         <td class="text-end">{{ number_format($values['total_amount'], 2) }}</td>
                                         <td class="text-end">{{ number_format($values['paid_amount'], 2) }}</td>
                                         <td class="text-end">{{ number_format($values['outstanding_amount'], 2) }}</td>
@@ -211,7 +168,9 @@
                                         <th class="text-end">{{ number_format($listStats['collections'] ?? 0) }}</th>
                                         <th class="text-end text-success">{{ number_format($secondaryCountValue) }}
                                         </th>
-                                        <th class="text-end text-danger">{{ number_format($tertiaryCountValue) }}</th>
+                                        @if ($showTertiaryColumn)
+                                            <th class="text-end text-danger">{{ number_format($tertiaryCountValue) }}</th>
+                                        @endif
                                         <th class="text-end">{{ number_format($listStats['expected_amount'] ?? 0, 2) }}
                                         </th>
                                         <th class="text-end">{{ number_format($listStats['paid_amount'] ?? 0, 2) }}
