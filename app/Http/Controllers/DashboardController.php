@@ -84,9 +84,14 @@ class DashboardController extends Controller
 
             //this month and today collection
             'month' => date('F', mktime(0, 0, 0, (int) $current_month, 1)),
+            'this_month_total_collections' => $this_month->total_collections,
             'this_month_expected' => $this_month->total_amount,
+            'this_month_successful_collections' => $this_month->successful_collections,
             'this_month_paid' => $this_month->paid_amount,
+
+            'today_total_collections' => $today->total_collections,
             'today_expected' => $today->total_amount,
+            'today_successful_collections' => $today->successful_collections,
             'today_paid' => $today->paid_amount
         ];
 

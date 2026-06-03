@@ -110,7 +110,7 @@
                                 {{ number_format($stats['this_month_expected']) }}</div>
                         </div>
                         <div class="detail-summary__metric detail-summary__metric--count">
-                            <div class="detail-summary__value text-primary">0</div>
+                            <div class="detail-summary__value text-primary">{{ number_format($stats['this_month_total_collections']) }}</div>
                         </div>
                     </div>
                 </div>
@@ -127,7 +127,7 @@
                             </div>
                         </div>
                         <div class="detail-summary__metric detail-summary__metric--count">
-                            <div class="detail-summary__value text-success">0</div>
+                            <div class="detail-summary__value text-success">{{ number_format($stats['this_month_successful_collections']) }}</div>
                         </div>
                     </div>
                 </div>
@@ -145,7 +145,7 @@
                         </div>
 
                         <div class="detail-summary__metric detail-summary__metric--count">
-                            <div class="detail-summary__value text-primary">0</div>
+                            <div class="detail-summary__value text-primary">{{ number_format($stats['today_total_collections']) }}</div>
                         </div>
                     </div>
                 </div>
@@ -162,7 +162,7 @@
                         </div>
 
                         <div class="detail-summary__metric detail-summary__metric--count">
-                            <div class="detail-summary__value text-primary">0</div>
+                            <div class="detail-summary__value text-primary">{{ number_format($stats['today_successful_collections']) }}</div>
                         </div>
                     </div>
                 </div>
