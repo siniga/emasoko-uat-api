@@ -4,7 +4,9 @@
     Register Service Provider
 @endsection
 
-@include('companies.create.partials.styles')
+@section('css')
+    <link href="{{ URL::asset('/assets/css/companies-create.css') }}" rel="stylesheet" type="text/css" />
+@endsection
 
 @section('content')
     <div class="row">
@@ -180,7 +182,7 @@
                             </div>
 
                             <div class="sp-actionbar">
-                                <div class="sp-actionbar__meta">Step 1 of 5. Save the profile before continuing to documents.</div>
+                                <div class="sp-actionbar__meta"></div>
                                 <div class="d-flex gap-2">
                                         <a href="{{ route('companies.lists') }}"
                                             class="btn btn-outline-danger btn-xs text-medium">

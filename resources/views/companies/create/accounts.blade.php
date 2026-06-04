@@ -4,7 +4,9 @@
     Register Service Provider
 @endsection
 
-@include('companies.create.partials.styles')
+@section('css')
+    <link href="{{ URL::asset('/assets/css/companies-create.css') }}" rel="stylesheet" type="text/css" />
+@endsection
 
 @section('content')
     <div class="row">
@@ -73,7 +75,7 @@
 
                                         <div class="col-lg-2">
                                             <div class="mb-3">
-                                                <label class="bank_mno_name">Bank Name <span
+                                                <label class="bank_mno_name">Payment Channel <span
                                                         class="text-danger">*</span></label>
                                                 @php $options = []; @endphp
                                                 @foreach ($accounts as $val)
@@ -181,7 +183,7 @@
 
                                     <div class="col-lg-2">
                                         <div class="mb-3">
-                                            <label class="bank_mno_name">Bank Name <span
+                                            <label class="bank_mno_name">Payment Channel <span
                                                     class="text-danger">*</span></label>
                                             @php $options = []; @endphp
                                             @foreach ($accounts as $val)
@@ -266,7 +268,7 @@
                             <div class="field_wrapper"></div>
 
                             <div class="sp-actionbar">
-                                <div class="sp-actionbar__meta">Step 3 of 5. Capture channel information correctly.</div>
+                                <div class="sp-actionbar__meta"></div>
                                 <div class="d-flex gap-2">
                                         <a href="{{ route('companies.register-documents', $company->uuid) }}"
                                             class="btn btn-outline-secondary text-medium">Previous</a>
@@ -298,10 +300,10 @@
                 // Change bank or MNO name
                 if (accountTypeId == 1) {
                     fieldInputContainer.find('.bank_mno_name').html(
-                        'Bank Name <span class="text-danger">*</span>');
+                        'Payment Channel <span class="text-danger">*</span>');
                 } else if (accountTypeId == 2) {
                     fieldInputContainer.find('.bank_mno_name').html(
-                        'MNO Name <span class="text-danger">*</span>');
+                        'Payment Channel <span class="text-danger">*</span>');
                 }
 
                 // Query for data
@@ -337,7 +339,7 @@
 
                 <div class="col-lg-2">
                     <div class="mb-3">
-                        <label class="bank_mno_name">Bank Name <span class="text-danger">*</span></label>
+                        <label class="bank_mno_name">Payment Channel <span class="text-danger">*</span></label>
                         <select name="account_id[]" class="form-control account_id">
                             <option value=''>-- Select --</option>
                             ${Object.keys(accounts).map(key => `<option value='${key}'>${accounts[key]}</option>`).join('')}
@@ -427,8 +429,8 @@
                     "currency_id[]": "required",
                 },
                 messages: {
-                    "account_type_id[]": "Account type required",
-                    "account_id[]": "Bank/MNO name required",
+                    "account_type_id[]": "Channel type required",
+                    "account_id[]": "Payment channel required",
                     "account_name[]": "Account name required",
                     "account_number[]": "Account number required",
                     "customer_code[]": "Customer number required",

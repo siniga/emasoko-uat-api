@@ -4,7 +4,9 @@
     Register Service Provider
 @endsection
 
-@include('companies.create.partials.styles')
+@section('css')
+    <link href="{{ URL::asset('/assets/css/companies-create.css') }}" rel="stylesheet" type="text/css" />
+@endsection
 
 @section('content')
     <div class="row">
@@ -157,7 +159,7 @@
                             <div class="field_wrapper"></div>
 
                             <div class="sp-actionbar">
-                                <div class="sp-actionbar__meta">Step 4 of 5. Save the representative details before reviewing the full onboarding package.</div>
+                                <div class="sp-actionbar__meta"></div>
                                 <div class="d-flex gap-2">
                                         <a href="{{ route('companies.register-accounts', $company->uuid) }}"
                                             class="btn btn-outline-secondary text-medium">Previous</a>

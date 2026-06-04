@@ -4,7 +4,9 @@
     Edit Customer Account
 @endsection
 
-@include('companies.create.partials.styles')
+@section('css')
+    <link href="{{ URL::asset('/assets/css/companies-create.css') }}" rel="stylesheet" type="text/css" />
+@endsection
 
 @section('content')
     <div class="row">

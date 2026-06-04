@@ -1,10 +1,10 @@
 @php
     $steps = [
-        1 => ['title' => 'Information', 'meta' => 'Business profile and address'],
-        2 => ['title' => 'Documents', 'meta' => 'Compliance file uploads'],
+        1 => ['title' => 'Information', 'meta' => 'Business profile'],
+        2 => ['title' => 'Documents', 'meta' => 'Compliance files'],
         3 => ['title' => 'Accounts', 'meta' => 'Collection setup'],
         4 => ['title' => 'Representative', 'meta' => 'Authorized contact'],
-        5 => ['title' => 'Preview', 'meta' => 'Final review and submit'],
+        5 => ['title' => 'Preview', 'meta' => 'Final review'],
     ];
 @endphp
 

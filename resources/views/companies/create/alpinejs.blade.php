@@ -41,6 +41,8 @@
                             "<div class='alert alert-success rounded-sm'>Service provider registered, Waiting for assessment and approval process.</div>"
                         );
 
+                        console.log(responseJson);
+
                         //set timer
                         setTimeout(function() {
                             window.location.href = "/companies/show/" + responseJson.uuid;

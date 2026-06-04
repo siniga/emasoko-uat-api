@@ -24,21 +24,8 @@ use Illuminate\Support\Facades\Auth;
 
 class CompanyService
 {
-    private $app_variable;
+    protected $app_variable;
     public function __construct() {}
-
-    protected function appVariable(): AppVariable
-    {
-        if (!$this->app_variable) {
-            $this->app_variable = AppVariable::first();
-        }
-
-        if (!$this->app_variable) {
-            throw new \RuntimeException('App variables are not initialized');
-        }
-
-        return $this->app_variable;
-    }
 
     //create company information
     public function createInformation($data, $uuid): Partner
@@ -302,8 +289,8 @@ class CompanyService
     //get customer code
     public function getCustomerCode()
     {
-        $appVariable = $this->appVariable();
-        static $number = $appVariable->cur_customer_code;
+        $appVariable = AppVariable::firstOrFail();
+        $number = $appVariable->cur_customer_code;
 
         $number++;
         $next_customer_code = str_pad($number, 9, '0', STR_PAD_LEFT);

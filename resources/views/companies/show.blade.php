@@ -122,7 +122,7 @@
                         <div class="detail-section">
                             <div class="detail-section__head">
                                 <div>
-                                    <h5>Provider Overview</h5>
+                                    <h5>Service Provider Information</h5>
                                 </div>
                                 <div class="actions">
                                     <div class="btn-group">
@@ -229,7 +229,6 @@
                             <div class="detail-section__head">
                                 <div>
                                     <h5>Additional Details</h5>
-                                    <p>Address and review notes for this provider.</p>
                                 </div>
                             </div>
 
@@ -254,7 +253,6 @@
                                 <div class="detail-section__head">
                                     <div>
                                         <h5>Collection Accounts</h5>
-                                        <p>Configured settlement accounts and their verification state.</p>
                                     </div>
                                 </div>
 
@@ -304,8 +302,7 @@
                             <div class="detail-section">
                                 <div class="detail-section__head">
                                     <div>
-                                        <h5>Documents</h5>
-                                        <p>Compliance files and uploaded provider records.</p>
+                                        <h5>Compliance Documents</h5>
                                     </div>
                                 </div>
 
@@ -351,7 +348,6 @@
                                 <div class="detail-section__head">
                                     <div>
                                         <h5>Authorized Representatives</h5>
-                                        <p>Contacts assigned to operate and approve on behalf of this provider.</p>
                                     </div>
                                 </div>
 

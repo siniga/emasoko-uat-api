@@ -4,66 +4,9 @@
     New Collection Account
 @endsection
 
-@include('companies.create.partials.styles')
-
-<style>
-    .account-shell .sp-stepper {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-
-    .account-note {
-        border: 1px solid #dbe7fb;
-        border-radius: 14px;
-        background: #edf4ff;
-        padding: 1rem 1.1rem;
-        color: #274160;
-        margin-bottom: 1rem;
-    }
-
-    .account-grid {
-        display: grid;
-        grid-template-columns: repeat(12, minmax(0, 1fr));
-        gap: 1rem;
-    }
-
-    .account-grid__col-3 {
-        grid-column: span 3;
-    }
-
-    .account-grid__col-2 {
-        grid-column: span 2;
-    }
-
-    .account-grid__col-4 {
-        grid-column: span 4;
-    }
-
-    .account-grid__col-6 {
-        grid-column: span 6;
-    }
-
-    .account-grid__col-12 {
-        grid-column: span 12;
-    }
-
-    @media (max-width: 991.98px) {
-        .account-shell .sp-stepper {
-            grid-template-columns: 1fr;
-        }
-
-        .account-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .account-grid__col-3,
-        .account-grid__col-2,
-        .account-grid__col-4,
-        .account-grid__col-6,
-        .account-grid__col-12 {
-            grid-column: span 1;
-        }
-    }
-</style>
+@section('css')
+    <link href="{{ URL::asset('/assets/css/companies-create.css') }}" rel="stylesheet" type="text/css" />
+@endsection
 
 @section('content')
     <div class="row">
@@ -96,19 +39,12 @@
 
                             <section>
                                 <div class="sp-section">
-                                    <div class="sp-section__title">Settlement Account Details</div>
-                                    <div class="sp-section__hint">Enter the account that should receive collections.
-                                        Bank/MNO will adjust automatically based on the selected account type.</div>
-
-                                    <div class="account-note">
-                                        Use a verified settlement account with the correct customer number and corporate
-                                        limit. This helps reduce approval delays and duplicate account submissions.
-                                    </div>
+                                    <div class="sp-section__title">Settlement Account Information</div>
 
                                     <div class="account-grid field-input">
                                         <div class="account-grid__col-3">
                                             <div class="mb-3">
-                                                <label for="basicpill-namecard-input">Account Type <span
+                                                <label for="basicpill-namecard-input">Channel Type <span
                                                         class="text-danger">*</span></label>
                                                 @php
                                                     $account_type_options = [];
@@ -131,7 +67,7 @@
 
                                         <div class="account-grid__col-3">
                                             <div class="mb-3">
-                                                <label class="bank_mno_name">Bank Name <span
+                                                <label class="bank_mno_name">Payment Channel <span
                                                         class="text-danger">*</span></label>
                                                 @php $options = []; @endphp
                                                 @foreach ($accounts as $val)
@@ -240,10 +176,10 @@
                 // Change bank or MNO name
                 if (accountTypeId == 1) {
                     fieldInputContainer.find('.bank_mno_name').html(
-                        'Bank Name <span class="text-danger">*</span>');
+                        'Payment Channel <span class="text-danger">*</span>');
                 } else if (accountTypeId == 2) {
                     fieldInputContainer.find('.bank_mno_name').html(
-                        'MNO Name <span class="text-danger">*</span>');
+                        'Payment Channel <span class="text-danger">*</span>');
                 }
 
                 // Query for data
@@ -270,8 +206,8 @@
                     "currency_id": "required",
                 },
                 messages: {
-                    "account_type_id": "Account type required",
-                    "account_id": "Bank/MNO name required",
+                    "account_type_id": "Channel type required",
+                    "account_id": "Payment channel required",
                     "account_name": "Account name required",
                     "account_number": "Account number required",
                     "customer_code": "Customer number required",
@@ -311,8 +247,7 @@
 
                                 // Set timer
                                 setTimeout(function() {
-                                    window.location.href = "/companies/details/" +
-                                        response.uuid;
+                                    window.location.href = "/companies/show/" + response.uuid;
                                 }, 300);
                             }
                         },
