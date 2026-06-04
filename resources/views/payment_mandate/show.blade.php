@@ -34,8 +34,7 @@
                     <div class="card-body">
                         <div class="pm-card__head">
                             <div>
-                                <div class="pm-card__title">Mandate Details</div>
-                                <div class="pm-card__hint">Customer, mandate terms, and operational metadata.</div>
+                                <div class="pm-card__title">Mandate Information</div>
                             </div>
 
                             <div class="pm-actions">
@@ -192,7 +191,7 @@
                 <div class="card pm-card">
                     <div class="card-body">
                         <div class="pm-card__title">Deduction History</div>
-                        <div class="pm-card__hint">Expected deduction dates and realized collection outcomes per installment.</div>
+                        <div class="pm-card__hint">Expected deduction dates</div>
 
                         <div class="table-responsive">
                             <table class="table table-bordered align-middle mb-0">

@@ -4,9 +4,11 @@
     Summary of Payment Mandate
 @endsection
 
-@section('content')
-    @include('payment_mandate.create.partials.styles')
+@section('css')
+    <link href="{{ URL::asset('/assets/css/payment-mandate-create.css') }}" rel="stylesheet" type="text/css" />
+@endsection
 
+@section('content')
     <div class="row">
         <div class="col-12">
             <div class="page-title-box d-sm-flex align-items-center justify-content-between">
@@ -26,8 +28,6 @@
     <div class="pmc-shell" x-data="initData();">
         <div class="card pmc-hero mb-4">
             <div class="card-body">
-                <div class="pmc-kicker">New Mandate Creation</div>
-                <div class="pmc-title">Step 3: Review and Submit</div>
                 @include('payment_mandate.create.partials.stepper', ['currentStep' => 3])
             </div>
         </div>

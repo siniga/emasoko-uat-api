@@ -141,7 +141,7 @@
 
                             <div class="col-md-8 text-sm-end">
                                 <div class="text-sm-end d-none d-sm-block">
-                                    @if (($monthlyFailedEligibility['allowed'] ?? false) === true)
+                                    {{-- @if (($monthlyFailedEligibility['allowed'] ?? false) === true)
                                         <a class="btn btn-outline-primary btn-sm"
                                             href="{{ route('collections.create-monthly-failed') }}">
                                             <i class='bx bxs-bookmark-plus'></i>
@@ -154,14 +154,14 @@
                                             <i class='bx bxs-bookmark-plus'></i>
                                             Create Failed {{ $monthlyFailedEligibility['month_label'] ?? '' }}
                                         </button>
-                                    @endif
+                                    @endif --}}
                                     <a class="btn btn-primary btn-sm" href="{{ route('collections.create') }}">
                                         <i class="bx bx-list-plus"></i> Create Collection Batch
                                     </a>
 
-                                    <a class="btn btn-secondary btn-sm" href="{{ route('collections.create-failed') }}">
+                                    {{-- <a class="btn btn-secondary btn-sm" href="{{ route('collections.create-failed') }}">
                                         <i class="bx bx-list-check"></i> Create Failed Batches
-                                    </a>
+                                    </a> --}}
                                 </div>
                             </div>
                         </div>
