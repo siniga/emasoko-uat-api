@@ -172,14 +172,14 @@
                             <span>Payment Channels</span>
                         </a>
                     </li>
-                @endif
 
-                <li class="">
-                    <a href="{{ route('sms-logs') }}" class="waves-effect">
-                        <i class='bx bx-message-alt'></i>
-                        <span key="t-chat">Messaging</span>
-                    </a>
-                </li>
+                    <li class="">
+                        <a href="{{ route('sms-logs') }}" class="waves-effect">
+                            <i class='bx bx-message-alt'></i>
+                            <span key="t-chat">Messaging</span>
+                        </a>
+                    </li>
+                @endif
 
                 <li class="{{ $reportsOpen ? 'mm-active' : '' }}">
                     <a href="{{ route('reports.lists') }}" class="waves-effect">
