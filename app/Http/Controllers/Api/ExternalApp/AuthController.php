@@ -15,43 +15,25 @@ class AuthController extends Controller
 {
     use RespondsWithApi;
 
-    protected function getPartnerReference(User $user): ?string
+    protected function getLinkedPartners(User $user)
     {
-        $partnerUser = PartnerUser::with('partner')
+        return PartnerUser::with('partner')
             ->where('user_id', $user->id)
-            ->orderByDesc('authorize')
-            ->first();
-
-        if ($partnerUser && $partnerUser->partner) {
-            return $partnerUser->partner->reference;
-        }
-
-        return null;
+            ->where('authorize', 1)
+            ->get()
+            ->filter(fn ($partnerUser) => $partnerUser->partner)
+            ->map(fn ($partnerUser) => [
+                'id' => $partnerUser->partner->id,
+                'uuid' => $partnerUser->partner->uuid,
+                'name' => $partnerUser->partner->business_name,
+                'corporate_reference' => $partnerUser->partner->reference,
+            ])
+            ->values();
     }
 
-    public function login(Request $request)
+    protected function getPartnerReference(User $user): ?string
     {
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|string|email',
-            'password' => 'required|string'
-        ]);
-
-        if ($validator->fails()) {
-            return $this->errorResponse('Validation failed.', $validator->errors(), 422);
-        }
-
-        if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
-            $user = User::findOrFail(Auth::user()->id);
-            $partnerReference = $this->getPartnerReference($user);
-
-            return $this->successResponse('Login successful.', [
-                'user' => $user,
-                'corporate_reference' => $partnerReference,
-                'token' => $user->createToken('eMakato')->accessToken,
-            ]);
-        }
-
-        return $this->errorResponse('Invalid credentials.', null, 401);
+        return $this->getLinkedPartners($user)->first()['corporate_reference'] ?? null;
     }
 
     public function token(Request $request)
@@ -67,7 +49,8 @@ class AuthController extends Controller
 
         if (Auth::attempt(['username' => $request->partnerId, 'password' => $request->password])) {
             $user = User::findOrFail(Auth::user()->id);
-            $partnerReference = $this->getPartnerReference($user);
+            $linkedPartners = $this->getLinkedPartners($user);
+            $partnerReference = $linkedPartners->first()['corporate_reference'] ?? null;
 
             // check if the user is api enabled and logout the user if not
             if (!$user->is_api_user) {
@@ -77,7 +60,7 @@ class AuthController extends Controller
             }
 
             return $this->successResponse('Token generated successfully.', [
-                'corporate_reference' => $partnerReference,
+                'corporate_references' => $linkedPartners->pluck('corporate_reference')->values(),
                 'token' => $user->createToken('eMakato')->accessToken,
             ]);
         }

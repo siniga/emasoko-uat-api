@@ -6,9 +6,6 @@ use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\Crdb\DisbursementController;
 use App\Http\Controllers\Api\NMB\CorporateController;
 use App\Http\Controllers\Api\CRDB\MandateController as CRDBMandateController;
-use App\Http\Controllers\Api\ExternalApp\AuthController;
-use App\Http\Controllers\Api\ExternalApp\PaymentCollectionController;
-use App\Http\Controllers\Api\ExternalApp\PaymentMandateController;
 use App\Http\Controllers\Api\NMB\MandateController;
 use App\Http\Controllers\Api\NMB\OtpController;
 use App\Http\Controllers\Api\Yas\MandateController as YasMandateController;
@@ -88,31 +85,4 @@ Route::post('v1/mandate/yas', [YasMandateController::class, 'create']);
 Route::post('v1/mandate/yas/cancel', [YasMandateController::class, 'cancel']);
 Route::post('v1/mandate/yas/callback', [YasMandateController::class, 'callback'])->middleware('verify.callback:yas');
 
-/*
-|--------------------------------------------------------------------------
-| EXTERNAL API Routes
-|--------------------------------------------------------------------------
-*/
-
-Route::controller(AuthController::class)->group(function () {
-    Route::post('v1/login', 'login');
-    Route::post('v1/token', 'token');
-});
-
-//external app routes
-Route::middleware('auth:api')->group(function () {
-    //Mandate APIs
-    Route::get('v1/mandate/all', [PaymentMandateController::class, 'all']);
-    Route::get('v1/mandate/{reference}', [PaymentMandateController::class, 'getMandate']);
-    Route::post('v1/mandate/create', [PaymentMandateController::class, 'create']);
-    Route::post('v1/mandate/otp/create', [PaymentMandateController::class, 'createOtp']);
-    Route::post('v1/mandate/otp/verify', [PaymentMandateController::class, 'verifyOtp']);
-    Route::post('v1/mandate/status', [PaymentMandateController::class, 'fetchStatus']);
-    Route::post('v1/mandate/cancellation', [PaymentMandateController::class, 'cancellation']);
-    Route::post('v1/mandate/summaries', [PaymentMandateController::class, 'summaries']);
-
-    //Collections APIs
-    Route::post('v1/collections/all', [PaymentCollectionController::class, 'all']);
-    Route::post('v1/collections/filtering', [PaymentCollectionController::class, 'filtering']);
-    Route::post('v1/collections/actual', [PaymentCollectionController::class, 'actual_collections']);
-});
+Route::prefix('v1')->group(base_path('routes/api_external.php'));
