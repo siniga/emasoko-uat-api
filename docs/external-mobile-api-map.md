@@ -1,28 +1,35 @@
 # External And Mobile API Map
 
-This document describes the `api/external App` area that currently serves:
+This document describes the API areas that currently serve:
 
 - mobile app clients
 - external service providers that integrate from their own systems
 
-The main route file is [routes/api.php](/Users/renfridngolongolo/html/solocodes/eMakato_v1/routes/api.php).
+The main route files are:
+
+- [routes/api.php](/Users/macbook/html/solocodes/emakato/routes/api.php)
+- [routes/api_external.php](/Users/macbook/html/solocodes/emakato/routes/api_external.php)
+- [routes/api_mobile.php](/Users/macbook/html/solocodes/emakato/routes/api_mobile.php)
 
 ## 1. Authentication Model
 
-Authentication is handled by [app/Http/Controllers/Api/ExternalApp/AuthController.php](/Users/renfridngolongolo/html/solocodes/eMakato_v1/app/Http/Controllers/Api/ExternalApp/AuthController.php).
+Authentication is handled by:
+
+- [app/Http/Controllers/Api/ExternalApp/AuthController.php](/Users/macbook/html/solocodes/emakato/app/Http/Controllers/Api/ExternalApp/AuthController.php)
+- [app/Http/Controllers/Api/MobileApp/AuthController.php](/Users/macbook/html/solocodes/emakato/app/Http/Controllers/Api/MobileApp/AuthController.php)
 
 Available endpoints:
 
-- `POST /api/v1/login`
-  Purpose: email/password login for app-style users
 - `POST /api/v1/token`
   Purpose: API token login using `partnerId` and password, mainly for provider/system integrations
+- `POST /api/mobile/v1/login`
+  Purpose: email/password login for mobile app users
 
 Response behavior:
 
 - returns `token`
-- returns `corporate_reference` when the authenticated user is linked to a partner
-- uses `auth:api` for all protected external/mobile routes
+- external token returns `corporate_reference`, `corporate_references`, and `partners` when the authenticated user is linked to one or more partners
+- uses `auth:api` for all protected external and mobile routes
 
 Important note:
 
@@ -39,8 +46,8 @@ These endpoints are intended for service providers that already have their own s
 
 Controllers:
 
-- [app/Http/Controllers/Api/ExternalApp/PaymentMandateController.php](/Users/renfridngolongolo/html/solocodes/eMakato_v1/app/Http/Controllers/Api/ExternalApp/PaymentMandateController.php)
-- [app/Http/Controllers/Api/ExternalApp/PaymentCollectionController.php](/Users/renfridngolongolo/html/solocodes/eMakato_v1/app/Http/Controllers/Api/ExternalApp/PaymentCollectionController.php)
+- [app/Http/Controllers/Api/ExternalApp/PaymentMandateController.php](/Users/macbook/html/solocodes/emakato/app/Http/Controllers/Api/ExternalApp/PaymentMandateController.php)
+- [app/Http/Controllers/Api/ExternalApp/PaymentCollectionController.php](/Users/macbook/html/solocodes/emakato/app/Http/Controllers/Api/ExternalApp/PaymentCollectionController.php)
 
 ### B. Mobile App API
 
@@ -48,9 +55,9 @@ These endpoints are intended for eMakato mobile users.
 
 Controllers:
 
-- [app/Http/Controllers/Api/ExternalApp/MobileAppController.php](/Users/renfridngolongolo/html/solocodes/eMakato_v1/app/Http/Controllers/Api/ExternalApp/MobileAppController.php)
-- [app/Http/Controllers/Api/ExternalApp/MandateRegistrationController.php](/Users/renfridngolongolo/html/solocodes/eMakato_v1/app/Http/Controllers/Api/ExternalApp/MandateRegistrationController.php)
-- [app/Http/Controllers/Api/ExternalApp/CollectionController.php](/Users/renfridngolongolo/html/solocodes/eMakato_v1/app/Http/Controllers/Api/ExternalApp/CollectionController.php)
+- [app/Http/Controllers/Api/MobileApp/AuthController.php](/Users/macbook/html/solocodes/emakato/app/Http/Controllers/Api/MobileApp/AuthController.php)
+- [app/Http/Controllers/Api/MobileApp/PaymentMandateController.php](/Users/macbook/html/solocodes/emakato/app/Http/Controllers/Api/MobileApp/PaymentMandateController.php)
+- [app/Http/Controllers/Api/MobileApp/PaymentCollectionController.php](/Users/macbook/html/solocodes/emakato/app/Http/Controllers/Api/MobileApp/PaymentCollectionController.php)
 
 ## 3. Data Access And Scoping
 
@@ -58,9 +65,9 @@ Most protected endpoints do not hardcode partner IDs directly in the controller.
 
 Main query gates:
 
-- [app/Models/DebitOrder.php](/Users/renfridngolongolo/html/solocodes/eMakato_v1/app/Models/DebitOrder.php)
-- [app/Models/Installment.php](/Users/renfridngolongolo/html/solocodes/eMakato_v1/app/Models/Installment.php)
-- [app/Models/Partner.php](/Users/renfridngolongolo/html/solocodes/eMakato_v1/app/Models/Partner.php)
+- [app/Models/DebitOrder.php](/Users/macbook/html/solocodes/emakato/app/Models/DebitOrder.php)
+- [app/Models/Installment.php](/Users/macbook/html/solocodes/emakato/app/Models/Installment.php)
+- [app/Models/Partner.php](/Users/macbook/html/solocodes/emakato/app/Models/Partner.php)
 
 Key mechanism:
 
@@ -79,38 +86,66 @@ This means the same endpoint may return different data depending on:
 
 Controller:
 
-- [app/Http/Controllers/Api/ExternalApp/PaymentMandateController.php](/Users/renfridngolongolo/html/solocodes/eMakato_v1/app/Http/Controllers/Api/ExternalApp/PaymentMandateController.php)
+- [app/Http/Controllers/Api/ExternalApp/PaymentMandateController.php](/Users/macbook/html/solocodes/emakato/app/Http/Controllers/Api/ExternalApp/PaymentMandateController.php)
 
 Endpoints:
 
+- `POST /api/v1/mandate/summaries`
+  Purpose: provider-facing mandate and collection summary dashboard
+
 - `GET /api/v1/mandate/all`
   Purpose: list mandates visible to the authenticated provider user
-  Filters: passes request data into `DebitOrder::withFilters()`
+  Optional filters:
+  `start_at`, `end_at`, `payment_channel`, `corporate_reference`, `lifecycle_status`, `keyword`
+  Notes:
+  - `payment_channel` is a channel slug such as `NMB` or `CRDB`
+  - use `corporate_reference` when the authenticated API user is linked to more than one partner
+  - `lifecycle_status` filters by mandate lifecycle state
 
 - `GET /api/v1/mandate/{reference}`
   Purpose: fetch a single mandate by mandate reference
 
+- `GET /api/mandate/channels`
+  Purpose: list supported mandate payment channels for external mandate creation
+  Auth: Bearer token
+  Response data:
+  `payment_channels[]`
+  Channel item fields:
+  `id`, `name`, `slug`, `channel`, `account_type_id`
+  Notes:
+  - use the returned `slug` as the `payment_channel` value when creating a mandate
+  - `channel` is response metadata only; do not send it to create mandate
+  - `account_type_id = 1` means BANK and requires `account_name` and `account_number`
+  - `account_type_id = 2` means MNO and uses customer `phone`
+
 - `POST /api/v1/mandate/create`
   Purpose: create mandate from external system
   Key required fields:
-  `channel`, `payment_channel`, `corporate_reference`, `phone`, `NIN`, `address`, `total_amount`, `debit_type`, `periodicity`, `deduction_start_date`
+  `payment_channel`, `phone`, `NIN`, `address`, `total_amount`, `debit_type`, `periodicity`, `deduction_start_date`
   Conditional fields:
-  `account_name`, `account_number`, `installment_amount`, `min_installment_amount`, `max_installment_amount`
-
-- `POST /api/v1/mandate/otp/create`
-  Purpose: request/resend OTP for mandate confirmation
+  `corporate_reference`, `account_name`, `account_number`, `installment_amount`, `min_installment_amount`, `max_installment_amount`
+  Partner selection:
+  - `corporate_reference` is optional when the authenticated API user is linked to one authorized partner
+  - `corporate_reference` is required when the authenticated API user is linked to more than one authorized partner
+  - when provided, `corporate_reference` must be one of the references returned by `POST /api/v1/token`
+  Payment channel values:
+  - fetch live supported values from `GET /api/mandate/channels`
+  - send `payment_channel` as the first mandate field, using the channel `slug` returned by that endpoint, for example `NMB`, `CRDB`, or `YAS`
+  - the API derives BANK or MNO behavior from `payment_channel`
+  - BANK payment channels require `account_name` and `account_number`
+  - MNO payment channels use customer `phone`
 
 - `POST /api/v1/mandate/otp/verify`
   Purpose: verify OTP for a created mandate
+
+- `POST /api/v1/mandate/otp/create`
+  Purpose: request/resend OTP for mandate confirmation
 
 - `POST /api/v1/mandate/status`
   Purpose: fetch mandate status from bank / local mapping
 
 - `POST /api/v1/mandate/cancellation`
-  Purpose: initiate mandate cancellation
-
-- `POST /api/v1/mandate/summaries`
-  Purpose: provider-facing mandate and collection summary dashboard
+  Purpose: process mandate cancellation with the payment channel and return the provider result
 
 Behavior summary:
 
@@ -127,7 +162,7 @@ Behavior summary:
 
 Controller:
 
-- [app/Http/Controllers/Api/ExternalApp/PaymentCollectionController.php](/Users/renfridngolongolo/html/solocodes/eMakato_v1/app/Http/Controllers/Api/ExternalApp/PaymentCollectionController.php)
+- [app/Http/Controllers/Api/ExternalApp/PaymentCollectionController.php](/Users/macbook/html/solocodes/emakato/app/Http/Controllers/Api/ExternalApp/PaymentCollectionController.php)
 
 Endpoints:
 

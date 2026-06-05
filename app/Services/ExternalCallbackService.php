@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Jobs\ApiCallbackJob;
+use App\Http\Resources\MandateResource;
 use App\Models\DebitOrder;
 use App\Models\ExternalCallbackLog;
 use Illuminate\Support\Str;
@@ -17,6 +18,8 @@ class ExternalCallbackService
             return null;
         }
 
+        $mandate = (new MandateResource($debitOrder))->resolve();
+
         $payload = [
             'event_id' => (string) Str::uuid(),
             'event_type' => $eventType,
@@ -24,21 +27,7 @@ class ExternalCallbackService
             'event_time' => now()->toIso8601String(),
             'provider_reference' => $debitOrder->partner?->reference,
             'channel' => $debitOrder->channel,
-            'mandate' => [
-                'reference' => $debitOrder->reference,
-                'uuid' => $debitOrder->uuid,
-                'external_reference' => $debitOrder->otp_reference,
-                'lifecycle_status' => $debitOrder->resolved_lifecycle_status,
-                'contract_status' => $debitOrder->contract_status,
-                'approved' => (int) $debitOrder->approved,
-                'bank_status_code' => $debitOrder->status,
-                'http_response_code' => $debitOrder->http_response_code,
-                'message' => $debitOrder->remarks,
-                'total_amount' => $debitOrder->total_amount,
-                'outstanding_amount' => $debitOrder->outstanding_amount,
-                'next_debit_date' => $debitOrder->next_debit_date,
-            ],
-            'meta' => $extra,
+            'mandate' => $mandate,
         ];
 
         $log = ExternalCallbackLog::create([

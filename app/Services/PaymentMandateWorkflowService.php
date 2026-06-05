@@ -23,8 +23,7 @@ class PaymentMandateWorkflowService
         protected BankApiService $bankApi,
         protected MandateActionService $mandateActionService,
         protected ExternalCallbackService $externalCallbackService
-    ) {
-    }
+    ) {}
 
     public function createDraft(array $attributes, int $userId): DebitOrder
     {
@@ -223,7 +222,7 @@ class PaymentMandateWorkflowService
 
         $success = true;
         $responseCode = 200;
-        $remarks = '';
+        $remarks = $debitOrder->remarks ?? '';
 
         if ($debitOrder->channel === 'NMB') {
             $payload = $this->payloadService->mandateStatusPayload($debitOrder);
@@ -255,7 +254,7 @@ class PaymentMandateWorkflowService
         }
 
         return [
-            'success' => $success,
+            'success' =>$success,
             'channel' => $debitOrder->channel,
             'response_code' => $responseCode,
             'success_msg' => $remarks,
@@ -299,6 +298,49 @@ class PaymentMandateWorkflowService
         $this->externalCallbackService->dispatchMandateStatus($debitOrder, 'MANDATE_CANCELLATION_REQUESTED');
 
         return $request;
+    }
+
+    public function cancel(DebitOrder $debitOrder, int $userId, string $reason): array
+    {
+        $debitOrder->cancellation_reason = $reason;
+        $debitOrder->cancellationStartedBy = $userId;
+        $debitOrder->cancellationStartedAt = now();
+        $debitOrder->cancellationApprovedBy = $userId;
+        $debitOrder->cancellationApprovedAt = now();
+        $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_CANCELLATION_REQUESTED;
+        $debitOrder->save();
+        $debitOrder->refresh();
+
+        $this->externalCallbackService->dispatchMandateStatus($debitOrder, 'MANDATE_CANCELLATION_REQUESTED');
+
+        $response = $this->mandateActionService->cancelMandate($debitOrder);
+        $debitOrder->refresh();
+
+        if ($response['success']) {
+            if ($debitOrder->lifecycle_status !== DebitOrder::LIFECYCLE_CANCELLED) {
+                $debitOrder->cancelled = 1;
+                $debitOrder->deleted = 1;
+                $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_CANCELLED;
+                $debitOrder->remarks = $response['remarks'];
+                $debitOrder->save();
+                $debitOrder->refresh();
+            }
+
+            $this->externalCallbackService->dispatchMandateStatus($debitOrder, 'MANDATE_CANCELLED');
+        } else {
+            $debitOrder->remarks = $response['remarks'];
+            $debitOrder->save();
+            $debitOrder->refresh();
+        }
+
+        return [
+            'success' => $response['success'],
+            'channel' => $debitOrder->channel,
+            'response_code' => $response['response_code'],
+            'provider_response_code' => $response['provider_response_code'] ?? null,
+            'success_msg' => $response['remarks'],
+            'lifecycle_status' => $debitOrder->lifecycle_status,
+        ];
     }
 
     public function approveCancellation(DebitOrderRequest $debitOrderRequest, int $userId): DebitOrderRequest

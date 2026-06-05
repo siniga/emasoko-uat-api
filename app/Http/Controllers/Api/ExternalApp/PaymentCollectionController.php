@@ -7,10 +7,12 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\InstallmentResource;
 use App\Models\Installment;
 use App\Models\Partner;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
+#[Group('Payment Collections', description: 'APIs for viewing and filtering payment collections.', weight: 3)]
 class PaymentCollectionController extends Controller
 {
     use RespondsWithApi;

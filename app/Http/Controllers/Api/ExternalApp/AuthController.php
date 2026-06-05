@@ -6,11 +6,13 @@ use App\Http\Controllers\Api\ExternalApp\Concerns\RespondsWithApi;
 use App\Http\Controllers\Controller;
 use App\Models\PartnerUser;
 use App\Models\User;
+use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 // use Dedoc\Scramble\Attributes\ExcludeRouteFromDocs;
 
+#[Group('Auth', description: 'APIs for external API authentication.', weight: 1)]
 class AuthController extends Controller
 {
     use RespondsWithApi;

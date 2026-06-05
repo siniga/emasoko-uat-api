@@ -553,7 +553,6 @@ class BankApiService
 
         //update the debit order
         $debit_order = DebitOrder::where('reference', '=', $payload['data']['mandateReferenceNumber'])->first();
-        //$debit_order->http_response_status_json = $response;
 
         // //decode the response 
         $response = json_decode($response, true);
@@ -588,6 +587,75 @@ class BankApiService
             Log::debug("No response from NMB end");
             return [500, 'No response from NMB endpoint.'];
         }
+    }
+
+    public function crdbMandateCancellationRequest(array $data): array
+    {
+        $debitOrder = DebitOrder::where('reference', '=', $data['mandateReferenceNumber'])->first();
+
+        if (!$debitOrder) {
+            Log::warning('Debit order not found for CRDB mandate cancellation', [
+                'mandateReferenceNumber' => $data['mandateReferenceNumber'] ?? null,
+            ]);
+
+            return [404, 'Mandate not found.', null];
+        }
+
+        $authBearerToken = $this->crdbAuth?->generateToken() ?? (new Checksum())->generateToken();
+
+        $headers = [
+            'Channel' => env('CRDB_CHANNEL_ID'),
+            'AppId' => env('CRDB_APP_ID'),
+            'AppVersion' => '1.0.0',
+            'RequestId' => $data['requestId'],
+            'Authorization' => 'Bearer ' . $authBearerToken,
+            'Content-Type' => 'application/json',
+            'Accept' => 'application/json',
+        ];
+
+        Log::debug('== CRDB Mandate Cancellation Request ==');
+        Log::debug($data['payload']);
+
+        $httpResponse = Http::withHeaders($headers)->post(env('CRDB_API_URL'), $data['payload']);
+        $raw = $httpResponse->body();
+        $raw = preg_replace('/^\xEF\xBB\xBF/', '', trim($raw ?? ''));
+        $sanitized = preg_replace('/,\s*(\}|\])/m', '$1', $raw);
+        $response = json_decode($sanitized, true);
+
+        Log::debug('== CRDB Mandate Cancellation Response ==');
+        Log::debug($response ?: $raw);
+
+        if (!is_array($response)) {
+            Log::error('CRDB mandate cancellation failed: invalid JSON response', [
+                'json_error' => json_last_error_msg(),
+                'sample' => Str::limit($raw, 800),
+                'http_status' => $httpResponse->status(),
+            ]);
+
+            return [$httpResponse->status() ?: 500, 'Invalid response from CRDB endpoint.', null];
+        }
+
+        $statusCode = data_get($response, 'ResponseHeader.StatusCode');
+        $statusCode = is_numeric($statusCode) ? (int) $statusCode : $statusCode;
+        $statusDesc = data_get($response, 'ResponseHeader.StatusDesc') ?: 'CRDB mandate cancellation response received.';
+        $isAlreadyCancelled = $statusCode === 1001 && data_get($response, 'ErrorMetadata.400') !== null;
+
+        if ($statusCode === 1000 || $isAlreadyCancelled) {
+            $debitOrder->cancelled = 1;
+            $debitOrder->deleted = 1;
+            $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_CANCELLED;
+            $debitOrder->remarks = $statusDesc ?: 'Mandate cancelled successfully.';
+            $debitOrder->http_response_code = $statusCode;
+            $debitOrder->save();
+
+            return [201, $debitOrder->remarks, $statusCode];
+        }
+
+        $debitOrder->http_response_code = $statusCode ?? $httpResponse->status();
+        $debitOrder->remarks = $statusDesc;
+        $debitOrder->save();
+
+        return [$httpResponse->successful() ? 400 : ($httpResponse->status() ?: 500), $statusDesc, $statusCode];
     }
 
     //create Otp 

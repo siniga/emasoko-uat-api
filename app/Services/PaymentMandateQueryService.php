@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\DebitOrder;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 
 class PaymentMandateQueryService
@@ -27,7 +28,15 @@ class PaymentMandateQueryService
                 'reference',
                 'partner_id',
                 'customer_account_id',
+                'channel',
                 'debit_type',
+                'total_amount',
+                'paid_amount',
+                'outstanding_amount',
+                'installment_amount',
+                'min_installment_amount',
+                'max_installment_amount',
+                'installment_number',
                 'periodicity',
                 'start_date',
                 'end_date',
@@ -98,6 +107,46 @@ class PaymentMandateQueryService
             return $query;
         }
 
-        return $query->withFilters($filters);
+        return $query
+            ->when($filters['start_at'] ?? null, function ($query, $startDate) use ($filters) {
+                $startAt = Carbon::createFromFormat('Y-m-d', $startDate)->startOfDay();
+                $endDate = $filters['end_at'] ?? null;
+
+                if ($endDate) {
+                    $endAt = Carbon::createFromFormat('Y-m-d', $endDate)->endOfDay();
+                    $query->whereBetween('debit_orders.created_at', [$startAt, $endAt]);
+                    return;
+                }
+
+                $query->where('debit_orders.created_at', '>=', $startAt);
+            })
+            ->when(empty($filters['start_at']) && !empty($filters['end_at']), function ($query) use ($filters) {
+                $endAt = Carbon::createFromFormat('Y-m-d', $filters['end_at'])->endOfDay();
+                $query->where('debit_orders.created_at', '<=', $endAt);
+            })
+            ->when($filters['payment_channel'] ?? null, function ($query, $paymentChannel) {
+                $query->where('debit_orders.channel', $paymentChannel);
+            })
+            ->when($filters['corporate_reference'] ?? null, function ($query, $corporateReference) {
+                $query->whereHas('partner', function ($partnerQuery) use ($corporateReference) {
+                    $partnerQuery->where('partners.reference', $corporateReference);
+                });
+            })
+            ->when($filters['lifecycle_status'] ?? null, function ($query, $lifecycleStatus) {
+                $query->where('debit_orders.lifecycle_status', $lifecycleStatus);
+            })
+            ->when($filters['keyword'] ?? null, function ($query, $keyword) {
+                $lowered = strtolower($keyword);
+
+                $query->where(function ($query) use ($lowered) {
+                    $query->whereRaw('LOWER(reference) LIKE ?', ["%{$lowered}%"])
+                        ->orWhereHas('customerAccount', function ($customerAccountQuery) use ($lowered) {
+                            $customerAccountQuery->where(function ($accountQuery) use ($lowered) {
+                                $accountQuery->whereRaw('LOWER(account_name) LIKE ?', ["%{$lowered}%"])
+                                    ->orWhereRaw('LOWER(account_number) LIKE ?', ["%{$lowered}%"]);
+                            });
+                        });
+                });
+            });
     }
 }
