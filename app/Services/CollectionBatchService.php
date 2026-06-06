@@ -10,6 +10,7 @@ use App\Models\Partner;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class CollectionBatchService
@@ -55,7 +56,7 @@ class CollectionBatchService
 
         return DB::transaction(function () use ($partner, $candidates, $actor, $attributes) {
             $now = now();
-            $userId = $actor?->id ?? auth()->id() ?? 1;
+            $userId = $actor?->id ?? Auth::user()->id ?? 1;
 
             $batch = CollectionBatch::create([
                 'partner_id' => $partner->id,
