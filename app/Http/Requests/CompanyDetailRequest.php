@@ -28,13 +28,14 @@ class CompanyDetailRequest extends FormRequest
     public function rules()
     {
         return [
-            'tin_number' => 'required',
+            'tin_number' => 'required|unique:partners,tin_number',
             'business_name' => 'required',
             'category_id' => 'required',
             'year_of_incorporation' => 'required|numeric',
+            'number_of_staff' => 'required|numeric|min:1',
             'country_code' => 'required',
             'company_phone' => ['required', new PhoneNumber()],
-            'company_email' => 'required|email|max:255',
+            'company_email' => 'required|email|max:255|unique:partners,email',
             'region_id' => 'required',
             'physical_address' => 'required',
         ];
@@ -49,18 +50,19 @@ class CompanyDetailRequest extends FormRequest
     {
         return [
             'tin_number.required' => 'TIN number required',
-            // 'tin_number.unique' => 'TIN number should be unique',
+            'tin_number.unique' => 'TIN number should be unique',
             'business_name.required' => 'Business name required',
             'category_id.required' => 'Category required',
             'year_of_incorporation.required' => 'Year of incorporation required',
             'year_of_incorporation.numeric' => 'Year of incorporation should be numeric',
-            // 'number_of_staff.required' => 'Number of staff required',
-            // 'number_of_staff.numeric' => 'Number of staff should be numeric',
+            'number_of_staff.required' => 'Number of staff required',
+            'number_of_staff.numeric' => 'Number of staff should be numeric',
+            'number_of_staff.min' => 'Number of staff must be at least 1',
             'country_code.required' => 'This is required',
             'company_phone.required' => 'Phone number required',
             'company_email.required' => 'Email required',
             'company_email.email' => 'Email valid format required',
-            // 'company_email.unique' => 'Email should be unique',
+            'company_email.unique' => 'Email should be unique',
             'region_id.required' => 'Region required',
             'physical_address.required' => 'Physical address required',
         ];

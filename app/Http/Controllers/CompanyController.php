@@ -16,6 +16,8 @@ use App\Models\AccountType;
 use App\Models\Country;
 use App\Models\Currency;
 use App\Models\DocumentCategory;
+use App\Models\DebitOrder;
+use App\Models\Installment;
 use App\Models\Partner;
 use App\Models\PartnerAccount;
 use App\Models\PartnerApproval;
@@ -61,24 +63,32 @@ class CompanyController extends Controller
         //companies
         $companies = Partner::filterCondition();
 
-        if (isset($_POST['filter'])) {
-            //all request
-            $requests = $request->all();
-            Log::debug($requests);
+        //all request
+        $requests = $request->all();
 
+        if (isset($_POST['filter'])) {
             $companies = $companies->when($requests, function ($query) use ($requests) {
                 $query->withFilters($requests);
             });
+        }
 
-            //number of companies
-            $number_of_companies = $companies->count();
+        $companyStats = [
+            'total' => (clone $companies)->count(),
+            'approved' => (clone $companies)->where('approved', 1)->count(),
+            'pending' => (clone $companies)->where('approved', 0)->count(),
+            'failed' => (clone $companies)->where('approved', 99)->count(),
+            'verified_accounts' => (clone $companies)->whereHas('partnerAccounts', function ($query) {
+                $query->where('is_verified', 1);
+            })->count(),
+        ];
 
-            //companies
+        //number of companies
+        $number_of_companies = $companyStats['total'];
+
+        //companies
+        if (isset($_POST['filter'])) {
             $companies = $companies->get();
         } else {
-            //number of companies
-            $number_of_companies = $companies->count();
-            //companies
             $companies = $companies->paginate(50);
         }
 
@@ -97,7 +107,7 @@ class CompanyController extends Controller
         ];
 
         //render view
-        return view('companies.lists', compact('title', 'companies', 'number_of_companies', 'regions', 'categories', 'post_data'));
+        return view('companies.lists', compact('title', 'companies', 'number_of_companies', 'companyStats', 'regions', 'categories', 'post_data'));
     }
 
     //export xls
@@ -526,7 +536,7 @@ class CompanyController extends Controller
 
         //update status of partner
         $partner->next_step = 'companies/preview/' . $uuid;
-        $partner->status = 100;
+        $partner->status = 'pending';
         $partner->complete = 1;
         $partner->updated_by = auth()->id();
         $partner->save();
@@ -548,7 +558,7 @@ class CompanyController extends Controller
         $partner = Partner::where(['uuid' => $uuid])->firstOrFail();
 
         //update status of partner
-        $partner->status = 0;
+        $partner->status = 'pending';
         $partner->complete = 0;
         $partner->save();
 
@@ -579,9 +589,9 @@ class CompanyController extends Controller
             PartnerUser::where(['partner_id' => $company->id])->delete();
 
             //redirect
-            return Redirect::route('companies.index')->with('success', 'Service Provider registration canceled');
+            return Redirect::route('companies.lists')->with('success', 'Service Provider registration canceled');
         } else {
-            return Redirect::route('companies.index')->with('danger', 'Failed to cancel service provider registration');
+            return Redirect::route('companies.lists')->with('danger', 'Failed to cancel service provider registration');
         }
     }
 
@@ -604,8 +614,89 @@ class CompanyController extends Controller
         //nmb is verified_false partner accounts
         $is_nmb_verified_false = PartnerAccount::where(['partner_id' => $company->id, 'is_verified' => 0, 'channel' => 'NMB'])->count();
 
+        $currentMonth = (int) now()->format('m');
+        $currentYear = (int) now()->format('Y');
+        $currentMonthLabel = now()->format('F');
+        $today = now()->toDateString();
+
+        $mandateBase = DebitOrder::query()
+            ->where('partner_id', $company->id)
+            ->where('deleted', 0);
+
+        $installmentBase = Installment::query()
+            ->whereHas('debitOrder', function ($query) use ($company) {
+                $query->where('partner_id', $company->id)
+                    ->where('approved', 1)
+                    ->where('status', 240)
+                    ->where('deleted', 0);
+            });
+
+        $monthlyCollection = Installment::monthlyCollectionStats($company->id, $currentMonth, $currentYear, 240, 0, null);
+        $todayCollection = Installment::todayCollectionStats($company->id, $today, 240, 0, null);
+
+        $totalMandates = (clone $mandateBase)
+            ->selectRaw('COUNT(*) as total_count')
+            ->selectRaw('COALESCE(SUM(total_amount), 0) as total_amount')
+            ->first();
+
+        $pendingMandates = (clone $mandateBase)
+            ->where('approved', 0)
+            ->selectRaw('COUNT(*) as total_count')
+            ->selectRaw('COALESCE(SUM(total_amount), 0) as total_amount')
+            ->first();
+
+        $failedMandates = (clone $mandateBase)
+            ->where('approved', 99)
+            ->selectRaw('COUNT(*) as total_count')
+            ->selectRaw('COALESCE(SUM(total_amount), 0) as total_amount')
+            ->first();
+
+        $activeMandates = (clone $mandateBase)
+            ->where('approved', 1)
+            ->where('status', 240)
+            ->where('contract_status', 'OPEN')
+            ->selectRaw('COUNT(*) as total_count')
+            ->selectRaw('COALESCE(SUM(total_amount), 0) as total_amount')
+            ->first();
+
+        $overdue = (clone $installmentBase)
+            ->whereHas('debitOrder', function ($query) {
+                $query->where('contract_status', 'OPEN');
+            })
+            ->whereDate('payment_date', '<', $today)
+            ->whereIn('status', ['OPEN', 'FAILED', 'FUNDSCHECK'])
+            ->selectRaw('COUNT(*) as overdue_count')
+            ->selectRaw('COALESCE(SUM(outstanding_amount), 0) as overdue_amount')
+            ->first();
+
+        $summaryStats = [
+            'documents' => $company->partnerDocuments->count(),
+            'accounts' => $company->partnerAccounts->count(),
+            'verified_accounts' => $company->partnerAccounts->where('is_verified', 1)->count(),
+            'representatives' => $company->partnerStaff->count(),
+            'total_mandates' => (int) $totalMandates->total_count,
+            'total_mandates_amount' => (float) $totalMandates->total_amount,
+            'pending_mandates' => (int) $pendingMandates->total_count,
+            'pending_mandates_amount' => (float) $pendingMandates->total_amount,
+            'failed_mandates' => (int) $failedMandates->total_count,
+            'failed_mandates_amount' => (float) $failedMandates->total_amount,
+            'active_mandates' => (int) $activeMandates->total_count,
+            'active_mandates_amount' => (float) $activeMandates->total_amount,
+            'current_month_label' => $currentMonthLabel,
+            'this_month_expected' => (float) $monthlyCollection->total_amount,
+            'this_month_collected' => (float) $monthlyCollection->paid_amount,
+            'today_expected' => (float) $todayCollection->total_amount,
+            'today_collected' => (float) $todayCollection->paid_amount,
+            'overdue_count' => (int) $overdue->overdue_count,
+            'overdue_amount' => (float) $overdue->overdue_amount,
+        ];
+
+        $summaryStats['collection_rate'] = $summaryStats['this_month_expected'] > 0
+            ? round(($summaryStats['this_month_collected'] / $summaryStats['this_month_expected']) * 100, 2)
+            : 0;
+
         //render view
-        return view('companies.show', compact('title', 'company', 'is_verified_false', 'is_nmb_verified_false'));
+        return view('companies.show', compact('title', 'company', 'is_verified_false', 'is_nmb_verified_false', 'summaryStats'));
     }
 
     //create invoice
@@ -730,6 +821,9 @@ class CompanyController extends Controller
     //confirm/reject company approval
     public function confirmAssessment(Request $request)
     {
+        //default status code
+        $http_status_code = 200;
+
         //requests
         $uuid = $request->post('uuid');
 
@@ -737,9 +831,9 @@ class CompanyController extends Controller
         $partner = Partner::where(['uuid' => $uuid])->firstOrFail();
 
         //process assessment
-        $http_response_code = $this->companyService->processAssessment($partner, $request->all());
+        $http_status_code = $this->companyService->processAssessment($partner, $request->all());
 
-        if ($http_response_code == 200) {
+        if ($http_status_code == 200) {
             //TODO: Check if corporate has NMB or CRDB partner accounts
             $partner_account = PartnerAccount::where(['partner_id' => $partner->id, 'is_verified' => 0]);
 
@@ -769,9 +863,6 @@ class CompanyController extends Controller
                     }
                 }
 
-                //check if account is NMB/CRDB
-                $http_response_code = 200;
-
                 if ($nmb_account && $crdb_account) {
                     $success_msg = "Service provider approved and pending approval from NMB.";
                 } elseif ($nmb_account) {
@@ -779,15 +870,15 @@ class CompanyController extends Controller
                 } elseif ($crdb_account) {
                     $success_msg = "Account processing completed successfully and is active";
                 } else {
-                    $http_response_code = 400;
+                    $http_status_code = 400;
                     $success_msg = "Failed to approve service provider. Review accounts remarks and try again.";
                 }
             }
 
             //response
-            return response()->json(['error' => false, "status" => $http_response_code, "message" => $success_msg], 200);
-        } else if ($http_response_code == 500) {
-            return response()->json(['error' => false, "status" => $http_response_code, "remarks" => $request->remarks, "message" => 'Service provider rejected and notification sent to service provider.'], 200);
+            return response()->json(['error' => false, "status" => $http_status_code, "message" => $success_msg], 200);
+        } else if ($http_status_code == 500) {
+            return response()->json(['error' => false, "status" => $http_status_code, "remarks" => $request->remarks, "message" => 'Service provider rejected and notification sent to service provider.'], 200);
         }
     }
 
@@ -807,7 +898,7 @@ class CompanyController extends Controller
                 [
                     "success" => false,
                     'success_msg' => "No NMB account found",
-                    "http_response_code" => 400,
+                    "status" => 400,
                     "remarks" => "No NMB account found"
                 ],
                 200
@@ -821,25 +912,25 @@ class CompanyController extends Controller
         $arr_response = $this->bankApi->corporateStatusRequest($payload);
 
         if ($arr_response) {
-            $http_response_code = $arr_response[0];
+            $http_status_code = $arr_response[0];
             $remarks = $arr_response[1];
 
-            if ($http_response_code == 202 || $http_response_code == 203) {
+            if ($http_status_code == 200) {
                 return response()->json(
                     [
                         "success" => true,
                         'message' => "Corporate status updated",
-                        "http_response_code" => 200,
+                        "status" => 200,
                         "remarks" => $remarks
                     ],
                     200
                 );
-            } else if ($http_response_code == 500) {
+            } else if ($http_status_code == 500) {
                 return response()->json(
                     [
                         "success" => false,
                         'message' => "Failed to update corporate status, Try again...",
-                        "http_response_code" => 400,
+                        "status" => 400,
                         "remarks" => $remarks
                     ],
                     200
@@ -849,7 +940,7 @@ class CompanyController extends Controller
                     [
                         "success" => false,
                         'message' => "Failed to update corporate status, Try again...",
-                        "http_response_code" => 400,
+                        "status" => 400,
                         "remarks" => $remarks
                     ],
                     200
@@ -860,7 +951,7 @@ class CompanyController extends Controller
                 [
                     "success" => false,
                     'message' => "Failed to update corporate status, Try again...",
-                    "http_response_code" => 404,
+                    "status" => 404,
                     "remarks" => "API does not response, Kindly try again or contact support."
                 ],
                 200

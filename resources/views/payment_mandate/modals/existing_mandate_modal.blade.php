@@ -1,34 +1,93 @@
-<div class="modal fade" id="existingDebitOrdersModal" tabindex="-1" aria-labelledby="existingDebitOrdersLabel"
+<style>
+    .pm-existing-modal .modal-content {
+        border: 0;
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: 0 24px 60px rgba(21, 53, 103, 0.18);
+    }
+
+    .pm-existing-modal__header {
+        background: linear-gradient(135deg, #8a2d2d 0%, #c24a4a 100%);
+        color: #fff;
+        padding: 1rem 1.1rem;
+        border-bottom: 0;
+    }
+
+    .pm-existing-modal__title {
+        margin-bottom: 0.2rem;
+        font-size: 1rem;
+        font-weight: 700;
+         color: #fff;
+        text-transform: uppercase;
+    }
+
+    .pm-existing-modal__subtitle {
+        margin-bottom: 0;
+        color: rgba(255, 255, 255, 0.82);
+        font-size: 0.85rem;
+    }
+
+    .pm-existing-modal .modal-body {
+        padding: 1.1rem;
+        background: #fff;
+    }
+
+    .pm-existing-modal__note {
+        border: 1px dashed #f0c2c2;
+        border-radius: 14px;
+        background: #fff8f8;
+        color: #8a4b4b;
+        padding: 0.9rem 0.95rem;
+        font-size: 0.85rem;
+        margin-bottom: 1rem;
+    }
+
+    .pm-existing-modal__table {
+        border: 1px solid #f0dada;
+        border-radius: 14px;
+        overflow: hidden;
+    }
+
+    .pm-existing-modal__table thead th {
+        background: #fff1f1;
+        color: #8a2d2d;
+        font-weight: 700;
+        border-color: #f1d1d1;
+    }
+
+    .pm-existing-modal__actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.65rem;
+        flex-wrap: wrap;
+        padding: 1rem 1.1rem 1.1rem;
+        background: #fff;
+        border-top: 1px solid #f1dede;
+    }
+</style>
+
+<div class="modal fade pm-existing-modal" id="existingDebitOrdersModal" tabindex="-1" aria-labelledby="existingDebitOrdersLabel"
     aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header bg-danger">
-                <h5 class="modal-title text-uppercase font-weight-600 text-white">Existing Debit Orders Found</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header pm-existing-modal__header">
+                <div>
+                    <h5 class="pm-existing-modal__title">Existing Debit Orders Found</h5>
+                    <p class="pm-existing-modal__subtitle">This customer account already has active or recent mandate activity that should be reviewed first.</p>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
             <div class="modal-body">
-                <p class="mb-3">
-                    We have detected <strong>{{ count($arr_debit_orders) }}</strong> existing debit
-                    order(s) linked to this customer account.
-                </p>
+                <div class="pm-existing-modal__note">
+                    We detected <strong>{{ count($arr_debit_orders) }}</strong> existing debit order(s) linked to this customer account.
+                    Review the current schedule below before deciding whether to create another mandate.
+                    <br><br>
+                    <strong>Recommendation:</strong> cancel this request if you need to review or clean up the existing orders first. Proceed only when creating an additional mandate is intentional.
+                </div>
 
-                <p class="mb-2">
-                    <strong>Advice:</strong>
-                </p>
-                <ul>
-                    <li>
-                        <strong>Cancel Request</strong> if you first want to review or update existing debit
-                        orders to low success rate.
-                    </li>
-                    <li>
-                        <strong>Proceed Anyway</strong> if you are sure you want to create a new payment mandate
-                        in addition to the existing one(s).
-                    </li>
-                </ul>
-
-                <div class="table-responsive mt-3">
-                    <table class="table table-sm table-bordered">
+                <div class="table-responsive pm-existing-modal__table">
+                    <table class="table table-sm table-bordered mb-0">
                         <thead>
                             <tr>
                                 <th width="3%">#</th>
@@ -59,11 +118,11 @@
                 </div>
             </div>
 
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline-danger" id="btn-cancel-request">
+            <div class="pm-existing-modal__actions">
+                <button type="button" class="btn btn-outline-danger" x-on:click="cancelExistingMandateRequest()">
                     Cancel Request
                 </button>
-                <button type="button" class="btn btn-success" id="btn-proceed-request">
+                <button type="button" class="btn btn-danger" x-on:click="proceedWithNewMandate()">
                     Proceed Anyway
                 </button>
             </div>

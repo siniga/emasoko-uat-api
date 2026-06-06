@@ -4,6 +4,10 @@
     Register Service Provider
 @endsection
 
+@section('css')
+    <link href="{{ URL::asset('/assets/css/companies-create.css') }}" rel="stylesheet" type="text/css" />
+@endsection
+
 @section('content')
     <div class="row">
         <div class="col-12">
@@ -22,46 +26,18 @@
         </div>
     </div>
 
+    @include('companies.create.partials.hero', [
+        'currentStep' => 1,
+        'heading' => 'Create a new service provider',
+        'subtitle' => 'Start with the legal profile and operating address. This draft will continue through documents, accounts, representative details, and final review.',
+        'company' => $company ?? null,
+    ])
+
     <div class="row">
         <div class="col-lg-12">
-            <div class="card">
-                <div class="card-body">
-                    <!--./form wizard -->
-                    <div class="stepwizard mb-4">
-                        <div class="stepwizard-row setup-panel">
-                            <div class="stepwizard-step bg-primary">
-                                <a href="#step-1" type="button" class="btn btn-secondary btn-circle">1</a>
-                                <span class="text-white">Company Information</span>
-                            </div>
-
-                            <div class="stepwizard-step">
-                                <a href="#step-2" type="button" class="btn btn-default btn-circle"
-                                    disabled="disabled">2</a>
-                                <span>Company Documents</span>
-                            </div>
-
-                            <div class="stepwizard-step">
-                                <a href="#step-2" type="button" class="btn btn-default btn-circle"
-                                    disabled="disabled">3</a>
-                                <span>Collection Accounts</span>
-                            </div>
-
-                            <div class="stepwizard-step">
-                                <a href="#step-2" type="button" class="btn btn-default btn-circle"
-                                    disabled="disabled">4</a>
-                                <span>Authorized Representative</span>
-                            </div>
-
-                            <div class="stepwizard-step">
-                                <a href="#step-5" type="button" class="btn btn-default btn-circle"
-                                    disabled="disabled">5</a>
-                                <span>Company Preview</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!--form message => success or danger -->
-                    <div class="form-message"></div>
+            <div class="card sp-card">
+                <div class="card-body sp-card__body">
+                    <div class="form-message sp-form-message"></div>
 
                     <form action="#" id="companyForm" enctype="multipart/form-data" autocomplete="off">
                         <input type="hidden" name="partner_id" value="{{ $company->id ?? null }}">
@@ -69,13 +45,10 @@
 
                         <!-- Company Details -->
                         <section data-step="0">
-                            <div class="row">
-                                <div class="col-lg-12">
-                                    <h5 class="text-capitalize">Company Information</h5>
-                                </div>
-                            </div>
+                            <div class="sp-section">
+                                <div class="sp-section__title">Business Information</div>
 
-                            <div class="row">
+                                <div class="row">
                                 <div class="col-lg-6">
                                     <div class="mb-3">
                                         <label>Business Name <span class="text-danger">*</span></label>
@@ -94,7 +67,7 @@
                                             @endphp
                                         @endforeach
                                         @php
-                                            $options = ['' => 'Select'] + $options;
+                                            $options = ['' => '-- Select --'] + $options;
                                         @endphp
 
                                         {{ Form::select('category_id', $options, old('category_id', $company->partner_category_id ?? ''), ['class' => 'form-control', 'id' => 'category_id']) }}
@@ -110,6 +83,10 @@
                                     </div>
                                 </div>
                             </div>
+                            </div>
+
+                            <div class="sp-section">
+                                <div class="sp-section__title">Address Details</div>
 
                             <div class="row mb-3">
                                 <div class="col-lg-3">
@@ -125,8 +102,16 @@
                                             @php $year_options[$v] = $v; @endphp
                                         @endforeach
 
-                                        @php $year_options = ['' => 'Select'] + $year_options; @endphp
-                                        {{ Form::select('year_of_incorporation', $year_options, old('year_of_incorporation', $company->year_of_incorporation ?? ''), ['class' => 'form-control']) }}
+                                        @php $year_options = ['' => '-- Select --'] + $year_options; @endphp
+                                        {{ Form::select('year_of_incorporation', $year_options, old('year_of_incorporation', $company->year_of_incorporation ?? ''), ['class' => 'form-control select2']) }}
+                                        <span class="formError"></span>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-3">
+                                    <div class="mb-3">
+                                        <label>Number of Staff <span class="text-danger">*</span></label>
+                                        {{ Form::number('number_of_staff', old('number_of_staff', $company->number_of_staff ?? 1), ['class="form-control"', 'placeholder="Write number of staff..."', 'min' => 1]) }}
                                         <span class="formError"></span>
                                     </div>
                                 </div>
@@ -143,7 +128,7 @@
                                 <div class="col-lg-6">
                                     <label>Company Phone <span class="text-danger">*</span></label>
                                     <div class="row">
-                                        <div class="col-md-4">
+                                        <div class="col-md-6">
                                             @php $options = []; @endphp
                                             @foreach ($arr_countries as $key => $country)
                                                 @php
@@ -154,20 +139,13 @@
                                             <span class="formError"></span>
                                         </div>
 
-                                        <div class="col-md-8">
+                                        <div class="col-md-6">
                                             {{ Form::number('company_phone', old('company_phone', $company->phone ?? ''), ['class="form-control"', 'placeholder="Write phone..."']) }}
                                             <span class="formError"></span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-
-                            <div class="row mt-4">
-                                <div class="col-lg-12">
-                                    <h5 class="text-capitalize">Company Address</h5>
-                                </div>
-                            </div>
-
                             <div class="row">
                                 <div class="col-lg-3">
                                     <div class="mb-3">
@@ -179,7 +157,7 @@
                                             @endphp
                                         @endforeach
                                         @php
-                                            $options = ['' => 'Select'] + $options;
+                                            $options = ['' => '-- Select --'] + $options;
                                         @endphp
 
                                         {{ Form::select('region_id', $options, old('region_id', $company->region_id ?? ''), ['class' => 'form-control select2', 'id' => 'region_id']) }}
@@ -203,16 +181,16 @@
                                 </div>
                             </div>
 
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <div class="mb-3 text-sm-end d-none d-sm-block">
+                            <div class="sp-actionbar">
+                                <div class="sp-actionbar__meta"></div>
+                                <div class="d-flex gap-2">
                                         <a href="{{ route('companies.lists') }}"
                                             class="btn btn-outline-danger btn-xs text-medium">
                                             Cancel
                                         </a>
-                                        <button type="submit" id="submitButton" class="btn btn-primary">Next</button>
-                                    </div>
+                                        <button type="submit" id="submitButton" class="btn btn-primary">Save and Continue</button>
                                 </div>
+                            </div>
                             </div>
                         </section>
                     </form>
@@ -241,6 +219,7 @@
                     category_id: "required",
                     tin_number: "required",
                     year_of_incorporation: "required",
+                    number_of_staff: "required",
                     company_email: {
                         required: true,
                         email: true,
@@ -262,6 +241,9 @@
                     },
                     year_of_incorporation: {
                         required: "Year of incorporation required"
+                    },
+                    number_of_staff: {
+                        required: "Number of staff required"
                     },
                     company_email: {
                         required: "Company email required",
@@ -302,7 +284,13 @@
                                     .content
                             },
                             body: JSON.stringify(jsonData),
-                        }).then(response => response.json())
+                        }).then(async response => {
+                            if (!response.ok) {
+                                throw response;
+                            }
+
+                            return response.json();
+                        })
                         .then(responseJson => {
                             if (responseJson.errors) {
                                 //display error message
@@ -331,12 +319,24 @@
                                     );
                                 }
                             }
-                        }).catch((error) => {
-                            //display errors
-                            
+                        }).catch(async (error) => {
+                            let message = 'Failed to save service provider information.';
+
+                            if (error instanceof Response) {
+                                try {
+                                    const errorJson = await error.json();
+                                    message = errorJson.message || errorJson.errors || message;
+                                } catch (parseError) {
+                                    message = `${message} Server responded with status ${error.status}.`;
+                                }
+                            } else if (error && error.message) {
+                                message = error.message;
+                            }
+
+                            $('.form-message').html('<div class="alert alert-danger">' + message + '</div>');
                         }).finally(() => {
                             //change submit button text
-                            $('#submitButton').text('Next');
+                            $('#submitButton').text('Save and Continue');
                         });
                     return false;
                 }

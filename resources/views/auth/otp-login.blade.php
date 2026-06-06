@@ -4,117 +4,156 @@
     @lang('translation.Login')
 @endsection
 
+@section('css')
+    <link href="{{ URL::asset('/assets/css/auth-otp-login.css') }}" rel="stylesheet" type="text/css" />
+@endsection
+
 @section('content')
-    <div class="account-pages my-5 pt-sm-5">
+    <div class="auth-shell">
         <div class="container">
             <div class="row justify-content-center">
-                <div class="col-md-8 col-lg-6 col-xl-5">
+                <div class="col-xl-10 col-lg-11">
+                    <div class="card auth-panel">
+                        <div class="row g-0">
+                            <div class="col-lg-6 d-none d-lg-block">
+                                <div class="auth-story">
+                                    <div class="auth-story-top">
+                                        <span class="auth-badge">
+                                            <i class="mdi mdi-shield-check-outline"></i>
+                                            Direct Debit Platform
+                                        </span>
 
-                    <div class="card bg-white border overflow-hidden">
-                        <div class="my-2">
-                            <div class="row">
-                                <div class="col-12">
-                                    <div class="text-center py-2 mb-4">
-                                        <img src="{{ URL::asset('assets/images/emakato_logo_colored.png') }}" alt="" height="48">
+                                        <h2 class="auth-story-title">Manage mandates and collections from one secure workspace.</h2>
+
+                                        <p class="auth-story-copy">
+                                            Built for teams handling direct debit operations with clear approvals,
+                                            secure access, and reliable payment workflows.
+                                        </p>
                                     </div>
 
-                                    
-                                    <div class="text-center">
-                                        <h5 class="text-gray-800 font-size-18">Login to your eMakato account!</h5>
-                                        <p class="text-muted font-size-14">Please provide your credentials.</p>
+                                    <div class="auth-story-bottom">
+                                        <ul class="auth-points">
+                                            <li>
+                                                <i class='bx bxs-badge-check'></i>
+                                                <span>
+                                                    <span class="auth-point-title">Secure Mandate</span>
+                                                    <span class="auth-point-copy">Secure way to create debit debit.</span>
+                                                </span>
+                                            </li>
+                                            <li>
+                                                <i class='bx bxs-chart'></i>
+                                                <span>
+                                                    <span class="auth-point-title">Collections oversight</span>
+                                                    <span class="auth-point-copy">Track mandate activity, schedules, and payment progress in one place.</span>
+                                                </span>
+                                            </li>
+                                            <li>
+                                                <i class='bx bxs-chart'></i>
+                                                <span>
+                                                    <span class="auth-point-title">Built for providers</span>
+                                                    <span class="auth-point-copy">Designed for service providers managing direct debit operations at scale.</span>
+                                                </span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6">
+                                <div class="auth-form-wrap">
+                                    <div class="auth-brand">
+                                        <img src="{{ URL::asset('assets/images/emakato_logo_colored.png') }}" alt="eMakato">
+                                    </div>
+
+                                    <h1 class="auth-form-title">Sign in to eMakato</h1>
+                                    <p class="auth-form-copy">
+                                        Enter your account credentials to login.
+                                    </p>
+
+                                    @if (session()->get('success'))
+                                        <div class="alert alert-success">{{ session()->get('success') }}</div>
+                                    @elseif(session()->get('danger'))
+                                        <div class="alert alert-danger">{{ session()->get('danger') }}</div>
+                                    @elseif(session()->get('error'))
+                                        <div class="alert alert-danger">{{ session()->get('error') }}</div>
+                                    @endif
+
+                                    <div class="auth-form-card">
+                                        <form class="form-horizontal needs-validation" method="POST"
+                                            action="{{ route('otp.generate') }}" novalidate>
+                                            @csrf
+
+                                            <div class="mb-3">
+                                                <label for="username" class="form-label">Email Address</label>
+                                                <input name="email" type="email"
+                                                    class="form-control @error('email') is-invalid @enderror"
+                                                    value="{{ old('email') }}" id="username"
+                                                    placeholder="name@company.com" autocomplete="email" required>
+                                                @error('email')
+                                                    <span class="invalid-feedback" role="alert">{{ $message }}</span>
+                                                @enderror
+                                                <div class="invalid-feedback">Email required</div>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label" for="userpassword">Password</label>
+                                                <div
+                                                    class="input-group auth-pass-inputgroup @error('password') is-invalid @enderror">
+                                                <input type="password" name="password"
+                                                        class="form-control @error('password') is-invalid @enderror"
+                                                        id="userpassword" placeholder="Enter your password"
+                                                        aria-label="Password" aria-describedby="password-addon" required>
+                                                    <button class="btn auth-pass-btn" type="button" id="password-addon">
+                                                        <i class="mdi mdi-eye-outline"></i>
+                                                    </button>
+                                                    @error('password')
+                                                        <span class="invalid-feedback" role="alert">{{ $message }}</span>
+                                                    @enderror
+                                                    <div class="invalid-feedback">Password required</div>
+                                                </div>
+                                            </div>
+
+                                            <div
+                                                class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center mb-4 gap-2">
+                                                <div class="form-check mb-0">
+                                                    <input class="form-check-input" type="checkbox" id="remember"
+                                                        name="remember" {{ old('remember') ? 'checked' : '' }}>
+                                                    <label class="form-check-label" for="remember">
+                                                        Remember me
+                                                    </label>
+                                                </div>
+
+                                                @if (Route::has('forget.password.get'))
+                                                    <a href="{{ route('forget.password.get') }}"
+                                                        class="auth-link text-decoration-none">
+                                                        Forgot password?
+                                                    </a>
+                                                @endif
+                                            </div>
+
+                                            <div class="d-grid">
+                                                <button class="btn btn-primary auth-submit waves-effect waves-light"
+                                                    type="submit">
+                                                    Login
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+
+                                    <div class="auth-footer text-center mt-4">
+                                        &copy; Copyright
+                                        <script>
+                                            document.write(new Date().getFullYear())
+                                        </script>
+                                        All rights reserved.<br>
+                                        A product of <a href="#">Solocodes</a>.
                                     </div>
                                 </div>
                             </div>
                         </div>
-
-                        <div class="card-body pt-0">
-
-                            <div class="p-2">
-                                @if (session()->get('success'))
-                                    <div class="alert alert-success">
-                                        {{ session()->get('success') }}
-                                    </div><br />
-                                @elseif(session()->get('danger'))
-                                    <div class="alert alert-danger">
-                                        {{ session()->get('danger') }}
-                                    </div><br />
-                                @endif
-
-                                <form class="form-horizontal needs-validation" method="POST" action="{{ route('otp.generate') }}" novalidate>
-                                    @csrf
-                                    <div class="mb-3">
-                                        <label for="username" class="form-label">Email</label>
-                                        <input name="email" type="email"
-                                            class="form-control @error('email') is-invalid @enderror"
-                                            value="{{ old('email') }}" id="username" placeholder="Enter Email..."
-                                            autocomplete="email" required>
-                                        @error('email')
-                                            <span class="invalid-feedback" role="alert">
-                                                {{ $message }}
-                                            </span>
-                                        @enderror
-
-                                        <div class="invalid-feedback">
-                                            Email required
-                                        </div>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label class="form-label">Password</label>
-                                        <div
-                                            class="input-group auth-pass-inputgroup @error('password') is-invalid @enderror">
-                                            <input type="password" name="password"
-                                                class="form-control  @error('password') is-invalid @enderror"
-                                                id="userpassword" placeholder="Enter password..." aria-label="Password"
-                                                aria-describedby="password-addon" required>
-                                            <button class="btn btn-light " type="button" id="password-addon"><i
-                                                    class="mdi mdi-eye-outline"></i></button>
-                                            @error('password')
-                                                <span class="invalid-feedback" role="alert">
-                                                    {{ $message }}
-                                                </span>
-                                            @enderror
-
-                                            <div class="invalid-feedback">
-                                                Password required
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="remember"
-                                            {{ old('remember') ? 'checked' : '' }}>
-                                        <label class="form-check-label" for="remember">
-                                            Remember me
-                                        </label>
-                                    </div>
-
-
-                                    <div class="mt-3 d-grid">
-                                        <button class="btn btn-primary waves-effect waves-light" type="submit">
-                                            Submit
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
                     </div>
-                    <div class="mt-2 text-center">
-                        <div>
-                            <p class="mb-0">
-                                © Copyright
-                                <script>
-                                    document.write(new Date().getFullYear())
-                                </script>All rights reserved.
-
-                               <br /> A product of <a href="#" class="text-muted">Solocodes</a>.
-                            </p>
-                        </div>
-                    </div>
-
                 </div>
             </div>
         </div>
     </div>
-    <!-- end account-pages -->
 @endsection

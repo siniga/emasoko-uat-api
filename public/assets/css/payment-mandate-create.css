@@ -1,0 +1,212 @@
+@import url("workflow-stepper.css");
+
+[x-cloak] {
+    display: none !important;
+}
+
+.pmc-shell {
+    --pmc-primary: #153567;
+    --pmc-border: #dbe5f3;
+    --pmc-text: #274160;
+    --pmc-muted: #6b7c93;
+    --pmc-surface: #f8fbff;
+    --sp-primary: var(--pmc-primary);
+    --sp-text: var(--pmc-text);
+}
+
+.pmc-hero {
+    background: linear-gradient(135deg, #153567 0%, #1e4a8b 100%);
+    border: 0;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 14px 34px rgba(21, 53, 103, 0.12);
+    color: #fff;
+    position: relative;
+}
+
+.pmc-hero::after {
+    content: "";
+    position: absolute;
+    inset: auto -40px -70px auto;
+    width: 220px;
+    height: 220px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 50%;
+}
+
+.pmc-card {
+    border: 1px solid var(--pmc-border);
+    border-radius: 6px;
+    box-shadow: 0 14px 32px rgba(25, 52, 93, 0.07);
+}
+
+.pmc-hero .card-body,
+.pmc-card .card-body {
+    padding: 0.8rem 1.2rem;
+}
+
+.pmc-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    font-size: 0.8rem;
+    text-transform: capitalize;
+}
+
+.pmc-title {
+    color: #fff;
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin: 0.7rem 0 0.35rem;
+}
+
+.pmc-subtitle {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.88rem;
+    margin-bottom: 0;
+    max-width: 780px;
+}
+
+.pmc-chip-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    margin-top: 0.95rem;
+}
+
+.pmc-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #fff;
+    border-radius: 999px;
+    padding: 0.45rem 0.75rem;
+    font-size: 0.82rem;
+}
+
+.pmc-section + .pmc-section {
+    margin-top: 1rem;
+}
+
+.pmc-section__title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #153567 !important;
+    margin-bottom: 0.2rem;
+}
+
+.pmc-section__hint {
+    color: var(--pmc-muted);
+    font-size: 0.82rem;
+    margin-bottom: 0.8rem;
+}
+
+.pmc-field {
+    padding: 0;
+    height: auto;
+    background: transparent;
+    border: 0;
+}
+
+.pmc-field label {
+    display: block;
+    color: var(--pmc-primary);
+    font-weight: 400;
+    margin-bottom: 0.35rem;
+    font-size: 0.84rem;
+    line-height: 1.35;
+}
+
+.pmc-field label small {
+    color: var(--pmc-muted);
+    font-size: 0.78rem;
+    font-weight: 400;
+}
+
+.pmc-field .form-control,
+.pmc-field .select2-container .select2-selection--single {
+    border-radius: 10px;
+    min-height: 38px;
+    border-color: #d7e3f4;
+    box-shadow: none;
+}
+
+.pmc-field .form-control:focus,
+.pmc-field .select2-container .select2-selection--single:focus {
+    border-color: #9cb8df;
+    box-shadow: 0 0 0 0.15rem rgba(21, 53, 103, 0.08);
+}
+
+.pmc-summary {
+    border: 1px solid var(--pmc-border);
+    border-radius: 6px;
+    background: linear-gradient(180deg, #fff 0%, var(--pmc-surface) 100%);
+    padding: 1rem 1.05rem;
+    height: 100%;
+}
+
+.pmc-summary__label {
+    color: var(--pmc-muted);
+    font-size: 0.76rem;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.35rem;
+    text-transform: uppercase;
+}
+
+.pmc-summary__value {
+    color: var(--pmc-primary);
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.pmc-table {
+    border-radius: 0;
+    overflow: hidden;
+    margin-bottom: 0;
+}
+
+.pmc-table thead th,
+.pmc-table thead td,
+.pmc-table th {
+    background: #edf4ff;
+    color: var(--pmc-primary);
+    font-weight: 700;
+    border-color: #dce7fa;
+}
+
+.pmc-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.32rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+}
+
+.pmc-note {
+    border: 1px dashed #cfe0f4;
+    border-radius: 12px;
+    padding: 0.75rem 0.9rem;
+    background: #fbfdff;
+    color: var(--pmc-muted);
+    font-size: 0.82rem;
+    margin-bottom: 0.85rem;
+}
+
+.pmc-shell .row.g-3 {
+    --bs-gutter-y: 0.8rem;
+}
+
+.pmc-shell .select2-container .select2-selection--single {
+    height: 38px;
+    padding-top: 4px;
+}
+
+.pmc-shell .select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 38px;
+}

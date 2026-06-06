@@ -2,19 +2,15 @@
 
 namespace App\Console\Commands;
 
-use App\Jobs\PushCollectionJob;
 use App\Jobs\SendSMSJob;
-use App\Models\CollectionBatch;
-use App\Models\CollectionDebitOrder;
-use App\Models\Installment;
-use App\Models\Partner;
-use App\Models\DebitOrder;
-use App\Services\BankPayloadService;
-use App\Services\BankApiService;
+use App\Models\SmsLog;
+use App\Services\CollectionBatchService;
 use App\Services\DeductionService;
+use App\Services\MessagingService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class CreateCollectionBatch extends Command
 {
@@ -37,8 +33,11 @@ class CreateCollectionBatch extends Command
      *
      * @return void
      */
-    public function __construct(protected DeductionService $deductionService)
-    {
+    public function __construct(
+        protected DeductionService $deductionService,
+        protected CollectionBatchService $collectionBatchService,
+        protected MessagingService $messagingService
+    ) {
         parent::__construct();
     }
 
@@ -51,7 +50,8 @@ class CreateCollectionBatch extends Command
     {
         //Limit
         $limit = 250;
-        $current_date = Carbon::now(); //today batch "2026-06-03";
+        $current_date = Carbon::now(); //today batch ;
+        //$current_date = Carbon::now()->addDays(12);
         Log::debug("== Collection for Current Date: '{$current_date}' ==");
 
         //initiate batch collection date
@@ -61,13 +61,10 @@ class CreateCollectionBatch extends Command
         $partners = Partner::whereHas('debitOrders', function ($query) use ($current_date) {
             return $query->where(['contract_status' => 'OPEN', 'channel' => 'NMB', 'approved' => 1, 'status' => 240, 'deleted' => 0])
                 ->whereDate('next_debit_date', "=", $current_date);
-        })->where('partners.status', '=', 202)
-        // ->where('partners.id', 145)
-        ->get();
+        })->where('partners.status', '=', 202)->get();
 
         $success = 0;
         foreach ($partners as $partner) {
-            //1.0: Number of installments
             $installments = $this->deductionService->getInstallments($partner, $current_date);
             $number_installments = $installments->count();
 
@@ -127,7 +124,6 @@ class CreateCollectionBatch extends Command
                                 if ($debit_start_date->lte(Carbon::now())) {
                                     //2.1: check if debit mandate expire
                                     if ($debit_end_date->gte(Carbon::now())) {
-
                                         //3.0: check if account exists in this batch
                                         if (!in_array($account_number, $arr_accounts)) {
                                             // 3.1: create new collection date from previous month
@@ -141,7 +137,6 @@ class CreateCollectionBatch extends Command
                                             if (!$collection_debit_order->exists()) {
                                                 //create csv file
                                                 $csv .= "{$installment_id};016;NMB;{$mandate_reference};{$account_name};{$account_number};{$payment_amount}\n";
-                                                echo $csv;
 
                                                 //append account in array
                                                 array_push($arr_accounts, $account_number);
@@ -192,17 +187,17 @@ class CreateCollectionBatch extends Command
         }
 
         //send Notification of batch creation
-        // if ($success > 0) {
-        //     // create messages
-        //     $message = "Collection batches created. Review and approve batches to the next stage.";
-        //     $arr_phone = [255717705746, 255656314330];
+        if ($success > 0) {
+            // create messages
+            $message = "Collection batches created. Review and approve batches to the next stage.";
+            $arr_phone = [255717705746, 255656314330];
 
-        //     foreach ($arr_phone as $phone) {
-        //         //send sms
-        //         $data = ["phone" => $phone, "message" => $message];
-        //         dispatch(new SendSMSJob($data));
-        //     }
-        // }
+            foreach ($arr_phone as $phone) {
+                //send sms
+                $data = ["phone" => $phone, "message" => $message];
+                dispatch(new SendSMSJob($data));
+            }
+        }
 
         // Log the collection batches
         Log::debug("== {$current_date} collection batches created ==");

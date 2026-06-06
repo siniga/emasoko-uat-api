@@ -24,10 +24,10 @@ class MandateController extends Controller
 
     public function __construct(protected DeductionService $deductionService)
     {
-        $tokenUrl =  "https://jumena-pay.tech-vault.com/oauth/token";
-        $clientId = "sk_test_NE6vb9DwC9tSAf72ECIzO3e48rvkjhrm"; //env('YAS_CLIENT_ID');
-        $clientSecret = "sk_0XUaFB-vswZxMOYryVe_ldM_--6A_rQ_RCdn0JSX1AO3wWbEuzOPDLVffqTL4TON"; //env('YAS_CLIENT_SECRET');
-        $this->auth = new BearerToken($clientId, $clientSecret, $tokenUrl);
+        $tokenUrl =  config('services.jumena.token_url');
+        $clientId = config('services.jumena.client_id');
+        $clientSecret = config('services.jumena.client_secret');
+        $this->auth = new BearerToken(null, $clientId, $clientSecret, $tokenUrl);
     }
 
     //push mandate to CRDB
@@ -41,6 +41,7 @@ class MandateController extends Controller
         $installmentAmount = $request->installmentAmount;
         $periodicity = $request->periodicity;
 
+        //request id
         $requestId = Str::uuid()->toString();
 
         //token
@@ -58,16 +59,23 @@ class MandateController extends Controller
 
         //create payload
         $payload = [
-            "orderId" => "SOLO-1702202626166",
-            "customerMsisdn" => "255658123898",
-            "amount" => 1500
+            "orderId" => (string) $request->input('orderId', 'SOLO-' . now()->format('YmdHis')),
+            "customerMsisdn" => (string) $request->input('phone'),
+            "amount" => (float) $request->input('installmentAmount', 0),
         ];
 
         Log::debug("== YAS Payload ==");
         Log::debug($payload);
 
         //API URL
-        $API_URL = "https://jumena-pay.tech-vault.com/v1/payment-sessions";
+        $API_URL = config('services.jumena.payment_session_url');
+
+        if (!$API_URL) {
+            return response()->json([
+                'status' => false,
+                'message' => 'JUMENA payment session URL is not configured',
+            ], 500);
+        }
 
         //push payload => NMB Direct Debits
         $response = Http::withHeaders($headers)->post($API_URL, $payload);

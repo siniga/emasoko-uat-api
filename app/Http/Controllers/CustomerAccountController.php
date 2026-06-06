@@ -35,11 +35,10 @@ class CustomerAccountController extends Controller
 
         //customer accounts
         $customer_accounts = CustomerAccount::filterCondition();
+        $customer_accounts->with(['customer', 'account', 'createdBy.partners.partner']);
+        $requests = $request->all();
 
         if (isset($_POST['filter'])) {
-            //all request
-            $requests = $request->all();
-
             $customer_accounts = $customer_accounts->when($requests, function ($query) use ($requests) {
                 $query->withFilters($requests);
             });
@@ -50,6 +49,18 @@ class CustomerAccountController extends Controller
             //customer accounts
             $customer_accounts = $customer_accounts->orderBy('customer_accounts.created_at', 'DESC')->paginate(50);
         }
+
+        $statsBase = CustomerAccount::filterCondition();
+        $statsBase = $statsBase->when($requests, function ($query) use ($requests) {
+            $query->withFilters($requests);
+        });
+
+        $listStats = [
+            'total' => (clone $statsBase)->count(),
+            'approved' => (clone $statsBase)->where('status', 'approved')->count(),
+            'partial' => (clone $statsBase)->where('status', 'partial')->count(),
+            'rejected' => (clone $statsBase)->where('status', 'rejected')->count(),
+        ];
 
         //post data
         $data = [
@@ -66,7 +77,7 @@ class CustomerAccountController extends Controller
         $accounts = Account::all();
 
         //render view
-        return view('customer_accounts.lists', compact('title', 'account_types', 'accounts', 'customer_accounts', 'data'));
+        return view('customer_accounts.lists', compact('title', 'account_types', 'accounts', 'customer_accounts', 'data', 'listStats'));
     }
 
     /**
@@ -104,8 +115,18 @@ class CustomerAccountController extends Controller
         //customer account
         $customer_account = CustomerAccount::findOrFail($id);
 
+        $mandates = $customer_account->debitOrders;
+        $approvedMandates = $mandates->where('approved', 1);
+        $detailStats = [
+            'mandates_total' => $mandates->count(),
+            'mandates_approved' => $approvedMandates->count(),
+            'mandates_pending' => $mandates->where('approved', 0)->count(),
+            'mandates_total_value' => (float) $mandates->sum('total_amount'),
+            'mandates_approved_value' => (float) $approvedMandates->sum('total_amount'),
+        ];
+
         //render view
-        return view('customer_accounts.show', compact('title', 'customer_account'));
+        return view('customer_accounts.show', compact('title', 'customer_account', 'detailStats'));
     }
 
     /**

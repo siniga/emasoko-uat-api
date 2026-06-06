@@ -1,0 +1,117 @@
+@page {
+    margin: 20px 20px 26px 20px;
+}
+
+body {
+    font-family: DejaVu Sans, sans-serif;
+    font-size: 9px;
+    color: #1f2937;
+}
+
+.page-shell {
+    width: 100%;
+}
+
+.report-header {
+    width: 100%;
+    border-bottom: 2px solid #153567;
+    padding-bottom: 9px;
+    margin-bottom: 10px;
+}
+
+.report-header-table {
+    width: 100%;
+    border: 0;
+}
+
+.report-header-table td {
+    border: 0;
+    padding: 0;
+    vertical-align: top;
+}
+
+.brand-block {
+    width: 220px;
+}
+
+.brand-logo {
+    height: 42px;
+    margin-bottom: 6px;
+}
+
+.brand-name {
+    font-size: 13px;
+    font-weight: bold;
+    color: #153567;
+}
+
+.report-meta-card {
+    width: 230px;
+    margin-left: auto;
+    border: 1px solid #d7e2f1;
+    background: #f8fbff;
+    border-radius: 6px;
+    padding: 8px 10px;
+}
+
+.report-meta-title {
+    font-size: 10px;
+    font-weight: bold;
+    color: #153567;
+    margin-bottom: 6px;
+}
+
+.report-meta-row {
+    margin-bottom: 3px;
+    font-size: 8.5px;
+    color: #475569;
+}
+
+.report-meta-row:last-child {
+    margin-bottom: 0;
+}
+
+.meta-label {
+    display: inline-block;
+    width: 78px;
+    font-weight: bold;
+    color: #153567;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    border: 1px solid #d1d5db;
+    padding: 4px 5px;
+    vertical-align: top;
+}
+
+th {
+    background: #153567;
+    color: #ffffff;
+    font-weight: bold;
+    text-align: left;
+    font-size: 7.8px;
+    line-height: 1.2;
+}
+
+tbody tr:nth-child(even) {
+    background: #f8fafc;
+}
+
+td {
+    font-size: 7.8px;
+    line-height: 1.25;
+    word-break: break-word;
+}
+
+.report-footer {
+    margin-top: 8px;
+    font-size: 8px;
+    color: #64748b;
+    text-align: right;
+}

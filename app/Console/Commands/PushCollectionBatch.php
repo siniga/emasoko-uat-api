@@ -48,7 +48,15 @@ class PushCollectionBatch extends Command
         $current_year = now()->year;
 
         //get unprocessed collection batch
-        $collection_batches = CollectionBatch::where(['pushed' => 0, 'deleted' => 0])
+        $collection_batches = CollectionBatch::where(['deleted' => 0])
+            ->where(function ($query) {
+                $query->whereIn('lifecycle_status', [
+                    CollectionBatch::LIFECYCLE_READY,
+                    CollectionBatch::LIFECYCLE_QUEUED_FOR_PUSH,
+                ])->orWhere(function ($legacy) {
+                    $legacy->whereNull('lifecycle_status')->where('pushed', 0);
+                });
+            })
             ->whereMonth("created_at", "=", $current_month)
             ->whereYear("created_at", "=", $current_year)
             ->orderBy('collectionReference', 'ASC');
@@ -61,16 +69,10 @@ class PushCollectionBatch extends Command
                 //batch information
                 $batch = CollectionBatch::findOrFail($value->id);
 
-                if (!empty($batch->request_csv)) {
-                    //1. Create parameters
-                    $csv = $batch->request_csv;
-                    $arr_installments = explode(",", $batch->installment_ids);
-
-                    //2. Create payload for collection 
-                    $payload = $this->bankPayload->collectionPayload($batch, $csv);
-
-                    //3. BackgroundJob for creating collection batches
-                    dispatch(new PushCollectionJob($payload, $arr_installments));
+                if ($batch->canBePushed()) {
+                    $batch->lifecycle_status = CollectionBatch::LIFECYCLE_QUEUED_FOR_PUSH;
+                    $batch->save();
+                    dispatch(new PushCollectionJob($batch->id));
                 }
                 sleep(5); //sleep for 5 seconds
             }

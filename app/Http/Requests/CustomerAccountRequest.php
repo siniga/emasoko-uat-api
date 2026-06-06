@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Account;
 use App\Rules\PhoneNumber;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -15,6 +16,21 @@ class CustomerAccountRequest extends FormRequest
     public function authorize()
     {
         return true;
+    }
+
+    protected function prepareForValidation()
+    {
+        if (!$this->filled('account_type_id') && $this->filled('account_id')) {
+            $accountTypeId = Account::where('id', $this->input('account_id'))
+                ->where('active', 1)
+                ->value('account_type_id');
+
+            if ($accountTypeId) {
+                $this->merge([
+                    'account_type_id' => $accountTypeId,
+                ]);
+            }
+        }
     }
 
     /**

@@ -2,8 +2,7 @@
 
 namespace App\Jobs;
 
-use App\Classes\Messaging;
-use App\Models\SmsLog;
+use App\Services\MessagingService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -15,16 +14,18 @@ class SendSMSJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    protected $data;
+    protected array $data;
+    private MessagingService $messaging;
 
     /**
      * Create a new job instance.
      *
      * @return void
      */
-    public function __construct($data)
+    public function __construct(array $data)
     {
         $this->data = $data;
+        $this->messaging = new MessagingService();
     }
 
     /**
@@ -35,8 +36,7 @@ class SendSMSJob implements ShouldQueue
     public function handle()
     {
         //call messaging class
-        $messaging = new Messaging();
-        $response = $messaging->sendSMS($this->data['phone'], $this->data['message']);
+        $response = $this->messaging->actionSendSMS($this->data['messageId']);
         Log::debug("== Sending SMS in background ==");
         Log::debug($response);
     }

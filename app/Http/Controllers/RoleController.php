@@ -27,8 +27,25 @@ class RoleController extends Controller
 
         //roles
         $roles = Role::all();
+        $configuredRoleIds = PermRole::query()->pluck('role_id')->filter()->unique();
+        $configuredRoles = $configuredRoleIds->count();
+        $rolesWithoutPermissions = max($roles->count() - $configuredRoles, 0);
+        $assignedMethods = PermRole::query()
+            ->get()
+            ->sum(function ($permRole) {
+                return collect(explode(',', (string) $permRole->methods))
+                    ->filter()
+                    ->count();
+            });
 
-        return view('roles.lists', compact('roles', 'title'));
+        $listStats = [
+            'total' => $roles->count(),
+            'configured' => $configuredRoles,
+            'without_permissions' => $rolesWithoutPermissions,
+            'assigned_methods' => $assignedMethods,
+        ];
+
+        return view('roles.lists', compact('roles', 'title', 'listStats'));
     }
 
     //register user

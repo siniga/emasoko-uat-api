@@ -28,7 +28,7 @@
 
 @section('body')
 
-    <body data-topbar="light">
+    <body data-topbar="dark">
     @show
     <!-- Begin page -->
     <div id="layout-wrapper">

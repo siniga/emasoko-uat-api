@@ -7,13 +7,97 @@ const handleBarClick = (
     //console.log(dataPointIndex);
 };
 
+const renderMandatesPostedVsDeductedChart = (selector, data) => {
+    if (!document.querySelector(selector)) {
+        return;
+    }
+
+    const arr_month = [];
+    const arr_paid = [];
+    const arr_gap = [];
+
+    for (let k = 0; k < data.chart.length; k++) {
+        arr_month.push(data.chart[k].month);
+        arr_paid.push(data.chart[k].paid);
+        arr_gap.push(Math.max(data.chart[k].total - data.chart[k].paid, 0));
+    }
+
+    const options = {
+        series: [
+            {
+                name: "Deducted (collected)",
+                data: arr_paid,
+            },
+            {
+                name: "Gap (not collected)",
+                data: arr_gap,
+            },
+        ],
+        chart: {
+            type: "bar",
+            height: 360,
+            stacked: true,
+            toolbar: {
+                show: false,
+            },
+        },
+        plotOptions: {
+            bar: {
+                borderRadius: 4,
+                horizontal: false,
+                columnWidth: "58%",
+            },
+        },
+        dataLabels: {
+            enabled: false,
+        },
+        stroke: {
+            show: false,
+        },
+        fill: {
+            opacity: 1,
+        },
+        legend: {
+            position: "top",
+            horizontalAlign: "left",
+        },
+        yaxis: {
+            labels: {
+                formatter: function (value) {
+                    return value.toLocaleString();
+                },
+            },
+        },
+        xaxis: {
+            categories: arr_month,
+            labels: {
+                rotate: -35,
+            },
+        },
+        colors: ["#2E7D32", "#F8BBD0"],
+    };
+
+    $(selector).html("");
+    const chart = new ApexCharts(document.querySelector(selector), options);
+    chart.render();
+};
+
+const fetchMandatesPostedVsDeducted = (year) => {
+    $.getJSON("charts/collected-mandate", { year: year, channel: channel }, (data) => {
+        if (data.error == false) {
+            renderMandatesPostedVsDeductedChart("#mandates-posted-vs-deducted-chart", data);
+        }
+    });
+};
+
 //Filters
 const filters = window.DASHBOARD_FILTERS || {};
 const channel = filters.channel;
+const selectedYear = filters.year || "";
 console.log('Dashboard Channel:', channel);
 
 //Payment mandate value
-$.getJSON("charts/mandate-values", { channel: channel }, (data) => {
+$.getJSON("charts/mandate-values", { channel: channel, year: selectedYear }, (data) => {
     if (data.error == false) {
         var arr_month = [];
         var arr_total = [];
@@ -244,7 +328,7 @@ $.getJSON("charts/mandate-percentages", { channel: channel }, (data) => {
 });
 
 //Expected and collected Mandates
-$.getJSON("charts/collected-mandate", { channel: channel }, (data) => {
+$.getJSON("charts/collected-mandate", { channel: channel, year: selectedYear }, (data) => {
     if (data.error == false) {
         var arr_month = [];
         var arr_total = [];
@@ -415,6 +499,14 @@ $("#collected-mandate-value-select-year").on("change", function (e) {
             chart.render();
         }
     });
+});
+
+fetchMandatesPostedVsDeducted(selectedYear);
+
+$("#mandates-posted-vs-deducted-select-year").on("change", function (e) {
+    e.preventDefault;
+    var yearName = $(this).val();
+    fetchMandatesPostedVsDeducted(yearName);
 });
 
 //Expected and collected Mandates
