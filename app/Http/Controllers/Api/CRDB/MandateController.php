@@ -194,35 +194,51 @@ class MandateController extends Controller
         $callback_type = $request->input('callbackType');
 
         if ($callback_type == "REQUEST_STATUS") {
-            // mandate reference
-            $mandateReference = $request['data']['reference'];
+            $data = $request->input('data', []);
+            $mandateReference = $data['reference'] ?? null;
+            $approved = $data['status'] ?? null;
+
+            if (!$mandateReference || !$approved) {
+                Log::warning('Invalid CRDB request status callback payload.', [
+                    'payload' => $request->all(),
+                ]);
+
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Invalid callback payload',
+                ], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
 
             //query debit order by reference id
-            $debitOrder = DebitOrder::where('otp_reference', '=', $request['data']['reference']);
+            $debitOrder = DebitOrder::where('crdb_reference', '=', $mandateReference);
 
             if ($debitOrder->exists()) {
                 $debitOrder = $debitOrder->first();
-
-                //approved data
-                $approved = $request['data']['status'];
+                $previousLifecycleStatus = $debitOrder->resolved_lifecycle_status;
+                $remarks = $data['message']
+                    ?? $data['statusDescription']
+                    ?? $data['statusDesc']
+                    ?? null;
 
                 if (strtolower($approved) == "approved") {
                     $debitOrder->approved = 1;
                     $debitOrder->status = 240;
                     $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_ACTIVE;
-                    $debitOrder->remarks = "Mandate approved";
+                    $debitOrder->remarks = $remarks ?: "Mandate approved";
                     $debitOrder->save();
 
-                    // create installments
-                    $this->deductionService->createInstallment($debitOrder);
+                    if ($previousLifecycleStatus !== DebitOrder::LIFECYCLE_ACTIVE) {
+                        $this->deductionService->createInstallment($debitOrder);
+                    }
 
                     //Log response
                     Log::debug("== CRDB Mandate Status Approved ==");
                 } else {
                     // Failed debit orders
+                    $debitOrder->approved = 2;
                     $debitOrder->status = 500;
                     $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_FAILED;
-                    $debitOrder->remarks = "Failed to approve mandate.";
+                    $debitOrder->remarks = $remarks ?: "Failed to approve mandate.";
                     $debitOrder->save();
 
                     //Log response
@@ -230,17 +246,20 @@ class MandateController extends Controller
                 }
 
                 $debitOrder->refresh();
-                $this->externalCallbackService->dispatchMandateStatus(
-                    $debitOrder,
-                    strtolower($approved) == "approved" ? 'MANDATE_ACTIVE' : 'MANDATE_FAILED'
-                );
+
+                if ($previousLifecycleStatus !== $debitOrder->resolved_lifecycle_status) {
+                    $this->externalCallbackService->dispatchMandateStatus(
+                        $debitOrder,
+                        strtolower($approved) == "approved" ? 'MANDATE_ACTIVE' : 'MANDATE_FAILED'
+                    );
+                }
             }
         } else if ($callback_type == "PAYMENT_STATUS") {
             // mandate reference
             $mandateReference = $request['data']['reference'];
 
             //query debit order by reference id
-            $debitOrder = DebitOrder::where('otp_reference', '=', $mandateReference);
+            $debitOrder = DebitOrder::where('crdb_reference', '=', $mandateReference);
 
             if ($debitOrder->exists()) {
                 $debitOrder = $debitOrder->first();
@@ -257,102 +276,21 @@ class MandateController extends Controller
                     $transactionReference = $request['data']['transactionReference'];
                     $transactionDateTime = $request['data']['transactionDateTime'];
 
-                    if (!PaymentSettlement::where([
-                        'channel' => 'CRDB',
-                        'payment_reference' => $transactionReference,
-                    ])->exists()) {
-                        $installments = Installment::where('debit_order_id', "=", $debitOrder->id)
-                            ->whereMonth('payment_date', "=", date('m', strtotime($collectionDate)))
-                            ->whereYear('payment_date', "=", date('Y', strtotime($collectionDate)));
-
-                        if ($installments->exists()) {
-                            $installment = $installments->first();
-                        } else {
-                            $installment_amount = $this->deductionService->getInstallmentAmount($debitOrder);
-                            $last_installment_order = $this->deductionService->getLastInstallmentOrder($debitOrder);
-
-                            $installment = new Installment();
-                            $installment->debit_order_id = $debitOrder->id;
-                            $installment->installment_order = $last_installment_order + 1;
-                            $installment->installment_amount = $installment_amount;
-                            $installment->current_balance = 0;
-                            $installment->outstanding_amount = $installment_amount;
-                            $installment->payment_date = date('Y-m-d', strtotime($collectionDate));
-                            $installment->remarks = "CRDB amount paid";
-                            $installment->save();
-                        }
-
-                        $openingBalance = (float) ($installment->outstanding_amount ?? 0);
-                        $paymentAmount = (float) $amount;
-                        $rawPayloadHash = md5(json_encode($request->all()));
-
-                        if ($openingBalance <= 0) {
-                            $this->settlementPostingService->postUnallocated([
-                                'channel' => 'CRDB',
-                                'debit_order' => $debitOrder,
-                                'installment' => $installment,
-                                'amount' => $paymentAmount,
-                                'raw_status' => strtoupper((string) $transferResponse),
-                                'normalized_status' => PaymentSettlement::STATUS_UNALLOCATED,
-                                'settlement_type' => 'OVERPAYMENT_UNALLOCATED',
-                                'remarks' => 'Duplicate or extra deduction after installment already covered',
-                                'effective_payment_date' => date('Y-m-d', strtotime($collectionDate)),
-                                'transaction_at' => $transactionDateTime ?: $collectionDate,
-                                'payment_reference' => $transactionReference,
-                                'external_reference' => $transactionReference,
-                                'raw_payload_hash' => $rawPayloadHash,
-                            ]);
-                        } elseif ($paymentAmount > $openingBalance) {
-                            $this->settlementPostingService->post([
-                                'channel' => 'CRDB',
-                                'debit_order' => $debitOrder,
-                                'installment' => $installment,
-                                'amount' => $openingBalance,
-                                'raw_status' => strtoupper((string) $transferResponse),
-                                'normalized_status' => PaymentSettlement::STATUS_SUCCESS,
-                                'remarks' => 'Applied capped amount from CRDB payment',
-                                'effective_payment_date' => date('Y-m-d', strtotime($collectionDate)),
-                                'transaction_at' => $transactionDateTime ?: $collectionDate,
-                                'payment_reference' => $transactionReference,
-                                'external_reference' => $transactionReference,
-                                'raw_payload_hash' => $rawPayloadHash,
-                            ]);
-
-                            $this->settlementPostingService->postUnallocated([
-                                'channel' => 'CRDB',
-                                'debit_order' => $debitOrder,
-                                'installment' => $installment,
-                                'amount' => $paymentAmount - $openingBalance,
-                                'raw_status' => strtoupper((string) $transferResponse),
-                                'normalized_status' => PaymentSettlement::STATUS_UNALLOCATED,
-                                'settlement_type' => 'OVERPAYMENT_UNALLOCATED',
-                                'remarks' => 'Excess deduction held for reconciliation',
-                                'effective_payment_date' => date('Y-m-d', strtotime($collectionDate)),
-                                'transaction_at' => $transactionDateTime ?: $collectionDate,
-                                'payment_reference' => $transactionReference . '-EXCESS',
-                                'external_reference' => $transactionReference,
-                                'raw_payload_hash' => $rawPayloadHash,
-                            ]);
-                        } else {
-                            $normalizedStatus = $paymentAmount > 0 && $paymentAmount < $openingBalance
-                                ? PaymentSettlement::STATUS_PARTIAL
-                                : PaymentSettlement::STATUS_SUCCESS;
-
-                            $this->settlementPostingService->post([
-                                'channel' => 'CRDB',
-                                'debit_order' => $debitOrder,
-                                'installment' => $installment,
-                                'amount' => $paymentAmount,
-                                'raw_status' => strtoupper((string) $transferResponse),
-                                'normalized_status' => $normalizedStatus,
-                                'remarks' => 'Amount paid',
-                                'effective_payment_date' => date('Y-m-d', strtotime($collectionDate)),
-                                'transaction_at' => $transactionDateTime ?: $collectionDate,
-                                'payment_reference' => $transactionReference,
-                                'external_reference' => $transactionReference,
-                                'raw_payload_hash' => $rawPayloadHash,
-                            ]);
-                        }
+                    if (!PaymentSettlement::where('channel', 'CRDB')
+                        ->where(function ($query) use ($transactionReference) {
+                            $query->where('external_reference', $transactionReference)
+                                ->orWhere('payment_reference', $transactionReference);
+                        })
+                        ->exists()) {
+                        $this->postCrdbSuccessfulPayment(
+                            $debitOrder,
+                            (float) $amount,
+                            $transactionReference,
+                            $transactionDateTime ?: $collectionDate,
+                            $collectionDate,
+                            strtoupper((string) $transferResponse),
+                            md5(json_encode($request->all()))
+                        );
                     }
                 } else if (strtolower($transferResponse) == "insufficient_amount") {
                     // select installment for this month
@@ -369,7 +307,7 @@ class MandateController extends Controller
                             'installment' => $installment,
                             'amount' => 0,
                             'raw_status' => strtoupper((string) $transferResponse),
-                            'normalized_status' => PaymentSettlement::STATUS_FAILED,
+                            'normalized_status' => PaymentSettlement::STATUS_FUNDSCHECK,
                             'remarks' => 'Insufficient funds',
                             'effective_payment_date' => date('Y-m-d', strtotime($collectionDate)),
                             'transaction_at' => $collectionDate,
@@ -389,5 +327,109 @@ class MandateController extends Controller
             'status' => true,
             'message' => "Callback received",
         ], 200);
+    }
+
+    protected function postCrdbSuccessfulPayment(
+        DebitOrder $debitOrder,
+        float $paymentAmount,
+        string $transactionReference,
+        string $transactionAt,
+        string $collectionDate,
+        string $rawStatus,
+        string $rawPayloadHash
+    ): void {
+        $remainingAmount = $paymentAmount;
+        $sequence = 1;
+
+        while ($remainingAmount > 0) {
+            $installment = $this->nextPayableCrdbInstallment($debitOrder, $collectionDate);
+
+            if (!$installment) {
+                $this->settlementPostingService->postUnallocated([
+                    'channel' => 'CRDB',
+                    'debit_order' => $debitOrder,
+                    'amount' => $remainingAmount,
+                    'raw_status' => $rawStatus,
+                    'normalized_status' => PaymentSettlement::STATUS_UNALLOCATED,
+                    'settlement_type' => 'OVERPAYMENT_UNALLOCATED',
+                    'remarks' => 'Excess deduction held for reconciliation',
+                    'effective_payment_date' => date('Y-m-d', strtotime($collectionDate)),
+                    'transaction_at' => $transactionAt,
+                    'payment_reference' => $transactionReference . '-EXCESS',
+                    'external_reference' => $transactionReference,
+                    'raw_payload_hash' => $rawPayloadHash,
+                ]);
+
+                return;
+            }
+
+            $openingBalance = (float) ($installment->outstanding_amount ?? $installment->installment_amount ?? 0);
+
+            if ($openingBalance <= 0) {
+                $installment->status = 'CLOSED';
+                $installment->save();
+                continue;
+            }
+
+            $amountToApply = min($remainingAmount, $openingBalance);
+            $remainingAmount -= $amountToApply;
+            $normalizedStatus = $amountToApply < $openingBalance
+                ? PaymentSettlement::STATUS_PARTIAL
+                : PaymentSettlement::STATUS_SUCCESS;
+
+            $this->settlementPostingService->post([
+                'channel' => 'CRDB',
+                'debit_order' => $debitOrder,
+                'installment' => $installment,
+                'amount' => $amountToApply,
+                'raw_status' => $rawStatus,
+                'normalized_status' => $normalizedStatus,
+                'remarks' => $normalizedStatus === PaymentSettlement::STATUS_PARTIAL ? 'Partial amount paid' : 'Amount paid',
+                'effective_payment_date' => date('Y-m-d', strtotime($collectionDate)),
+                'transaction_at' => $transactionAt,
+                'payment_reference' => $sequence === 1 ? $transactionReference : "{$transactionReference}-PART-{$sequence}",
+                'external_reference' => $transactionReference,
+                'raw_payload_hash' => $rawPayloadHash,
+            ]);
+
+            $sequence++;
+        }
+    }
+
+    protected function nextPayableCrdbInstallment(DebitOrder $debitOrder, string $collectionDate): ?Installment
+    {
+        $debitOrder->refresh();
+
+        if ((float) ($debitOrder->outstanding_amount ?? 0) <= 0) {
+            return null;
+        }
+
+        $installment = Installment::where('debit_order_id', $debitOrder->id)
+            ->whereNotIn('status', ['CLOSED'])
+            ->where('outstanding_amount', '>', 0)
+            ->orderByRaw("CASE WHEN status = 'PARTIAL_PAID' THEN 0 ELSE 1 END")
+            ->orderBy('payment_date')
+            ->orderBy('installment_order')
+            ->first();
+
+        if ($installment) {
+            return $installment;
+        }
+
+        $installmentAmount = $this->deductionService->getInstallmentAmount($debitOrder);
+        $lastInstallmentOrder = $this->deductionService->getLastInstallmentOrder($debitOrder);
+
+        $installment = new Installment();
+        $installment->debit_order_id = $debitOrder->id;
+        $installment->installment_order = $lastInstallmentOrder + 1;
+        $installment->installment_amount = $installmentAmount;
+        $installment->current_balance = 0;
+        $installment->outstanding_amount = $installmentAmount;
+        $installment->payment_date = date('Y-m-d', strtotime($collectionDate));
+        $installment->status = 'OPEN';
+        $installment->remarks = 'CRDB amount paid';
+        $installment->save();
+
+        return $installment;
     }
 }
