@@ -37,17 +37,14 @@ class CollectionReportMapper extends ReportMapper
     public function map(mixed $record): array
     {
         /** @var Installment $record */
-        $status = $this->actual
-            ? match ($record->status) {
-                'CLOSED' => 'PAID',
-                'PARTIAL_PAID' => 'PARTIAL PAID',
-                default => 'UNPAID',
-            }
-            : match ($record->status) {
-                'CLOSED' => 'PAID',
-                'FAILED' => 'FAILED',
-                default => strtoupper((string) $record->status),
-            };
+        $status = match ($record->status) {
+            'OPEN' => 'PENDING COLLECTION',
+            'CLOSED' => 'PAID',
+            'PARTIAL_PAID' => 'PARTIAL PAID',
+            'FAILED' => 'FAILED',
+            'FUNDSCHECK' => 'FUND CHECK',
+            default => strtoupper(str_replace('_', ' ', (string) $record->status)),
+        };
 
         return [
             strtoupper($record->debitOrder->partner->business_name ?? ''),

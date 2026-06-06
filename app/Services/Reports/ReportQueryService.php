@@ -85,18 +85,20 @@ class ReportQueryService
     {
         return [
             'pending' => 'Pending',
-            'approved' => 'Approved',
-            'failed' => 'Failed',
+            'active' => 'Active',
+            'cancellation_requested' => 'Cancellation Requested',
             'cancelled' => 'Cancelled',
             'closed' => 'Closed',
+            'failed' => 'Failed',
         ];
     }
 
     public function collectionStatusOptions(): array
     {
         return [
-            'pending' => 'Pending Upload',
+            'pending' => 'Pending Collection',
             'paid' => 'Paid',
+            'partial_paid' => 'Partial Paid',
             'failed' => 'Failed',
             'fund_check' => 'Fund Check',
         ];
@@ -231,16 +233,7 @@ class ReportQueryService
         $this->applyDateRange($query, 'debit_orders.created_at', $filters['start_at'], $filters['end_at']);
         $this->applyMandateFilters($query, $filters);
 
-        if (!empty($filters['mandate_status'])) {
-            match ($filters['mandate_status']) {
-                'pending' => $query->where(['approved' => 0]),
-                'approved' => $query->where(['approved' => 1]),
-                'failed' => $query->where(['approved' => 2]),
-                'cancelled' => $query->where(['cancelled' => 1]),
-                'closed' => $query->where(['closed' => 1]),
-                default => null,
-            };
-        }
+        $this->applyMandateStatusFilter($query, $filters['mandate_status'] ?? null);
 
         return $query;
     }
@@ -254,6 +247,7 @@ class ReportQueryService
             $mappedStatus = match ($filters['collection_status']) {
                 'pending' => 'OPEN',
                 'paid' => 'CLOSED',
+                'partial_paid' => 'PARTIAL_PAID',
                 'failed' => 'FAILED',
                 'fund_check' => 'FUNDSCHECK',
                 default => null,
@@ -270,7 +264,14 @@ class ReportQueryService
     protected function actualCollectionBaseQuery(array $filters): Builder
     {
         $query = $this->collectionBaseQuery($filters);
-        $query->whereIn('installments.status', ['CLOSED', 'PARTIAL_PAID']);
+        $mappedStatus = match ($filters['collection_status'] ?? null) {
+            'paid' => ['CLOSED'],
+            'partial_paid' => ['PARTIAL_PAID'],
+            null, '' => ['CLOSED', 'PARTIAL_PAID'],
+            default => [],
+        };
+
+        $query->whereIn('installments.status', $mappedStatus);
         $this->applyDateRange($query, 'installments.effective_payment_date', $filters['start_at'], $filters['end_at']);
 
         return $query;
@@ -544,6 +545,51 @@ class ReportQueryService
                 $q->where('account_id', $filters['account_id']);
             });
         }
+    }
+
+    protected function applyMandateStatusFilter(Builder $query, ?string $status): void
+    {
+        if (empty($status)) {
+            return;
+        }
+
+        match ($status) {
+            'pending' => $query->where(function ($statusQuery) {
+                $statusQuery->whereIn('lifecycle_status', DebitOrder::lifecycleStatusesForSummary(DebitOrder::SUMMARY_PENDING))
+                    ->orWhere(function ($legacy) {
+                        $legacy->whereNull('lifecycle_status')
+                            ->where('approved', 0);
+                    });
+            }),
+            'active' => $query->where(function ($statusQuery) {
+                $statusQuery->where('lifecycle_status', DebitOrder::LIFECYCLE_ACTIVE)
+                    ->orWhere(function ($legacy) {
+                        $legacy->whereNull('lifecycle_status')
+                            ->where('approved', 1)
+                            ->where('contract_status', 'OPEN')
+                            ->where('cancelled', 0)
+                            ->where('closed', 0);
+                    });
+            }),
+            'cancellation_requested' => $query->where('lifecycle_status', DebitOrder::LIFECYCLE_CANCELLATION_REQUESTED),
+            'cancelled' => $query->where(function ($statusQuery) {
+                $statusQuery->where('lifecycle_status', DebitOrder::LIFECYCLE_CANCELLED)
+                    ->orWhere('cancelled', 1);
+            }),
+            'closed' => $query->where(function ($statusQuery) {
+                $statusQuery->where('lifecycle_status', DebitOrder::LIFECYCLE_CLOSED)
+                    ->orWhere('closed', 1)
+                    ->orWhere('contract_status', 'CLOSED');
+            }),
+            'failed' => $query->where(function ($statusQuery) {
+                $statusQuery->where('lifecycle_status', DebitOrder::LIFECYCLE_FAILED)
+                    ->orWhere(function ($legacy) {
+                        $legacy->whereNull('lifecycle_status')
+                            ->where('approved', 2);
+                    });
+            }),
+            default => null,
+        };
     }
 
     protected function applyInstallmentRelationFilters(Builder $query, array $filters): void

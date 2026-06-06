@@ -36,17 +36,12 @@ class MandateReportMapper extends ReportMapper
     public function map(mixed $record): array
     {
         /** @var DebitOrder $record */
-        $consentStatus = match ((int) $record->approved) {
-            1 => 'APPROVED',
-            2 => 'FAILED',
-            9 => 'CANCELLED',
-            default => 'PENDING',
-        };
+        $mandateStatus = strtoupper(str_replace('_', ' ', (string) $record->resolved_lifecycle_status));
 
         return [
             strtoupper($record->partner->business_name ?? ''),
             $record->reference,
-            $consentStatus,
+            $mandateStatus,
             strtoupper($record->customerAccount->account->name ?? ''),
             strtoupper($record->customerAccount->account_name ?? ''),
             $record->customerAccount->account_number ?? '',

@@ -27,8 +27,7 @@
                 <div class="rp-filter">
                     <div class="rp-filter__head">
                         <div>
-                            <div class="rp-filter__title">Reporting</div>
-                            <div class="rp-filter__hint">Choose a report card to open a focused filter modal, then preview or export the result.</div>
+                            <div class="rp-filter__title">Reports</div>
                         </div>
 
                         <div class="rp-filter__actions">
@@ -44,21 +43,17 @@
 
                     <div class="row g-3 mb-2">
                         @foreach ($reportDefinitions as $key => $definition)
-                            <div class="col-lg-4 col-md-4 col-12 mb-0">
+                            <div class="col-xl-3 col-lg-4 col-md-6 col-12 mb-0">
                                 <label class="rp-type-card {{ ($filters['report_type'] ?? '') === $key ? 'rp-type-card--active' : '' }}"
                                     :class="reportType === '{{ $key }}' ? 'rp-type-card--active' : ''"
                                     @click="openReportModal('{{ $key }}')">
-                                    <div class="rp-type-card__label">{{ $definition['label'] }}</div>
-                                    <p class="rp-type-card__text">{{ $definition['description'] }}</p>
+                                    <span class="rp-type-card__icon">
+                                        <i class="bx bxs-report"></i>
+                                    </span>
+                                    <span class="rp-type-card__label">{{ $definition['label'] }}</span>
                                 </label>
                             </div>
                         @endforeach
-                    </div>
-
-                    <div class="rp-selection" x-show="selectedDefinition()" x-cloak>
-                        <div class="rp-selection__label">Selected Report</div>
-                        <div class="rp-selection__value" x-text="selectedDefinition()?.label || ''"></div>
-                        <div class="rp-selection__hint" x-text="selectedDefinition()?.description || ''"></div>
                     </div>
                 </div>
             </div>
@@ -70,7 +65,6 @@
                     <div class="modal-header rp-modal__head">
                         <div>
                             <h5 class="modal-title rp-modal__title" x-text="selectedDefinition()?.label || 'Report Filters'"></h5>
-                            <p class="rp-modal__hint mb-0" x-text="modalHint()"></p>
                         </div>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
@@ -149,6 +143,16 @@
         </div>
 
         @if ($reportPreview)
+            @php
+                $hiddenPreviewColumns = [];
+
+                if (($reportPreview['type'] ?? null) === \App\Services\Reports\ReportQueryService::TYPE_MANDATE) {
+                    $hiddenPreviewColumns = collect($reportPreview['headings'])
+                        ->filter(fn ($heading) => strtolower((string) $heading) === 'remarks')
+                        ->keys()
+                        ->all();
+                }
+            @endphp
             <div class="row mt-4">
                 <div class="col-lg-12">
                     <div class="card rp-preview-card">
@@ -156,12 +160,6 @@
                             <div class="rp-preview-head">
                                 <div>
                                     <div class="rp-preview-head__title">{{ $reportPreview['title'] }}</div>
-                                    <p class="rp-preview-head__hint">
-                                        {{ number_format($reportPreview['total_records']) }} record(s) matched the selected filters.
-                                        @if ($reportPreview['preview_limited'])
-                                            Showing the first 100 rows in preview.
-                                        @endif
-                                    </p>
                                 </div>
 
                                 <div class="rp-preview-head__actions">
@@ -180,36 +178,31 @@
                                 </div>
                             </div>
 
-                            <div class="row g-3 mb-4">
-                                @foreach ($reportPreview['summary'] as $summary)
-                                    <div class="col-md-3">
-                                        <div class="detail-summary shadow h-96 py-2">
-                                            <div class="detail-summary__label">{{ $summary['label'] }}</div>
-                                            <div class="detail-summary__value text-{{ $summary['tone'] ?? 'primary' }}">{{ $summary['value'] }}</div>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
+                            @if ($reportPreview['preview_limited'])
+                                <div class="rp-preview-note">Preview is limited to the first 100 rows.</div>
+                            @endif
 
                             <div class="table-responsive">
                                 <table class="table table-bordered dt-responsive nowrap w-100 mb-0">
                                     <thead>
                                         <tr>
-                                            @foreach ($reportPreview['headings'] as $heading)
-                                                <th>{{ $heading }}</th>
+                                            @foreach ($reportPreview['headings'] as $headingIndex => $heading)
+                                                @continue(in_array($headingIndex, $hiddenPreviewColumns, true))
+                                                <th scope="col">{{ $heading }}</th>
                                             @endforeach
                                         </tr>
                                     </thead>
                                     <tbody>
                                         @forelse ($reportPreview['rows'] as $row)
                                             <tr>
-                                                @foreach ($row as $cell)
+                                                @foreach ($row as $cellIndex => $cell)
+                                                    @continue(in_array($cellIndex, $hiddenPreviewColumns, true))
                                                     <td>{{ $cell }}</td>
                                                 @endforeach
                                             </tr>
                                         @empty
                                             <tr>
-                                                <td colspan="{{ count($reportPreview['headings']) }}" class="text-center text-muted">
+                                                <td colspan="{{ count($reportPreview['headings']) - count($hiddenPreviewColumns) }}" class="text-center text-muted">
                                                     No data matched the selected filters.
                                                 </td>
                                             </tr>
