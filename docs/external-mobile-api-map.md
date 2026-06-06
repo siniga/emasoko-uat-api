@@ -179,9 +179,15 @@ Endpoints:
   `status`
 
 - `POST /api/v1/collections/actual`
-  Purpose: aggregated actual collections by provider for a month/year
+  Purpose: aggregated actual collections by partner for a month/year
   Optional filters:
   `year`, `month`
+  Notes:
+  - includes only approved mandates with active lifecycle status
+  - `number_of_collection`, `total_amount`, and `outstanding_amount` are calculated from installments due in the selected month/year using `payment_date`
+  - `paid_amount` is calculated from installments paid in the selected month/year using `effective_payment_date`
+  - paid installments are counted when status is `CLOSED` or `PARTIAL_PAID`
+  - only partners with `paid_amount > 0` are returned
 
 ## 5. Mobile App API Map
 

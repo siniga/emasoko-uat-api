@@ -202,7 +202,7 @@ class CollectionBatchService
         return Partner::whereHas('debitOrders', function ($query) use ($collectionDate) {
             return $query->eligibleForCollection('NMB')
                 ->whereDate('next_debit_date', '=', $collectionDate);
-        })->where('partners.status', '=', 202)->get();
+        })->get();
     }
 
     public function hasCollectionCycleDuplicate(Installment $installment, Carbon $collectionDate): bool

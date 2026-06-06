@@ -23,5 +23,5 @@ Route::middleware('auth:api')->group(function () {
 
     Route::post('collections/all', [PaymentCollectionController::class, 'all']);
     Route::post('collections/filtering', [PaymentCollectionController::class, 'filtering']);
-    Route::post('collections/actual', [PaymentCollectionController::class, 'actual_collections']);
+    Route::post('collections/actual', [PaymentCollectionController::class, 'actualCollections']);
 });

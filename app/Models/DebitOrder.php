@@ -54,12 +54,10 @@ class DebitOrder extends Model
 
             if ($arr_partners) {
                 $debit_orders = $debit_orders
-                    ->where('debit_orders.contract_status', '=', "OPEN")
                     ->whereIn('debit_orders.partner_id', $arr_partners);
             }
         } else if ($user->hasRole('Company_User')) {
             $debit_orders = $debit_orders
-                ->where('debit_orders.contract_status', '=', "OPEN")
                 ->where('debit_orders.created_by', '=', $user->id);
         }
 
@@ -68,12 +66,12 @@ class DebitOrder extends Model
 
     public function scopeCancelled($query)
     {
-        return $query->where('status', 'cancelled');
+        return $query->where('lifecycle_status', 'cancelled');
     }
 
     public function scopeActive($query)
     {
-        return $query->where('status', '=', 'active');
+        return $query->where('lifecycle_status', '=', 'active');
     }
 
     public function scopeEligibleForCollection($query, ?string $channel = null)
