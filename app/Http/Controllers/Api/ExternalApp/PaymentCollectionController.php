@@ -168,7 +168,7 @@ class PaymentCollectionController extends Controller
     message: string,
     data: array{
         collections: array<array{
-            uuid: string,
+            corporate_reference: string,
             partner_name: string,
             number_of_collection: int,
             total_amount: float,
