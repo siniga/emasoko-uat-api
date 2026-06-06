@@ -181,11 +181,7 @@ class DeductionService
                     if ($open) {
                         $picked->push($open);
                     } else {
-<<<<<<< HEAD
-                        // 2) Fallback: earliest FAILED/FUNDSCHECK/OPEN before today, exclude "Account Is Valid"
-=======
                         // 2) Fallback: earliest previous OPEN/FAILED/FUNDSCHECK installment.
->>>>>>> c3bb0f30c1a5f69834d284b7d45ccc1cb584f71e
                         $fallback = $debitOrder->installments()
                             ->whereIn('status', ['OPEN', 'FAILED', 'FUNDSCHECK'])
                             ->where(function ($query) {

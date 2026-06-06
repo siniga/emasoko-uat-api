@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api\Crdb;
+namespace App\Http\Controllers\Api\CRDB;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\BatchDisbursementRequest;

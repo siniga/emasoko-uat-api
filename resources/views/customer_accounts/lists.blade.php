@@ -153,104 +153,6 @@
                     </div>
                 </div>
 
-<<<<<<< HEAD
-            <div class="card">
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <div class="row">
-                            <div class="col-md-12">
-                                @if (session()->get('success'))
-                                    <div class="alert alert-success">
-                                        {{ session()->get('success') }}
-                                    </div>
-                                @elseif(session()->get('warning'))
-                                    <div class="alert alert-warning">
-                                        {{ session()->get('warning') }}
-                                    </div>
-                                @elseif(session()->get('danger'))
-                                    <div class="alert alert-danger">
-                                        {{ session()->get('danger') }}
-                                    </div>
-                                @endif
-                            </div>
-                        </div>
-
-                        @if (isset($customer_accounts) && $customer_accounts->isNotEmpty())
-                            <div class="row mb-2">
-                                <div class="col-md-6">
-                                    <span class="font-weight-500">No. of customer accounts:
-                                        {{ number_format(count($customer_accounts)) }}</span>
-                                </div>
-
-                                <div class="col-md-6">
-                                    <div class="text-sm-end d-none d-sm-block">
-                                        <a title="Export" class="btn btn-outline-success btn-sm"
-                                            href="{{ route('customer-accounts.export-xls', ['start_at' => $data['start_at'], 'end_at' => $data['end_at'], 'account_type_id' => $data['account_type_id'], 'account_id' => $data['account_id'], 'status' => $data['status'], 'keyword' => $data['keyword']]) }}">
-                                            <i class="bx bx-export"></i> Export XLS</a>
-
-                                        {{-- <a class="btn btn-outline-danger btn-sm"
-                                            href="{{ route('customer-accounts.export-pdf', ['start_at' => $data['start_at'], 'end_at' => $data['end_at'], 'account_type_id' => $data['account_type_id'], 'account_id' => $data['account_id'], 'status' => $data['status'], 'keyword' => $data['keyword']]) }}">
-                                            <i class="fas fa-file-pdf"></i> Export PDF
-                                        </a> --}}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="table-responsive">
-                                <table class="table table-bordered dt-responsive  nowrap w-100" id="dynamicTable">
-                                    <thead>
-                                        <tr>
-                                            <th width="3%">#</th>
-                                            <th width="30%">Account Name</th>
-                                            <th>Bank Name/MNO</th>
-                                            <th>Account Number</th>
-                                            <th>Phone</th>
-                                            <th>Created</th>
-                                            <th style="width: 40px; !important">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @php $serial = 1; @endphp
-                                        @foreach ($customer_accounts as $values)
-                                            <tr>
-                                                <td>{{ $serial }}</td>
-                                                <td>
-                                                    {{ strtoupper($values->account_name) ?? $values->phone }}<br>
-                                                    ID: {{ $values->customer->id_number ?? 'NIL' }}
-                                                    <br>
-                                                    Provider:
-                                                    {{ optional(optional(optional($values->createdBy)->partners)->first())->partner->business_name ?? 'NIL' }}
-                                                </td>
-                                                <td>{{ $values->account->name ?? 'NIL' }}</td>
-                                                <td>{{ $values->account_number ?? $values->phone }}</td>
-                                                <td>{{ $values->phone }}</td>
-                                                <td>{{ date('d-m-Y H:i', strtotime($values->created_at)) }}</td>
-                                                <td>
-                                                    <a href="{{ route('customer-accounts.show', $values->id) }}"
-                                                        title="View" class="btn btn-xss">
-                                                        <i class="bx bxs-folder-open"></i>
-                                                    </a>
-
-                                                    {{-- <a href="{{ route('customer-accounts.edit', $values->id) }}"
-                                                        title="Edit" class="btn btn-xss">
-                                                        <i class="bx bx-edit text-secondary"></i>
-                                                    </a>
-
-                                                    <a href="{{ route('customer-accounts.delete', $values->id) }}"
-                                                        title="Delete" class="btn btn-xss delete">
-                                                        <i class="bx bx-trash text-danger"></i>
-                                                    </a> --}}
-                                                </td>
-                                            </tr>
-                                            @php $serial++; @endphp
-                                        @endforeach
-                                    </tbody>
-                                </table>
-
-                                <div class="d-flex justify-content-end">
-                                    @if (method_exists($customer_accounts, 'links'))
-                                        {{ $customer_accounts->links() }}
-=======
                 <div class="card sp-list-card">
                     <div class="card-body">
                         <div class="table-responsive">
@@ -268,7 +170,6 @@
                                         <div class="alert alert-danger">
                                             {{ session()->get('danger') }}
                                         </div>
->>>>>>> c3bb0f30c1a5f69834d284b7d45ccc1cb584f71e
                                     @endif
                                 </div>
                             </div>

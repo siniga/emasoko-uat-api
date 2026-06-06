@@ -146,15 +146,9 @@
                     </a>
                 </li>
 
-<<<<<<< HEAD
-                @if (Auth::user()->hasRole(['admin']) || Auth::user()->hasRole(['Partner']))
-                    <li class="{{ Route::is('payment-mandate.request-cancellation', 'payment-mandate.request-closing') ? 'mm-active' : '' }}">
-                        <a href="javascript: void(0);" class="has-arrow waves-effect">
-=======
                 @if (Auth::user()->hasRole(['admin']))
                     <li class="{{ $mandateApprovalsOpen ? 'mm-active' : '' }}">
                         <a href="{{ route('payment-mandate.approvals') }}" class="waves-effect">
->>>>>>> c3bb0f30c1a5f69834d284b7d45ccc1cb584f71e
                             <i class='bx bx-list-check'></i>
                             <span>Approvals</span>
                             @if ($mandateApprovalCount > 0)
