@@ -82,13 +82,15 @@
 
                                         <div class="dropdown-divider"></div>
 
-                                        <!-- <template
-                                            x-if="status==201 || status==249 || status==403 || status==430 || status==405 || status==500 || status==501">
-                                            <a class="dropdown-item text-sm"
-                                                href="{{ route('payment-mandate.delete', $debit_order->uuid) }}">
-                                                Delete Mandate
-                                            </a>
-                                        </template> -->
+                                        <template x-if="channel=='NMB'">
+                                            <template
+                                                x-if="status==201 || status==249 || status == '404' || status==403 || status==430 || status==405 || status==500 || status==501">
+                                                <a class="dropdown-item text-sm"
+                                                    href="{{ route('payment-mandate.delete', $debit_order->uuid) }}">
+                                                    Delete Mandate
+                                                </a>
+                                            </template>
+                                        </template>
                                     </div>
                                 </div>
 
@@ -181,72 +183,80 @@
 
                                         <th width="25%">Mandate Status</th>
                                         <td width="25%">
-                                            <template x-if="status==0">
-                                                <span class="badge badge-pill badge-soft-warning">Registration
-                                                    Process</span>
-                                            </template>
+                                            @if($debit_order->contract_status === 'OPEN')
+                                                <template x-if="status==0">
+                                                    <span class="badge badge-pill badge-soft-warning">Registration
+                                                        Process</span>
+                                                </template>
 
-                                            <template x-if="status==100">
-                                                <span class="badge badge-pill badge-soft-warning">Pending
-                                                    Registration</span>
-                                            </template>
+                                                <template x-if="status==100">
+                                                    <span class="badge badge-pill badge-soft-warning">Pending
+                                                        Registration</span>
+                                                </template>
 
-                                            <template x-if="status==200">
-                                                <span class="badge badge-pill badge-soft-info">Under Review</span>
-                                            </template>
+                                                <template x-if="status==200">
+                                                    <span class="badge badge-pill badge-soft-info">Under Review</span>
+                                                </template>
 
-                                            <template x-if="status==201">
-                                                <span class="badge badge-pill badge-soft-warning">Pending Verification</span>
-                                            </template>
+                                                <template x-if="status==201">
+                                                    <span class="badge badge-pill badge-soft-warning">Pending Verification</span>
+                                                </template>
 
-                                            <template x-if="status==202">
-                                                <span class="badge badge-pill badge-soft-success">Verified</span>
-                                            </template>
+                                                <template x-if="status==202">
+                                                    <span class="badge badge-pill badge-soft-success">Verified</span>
+                                                </template>
 
-                                            <template x-if="status==240">
-                                                <span class="badge badge-pill badge-soft-success">Active</span>
-                                            </template>
+                                                <template x-if="status==240">
+                                                    <span class="badge badge-pill badge-soft-success">Active</span>
+                                                </template>
 
-                                            <template x-if="status==249">
-                                                <span class="badge badge-pill badge-soft-warning">Processing</span>
-                                            </template>
+                                                <template x-if="status==249">
+                                                    <span class="badge badge-pill badge-soft-warning">Processing</span>
+                                                </template>
 
-                                            <template x-if="status==403">
-                                                <span class="badge badge-pill badge-soft-danger">Pending
-                                                    Registration</span>
-                                            </template>
+                                                <template x-if="status==403">
+                                                    <span class="badge badge-pill badge-soft-danger">Pending
+                                                        Registration</span>
+                                                </template>
 
-                                            <template x-if="status==404">
-                                                <span class="badge badge-pill badge-soft-danger">Pending
-                                                    Registration</span>
-                                            </template>
+                                                <template x-if="status==404">
+                                                    <span class="badge badge-pill badge-soft-danger">Pending
+                                                        Registration</span>
+                                                </template>
 
-                                            <template x-if="status==405">
-                                                <span class="badge badge-pill badge-soft-danger">Cancelled</span>
-                                            </template>
+                                                <template x-if="status==405">
+                                                    <span class="badge badge-pill badge-soft-danger">Cancelled</span>
+                                                </template>
 
-                                            <template x-if="status==500">
-                                                <span class="badge badge-pill badge-soft-danger">Failed Verification</span>
-                                            </template>
+                                                <template x-if="status==500">
+                                                    <span class="badge badge-pill badge-soft-danger">Failed Verification</span>
+                                                </template>
 
-                                            <template x-if="status==501">
-                                                <span class="badge badge-pill badge-soft-danger">Inactive</span>
-                                            </template>
+                                                <template x-if="status==501">
+                                                    <span class="badge badge-pill badge-soft-danger">Inactive</span>
+                                                </template>
 
-                                            <template x-if="status==900">
-                                                <span class="badge badge-pill badge-soft-success">Closed</span>
-                                            </template>
+                                                <template x-if="status==900">
+                                                    <span class="badge badge-pill badge-soft-closed">CLOSED</span>
+                                                </template>
 
-                                            <template x-if="status==999">
-                                                <span class="badge badge-pill badge-soft-danger">Cancelled</span>
-                                            </template>
+                                                <template x-if="status==999">
+                                                    <span class="badge badge-pill badge-soft-danger">Cancelled</span>
+                                                </template>
+                                            @else
+                                                <span class="badge badge-pill badge-soft-closed">CLOSED</span>
+                                            @endif
                                         </td>
                                     </tr>
 
                                     <tr>
                                         <th width="25%">Remarks</th>
                                         <td colspan="3">
-                                            <span x-text="remarks"></span>
+                                            @if($debit_order->contract_status === 'OPEN')
+                                                <span x-text="remarks"></span>
+                                            @else
+                                                <span>Mandate closed</span>
+                                            @endif
                                         </td>
                                     </tr>
 

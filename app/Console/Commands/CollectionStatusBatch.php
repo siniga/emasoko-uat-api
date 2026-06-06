@@ -56,12 +56,12 @@ class CollectionStatusBatch extends Command
         // get the start and end of the last month
         // $start = now()->subMonth()->startOfMonth();
         // $end   = now()->subMonth()->endOfMonth();
-        //->whereDate('created_at', $current_date)
 
         //1. Get all collection batches created in the current month
         $collection_batches = CollectionBatch::where(['pushed' => 1, 'deleted' => 0])
-            ->whereBetween('created_at', [$start, $end])
-            ->orderBy('collectionReference', 'ASC')->get();
+            ->whereBetween('created_at', [$start, $end]) 
+            ->orderBy('collectionReference', 'ASC')
+            ->get();
 
         if ($collection_batches->isEmpty())
             return;

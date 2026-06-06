@@ -25,8 +25,8 @@ if (!function_exists('mandate_status_badge')) {
             return badge('Cancelled', 'danger');
         }
 
-        if (in_array($values->approved, [0, 1, 2]) && $values->closed == 1) {
-            return badge('Closed', 'closed');
+        if (in_array($values->approved, [0, 1, 2]) && $values->contract_status == 'CLOSED') {
+            return badge('CLOSED', 'closed');
         }
 
         // Approved = 1

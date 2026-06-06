@@ -69,36 +69,38 @@
                                         <tbody>
                                             @php $serial = 1; @endphp
                                             @foreach ($dd_requests as $values)
-                                                <tr>
-                                                    <td>
-                                                        <input type="checkbox" class="checkbox" id="request_id"
-                                                            name="request_id[]" value="{{ $values->id }}">
-                                                    </td>
-                                                    <td>
-                                                        {{ strtoupper($values->debitOrder->customerAccount->account_name) ?? $values->debitOrder->customerAccount->phone }}<br>
-                                                        ID:
-                                                        {{ $values->debitOrder->customerAccount->customer->id_number ?? 'NIL' }}
-                                                    </td>
-                                                    <td>{{ $values->debitOrder->customerAccount->account->name ?? '' }}</td>
-                                                    <td>
-                                                        {{ $values->debitOrder->customerAccount->debitOrder->account_number ?? $values->debitOrder->customerAccount->phone }}
-                                                    </td>
-                                                    <td>
-                                                        {{ $values->debitOrder->reference }}
-                                                    </td>
-                                                    <td>{{ $values->debitOrder->customerAccount->phone ?? '' }}</td>
+                                                @if($values->debitOrder)
+                                                    <tr>
+                                                        <td>
+                                                            <input type="checkbox" class="checkbox" id="request_id"
+                                                                name="request_id[]" value="{{ $values->id }}">
+                                                        </td>
+                                                        <td>
+                                                            {{ strtoupper($values->debitOrder->customerAccount->account_name) ?? $values->debitOrder->customerAccount->phone }}<br>
+                                                            ID:
+                                                            {{ $values->debitOrder->customerAccount->customer->id_number ?? 'NIL' }}
+                                                        </td>
+                                                        <td>{{ $values->debitOrder->customerAccount->account->name ?? '' }}</td>
+                                                        <td>
+                                                            {{ $values->debitOrder->customerAccount->debitOrder->account_number ?? $values->debitOrder->customerAccount->phone }}
+                                                        </td>
+                                                        <td>
+                                                            {{ $values->debitOrder->reference }}
+                                                        </td>
+                                                        <td>{{ $values->debitOrder->customerAccount->phone ?? '' }}</td>
 
-                                                    <td>
-                                                        @if ($values->status == 'PENDING')
-                                                            <span class="badge badge-pill badge-soft-danger">Pending</span>
-                                                        @elseif($values->status == 'APPROVED')
-                                                            <span class="badge badge-pill bg-success">Approved</span>
-                                                        @elseif($values->status == 'REJECTED')
-                                                            <span class="badge badge-pill badge-soft-danger">Rejected</span>
-                                                        @endif
-                                                    </td>
-                                                    <td>{{ date('d-m-Y H:i', strtotime($values->created_at)) }}</td>
-                                                </tr>
+                                                        <td>
+                                                            @if ($values->status == 'PENDING')
+                                                                <span class="badge badge-pill badge-soft-danger">Pending</span>
+                                                            @elseif($values->status == 'APPROVED')
+                                                                <span class="badge badge-pill bg-success">Approved</span>
+                                                            @elseif($values->status == 'REJECTED')
+                                                                <span class="badge badge-pill badge-soft-danger">Rejected</span>
+                                                            @endif
+                                                        </td>
+                                                        <td>{{ date('d-m-Y H:i', strtotime($values->created_at)) }}</td>
+                                                    </tr>
+                                                @endif
                                                 @php $serial++; @endphp
                                             @endforeach
                                         </tbody>

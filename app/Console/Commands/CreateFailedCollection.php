@@ -61,6 +61,8 @@ class CreateFailedCollection extends Command
         //collection batches
         $collection_batches = CollectionBatch::whereMonth("created_at", "=", $previous_month)
             ->whereYear("created_at", "=", $current_year)
+            ->where("partner_id", "!=", 22)
+            ->where('collectionReference', 24699)
             ->orderBy('collectionReference', 'ASC');
 
         if ($collection_batches->count() > 0) {
@@ -118,6 +120,8 @@ class CreateFailedCollection extends Command
 
                             //Batch Collection Date
                             $batch_collection_date = $installment->effective_payment_date;
+                            Log::debug("== Failed collection date ==");
+                            Log::debug($batch_collection_date);
 
                             //1.0: check if periodicity == MONTHLY and deleted = 0
                             if ($periodicity == "MONTHLY" && $contract_status == "OPEN" && $deleted == 0) {
@@ -128,7 +132,7 @@ class CreateFailedCollection extends Command
                                         //3.0: check if account exists in this batch
                                         if (!in_array($account_number, $arr_accounts)) {
                                             // 3.1: create new collection date from previous month
-                                            $collection_date = $this->deductionService->createCollectionDate($effective_date);
+                                            $collection_date = $this->deductionService->createCollectionDate($payment_date);
 
                                             //4.0: check if the mandate reference debited this month
                                             $collection_debit_order = CollectionDebitOrder::where(['debit_order_id' => $debit_order_id])

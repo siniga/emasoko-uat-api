@@ -44,6 +44,11 @@ class CustomerAccount extends Model
         return $this->hasMany(DebitOrder::class, 'customer_account_id');
     }
 
+    public function createdBy()
+    {
+        return $this->belongsTo(User::class, 'created_by', 'id');
+    }
+
     public function scopeWithFilters($query, $request)
     {
         $start_date        = $request['start_at'] ?? null;

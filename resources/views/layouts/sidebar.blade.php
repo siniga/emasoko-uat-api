@@ -57,7 +57,7 @@
                     </a>
                 </li>
 
-                @if (Auth::user()->hasRole(['admin']))
+                @if (Auth::user()->hasRole(['admin']) || Auth::user()->hasRole(['Partner']))
                     <li class="{{ Route::is('payment-mandate.request-cancellation', 'payment-mandate.request-closing') ? 'mm-active' : '' }}">
                         <a href="javascript: void(0);" class="has-arrow waves-effect">
                             <i class='bx bx-list-check'></i>

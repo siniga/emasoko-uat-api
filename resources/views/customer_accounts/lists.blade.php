@@ -181,6 +181,9 @@
                                                 <td>
                                                     {{ strtoupper($values->account_name) ?? $values->phone }}<br>
                                                     ID: {{ $values->customer->id_number ?? 'NIL' }}
+                                                    <br>
+                                                    Provider:
+                                                    {{ optional(optional(optional($values->createdBy)->partners)->first())->partner->business_name ?? 'NIL' }}
                                                 </td>
                                                 <td>{{ $values->account->name ?? 'NIL' }}</td>
                                                 <td>{{ $values->account_number ?? $values->phone }}</td>

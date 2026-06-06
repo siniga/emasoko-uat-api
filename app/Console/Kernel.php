@@ -32,7 +32,7 @@ class Kernel extends ConsoleKernel
 
         //summary reports
         $schedule->command('send:daily-report-summary')->dailyAt('23:50');
-        //$schedule->command('send:monthly-report-summary')->lastDayOfMonth('23:30');
+        $schedule->command('send:monthly-report-summary')->lastDayOfMonth('23:30');
     }
 
     /**

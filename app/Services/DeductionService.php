@@ -184,14 +184,20 @@ class DeductionService
                     $open = $debitOrder->installments()
                         ->where('installments.status', 'OPEN')
                         ->where('installments.created', 0)
-                        ->whereDate('installments.payment_date', $current_date)
-                        ->orderBy('installments.payment_date')
+                        ->whereDate('installments.payment_date', '<=', $current_date)
+                        ->orderByRaw("
+                            CASE 
+                                WHEN DATE(installments.payment_date) = ? THEN 0
+                                ELSE 1
+                            END
+                        ", [$current_date])
+                        ->orderBy('installments.payment_date', 'desc')
                         ->first();
 
                     if ($open) {
                         $picked->push($open);
                     } else {
-                        // 2) Fallback: earliest FAILED/FUNDSCHECK before today, exclude "Account Is Valid"
+                        // 2) Fallback: earliest FAILED/FUNDSCHECK/OPEN before today, exclude "Account Is Valid"
                         $fallback = $debitOrder->installments()
                             ->whereIn('status', ['FAILED', 'FUNDSCHECK'])
                             ->where('remarks', '!=', 'Account Is Valid')

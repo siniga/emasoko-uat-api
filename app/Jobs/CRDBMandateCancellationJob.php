@@ -100,17 +100,23 @@ class CRDBMandateCancellationJob implements ShouldQueue
         $statusCode = data_get($response, 'ResponseHeader.StatusCode');
         $statusDesc = data_get($response, 'ResponseHeader.StatusDesc');
         $responseId = data_get($response, 'ResponseHeader.RequestId');
-        Log::debug('Parsed header', compact('statusCode', 'statusDesc', 'reference'));
+        Log::debug('Parsed header', compact('statusCode', 'statusDesc'));
 
         // Handle business logic only if StatusCode is present
         if ($statusCode === 1000) {
             $debitOrder->cancelled = 1;
             $debitOrder->deleted = 1;
+            $debitOrder->status = 405;
             $debitOrder->remarks = "Mandate cancelled successfully";
         } elseif ($statusCode === 1001) {
-            if (isset($response['ErrorMetadata']['400'])) {
+            $errorMetaData = data_get($response, 'ResponseHeader.ErrorMetadata');
+            Log::debug("== 400 ErrorCode ==");
+            Log::debug($errorMetaData['400']);
+
+            if (isset($errorMetaData['400'])) {
                 $debitOrder->cancelled = 1;
                 $debitOrder->deleted = 1;
+                $debitOrder->status = 405;
                 $debitOrder->remarks = "Mandate cancelled successfully";
             }
         } else {
