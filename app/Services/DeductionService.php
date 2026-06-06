@@ -525,7 +525,7 @@ class DeductionService
                     $amount = floatval($fields[6]);
 
                     //check for status
-                    if ($status == "FAIL" || $status == "FUNDSCHECK") {
+                    if (in_array($status, ["FAIL", "FAILED", "FUNDSCHECK"], true)) {
                         $normalizedStatus = $status == "FUNDSCHECK"
                             ? PaymentSettlement::STATUS_FUNDSCHECK
                             : PaymentSettlement::STATUS_FAILED;
@@ -639,7 +639,11 @@ class DeductionService
                 //check if installment status != CLOSED
                 if ($installment->status != "CLOSED") {
                     //status and paid amount
+                    $status = strtoupper($fields[7] ?? 'FAILED');
                     $message = ucwords(strtolower($fields[8]));
+                    $normalizedStatus = $status === 'FUNDSCHECK'
+                        ? PaymentSettlement::STATUS_FUNDSCHECK
+                        : PaymentSettlement::STATUS_FAILED;
 
                     $this->settlementPosting()->post([
                         'channel' => 'NMB',
@@ -648,8 +652,8 @@ class DeductionService
                         'debit_order' => $installment->debitOrder,
                         'installment' => $installment,
                         'amount' => 0,
-                        'raw_status' => 'FAILED',
-                        'normalized_status' => PaymentSettlement::STATUS_FAILED,
+                        'raw_status' => $status,
+                        'normalized_status' => $normalizedStatus,
                         'remarks' => $message,
                         'effective_payment_date' => $installment->effective_payment_date ?: now()->toDateString(),
                         'payment_reference' => "COL-{$batch->collectionReference}-{$installment->id}",

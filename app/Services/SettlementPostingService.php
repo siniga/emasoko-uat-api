@@ -59,7 +59,59 @@ class SettlementPostingService
             ])->first();
 
             if ($existing) {
-                return $existing;
+                $statusChanged = strtoupper((string) $existing->normalized_status) !== $normalizedStatus;
+
+                if (!$statusChanged) {
+                    return $existing;
+                }
+
+                $settlement = $existing;
+                $settlement->collection_batch_id = $batch?->id ?? $settlement->collection_batch_id;
+                $settlement->collection_debit_order_id = $line?->id ?? $settlement->collection_debit_order_id;
+                $settlement->debit_order_id = $debitOrder->id;
+                $settlement->installment_id = $installment?->id;
+                $settlement->mandate_reference = $debitOrder->reference;
+                $settlement->external_reference = $externalReference;
+                $settlement->raw_status = $rawStatus;
+                $settlement->normalized_status = $normalizedStatus;
+                $settlement->paid_amount = $amount;
+                $settlement->effective_payment_date = $effectiveDate;
+                $settlement->transaction_at = $transactionAt;
+                $settlement->remarks = $remarks;
+                $settlement->raw_payload_hash = $rawPayloadHash;
+                $settlement->expected_amount = (float) ($payload['expected_amount'] ?? $installment?->installment_amount ?? $settlement->expected_amount ?? 0);
+
+                if ($applyToBalances && in_array($normalizedStatus, [PaymentSettlement::STATUS_SUCCESS, PaymentSettlement::STATUS_PARTIAL], true)) {
+                    $this->storeInstallmentPayment($debitOrder->reference, $paymentReference, $amount, $effectiveDate);
+                } else {
+                    $this->deleteInstallmentPayment($debitOrder->reference, $paymentReference);
+                }
+
+                $settlement->save();
+
+                if (!$applyToBalances || !$installment) {
+                    $settlement->closing_installment_balance = $openingInstallmentBalance;
+                    $settlement->closing_debit_order_balance = $openingDebitOrderBalance;
+                    $settlement->settlement_type = $settlement->settlement_type ?: 'UNALLOCATED_PAYMENT';
+                    $settlement->save();
+
+                    return $settlement;
+                }
+
+                $this->recalculateInstallment($installment, $settlement, $normalizedStatus, $amount, $effectiveDate, $remarks, $paymentReference);
+                $this->recalculateDebitOrder($debitOrder, $installment);
+                $this->updateCollectionLine($line ?? $settlement->collectionLine, $normalizedStatus, $rawStatus, $remarks, $rawPayloadHash);
+
+                $settlement->closing_installment_balance = (float) $installment->outstanding_amount;
+                $settlement->closing_debit_order_balance = (float) $debitOrder->outstanding_amount;
+                $settlement->settlement_type = $this->settlementType($settlement, $installment);
+                $settlement->save();
+
+                if (in_array($normalizedStatus, [PaymentSettlement::STATUS_SUCCESS, PaymentSettlement::STATUS_PARTIAL], true)) {
+                    $this->queueSuccessfulCollectionSms($debitOrder, $installment, $amount);
+                }
+
+                return $settlement;
             }
 
             $settlement = new PaymentSettlement();
@@ -103,14 +155,7 @@ class SettlementPostingService
             $this->recalculateInstallment($installment, $settlement, $normalizedStatus, $amount, $effectiveDate, $remarks, $paymentReference);
             $this->recalculateDebitOrder($debitOrder, $installment);
 
-            if ($line) {
-                $line->status = $normalizedStatus;
-                $line->bank_status = $rawStatus;
-                $line->bank_message = $remarks;
-                $line->response_hash = $rawPayloadHash;
-                $line->processed_at = now();
-                $line->save();
-            }
+            $this->updateCollectionLine($line, $normalizedStatus, $rawStatus, $remarks, $rawPayloadHash);
 
             $settlement->closing_installment_balance = (float) $installment->outstanding_amount;
             $settlement->closing_debit_order_balance = (float) $debitOrder->outstanding_amount;
@@ -144,6 +189,28 @@ class SettlementPostingService
         $payment->amount = $amount;
         $payment->payment_at = $effectiveDate;
         $payment->save();
+    }
+
+    protected function deleteInstallmentPayment(string $mandateReference, string $paymentReference): void
+    {
+        InstallmentPayment::where([
+            'mandate_reference' => $mandateReference,
+            'payment_reference' => $paymentReference,
+        ])->delete();
+    }
+
+    protected function updateCollectionLine(?CollectionDebitOrder $line, string $normalizedStatus, string $rawStatus, ?string $remarks, ?string $rawPayloadHash): void
+    {
+        if (!$line) {
+            return;
+        }
+
+        $line->status = $normalizedStatus;
+        $line->bank_status = $rawStatus;
+        $line->bank_message = $remarks;
+        $line->response_hash = $rawPayloadHash;
+        $line->processed_at = now();
+        $line->save();
     }
 
     protected function recalculateInstallment(
