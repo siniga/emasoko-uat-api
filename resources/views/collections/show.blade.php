@@ -42,7 +42,6 @@
                 <div class="pm-card__head">
                     <div>
                         <div class="pm-card__title">Batch Details</div>
-                        <div class="pm-card__hint">Batch identity, processing state, operational ownership, and timing metadata.</div>
                     </div>
 
                     <div class="pm-actions">

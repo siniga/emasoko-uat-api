@@ -247,6 +247,7 @@ class CollectionBatch extends Model
     public function isWorkflowComplete(): bool
     {
         return in_array($this->resolved_lifecycle_status, [
+            self::LIFECYCLE_PARTIALLY_PROCESSED,
             self::LIFECYCLE_PROCESSED_SUCCESS,
             self::LIFECYCLE_PROCESSED_FAILED,
             self::LIFECYCLE_RECREATED,
