@@ -18,12 +18,19 @@ class Partner extends Model
     {
         parent::boot();
         static::creating(function ($model) {
-            //create short code
-            $short_code = strtoupper(Str::random(3));
+            //create short code and client code
+            do {
+                $shortCode = strtoupper(Str::random(3));
+                $clientCode = substr($shortCode, 0, 2);
+
+                $exists = self::where('short_code', $shortCode)
+                    ->orWhere('client_code', $clientCode)
+                    ->exists();
+            } while ($exists);
 
             $model->reference = Partner::document_number("reference", "CO", 4, true, false);
-            $model->short_code = $short_code;
-            $model->client_code = substr($short_code, 0, 2);
+            $model->short_code = $shortCode;
+            $model->client_code = $clientCode;
         });
     }
 

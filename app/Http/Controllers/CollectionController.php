@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Classes\Messaging;
 use App\Exports\CollectionCreatedExport;
 use App\Exports\CollectionProcessedExport;
-use App\Exports\CollectionPayments;
 use App\Http\Requests\CollectionRequest;
 use App\Jobs\CollectionStatusJob;
 use App\Jobs\PushCollectionJob;
@@ -16,11 +15,18 @@ use App\Models\CollectionDebitOrder;
 use App\Models\DebitOrder;
 use App\Models\Installment;
 use App\Models\InstallmentPayment;
+use App\Models\PaymentSettlement;
 use App\Models\Partner;
+use App\Models\SmsLog;
 use App\Models\User;
 use App\Services\BankApiService;
+use App\Services\CollectionBatchService;
 use App\Services\BankPayloadService;
+use App\Services\CollectionAnalyticsService;
 use App\Services\DeductionService;
+use App\Services\MessagingService;
+use App\Services\Reports\ReportExportService;
+use App\Services\SettlementPostingService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
@@ -30,12 +36,21 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Str;
 use Psy\VersionUpdater\Installer;
 
 class CollectionController extends Controller
 {
-    public function __construct(protected BankPayloadService $payloadService, protected BankApiService $bankApi, protected DeductionService $deductionService)
-    {
+    public function __construct(
+        protected BankPayloadService $payloadService,
+        protected BankApiService $bankApi,
+        protected DeductionService $deductionService,
+        protected CollectionAnalyticsService $collectionAnalytics,
+        protected CollectionBatchService $collectionBatchService,
+        protected ReportExportService $reportExportService,
+        protected MessagingService $messagingService,
+        protected SettlementPostingService $settlementPostingService,
+    ) {
         $this->middleware('auth');
     }
 
@@ -46,6 +61,7 @@ class CollectionController extends Controller
         //collection batches
         $number_of_batches = 0;
         $batches = CollectionBatch::filterCondition();
+        $statsQuery = CollectionBatch::filterCondition();
 
         //providers
         $providers = Partner::filterCondition();
@@ -59,6 +75,10 @@ class CollectionController extends Controller
                 $query->withFilters($requests);
             });
 
+            $statsQuery = $statsQuery->when($requests, function ($query) use ($requests) {
+                $query->withFilters($requests);
+            });
+
             $number_of_batches = $batches->count();
             $batches = $batches->get();
         } else {
@@ -66,14 +86,26 @@ class CollectionController extends Controller
             $batches = $batches->paginate(50);
         }
 
+        $listStats = [
+            'total' => (clone $statsQuery)->count(),
+            'uploaded' => (clone $statsQuery)->where('pushed', 1)->count(),
+            'processed' => (clone $statsQuery)->where('processed', 1)->count(),
+            'failed' => (clone $statsQuery)->where('failed', 1)->count(),
+            'collections' => (clone $statsQuery)->sum('number_of_collections'),
+        ];
+
+        $monthlyFailedEligibility = $this->collectionBatchService->lastMonthFailedBatchEligibility();
+
         $post_data = [
             'start_at' => $request->start_at ?? null,
             'end_at' => $request->end_at ?? null,
             'partner_id' => $request->partner_id ?? null,
+            'cl_status' => $request->cl_status ?? null,
+            'mandate_reference' => $request->mandate_reference ?? null,
         ];
 
         //render view
-        return view('collections.batches', compact('title', 'batches', 'providers', 'number_of_batches', 'post_data'));
+        return view('collections.batches', compact('title', 'batches', 'providers', 'number_of_batches', 'post_data', 'listStats', 'monthlyFailedEligibility'));
     }
 
     public function create(Request $request)
@@ -93,75 +125,15 @@ class CollectionController extends Controller
 
             // initialize deduction service
             $partner = Partner::whereHas('debitOrders', function ($query) use ($debit_date) {
-                return $query->where(['contract_status' => 'OPEN', 'channel' => 'NMB', 'approved' => 1, 'status' => 240, 'deleted' => 0])
+                return $query->eligibleForCollection('NMB')
                     ->whereDate('next_debit_date', "=", $debit_date);
-            })->where(['partners.id' => $partner_id, 'partners.status' => 202]);
+            })->where(['partners.id' => $partner_id]);
 
             if ($partner->count() > 0) {
                 $partner = $partner->first();
+                $arr_installments = $this->collectionBatchService->previewInstallments($partner, $debit_date, 250);
 
-                //installments
-                $installments = $this->deductionService->getInstallments($partner, $debit_date, 250);
-
-                if ($installments) {
-                    foreach ($installments as $installment) {
-                        //account details
-                        $account_name = strtoupper($installment->debitOrder->customerAccount->account_name);
-                        $account_number = $installment->debitOrder->customerAccount->account_number;
-                        $mandate_reference = $installment->debitOrder->reference;
-                        $debit_order_id = $installment->debitOrder->id;
-                        $periodicity = $installment->debitOrder->periodicity;
-                        $installment_id = $installment->id;
-                        $payment_amount = $installment->installment_amount;
-                        $current_balance = $installment->current_balance;
-                        $outstanding_amount = $installment->outstanding_amount;
-                        $payment_date = $installment->payment_date;
-                        $debit_start_date = Carbon::parse($installment->debitOrder->start_date);
-                        $debit_end_date = Carbon::parse($installment->debitOrder->end_date);
-
-                        //debit status
-                        $deleted = $installment->debitOrder->deleted;
-                        $contract_status = $installment->debitOrder->contract_status;
-
-                        //1.0 check if periodicity == MONTHLY and deleted = 0
-                        if ($periodicity == "MONTHLY" && $contract_status == "OPEN" && $deleted == 0) {
-                            //2.0: Check if mandate start date <= today
-                            if ($debit_start_date->lte(Carbon::now())) {
-                                //2.1: check if debit mandate expire
-                                if ($debit_end_date->gte(Carbon::now())) {
-                                    //3.0: check if account exists in this batch
-                                    if (!in_array($account_number, $arr_accounts)) {
-                                        // 3.1: create new collection date from previous month
-                                        $collection_date = $this->deductionService->createCollectionDate($payment_date);
-
-                                        //4.0: check if the mandate reference is exists for this month
-                                        $collection_debit_order = CollectionDebitOrder::where(['debit_order_id' => $debit_order_id])
-                                            ->whereMonth('payment_at', Carbon::parse($collection_date)->format('m'))
-                                            ->whereYear('payment_at', Carbon::parse($collection_date)->format('Y'));
-
-                                        if (!$collection_debit_order->exists()) {
-                                            //append account in array
-                                            array_push($arr_accounts, $account_number);
-
-                                            //append array installments
-                                            $arr_installments[] = [
-                                                'id' => $installment_id,
-                                                'reference' => $mandate_reference,
-                                                'account_name' => $account_name,
-                                                'account_number' => $account_number,
-                                                'amount' => $payment_amount,
-                                                'current_balance' => $current_balance,
-                                                'outstanding_amount' => $outstanding_amount,
-                                                'payment_date' => $payment_date,
-                                                'collection_date' => $collection_date
-                                            ];
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                } else {
+                if (empty($arr_installments)) {
                     return Redirect::route('collections.create')->with('danger', 'No any collection on this ' . $debit_date);
                 }
             }
@@ -187,136 +159,47 @@ class CollectionController extends Controller
     public function store(Request $request)
     {
         if ($request->selected_partner_id && $request->installment_ids) {
-
-            //initiate batch collection date
-            $batch_collection_date = Carbon::now();
-
-            //1. Find partner information
-            $partner = Partner::findOrFail($request->selected_partner_id);
-
-            //2.0 Create collection batch based on partner 
-            $batch = CollectionBatch::create([
-                'partner_id' => $partner->id,
-                "collectionReference" => $this->deductionService->getCollectionReference(),
-                "corporateReference" => $partner->reference,
-                "selectedPostingDate" => Carbon::now(),
-                "createdBy" => Auth::user()->id,
-                "verifiedBy" => Auth::user()->id,
-                "createdDate" => Carbon::now(),
-                "verifyDate" => Carbon::now(),
-            ]);
-
-            if ($batch->wasRecentlyCreated) {
-                //2.1 Declare variables
-                $number_of_collections = 0;
-                $arr_installments = [];
-                $arr_accounts = [];
-
-                //3. Create CSV file based installment
-                $csv = "SERIAL No.;BANK CODE;BRANCH NAME;EMPLOYEE NUMBER;CUSTOMER NAME;ACCOUNT NO;AMOUNT\n";
-                $success = 0;
-                foreach ($request->installment_ids as $id) {
-                    //Query Installment
-                    $installment = Installment::findOrFail($id);
-
-                    //Account Information
-                    $account_name = strtoupper($installment->debitOrder->customerAccount->account_name);
-                    $account_number = $installment->debitOrder->customerAccount->account_number;
-                    $mandate_reference = $installment->debitOrder->reference;
-                    $debit_order_id = $installment->debitOrder->id;
-                    $periodicity = $installment->debitOrder->periodicity;
-                    $installment_id = $installment->id;
-                    $payment_amount = $installment->installment_amount;
-                    $payment_date = $installment->payment_date;
-                    $debit_start_date = Carbon::parse($installment->debitOrder->start_date);
-                    $debit_end_date = Carbon::parse($installment->debitOrder->end_date);
-
-                    //debit status
-                    $deleted = $installment->debitOrder->deleted;
-                    $contract_status = $installment->debitOrder->contract_status;
-
-                    //Batch Collection Date
-                    $batch_collection_date = $installment->payment_date;
-
-                    //1.0 check if periodicity == MONTHLY
-                    if ($periodicity == "MONTHLY" && $contract_status == "OPEN" && $deleted == 0) {
-                        //2.0: Check if mandate start date <= today
-                        if ($debit_start_date->lte(Carbon::now())) {
-                            //2.1: check if debit mandate expire
-                            if ($debit_end_date->gte(Carbon::now())) {
-                                //3.0: check if account exists in this batch
-                                if (!in_array($account_number, $arr_accounts)) {
-                                    // 3.1: create new collection date from previous month
-                                    $collection_date = $this->deductionService->createCollectionDate($payment_date);
-
-                                    //4.0: check if the mandate reference debited this month
-                                    $collection_debit_order = CollectionDebitOrder::where(['debit_order_id' => $debit_order_id])
-                                        ->whereMonth('payment_at', Carbon::parse($collection_date)->format('m'))
-                                        ->whereYear('payment_at', Carbon::parse($collection_date)->format('Y'));
-
-                                    if (!$collection_debit_order->exists()) {
-                                        //create csv file
-                                        $csv .= "{$installment_id};016;NMB;{$mandate_reference};{$account_name};{$account_number};{$payment_amount}\n";
-
-                                        //append account in array
-                                        array_push($arr_accounts, $account_number);
-
-                                        //update array installments
-                                        array_push($arr_installments, $installment->id);
-
-                                        //update installment status => created = 1 and effective payment date
-                                        $installment->effective_payment_date = $collection_date;
-                                        $installment->created = 1;
-                                        $installment->save();
-
-                                        // create collection debit order
-                                        CollectionDebitOrder::create([
-                                            'collection_batch_id' => $batch->id,
-                                            'debit_order_id' => $debit_order_id,
-                                            'installment_id' => $installment_id,
-                                            'status' => 'CREATED',
-                                            'payment_at' => $collection_date
-                                        ]);
-
-                                        //increment number of collections
-                                        $number_of_collections += 1;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                //4. Save csv payload in database
-                if ($arr_installments) {
-                    $batch->request_csv = $csv;
-                    $batch->collectionDate = $batch_collection_date;
-                    $batch->number_of_collections = $number_of_collections;
-                    $batch->installment_ids = implode(",", $arr_installments);
-                    $batch->save();
-
-                    //increment success
-                    $success += 1;
-                }
-            }
+            $batch = $this->collectionBatchService->createManualBatch(
+                (int) $request->selected_partner_id,
+                array_map('intval', $request->installment_ids),
+                Auth::user()
+            );
 
             //Batch Information
-            $collection_reference = $batch->collectionReference;
+            $collection_reference = $batch?->collectionReference;
 
             //send Notification of batch creation
-            if ($success > 0) {
+            if ($batch) {
                 $message = "Collection batch number " . $collection_reference . " created. Review and approve to the next stage.";
                 $arr_phone = [255717705746, 255656314330];
 
+                //message id
+                $messageId = $this->messagingService->generateMessageId();
+
                 foreach ($arr_phone as $phone) {
-                    //send sms
-                    $data = ["phone" => $phone, "message" => $message];
-                    dispatch(new SendSMSJob($data));
+                    //save sms to database
+                    $sms_log = SmsLog::firstOrNew([
+                        'message_id' => $messageId,
+                        'phone' => $this->messagingService->castPhone(trim($phone)),
+                    ]);
+                    $sms_log->uuid = Str::uuid();
+                    $sms_log->message = $message;
+                    $sms_log->number_of_sms = $this->messagingService->countNumberOfSms($message);
+                    $sms_log->status = 'PENDING';
+                    $sms_log->created_by = Auth::user()->id;
+                    $sms_log->save();
                 }
+
+                //trigger background job for send SMS
+                dispatch(new SendSMSJob(['messageId' => $messageId]));
             }
 
             //redirect
-            return Redirect::route('collections.create')->with('success', 'Collection batch created, Preview and Approve to next stage.');
+            if ($batch) {
+                return Redirect::route('collections.create')->with('success', 'Collection batch created, Preview and Approve to next stage.');
+            }
+
+            return Redirect::route('collections.create')->with('danger', 'No eligible collection selected.');
         } else {
             //redirect
             return Redirect::route('collections.create')->with('danger', 'No any collection selected.');
@@ -342,7 +225,7 @@ class CollectionController extends Controller
         //installments
         $arr_installments = [];
         $number_of_failed_installments = 0;
-        $installment_ids = explode(',', $batch->installment_ids);
+        $installment_ids = $batch->installment_id_list;
 
         $installments = Installment::whereIn('id', $installment_ids);
 
@@ -387,7 +270,7 @@ class CollectionController extends Controller
         $batch = CollectionBatch::where(['id' => $id])->firstOrFail();
 
         //installments
-        $installment_ids = explode(',', $batch->installment_ids);
+        $installment_ids = $batch->installment_id_list;
         $installments = Installment::whereIn('id', $installment_ids);
 
         if ($installments->count() > 0) {
@@ -423,7 +306,7 @@ class CollectionController extends Controller
         $batch = CollectionBatch::where(['id' => $id])->firstOrFail();
 
         //installments
-        $installment_ids = explode(',', $batch->installment_ids);
+        $installment_ids = $batch->installment_id_list;
         $installments = Installment::whereIn('id', $installment_ids);
 
         if ($installments->count() > 0) {
@@ -468,16 +351,8 @@ class CollectionController extends Controller
         //collection batch
         $collection_batch = CollectionBatch::where(['id' => $request->batch_id])->firstOrFail();
 
-        if (!empty($collection_batch->request_csv)) {
-            //1. Create parameters
-            $csv = $collection_batch->request_csv;
-            $arr_installments = explode(",", $collection_batch->installment_ids);
-
-            //2. Create payload for collection 
-            $payload = $this->payloadService->collectionPayload($collection_batch, $csv);
-
-            //3. BackgroundJob for creating collection batches
-            dispatch(new PushCollectionJob($payload, $arr_installments));
+        if ($collection_batch->canBePushed()) {
+            dispatch(new PushCollectionJob($collection_batch->id));
         }
 
         //response
@@ -491,162 +366,123 @@ class CollectionController extends Controller
         //batch
         $batch = CollectionBatch::where(['id' => $id])->firstOrFail();
         $batch->deleted = 1;
+        $batch->lifecycle_status = CollectionBatch::LIFECYCLE_ARCHIVED;
         $batch->save();
 
         //redirect
         return Redirect::route('collections.batches')->with('success', 'Collection batch archived');
     }
 
-    public function create_failed($id)
+    public function create_failed($id = null)
     {
-        $title = 'Create Failed Debit Mandate';
+        $title = 'Create Failed Collection Batch';
+        $selectedBatchId = $id;
 
-        try {
-            //collection batch
-            $collection_batch = CollectionBatch::findOrFail($id);
-
-            // validate the date before creating new collection dates
-            $current_month = now()->month; //current month
-            $batch_month = Carbon::parse($collection_batch->collectionDate)->format('m');
-            $diff = $current_month - $batch_month;
-
-            if ($diff > 1 || $diff < 1) {
-                return Redirect::route('collections.show', $id)->with('danger', 'Failed to create batch, check batch collection date');
-            }
-
-            //installment_ids
-            $installment_ids = explode(",", $collection_batch->installment_ids);
-
-            //find installments where status=FAILED
-            $installments = Installment::whereIn('id', $installment_ids)->where(function ($q) {
-                $q->orWhere('status', 'FAILED')
-                    ->orWhere('status', 'FUNDSCHECK');
-            })->where('remarks', '!=', 'Account Is Valid')->get();
-
-            if ($installments->isNotEmpty()) {
-                //1. Create new collection batch
-                //1.0 Create and format next month collection date
-                $collectionDate = Carbon::parse($collection_batch->collectionDate);
-                $nextMonthCollectionDate = $collectionDate->copy()->addMonth();
-
-                //create statement
-                $batch = CollectionBatch::create([
-                    "partner_id" => $collection_batch->partner->id,
-                    "collectionReference" => $this->deductionService->getCollectionReference(),
-                    "corporateReference" => $collection_batch->corporateReference,
-                    "selectedPostingDate" => Carbon::now(),
-                    "createdBy" => 1,
-                    "verifiedBy" => 1,
-                    "collectionDate" => $nextMonthCollectionDate->toDateString(),
-                    "createdDate" => Carbon::now(),
-                    "verifyDate" => Carbon::now(),
-                ]);
-
-                if ($batch->wasRecentlyCreated) {
-                    //2.1 Declare variables
-                    $number_of_collections = 0;
-                    $arr_installments = [];
-                    $arr_accounts = [];
-
-                    //3. Create CSV file based installment
-                    $csv = "SERIAL No.;BANK CODE;BRANCH NAME;EMPLOYEE NUMBER;CUSTOMER NAME;ACCOUNT NO;AMOUNT\n";
-
-                    foreach ($installments as $installment) {
-                        //debit order information
-                        $account_name = strtoupper($installment->debitOrder->customerAccount->account_name);
-                        $account_number = $installment->debitOrder->customerAccount->account_number;
-                        $mandate_reference = $installment->debitOrder->reference;
-                        $debit_order_id = $installment->debitOrder->id;
-                        $periodicity = $installment->debitOrder->periodicity;
-                        $installment_id = $installment->id;
-                        $payment_amount = $installment->installment_amount;
-                        $payment_date = $installment->payment_date;
-                        $debit_start_date = Carbon::parse($installment->debitOrder->start_date);
-                        $debit_end_date = Carbon::parse($installment->debitOrder->end_date);
-                        $deleted = $installment->debitOrder->deleted;
-                        $contract_status = $installment->debitOrder->contract_status;
-
-                        //1.0: check if periodicity == MONTHLY and deleted = 0
-                        if ($periodicity == "MONTHLY" && $contract_status == "OPEN" && $deleted == 0) {
-                            //2.0: Check if mandate start date <= today
-                            if ($debit_start_date->lte(Carbon::now())) {
-                                //2.1: check if debit mandate expire
-                                if ($debit_end_date->gte(Carbon::now())) {
-                                    //3.0: check if account exists in this batch
-                                    if (!in_array($account_number, $arr_accounts)) {
-                                        //4.0: check if the mandate reference debited this month
-                                        $collection_debit_order = CollectionDebitOrder::where(['debit_order_id' => $debit_order_id, 'status' => 'CREATED'])
-                                            ->whereMonth('payment_at', Carbon::parse($payment_date)->format('m'));
-
-                                        if ($collection_debit_order->count() == 1) {
-                                            //create csv file
-                                            $csv .= "{$installment_id};016;NMB;{$mandate_reference};{$account_name};{$account_number};{$payment_amount}\n";
-
-                                            //append account in array
-                                            array_push($arr_accounts, $account_number);
-
-                                            //update array installments
-                                            array_push($arr_installments, $installment_id);
-
-                                            // Convert to Carbon instance if it's not already
-                                            $paymentDate = Carbon::parse($payment_date);
-
-                                            //same day next month
-                                            $nextMonthPaymentDate = $paymentDate->copy()->addMonth();
-
-                                            // create collection debit order
-                                            $create_collection_debit_order = CollectionDebitOrder::create([
-                                                'collection_batch_id' => $batch->id,
-                                                'debit_order_id' => $debit_order_id,
-                                                'status' => 'CREATED',
-                                                'payment_at' => $nextMonthPaymentDate->toDateString()
-                                            ]);
-
-                                            //increment number of collections
-                                            $number_of_collections += 1;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    //check if installments is not null
-                    if ($arr_installments) {
-                        $batch->request_csv = $csv;
-                        $batch->number_of_collections = $number_of_collections;
-                        $batch->installment_ids = implode(",", $arr_installments);
-                        //$batch->recreated = 1;
-                        $batch->save();
-
-                        //Batch Information
-                        $collection_reference = $batch->collectionReference;
-
-                        //send Notification of batch creation
-                        $message = "Collection batch number " . $collection_reference . " created. Review and approve to the next stage.";
-                        $arr_phone = [255717705746, 255656314330];
-
-                        foreach ($arr_phone as $phone) {
-                            //send sms
-                            $data = ["phone" => $phone, "message" => $message];
-                            dispatch(new SendSMSJob($data));
-                        }
-                    } else {
-                        $batch->delete();
-                    }
+        $batches = CollectionBatch::filterCondition()
+            ->where('recreated', 0)
+            ->where(function ($query) {
+                $query->where('failed', 1)
+                    ->orWhere(function ($inner) {
+                        $inner->where('processed', 1)->where('number_of_failed', '>', 0);
+                    });
+            })
+            ->orderByDesc('collectionDate')
+            ->get()
+            ->filter(function ($batch) {
+                if (empty($batch->collectionDate)) {
+                    return false;
                 }
 
-                //update existing collection batch
-                $collection_batch->recreated = 1;
-                $collection_batch->save();
-            }
-        } catch (ModelNotFoundException $e) {
-            Log::debug(get_class_methods($e));
-            Log::debug($e);
+                $currentMonth = now()->month;
+                $batchMonth = (int) Carbon::parse($batch->collectionDate)->format('m');
+
+                return ($currentMonth - $batchMonth) === 1;
+            })
+            ->values();
+
+        $rows = $batches->map(function ($batch) {
+            $installments = Installment::whereIn('id', $batch->installment_id_list)->get();
+            $failedCount = $installments->whereIn('status', ['FAILED', 'FUNDSCHECK'])->count();
+
+            return [
+                'id' => $batch->id,
+                'collectionReference' => $batch->collectionReference,
+                'partner_name' => $batch->partner->business_name ?? 'NIL',
+                'collectionDate' => $batch->collectionDate,
+                'created_at' => $batch->created_at,
+                'number_of_collections' => $batch->number_of_collections ?? 0,
+                'number_of_failed' => $batch->number_of_failed ?: $failedCount,
+                'remarks' => $batch->remarks,
+            ];
+        });
+
+        return view('collections.create_failed', compact('title', 'rows', 'selectedBatchId'));
+    }
+
+    public function store_failed(Request $request)
+    {
+        $batchIds = collect($request->input('batch_ids', []))
+            ->filter()
+            ->map(fn($id) => (string) $id)
+            ->values();
+
+        if ($batchIds->isEmpty()) {
+            return Redirect::route('collections.create-failed')->with('danger', 'Select at least one batch to recreate.');
         }
 
-        //redirect
-        return Redirect::route('collections.batches')->with('success', 'Collection batch created, review and approve to the next stage.');
+        $success = 0;
+        $references = [];
+
+        foreach ($batchIds as $batchId) {
+            $collectionBatch = CollectionBatch::find($batchId);
+
+            if (!$collectionBatch) {
+                continue;
+            }
+
+            $batch = $this->collectionBatchService->recreateFailedBatch($collectionBatch, Auth::user());
+
+            if ($batch) {
+                $success++;
+                $references[] = $batch->collectionReference;
+            }
+        }
+
+        if ($success === 0) {
+            return Redirect::route('collections.create-failed')->with('warning', 'No failed collection batch was created from the selected rows.');
+        }
+
+        $message = "Collection batch" . ($success > 1 ? 'es' : '') . " " . implode(', ', $references) . " created. Review and approve to the next stage.";
+        $arr_phone = [255717705746, 255656314330];
+
+        foreach ($arr_phone as $phone) {
+            $data = ["phone" => $phone, "message" => $message];
+            dispatch(new SendSMSJob($data));
+        }
+
+        return Redirect::route('collections.batches')->with('success', "Created {$success} failed collection batch(es) successfully.");
+    }
+
+    public function create_monthly_failed()
+    {
+        $previousMonth = now()->subMonth();
+        $eligibility = $this->collectionBatchService->lastMonthFailedBatchEligibility();
+
+        if (!$eligibility['allowed']) {
+            return Redirect::route('collections.batches')->with('warning', $eligibility['reason']);
+        }
+
+        $count = $this->collectionBatchService->recreateFailedBatchesForMonth(
+            (int) $previousMonth->format('m'),
+            (int) $previousMonth->format('Y'),
+            Auth::user()
+        );
+
+        if ($count === 0) {
+            return Redirect::route('collections.batches')->with('warning', 'No failed collection batches were eligible for monthly recreation.');
+        }
+
+        return Redirect::route('collections.batches')->with('success', "Created {$count} failed collection batch(es) for " . $previousMonth->format('F Y') . '.');
     }
 
     public function fetch_status(Request $request)
@@ -656,11 +492,9 @@ class CollectionController extends Controller
         //Collection batch
         $collection_batch = CollectionBatch::where(['id' => $request->batch_id])->firstOrFail();
 
-        //Create payload
-        $payload = $this->payloadService->collectionStatusPayload($collection_batch);
-
-        //BackgroundJob for creating collection batches
-        dispatch(new CollectionStatusJob($payload));
+        if ($collection_batch->canFetchStatus()) {
+            dispatch(new CollectionStatusJob($collection_batch->id));
+        }
 
         //response
         return response()->json(['success' => true, 'success_msg' => "Collection status successful fetched."], 200);
@@ -668,736 +502,475 @@ class CollectionController extends Controller
 
     public function expected_monthly(Request $request)
     {
-        //current date
-        $current_year = date('Y');
-        $current_month = date('m');
+        $post_data = $this->collectionAnalytics->defaultFilters(CollectionAnalyticsService::PERIOD_MONTHLY, $request->all());
 
-        $channel = null;
-        if ($request->has('channel'))
-            $channel = $request->channel;
+        $summary = $this->collectionAnalytics->summary(
+            CollectionAnalyticsService::TYPE_EXPECTED,
+            CollectionAnalyticsService::PERIOD_MONTHLY,
+            $post_data
+        );
 
-        if ($request->has('year') && $request->has('year') != "")
-            $current_year = $request->year;
+        $display_current_month = date('F', mktime(0, 0, 0, $post_data['month'], 1));
+        $title = "Expected Monthly Collection - {$display_current_month}, {$post_data['year']}";
+        $payment_channels = $this->collectionAnalytics->paymentChannels();
+        $arr_data = $summary['rows'];
+        $listStats = $summary['stats'];
+        $collectionType = CollectionAnalyticsService::TYPE_EXPECTED;
+        $collectionPeriod = CollectionAnalyticsService::PERIOD_MONTHLY;
 
-        if ($request->has('month') && $request->has('month') != "")
-            $current_month = $request->month;
-
-        //partners
-        $partners = Partner::filterCondition()->where('approved', 1)->get();
-
-        $arr_data = [];
-        foreach ($partners as $partner) {
-            //this month collection
-            $this_month = Installment::monthlyCollectionStats($partner->id, $current_month, $current_year, $status = 240, $deleted = 0, $channel);
-
-            //create dictionary
-            if ($this_month->number_of_collection > 0) {
-                $arr_data[] = [
-                    'uuid' => $partner->uuid,
-                    'partner_name' => $partner->business_name,
-                    'number_of_collection' => $this_month->number_of_collection,
-                    'total_amount' => $this_month->total_amount,
-                    'outstanding_amount' => $this_month->outstanding_amount,
-                    'paid_amount' => $this_month->paid_amount,
-                    'percent' => $this_month->paid_amount > 0 ? round(($this_month->paid_amount / $this_month->total_amount) * 100, 2) : 0
-                ];
-            }
-        }
-
-        //sort array
-        $arr_data = collect($arr_data)
-            ->sortBy([
-                ['number_of_collection', 'desc'],
-                ['total_amount', 'desc'],
-                ['paid_amount', 'desc'],
-            ])
-            ->values()
-            ->toArray();
-
-        //post data
-        $post_data = ['year' => $current_year, 'month' => $current_month, 'channel' => $channel];
-
-        //title
-        $display_current_month = date('F', mktime(0, 0, 0, $current_month, 1));
-        $title = "Expected Monthly Collection - $display_current_month, $current_year";
-
-        //payment channels
-        $payment_channels = Account::where('active', '=', 1)->get();
-
-        //render view
-        return view('collections.expected_collection_monthly', compact('title', 'payment_channels', 'arr_data', 'post_data'));
+        return view('collections.expected_monthly', compact(
+            'title',
+            'payment_channels',
+            'arr_data',
+            'post_data',
+            'listStats',
+            'collectionType',
+            'collectionPeriod'
+        ));
     }
 
     public function expected_monthly_detail($uuid, Request $request)
     {
-        //channel and current date
-        $channel = $request->channel;
-        $current_year = $request->year;
-        $current_month = $request->month;
+        $post_data = $this->collectionAnalytics->defaultFilters(CollectionAnalyticsService::PERIOD_MONTHLY, $request->all());
+        $detail = $this->collectionAnalytics->detail(
+            CollectionAnalyticsService::TYPE_EXPECTED,
+            CollectionAnalyticsService::PERIOD_MONTHLY,
+            $uuid,
+            $post_data
+        );
 
-        //partner
-        $partner = Partner::where(['uuid' => $uuid])->firstOrfail();
+        $partner = $detail['partner'];
+        $arr_installments = $detail['rows'];
+        $listStats = $detail['stats'];
+        $display_current_month = date('F', mktime(0, 0, 0, $post_data['month'], 1));
+        $title = "Expected Monthly Collection - {$display_current_month}, {$post_data['year']}";
+        $collectionType = CollectionAnalyticsService::TYPE_EXPECTED;
+        $collectionPeriod = CollectionAnalyticsService::PERIOD_MONTHLY;
 
-        //arr installments
-        $arr_installments = [];
-
-        //installment this month
-        $installments = Installment::filterCondition()
-            ->whereHas('debitOrder', function ($query) use ($partner, $channel) {
-                $query->where('debit_orders.partner_id', '=', $partner->id)
-                    ->where('debit_orders.approved', '=', 1)
-                    ->where('debit_orders.deleted', '=', 0)
-                    ->where('debit_orders.status', '=', 240)
-                    ->when($channel, function ($q) use ($channel) {
-                        $q->where('debit_orders.channel', '=', $channel);
-                    });
-            })
-            ->whereMonth('payment_date', $current_month)
-            ->whereYear('payment_date', $current_year)
-            ->orderBy('payment_date')
-            ->get();
-
-        foreach ($installments as $val) {
-            $arr_installments[] = [
-                'id' => $val->id,
-                'reference' => $val->debitOrder->reference,
-                'channel' => $val->debitOrder->channel,
-                'periodicity' => $val->debitOrder->periodicity,
-                'account_name' => strtoupper($val->debitOrder->customerAccount->account_name),
-                'account_number' => $val->debitOrder->customerAccount->account_number,
-                'amount' => $val->installment_amount,
-                'last_paid_amount' => $val->last_paid_amount,
-                'current_balance' => $val->current_balance,
-                'outstanding_amount' => $val->outstanding_amount,
-                'status' => $val->status,
-                'remarks' => $val->remarks,
-                'payment_date' => Carbon::parse($val->payment_date)->format('d-m-Y'),
-                'start_date' => Carbon::parse($val->debitOrder->start_date)->format('d-m-Y'),
-                'end_date' => Carbon::parse($val->debitOrder->end_date)->format('d-m-Y'),
-            ];
-        }
-
-        //post data
-        $post_data = ['year' => $current_year, 'month' => $current_month, 'channel' => $channel];
-
-        //title
-        $display_current_month = date('F', mktime(0, 0, 0, $current_month, 1));
-        $title = "Monthly Collection - $display_current_month, $current_year | $partner->business_name";
-
-        //render view
-        return view('collections.expected_collection_monthly_detail', compact('title', 'partner', 'arr_installments', 'post_data'));
+        return view('collections.expected_monthly_detail', compact(
+            'title',
+            'partner',
+            'arr_installments',
+            'post_data',
+            'listStats',
+            'collectionType',
+            'collectionPeriod'
+        ));
     }
 
     public function export_expected_monthly($uuid, Request $request)
     {
-        //current date
-        $channel = $request->channel;
-        $current_year = $request->year;
-        $current_month = $request->month;
+        $post_data = $this->collectionAnalytics->defaultFilters(CollectionAnalyticsService::PERIOD_MONTHLY, $request->all());
+        return $this->downloadCollectionDetailExport(
+            CollectionAnalyticsService::TYPE_EXPECTED,
+            CollectionAnalyticsService::PERIOD_MONTHLY,
+            $uuid,
+            $post_data,
+            $request->input('format', 'xls')
+        );
+    }
 
-        //partner
-        $partner = Partner::where(['uuid' => $uuid])->firstOrfail();
+    public function export_expected_monthly_summary(Request $request)
+    {
+        $post_data = $this->collectionAnalytics->defaultFilters(CollectionAnalyticsService::PERIOD_MONTHLY, $request->all());
 
-        //arr installments
-        $arr_installments = [];
-
-        //installment this month
-        $installments = Installment::filterCondition()
-            ->whereHas('debitOrder', function ($query) use ($partner, $channel) {
-                $query->where('debit_orders.partner_id', '=', $partner->id)
-                    ->where('debit_orders.approved', '=', 1)
-                    ->where('debit_orders.deleted', '=', 0)
-                    ->where('debit_orders.status', '=', 240)
-                    ->when($channel, function ($q) use ($channel) {
-                        $q->where('debit_orders.channel', '=', $channel);
-                    });
-            })
-            ->whereMonth('payment_date', $current_month)
-            ->whereYear('payment_date', $current_year)
-            ->orderBy('payment_date')
-            ->get();
-
-        foreach ($installments as $val) {
-            if ($val->status == "CLOSED")
-                $status = "PAID";
-            elseif ($val->status == "FAILED")
-                $status = "UNPAID";
-            else
-                $status = strtoupper($val->status);
-
-            $arr_installments[] = [
-                'business_name' => $val->debitOrder->partner->business_name,
-                'reference' => $val->debitOrder->reference,
-                'periodicity' => $val->debitOrder->periodicity,
-                'channel' => $val->debitOrder->channel,
-                'account_name' => strtoupper($val->debitOrder->customerAccount->account_name),
-                'account_number' => $val->debitOrder->customerAccount->account_number,
-                'customer_address' => $val->debitOrder->customerAccount->customer->address,
-                'amount' => $val->installment_amount,
-                'last_paid_amount' => $val->last_paid_amount,
-                'current_balance' => $val->current_balance,
-                'outstanding_amount' => $val->outstanding_amount,
-                'status' => $status,
-                'payment_date' => Carbon::parse($val->payment_date)->format('d-m-Y'),
-                'effective_payment_date' => Carbon::parse($val->effective_payment_date)->format('d-m-Y'),
-                'start_date' => Carbon::parse($val->debitOrder->start_date)->format('d-m-Y'),
-                'end_date' => Carbon::parse($val->debitOrder->end_date)->format('d-m-Y'),
-                'remarks' => $val->remarks,
-            ];
-        }
-
-        //create filename
-        $filename = "Expected_Collection_" . date('F') . "_" . $partner->business_name . ".xlsx";
-
-        //return
-        return Excel::download(new CollectionPayments($arr_installments), $filename);
+        return $this->downloadCollectionSummaryExport(
+            CollectionAnalyticsService::TYPE_EXPECTED,
+            CollectionAnalyticsService::PERIOD_MONTHLY,
+            $post_data,
+            $request->input('format', 'xls')
+        );
     }
 
     public function actual_monthly(Request $request)
     {
-        //current date
-        $current_year = date('Y');
-        $current_month = date('m');
+        $post_data = $this->collectionAnalytics->defaultFilters(CollectionAnalyticsService::PERIOD_MONTHLY, $request->all());
+        $summary = $this->collectionAnalytics->summary(
+            CollectionAnalyticsService::TYPE_ACTUAL,
+            CollectionAnalyticsService::PERIOD_MONTHLY,
+            $post_data
+        );
 
-        $channel = null;
-        if ($request->has('channel'))
-            $channel = $request->channel;
+        $display_current_month = date('F', mktime(0, 0, 0, $post_data['month'], 1));
+        $title = "Actual Monthly Collection - {$display_current_month}, {$post_data['year']}";
+        $payment_channels = $this->collectionAnalytics->paymentChannels();
+        $arr_data = $summary['rows'];
+        $listStats = $summary['stats'];
+        $collectionType = CollectionAnalyticsService::TYPE_ACTUAL;
+        $collectionPeriod = CollectionAnalyticsService::PERIOD_MONTHLY;
 
-        if ($request->has('year') && $request->has('year') != "")
-            $current_year = $request->year;
-
-        if ($request->has('month') && $request->has('month') != "")
-            $current_month = $request->month;
-
-        //partners
-        $partners = Partner::filterCondition()->where('approved', 1)->get();
-
-        $arr_data = [];
-        foreach ($partners as $partner) {
-            $this_month = Installment::monthlyCollectionStats($partner->id, $current_month, $current_year, $status = null, $deleted = null, $channel);
-
-            //create dictionary
-            if ($this_month->paid_amount > 0) {
-                $arr_data[] = [
-                    'uuid' => $partner->uuid,
-                    'partner_name' => $partner->business_name,
-                    'number_of_collection' => $this_month->number_of_collection,
-                    'total_amount' => $this_month->total_amount,
-                    'outstanding_amount' => $this_month->outstanding_amount,
-                    'paid_amount' => $this_month->paid_amount,
-                    'percent' => $this_month->paid_amount > 0 & $this_month->total_amount > 0 ? round(($this_month->paid_amount / $this_month->total_amount) * 100, 2) : 0
-                ];
-            }
-        }
-
-        //sort array
-        $arr_data = collect($arr_data)
-            ->sortBy([
-                ['number_of_collection', 'desc'],
-                ['total_amount', 'desc'],
-                ['paid_amount', 'desc'],
-            ])
-            ->values()
-            ->toArray();
-
-        //post data
-        $post_data = ['year' => $current_year, 'month' => $current_month, 'channel' => $channel];
-
-        //title
-        $display_current_month = date('F', mktime(0, 0, 0, $current_month, 1));
-        $title = "Actual Monthly Collection - $display_current_month, $current_year";
-
-        //payment channels
-        $payment_channels = Account::where('active', '=', 1)->get();
-
-        //render view
-        return view('collections.actual_collection_monthly', compact('title', 'payment_channels', 'arr_data', 'post_data'));
+        return view('collections.actual_monthly', compact(
+            'title',
+            'payment_channels',
+            'arr_data',
+            'post_data',
+            'listStats',
+            'collectionType',
+            'collectionPeriod'
+        ));
     }
 
     public function actual_monthly_detail($uuid, Request $request)
     {
-        //channel and current date
-        $channel = $request->channel;
-        $current_year = $request->year;
-        $current_month = $request->month;
+        $post_data = $this->collectionAnalytics->defaultFilters(CollectionAnalyticsService::PERIOD_MONTHLY, $request->all());
+        $detail = $this->collectionAnalytics->detail(
+            CollectionAnalyticsService::TYPE_ACTUAL,
+            CollectionAnalyticsService::PERIOD_MONTHLY,
+            $uuid,
+            $post_data
+        );
 
-        //partner
-        $partner = Partner::where(['uuid' => $uuid])->firstOrfail();
+        $partner = $detail['partner'];
+        $arr_installments = $detail['rows'];
+        $listStats = $detail['stats'];
+        $display_current_month = date('F', mktime(0, 0, 0, $post_data['month'], 1));
+        $title = "Actual Monthly Collection - {$display_current_month}, {$post_data['year']}";
+        $collectionType = CollectionAnalyticsService::TYPE_ACTUAL;
+        $collectionPeriod = CollectionAnalyticsService::PERIOD_MONTHLY;
 
-        //arr installments
-        $arr_installments = [];
-
-        //installment this month
-        $installments = Installment::filterCondition()
-            ->whereHas('debitOrder', function ($query) use ($partner, $channel) {
-                $query->where('debit_orders.partner_id', '=', $partner->id)
-                    ->where('debit_orders.approved', '=', 1)
-                    ->when($channel, function ($q) use ($channel) {
-                        $q->where('debit_orders.channel', '=', $channel);
-                    });
-            })
-            ->where('status', 'CLOSED')
-            ->whereMonth('effective_payment_date', $current_month)
-            ->whereYear('effective_payment_date', $current_year)
-            ->orderBy('effective_payment_date')
-            ->get();
-
-        foreach ($installments as $val) {
-            $arr_installments[] = [
-                'id' => $val->id,
-                'reference' => $val->debitOrder->reference,
-                'channel' => $val->debitOrder->channel,
-                'periodicity' => $val->debitOrder->periodicity,
-                'account_name' => strtoupper($val->debitOrder->customerAccount->account_name),
-                'account_number' => $val->debitOrder->customerAccount->account_number,
-                'amount' => $val->installment_amount,
-                'last_paid_amount' => $val->last_paid_amount,
-                'current_balance' => $val->current_balance,
-                'outstanding_amount' => $val->outstanding_amount,
-                'status' => $val->status,
-                'remarks' => $val->remarks,
-                'payment_date' => Carbon::parse($val->payment_date)->format('d-m-Y'),
-                'effective_payment_date' => Carbon::parse($val->effective_payment_date)->format('d-m-Y'),
-                'start_date' => Carbon::parse($val->debitOrder->start_date)->format('d-m-Y'),
-                'end_date' => Carbon::parse($val->debitOrder->end_date)->format('d-m-Y'),
-            ];
-        }
-
-        //post data
-        $post_data = ['year' => $current_year, 'month' => $current_month, 'channel' => $channel];
-
-        //title
-        $display_current_month = date('F', mktime(0, 0, 0, $current_month, 1));
-        $title = "Monthly Collection - $display_current_month, $current_year | $partner->business_name";
-
-        //render view
-        return view('collections.actual_collection_monthly_detail', compact('title', 'partner', 'arr_installments', 'post_data'));
+        return view('collections.actual_monthly_detail', compact(
+            'title',
+            'partner',
+            'arr_installments',
+            'post_data',
+            'listStats',
+            'collectionType',
+            'collectionPeriod'
+        ));
     }
 
     public function export_actual_monthly($uuid, Request $request)
     {
-        //channel and current date
-        $channel = $request->channel;
-        $current_year = $request->year;
-        $current_month = $request->month;
+        $post_data = $this->collectionAnalytics->defaultFilters(CollectionAnalyticsService::PERIOD_MONTHLY, $request->all());
+        return $this->downloadCollectionDetailExport(
+            CollectionAnalyticsService::TYPE_ACTUAL,
+            CollectionAnalyticsService::PERIOD_MONTHLY,
+            $uuid,
+            $post_data,
+            $request->input('format', 'xls')
+        );
+    }
 
-        //partner
-        $partner = Partner::where(['uuid' => $uuid])->firstOrfail();
+    public function export_actual_monthly_summary(Request $request)
+    {
+        $post_data = $this->collectionAnalytics->defaultFilters(CollectionAnalyticsService::PERIOD_MONTHLY, $request->all());
 
-        //arr installments
-        $arr_installments = [];
-
-        //installment this month
-        $installments = Installment::filterCondition()
-            ->whereHas('debitOrder', function ($query) use ($partner, $channel) {
-                $query->where('debit_orders.partner_id', '=', $partner->id)
-                    ->where('debit_orders.approved', '=', 1)
-                    ->when($channel, function ($q) use ($channel) {
-                        $q->where('debit_orders.channel', '=', $channel);
-                    });
-            })
-            ->where('status', 'CLOSED')
-            ->whereMonth('effective_payment_date', $current_month)
-            ->whereYear('effective_payment_date', $current_year)
-            ->orderBy('effective_payment_date')
-            ->get();
-
-        foreach ($installments as $val) {
-            if ($val->status == "CLOSED")
-                $status = "PAID";
-            elseif ($val->status == "FAILED")
-                $status = "UNPAID";
-            else
-                $status = strtoupper($val->status);
-
-            $arr_installments[] = [
-                'business_name' => $val->debitOrder->partner->business_name,
-                'reference' => $val->debitOrder->reference,
-                'periodicity' => $val->debitOrder->periodicity,
-                'channel' => $val->debitOrder->channel,
-                'account_name' => strtoupper($val->debitOrder->customerAccount->account_name),
-                'account_number' => $val->debitOrder->customerAccount->account_number,
-                'customer_address' => $val->debitOrder->customerAccount->customer->address,
-                'amount' => $val->installment_amount,
-                'last_paid_amount' => $val->last_paid_amount,
-                'current_balance' => $val->current_balance,
-                'outstanding_amount' => $val->outstanding_amount,
-                'status' => $status,
-                'payment_date' => Carbon::parse($val->payment_date)->format('d-m-Y'),
-                'effective_payment_date' => Carbon::parse($val->effective_payment_date)->format('d-m-Y'),
-                'start_date' => Carbon::parse($val->debitOrder->start_date)->format('d-m-Y'),
-                'end_date' => Carbon::parse($val->debitOrder->end_date)->format('d-m-Y'),
-                'remarks' => $val->remarks,
-            ];
-        }
-
-        //title
-        $current_month_year = date('F', mktime(0, 0, 0, $current_month, 1)) . '_' . $current_year;
-
-        //create filename
-        $filename = "Actual_Collection_" . $current_month_year . "_" . $partner->business_name . ".xlsx";
-
-        //return
-        return Excel::download(new CollectionPayments($arr_installments), $filename);
+        return $this->downloadCollectionSummaryExport(
+            CollectionAnalyticsService::TYPE_ACTUAL,
+            CollectionAnalyticsService::PERIOD_MONTHLY,
+            $post_data,
+            $request->input('format', 'xls')
+        );
     }
 
     public function expected_daily(Request $request)
     {
-        //channel
-        $channel = null;
-        if ($request->has('channel'))
-            $channel = $request->channel;
+        $post_data = $this->collectionAnalytics->defaultFilters(CollectionAnalyticsService::PERIOD_DAILY, $request->all());
+        $summary = $this->collectionAnalytics->summary(
+            CollectionAnalyticsService::TYPE_EXPECTED,
+            CollectionAnalyticsService::PERIOD_DAILY,
+            $post_data
+        );
 
-        //current date
-        $current_date = Carbon::now()->format('Y-m-d');
+        $title = 'Expected Daily Collection - ' . Carbon::parse($post_data['payment_at'])->format('d F, Y');
+        $payment_channels = $this->collectionAnalytics->paymentChannels();
+        $arr_data = $summary['rows'];
+        $listStats = $summary['stats'];
+        $collectionType = CollectionAnalyticsService::TYPE_EXPECTED;
+        $collectionPeriod = CollectionAnalyticsService::PERIOD_DAILY;
 
-        if ($request->has('payment_at'))
-            $current_date = date('Y-m-d', strtotime($request->input('payment_at')));
-
-        //partners
-        $partners = Partner::filterCondition()->where('approved', 1)->get();
-
-        $arr_data = [];
-        foreach ($partners as $partner) {
-            // today stats
-            $today_stats = Installment::todayCollectionStats($partner->id, $current_date, $status = 240, $deleted = 0, $channel);
-
-            //create dictionary
-            if ($today_stats->number_of_collection > 0) {
-                $arr_data[] = [
-                    'uuid' => $partner->uuid,
-                    'partner_name' => $partner->business_name,
-                    'number_of_collection' => $today_stats->number_of_collection,
-                    'total_amount' => $today_stats->total_amount,
-                    'outstanding_amount' => $today_stats->outstanding_amount,
-                    'paid_amount' => $today_stats->paid_amount,
-                    'percent' => round(($today_stats->paid_amount / $today_stats->total_amount) * 100, 2)
-                ];
-            }
-        }
-
-        //sort array
-        $arr_data = collect($arr_data)
-            ->sortBy([
-                ['number_of_collection', 'desc'],
-                ['total_amount', 'desc'],
-                ['paid_amount', 'desc'],
-            ])
-            ->values()
-            ->toArray();
-
-        //post data
-        $post_data = ['payment_at' => $current_date, 'channel' => $channel];
-
-        //title
-        $current_date = Carbon::parse($current_date)->format("d F, Y");
-        $title = "Expected Daily Collection - $current_date";
-
-        //payment channels
-        $payment_channels = Account::where('active', '=', 1)->get();
-
-        //render view
-        return view('collections.expected_collection_daily', compact('title', 'payment_channels', 'arr_data', 'post_data'));
+        return view('collections.expected_daily', compact(
+            'title',
+            'payment_channels',
+            'arr_data',
+            'post_data',
+            'listStats',
+            'collectionType',
+            'collectionPeriod'
+        ));
     }
 
     public function expected_daily_detail($uuid, Request $request)
     {
-        //channel and payment date
-        $channel = $request->channel;
-        $payment_at = date('Y-m-d', strtotime($request->payment_at));
+        $post_data = $this->collectionAnalytics->defaultFilters(CollectionAnalyticsService::PERIOD_DAILY, $request->all());
+        $detail = $this->collectionAnalytics->detail(
+            CollectionAnalyticsService::TYPE_EXPECTED,
+            CollectionAnalyticsService::PERIOD_DAILY,
+            $uuid,
+            $post_data
+        );
 
-        //partner
-        $partner = Partner::where(['uuid' => $uuid])->firstOrfail();
+        $partner = $detail['partner'];
+        $arr_installments = $detail['rows'];
+        $listStats = $detail['stats'];
+        $title = 'Expected Daily Collection - ' . date('d F, Y', strtotime($post_data['payment_at'])) . "";
+        $collectionType = CollectionAnalyticsService::TYPE_EXPECTED;
+        $collectionPeriod = CollectionAnalyticsService::PERIOD_DAILY;
 
-        //arr installments
-        $arr_installments = [];
-
-        //installment this month
-        $installments = Installment::filterCondition()
-            ->whereHas('debitOrder', function ($query) use ($partner, $channel) {
-                $query->where('debit_orders.partner_id', '=', $partner->id)
-                    ->where('debit_orders.approved', '=', 1)
-                    ->where('debit_orders.deleted', '=', 0)
-                    ->where('debit_orders.status', '=', 240)
-                    ->when($channel, function ($q) use ($channel) {
-                        $q->where('debit_orders.channel', '=', $channel);
-                    });
-            })
-            ->whereDate('payment_date', $payment_at)
-            ->orderBy('payment_date')
-            ->get();
-
-
-        foreach ($installments as $val) {
-            $arr_installments[] = [
-                'id' => $val->id,
-                'reference' => $val->debitOrder->reference,
-                'channel' => $val->debitOrder->channel,
-                'periodicity' => $val->debitOrder->periodicity,
-                'account_name' => strtoupper($val->debitOrder->customerAccount->account_name),
-                'account_number' => $val->debitOrder->customerAccount->account_number,
-                'amount' => $val->installment_amount,
-                'last_paid_amount' => $val->last_paid_amount,
-                'current_balance' => $val->current_balance,
-                'outstanding_amount' => $val->outstanding_amount,
-                'status' => $val->status,
-                'remarks' => $val->remarks,
-                'payment_date' => Carbon::parse($val->payment_date)->format('d-m-Y'),
-                'effective_payment_date' => Carbon::parse($val->effective_payment_date)->format('d-m-Y'),
-                'start_date' => Carbon::parse($val->debitOrder->start_date)->format('d-m-Y'),
-                'end_date' => Carbon::parse($val->debitOrder->end_date)->format('d-m-Y'),
-            ];
-        }
-
-        //post data
-        $post_data = ['payment_at' => $payment_at, 'channel' => $channel];
-
-        //title
-        $current_date =  date('d F, Y', strtotime($payment_at));
-        $title = "Daily Collection - $current_date | $partner->business_name";
-
-        //render view
-        return view('collections.expected_collection_daily_detail', compact('title', 'partner', 'arr_installments', 'post_data'));
+        return view('collections.expected_daily_detail', compact(
+            'title',
+            'partner',
+            'arr_installments',
+            'post_data',
+            'listStats',
+            'collectionType',
+            'collectionPeriod'
+        ));
     }
 
     public function export_expected_daily($uuid, Request $request)
     {
-        //channel and payment date
-        $channel = $request->channel;
-        $payment_at = date('Y-m-d', strtotime($request->payment_at));
+        $post_data = $this->collectionAnalytics->defaultFilters(CollectionAnalyticsService::PERIOD_DAILY, $request->all());
+        return $this->downloadCollectionDetailExport(
+            CollectionAnalyticsService::TYPE_EXPECTED,
+            CollectionAnalyticsService::PERIOD_DAILY,
+            $uuid,
+            $post_data,
+            $request->input('format', 'xls')
+        );
+    }
 
-        //partner
-        $partner = Partner::where(['uuid' => $uuid])->firstOrfail();
+    public function export_expected_daily_summary(Request $request)
+    {
+        $post_data = $this->collectionAnalytics->defaultFilters(CollectionAnalyticsService::PERIOD_DAILY, $request->all());
 
-        //arr installments
-        $arr_installments = [];
-
-        //installment this month
-        $installments = Installment::filterCondition()
-            ->whereHas('debitOrder', function ($query) use ($partner, $channel) {
-                $query->where('debit_orders.partner_id', '=', $partner->id)
-                    ->where('debit_orders.approved', '=', 1)
-                    ->where('debit_orders.deleted', '=', 0)
-                    ->where('debit_orders.status', '=', 240)
-                    ->when($channel, function ($q) use ($channel) {
-                        $q->where('debit_orders.channel', '=', $channel);
-                    });
-            })
-            ->whereDate('payment_date', $payment_at)
-            ->orderBy('payment_date')
-            ->get();
-
-        foreach ($installments as $val) {
-            if ($val->status == "CLOSED")
-                $status = "PAID";
-            elseif ($val->status == "FAILED")
-                $status = "UNPAID";
-            else
-                $status = strtoupper($val->status);
-
-            $arr_installments[] = [
-                'business_name' => $val->debitOrder->partner->business_name,
-                'reference' => $val->debitOrder->reference,
-                'periodicity' => $val->debitOrder->periodicity,
-                'channel' => $val->debitOrder->channel,
-                'account_name' => strtoupper($val->debitOrder->customerAccount->account_name),
-                'account_number' => $val->debitOrder->customerAccount->account_number,
-                'customer_address' => $val->debitOrder->customerAccount->customer->address,
-                'amount' => $val->installment_amount,
-                'last_paid_amount' => $val->last_paid_amount,
-                'current_balance' => $val->current_balance,
-                'outstanding_amount' => $val->outstanding_amount,
-                'status' => $status,
-                'payment_date' => Carbon::parse($val->payment_date)->format('d-m-Y'),
-                'effective_payment_date' => Carbon::parse($val->effective_payment_date)->format('d-m-Y'),
-                'start_date' => Carbon::parse($val->debitOrder->start_date)->format('d-m-Y'),
-                'end_date' => Carbon::parse($val->debitOrder->end_date)->format('d-m-Y'),
-                'remarks' => $val->remarks,
-            ];
-        }
-
-        //create filename
-        $filename = "Expected_Collection_" . date('d_m_Y', strtotime($payment_at)) . "_" . $partner->business_name . ".xlsx";
-
-        //return
-        return Excel::download(new CollectionPayments($arr_installments), $filename);
+        return $this->downloadCollectionSummaryExport(
+            CollectionAnalyticsService::TYPE_EXPECTED,
+            CollectionAnalyticsService::PERIOD_DAILY,
+            $post_data,
+            $request->input('format', 'xls')
+        );
     }
 
     public function actual_daily(Request $request)
     {
-        $channel = null;
-        if ($request->has('channel'))
-            $channel = $request->channel;
+        $post_data = $this->collectionAnalytics->defaultFilters(CollectionAnalyticsService::PERIOD_DAILY, $request->all());
+        $summary = $this->collectionAnalytics->summary(
+            CollectionAnalyticsService::TYPE_ACTUAL,
+            CollectionAnalyticsService::PERIOD_DAILY,
+            $post_data
+        );
 
-        //current date
-        $current_date = Carbon::now();
-        if ($request->has('payment_at'))
-            $current_date = date('Y-m-d', strtotime($request->input('payment_at')));
+        $title = 'Actual Daily Collection - ' . Carbon::parse($post_data['payment_at'])->format('d F, Y');
+        $payment_channels = $this->collectionAnalytics->paymentChannels();
+        $arr_data = $summary['rows'];
+        $listStats = $summary['stats'];
+        $collectionType = CollectionAnalyticsService::TYPE_ACTUAL;
+        $collectionPeriod = CollectionAnalyticsService::PERIOD_DAILY;
 
-        //partners
-        $partners = Partner::filterCondition()->where('approved', 1)->get();
-
-        $arr_data = [];
-        foreach ($partners as $partner) {
-            // today stats
-            $today_stats = Installment::todayCollectionStats($partner->id, $current_date, null, null, $channel);
-
-            //create dictionary
-            if ($today_stats->paid_amount > 0) {
-                $arr_data[] = [
-                    'uuid' => $partner->uuid,
-                    'partner_name' => $partner->business_name,
-                    'number_of_collection' => $today_stats->number_of_collection,
-                    'total_amount' => $today_stats->total_amount,
-                    'outstanding_amount' => $today_stats->outstanding_amount,
-                    'paid_amount' => $today_stats->paid_amount,
-                    'percent' => round(($today_stats->paid_amount / $today_stats->total_amount) * 100, 2)
-                ];
-            }
-        }
-
-        //sort array
-        $arr_data = collect($arr_data)
-            ->sortBy([
-                ['number_of_collection', 'desc'],
-                ['total_amount', 'desc'],
-                ['paid_amount', 'desc'],
-            ])
-            ->values()
-            ->toArray();
-
-        //post data
-        $post_data = ['payment_at' => $current_date, 'channel' => $channel];
-
-        //title
-        $current_date = Carbon::parse($current_date)->format("d F, Y");
-        $title = "Actual Daily Collection - $current_date";
-
-        //payment channels
-        $payment_channels = Account::where('active', '=', 1)->get();
-
-        //render view
-        return view('collections.actual_collection_daily', compact('title', 'payment_channels', 'arr_data', 'post_data'));
+        return view('collections.actual_daily', compact(
+            'title',
+            'payment_channels',
+            'arr_data',
+            'post_data',
+            'listStats',
+            'collectionType',
+            'collectionPeriod'
+        ));
     }
 
     public function actual_daily_detail($uuid, Request $request)
     {
-        //channel and payment date
-        $channel = $request->channel;
-        $payment_at = date('Y-m-d', strtotime($request->payment_at));
+        $post_data = $this->collectionAnalytics->defaultFilters(CollectionAnalyticsService::PERIOD_DAILY, $request->all());
+        $detail = $this->collectionAnalytics->detail(
+            CollectionAnalyticsService::TYPE_ACTUAL,
+            CollectionAnalyticsService::PERIOD_DAILY,
+            $uuid,
+            $post_data
+        );
 
-        //partner
-        $partner = Partner::where(['uuid' => $uuid])->firstOrfail();
+        $partner = $detail['partner'];
+        $arr_installments = $detail['rows'];
+        $listStats = $detail['stats'];
+        $title = 'Actual Daily Collection - ' . date('d F, Y', strtotime($post_data['payment_at'])) . "";
+        $collectionType = CollectionAnalyticsService::TYPE_ACTUAL;
+        $collectionPeriod = CollectionAnalyticsService::PERIOD_DAILY;
 
-        //arr installments
-        $arr_installments = [];
-
-        //installment this day
-        $installments = Installment::filterCondition()
-            ->whereHas('debitOrder', function ($query) use ($partner, $channel) {
-                $query->where('debit_orders.partner_id', '=', $partner->id)
-                    ->where('debit_orders.approved', '=', 1)
-                    ->when($channel, function ($q) use ($channel) {
-                        $q->where('debit_orders.channel', '=', $channel);
-                    });
-            })
-            ->where('status', 'CLOSED')
-            ->whereDate('effective_payment_date', $payment_at)
-            ->orderBy('effective_payment_date')
-            ->get();
-
-        foreach ($installments as $val) {
-            $arr_installments[] = [
-                'id' => $val->id,
-                'reference' => $val->debitOrder->reference,
-                'channel' => $val->debitOrder->channel,
-                'periodicity' => $val->debitOrder->periodicity,
-                'account_name' => strtoupper($val->debitOrder->customerAccount->account_name),
-                'account_number' => $val->debitOrder->customerAccount->account_number,
-                'amount' => $val->installment_amount,
-                'last_paid_amount' => $val->last_paid_amount,
-                'current_balance' => $val->current_balance,
-                'outstanding_amount' => $val->outstanding_amount,
-                'status' => $val->status,
-                'remarks' => $val->remarks,
-                'payment_date' => Carbon::parse($val->payment_date)->format('d-m-Y'),
-                'effective_payment_date' => Carbon::parse($val->effective_payment_date)->format('d-m-Y'),
-                'start_date' => Carbon::parse($val->debitOrder->start_date)->format('d-m-Y'),
-                'end_date' => Carbon::parse($val->debitOrder->end_date)->format('d-m-Y'),
-            ];
-        }
-
-        //post data
-        $post_data = ['payment_at' => $payment_at, 'channel' => $channel];
-
-        //title
-        $current_date =  date('d F, Y', strtotime($payment_at));
-        $title = "Daily Collection - $current_date | $partner->business_name";
-
-        //render view
-        return view('collections.actual_collection_daily_detail', compact('title', 'partner', 'arr_installments', 'post_data'));
+        return view('collections.actual_daily_detail', compact(
+            'title',
+            'partner',
+            'arr_installments',
+            'post_data',
+            'listStats',
+            'collectionType',
+            'collectionPeriod'
+        ));
     }
 
     public function export_actual_daily($uuid, Request $request)
     {
-        //current date
-        $channel = $request->channel;
-        $payment_at = date('Y-m-d', strtotime($request->payment_at));
+        $post_data = $this->collectionAnalytics->defaultFilters(CollectionAnalyticsService::PERIOD_DAILY, $request->all());
+        return $this->downloadCollectionDetailExport(
+            CollectionAnalyticsService::TYPE_ACTUAL,
+            CollectionAnalyticsService::PERIOD_DAILY,
+            $uuid,
+            $post_data,
+            $request->input('format', 'xls')
+        );
+    }
 
-        //partner
-        $partner = Partner::where(['uuid' => $uuid])->firstOrfail();
+    public function export_actual_daily_summary(Request $request)
+    {
+        $post_data = $this->collectionAnalytics->defaultFilters(CollectionAnalyticsService::PERIOD_DAILY, $request->all());
 
-        //arr installments
-        $arr_installments = [];
+        return $this->downloadCollectionSummaryExport(
+            CollectionAnalyticsService::TYPE_ACTUAL,
+            CollectionAnalyticsService::PERIOD_DAILY,
+            $post_data,
+            $request->input('format', 'xls')
+        );
+    }
 
-        //installment this day
-        $installments = Installment::filterCondition()
-            ->whereHas('debitOrder', function ($query) use ($partner, $channel) {
-                $query->where('debit_orders.partner_id', '=', $partner->id)
-                    ->where('debit_orders.approved', '=', 1)
-                    ->when($channel, function ($q) use ($channel) {
-                        $q->where('debit_orders.channel', '=', $channel);
-                    });
-            })
-            ->where('status', 'CLOSED')
-            ->whereDate('effective_payment_date', $payment_at)
-            ->orderBy('effective_payment_date')
-            ->get();
+    protected function downloadCollectionSummaryExport(string $type, string $period, array $filters, string $format)
+    {
+        $title = $this->collectionSummaryTitle($type, $period, $filters);
+        $filename = $this->collectionSummaryFilename($type, $period, $filters, $format);
+        $payload = $this->collectionSummaryExportPayload($type, $period, $filters);
 
-        foreach ($installments as $val) {
-            if ($val->status == "CLOSED")
-                $status = "PAID";
-            elseif ($val->status == "FAILED")
-                $status = "UNPAID";
-            else
-                $status = strtoupper($val->status);
+        return strtolower($format) === 'pdf'
+            ? $this->reportExportService->downloadPdf($title, $payload['headings'], $payload['rows'], $filename)
+            : $this->reportExportService->downloadXls($payload['headings'], $payload['rows'], $filename);
+    }
 
-            $arr_installments[] = [
-                'business_name' => $val->debitOrder->partner->business_name,
-                'reference' => $val->debitOrder->reference,
-                'periodicity' => $val->debitOrder->periodicity,
-                'channel' => $val->debitOrder->channel,
-                'account_name' => strtoupper($val->debitOrder->customerAccount->account_name),
-                'account_number' => $val->debitOrder->customerAccount->account_number,
-                'customer_address' => $val->debitOrder->customerAccount->customer->address,
-                'amount' => $val->installment_amount,
-                'last_paid_amount' => $val->last_paid_amount,
-                'current_balance' => $val->current_balance,
-                'outstanding_amount' => $val->outstanding_amount,
-                'status' => $status,
-                'payment_date' => Carbon::parse($val->payment_date)->format('d-m-Y'),
-                'effective_payment_date' => Carbon::parse($val->effective_payment_date)->format('d-m-Y'),
-                'start_date' => Carbon::parse($val->debitOrder->start_date)->format('d-m-Y'),
-                'end_date' => Carbon::parse($val->debitOrder->end_date)->format('d-m-Y'),
-                'remarks' => $val->remarks,
+    protected function downloadCollectionDetailExport(string $type, string $period, string $partnerUuid, array $filters, string $format)
+    {
+        $title = $this->collectionDetailTitle($type, $period, $filters);
+        $filename = $this->collectionDetailFilename($type, $period, $partnerUuid, $filters, $format);
+        $payload = $this->collectionDetailExportPayload($type, $period, $partnerUuid, $filters);
+
+        return strtolower($format) === 'pdf'
+            ? $this->reportExportService->downloadPdf($title, $payload['headings'], $payload['rows'], $filename)
+            : $this->reportExportService->downloadXls($payload['headings'], $payload['rows'], $filename);
+    }
+
+    protected function collectionSummaryExportPayload(string $type, string $period, array $filters): array
+    {
+        $summary = $this->collectionAnalytics->summary($type, $period, $filters);
+        $isActualCollection = $type === CollectionAnalyticsService::TYPE_ACTUAL;
+        $collectionsLabel = 'Collections';
+        $secondaryCountLabel = $isActualCollection ? 'Paid In Full' : 'Success';
+        $tertiaryCountLabel = $isActualCollection ? 'Partial Paid' : 'Failed';
+        $paidAmountLabel = $isActualCollection ? 'Settled Amount' : 'Paid Amount';
+        $secondaryRowKey = $isActualCollection ? 'fully_paid_count' : 'success_count';
+        $tertiaryRowKey = $isActualCollection ? 'partial_paid_count' : 'failed_count';
+
+        $headings = [
+            'Service Provider',
+            $collectionsLabel,
+            $secondaryCountLabel,
+            $tertiaryCountLabel,
+            'Expected Amount',
+            $paidAmountLabel,
+            'Outstanding Amount',
+            'Success Rate (%)',
+        ];
+
+        $rows = collect($summary['rows'])->map(function (array $row) use ($secondaryRowKey, $tertiaryRowKey) {
+            return [
+                strtoupper((string) $row['partner_name']),
+                (int) $row['number_of_collection'],
+                (int) ($row[$secondaryRowKey] ?? 0),
+                (int) ($row[$tertiaryRowKey] ?? 0),
+                round((float) $row['total_amount'], 2),
+                round((float) $row['paid_amount'], 2),
+                round((float) $row['outstanding_amount'], 2),
+                round((float) $row['percent'], 2),
             ];
+        })->values()->all();
+
+        return compact('headings', 'rows');
+    }
+
+    protected function collectionDetailExportPayload(string $type, string $period, string $partnerUuid, array $filters): array
+    {
+        $detail = $this->collectionAnalytics->detail($type, $period, $partnerUuid, $filters);
+        $isActualCollection = $type === CollectionAnalyticsService::TYPE_ACTUAL;
+        $paidAmountLabel = $isActualCollection ? 'Settled Amount' : 'Paid Amount';
+
+        $headings = [
+            'Service Provider',
+            'Mandate Reference',
+            'Payment Channel',
+            'Account Name',
+            'Account Number',
+            'Expected Amount',
+            $paidAmountLabel,
+            'Current Balance',
+            'Outstanding Amount',
+            'Deduction Date',
+            'Collection Date',
+            'Status',
+            'Remarks',
+        ];
+
+        $rows = collect($detail['rows'])->map(function (array $row) use ($isActualCollection) {
+            $paidAmount = $isActualCollection
+                ? $row['current_balance']
+                : $row['last_paid_amount'];
+
+            return [
+                $row['business_name'],
+                $row['reference'],
+                $row['channel'],
+                $row['account_name'],
+                $row['account_number'],
+                round((float) $row['amount'], 2),
+                round((float) $paidAmount, 2),
+                round((float) $row['current_balance'], 2),
+                round((float) $row['outstanding_amount'], 2),
+                $row['payment_date'],
+                $row['effective_payment_date'],
+                strtoupper((string) $row['status']) === 'CLOSED' ? 'FULLY PAID' : (strtoupper((string) $row['status']) === 'PARTIAL_PAID' ? 'PARTIAL PAID' : $row['status_label']),
+                $row['remarks'],
+            ];
+        })->values()->all();
+
+        return compact('headings', 'rows');
+    }
+
+    protected function collectionSummaryTitle(string $type, string $period, array $filters): string
+    {
+        if ($period === CollectionAnalyticsService::PERIOD_MONTHLY) {
+            $displayMonth = date('F', mktime(0, 0, 0, $filters['month'], 1));
+            return ($type === CollectionAnalyticsService::TYPE_ACTUAL ? 'Actual' : 'Expected') . " {$displayMonth} Collection Summary - {$filters['year']}";
         }
 
-        //create filename
-        $filename = "Actual_Collection_" . date('d_m_Y', strtotime($payment_at)) . "_" . $partner->business_name . ".xlsx";
+        return ($type === CollectionAnalyticsService::TYPE_ACTUAL ? 'Actual' : 'Expected') . ' Daily Collection Summary - ' . Carbon::parse($filters['payment_at'])->format('d F, Y');
+    }
 
-        //return
-        return Excel::download(new CollectionPayments($arr_installments), $filename);
+    protected function collectionDetailTitle(string $type, string $period, array $filters): string
+    {
+        if ($period === CollectionAnalyticsService::PERIOD_MONTHLY) {
+            $displayMonth = date('F', mktime(0, 0, 0, $filters['month'], 1));
+            return ($type === CollectionAnalyticsService::TYPE_ACTUAL ? 'Actual' : 'Expected') . " {$displayMonth} Collection Detail - {$filters['year']}";
+        }
+
+        return ($type === CollectionAnalyticsService::TYPE_ACTUAL ? 'Actual' : 'Expected') . ' Daily Collection Detail - ' . Carbon::parse($filters['payment_at'])->format('d F, Y');
+    }
+
+    protected function collectionSummaryFilename(string $type, string $period, array $filters, string $format): string
+    {
+        $extension = strtolower($format) === 'pdf' ? 'pdf' : 'xlsx';
+        $prefix = $type === CollectionAnalyticsService::TYPE_ACTUAL ? 'Actual_Collection_Summary_' : 'Expected_Collection_Summary_';
+
+        if ($period === CollectionAnalyticsService::PERIOD_MONTHLY) {
+            return $prefix . date('F', mktime(0, 0, 0, $filters['month'], 1)) . '_' . $filters['year'] . '.' . $extension;
+        }
+
+        return $prefix . date('d_m_Y', strtotime($filters['payment_at'])) . '.' . $extension;
+    }
+
+    protected function collectionDetailFilename(string $type, string $period, string $partnerUuid, array $filters, string $format): string
+    {
+        $partner = Partner::where(['uuid' => $partnerUuid])->firstOrFail();
+        $extension = strtolower($format) === 'pdf' ? 'pdf' : 'xlsx';
+        $prefix = $type === CollectionAnalyticsService::TYPE_ACTUAL ? 'Actual_Collection_' : 'Expected_Collection_';
+
+        if ($period === CollectionAnalyticsService::PERIOD_MONTHLY) {
+            return $prefix . date('F', mktime(0, 0, 0, $filters['month'], 1)) . '_' . $filters['year'] . '_' . $partner->business_name . '.' . $extension;
+        }
+
+        return $prefix . date('d_m_Y', strtotime($filters['payment_at'])) . '_' . $partner->business_name . '.' . $extension;
     }
 
     public function reconciliation(Request $request)
@@ -1515,15 +1088,17 @@ class CollectionController extends Controller
                     // get installment
                     $installment = $installments->first();
 
-                    //updated installment
-                    $installment->last_paid_amount = $amount;
-                    $installment->payment_reference = $transactionReference;
-                    $installment->effective_payment_date = date('Y-m-d', strtotime($collectionDate));
-                    $installment->remarks = "Amount paid";
-                    $installment->save();
-
-                    // process installment
-                    $this->deductionService->processInstallment($installment);
+                    $this->settlementPostingService->post([
+                        'channel' => 'CRDB',
+                        'debit_order' => $debitOrder,
+                        'installment' => $installment,
+                        'amount' => $amount,
+                        'raw_status' => 'SUCCESS',
+                        'normalized_status' => PaymentSettlement::STATUS_SUCCESS,
+                        'remarks' => 'Amount paid',
+                        'effective_payment_date' => date('Y-m-d', strtotime($collectionDate)),
+                        'payment_reference' => $transactionReference,
+                    ]);
                 } else {
                     //1.0 calculate installment amount
                     $installment_amount = $this->deductionService->getInstallmentAmount($debitOrder);
@@ -1535,14 +1110,19 @@ class CollectionController extends Controller
                     $new_installment->installment_order = $last_installment_order + 1;
                     $new_installment->installment_amount = $installment_amount;
                     $new_installment->payment_date = date('Y-m-d', strtotime($collectionDate));
-                    $new_installment->last_paid_amount = $amount;
-                    $new_installment->payment_reference = $transactionReference;
-                    $new_installment->effective_payment_date = date('Y-m-d', strtotime($collectionDate));
-                    $new_installment->remarks = "Amount paid";
                     $new_installment->save();
 
-                    //2.0 then process payment installment
-                    $this->deductionService->processInstallment($new_installment);
+                    $this->settlementPostingService->post([
+                        'channel' => 'CRDB',
+                        'debit_order' => $debitOrder,
+                        'installment' => $new_installment,
+                        'amount' => $amount,
+                        'raw_status' => 'SUCCESS',
+                        'normalized_status' => PaymentSettlement::STATUS_SUCCESS,
+                        'remarks' => 'Amount paid',
+                        'effective_payment_date' => date('Y-m-d', strtotime($collectionDate)),
+                        'payment_reference' => $transactionReference,
+                    ]);
                 }
                 $success++;
             } else {
@@ -1720,13 +1300,14 @@ class CollectionController extends Controller
                     else
                         $status = 'CREATED';
 
-                    //create or update collection batch
-                    $collection_debit_order = CollectionDebitOrder::firstOrNew(
-                        ['debit_order_id' => $installment->debitOrder->id, 'payment_at' => $installment->payment_date]
-                    );
-                    $collection_debit_order->collection_batch_id = $batch->id;
-                    $collection_debit_order->status = $status;
-                    $collection_debit_order->save();
+                    CollectionDebitOrder::createForCycle([
+                        'collection_batch_id' => $batch->id,
+                        'debit_order_id' => $installment->debitOrder->id,
+                        'installment_id' => $installment->id,
+                        'status' => $status,
+                        'bank_status' => $status,
+                        'payment_at' => $installment->effective_payment_date ?: $installment->payment_date,
+                    ]);
                 }
             }
         }
@@ -1736,25 +1317,10 @@ class CollectionController extends Controller
 
     public function update_debit_orders()
     {
-        $current_month = now()->month; //current month
-        $current_year = now()->year; // current year
         $debit_orders = DebitOrder::where(['approved' => 1])->get(); //debit orders
 
         foreach ($debit_orders as $val) {
-            $payment_month = Carbon::parse($val->next_debit_date)->format('m');
-
-            if ($payment_month != $current_month) {
-                //original date
-                $original = Carbon::parse($val->next_debit_date);
-
-                //new date
-                $newDate = Carbon::create($current_year, $current_month, $original->day);
-
-                //update debit order 
-                $debit_order = DebitOrder::findOrFail($val->id);
-                $debit_order->next_debit_date = $newDate;
-                $debit_order->save();
-            }
+            $this->deductionService->syncNextDebitDate($val);
         }
 
         return response()->json(['error' => false, 'success' => 'Debit order updated']);

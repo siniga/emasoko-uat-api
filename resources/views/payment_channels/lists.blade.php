@@ -29,8 +29,8 @@
                     <div class="row mb-2">
                         <div class="col-md-12 col-12">
                             <div class="text-sm-end">
-                                <a href="{{ route('payment-channels.create') }}" class="btn btn-outline-primary btn-sm">
-                                    <i class="fa fa-plus"></i> Register New
+                                <a href="{{ route('payment-channels.create') }}" class="btn btn-primary btn-sm">
+                                    <i class="bx bx-list-plus"></i> Create New
                                 </a>
                             </div>
                         </div>
@@ -40,16 +40,17 @@
 
                     <div class="table-responsive">
                         @if (isset($accounts) && $accounts->isNotEmpty())
-                            <table class="table table-bordered mb-0">
+                            <table class="table table-bordered dt-responsive nowrap w-100">
                                 <thead>
                                     <tr>
                                         <th width="3%">#</th>
-                                        <th width="12%">Type</th>
-                                        <th width="20%">Name</th>
-                                        <th width="30%">Description</th>
-                                        <th width="16%">Created On</th>
-                                        <th width="8%">Status</th>
-                                        <th style="width: 60px;">Actions</th>
+                                        <th>Logo</th>
+                                        <th>Type</th>
+                                        <th>Name</th>
+                                        <th>Slug</th>
+                                        <th>Created On</th>
+                                        <th>Status</th>
+                                        <th width="10%">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -57,9 +58,16 @@
                                     @foreach ($accounts as $values)
                                         <tr>
                                             <td>{{ $serial }}</td>
+                                            <td>
+                                                @if (!empty($values->logo))
+                                                    <img src="{{ asset($values->logo) }}" alt="{{ $values->name }}" class="img-thumbnail" style="max-height: 40px;">
+                                                @else
+                                                    <span class="text-muted">No logo</span>
+                                                @endif
+                                            </td>
                                             <td>{{ $values->accountType->name }}</td>
                                             <td>{{ $values->name }}</td>
-                                            <td>{{ $values->description }}</td>
+                                            <td>{{ $values->slug }}</td>
                                             <td>{{ $values->created_at }}</td>
                                             <td>
                                                 @if ($values->active == 1)
@@ -95,4 +103,3 @@
     <!-- end row -->
 
 @endsection
-

@@ -4,6 +4,7 @@
         return {
             uuid: "{{ $debit_order->uuid }}",
             status: "{{ $debit_order->status }}",
+            lifecycleStatus: "{{ $debit_order->lifecycle_status ?? $debit_order->resolved_lifecycle_status }}",
             channel: "{{ $debit_order->channel }}",
             showModal: false,
 
@@ -28,6 +29,14 @@
 
             resendBtn: "Resend",
 
+            canSaveOrSubmit() {
+                return ['draft', 'submitted'].includes(this.lifecycleStatus);
+            },
+
+            canVerifyOtp() {
+                return this.channel === 'NMB' && this.lifecycleStatus === 'awaiting_otp';
+            },
+
             //Save Mandate
             saveMandateForm() {
                 this.formMessage = "";
@@ -45,8 +54,8 @@
                     }).then(response => response.json())
                     .then(responseJson => {
                         console.log(responseJson);
-                        // change status
-                        this.status = 200;
+                        this.status = 100;
+                        this.lifecycleStatus = 'draft';
 
                         // display message
                         $('#message_wrp').html(
@@ -93,6 +102,7 @@
                                 //create modal for verifying OTP 
                                 $('#verifyOtpModal').modal('show');
                                 this.status = 201;
+                                this.lifecycleStatus = data.lifecycle_status || 'awaiting_otp';
 
                                 //display message
                                 $('#message_wrp_1').html("<div class='alert alert-success rounded-sm'>" +
@@ -108,6 +118,7 @@
                         } else if (data.channel == "CRDB") {
                             if (data.response_code == 201) {
                                 this.status = 201;
+                                this.lifecycleStatus = data.lifecycle_status || 'awaiting_otp';
 
                                 //display message
                                 $('#message_wrp').html("<div class='alert alert-success rounded-sm'>" + data
@@ -116,6 +127,7 @@
                         } else if (data.channel == "YAS") {
                             if (data.response_code == 201) {
                                 this.status = 201;
+                                this.lifecycleStatus = data.lifecycle_status || 'awaiting_otp';
                                 const url = data.redirect_url;
 
                                 //display message
@@ -188,6 +200,7 @@
                             //set show modal to true
                             if (data.response_code == 201) {
                                 this.status = 201;
+                                this.lifecycleStatus = data.lifecycle_status || 'awaiting_otp';
 
                                 //display message
                                 $('#message_wrp_1').html("<div class='alert alert-success rounded-sm'>" +
@@ -251,6 +264,7 @@
                             //set show modal to true
                             if (data.response_code == 202) {
                                 this.status = 202;
+                                this.lifecycleStatus = data.lifecycle_status || 'verified';
 
                                 //display message
                                 $('#message_wrp_1').html("<div class='alert alert-success rounded-sm'>" +

@@ -102,10 +102,12 @@ class MandateCancellationJob implements ShouldQueue
                 $debitOrder->status = 405;
                 $debitOrder->cancelled = 1; // Mark as cancelled
                 $debitOrder->deleted = 1; // Mark as deleted
+                $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_CANCELLED;
             }
         } else if (strtolower($httpStatus) == "fail") {
             //update debit order => rejected
             $debitOrder->status = 404;
+            $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_FAILED;
         }
 
         $debitOrder->remarks = $responseDescription;

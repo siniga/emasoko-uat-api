@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Classes\Authentication;
 use App\Events\CollectionStatus;
 use App\Models\CollectionBatch;
+use App\Models\CollectionDebitOrder;
 use App\Services\DeductionService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
@@ -16,7 +17,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 
-class CollectionStatusJob implements ShouldQueue
+class CollectionStatusJob implements ShouldQueue, ShouldBeUnique
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -25,13 +26,18 @@ class CollectionStatusJob implements ShouldQueue
      *
      * @return void
      */
-    protected $data;
+    protected $batchId;
     private $auth;
 
-    public function __construct($data)
+    public function __construct(string $batchId)
     {
-        $this->data = $data;
+        $this->batchId = $batchId;
         $this->auth = new Authentication();
+    }
+
+    public function uniqueId(): string
+    {
+        return $this->batchId;
     }
 
     /**
@@ -43,6 +49,11 @@ class CollectionStatusJob implements ShouldQueue
     {
         //initialize deduction service
         $deduction_service = new DeductionService();
+        $collection_batch = CollectionBatch::find($this->batchId);
+
+        if (!$collection_batch || !$collection_batch->canFetchStatus()) {
+            return;
+        }
 
         //create authentication token
         $AUTH_BEARER_TOKEN = $this->auth->generateToken();
@@ -56,7 +67,9 @@ class CollectionStatusJob implements ShouldQueue
             "correlationId" => Str::uuid()->toString(),
             "targetService" => "CollectionStatus",
             "status" => "Check",
-            "data" => $this->data
+            "data" => [
+                "collectionReference" => $collection_batch->collectionReference,
+            ]
         ];
 
         //Create Payload
@@ -76,12 +89,6 @@ class CollectionStatusJob implements ShouldQueue
             'body'    => $response->body(),   // raw string
         ]);
 
-        //collection reference
-        $collection_reference = $payload['data']['collectionReference'];
-
-        //update collection batch 
-        $collection_batch = CollectionBatch::where('collectionReference', '=', $collection_reference)->first();
-
         //decode the response 
         $response = json_decode($response, true);
 
@@ -99,6 +106,7 @@ class CollectionStatusJob implements ShouldQueue
                 $collection_batch->http_response_code = $response_code;
                 $collection_batch->remarks = $remarks;
                 $collection_batch->processed = 1;
+                $collection_batch->last_status_checked_at = now();
 
                 //check for batch processing or batch complete
                 if ($response_code == 230) {
@@ -108,11 +116,12 @@ class CollectionStatusJob implements ShouldQueue
                     Log::debug($data);
 
                     //1.1: response
-                    $response = $deduction_service->updateInstallments($data);
+                    $response = $deduction_service->updateInstallments($collection_batch, $data);
 
                     //1.3: process batch
                     $collection_batch->number_of_success = $response[0];
                     $collection_batch->number_of_failed = $response[1];
+                    $collection_batch->lifecycle_status = CollectionBatch::LIFECYCLE_PROCESSED_SUCCESS;
                     $collection_batch->save();
                 } else if ($response_code == 235) {
                     //2.0: Complete Failed Batch
@@ -121,11 +130,12 @@ class CollectionStatusJob implements ShouldQueue
                     Log::debug($data);
 
                     //2.1: response
-                    $response = $deduction_service->updateFailedInstallments($data);
+                    $response = $deduction_service->updateFailedInstallments($collection_batch, $data);
 
                     //1.3: process batch
                     $collection_batch->number_of_failed = $response[0];
                     $collection_batch->failed = 1;
+                    $collection_batch->lifecycle_status = CollectionBatch::LIFECYCLE_PROCESSED_FAILED;
                     $collection_batch->save();
                 } else if ($response_code == 239) {
                     //3.0: Process Ongoing Batch
@@ -134,11 +144,12 @@ class CollectionStatusJob implements ShouldQueue
                     Log::debug($data);
 
                     //3.1: response
-                    $response = $deduction_service->updateInstallments($data);
+                    $response = $deduction_service->updateInstallments($collection_batch, $data);
 
                     //1.3: process batch
                     $collection_batch->number_of_success += $response[0];
-                    $collection_batch->number_of_failed = $response[1];
+                    $collection_batch->number_of_failed += $response[1];
+                    $collection_batch->lifecycle_status = CollectionBatch::LIFECYCLE_PARTIALLY_PROCESSED;
                     $collection_batch->save();
                 }
             } else if (strtolower($response['status']) == "fail") {
@@ -149,9 +160,14 @@ class CollectionStatusJob implements ShouldQueue
                 $collection_batch->status = 501;
                 $collection_batch->http_response_code = $response_code;
                 $collection_batch->remarks = $remarks;
+                $collection_batch->last_status_checked_at = now();
 
                 if ($response_code == 235 || $response_code == 404)
                     $collection_batch->processed = 1; //batch processed and failed
+
+                if ($response_code == 235) {
+                    $collection_batch->lifecycle_status = CollectionBatch::LIFECYCLE_PROCESSED_FAILED;
+                }
 
                 //save batch    
                 $collection_batch->save();

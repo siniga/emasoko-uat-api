@@ -59,7 +59,16 @@ class CollectionStatusBatch extends Command
         //->whereDate('created_at', $current_date)
 
         //1. Get all collection batches created in the current month
-        $collection_batches = CollectionBatch::where(['pushed' => 1, 'deleted' => 0])
+        $collection_batches = CollectionBatch::where(['deleted' => 0])
+            ->where(function ($query) {
+                $query->whereIn('lifecycle_status', [
+                    CollectionBatch::LIFECYCLE_PUSHED,
+                    CollectionBatch::LIFECYCLE_STATUS_PENDING,
+                    CollectionBatch::LIFECYCLE_PARTIALLY_PROCESSED,
+                ])->orWhere(function ($legacy) {
+                    $legacy->whereNull('lifecycle_status')->where('pushed', 1)->where('processed', 0);
+                });
+            })
             ->whereBetween('created_at', [$start, $end])
             ->orderBy('collectionReference', 'ASC')->get();
 
@@ -71,11 +80,9 @@ class CollectionStatusBatch extends Command
             //collection batch
             $batch = CollectionBatch::findOrFail($value->id);
 
-            //create payload
-            $payload = $this->bankPayload->collectionStatusPayload($batch);
-
-            //3. BackgroundJob for creating collection batches
-            dispatch(new CollectionStatusJob($payload));
+            $batch->lifecycle_status = CollectionBatch::LIFECYCLE_STATUS_PENDING;
+            $batch->save();
+            dispatch(new CollectionStatusJob($batch->id));
             sleep(5); // sleep for 5 seconds
         }
 

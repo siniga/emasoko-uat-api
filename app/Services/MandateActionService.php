@@ -6,16 +6,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use App\Classes\Authentication;
-use App\Jobs\CRDBMandateCancellationJob;
-use App\Jobs\CRDBMandateRegistrationJob;
-use App\Jobs\MandateCancellationJob;
-use App\Jobs\SendSMSJob;
-use App\Models\CollectionBatch;
 use App\Models\DebitOrder;
-use App\Models\Installment;
-use App\Models\OtpRequest;
-use App\Models\Partner;
-use App\Models\PartnerAccount;
 use Exception;
 
 
@@ -32,7 +23,7 @@ class MandateActionService
         $this->payloadService = new BankPayloadService();
     }
 
-    public function registerMandate($debitOrder)
+    public function registerMandate(DebitOrder $debitOrder)
     {
         if ($debitOrder->channel == "CRDB") {
             //requestId
@@ -46,15 +37,34 @@ class MandateActionService
             $data['requestId'] = $requestId;
             $data['mandateReferenceNumber'] = $debitOrder->reference;
 
-            //Create Request to CRDB
-            dispatch(new CRDBMandateRegistrationJob($data));
+            //arr response
+            $arrResponse = $this->bankApi->crdbMandateRegistrationRequest($data);
 
-            //return response
-            return response()->json([
-                'success' => true,
-                'response_code' => 201,
-                'remarks' => "Mandate registration request sent to CRDB. Go to customer SimBanking and approve mandate."
-            ]);
+            if ($arrResponse) {
+                $success = true;
+                $http_status_code = $arrResponse[0];
+                $remarks = $arrResponse[1];
+
+                if ($http_status_code == 201) {
+                    return response()->json([
+                        'success' => true,
+                        'response_code' => 201,
+                        'remarks' => $remarks
+                    ]);
+                } else if ($http_status_code == 500) {
+                    return response()->json([
+                        'success' => true,
+                        'response_code' => 500,
+                        'remarks' => $remarks
+                    ]);
+                }
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'response_code' => 500,
+                    'remarks' => 'Unable to register mandate'
+                ]);
+            }
         } else if ($debitOrder->channel == "NMB") {
             //create payload
             $payload = $this->payloadService->mandateRegistrationPayload($debitOrder);
@@ -64,14 +74,22 @@ class MandateActionService
 
             if ($arrResponse) {
                 $success = true;
-                $response_code = $arrResponse[0];
+                $http_status_code = $arrResponse[0];
                 $remarks = $arrResponse[1];
 
-                return response()->json([
-                    'success' => $success,
-                    'response_code' => $response_code,
-                    'remarks' => $remarks
-                ]);
+                if ($http_status_code == 201) {
+                    return response()->json([
+                        'success' => true,
+                        'response_code' => 201,
+                        'remarks' => $remarks
+                    ]);
+                } else if ($http_status_code == 500) {
+                    return response()->json([
+                        'success' => true,
+                        'response_code' => 500,
+                        'remarks' => $remarks
+                    ]);
+                }
             } else {
                 return response()->json([
                     'success' => false,
@@ -108,12 +126,16 @@ class MandateActionService
         }
     }
 
-
-    public function cancelMandate($debitOrder)
+    public function cancelMandate(DebitOrder $debitOrder)
     {
         if ($debitOrder->channel == "CRDB") {
             //requestId
-            $requestId = $debitOrder->crdb_request_id;
+            $requestId = $debitOrder->request_id ?: Str::uuid()->toString();
+
+            if (!$debitOrder->request_id) {
+                $debitOrder->request_id = $requestId;
+                $debitOrder->save();
+            }
 
             //create payload
             $payload = $this->payloadService->CRDBMandateCancellationPayload($debitOrder, $requestId);
@@ -123,8 +145,14 @@ class MandateActionService
             $data['requestId'] = $requestId;
             $data['mandateReferenceNumber'] = $debitOrder->reference;
 
-            //Create Request to CRDB
-            dispatch(new CRDBMandateCancellationJob($data));
+            $arrResponse = $this->bankApi->crdbMandateCancellationRequest($data);
+
+            return [
+                'success' => (int) $arrResponse[0] < 400,
+                'response_code' => $arrResponse[0],
+                'remarks' => $arrResponse[1],
+                'provider_response_code' => $arrResponse[2] ?? null,
+            ];
         } else if ($debitOrder->channel == "NMB") {
             //cancel mandate
             Log::debug("== NMB Cancel Mandate Payload ==");
@@ -132,8 +160,21 @@ class MandateActionService
             //create payload
             $payload = $this->payloadService->mandateCancellationPayload($debitOrder);
 
-            //background job
-            dispatch(new MandateCancellationJob($payload));
+            $arrResponse = $this->bankApi->mandateCancellationRequest($payload);
+
+            return [
+                'success' => (int) $arrResponse[0] < 400,
+                'response_code' => $arrResponse[0],
+                'remarks' => $arrResponse[1],
+                'provider_response_code' => $arrResponse[0],
+            ];
         }
+
+        return [
+            'success' => false,
+            'response_code' => 400,
+            'remarks' => 'Mandate cancellation is not supported for this payment channel.',
+            'provider_response_code' => null,
+        ];
     }
 }

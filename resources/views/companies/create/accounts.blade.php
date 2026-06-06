@@ -4,6 +4,10 @@
     Register Service Provider
 @endsection
 
+@section('css')
+    <link href="{{ URL::asset('/assets/css/companies-create.css') }}" rel="stylesheet" type="text/css" />
+@endsection
+
 @section('content')
     <div class="row">
         <div class="col-12">
@@ -22,46 +26,18 @@
         </div>
     </div>
 
+    @include('companies.create.partials.hero', [
+        'currentStep' => 3,
+        'heading' => 'Configure collection accounts',
+        'subtitle' => 'Set up the bank or MNO accounts used to receive collections, including customer code, corporate limit, and currency.',
+        'company' => $company,
+    ])
+
     <div class="row">
         <div class="col-lg-12">
-            <div class="card">
-                <div class="card-body">
-                    <!--./form wizard -->
-                    <div class="stepwizard mb-4">
-                        <div class="stepwizard-row setup-panel">
-                            <div class="stepwizard-step bg-success">
-                                <a href="#step-1" type="button" class="btn btn-success btn-circle text-white">1</a>
-                                <span class="text-white">Company Information</span>
-                            </div>
-
-                            <div class="stepwizard-step bg-success">
-                                <a href="#step-2" type="button" class="btn btn-success btn-circle text-white"
-                                    disabled="disabled">2</a>
-                                <span class="text-white">Company Documents</span>
-                            </div>
-
-                            <div class="stepwizard-step bg-primary">
-                                <a href="#step-2" type="button" class="btn btn-secondary btn-circle"
-                                    disabled="disabled">3</a>
-                                <span class="text-white">Collection Accounts</span>
-                            </div>
-
-                            <div class="stepwizard-step">
-                                <a href="#step-2" type="button" class="btn btn-default btn-circle"
-                                    disabled="disabled">4</a>
-                                <span>Authorized Representative</span>
-                            </div>
-
-                            <div class="stepwizard-step">
-                                <a href="#step-5" type="button" class="btn btn-default btn-circle"
-                                    disabled="disabled">5</a>
-                                <span>Company Preview</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!--form message => success or danger -->
-                    <div class="form-message"></div>
+            <div class="card sp-card">
+                <div class="card-body sp-card__body">
+                    <div class="form-message sp-form-message"></div>
 
                     <form action="#" id="companyForm" enctype="multipart/form-data" autocomplete="off">
                         <input type="hidden" name="partner_id" value="{{ $company->id }}">
@@ -69,18 +45,15 @@
 
                         <!-- Company Documents -->
                         <section data-step="3">
-                            <div class="row">
-                                <div class="col-lg-12">
-                                    <h5 class="text-capitalize">Company Collection Accounts</h5>
-                                </div>
-                            </div>
+                            <div class="sp-section">
+                                <div class="sp-section__title">Collection Account Setup</div>
 
                             @if ($company->partnerAccounts->isNotEmpty())
                                 @foreach ($company->partnerAccounts as $data)
                                     <div class="row field-input">
                                         <div class="col-lg-2">
                                             <div class="mb-3">
-                                                <label>Account Type <span class="text-danger">*</span></label>
+                                                <label>Channel Type <span class="text-danger">*</span></label>
                                                 @php
                                                     $account_type_options = [];
                                                     $options = [];
@@ -92,7 +65,7 @@
                                                 @endforeach
                                                 @php
                                                     $account_type_options = $options;
-                                                    $options = ['' => 'Select'] + $options;
+                                                    $options = ['' => '-- Select --'] + $options;
                                                 @endphp
 
                                                 {{ Form::select('account_type_id[]', $options, old('account_type_id[]', $data->account_type_id), ['class' => 'form-control account_type_id', 'id' => 'account_type_id']) }}
@@ -102,7 +75,7 @@
 
                                         <div class="col-lg-2">
                                             <div class="mb-3">
-                                                <label class="bank_mno_name">Bank Name <span
+                                                <label class="bank_mno_name">Payment Channel <span
                                                         class="text-danger">*</span></label>
                                                 @php $options = []; @endphp
                                                 @foreach ($accounts as $val)
@@ -112,7 +85,7 @@
                                                 @endforeach
                                                 @php
                                                     $account_options = $options;
-                                                    $options = ['' => 'Select'] + $options;
+                                                    $options = ['' => '-- Select --'] + $options;
 
                                                 @endphp
 
@@ -165,7 +138,7 @@
                                                 @endforeach
                                                 @php
                                                     $currency_options = $options;
-                                                    $options = ['' => 'Select'] + $options;
+                                                    $options = ['' => '-- Select --'] + $options;
                                                 @endphp
 
                                                 {{ Form::select('currency_id[]', $options, old('currency_id[]', $data->currency_id), ['class' => 'form-control currency_id', 'id' => 'currency_id']) }}
@@ -187,7 +160,7 @@
                                 <div class="row field-input">
                                     <div class="col-lg-2">
                                         <div class="mb-3">
-                                            <label for="basicpill-namecard-input">Account Type <span
+                                            <label for="basicpill-namecard-input">Channel Type <span
                                                     class="text-danger">*</span></label>
                                             @php
                                                 $account_type_options = [];
@@ -200,7 +173,7 @@
                                             @endforeach
                                             @php
                                                 $account_type_options = $options;
-                                                $options = ['' => 'Select'] + $options;
+                                                $options = ['' => '-- Select --'] + $options;
                                             @endphp
 
                                             {{ Form::select('account_type_id[]', $options, old('account_type_id[]'), ['class' => 'form-control account_type_id', 'id' => 'account_type_id']) }}
@@ -210,7 +183,7 @@
 
                                     <div class="col-lg-2">
                                         <div class="mb-3">
-                                            <label class="bank_mno_name">Bank Name <span
+                                            <label class="bank_mno_name">Payment Channel <span
                                                     class="text-danger">*</span></label>
                                             @php $options = []; @endphp
                                             @foreach ($accounts as $val)
@@ -220,7 +193,7 @@
                                             @endforeach
                                             @php
                                                 $account_options = $options;
-                                                $options = ['' => 'Select'] + $options;
+                                                $options = ['' => '-- Select --'] + $options;
                                             @endphp
 
                                             {{ Form::select('account_id[]', $options, old('account_id[]'), ['class' => 'form-control account_id', 'id' => 'account_id']) }}
@@ -273,7 +246,7 @@
                                             @endforeach
                                             @php
                                                 $currency_options = $options;
-                                                $options = ['' => 'Select'] + $options;
+                                                $options = ['' => '-- Select --'] + $options;
                                             @endphp
 
                                             {{ Form::select('currency_id[]', $options, old('currency_id[]'), ['class' => 'form-control currency_id', 'id' => 'currency_id']) }}
@@ -294,14 +267,14 @@
 
                             <div class="field_wrapper"></div>
 
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <div class="mb-3 text-sm-end d-none d-sm-block">
+                            <div class="sp-actionbar">
+                                <div class="sp-actionbar__meta"></div>
+                                <div class="d-flex gap-2">
                                         <a href="{{ route('companies.register-documents', $company->uuid) }}"
-                                            class="btn btn-info text-medium">Previous</a>
-                                        <button type="submit" id="submitButton" class="btn btn-primary">Next</button>
-                                    </div>
+                                            class="btn btn-outline-secondary text-medium">Previous</a>
+                                        <button type="submit" id="submitButton" class="btn btn-primary">Save and Continue</button>
                                 </div>
+                            </div>
                             </div>
                         </section>
                     </form>
@@ -327,10 +300,10 @@
                 // Change bank or MNO name
                 if (accountTypeId == 1) {
                     fieldInputContainer.find('.bank_mno_name').html(
-                        'Bank Name <span class="text-danger">*</span>');
+                        'Payment Channel <span class="text-danger">*</span>');
                 } else if (accountTypeId == 2) {
                     fieldInputContainer.find('.bank_mno_name').html(
-                        'MNO Name <span class="text-danger">*</span>');
+                        'Payment Channel <span class="text-danger">*</span>');
                 }
 
                 // Query for data
@@ -355,9 +328,9 @@
             <div class="row field-input row-div border-top border-primary py-4">
                 <div class="col-lg-2">
                     <div class="mb-3">
-                        <label>Account Type <span class="text-danger">*</span></label>
+                        <label>Channel Type <span class="text-danger">*</span></label>
                         <select name="account_type_id[]" class="form-control account_type_id">
-                            <option value=''>Select</option>
+                            <option value=''>-- Select --</option>
                             ${Object.keys(account_types).map(key => `<option value='${key}'>${account_types[key]}</option>`).join('')}
                         </select>
                         <span class="formError"></span>
@@ -366,9 +339,9 @@
 
                 <div class="col-lg-2">
                     <div class="mb-3">
-                        <label class="bank_mno_name">Bank Name <span class="text-danger">*</span></label>
+                        <label class="bank_mno_name">Payment Channel <span class="text-danger">*</span></label>
                         <select name="account_id[]" class="form-control account_id">
-                            <option value=''>Select</option>
+                            <option value=''>-- Select --</option>
                             ${Object.keys(accounts).map(key => `<option value='${key}'>${accounts[key]}</option>`).join('')}
                         </select>
                         <span class="formError"></span>
@@ -411,7 +384,7 @@
                     <div class="mb-3">
                         <label class="currency_id">Currency <span class="text-danger">*</span></label>
                         <select name="currency_id[]" class="form-control currency_id">
-                            <option value=''>Select</option>
+                            <option value=''>-- Select --</option>
                             ${Object.keys(currencies).map(key => `<option value='${key}'>${currencies[key]}</option>`).join('')}
                         </select>
                         <span class="formError"></span>
@@ -456,8 +429,8 @@
                     "currency_id[]": "required",
                 },
                 messages: {
-                    "account_type_id[]": "Account type required",
-                    "account_id[]": "Bank/MNO name required",
+                    "account_type_id[]": "Channel type required",
+                    "account_id[]": "Payment channel required",
                     "account_name[]": "Account name required",
                     "account_number[]": "Account number required",
                     "customer_code[]": "Customer number required",

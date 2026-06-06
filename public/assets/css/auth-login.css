@@ -1,0 +1,186 @@
+html,
+body.auth-body-bg {
+    height: 100%;
+    margin: 0;
+}
+
+body.auth-body-bg {
+    overflow: hidden;
+}
+
+.login-shell {
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    align-items: center;
+    background:
+        radial-gradient(circle at top left, rgba(21, 53, 103, 0.12), transparent 28%),
+        linear-gradient(135deg, #f5f8fc 0%, #eef3f8 48%, #f8fafc 100%);
+    padding: 0;
+    overflow: hidden;
+}
+
+.login-shell .container,
+.login-shell .row,
+.login-shell [class*="col-"] {
+    height: 100%;
+}
+
+.login-card {
+    border: 0;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 22px 60px rgba(22, 44, 72, 0.12);
+    max-height: calc(100dvh - 2rem);
+}
+
+.login-aside {
+    height: 100%;
+    padding: 2rem;
+    color: #fff;
+    background: linear-gradient(160deg, #153567 0%, #214b88 100%);
+}
+
+.login-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.45rem 0.85rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.08);
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.login-aside h2 {
+    color: #fff;
+    font-size: 1.85rem;
+    line-height: 1.2;
+    margin: 1.4rem 0 0.9rem;
+}
+
+.login-aside p,
+.login-aside li {
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 0.95rem;
+    line-height: 1.7;
+}
+
+.login-points {
+    list-style: none;
+    padding: 0;
+    margin: 1.75rem 0 0;
+}
+
+.login-points li {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 0.85rem;
+}
+
+.login-points i {
+    color: #ffe4a3;
+    margin-top: 0.2rem;
+}
+
+.login-form-wrap {
+    padding: 2rem;
+    background: #fff;
+}
+
+.login-brand img {
+    height: 46px;
+}
+
+.login-title {
+    color: #17303e;
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin: 1rem 0 0.35rem;
+}
+
+.login-copy {
+    color: #647481;
+    margin-bottom: 1.15rem;
+}
+
+.login-form .form-control {
+    min-height: 46px;
+    border-radius: 12px;
+    padding: 0.8rem 0.95rem;
+    border-color: #d7e0e8;
+}
+
+.login-form .input-group .form-control {
+    border-radius: 12px 0 0 12px;
+}
+
+.login-form .input-group .btn {
+    border-radius: 0 12px 12px 0;
+    border-color: #d7e0e8;
+    background: #fff;
+    color: #5f7382;
+}
+
+.login-form .form-check-label {
+    color: #5f6d79;
+}
+
+.login-submit {
+    min-height: 48px;
+    border-radius: 12px;
+    border: 0;
+    background: linear-gradient(135deg, #153567 0%, #214b88 100%);
+    box-shadow: 0 14px 28px rgba(21, 53, 103, 0.2);
+    font-weight: 600;
+}
+
+.login-submit:hover,
+.login-submit:focus {
+    background: linear-gradient(135deg, #10294f 0%, #1a3d70 100%);
+}
+
+.login-footer {
+    color: #748390;
+    font-size: 0.9rem;
+}
+
+.login-footer a,
+.login-link {
+    color: #153567;
+    font-weight: 600;
+}
+
+@media (max-width: 991.98px) {
+    body.auth-body-bg {
+        overflow: auto;
+    }
+
+    .login-shell {
+        height: auto;
+        padding: 1rem 0;
+        overflow: visible;
+    }
+
+    .login-shell .container,
+    .login-shell .row,
+    .login-shell [class*="col-"] {
+        height: auto;
+    }
+
+    .login-card {
+        max-height: none;
+    }
+
+    .login-form-wrap,
+    .login-aside {
+        padding: 1.5rem;
+    }
+
+    .login-title,
+    .login-aside h2 {
+        font-size: 1.45rem;
+    }
+}

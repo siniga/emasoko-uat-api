@@ -4,11 +4,15 @@
     @lang('translation.Dashboards')
 @endsection
 
+@section('css')
+    <link href="{{ URL::asset('/assets/css/dashboard.css') }}" rel="stylesheet" type="text/css" />
+@endsection
+
 @section('content')
     <div class="row">
         <div class="col-12">
             <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                <h4 class="mb-sm-0 font-size-18">Summaries : {{ request('channel') ?? 'All Channels'}}</h4>
+                <h4 class="mb-sm-0 font-size-18">Summaries : {{ request('channel') ?? 'All Channels' }}</h4>
 
                 <div class="page-title-right">
                     <ol class="breadcrumb m-0">
@@ -21,24 +25,19 @@
         </div>
     </div>
 
-    <div class="row">
+    <div class="row mb-3">
         <div class="col-md-3">
             <a href="{{ route('payment-mandate.lists') }}">
-                <div class="card border-left-info bg-primary shadow h-96 py-2">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xss font-weight-600 text-white mb-1">
-                                    Payment Mandate
-                                </div>
-
-                                <div class="h5 mb-0 font-weight-700 text-white">
-                                    {{ number_format($stats['total_mandate_value']) }}
-                                </div>
-                            </div>
-                            <div class="col-auto">
-                                <i class='bx bx-copy-alt fa-3x text-white'></i>
-                            </div>
+                <div class="detail-summary shadow h-96 py-2">
+                    <div class="detail-summary__label text-muted">Payment Mandate</div>
+                    <div class="detail-summary__split">
+                        <div class="detail-summary__metric">
+                            <div class="detail-summary__value text-primary">
+                                {{ number_format($stats['total_mandate_value']) }}</div>
+                        </div>
+                        <div class="detail-summary__metric detail-summary__metric--count">
+                            <div class="detail-summary__value text-primary">
+                                {{ number_format($stats['total_number_of_mandate']) }}</div>
                         </div>
                     </div>
                 </div>
@@ -47,21 +46,16 @@
 
         <div class="col-md-3">
             <a href="{{ route('payment-mandate.lists', ['status' => 'approved']) }}">
-                <div class="card border-left-info bg-success-1 shadow h-96 py-2">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xss font-weight-600 text-white mb-1">
-                                    Approved Mandate
-                                </div>
-
-                                <div class="h5 mb-0 font-weight-700 text-white">
-                                    {{ number_format($stats['approved_mandate_value']) }}
-                                </div>
-                            </div>
-                            <div class="col-auto">
-                                <i class='bx bx-copy-alt fa-3x text-white'></i>
-                            </div>
+                <div class="detail-summary shadow h-96 py-2">
+                    <div class="detail-summary__label text-muted">Approved Mandate</div>
+                    <div class="detail-summary__split">
+                        <div class="detail-summary__metric">
+                            <div class="detail-summary__value text-success">
+                                {{ number_format($stats['approved_mandate_value']) }}</div>
+                        </div>
+                        <div class="detail-summary__metric detail-summary__metric--count">
+                            <div class="detail-summary__value text-success">
+                                {{ number_format($stats['number_of_approved_mandate']) }}</div>
                         </div>
                     </div>
                 </div>
@@ -70,21 +64,16 @@
 
         <div class="col-md-3">
             <a href="{{ route('payment-mandate.lists', ['status' => 'pending']) }}">
-                <div class="card border-left-info bg-danger-1 shadow h-96 py-2">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xss font-weight-600 text-white mb-1">
-                                    Pending Mandate
-                                </div>
-
-                                <div class="h5 mb-0 font-weight-700 text-white">
-                                    {{ number_format($stats['pending_mandate_value']) }}
-                                </div>
-                            </div>
-                            <div class="col-auto">
-                                <i class='bx bx-copy-alt fa-3x text-white'></i>
-                            </div>
+                <div class="detail-summary shadow h-96 py-2">
+                    <div class="detail-summary__label text-muted">Pending Mandate</div>
+                    <div class="detail-summary__split">
+                        <div class="detail-summary__metric">
+                            <div class="detail-summary__value text-warning">
+                                {{ number_format($stats['pending_mandate_value']) }}</div>
+                        </div>
+                        <div class="detail-summary__metric detail-summary__metric--count">
+                            <div class="detail-summary__value text-warning">
+                                {{ number_format($stats['number_of_pending_mandate']) }}</div>
                         </div>
                     </div>
                 </div>
@@ -93,21 +82,16 @@
 
         <div class="col-md-3">
             <a href="{{ route('payment-mandate.lists', ['status' => 'failed']) }}">
-                <div class="card border-left-info bg-danger shadow h-96 py-2">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xss font-weight-600 text-white mb-1">
-                                    Failed Mandate
-                                </div>
-
-                                <div class="h5 mb-0 font-weight-700 text-white">
-                                    {{ number_format($stats['failed_mandate_value']) }}
-                                </div>
-                            </div>
-                            <div class="col-auto">
-                                <i class='bx bx-copy-alt fa-3x text-white'></i>
-                            </div>
+                <div class="detail-summary shadow h-96 py-2">
+                    <div class="detail-summary__label text-muted">Failed Mandate</div>
+                    <div class="detail-summary__split">
+                        <div class="detail-summary__metric">
+                            <div class="detail-summary__value text-danger">
+                                {{ number_format($stats['failed_mandate_value']) }}</div>
+                        </div>
+                        <div class="detail-summary__metric detail-summary__metric--count">
+                            <div class="detail-summary__value text-danger">
+                                {{ number_format($stats['number_of_failed_mandate']) }}</div>
                         </div>
                     </div>
                 </div>
@@ -115,21 +99,18 @@
         </div>
     </div>
 
-    <div class="row">
+    <div class="row mb-3">
         <div class="col-md-3">
             <a href="{{ route('collections.expected-monthly') }}">
-                <div class="card border-left-info bg-primary shadow h-96 py-2">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xss font-weight-600 text-white mb-1">
-                                    Expected Collection ({{ $stats['month'] }})
-                                </div>
-
-                                <div class="h5 mb-0 font-weight-700 text-white">
-                                    {{ number_format($stats['this_month_expected']) }}
-                                </div>
-                            </div>
+                <div class="detail-summary shadow h-96 py-2">
+                    <div class="detail-summary__label text-muted">Expected Collection - {{ $stats['month'] }}</div>
+                    <div class="detail-summary__split">
+                        <div class="detail-summary__metric">
+                            <div class="detail-summary__value text-primary">
+                                {{ number_format($stats['this_month_expected']) }}</div>
+                        </div>
+                        <div class="detail-summary__metric detail-summary__metric--count">
+                            <div class="detail-summary__value text-primary">{{ number_format($stats['this_month_total_collections']) }}</div>
                         </div>
                     </div>
                 </div>
@@ -138,18 +119,15 @@
 
         <div class="col-md-3">
             <a href="{{ route('collections.actual-monthly') }}">
-                <div class="card border-left-info bg-success-1 shadow h-96 py-2">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xss font-weight-600 text-white mb-1">
-                                    Actual Collection ({{ $stats['month'] }})
-                                </div>
-
-                                <div class="h5 mb-0 font-weight-700 text-white">
-                                    {{ number_format($stats['this_month_paid']) }}
-                                </div>
+                <div class="detail-summary shadow h-96 py-2">
+                    <div class="detail-summary__label text-muted">Actual Collection - {{ $stats['month'] }}</div>
+                    <div class="detail-summary__split">
+                        <div class="detail-summary__metric">
+                            <div class="detail-summary__value text-success">{{ number_format($stats['this_month_paid']) }}
                             </div>
+                        </div>
+                        <div class="detail-summary__metric detail-summary__metric--count">
+                            <div class="detail-summary__value text-success">{{ number_format($stats['this_month_successful_collections']) }}</div>
                         </div>
                     </div>
                 </div>
@@ -158,18 +136,16 @@
 
         <div class="col-md-3">
             <a href="{{ route('collections.expected-daily') }}">
-                <div class="card border-left-info bg-primary shadow h-96 py-2">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xss font-weight-600 text-white mb-1">
-                                    Expected Collection (Today)
-                                </div>
-
-                                <div class="h5 mb-0 font-weight-700 text-white">
-                                    {{ number_format($stats['today_expected']) }}
-                                </div>
+                <div class="detail-summary shadow h-96 py-2">
+                    <div class="detail-summary__label text-muted">Expected Collection - Today</div>
+                    <div class="detail-summary__split">
+                        <div class="detail-summary__metric">
+                            <div class="detail-summary__value text-primary">{{ number_format($stats['today_expected']) }}
                             </div>
+                        </div>
+
+                        <div class="detail-summary__metric detail-summary__metric--count">
+                            <div class="detail-summary__value text-primary">{{ number_format($stats['today_total_collections']) }}</div>
                         </div>
                     </div>
                 </div>
@@ -178,18 +154,15 @@
 
         <div class="col-md-3">
             <a href="{{ route('collections.actual-daily') }}">
-                <div class="card border-left-info bg-success-1 shadow h-96 py-2">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xss font-weight-600 text-white mb-1">
-                                    Actual Collection (Today)
-                                </div>
+                <div class="detail-summary shadow h-96 py-2">
+                    <div class="detail-summary__label text-muted">Actual Collection - Today</div>
+                    <div class="detail-summary__split">
+                        <div class="detail-summary__metric">
+                            <div class="detail-summary__value text-success">{{ number_format($stats['today_paid']) }}</div>
+                        </div>
 
-                                <div class="h5 mb-0 font-weight-700 text-white">
-                                    {{ number_format($stats['today_paid']) }}
-                                </div>
-                            </div>
+                        <div class="detail-summary__metric detail-summary__metric--count">
+                            <div class="detail-summary__value text-success">{{ number_format($stats['today_successful_collections']) }}</div>
                         </div>
                     </div>
                 </div>
@@ -212,7 +185,9 @@
 
                                     <option value="">Select</option>
                                     @foreach (range(2024, $current_year) as $v)
-                                        <option value="{{ $v }}">{{ $v }}</option>
+                                        <option value="{{ $v }}"
+                                            {{ (int) $post_data['year'] === (int) $v ? 'selected' : '' }}>
+                                            {{ $v }}</option>
                                     @endforeach
                                 </select>
                                 <label class="input-group-text">Year</label>
@@ -233,45 +208,33 @@
         <div class="col-xl-4">
             <div class="card">
                 <div class="card-body">
-                    <h4 class="card-title mb-4">Payment Mandate Rates</h4>
-                    <div>
-                        <div id="consent-rate-chart" class="apex-charts"></div>
-                    </div>
-                    <div class="text-center text-muted">
-                        <div class="row">
-                            <div class="col-lg-4 col-md-4 col-4">
-                                <div class="my-2">
-                                    <p class="text-xs">
-                                        <i class="mdi mdi-circle text-success-1 my-1"></i> Approved :
-                                        {{ $stats['number_of_approved_mandate'] }}
-                                    </p>
+                    <h4 class="card-title mb-4">Mandate Rates</h4>
+                    <div class="dashboard-pipeline">
+                        @foreach ($mandate_pipeline as $item)
+                            <div class="dashboard-pipeline__item">
+                                <div class="dashboard-pipeline__row">
+                                    <span class="dashboard-pipeline__label">{{ $item['label'] }}</span>
+                                    <span class="dashboard-pipeline__value pipeline-{{ $item['tone'] }}">
+                                        {{ format_short_amount($item['amount']) }} TZS ·
+                                        {{ number_format($item['percent'], 1) }}%
+                                    </span>
+                                </div>
+                                <div class="dashboard-pipeline__track">
+                                    <div class="dashboard-pipeline__bar pipeline-{{ $item['tone'] }}"
+                                        style="width: {{ min(max($item['percent'], 0), 100) }}%"></div>
                                 </div>
                             </div>
+                        @endforeach
 
-                            <div class="col-lg-4 col-md-4 col-4">
-                                <div class="my-2">
-                                    <p class="text-xs">
-                                        <i class="mdi mdi-circle text-danger my-1"></i> Pending :
-                                        {{ $stats['number_of_pending_mandate'] }}
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div class="col-lg-4 col-md-4 col-4">
-                                <div class="my-2">
-                                    <p class="text-xs">
-                                        <i class="mdi mdi-circle text-danger-1 my-1"></i> Failed :
-                                        {{ $stats['number_of_failed_mandate'] }}
-                                    </p>
-                                </div>
-                            </div>
-
+                        <div class="dashboard-pipeline__footer">
+                            Total mandate value: <strong>{{ format_short_amount($stats['total_mandate_value']) }}
+                                TZS</strong><br>
+                            Highest single: <strong>{{ format_short_amount($highest_single_mandate) }} TZS</strong>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <!--./col -->
     </div>
 
     <div class="row">
@@ -289,7 +252,9 @@
 
                                     <option value="">Select</option>
                                     @foreach (range(2024, $current_year + 5) as $v)
-                                        <option value="{{ $v }}">{{ $v }}</option>
+                                        <option value="{{ $v }}"
+                                            {{ (int) $post_data['year'] === (int) $v ? 'selected' : '' }}>
+                                            {{ $v }}</option>
                                     @endforeach
                                 </select>
                                 <label class="input-group-text">Year</label>
@@ -333,53 +298,74 @@
     </div>
 
     <div class="row">
-        <div class="col-xl-12">
-            <div class="card">
+        <div class="col-xl-8">
+            <div class="card dashboard-report-panel">
                 <div class="card-body">
-                    <div class="clearfix">
-                        <h4 class="card-title mb-4">{{ $collection_title }}</h4>
-                    </div>
+                    <div class="dashboard-report-panel__head">
+                        <div>
+                            <h4 class="card-title">Mandates Posted vs Deducted</h4>
+                            <p class="dashboard-report-panel__hint">Collected mandates against the remaining gap for
+                                each month.</p>
+                        </div>
 
-                    <div class="table-responsive">
-                        <table class="table table-bordered dt-responsive  nowrap w-100" id="dynamicTable">
-                            <thead>
-                                <tr>
-                                    <th width="3%">#</th>
-                                    <th width="30%">Service Provider</th>
-                                    <th width="12%">No. of Collection</th>
-                                    <th width="14%">Expected Amount</th>
-                                    <th width="14%">Collected Amount</th>
-                                    <th width="14%">Outstanding Amount</th>
-                                    <th width="12%">Success Rate(%)</th>
-                                </tr>
-                            </thead>
-
-                            <tbody>
-                                @php $serial = 1; @endphp
-                                @foreach ($arr_data as $values)
-                                    <tr>
-                                        <td>{{ $serial }}</td>
-                                        <td>
-                                            <a href="{{ route('collections.actual-monthly-detail', $values['uuid']) }}?month={{ $post_data['month'] }}&year={{ $post_data['year'] }}"
-                                                class="font-weight-600">
-                                                {{ strtoupper($values['partner_name']) }}
-                                            </a>
-                                        </td>
-                                        <td class="text-sm-end">{{ number_format($values['number_of_collection']) }}</td>
-                                        <td class="text-sm-end">{{ number_format($values['total_amount']) }}</td>
-                                        <td class="text-sm-end">{{ number_format($values['paid_amount']) }}</td>
-                                        <td class="text-sm-end">{{ number_format($values['outstanding_amount']) }}</td>
-                                        <td class="text-sm-end">{{ $values['percent'] }}</td>
-                                    </tr>
-                                    @php $serial++; @endphp
-                                @endforeach
-                            </tbody>
-                        </table>
+                        <div>
+                            <div class="input-group input-group-sm">
+                                <select class="form-select form-select-sm" id="mandates-posted-vs-deducted-select-year">
+                                    @php $current_year = date('Y'); @endphp
+                                    <option value="">Select</option>
+                                    @foreach (range(2024, $current_year + 5) as $v)
+                                        <option value="{{ $v }}"
+                                            {{ (int) $post_data['year'] === (int) $v ? 'selected' : '' }}>
+                                            {{ $v }}</option>
+                                    @endforeach
+                                </select>
+                                <label class="input-group-text">Year</label>
+                            </div>
+                        </div>
                     </div>
+                    <div id="mandates-posted-vs-deducted-chart"></div>
                 </div>
             </div>
         </div>
-        <!--./col -->
+
+        <div class="col-xl-4">
+            <div class="card dashboard-report-panel">
+                <div class="card-body">
+                    <div class="dashboard-report-panel__head">
+                        <div>
+                            <h4 class="card-title">Payment Channel Performance</h4>
+                        </div>
+                    </div>
+
+                    {{-- <div class="dashboard-channel-list">
+                        @foreach ($bank_channel_performance as $channelItem)
+                            <div class="dashboard-channel-item">
+                                <div class="dashboard-channel-item__badge">
+                                    @if (!empty($channelItem['logo']))
+                                        <img src="{{ $channelItem['logo'] }}" alt="{{ $channelItem['name'] }}" class="dashboard-channel-item__logo">
+                                    @else
+                                        {{ $channelItem['slug'] }}
+                                    @endif
+                                </div>
+
+                                <div>
+                                    <div class="dashboard-channel-item__name">{{ $channelItem['name'] }}</div>
+                                    <div class="dashboard-channel-item__meta">{{ $channelItem['subtitle'] }}</div>
+                                    <div class="dashboard-channel-item__track">
+                                        <div class="dashboard-channel-item__bar channel-{{ $channelItem['tone'] }}"
+                                            style="width: {{ $channelItem['bar_width'] }}%"></div>
+                                    </div>
+                                </div>
+
+                                <div class="dashboard-channel-item__status channel-{{ $channelItem['tone'] }}">
+                                    {{ $channelItem['status'] }}
+                                </div>
+                            </div>
+                        @endforeach
+                    </div> --}}
+                </div>
+            </div>
+        </div>
     </div>
 @endsection
 
@@ -388,8 +374,8 @@
     <script src="{{ URL::asset('/assets/libs/apexcharts/apexcharts.min.js') }}"></script>
 
     <script>
-    window.DASHBOARD_FILTERS = @json($post_data);
-</script>
+        window.DASHBOARD_FILTERS = @json($post_data);
+    </script>
 
     <!-- Saas dashboard init -->
     <script src="{{ URL::asset('/assets/js/charts/dashboard.js') }}"></script>
