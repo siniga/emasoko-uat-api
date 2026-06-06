@@ -26,24 +26,41 @@ class CollectionDebitOrder extends Model
         return $this->belongsTo(Installment::class, "installment_id");
     }
 
-    public function scopeForCycle($query, int $installmentId, $paymentAt)
+    public function scopeForCycle($query, int $debitOrderId, $paymentAt)
     {
         $month = Carbon::parse($paymentAt)->format('m');
         $year = Carbon::parse($paymentAt)->format('Y');
 
-        return $query->where('installment_id', $installmentId)
+        return $query->where('debit_order_id', $debitOrderId)
             ->whereMonth('payment_at', $month)
             ->whereYear('payment_at', $year);
     }
 
     public static function createForCycle(array $attributes): self
     {
-        return static::firstOrCreate(
-            [
-                'installment_id' => $attributes['installment_id'],
-                'payment_at' => Carbon::parse($attributes['payment_at'])->toDateString(),
-            ],
-            $attributes
-        );
+        $paymentAt = Carbon::parse($attributes['payment_at'])->toDateString();
+
+        $activeCycle = static::query()
+            ->forCycle($attributes['debit_order_id'], $paymentAt)
+            ->whereHas('batch', function ($query) {
+                $query->where('deleted', 0);
+            })
+            ->first();
+
+        if ($activeCycle) {
+            return $activeCycle;
+        }
+
+        $attributes['payment_at'] = $paymentAt;
+
+        $line = static::firstOrNew([
+            'installment_id' => $attributes['installment_id'],
+            'payment_at' => $paymentAt,
+        ]);
+
+        $line->fill($attributes);
+        $line->save();
+
+        return $line;
     }
 }

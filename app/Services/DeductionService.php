@@ -164,7 +164,7 @@ class DeductionService
                         return false; // abort further chunking
                     }
 
-                    // 1) Prefer OPEN + not created + due today (earliest first)
+                    // 1) Prefer OPEN + not created + due today.
                     $open = $debitOrder->installments()
                         ->where('installments.status', 'OPEN')
                         ->where('installments.created', 0)
@@ -175,10 +175,17 @@ class DeductionService
                     if ($open) {
                         $picked->push($open);
                     } else {
-                        // 2) Fallback: earliest FAILED/FUNDSCHECK before today, exclude "Account Is Valid"
+                        // 2) Fallback: earliest previous OPEN/FAILED/FUNDSCHECK installment.
                         $fallback = $debitOrder->installments()
-                            ->whereIn('status', ['FAILED', 'FUNDSCHECK'])
-                            ->where('remarks', '!=', 'Account Is Valid')
+                            ->whereIn('status', ['OPEN', 'FAILED', 'FUNDSCHECK'])
+                            ->where(function ($query) {
+                                $query->where('status', '!=', 'OPEN')
+                                    ->orWhere('created', 0);
+                            })
+                            ->where(function ($query) {
+                                $query->whereNull('remarks')
+                                    ->orWhere('remarks', '!=', 'Account Is Valid');
+                            })
                             ->whereDate('payment_date', '<', $current_date)
                             ->orderBy('installments.payment_date')
                             ->first();

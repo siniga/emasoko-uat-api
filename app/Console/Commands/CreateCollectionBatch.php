@@ -3,11 +3,14 @@
 namespace App\Console\Commands;
 
 use App\Jobs\SendSMSJob;
+use App\Models\SmsLog;
 use App\Services\CollectionBatchService;
 use App\Services\DeductionService;
+use App\Services\MessagingService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class CreateCollectionBatch extends Command
 {
@@ -32,9 +35,9 @@ class CreateCollectionBatch extends Command
      */
     public function __construct(
         protected DeductionService $deductionService,
-        protected CollectionBatchService $collectionBatchService
-    )
-    {
+        protected CollectionBatchService $collectionBatchService,
+        protected MessagingService $messagingService
+    ) {
         parent::__construct();
     }
 
@@ -52,11 +55,14 @@ class CreateCollectionBatch extends Command
 
         $success = 0;
         foreach ($partners as $partner) {
-            $installments = $this->deductionService->getInstallments($partner, $current_date, 250);
-            $batch = $this->collectionBatchService->createBatchFromInstallments($partner, $installments);
+            $installments = $this->deductionService->getInstallments($partner, $current_date);
 
-            if ($batch) {
-                $success += 1;
+            foreach ($installments->chunk(250) as $chunk) {
+                $batch = $this->collectionBatchService->createBatchFromInstallments($partner, $chunk->values());
+
+                if ($batch) {
+                    $success += 1;
+                }
             }
         }
 
@@ -66,11 +72,25 @@ class CreateCollectionBatch extends Command
             $message = "Collection batches created. Review and approve batches to the next stage.";
             $arr_phone = [255717705746, 255656314330];
 
+            //messageid
+            $messageId = $this->messagingService->generateMessageId();
+
             foreach ($arr_phone as $phone) {
-                //send sms
-                $data = ["phone" => $phone, "message" => $message];
-                dispatch(new SendSMSJob($data));
+                $sms_log = SmsLog::firstOrNew([
+                    'message_id' => $messageId,
+                    'phone' => $this->messagingService->castPhone($phone),
+                ]);
+                $sms_log->message = $message;
+                $sms_log->uuid = Str::uuid();
+                $sms_log->number_of_sms = $this->messagingService->countNumberOfSms($message);
+                $sms_log->status = 'PENDING';
+                $sms_log->created_by = 1;
+                $sms_log->save();
             }
+
+            //send sms
+            $response = $this->messagingService->actionSendSMS($messageId);
+            Log::debug("== Collection SMS sent ==");
         }
 
         // Log the collection batches

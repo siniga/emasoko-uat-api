@@ -15,7 +15,7 @@ class SyncDebitOrderDates extends Command
      *
      * @var string
      */
-    protected $signature = 'debit-orders:sync-next-date';
+    protected $signature = 'debit-orders:sync-next-date {--date= : Reference date used to resolve the next unpaid installment}';
 
     /**
      * The console command description.
@@ -36,7 +36,9 @@ class SyncDebitOrderDates extends Command
      */
     public function handle()
     {
-        $referenceDate = Carbon::now();
+        $referenceDate = $this->option('date')
+            ? Carbon::parse($this->option('date'))
+            : Carbon::now();
         Log::debug("== Sync next debit dates: '{$referenceDate}' ==");
 
         $count = 0;

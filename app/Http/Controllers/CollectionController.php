@@ -1300,13 +1300,14 @@ class CollectionController extends Controller
                     else
                         $status = 'CREATED';
 
-                    //create or update collection batch
-                    $collection_debit_order = CollectionDebitOrder::firstOrNew(
-                        ['debit_order_id' => $installment->debitOrder->id, 'payment_at' => $installment->payment_date]
-                    );
-                    $collection_debit_order->collection_batch_id = $batch->id;
-                    $collection_debit_order->status = $status;
-                    $collection_debit_order->save();
+                    CollectionDebitOrder::createForCycle([
+                        'collection_batch_id' => $batch->id,
+                        'debit_order_id' => $installment->debitOrder->id,
+                        'installment_id' => $installment->id,
+                        'status' => $status,
+                        'bank_status' => $status,
+                        'payment_at' => $installment->effective_payment_date ?: $installment->payment_date,
+                    ]);
                 }
             }
         }
@@ -1316,25 +1317,10 @@ class CollectionController extends Controller
 
     public function update_debit_orders()
     {
-        $current_month = now()->month; //current month
-        $current_year = now()->year; // current year
         $debit_orders = DebitOrder::where(['approved' => 1])->get(); //debit orders
 
         foreach ($debit_orders as $val) {
-            $payment_month = Carbon::parse($val->next_debit_date)->format('m');
-
-            if ($payment_month != $current_month) {
-                //original date
-                $original = Carbon::parse($val->next_debit_date);
-
-                //new date
-                $newDate = Carbon::create($current_year, $current_month, $original->day);
-
-                //update debit order 
-                $debit_order = DebitOrder::findOrFail($val->id);
-                $debit_order->next_debit_date = $newDate;
-                $debit_order->save();
-            }
+            $this->deductionService->syncNextDebitDate($val);
         }
 
         return response()->json(['error' => false, 'success' => 'Debit order updated']);

@@ -3,15 +3,16 @@
 namespace App\Console\Commands;
 
 use App\Jobs\SendSMSJob;
+use App\Models\SmsLog;
 use App\Models\CollectionBatch;
-use App\Models\CollectionDebitOrder;
 use App\Models\Installment;
-use App\Services\BankApiService;
-use App\Services\BankPayloadService;
-use App\Services\DeductionService;
+use App\Services\CollectionBatchService;
+use App\Services\MessagingService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class CreateFailedBatch extends Command
 {
@@ -20,22 +21,24 @@ class CreateFailedBatch extends Command
      *
      * @var string
      */
-    protected $signature = 'create:failed-batches';
+    protected $signature = 'create:failed-batches {--references= : Comma-separated current-month collection references to repair}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Command for sending failed batches';
+    protected $description = 'Format and create repaired current-month batches from failed bank-side collection batches';
 
     /**
      * Create a new command instance.
      *
      * @return void
      */
-    public function __construct()
-    {
+    public function __construct(
+        protected CollectionBatchService $collectionBatchService,
+        protected MessagingService $messagingService
+    ) {
         parent::__construct();
     }
 
@@ -46,146 +49,151 @@ class CreateFailedBatch extends Command
      */
     public function handle()
     {
-        //initiate collection date
-        $collection_date = Carbon::now();
+        $references = collect(explode(',', (string) $this->option('references')))
+            ->map(fn($reference) => trim($reference))
+            ->filter()
+            ->values();
 
-        //initialize deduction service
+        if ($references->isEmpty()) {
+            $this->error('Pass affected batch references with --references=17916,17832.');
 
-        $deductionService = new DeductionService();
+            return self::FAILURE;
+        }
 
-        //Query filed collection batches
-        $collection_batches = CollectionBatch::whereIn('collectionReference', [17916, 17832, 17748])->get();
+        $batches = CollectionBatch::whereIn('collectionReference', $references)
+            ->where('deleted', 0)
+            ->get();
 
-        if ($collection_batches) {
-            foreach ($collection_batches as $batch) {
-                //1. Create new collection batch
-                $new_batch = CollectionBatch::create([
-                    "partner_id" => $batch->partner_id,
-                    "collectionReference" => $deductionService->getCollectionReference(),
-                    "corporateReference" => $batch->corporateReference,
-                    "selectedPostingDate" => Carbon::now(),
-                    "createdBy" => 1,
-                    "verifiedBy" => 1,
-                    "createdDate" => Carbon::now(),
-                    "verifyDate" => Carbon::now(),
-                ]);
+        if ($batches->isEmpty()) {
+            $this->warn('No active collection batches found for the provided references.');
 
-                //batch collection date
-                $batch_collection_date = Carbon::parse($batch->collectionDate);
+            return self::SUCCESS;
+        }
 
-                if ($new_batch->wasRecentlyCreated) {
-                    //3. Create CSV file based installment
-                    $csv = "SERIAL No.;BANK CODE;BRANCH NAME;EMPLOYEE NUMBER;CUSTOMER NAME;ACCOUNT NO;AMOUNT\n";
+        $created = 0;
+        $createdReferences = [];
 
-                    //response
-                    $response_csv = $batch->request_csv;
+        foreach ($batches as $sourceBatch) {
+            $batch = DB::transaction(function () use ($sourceBatch) {
+                $installmentIds = $sourceBatch->installment_id_list;
 
-                    // Convert the data into an array of rows
-                    $rows = explode("\n", $response_csv);
-
-                    //remove empty rows
-                    $rows = array_filter($rows);
-
-                    //Declare variables
-                    $number_of_collections = 0;
-                    $arr_installments = [];
-                    $arr_accounts = [];
-
-                    foreach ($rows as $index => $row) {
-                        // Skip the first row as it contains headers
-                        if ($index === 0) {
-                            continue;
-                        }
-
-                        // Split the row into individual fields using semicolon as delimiter
-                        $fields = explode(";", $row);
-
-                        //get installment from id
-                        $installment = Installment::where(['id' => $fields[0]])->first();
-
-                        if ($installment) {
-                            //account details
-                            $account_name = strtoupper($installment->debitOrder->customerAccount->account_name);
-                            $account_number = $installment->debitOrder->customerAccount->account_number;
-                            $mandate_reference = $installment->debitOrder->reference;
-                            $debit_order_id = $installment->debitOrder->id;
-                            $periodicity = $installment->debitOrder->periodicity;
-                            $installment_id = $installment->id;
-                            $payment_amount = $installment->installment_amount;
-                            $debit_start_date = Carbon::parse($installment->debitOrder->start_date);
-                            $debit_end_date = Carbon::parse($installment->debitOrder->end_date);
-
-                            //debit status
-                            $deleted = $installment->debitOrder->deleted;
-                            $contract_status = $installment->debitOrder->contract_status;
-
-                            //updated installment set created = 0 and pushed = 0
-                            $installment->created = 0;
-                            $installment->pushed = 0;
-                            $installment->status = "OPEN";
-                            $installment->save();
-
-                            //2.0: check if periodicity == MONTHLY and deleted = 0
-                            if ($periodicity == "MONTHLY" && $contract_status == "OPEN" && $deleted == 0) {
-                                //2.0: Check if mandate start date <= today
-                                if ($debit_start_date->lte(Carbon::now())) {
-                                    //2.1: check if debit mandate expire
-                                    if ($debit_end_date->gte(Carbon::now())) {
-                                        //3.0: check if account exists in this batch
-                                        if (!in_array($account_number, $arr_accounts)) {
-                                            // 3.1: create new collection date from previous month
-                                            $collection_date = $installment->effective_payment_date;
-
-                                            //3.2: check if the mandate reference is exists for this month
-                                            $collection_debit_order = CollectionDebitOrder::where(['debit_order_id' => $debit_order_id])
-                                                ->whereMonth('payment_at', Carbon::parse($collection_date)->format('m'))
-                                                ->whereYear('payment_at', Carbon::parse($collection_date)->format('Y'));
-
-                                            if ($collection_debit_order->count() == 1) {
-                                                //create csv file
-                                                $csv .= "{$installment_id};016;NMB;{$mandate_reference};{$account_name};{$account_number};{$payment_amount}\n";
-
-                                                //append account in array
-                                                array_push($arr_accounts, $account_number);
-
-                                                //update array installments
-                                                array_push($arr_installments, $installment_id);
-
-                                                //updated installment set created = 1
-                                                $installment->created = 1;
-                                                $installment->save();
-
-                                                //increment number of collections
-                                                $number_of_collections += 1;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    //check if installments is not null
-                    if ($arr_installments) {
-                        $new_batch->request_csv = $csv;
-                        $new_batch->collectionDate = $batch_collection_date;
-                        $new_batch->number_of_collections = $number_of_collections;
-                        $new_batch->installment_ids = implode(",", $arr_installments);
-                        $new_batch->save();
-                    } else {
-                        $new_batch->delete();
-                    }
+                if (empty($installmentIds)) {
+                    return null;
                 }
 
-                //set old batch deleted = 1
-                $origin_batch = CollectionBatch::where(['id' => $batch->id])->first();
-                $origin_batch->deleted = 1;
-                $origin_batch->save();
+                $installments = $this->repairableInstallments($installmentIds);
+
+                if ($installments->isEmpty()) {
+                    return null;
+                }
+
+                $collectionDate = $sourceBatch->collectionDate
+                    ? Carbon::parse($sourceBatch->collectionDate)
+                    : now();
+
+                $originalState = [
+                    'deleted' => $sourceBatch->deleted,
+                    'recreated' => $sourceBatch->recreated,
+                    'lifecycle_status' => $sourceBatch->lifecycle_status,
+                ];
+
+                $sourceBatch->deleted = 1;
+                $sourceBatch->save();
+
+                $batch = $this->collectionBatchService->createBatchFromInstallments(
+                    $sourceBatch->partner,
+                    $installments,
+                    null,
+                    [
+                        'forced_collection_date' => $collectionDate,
+                        'batch_collection_date' => $collectionDate->toDateString(),
+                    ]
+                );
+
+                if (!$batch) {
+                    $sourceBatch->fill($originalState);
+                    $sourceBatch->save();
+
+                    return null;
+                }
+
+                $sourceBatch->recreated = 1;
+                $sourceBatch->lifecycle_status = CollectionBatch::LIFECYCLE_RECREATED;
+                $sourceBatch->save();
+
+                return $batch;
+            });
+
+            if ($batch) {
+                $created++;
+                $createdReferences[] = $batch->collectionReference;
+                $this->info("Created repaired batch {$batch->collectionReference} from {$sourceBatch->collectionReference}.");
+            } else {
+                $this->warn("No repaired batch created from {$sourceBatch->collectionReference}.");
             }
         }
 
-        // Log the collection batches
-        Log::debug("== Failed collection batches created==");
-        return 200;
+        if ($created > 0) {
+            $message = "Repaired collection batch" . ($created > 1 ? 'es' : '') . " " . implode(', ', $createdReferences) . " created. Review and approve to the next stage.";
+            $arr_phone = [255717705746, 255656314330];
+
+            //messageid
+            $messageId = $this->messagingService->generateMessageId();
+
+            foreach ($arr_phone as $phone) {
+                $sms_log = SmsLog::firstOrNew([
+                    'message_id' => $messageId,
+                    'phone' => $this->messagingService->castPhone($phone),
+                ]);
+                $sms_log->message = $message;
+                $sms_log->uuid = Str::uuid();
+                $sms_log->number_of_sms = $this->messagingService->countNumberOfSms($message);
+                $sms_log->status = 'PENDING';
+                $sms_log->created_by = 1;
+                $sms_log->save();
+            }
+
+            //send sms
+            $response = $this->messagingService->actionSendSMS($messageId);
+            Log::debug("== Collection SMS sent ==");
+        }
+
+        Log::debug("== {$created} repaired failed collection batches created ==");
+
+        return self::SUCCESS;
+    }
+
+    protected function repairableInstallments(array $installmentIds)
+    {
+        return Installment::whereIn('id', $installmentIds)
+            ->where('status', 'FAILED')
+            ->whereIn('remarks', [
+                'Item Can Be Collected And Has Been Tracked Successfully.',
+                'Insufficient funds Archive',
+            ])
+            ->get()
+            ->each(function (Installment $installment) {
+                $this->normalizeInstallmentAmount($installment);
+            });
+    }
+
+    protected function normalizeInstallmentAmount(Installment $installment): void
+    {
+        $debitOrder = $installment->debitOrder;
+        $debitType = strtoupper((string) $debitOrder->debit_type);
+        $expectedAmount = $debitType === 'FIXED'
+            ? $debitOrder->installment_amount
+            : $debitOrder->max_installment_amount;
+
+        if ((float) $installment->installment_amount === (float) $expectedAmount) {
+            return;
+        }
+
+        $installment->installment_amount = $expectedAmount;
+        $installment->min_installment_amount = $debitOrder->min_installment_amount;
+        $installment->max_installment_amount = $debitOrder->max_installment_amount;
+        $installment->current_balance = 0;
+        $installment->outstanding_amount = $expectedAmount;
+        $installment->save();
     }
 }

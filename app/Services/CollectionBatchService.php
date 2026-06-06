@@ -75,15 +75,29 @@ class CollectionBatchService
 
             foreach ($candidates as $candidate) {
                 /** @var \App\Models\Installment $installment */
-                $installment = $candidate['installment']->fresh();
+                $installment = Installment::query()
+                    ->whereKey($candidate['installment']->id)
+                    ->lockForUpdate()
+                    ->first();
 
-                $csv .= "{$installment->id};016;NMB;{$candidate['mandate_reference']};{$candidate['account_name']};{$candidate['account_number']};{$candidate['payment_amount']}\n";
+                if (!$installment) {
+                    continue;
+                }
 
-                $installment->effective_payment_date = $candidate['collection_date']->toDateString();
-                $installment->created = 1;
-                $installment->save();
+                $debitOrder = DebitOrder::query()
+                    ->whereKey($installment->debit_order_id)
+                    ->lockForUpdate()
+                    ->first();
 
-                CollectionDebitOrder::createForCycle([
+                if (!$debitOrder) {
+                    continue;
+                }
+
+                if ($this->hasCollectionCycleDuplicate($installment, $candidate['collection_date'])) {
+                    continue;
+                }
+
+                $line = CollectionDebitOrder::createForCycle([
                     'collection_batch_id' => $batch->id,
                     'debit_order_id' => $installment->debit_order_id,
                     'installment_id' => $installment->id,
@@ -92,7 +106,23 @@ class CollectionBatchService
                     'payment_at' => $candidate['collection_date']->toDateString(),
                 ]);
 
+                if ((string) $line->collection_batch_id !== (string) $batch->id) {
+                    continue;
+                }
+
+                $csv .= "{$installment->id};016;NMB;{$candidate['mandate_reference']};{$candidate['account_name']};{$candidate['account_number']};{$candidate['payment_amount']}\n";
+
+                $installment->effective_payment_date = $candidate['collection_date']->toDateString();
+                $installment->created = 1;
+                $installment->save();
+
                 $installmentIds[] = $installment->id;
+            }
+
+            if (empty($installmentIds)) {
+                $batch->delete();
+
+                return null;
             }
 
             $batch->request_csv = $csv;
@@ -111,7 +141,10 @@ class CollectionBatchService
 
         $installments = Installment::whereIn('id', $installmentIds)
             ->whereIn('status', ['FAILED', 'FUNDSCHECK'])
-            ->where('remarks', '!=', 'Account Is Valid')
+            ->where(function ($query) {
+                $query->whereNull('remarks')
+                    ->orWhere('remarks', '!=', 'Account Is Valid');
+            })
             ->get();
 
         $batch = $this->createBatchFromInstallments(
@@ -208,7 +241,7 @@ class CollectionBatchService
     public function hasCollectionCycleDuplicate(Installment $installment, Carbon $collectionDate): bool
     {
         return CollectionDebitOrder::query()
-            ->forCycle($installment->id, $collectionDate)
+            ->forCycle($installment->debit_order_id, $collectionDate)
             ->whereHas('batch', function ($query) {
                 $query->where('deleted', 0);
             })
@@ -217,16 +250,17 @@ class CollectionBatchService
 
     protected function buildCandidates(iterable $installments, string|Carbon|null $forcedCollectionDate = null): Collection
     {
-        $accountNumbers = [];
+        $collectionCycles = [];
 
         return collect($installments)
-            ->map(function (Installment $installment) use (&$accountNumbers, $forcedCollectionDate) {
+            ->map(function (Installment $installment) use (&$collectionCycles, $forcedCollectionDate) {
                 $debitOrder = $installment->debitOrder;
                 $account = $debitOrder->customerAccount;
                 $paymentDate = Carbon::parse($installment->payment_date);
                 $collectionDate = $forcedCollectionDate
                     ? Carbon::parse($forcedCollectionDate)
                     : Carbon::parse($this->deductionService->createCollectionDate($paymentDate));
+                $cycleKey = $debitOrder->id . ':' . $collectionDate->format('Y-m');
 
                 if (strtoupper((string) $debitOrder->periodicity) !== 'MONTHLY') {
                     return null;
@@ -240,7 +274,7 @@ class CollectionBatchService
                     return null;
                 }
 
-                if (in_array($account->account_number, $accountNumbers, true)) {
+                if (in_array($cycleKey, $collectionCycles, true)) {
                     return null;
                 }
 
@@ -248,7 +282,7 @@ class CollectionBatchService
                     return null;
                 }
 
-                $accountNumbers[] = $account->account_number;
+                $collectionCycles[] = $cycleKey;
 
                 return [
                     'installment' => $installment,
