@@ -1,7 +1,7 @@
 {
     "info": {
-        "title": "eMakato Mobile APIs",
-        "description": "## Overview\nThis documentation covers the Mobile App APIs used to authenticate, manage payment mandates, and view collections.\n\n## API Groups\n- **Auth**: obtain an external API token using `POST /v1/token`.\n- **PaymentMandate**: list supported mandate channels, create and manage mandates, OTP, status checks, and cancellation.\n- **PaymentCollection**: view all collections, filter by mandate reference, and retrieve actual collections.\n\n## Authentication Flow\n1. Call `POST /v1/token` to get an API token.\n2. Send the token in authorized requests to mandate and collection endpoints.\n3. Use `GET /mandate/channels` to fetch supported `payment_channel` values before mandate creation. Send `payment_channel`; `channel` is derived by the API.\n\n## Response Format\nMost endpoints return `success`, `response_code`, and a payload object/array depending on the operation.",
+        "name": "eMakato - Postman",
+        "description": "## Overview\nThis documentation covers the External App APIs used to authenticate, manage payment mandates, and view collections.\n\n## API Groups\n- **Auth**: obtain an external API token using `POST /v1/token`.\n- **PaymentMandate**: list supported mandate channels, create and manage mandates, OTP, status checks, and cancellation.\n- **PaymentCollection**: view all collections, filter by mandate reference, and retrieve actual collections.\n\n## Authentication Flow\n1. Call `POST /v1/token` to get an API token.\n2. Send the token in authorized requests to mandate and collection endpoints.\n3. Use `GET /mandate/channels` to fetch supported `payment_channel` values before mandate creation. Send `payment_channel`; `channel` is derived by the API.\n\n## Response Format\nMost endpoints return `success`, `response_code`, and a payload object/array depending on the operation.",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
     },
     "item": [
@@ -80,20 +80,6 @@
                                 "v1",
                                 "mandates",
                                 "summaries"
-                            ],
-                            "query": [
-                                {
-                                    "key": "channel",
-                                    "value": "",
-                                    "description": "",
-                                    "disabled": true
-                                },
-                                {
-                                    "key": "payment_channel",
-                                    "value": "",
-                                    "description": "",
-                                    "disabled": true
-                                }
                             ]
                         },
                         "description": "",
@@ -110,7 +96,7 @@
                     }
                 },
                 {
-                    "name": "GET /mobile/v1/mandates/all",
+                    "name": "All mandates",
                     "request": {
                         "method": "GET",
                         "header": [
@@ -129,9 +115,47 @@
                                 "v1",
                                 "mandates",
                                 "all"
+                            ],
+                            "query": [
+                                {
+                                    "key": "start_at",
+                                    "value": "2026-06-01",
+                                    "description": "Optional start date filter for mandate creation date.",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "end_at",
+                                    "value": "2026-06-30",
+                                    "description": "Optional end date filter for mandate creation date.",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "payment_channel",
+                                    "value": "NMB",
+                                    "description": "Optional payment channel slug filter, for example NMB or CRDB.",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "corporate_reference",
+                                    "value": "CO0001",
+                                    "description": "Optional corporate reference filter. Use this when your user is linked to more than one partner.",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "lifecycle_status",
+                                    "value": "ACTIVE",
+                                    "description": "Optional mandate lifecycle status filter.",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "keyword",
+                                    "value": "DO0000123",
+                                    "description": "Optional search term for mandate reference, account name, or account number.",
+                                    "disabled": true
+                                }
                             ]
                         },
-                        "description": "",
+                        "description": "Returns all mandates.\n\nAll mandates",
                         "auth": {
                             "type": "bearer",
                             "bearer": [
@@ -462,6 +486,226 @@
                             }
                         }
                     }
+                },
+                {
+                    "name": "GET /mobile/v1/sp-homepage",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/mobile/v1/sp-homepage",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "mobile",
+                                "v1",
+                                "sp-homepage"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "GET /mobile/v1/debit-orders-summaries",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/mobile/v1/debit-orders-summaries",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "mobile",
+                                "v1",
+                                "debit-orders-summaries"
+                            ],
+                            "query": [
+                                {
+                                    "key": "channel",
+                                    "value": "",
+                                    "description": "",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "payment_channel",
+                                    "value": "",
+                                    "description": "",
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "GET /mobile/v1/deduction-histories/{uuid}",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/mobile/v1/deduction-histories/:uuid",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "mobile",
+                                "v1",
+                                "deduction-histories",
+                                ":uuid"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "uuid",
+                                    "value": "",
+                                    "description": ""
+                                }
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "POST /mobile/v1/mandates/archive",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/mobile/v1/mandates/archive",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "mobile",
+                                "v1",
+                                "mandates",
+                                "archive"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"uuid\": \"\",\n    \"reference\": \"\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "POST /mobile/v1/mandates/close",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/mobile/v1/mandates/close",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "mobile",
+                                "v1",
+                                "mandates",
+                                "close"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"uuid\": \"\",\n    \"reference\": \"\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    }
                 }
             ]
         },
@@ -613,12 +857,246 @@
                     }
                 }
             ]
+        },
+        {
+            "name": "User",
+            "item": [
+                {
+                    "name": "GET /mobile/v1/user/profile",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/mobile/v1/user/profile",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "mobile",
+                                "v1",
+                                "user",
+                                "profile"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "PATCH /mobile/v1/user/profile",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/mobile/v1/user/profile",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "mobile",
+                                "v1",
+                                "user",
+                                "profile"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"\",\n    \"email\": \"\",\n    \"phone\": \"\",\n    \"current_password\": \"\",\n    \"password\": \"\",\n    \"password_confirmation\": \"\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "POST /mobile/v1/logout",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/mobile/v1/logout",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "mobile",
+                                "v1",
+                                "logout"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "GET /mobile/v1/notifications",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/mobile/v1/notifications",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "mobile",
+                                "v1",
+                                "notifications"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "PATCH /mobile/v1/notifications/{id}/read",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/mobile/v1/notifications/:id/read",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "mobile",
+                                "v1",
+                                "notifications",
+                                ":id",
+                                "read"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "",
+                                    "description": ""
+                                }
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "PATCH /mobile/v1/notifications/read-all",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/mobile/v1/notifications/read-all",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "mobile",
+                                "v1",
+                                "notifications",
+                                "read-all"
+                            ]
+                        },
+                        "description": "",
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{access_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
         }
     ],
     "variable": [
         {
             "key": "base_url",
-            "value": "https://portal.emakato.co.tz/api",
+            "value": "https://uat.emakato.co.tz/api",
             "type": "string"
         },
         {

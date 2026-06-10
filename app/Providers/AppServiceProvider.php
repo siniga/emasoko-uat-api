@@ -58,6 +58,15 @@ class AppServiceProvider extends ServiceProvider
 
         $mobileApiRoutes = [
             'api/mobile/v1/login',
+            'api/mobile/v1/channels',
+            'api/mobile/v1/user/profile',
+            'api/mobile/v1/logout',
+            'api/mobile/v1/notifications',
+            'api/mobile/v1/notifications/{id}/read',
+            'api/mobile/v1/notifications/read-all',
+            'api/mobile/v1/sp-homepage',
+            'api/mobile/v1/debit-orders-summaries',
+            'api/mobile/v1/deduction-histories/{uuid}',
             'api/mobile/v1/mandates/summaries',
             'api/mobile/v1/mandates/all',
             'api/mobile/v1/mandates/{reference}',
@@ -67,6 +76,8 @@ class AppServiceProvider extends ServiceProvider
             'api/mobile/v1/mandates/otp/create',
             'api/mobile/v1/mandates/status',
             'api/mobile/v1/mandates/cancellation',
+            'api/mobile/v1/mandates/archive',
+            'api/mobile/v1/mandates/close',
             'api/mobile/v1/collections/all',
             'api/mobile/v1/collections/filtering',
             'api/mobile/v1/collections/actual',
@@ -109,6 +120,17 @@ class AppServiceProvider extends ServiceProvider
             'api/mobile/v1/collections/all' => 20,
             'api/mobile/v1/collections/filtering' => 21,
             'api/mobile/v1/collections/actual' => 22,
+            'api/mobile/v1/channels' => 23,
+            'api/mobile/v1/user/profile' => 30,
+            'api/mobile/v1/logout' => 31,
+            'api/mobile/v1/notifications' => 32,
+            'api/mobile/v1/notifications/{id}/read' => 33,
+            'api/mobile/v1/notifications/read-all' => 34,
+            'api/mobile/v1/sp-homepage' => 35,
+            'api/mobile/v1/debit-orders-summaries' => 36,
+            'api/mobile/v1/deduction-histories/{uuid}' => 37,
+            'api/mobile/v1/mandates/archive' => 38,
+            'api/mobile/v1/mandates/close' => 39,
         ];
 
         Scramble::configure()->withOperationTransformers(function (OperationTransformers $transformers) use ($pathOrder) {
