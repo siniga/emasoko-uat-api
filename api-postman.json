@@ -1,13 +1,13 @@
 {
     "openapi": "3.1.0",
     "info": {
-        "title": "e-Makato",
-        "version": "v1",
-        "description": "## Overview\nThis documentation covers the External App APIs used to authenticate, manage payment mandates, and view collections.\n\n## API Groups\n- **Auth**: obtain an external API token using `POST \/v1\/token`.\n- **PaymentMandate**: list supported mandate channels, create and manage mandates, OTP, status checks, and cancellation.\n- **PaymentCollection**: view all collections, filter by mandate reference, and retrieve actual collections.\n\n## Authentication Flow\n1. Call `POST \/v1\/token` to get an API token.\n2. Send the token in authorized requests to mandate and collection endpoints.\n3. Use `GET \/mandate\/channels` to fetch supported `payment_channel` values before mandate creation. Send `payment_channel`; `channel` is derived by the API.\n\n## Response Format\nMost endpoints return `success`, `response_code`, and a payload object\/array depending on the operation."
+        "title": "eMakato APIs",
+        "version": "0.0.1",
+        "description": "## Overview\nThis documentation covers the External App APIs used to authenticate, manage payment mandates, and view collections.\n\n## API Groups\n- **Auth**: obtain an external API token using `POST /v1/token`.\n- **PaymentMandate**: list supported mandate channels, create and manage mandates, OTP, status checks, and cancellation.\n- **PaymentCollection**: view all collections, filter by mandate reference, and retrieve actual collections.\n\n## Authentication Flow\n1. Call `POST /v1/token` to get an API token.\n2. Send the token in authorized requests to mandate and collection endpoints.\n3. Use `GET /mandate/channels` to fetch supported `payment_channel` values before mandate creation. Send `payment_channel`; `channel` is derived by the API.\n\n## Response Format\nMost endpoints return `success`, `response_code`, and a payload object/array depending on the operation."
     },
     "servers": [
         {
-            "url": "https:\/\/uat.emakato.co.tz\/api"
+            "url": "https://portal.emakato.co.tz/api"
         }
     ],
     "tags": [
@@ -25,7 +25,7 @@
         }
     ],
     "paths": {
-        "\/v1\/token": {
+        "/v1/token": {
             "post": {
                 "operationId": "auth.token",
                 "tags": [
@@ -34,7 +34,7 @@
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "application\/json": {
+                        "application/json": {
                             "schema": {
                                 "type": "object",
                                 "properties": {
@@ -57,7 +57,7 @@
                     "401": {
                         "description": "",
                         "content": {
-                            "application\/json": {
+                            "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
@@ -93,7 +93,7 @@
                     "200": {
                         "description": "",
                         "content": {
-                            "application\/json": {
+                            "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
@@ -113,7 +113,7 @@
                                             "properties": {
                                                 "corporate_references": {
                                                     "type": "array",
-                                                    "items": {}
+                                                    "items": []
                                                 },
                                                 "token": {
                                                     "type": "string"
@@ -138,7 +138,7 @@
                     "403": {
                         "description": "",
                         "content": {
-                            "application\/json": {
+                            "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
@@ -174,7 +174,7 @@
                     "422": {
                         "description": "",
                         "content": {
-                            "application\/json": {
+                            "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
@@ -193,7 +193,7 @@
                                             "type": "string"
                                         },
                                         "errors": {
-                                            "$ref": "#\/components\/schemas\/MessageBag"
+                                            "$ref": "#/components/schemas/MessageBag"
                                         }
                                     },
                                     "required": [
@@ -210,7 +210,7 @@
                 }
             }
         },
-        "\/v1\/mandate\/all": {
+        "/v1/mandate/all": {
             "get": {
                 "operationId": "listPaymentMandates",
                 "description": "Returns all mandates.",
@@ -280,7 +280,7 @@
                     "200": {
                         "description": "Mandates fetched successfully.",
                         "content": {
-                            "application\/json": {
+                            "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
@@ -428,12 +428,12 @@
                         }
                     },
                     "401": {
-                        "$ref": "#\/components\/responses\/AuthenticationException"
+                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 }
             }
         },
-        "\/v1\/mandate\/{reference}": {
+        "/v1/mandate/{reference}": {
             "get": {
                 "operationId": "getPaymentMandate",
                 "description": "Returns mandate by reference.",
@@ -457,7 +457,7 @@
                     "200": {
                         "description": "Mandate fetched successfully.",
                         "content": {
-                            "application\/json": {
+                            "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
@@ -604,7 +604,7 @@
                     "404": {
                         "description": "Mandate not found.",
                         "content": {
-                            "application\/json": {
+                            "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
@@ -638,12 +638,12 @@
                         }
                     },
                     "401": {
-                        "$ref": "#\/components\/responses\/AuthenticationException"
+                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 }
             }
         },
-        "\/mandate\/channels": {
+        "/v1/mandate/channels": {
             "get": {
                 "operationId": "listMandatePaymentChannels",
                 "description": "Lists of active payment channels. Use slug as payment_channel when creating a mandate.",
@@ -655,7 +655,7 @@
                     "200": {
                         "description": "Payment channels fetched successfully.",
                         "content": {
-                            "application\/json": {
+                            "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
@@ -706,12 +706,12 @@
                         }
                     },
                     "401": {
-                        "$ref": "#\/components\/responses\/AuthenticationException"
+                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 }
             }
         },
-        "\/v1\/mandate\/create": {
+        "/v1/mandate/create": {
             "post": {
                 "operationId": "createPaymentMandate",
                 "description": "Creates a new payment mandate from the selected payment_channel.",
@@ -721,98 +721,91 @@
                 ],
                 "requestBody": {
                     "content": {
-                        "application\/json": {
+                        "application/json": {
                             "schema": {
-                                "allOf": [
-                                    {
-                                        "$ref": "#\/components\/schemas\/CreatePaymentMandateRequest"
+                                "type": "object",
+                                "properties": {
+                                    "payment_channel": {
+                                        "type": "string",
+                                        "description": "Payment provider slug returned by GET /api/mandate/channels.",
+                                        "example": "CRDB"
                                     },
-                                    {
-                                        "type": "object",
-                                        "properties": {
-                                            "payment_channel": {
-                                                "type": "string",
-                                                "description": "Payment provider slug returned by GET \/api\/mandate\/channels.",
-                                                "example": "CRDB"
-                                            },
-                                            "corporate_reference": {
-                                                "type": "string",
-                                                "description": "Partner corporate reference. Required only when your user is linked to more than one partner.",
-                                                "example": "CO0001"
-                                            },
-                                            "account_name": {
-                                                "type": "string",
-                                                "description": "Required when the payment_channel is a BANK channel.",
-                                                "example": "Tony Missokia"
-                                            },
-                                            "account_number": {
-                                                "type": "string",
-                                                "description": "Required when the payment_channel is a BANK channel.",
-                                                "example": "015123456789"
-                                            },
-                                            "phone": {
-                                                "type": "string",
-                                                "description": "Customer phone number. This should be number connected to bank account if payment channel is BANK.",
-                                                "example": "255712345678"
-                                            },
-                                            "NIN": {
-                                                "type": "string",
-                                                "description": "Customer identification number.",
-                                                "example": "19900101123456789012"
-                                            },
-                                            "address": {
-                                                "type": "string",
-                                                "description": "Customer address.",
-                                                "example": "Dar es Salaam"
-                                            },
-                                            "total_amount": {
-                                                "type": "object",
-                                                "description": "Total mandate amount. Minimum 1,000.",
-                                                "example": 500000
-                                            },
-                                            "debit_type": {
-                                                "type": "string",
-                                                "description": "Mandate debit type. {FIXED, DYNAMIC}",
-                                                "example": "FIXED"
-                                            },
-                                            "installment_amount": {
-                                                "type": "object",
-                                                "description": "Required when debit_type is FIXED.",
-                                                "example": 50000
-                                            },
-                                            "min_installment_amount": {
-                                                "type": "object",
-                                                "description": "Required when debit_type is DYNAMIC.",
-                                                "example": 10000
-                                            },
-                                            "max_installment_amount": {
-                                                "type": "object",
-                                                "description": "Required when debit_type is DYNAMIC.",
-                                                "example": 100000
-                                            },
-                                            "periodicity": {
-                                                "type": "string",
-                                                "description": "Deduction frequency.",
-                                                "example": "MONTHLY"
-                                            },
-                                            "deduction_start_date": {
-                                                "type": "string",
-                                                "format": "date",
-                                                "description": "Start date. Must be today or future date.",
-                                                "example": "2026-06-10"
-                                            }
-                                        },
-                                        "required": [
-                                            "payment_channel",
-                                            "phone",
-                                            "NIN",
-                                            "address",
-                                            "total_amount",
-                                            "debit_type",
-                                            "periodicity",
-                                            "deduction_start_date"
-                                        ]
+                                    "corporate_reference": {
+                                        "type": "string",
+                                        "description": "Partner corporate reference. Required only when your user is linked to more than one partner.",
+                                        "example": "CO0001"
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "description": "Customer phone number. This should be number connected to bank account if payment channel is BANK.",
+                                        "example": "255712345678"
+                                    },
+                                    "NIN": {
+                                        "type": "string",
+                                        "description": "Customer identification number.",
+                                        "example": "19900101123456789012"
+                                    },
+                                    "address": {
+                                        "type": "string",
+                                        "description": "Customer address.",
+                                        "example": "Dar es Salaam"
+                                    },
+                                    "total_amount": {
+                                        "type": "integer",
+                                        "description": "Total mandate amount. Minimum 1,000.",
+                                        "example": 500000
+                                    },
+                                    "debit_type": {
+                                        "type": "string",
+                                        "description": "Mandate debit type. {FIXED, DYNAMIC}",
+                                        "example": "FIXED"
+                                    },
+                                    "installment_amount": {
+                                        "type": "integer",
+                                        "description": "Required when debit_type is FIXED.",
+                                        "example": 50000
+                                    },
+                                    "min_installment_amount": {
+                                        "type": "integer",
+                                        "description": "Required when debit_type is DYNAMIC.",
+                                        "example": 10000
+                                    },
+                                    "max_installment_amount": {
+                                        "type": "integer",
+                                        "description": "Required when debit_type is DYNAMIC.",
+                                        "example": 100000
+                                    },
+                                    "periodicity": {
+                                        "type": "string",
+                                        "description": "Deduction frequency.",
+                                        "example": "MONTHLY"
+                                    },
+                                    "deduction_start_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "description": "Start date. Must be today or future date.",
+                                        "example": "2026-06-10"
+                                    },
+                                    "account_name": {
+                                        "type": "string",
+                                        "description": "Required when the payment_channel is a BANK channel.",
+                                        "example": "Tony Missokia"
+                                    },
+                                    "account_number": {
+                                        "type": "string",
+                                        "description": "Required when the payment_channel is a BANK channel.",
+                                        "example": "015123456789"
                                     }
+                                },
+                                "required": [
+                                    "payment_channel",
+                                    "phone",
+                                    "NIN",
+                                    "address",
+                                    "total_amount",
+                                    "debit_type",
+                                    "periodicity",
+                                    "deduction_start_date"
                                 ]
                             }
                         }
@@ -822,7 +815,7 @@
                     "500": {
                         "description": "",
                         "content": {
-                            "application\/json": {
+                            "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
@@ -867,7 +860,7 @@
                     "200": {
                         "description": "Mandate created successfully.",
                         "content": {
-                            "application\/json": {
+                            "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
@@ -916,7 +909,7 @@
                     "400": {
                         "description": "",
                         "content": {
-                            "application\/json": {
+                            "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
@@ -952,7 +945,7 @@
                     "403": {
                         "description": "Partner has not linked to payment channel.",
                         "content": {
-                            "application\/json": {
+                            "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
@@ -998,12 +991,12 @@
                         }
                     },
                     "401": {
-                        "$ref": "#\/components\/responses\/AuthenticationException"
+                        "$ref": "#/components/responses/AuthenticationException"
                     },
                     "422": {
                         "description": "Validation failed.",
                         "content": {
-                            "application\/json": {
+                            "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
@@ -1033,7 +1026,7 @@
                 }
             }
         },
-        "\/v1\/mandate\/otp\/verify": {
+        "/v1/mandate/otp/verify": {
             "post": {
                 "operationId": "verifyMandateOtp",
                 "description": "Verify OTP for a payment mandate using mandate reference.",
@@ -1044,7 +1037,7 @@
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "application\/json": {
+                        "application/json": {
                             "schema": {
                                 "type": "object",
                                 "properties": {
@@ -1071,7 +1064,7 @@
                     "200": {
                         "description": "OTP verified successfully.",
                         "content": {
-                            "application\/json": {
+                            "application/json": {
                                 "schema": {
                                     "type": "string"
                                 }
@@ -1081,7 +1074,7 @@
                     "404": {
                         "description": "Mandate not found.",
                         "content": {
-                            "application\/json": {
+                            "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
@@ -1117,7 +1110,7 @@
                     "422": {
                         "description": "Validation failed.",
                         "content": {
-                            "application\/json": {
+                            "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
@@ -1136,7 +1129,7 @@
                                             "type": "string"
                                         },
                                         "errors": {
-                                            "$ref": "#\/components\/schemas\/MessageBag"
+                                            "$ref": "#/components/schemas/MessageBag"
                                         }
                                     },
                                     "required": [
@@ -1151,12 +1144,12 @@
                         }
                     },
                     "401": {
-                        "$ref": "#\/components\/responses\/AuthenticationException"
+                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 }
             }
         },
-        "\/v1\/mandate\/otp\/create": {
+        "/v1/mandate/otp/create": {
             "post": {
                 "operationId": "createMandateOtp",
                 "description": "Requests or resends OTP for a mandate using mandate reference.",
@@ -1167,7 +1160,7 @@
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "application\/json": {
+                        "application/json": {
                             "schema": {
                                 "type": "object",
                                 "properties": {
@@ -1188,7 +1181,7 @@
                     "200": {
                         "description": "OTP created successfully.",
                         "content": {
-                            "application\/json": {
+                            "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
@@ -1226,7 +1219,7 @@
                     "404": {
                         "description": "Mandate not found.",
                         "content": {
-                            "application\/json": {
+                            "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
@@ -1262,7 +1255,7 @@
                     "422": {
                         "description": "Validation failed.",
                         "content": {
-                            "application\/json": {
+                            "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
@@ -1281,7 +1274,7 @@
                                             "type": "string"
                                         },
                                         "errors": {
-                                            "$ref": "#\/components\/schemas\/MessageBag"
+                                            "$ref": "#/components/schemas/MessageBag"
                                         }
                                     },
                                     "required": [
@@ -1296,12 +1289,12 @@
                         }
                     },
                     "401": {
-                        "$ref": "#\/components\/responses\/AuthenticationException"
+                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 }
             }
         },
-        "\/v1\/mandate\/status": {
+        "/v1/mandate/status": {
             "post": {
                 "operationId": "fetchMandateStatus",
                 "description": "Fetches the latest mandate status from the payment channel.",
@@ -1312,7 +1305,7 @@
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "application\/json": {
+                        "application/json": {
                             "schema": {
                                 "type": "object",
                                 "properties": {
@@ -1333,7 +1326,7 @@
                     "200": {
                         "description": "Mandate status fetched successfully.",
                         "content": {
-                            "application\/json": {
+                            "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
@@ -1375,7 +1368,7 @@
                     "404": {
                         "description": "Mandate not found.",
                         "content": {
-                            "application\/json": {
+                            "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
@@ -1411,7 +1404,7 @@
                     "422": {
                         "description": "Validation failed.",
                         "content": {
-                            "application\/json": {
+                            "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
@@ -1430,7 +1423,7 @@
                                             "type": "string"
                                         },
                                         "errors": {
-                                            "$ref": "#\/components\/schemas\/MessageBag"
+                                            "$ref": "#/components/schemas/MessageBag"
                                         }
                                     },
                                     "required": [
@@ -1445,12 +1438,12 @@
                         }
                     },
                     "401": {
-                        "$ref": "#\/components\/responses\/AuthenticationException"
+                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 }
             }
         },
-        "\/v1\/mandate\/cancellation": {
+        "/v1/mandate/cancellation": {
             "post": {
                 "operationId": "cancelPaymentMandate",
                 "description": "Initiates cancellation for a mandate using mandate reference and cancellation reason.",
@@ -1461,7 +1454,7 @@
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "application\/json": {
+                        "application/json": {
                             "schema": {
                                 "type": "object",
                                 "properties": {
@@ -1488,7 +1481,7 @@
                     "200": {
                         "description": "",
                         "content": {
-                            "application\/json": {
+                            "application/json": {
                                 "schema": {
                                     "type": "string"
                                 }
@@ -1498,7 +1491,7 @@
                     "404": {
                         "description": "Mandate not found.",
                         "content": {
-                            "application\/json": {
+                            "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
@@ -1534,7 +1527,7 @@
                     "422": {
                         "description": "Validation failed.",
                         "content": {
-                            "application\/json": {
+                            "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
@@ -1553,7 +1546,7 @@
                                             "type": "string"
                                         },
                                         "errors": {
-                                            "$ref": "#\/components\/schemas\/MessageBag"
+                                            "$ref": "#/components/schemas/MessageBag"
                                         }
                                     },
                                     "required": [
@@ -1568,12 +1561,12 @@
                         }
                     },
                     "401": {
-                        "$ref": "#\/components\/responses\/AuthenticationException"
+                        "$ref": "#/components/responses/AuthenticationException"
                     },
                     "201": {
                         "description": "Mandate cancelled successfully.",
                         "content": {
-                            "application\/json": {
+                            "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
@@ -1622,7 +1615,7 @@
                 }
             }
         },
-        "\/v1\/collections\/all": {
+        "/v1/collections/all": {
             "post": {
                 "operationId": "listPaymentCollections",
                 "description": "Returns expected and paid collections for the selected month and year.",
@@ -1632,7 +1625,7 @@
                 ],
                 "requestBody": {
                     "content": {
-                        "application\/json": {
+                        "application/json": {
                             "schema": {
                                 "type": "object",
                                 "properties": {
@@ -1660,7 +1653,7 @@
                     "200": {
                         "description": "Collections fetched successfully.",
                         "content": {
-                            "application\/json": {
+                            "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
@@ -1826,12 +1819,12 @@
                         }
                     },
                     "401": {
-                        "$ref": "#\/components\/responses\/AuthenticationException"
+                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 }
             }
         },
-        "\/v1\/collections\/filtering": {
+        "/v1/collections/filtering": {
             "post": {
                 "operationId": "filterPaymentCollections",
                 "description": "Returns expected collections for a specific mandate reference, optionally filtered by collection status.",
@@ -1842,7 +1835,7 @@
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "application\/json": {
+                        "application/json": {
                             "schema": {
                                 "type": "object",
                                 "properties": {
@@ -1868,7 +1861,7 @@
                     "200": {
                         "description": "Collections fetched successfully.",
                         "content": {
-                            "application\/json": {
+                            "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
@@ -2036,7 +2029,7 @@
                     "422": {
                         "description": "Validation failed.",
                         "content": {
-                            "application\/json": {
+                            "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
@@ -2055,7 +2048,7 @@
                                             "type": "string"
                                         },
                                         "errors": {
-                                            "$ref": "#\/components\/schemas\/MessageBag"
+                                            "$ref": "#/components/schemas/MessageBag"
                                         }
                                     },
                                     "required": [
@@ -2070,12 +2063,12 @@
                         }
                     },
                     "401": {
-                        "$ref": "#\/components\/responses\/AuthenticationException"
+                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 }
             }
         },
-        "\/v1\/collections\/actual": {
+        "/v1/collections/actual": {
             "post": {
                 "operationId": "actualPaymentCollections",
                 "description": "Returns actual aggregated collections by partner for the selected month and year.",
@@ -2085,7 +2078,7 @@
                 ],
                 "requestBody": {
                     "content": {
-                        "application\/json": {
+                        "application/json": {
                             "schema": {
                                 "type": "object",
                                 "properties": {
@@ -2108,7 +2101,7 @@
                     "200": {
                         "description": "Actual collections fetched successfully.",
                         "content": {
-                            "application\/json": {
+                            "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
@@ -2175,7 +2168,7 @@
                         }
                     },
                     "401": {
-                        "$ref": "#\/components\/responses\/AuthenticationException"
+                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 }
             }
@@ -2423,7 +2416,7 @@
             },
             "MessageBag": {
                 "type": "array",
-                "items": {},
+                "items": [],
                 "title": "MessageBag"
             }
         },
@@ -2431,7 +2424,7 @@
             "AuthenticationException": {
                 "description": "Unauthenticated",
                 "content": {
-                    "application\/json": {
+                    "application/json": {
                         "schema": {
                             "type": "object",
                             "properties": {

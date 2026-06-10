@@ -49,7 +49,7 @@ class CompanyService
         //create or update partner information
         $partner = Partner::firstOrNew(['uuid' => $uuid]);
         if ($partner->created_by == null) {
-            $partner->created_by = auth()->id();
+            $partner->created_by = Auth::user()->id;
         }
         $partner->partner_category_id = $data->category_id;
         $partner->business_name = ucwords($data->business_name);
@@ -198,7 +198,7 @@ class CompanyService
             $partner->complete = 0;
             $partner->approved = 99;
             $partner->remarks = $data['remarks'];
-            $partner->updated_by = auth()->id();
+            $partner->updated_by = Auth::user()->id;
             $partner->save();
 
             //construct message
@@ -221,10 +221,10 @@ class CompanyService
         } else if ($data['action'] == "APPROVE") {
             //update company registration status
             $partner->complete = 1;
-            $partner->approved = 1; //approved
+            $partner->approved = 1;
             $partner->remarks = "Service provider registration approved by eMakato Team";
             $partner->status = 'pending_approval';
-            $partner->updated_by = auth()->id();
+            $partner->updated_by = Auth::user()->id;
             $partner->save();
 
             return 200;

@@ -12,8 +12,7 @@ Route::controller(AuthController::class)->group(function () {
 Route::middleware('auth:api')->group(function () {
     //Route::post('mandate/summaries', [PaymentMandateController::class, 'summaries']);
     Route::get('mandate/all', [PaymentMandateController::class, 'all']);
-    Route::get('mandate/{reference}', [PaymentMandateController::class, 'getMandate'])
-        ->where('reference', '^(?!channels$).+');
+    Route::get('mandate/{reference}', [PaymentMandateController::class, 'getMandate']);
     Route::get('mandate/channels', [PaymentMandateController::class, 'getPaymentChannels']);
     Route::post('mandate/create', [PaymentMandateController::class, 'create']);
     Route::post('mandate/otp/verify', [PaymentMandateController::class, 'verifyOtp']);

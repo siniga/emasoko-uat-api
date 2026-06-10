@@ -42,6 +42,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Str;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class CompanyController extends Controller
 {
@@ -538,7 +539,7 @@ class CompanyController extends Controller
         $partner->next_step = 'companies/preview/' . $uuid;
         $partner->status = 'pending';
         $partner->complete = 1;
-        $partner->updated_by = auth()->id();
+        $partner->updated_by = Auth::user()->id;
         $partner->save();
 
         //send assessment alert

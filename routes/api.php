@@ -72,7 +72,6 @@ Route::post('collection/airtel/recovery-refund', [AirtelCollectionController::cl
 Route::post('v1/mandate/crdb', [CRDBMandateController::class, 'create']);
 Route::post('v1/mandate/crdb/cancel', [CRDBMandateController::class, 'cancel']);
 Route::post('v1/mandate/crdb/callback', [CRDBMandateController::class, 'callback']);
-//Route::post('v1/mandate/crdb/callback', [CRDBMandateController::class, 'callback'])->middleware('verify.callback:crdb');
 Route::post('v1/mandate/crdb/request', [CRDBMandateController::class, 'request']);
 Route::post('v1/mandate/crdb/response', [CRDBMandateController::class, 'response']);
 
@@ -86,8 +85,5 @@ Route::post('v1/mandate/yas', [YasMandateController::class, 'create']);
 Route::post('v1/mandate/yas/cancel', [YasMandateController::class, 'cancel']);
 Route::post('v1/mandate/yas/callback', [YasMandateController::class, 'callback'])->middleware('verify.callback:yas');
 
-Route::middleware('auth:api')->group(function () {
-    Route::get('mandate/channels', [\App\Http\Controllers\Api\ExternalApp\PaymentMandateController::class, 'getPaymentChannels']);
-});
-
+//api v1
 Route::prefix('v1')->group(base_path('routes/api_external.php'));
