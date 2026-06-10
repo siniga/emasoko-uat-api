@@ -15,6 +15,7 @@ use App\Models\Installment;
 use App\Models\OtpRequest;
 use App\Models\Partner;
 use App\Models\PartnerAccount;
+use Carbon\Carbon;
 use Exception;
 
 class BankApiService
@@ -84,7 +85,16 @@ class BankApiService
             //updated partner account
             $partner_account = PartnerAccount::where(['partner_id' => $partner->id, 'channel' => "NMB"])->first();
             $partner_account->remarks = $remarks;
+            if ($http_response_code === 201) {
+                $partner_account->send_verification = 2;
+                $partner_account->rejected_at = null;
+            } else {
+                $partner_account->send_verification = 0;
+                $partner_account->rejected_at = Carbon::now();
+            }
             $partner_account->save();
+
+            $partner->refreshLifecycleStatus()->save();
 
             return [$http_response_code, $remarks];
         } else {
@@ -148,7 +158,10 @@ class BankApiService
             if ($response_code == 240) {
                 $is_verified = 1;
                 $status = 'active';
+            } else if ($response_code == 249) {
+                $status = 'not_active';
             } else {
+                $http_status_code = 500;
                 $status = 'not_active';
             }
         } else if (strtolower($response['status']) == "fail") {
@@ -164,8 +177,13 @@ class BankApiService
 
         //update partner account
         $nmb_partner_account->is_verified = $is_verified;
+        $nmb_partner_account->verified_at = $is_verified ? Carbon::now() : null;
+        $nmb_partner_account->rejected_at = $http_status_code === 500 ? Carbon::now() : null;
+        $nmb_partner_account->send_verification = $is_verified ? 0 : 2;
         $nmb_partner_account->remarks = $remarks;
         $nmb_partner_account->save();
+
+        $partner->refreshLifecycleStatus()->save();
 
         return [$http_status_code, $remarks];
     }

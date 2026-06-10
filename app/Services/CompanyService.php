@@ -50,6 +50,10 @@ class CompanyService
         $partner = Partner::firstOrNew(['uuid' => $uuid]);
         if ($partner->created_by == null) {
             $partner->created_by = Auth::user()->id;
+            $partner->lifecycle_status = Partner::LIFECYCLE_DRAFT;
+        }
+        if (empty($partner->lifecycle_status)) {
+            $partner->lifecycle_status = $partner->resolved_lifecycle_status;
         }
         $partner->partner_category_id = $data->category_id;
         $partner->business_name = ucwords($data->business_name);
@@ -197,6 +201,7 @@ class CompanyService
             //update company registration status
             $partner->complete = 0;
             $partner->approved = 99;
+            $partner->lifecycle_status = Partner::LIFECYCLE_REJECTED;
             $partner->remarks = $data['remarks'];
             $partner->updated_by = Auth::user()->id;
             $partner->save();
@@ -224,6 +229,7 @@ class CompanyService
             $partner->approved = 1;
             $partner->remarks = "Service provider registration approved by eMakato Team";
             $partner->status = 'pending_approval';
+            $partner->lifecycle_status = Partner::LIFECYCLE_PENDING_ACCOUNT_ACTIVATION;
             $partner->updated_by = Auth::user()->id;
             $partner->save();
 

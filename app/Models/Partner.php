@@ -14,6 +14,16 @@ class Partner extends Model
     use HasFactory, DocumentNumberTrait;
     protected $guarded = [];
 
+    public const LIFECYCLE_DRAFT = 'draft';
+    public const LIFECYCLE_SUBMITTED = 'submitted';
+    public const LIFECYCLE_UNDER_REVIEW = 'under_review';
+    public const LIFECYCLE_REJECTED = 'rejected';
+    public const LIFECYCLE_APPROVED = 'approved';
+    public const LIFECYCLE_PENDING_ACCOUNT_ACTIVATION = 'pending_account_activation';
+    public const LIFECYCLE_ACTIVE = 'active';
+    public const LIFECYCLE_FAILED = 'failed';
+    public const LIFECYCLE_ARCHIVED = 'archived';
+
     public static function boot()
     {
         parent::boot();
@@ -122,6 +132,7 @@ class Partner extends Model
         $start_date        = $request['start_at'] ?? null;
         $end_date          = $request['end_at'] ?? null;
         $approved          = $request['approved'] ?? null;
+        $lifecycle_status  = $request['lifecycle_status'] ?? null;
         $is_verified       = $request['is_verified'] ?? null;
         $category_id       = $request['category_id'] ?? null;
         $region_id         = $request['region_id'] ?? null;
@@ -142,6 +153,25 @@ class Partner extends Model
             ->when(!is_null($approved) && $approved !== '', function ($q) use ($approved) {
                 $q->where('approved', (int) $approved);
             })
+            ->when(!is_null($lifecycle_status) && $lifecycle_status !== '', function ($q) use ($lifecycle_status) {
+                $q->where(function ($statusQuery) use ($lifecycle_status) {
+                    $statusQuery->where('lifecycle_status', $lifecycle_status);
+
+                    if ($lifecycle_status === self::LIFECYCLE_REJECTED) {
+                        $statusQuery->orWhere('approved', 99);
+                    }
+
+                    if ($lifecycle_status === self::LIFECYCLE_ACTIVE) {
+                        $statusQuery->orWhere(function ($legacy) {
+                            $legacy->where('approved', 1)
+                                ->whereDoesntHave('partnerAccounts', function ($accountQuery) {
+                                    $accountQuery->where('channel', 'NMB')
+                                        ->where('is_verified', 0);
+                                });
+                        });
+                    }
+                });
+            })
             ->when(!is_null($category_id) && $category_id !== '', function ($q) use ($category_id) {
                 $q->where('partner_category_id', $category_id);
             })
@@ -159,5 +189,84 @@ class Partner extends Model
                     $qq->where('is_verified', (int) $is_verified);
                 });
             });
+    }
+
+    public function getResolvedLifecycleStatusAttribute(): string
+    {
+        if (!empty($this->lifecycle_status)) {
+            return $this->lifecycle_status;
+        }
+
+        if ((int) $this->approved === 99) {
+            return self::LIFECYCLE_REJECTED;
+        }
+
+        if ((int) $this->approved === 1) {
+            return $this->resolveApprovedLifecycleStatus();
+        }
+
+        if ((int) $this->complete === 1) {
+            return self::LIFECYCLE_SUBMITTED;
+        }
+
+        return self::LIFECYCLE_DRAFT;
+    }
+
+    public function resolveApprovedLifecycleStatus(): string
+    {
+        if ($this->hasFailedNmbAccount()) {
+            return self::LIFECYCLE_FAILED;
+        }
+
+        if ($this->hasPendingNmbAccount()) {
+            return self::LIFECYCLE_PENDING_ACCOUNT_ACTIVATION;
+        }
+
+        return self::LIFECYCLE_ACTIVE;
+    }
+
+    public function hasPendingNmbAccount(): bool
+    {
+        return $this->partnerAccounts()
+            ->where('channel', 'NMB')
+            ->where('is_verified', 0)
+            ->whereNull('rejected_at')
+            ->exists();
+    }
+
+    public function hasFailedNmbAccount(): bool
+    {
+        return $this->partnerAccounts()
+            ->where('channel', 'NMB')
+            ->where('is_verified', 0)
+            ->whereNotNull('rejected_at')
+            ->exists();
+    }
+
+    public function refreshLifecycleStatus(): self
+    {
+        $this->lifecycle_status = match (true) {
+            (int) $this->approved === 99 => self::LIFECYCLE_REJECTED,
+            (int) $this->approved === 1 => $this->resolveApprovedLifecycleStatus(),
+            (int) $this->complete === 1 => self::LIFECYCLE_SUBMITTED,
+            default => self::LIFECYCLE_DRAFT,
+        };
+
+        return $this;
+    }
+
+    public static function lifecycleOptions(): array
+    {
+        return [
+            self::LIFECYCLE_DRAFT => 'Draft',
+            self::LIFECYCLE_SUBMITTED => 'Submitted',
+            self::LIFECYCLE_UNDER_REVIEW => 'Under Review',
+            self::LIFECYCLE_REJECTED => 'Rejected',
+            self::LIFECYCLE_APPROVED => 'Approved',
+            self::LIFECYCLE_PENDING_ACCOUNT_ACTIVATION => 'Pending Account Activation',
+            self::LIFECYCLE_ACTIVE => 'Active',
+            self::LIFECYCLE_FAILED => 'Failed',
+            self::LIFECYCLE_ARCHIVED => 'Archived',
+        ];
     }
 }

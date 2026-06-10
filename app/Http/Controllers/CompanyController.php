@@ -78,6 +78,8 @@ class CompanyController extends Controller
             'approved' => (clone $companies)->where('approved', 1)->count(),
             'pending' => (clone $companies)->where('approved', 0)->count(),
             'failed' => (clone $companies)->where('approved', 99)->count(),
+            'active' => (clone $companies)->where('lifecycle_status', Partner::LIFECYCLE_ACTIVE)->count(),
+            'pending_account_activation' => (clone $companies)->where('lifecycle_status', Partner::LIFECYCLE_PENDING_ACCOUNT_ACTIVATION)->count(),
             'verified_accounts' => (clone $companies)->whereHas('partnerAccounts', function ($query) {
                 $query->where('is_verified', 1);
             })->count(),
@@ -103,6 +105,7 @@ class CompanyController extends Controller
             'category_id' => $request->category_id ?? null,
             'region_id' => $request->region_id ?? null,
             'approved' => $request->approved ?? null,
+            'lifecycle_status' => $request->lifecycle_status ?? null,
             'is_verified' => $request->is_verified ?? null,
             'keyword' => $request->keyword ?? null
         ];
@@ -538,6 +541,7 @@ class CompanyController extends Controller
         //update status of partner
         $partner->next_step = 'companies/preview/' . $uuid;
         $partner->status = 'pending';
+        $partner->lifecycle_status = Partner::LIFECYCLE_SUBMITTED;
         $partner->complete = 1;
         $partner->updated_by = Auth::user()->id;
         $partner->save();
@@ -560,6 +564,7 @@ class CompanyController extends Controller
 
         //update status of partner
         $partner->status = 'pending';
+        $partner->lifecycle_status = Partner::LIFECYCLE_DRAFT;
         $partner->complete = 0;
         $partner->save();
 
@@ -848,6 +853,7 @@ class CompanyController extends Controller
                         //update partner account
                         $partner_account->is_verified = 1;
                         $partner_account->verified_at = Carbon::now();
+                        $partner_account->rejected_at = null;
                         $partner_account->remarks = "Account processing completed successfully and is active.";
                         $partner_account->save();
 
@@ -875,6 +881,9 @@ class CompanyController extends Controller
                     $success_msg = "Failed to approve service provider. Review accounts remarks and try again.";
                 }
             }
+
+            $partner->refresh();
+            $partner->refreshLifecycleStatus()->save();
 
             //response
             return response()->json(['error' => false, "status" => $http_status_code, "message" => $success_msg], 200);
