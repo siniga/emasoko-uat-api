@@ -28,14 +28,14 @@ class CompanyDetailRequest extends FormRequest
     public function rules()
     {
         return [
-            'tin_number' => 'required|unique:partners,tin_number',
+            'tin_number' => 'required',
             'business_name' => 'required',
             'category_id' => 'required',
             'year_of_incorporation' => 'required|numeric',
             'number_of_staff' => 'required|numeric|min:1',
             'country_code' => 'required',
             'company_phone' => ['required', new PhoneNumber()],
-            'company_email' => 'required|email|max:255|unique:partners,email',
+            'company_email' => 'required|email|max:255',
             'region_id' => 'required',
             'physical_address' => 'required',
         ];

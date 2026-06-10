@@ -205,6 +205,7 @@ class CompanyController extends Controller
 
         //validate tin number
         $partner = Partner::where(['tin_number' => $request->input('tin_number')])->first();
+        
         if ($partner) {
             //check if uuid with db_uuid
             if ($partner->uuid != $uuid)
