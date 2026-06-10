@@ -10,7 +10,6 @@ Route::controller(AuthController::class)->group(function () {
 });
 
 Route::middleware('auth:api')->group(function () {
-    //Route::post('mandate/summaries', [PaymentMandateController::class, 'summaries']);
     Route::get('mandate/all', [PaymentMandateController::class, 'all']);
     Route::get('mandate/{reference}', [PaymentMandateController::class, 'getMandate']);
     Route::get('mandate/channels', [PaymentMandateController::class, 'getPaymentChannels']);

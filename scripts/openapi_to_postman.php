@@ -47,7 +47,7 @@ $folders = [];
 
 foreach (($openApi['paths'] ?? []) as $path => $operations) {
     foreach ($operations as $method => $operation) {
-        $tag = $operation['tags'][0] ?? 'External App';
+        $tag = normalizeTag($operation['tags'][0] ?? 'External App');
         $folders[$tag] ??= [
             'name' => $tag,
             'item' => [],
@@ -158,6 +158,15 @@ function postmanItem(string $method, string $path, array $operation, array $open
     }
 
     return $item;
+}
+
+function normalizeTag(string $tag): string
+{
+    return match ($tag) {
+        'PaymentMandate' => 'Payment Mandates',
+        'PaymentCollection' => 'Payment Collections',
+        default => $tag,
+    };
 }
 
 function samplePayload(array $schema, array $openApi): array

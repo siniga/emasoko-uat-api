@@ -40,8 +40,7 @@ class AppServiceProvider extends ServiceProvider
         Paginator::useBootstrap();
         app(AuditTrailService::class)->register($this);
 
-        Scramble::routes(function (Route $route) {
-            return in_array($route->uri, [
+        $externalApiRoutes = [
                 'api/v1/token',
                 'api/v1/mandate/summaries',
                 'api/v1/mandate/all',
@@ -55,7 +54,32 @@ class AppServiceProvider extends ServiceProvider
                 'api/v1/collections/all',
                 'api/v1/collections/filtering',
                 'api/v1/collections/actual',
-            ], true);
+        ];
+
+        $mobileApiRoutes = [
+            'api/mobile/v1/login',
+            'api/mobile/v1/mandates/summaries',
+            'api/mobile/v1/mandates/all',
+            'api/mobile/v1/mandates/{reference}',
+            'api/mobile/v1/mandates/channels',
+            'api/mobile/v1/mandates/create',
+            'api/mobile/v1/mandates/otp/verify',
+            'api/mobile/v1/mandates/otp/create',
+            'api/mobile/v1/mandates/status',
+            'api/mobile/v1/mandates/cancellation',
+            'api/mobile/v1/collections/all',
+            'api/mobile/v1/collections/filtering',
+            'api/mobile/v1/collections/actual',
+        ];
+
+        Scramble::routes(function (Route $route) use ($externalApiRoutes, $mobileApiRoutes) {
+            $audience = env('SCRAMBLE_API_AUDIENCE', 'external');
+
+            return match ($audience) {
+                'mobile' => in_array($route->uri, $mobileApiRoutes, true),
+                'all' => in_array($route->uri, array_merge($externalApiRoutes, $mobileApiRoutes), true),
+                default => in_array($route->uri, $externalApiRoutes, true),
+            };
         });
 
         $pathOrder = [
@@ -72,6 +96,19 @@ class AppServiceProvider extends ServiceProvider
             'api/v1/collections/all' => 20,
             'api/v1/collections/filtering' => 21,
             'api/v1/collections/actual' => 22,
+            'api/mobile/v1/login' => 0,
+            'api/mobile/v1/mandates/summaries' => 10,
+            'api/mobile/v1/mandates/all' => 11,
+            'api/mobile/v1/mandates/{reference}' => 12,
+            'api/mobile/v1/mandates/channels' => 13,
+            'api/mobile/v1/mandates/create' => 14,
+            'api/mobile/v1/mandates/otp/verify' => 15,
+            'api/mobile/v1/mandates/otp/create' => 16,
+            'api/mobile/v1/mandates/status' => 17,
+            'api/mobile/v1/mandates/cancellation' => 18,
+            'api/mobile/v1/collections/all' => 20,
+            'api/mobile/v1/collections/filtering' => 21,
+            'api/mobile/v1/collections/actual' => 22,
         ];
 
         Scramble::configure()->withOperationTransformers(function (OperationTransformers $transformers) use ($pathOrder) {

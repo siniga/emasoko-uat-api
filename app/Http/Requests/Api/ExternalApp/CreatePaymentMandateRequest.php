@@ -15,6 +15,49 @@ class CreatePaymentMandateRequest extends FormRequest
     protected ?Partner $partner = null;
     protected ?Collection $authorizedPartners = null;
 
+    protected function prepareForValidation()
+    {
+        $normalized = [];
+
+        if (!$this->filled('payment_channel')) {
+            if ($this->filled('channel')) {
+                $normalized['payment_channel'] = $this->input('channel');
+            } elseif ($this->filled('account_slug')) {
+                $normalized['payment_channel'] = $this->input('account_slug');
+            } elseif ($this->filled('account_id')) {
+                $normalized['payment_channel'] = Account::whereKey($this->input('account_id'))->value('slug');
+            }
+        }
+
+        if (!$this->filled('NIN') && $this->filled('nin')) {
+            $normalized['NIN'] = $this->input('nin');
+        }
+
+        if (!$this->filled('NIN') && $this->filled('id_number')) {
+            $normalized['NIN'] = $this->input('id_number');
+        }
+
+        if (!$this->filled('total_amount') && $this->filled('loan_amount')) {
+            $normalized['total_amount'] = $this->input('loan_amount');
+        }
+
+        if (!$this->filled('deduction_start_date') && $this->filled('start_date')) {
+            $normalized['deduction_start_date'] = $this->input('start_date');
+        }
+
+        if (!$this->filled('account_name') && $this->filled('customer_name')) {
+            $normalized['account_name'] = $this->input('customer_name');
+        }
+
+        if (!$this->filled('installment_amount') && $this->filled('deduction_amount')) {
+            $normalized['installment_amount'] = $this->input('deduction_amount');
+        }
+
+        if (!empty($normalized)) {
+            $this->merge($normalized);
+        }
+    }
+
     public function authorize()
     {
         return $this->authorizedPartners()->isNotEmpty();
@@ -169,7 +212,7 @@ class CreatePaymentMandateRequest extends FormRequest
         }
 
         $this->paymentAccount = Account::whereIn('account_type_id', [1, 2])
-            ->where('slug', $this->payment_channel)
+            ->whereRaw('LOWER(slug) = ?', [strtolower((string) $this->payment_channel)])
             ->first();
 
         return $this->paymentAccount;

@@ -13,7 +13,7 @@ return [
      * Your API domain. By default, app domain is used. This is also a part of the default API routes
      * matcher, so when implementing your own, make sure you use this config if needed.
      */
-    'api_domain' => "https://portal.emakato.co.tz",
+    'api_domain' => null,
 
     /*
      * Define the theme of the documentation.
@@ -83,7 +83,9 @@ return [
      * ],
      * ```
      */
-    'servers' => null,
+    'servers' => [
+        'Production' => env('SCRAMBLE_SERVER_URL', 'https://uat.emakato.co.tz/api'),
+    ],
 
     'middleware' => [
         'web',

@@ -32,29 +32,6 @@ Route::get('document_categories', [CompanyController::class, 'document_categorie
 Route::get('countries', [CompanyController::class, 'countries']);
 Route::get('regions', [CompanyController::class, 'regions']);
 
-// Route::middleware('throttle:auth')->group(function () {
-//     //Corporate APIs
-//     Route::post('corporate/registration', [CorporateController::class, 'registration']);
-//     Route::post('corporate/status', [CorporateController::class, 'status']);
-
-//     //Mandate APIs
-//     Route::post('mandate/create', [MandateController::class, 'create']);
-//     Route::post('mandate/status', [MandateController::class, 'status']);
-//     Route::post('mandate/cancellation', [MandateController::class, 'cancellation']);
-
-//     //OTP APIs
-//     Route::post('otp/create', [OtpController::class, 'create']);
-//     Route::post('otp/verify', [OtpController::class, 'verify']);
-
-//     //Collections APIs
-//     Route::post('collection/create', [CollectionController::class, 'create']);
-//     Route::post('collection/status', [CollectionController::class, 'status']);
-
-//     //CRDB apis
-//     Route::post('mandate/crdb', [CRDBMandateController::class, 'create']);
-//     Route::post('mandate/crdb/callback', [CRDBMandateController::class, 'callback']);
-// });
-
 //Airtel APIs
 Route::post('mandate/airtel', [AirtelMandateController::class, 'create']);
 Route::post('mandate/airtel/status', [AirtelMandateController::class, 'query_status']);
@@ -85,5 +62,6 @@ Route::post('v1/mandate/yas', [YasMandateController::class, 'create']);
 Route::post('v1/mandate/yas/cancel', [YasMandateController::class, 'cancel']);
 Route::post('v1/mandate/yas/callback', [YasMandateController::class, 'callback'])->middleware('verify.callback:yas');
 
-//api v1
+//api v1 for mobile and external apps
 Route::prefix('v1')->group(base_path('routes/api_external.php'));
+Route::prefix('v1')->group(base_path('routes/api_mobile.php'));

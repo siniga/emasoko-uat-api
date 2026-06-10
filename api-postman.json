@@ -1,13 +1,14 @@
 {
     "openapi": "3.1.0",
     "info": {
-        "title": "eMakato APIs",
+        "title": "eMakato",
         "version": "0.0.1",
         "description": "## Overview\nThis documentation covers the External App APIs used to authenticate, manage payment mandates, and view collections.\n\n## API Groups\n- **Auth**: obtain an external API token using `POST /v1/token`.\n- **PaymentMandate**: list supported mandate channels, create and manage mandates, OTP, status checks, and cancellation.\n- **PaymentCollection**: view all collections, filter by mandate reference, and retrieve actual collections.\n\n## Authentication Flow\n1. Call `POST /v1/token` to get an API token.\n2. Send the token in authorized requests to mandate and collection endpoints.\n3. Use `GET /mandate/channels` to fetch supported `payment_channel` values before mandate creation. Send `payment_channel`; `channel` is derived by the API.\n\n## Response Format\nMost endpoints return `success`, `response_code`, and a payload object/array depending on the operation."
     },
     "servers": [
         {
-            "url": "https://portal.emakato.co.tz/api"
+            "url": "https://portal.emakato.co.tz/api",
+            "description": "Production"
         }
     ],
     "tags": [

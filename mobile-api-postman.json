@@ -1,0 +1,2488 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "eMakato Mobile APIs",
+        "version": "0.0.1",
+        "description": "## Overview\nThis documentation covers the Mobile App APIs used to authenticate, manage payment mandates, and view collections.\n\n## API Groups\n- **Auth**: obtain an external API token using `POST /v1/token`.\n- **PaymentMandate**: list supported mandate channels, create and manage mandates, OTP, status checks, and cancellation.\n- **PaymentCollection**: view all collections, filter by mandate reference, and retrieve actual collections.\n\n## Authentication Flow\n1. Call `POST /v1/token` to get an API token.\n2. Send the token in authorized requests to mandate and collection endpoints.\n3. Use `GET /mandate/channels` to fetch supported `payment_channel` values before mandate creation. Send `payment_channel`; `channel` is derived by the API.\n\n## Response Format\nMost endpoints return `success`, `response_code`, and a payload object/array depending on the operation."
+    },
+    "servers": [
+        {
+            "url": "https://portal.emakato.co.tz/api",
+            "description": "Production"
+        }
+    ],
+    "tags": [
+        {
+            "name": "Payment Mandates",
+            "description": "Mobile APIs for creating, viewing, and managing payment mandates."
+        },
+        {
+            "name": "Payment Collections",
+            "description": "APIs for viewing and filtering payment collections."
+        }
+    ],
+    "paths": {
+        "/mobile/v1/login": {
+            "post": {
+                "operationId": "auth.login",
+                "tags": [
+                    "Auth"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "password": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "email",
+                                    "password"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "401": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "response_code": {
+                                            "type": "integer",
+                                            "const": 401
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Invalid credentials."
+                                        },
+                                        "data": {
+                                            "type": "string"
+                                        },
+                                        "errors": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "response_code",
+                                        "message",
+                                        "data",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "response_code": {
+                                            "type": "integer",
+                                            "const": 200
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Login successful."
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "user": {
+                                                    "type": "string"
+                                                },
+                                                "corporate_reference": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "corporate_references": {
+                                                    "type": "array",
+                                                    "items": []
+                                                },
+                                                "partners": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "uuid": {
+                                                                "type": "string"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "corporate_reference": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "uuid",
+                                                            "name",
+                                                            "corporate_reference"
+                                                        ]
+                                                    }
+                                                },
+                                                "token": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "user",
+                                                "corporate_reference",
+                                                "corporate_references",
+                                                "partners",
+                                                "token"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "response_code",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "response_code": {
+                                            "type": "integer",
+                                            "const": 422
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Validation failed."
+                                        },
+                                        "data": {
+                                            "type": "string"
+                                        },
+                                        "errors": {
+                                            "$ref": "#/components/schemas/MessageBag"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "response_code",
+                                        "message",
+                                        "data",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/mobile/v1/mandates/summaries": {
+            "get": {
+                "operationId": "paymentMandate.summaries",
+                "tags": [
+                    "Payment Mandates"
+                ],
+                "parameters": [
+                    {
+                        "name": "channel",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "payment_channel",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "response_code": {
+                                            "type": "integer",
+                                            "const": 200
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Mobile summaries fetched successfully."
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "mandates": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "pending": {
+                                                            "type": "string"
+                                                        },
+                                                        "approved": {
+                                                            "type": "string"
+                                                        },
+                                                        "failed": {
+                                                            "type": "string"
+                                                        },
+                                                        "total": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "count": {
+                                                                    "anyOf": [
+                                                                        {
+                                                                            "type": "integer"
+                                                                        },
+                                                                        {
+                                                                            "type": "number"
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                "amount": {
+                                                                    "anyOf": [
+                                                                        {
+                                                                            "type": "integer"
+                                                                        },
+                                                                        {
+                                                                            "type": "number"
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "count",
+                                                                "amount"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "pending",
+                                                        "approved",
+                                                        "failed",
+                                                        "total"
+                                                    ]
+                                                },
+                                                "collections": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "month": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "year": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "month": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "expected_count": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "paid_count": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "expected_amount": {
+                                                                    "type": "number"
+                                                                },
+                                                                "paid_amount": {
+                                                                    "type": "number"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "year",
+                                                                "month",
+                                                                "expected_count",
+                                                                "paid_count",
+                                                                "expected_amount",
+                                                                "paid_amount"
+                                                            ]
+                                                        },
+                                                        "today": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "date": {
+                                                                    "type": "string"
+                                                                },
+                                                                "expected_count": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "paid_count": {
+                                                                    "type": "integer"
+                                                                },
+                                                                "expected_amount": {
+                                                                    "type": "number"
+                                                                },
+                                                                "paid_amount": {
+                                                                    "type": "number"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "date",
+                                                                "expected_count",
+                                                                "paid_count",
+                                                                "expected_amount",
+                                                                "paid_amount"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "month",
+                                                        "today"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "mandates",
+                                                "collections"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "response_code",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/mobile/v1/mandates/all": {
+            "get": {
+                "operationId": "paymentMandate.all",
+                "tags": [
+                    "Payment Mandates"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "response_code": {
+                                            "type": "integer",
+                                            "const": 200
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Mandates fetched successfully."
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "mandates": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/MandateResource"
+                                                    }
+                                                },
+                                                "pagination": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "current_page": {
+                                                            "type": "integer"
+                                                        },
+                                                        "per_page": {
+                                                            "type": "integer"
+                                                        },
+                                                        "last_page": {
+                                                            "type": "integer"
+                                                        },
+                                                        "total": {
+                                                            "type": "integer"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "current_page",
+                                                        "per_page",
+                                                        "last_page",
+                                                        "total"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "mandates",
+                                                "pagination"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "response_code",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/mobile/v1/mandates/{reference}": {
+            "get": {
+                "operationId": "getPaymentMandate",
+                "description": "Returns mandate by reference.",
+                "summary": "Get mandate",
+                "tags": [
+                    "Payment Mandates"
+                ],
+                "parameters": [
+                    {
+                        "name": "reference",
+                        "in": "path",
+                        "required": true,
+                        "description": "Mandate reference number.",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "DO0000123"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mandate fetched successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "mandate": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "payment_channel": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "reference": {
+                                                            "type": "string"
+                                                        },
+                                                        "periodicity": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "debit_type": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "installment_amount": {
+                                                            "type": [
+                                                                "number",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "min_installment_amount": {
+                                                            "type": [
+                                                                "number",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "max_installment_amount": {
+                                                            "type": [
+                                                                "number",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "total_amount": {
+                                                            "type": [
+                                                                "number",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "paid_amount": {
+                                                            "type": [
+                                                                "number",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "outstanding_amount": {
+                                                            "type": [
+                                                                "number",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "number_of_installment": {
+                                                            "type": [
+                                                                "integer",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "start_date": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "end_date": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "lifecycle_status": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "contract_status": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "remarks": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "payment_channel",
+                                                        "reference",
+                                                        "periodicity",
+                                                        "debit_type",
+                                                        "installment_amount",
+                                                        "min_installment_amount",
+                                                        "max_installment_amount",
+                                                        "total_amount",
+                                                        "paid_amount",
+                                                        "outstanding_amount",
+                                                        "number_of_installment",
+                                                        "start_date",
+                                                        "end_date",
+                                                        "lifecycle_status",
+                                                        "contract_status",
+                                                        "remarks"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "mandate"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Mandate not found.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "response_code": {
+                                            "type": "integer",
+                                            "const": 404
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Mandate not found."
+                                        },
+                                        "data": {
+                                            "type": "string"
+                                        },
+                                        "errors": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "response_code",
+                                        "message",
+                                        "data",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/mobile/v1/mandates/channels": {
+            "get": {
+                "operationId": "listMandatePaymentChannels",
+                "description": "Lists of active payment channels. Use slug as payment_channel when creating a mandate.",
+                "summary": "Active payment channels",
+                "tags": [
+                    "Payment Mandates"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Payment channels fetched successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "payment_channels": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "slug": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "name",
+                                                            "slug"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "payment_channels"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/mobile/v1/mandates/create": {
+            "post": {
+                "operationId": "createPaymentMandate",
+                "description": "Creates a new payment mandate from the selected payment_channel.",
+                "summary": "Create mandate",
+                "tags": [
+                    "Payment Mandates"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "payment_channel": {
+                                        "type": "string",
+                                        "description": "Payment provider slug returned by GET /api/mandate/channels.",
+                                        "example": "CRDB"
+                                    },
+                                    "corporate_reference": {
+                                        "type": "string",
+                                        "description": "Partner corporate reference. Required only when your user is linked to more than one partner.",
+                                        "example": "CO0001"
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "description": "Customer phone number. This should be number connected to bank account if payment channel is BANK.",
+                                        "example": "255712345678"
+                                    },
+                                    "NIN": {
+                                        "type": "string",
+                                        "description": "Customer identification number.",
+                                        "example": "19900101123456789012"
+                                    },
+                                    "address": {
+                                        "type": "string",
+                                        "description": "Customer address.",
+                                        "example": "Dar es Salaam"
+                                    },
+                                    "total_amount": {
+                                        "type": "integer",
+                                        "description": "Total mandate amount. Minimum 1,000.",
+                                        "example": 500000
+                                    },
+                                    "debit_type": {
+                                        "type": "string",
+                                        "description": "Mandate debit type. {FIXED, DYNAMIC}",
+                                        "example": "FIXED"
+                                    },
+                                    "installment_amount": {
+                                        "type": "integer",
+                                        "description": "Required when debit_type is FIXED.",
+                                        "example": 50000
+                                    },
+                                    "min_installment_amount": {
+                                        "type": "integer",
+                                        "description": "Required when debit_type is DYNAMIC.",
+                                        "example": 10000
+                                    },
+                                    "max_installment_amount": {
+                                        "type": "integer",
+                                        "description": "Required when debit_type is DYNAMIC.",
+                                        "example": 100000
+                                    },
+                                    "periodicity": {
+                                        "type": "string",
+                                        "description": "Deduction frequency.",
+                                        "example": "MONTHLY"
+                                    },
+                                    "deduction_start_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "description": "Start date. Must be today or future date.",
+                                        "example": "2026-06-10"
+                                    },
+                                    "account_name": {
+                                        "type": "string",
+                                        "description": "Required when the payment_channel is a BANK channel.",
+                                        "example": "Tony Missokia"
+                                    },
+                                    "account_number": {
+                                        "type": "string",
+                                        "description": "Required when the payment_channel is a BANK channel.",
+                                        "example": "015123456789"
+                                    }
+                                },
+                                "required": [
+                                    "payment_channel",
+                                    "phone",
+                                    "NIN",
+                                    "address",
+                                    "total_amount",
+                                    "debit_type",
+                                    "periodicity",
+                                    "deduction_start_date"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "500": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "response_code": {
+                                            "type": "integer",
+                                            "const": 500
+                                        },
+                                        "message": {
+                                            "anyOf": [
+                                                {
+                                                    "type": "string"
+                                                },
+                                                {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "Unable to create mandate."
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        "data": {
+                                            "type": "string"
+                                        },
+                                        "errors": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "response_code",
+                                        "message",
+                                        "data",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "200": {
+                        "description": "Mandate created successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "lifecycle_status": {
+                                                    "type": "string"
+                                                },
+                                                "mandate_reference": {
+                                                    "type": "string"
+                                                },
+                                                "redirect_url": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "status",
+                                                "lifecycle_status",
+                                                "mandate_reference",
+                                                "redirect_url"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "response_code": {
+                                            "type": "integer",
+                                            "const": 400
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Failed to create mandate, review your request and submit again."
+                                        },
+                                        "data": {
+                                            "type": "string"
+                                        },
+                                        "errors": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "response_code",
+                                        "message",
+                                        "data",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Partner has not linked to payment channel.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "response_code": {
+                                            "type": "integer",
+                                            "const": 403
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Partner has not linked to any payment channel, contact eMakato support team."
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "partner_id": {
+                                                    "type": "integer"
+                                                },
+                                                "account_id": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "required": [
+                                                "partner_id",
+                                                "account_id"
+                                            ]
+                                        },
+                                        "errors": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "response_code",
+                                        "message",
+                                        "data",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "description": "Validation failed.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Errors overview."
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "description": "A detailed description of each field that failed validation.",
+                                            "additionalProperties": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/mobile/v1/mandates/otp/verify": {
+            "post": {
+                "operationId": "verifyMandateOtp",
+                "description": "Verify OTP for a payment mandate using mandate reference.",
+                "summary": "Verify mandate OTP",
+                "tags": [
+                    "Payment Mandates"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "reference": {
+                                        "type": "string",
+                                        "description": "Mandate reference number.",
+                                        "example": "DO0000123"
+                                    },
+                                    "otpPin": {
+                                        "type": "string",
+                                        "description": "OTP received by customer.",
+                                        "example": "123456"
+                                    }
+                                },
+                                "required": [
+                                    "reference",
+                                    "otpPin"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OTP verified successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Mandate not found.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "response_code": {
+                                            "type": "integer",
+                                            "const": 404
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Mandate not found."
+                                        },
+                                        "data": {
+                                            "type": "string"
+                                        },
+                                        "errors": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "response_code",
+                                        "message",
+                                        "data",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation failed.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "response_code": {
+                                            "type": "integer",
+                                            "const": 422
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Validation failed."
+                                        },
+                                        "data": {
+                                            "type": "string"
+                                        },
+                                        "errors": {
+                                            "$ref": "#/components/schemas/MessageBag"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "response_code",
+                                        "message",
+                                        "data",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/mobile/v1/mandates/otp/create": {
+            "post": {
+                "operationId": "createMandateOtp",
+                "description": "Requests or resends OTP for a mandate using mandate reference.",
+                "summary": "Create mandate OTP",
+                "tags": [
+                    "Payment Mandates"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "reference": {
+                                        "type": "string",
+                                        "description": "Mandate reference number.",
+                                        "example": "DO0000123"
+                                    }
+                                },
+                                "required": [
+                                    "reference"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OTP created successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "mandate_reference": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "status",
+                                                "mandate_reference"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Mandate not found.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "response_code": {
+                                            "type": "integer",
+                                            "const": 404
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Mandate not found."
+                                        },
+                                        "data": {
+                                            "type": "string"
+                                        },
+                                        "errors": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "response_code",
+                                        "message",
+                                        "data",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation failed.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "response_code": {
+                                            "type": "integer",
+                                            "const": 422
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Validation failed."
+                                        },
+                                        "data": {
+                                            "type": "string"
+                                        },
+                                        "errors": {
+                                            "$ref": "#/components/schemas/MessageBag"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "response_code",
+                                        "message",
+                                        "data",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/mobile/v1/mandates/status": {
+            "post": {
+                "operationId": "fetchMandateStatus",
+                "description": "Fetches the latest mandate status from the payment channel.",
+                "summary": "Fetch mandate status",
+                "tags": [
+                    "Payment Mandates"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "reference": {
+                                        "type": "string",
+                                        "description": "Mandate reference number.",
+                                        "example": "DO0000123"
+                                    }
+                                },
+                                "required": [
+                                    "reference"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Mandate status fetched successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "lifecycle_status": {
+                                                    "type": "string"
+                                                },
+                                                "mandate_reference": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "status",
+                                                "lifecycle_status",
+                                                "mandate_reference"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Mandate not found.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "response_code": {
+                                            "type": "integer",
+                                            "const": 404
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Mandate not found."
+                                        },
+                                        "data": {
+                                            "type": "string"
+                                        },
+                                        "errors": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "response_code",
+                                        "message",
+                                        "data",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation failed.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "response_code": {
+                                            "type": "integer",
+                                            "const": 422
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Validation failed."
+                                        },
+                                        "data": {
+                                            "type": "string"
+                                        },
+                                        "errors": {
+                                            "$ref": "#/components/schemas/MessageBag"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "response_code",
+                                        "message",
+                                        "data",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/mobile/v1/mandates/cancellation": {
+            "post": {
+                "operationId": "cancelPaymentMandate",
+                "description": "Initiates cancellation for a mandate using mandate reference and cancellation reason.",
+                "summary": "Cancel mandate",
+                "tags": [
+                    "Payment Mandates"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "reference": {
+                                        "type": "string",
+                                        "description": "Mandate reference number.",
+                                        "example": "DO0000123"
+                                    },
+                                    "reasons": {
+                                        "type": "string",
+                                        "description": "Reason for cancelling the mandate.",
+                                        "example": "Customer requested cancellation"
+                                    }
+                                },
+                                "required": [
+                                    "reference",
+                                    "reasons"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Mandate not found.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "response_code": {
+                                            "type": "integer",
+                                            "const": 404
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Mandate not found."
+                                        },
+                                        "data": {
+                                            "type": "string"
+                                        },
+                                        "errors": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "response_code",
+                                        "message",
+                                        "data",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation failed.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "response_code": {
+                                            "type": "integer",
+                                            "const": 422
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Validation failed."
+                                        },
+                                        "data": {
+                                            "type": "string"
+                                        },
+                                        "errors": {
+                                            "$ref": "#/components/schemas/MessageBag"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "response_code",
+                                        "message",
+                                        "data",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "201": {
+                        "description": "Mandate cancelled successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "lifecycle_status": {
+                                                    "type": "string"
+                                                },
+                                                "provider_response_code": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "mandate_reference": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "status",
+                                                "lifecycle_status",
+                                                "provider_response_code",
+                                                "mandate_reference"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/mobile/v1/collections/all": {
+            "post": {
+                "operationId": "listPaymentCollections",
+                "description": "Returns expected and paid collections for the selected month and year.",
+                "summary": "All collections",
+                "tags": [
+                    "Payment Collections"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "year": {
+                                        "type": "integer",
+                                        "description": "Optional collection year. Defaults to current year.",
+                                        "example": 2026
+                                    },
+                                    "month": {
+                                        "type": "integer",
+                                        "description": "Optional collection month number. Defaults to current month.",
+                                        "example": 6
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "description": "Optional collection status filter. Example values: OPEN, CLOSED, FUNDSCHECK, FAILED.",
+                                        "example": "OPEN"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Collections fetched successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "collections": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "mandate": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "reference": {
+                                                                        "type": [
+                                                                            "string",
+                                                                            "null"
+                                                                        ]
+                                                                    },
+                                                                    "debit_type": {
+                                                                        "type": [
+                                                                            "string",
+                                                                            "null"
+                                                                        ]
+                                                                    },
+                                                                    "start_date": {
+                                                                        "type": [
+                                                                            "string",
+                                                                            "null"
+                                                                        ]
+                                                                    },
+                                                                    "end_date": {
+                                                                        "type": [
+                                                                            "string",
+                                                                            "null"
+                                                                        ]
+                                                                    },
+                                                                    "contract_status": {
+                                                                        "type": [
+                                                                            "string",
+                                                                            "null"
+                                                                        ]
+                                                                    },
+                                                                    "approved": {
+                                                                        "type": [
+                                                                            "integer",
+                                                                            "null"
+                                                                        ]
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "reference",
+                                                                    "debit_type",
+                                                                    "start_date",
+                                                                    "end_date",
+                                                                    "contract_status",
+                                                                    "approved"
+                                                                ]
+                                                            },
+                                                            "installment_order": {
+                                                                "type": [
+                                                                    "integer",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "installment_amount": {
+                                                                "type": [
+                                                                    "number",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "min_installment_amount": {
+                                                                "type": [
+                                                                    "number",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "max_installment_amount": {
+                                                                "type": [
+                                                                    "number",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "current_balance": {
+                                                                "type": [
+                                                                    "number",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "outstanding_amount": {
+                                                                "type": [
+                                                                    "number",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "payment_date": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "last_paid_amount": {
+                                                                "type": [
+                                                                    "number",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "reference": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "status": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "remarks": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "mandate",
+                                                            "installment_order",
+                                                            "installment_amount",
+                                                            "min_installment_amount",
+                                                            "max_installment_amount",
+                                                            "current_balance",
+                                                            "outstanding_amount",
+                                                            "payment_date",
+                                                            "last_paid_amount",
+                                                            "reference",
+                                                            "status",
+                                                            "remarks"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "collections"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/mobile/v1/collections/filtering": {
+            "post": {
+                "operationId": "filterPaymentCollections",
+                "description": "Returns expected collections for a specific mandate reference, optionally filtered by collection status.",
+                "summary": "Filter collections",
+                "tags": [
+                    "Payment Collections"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "reference": {
+                                        "type": "string",
+                                        "description": "Mandate reference number.",
+                                        "example": "DO0000123"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "description": "Optional collection status filter. Example values: OPEN, CLOSED, FUNDSCHECK, FAILED.",
+                                        "example": "OPEN"
+                                    }
+                                },
+                                "required": [
+                                    "reference"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Collections fetched successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "collections": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "mandate": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "reference": {
+                                                                        "type": [
+                                                                            "string",
+                                                                            "null"
+                                                                        ]
+                                                                    },
+                                                                    "debit_type": {
+                                                                        "type": [
+                                                                            "string",
+                                                                            "null"
+                                                                        ]
+                                                                    },
+                                                                    "start_date": {
+                                                                        "type": [
+                                                                            "string",
+                                                                            "null"
+                                                                        ]
+                                                                    },
+                                                                    "end_date": {
+                                                                        "type": [
+                                                                            "string",
+                                                                            "null"
+                                                                        ]
+                                                                    },
+                                                                    "contract_status": {
+                                                                        "type": [
+                                                                            "string",
+                                                                            "null"
+                                                                        ]
+                                                                    },
+                                                                    "approved": {
+                                                                        "type": [
+                                                                            "integer",
+                                                                            "null"
+                                                                        ]
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "reference",
+                                                                    "debit_type",
+                                                                    "start_date",
+                                                                    "end_date",
+                                                                    "contract_status",
+                                                                    "approved"
+                                                                ]
+                                                            },
+                                                            "installment_order": {
+                                                                "type": [
+                                                                    "integer",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "installment_amount": {
+                                                                "type": [
+                                                                    "number",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "min_installment_amount": {
+                                                                "type": [
+                                                                    "number",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "max_installment_amount": {
+                                                                "type": [
+                                                                    "number",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "current_balance": {
+                                                                "type": [
+                                                                    "number",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "outstanding_amount": {
+                                                                "type": [
+                                                                    "number",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "payment_date": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "last_paid_amount": {
+                                                                "type": [
+                                                                    "number",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "reference": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "status": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "remarks": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "mandate",
+                                                            "installment_order",
+                                                            "installment_amount",
+                                                            "min_installment_amount",
+                                                            "max_installment_amount",
+                                                            "current_balance",
+                                                            "outstanding_amount",
+                                                            "payment_date",
+                                                            "last_paid_amount",
+                                                            "reference",
+                                                            "status",
+                                                            "remarks"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "collections"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation failed.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "response_code": {
+                                            "type": "integer",
+                                            "const": 422
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Validation failed."
+                                        },
+                                        "data": {
+                                            "type": "string"
+                                        },
+                                        "errors": {
+                                            "$ref": "#/components/schemas/MessageBag"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "response_code",
+                                        "message",
+                                        "data",
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/mobile/v1/collections/actual": {
+            "post": {
+                "operationId": "actualPaymentCollections",
+                "description": "Returns actual aggregated collections by partner for the selected month and year.",
+                "summary": "Actual collections",
+                "tags": [
+                    "Payment Collections"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "year": {
+                                        "type": "integer",
+                                        "description": "Optional collection year for payment_date and effective_payment_date filters. Defaults to current year.",
+                                        "example": 2026
+                                    },
+                                    "month": {
+                                        "type": "integer",
+                                        "description": "Optional collection month number for payment_date and effective_payment_date filters. Defaults to current month.",
+                                        "example": 6
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Actual collections fetched successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "collections": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "corporate_reference": {
+                                                                "type": "string"
+                                                            },
+                                                            "partner_name": {
+                                                                "type": "string"
+                                                            },
+                                                            "number_of_collection": {
+                                                                "type": "integer"
+                                                            },
+                                                            "total_amount": {
+                                                                "type": "number"
+                                                            },
+                                                            "outstanding_amount": {
+                                                                "type": "number"
+                                                            },
+                                                            "paid_amount": {
+                                                                "type": "number"
+                                                            },
+                                                            "percent": {
+                                                                "type": "number"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "corporate_reference",
+                                                            "partner_name",
+                                                            "number_of_collection",
+                                                            "total_amount",
+                                                            "outstanding_amount",
+                                                            "paid_amount",
+                                                            "percent"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "collections"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "CreatePaymentMandateRequest": {
+                "type": "object",
+                "properties": {
+                    "payment_channel": {
+                        "type": "string"
+                    },
+                    "corporate_reference": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "phone": {
+                        "type": "string"
+                    },
+                    "NIN": {
+                        "type": "string"
+                    },
+                    "address": {
+                        "type": "string"
+                    },
+                    "total_amount": {
+                        "type": "string"
+                    },
+                    "debit_type": {
+                        "type": "string"
+                    },
+                    "installment_amount": {
+                        "type": "string"
+                    },
+                    "min_installment_amount": {
+                        "type": "string"
+                    },
+                    "max_installment_amount": {
+                        "type": "string"
+                    },
+                    "periodicity": {
+                        "type": "string"
+                    },
+                    "deduction_start_date": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "payment_channel",
+                    "phone",
+                    "NIN",
+                    "address",
+                    "total_amount",
+                    "debit_type",
+                    "periodicity",
+                    "deduction_start_date"
+                ],
+                "title": "CreatePaymentMandateRequest"
+            },
+            "InstallmentResource": {
+                "type": "object",
+                "properties": {
+                    "mandate": {
+                        "type": "object",
+                        "properties": {
+                            "reference": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "debit_type": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "start_date": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "end_date": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "lifecycle_status": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "reference",
+                            "debit_type",
+                            "start_date",
+                            "end_date",
+                            "lifecycle_status"
+                        ]
+                    },
+                    "installment_amount": {
+                        "type": [
+                            "number",
+                            "null"
+                        ]
+                    },
+                    "current_balance": {
+                        "type": [
+                            "number",
+                            "null"
+                        ]
+                    },
+                    "outstanding_amount": {
+                        "type": [
+                            "number",
+                            "null"
+                        ]
+                    },
+                    "last_paid_amount": {
+                        "type": [
+                            "number",
+                            "null"
+                        ]
+                    },
+                    "payment_date": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "effective_payment_date": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "reference": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "status": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "remarks": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "mandate",
+                    "installment_amount",
+                    "current_balance",
+                    "outstanding_amount",
+                    "last_paid_amount",
+                    "payment_date",
+                    "effective_payment_date",
+                    "reference",
+                    "status",
+                    "remarks"
+                ],
+                "title": "InstallmentResource"
+            },
+            "MandateResource": {
+                "type": "object",
+                "properties": {
+                    "payment_channel": {
+                        "type": "string"
+                    },
+                    "reference": {
+                        "type": "string"
+                    },
+                    "periodicity": {
+                        "type": "string"
+                    },
+                    "debit_type": {
+                        "type": "string"
+                    },
+                    "installment_amount": {
+                        "type": "string"
+                    },
+                    "min_installment_amount": {
+                        "type": "string"
+                    },
+                    "max_installment_amount": {
+                        "type": "string"
+                    },
+                    "total_amount": {
+                        "type": "string"
+                    },
+                    "paid_amount": {
+                        "type": "string"
+                    },
+                    "outstanding_amount": {
+                        "type": "string"
+                    },
+                    "number_of_installment": {
+                        "type": "string"
+                    },
+                    "start_date": {
+                        "type": "string"
+                    },
+                    "end_date": {
+                        "type": "string"
+                    },
+                    "lifecycle_status": {
+                        "type": "string"
+                    },
+                    "remarks": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "payment_channel",
+                    "reference",
+                    "periodicity",
+                    "debit_type",
+                    "installment_amount",
+                    "min_installment_amount",
+                    "max_installment_amount",
+                    "total_amount",
+                    "paid_amount",
+                    "outstanding_amount",
+                    "number_of_installment",
+                    "start_date",
+                    "end_date",
+                    "lifecycle_status",
+                    "remarks"
+                ],
+                "title": "MandateResource"
+            },
+            "MessageBag": {
+                "type": "array",
+                "items": [],
+                "title": "MessageBag"
+            }
+        },
+        "responses": {
+            "AuthenticationException": {
+                "description": "Unauthenticated",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string",
+                                    "description": "Error overview."
+                                }
+                            },
+                            "required": [
+                                "message"
+                            ]
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
