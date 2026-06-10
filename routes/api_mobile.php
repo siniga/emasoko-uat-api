@@ -17,10 +17,11 @@ Route::middleware('auth:api')->group(function () {
     Route::get('notifications', [UserController::class, 'notifications']);
     Route::patch('notifications/{id}/read', [UserController::class, 'markNotificationAsRead']);
     Route::patch('notifications/read-all', [UserController::class, 'markAllNotificationsAsRead']);
+
+
     Route::get('sp-homepage', [PaymentMandateController::class, 'spHomepage']);
     Route::get('debit-orders-summaries', [PaymentMandateController::class, 'debitOrderSummaries']);
     Route::get('deduction-histories/{uuid}', [PaymentMandateController::class, 'deductionHistories']);
-
     Route::any('mandates/summaries', [PaymentMandateController::class, 'summaries']);
     Route::get('mandates/all', [PaymentMandateController::class, 'all']);
     Route::get('mandates/channels', [PaymentMandateController::class, 'getPaymentChannels']);
