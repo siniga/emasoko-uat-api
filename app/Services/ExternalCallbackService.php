@@ -63,6 +63,8 @@ class ExternalCallbackService
         }
 
         $collection = (new InstallmentResource($installment))->resolve();
+        $callbackChannel = $extra['channel'] ?? $debitOrder->channel;
+        unset($extra['channel']);
 
         $payload = [
             'event_id' => (string) Str::uuid(),
@@ -70,7 +72,7 @@ class ExternalCallbackService
             'callback_type' => 'COLLECTION_STATUS',
             'event_time' => now()->toIso8601String(),
             'corporate_reference' => $debitOrder->partner?->reference,
-            'channel' => $debitOrder->channel,
+            'channel' => $callbackChannel,
             'collection' => $collection,
         ];
 

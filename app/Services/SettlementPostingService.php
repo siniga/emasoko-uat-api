@@ -68,6 +68,7 @@ class SettlementPostingService
                 $settlement = $existing;
                 $settlement->collection_batch_id = $batch?->id ?? $settlement->collection_batch_id;
                 $settlement->collection_debit_order_id = $line?->id ?? $settlement->collection_debit_order_id;
+                $settlement->channel = $sourceChannel;
                 $settlement->debit_order_id = $debitOrder->id;
                 $settlement->installment_id = $installment?->id;
                 $settlement->mandate_reference = $debitOrder->reference;
@@ -116,6 +117,7 @@ class SettlementPostingService
 
             $settlement = new PaymentSettlement();
 
+            $settlement->channel = $sourceChannel;
             $settlement->collection_batch_id = $batch?->id;
             $settlement->collection_debit_order_id = $line?->id;
             $settlement->debit_order_id = $debitOrder->id;

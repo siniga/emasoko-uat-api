@@ -470,6 +470,7 @@ class MandateController extends Controller
         };
 
         $this->externalCallbackService->dispatchCollectionStatus($settlement->installment, $eventType, [
+            'channel' => $settlement->channel,
             'settlement_reference' => $settlement->payment_reference,
             'external_reference' => $settlement->external_reference,
             'bank_status' => $settlement->raw_status,
