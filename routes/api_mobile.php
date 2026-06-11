@@ -30,9 +30,10 @@ Route::middleware('auth:api')->group(function () {
     Route::post('mandates/otp/create', [PaymentMandateController::class, 'createOtp']);
     Route::post('mandates/status', [PaymentMandateController::class, 'fetchStatus']);
     Route::post('mandates/cancellation', [PaymentMandateController::class, 'cancellation']);
-    Route::get('mandates/{reference}', [PaymentMandateController::class, 'getMandate']);
     Route::post('mandates/archive', [PaymentMandateController::class, 'archiveMandate']);
     Route::post('mandates/close', [PaymentMandateController::class, 'closeMandate']);
+    Route::get('mandates/{reference}', [PaymentMandateController::class, 'getMandate'])
+        ->where('reference', '^(?!summaries$|all$|channels$|create$|otp$|status$|cancellation$|archive$|close$).+');
 
     Route::post('collections/all', [PaymentCollectionController::class, 'all']);
     Route::post('collections/filtering', [PaymentCollectionController::class, 'filtering']);
