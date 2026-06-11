@@ -10,6 +10,7 @@ use App\Models\PaymentSettlement;
 use App\Services\DeductionService;
 use App\Services\ExternalCallbackService;
 use App\Services\SettlementPostingService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -300,8 +301,14 @@ class MandateController extends Controller
 
                     if ($installments->exists()) {
                         $installment = $installments->first();
+                        $paymentReference = "CRDB-FAILED-{$debitOrder->id}-" . date('Ym', strtotime($collectionDate));
+                        $existingSettlement = PaymentSettlement::where([
+                            'channel' => 'CRDB',
+                            'payment_reference' => $paymentReference,
+                            'installment_id' => $installment->id,
+                        ])->first();
 
-                        $this->settlementPostingService->post([
+                        $settlement = $this->settlementPostingService->post([
                             'channel' => 'CRDB',
                             'debit_order' => $debitOrder,
                             'installment' => $installment,
@@ -311,9 +318,12 @@ class MandateController extends Controller
                             'remarks' => 'Insufficient funds',
                             'effective_payment_date' => date('Y-m-d', strtotime($collectionDate)),
                             'transaction_at' => $collectionDate,
-                            'payment_reference' => "CRDB-FAILED-{$debitOrder->id}-" . date('Ym', strtotime($collectionDate)),
+                            'payment_reference' => $paymentReference,
                             'raw_payload_hash' => md5(json_encode($request->all())),
                         ]);
+
+                        $this->dispatchCrdbCollectionCallback($settlement, !$existingSettlement
+                            || strtoupper((string) $existingSettlement->normalized_status) !== PaymentSettlement::STATUS_FUNDSCHECK);
 
                         Log::debug("== update installment : insufficient amount ===");
                         Log::debug($installment->toArray());
@@ -377,7 +387,7 @@ class MandateController extends Controller
                 ? PaymentSettlement::STATUS_PARTIAL
                 : PaymentSettlement::STATUS_SUCCESS;
 
-            $this->settlementPostingService->post([
+            $settlement = $this->settlementPostingService->post([
                 'channel' => 'CRDB',
                 'debit_order' => $debitOrder,
                 'installment' => $installment,
@@ -391,6 +401,8 @@ class MandateController extends Controller
                 'external_reference' => $transactionReference,
                 'raw_payload_hash' => $rawPayloadHash,
             ]);
+
+            $this->dispatchCrdbCollectionCallback($settlement);
 
             $sequence++;
         }
@@ -431,5 +443,41 @@ class MandateController extends Controller
         $installment->save();
 
         return $installment;
+    }
+
+    protected function dispatchCrdbCollectionCallback(PaymentSettlement $settlement, bool $shouldDispatch = true): void
+    {
+        if (!$shouldDispatch) {
+            return;
+        }
+
+        if (!$settlement->installment_id) {
+            return;
+        }
+
+        $settlement->loadMissing('installment.debitOrder.partner');
+
+        if (!$settlement->installment) {
+            return;
+        }
+
+        $eventType = match (strtoupper((string) $settlement->normalized_status)) {
+            PaymentSettlement::STATUS_SUCCESS => 'COLLECTION_PAID',
+            PaymentSettlement::STATUS_PARTIAL => 'COLLECTION_PARTIAL_PAID',
+            PaymentSettlement::STATUS_FUNDSCHECK => 'COLLECTION_FUNDSCHECK',
+            PaymentSettlement::STATUS_UNALLOCATED => 'COLLECTION_UNALLOCATED',
+            default => 'COLLECTION_FAILED',
+        };
+
+        $this->externalCallbackService->dispatchCollectionStatus($settlement->installment, $eventType, [
+            'settlement_reference' => $settlement->payment_reference,
+            'external_reference' => $settlement->external_reference,
+            'bank_status' => $settlement->raw_status,
+            'settlement_status' => $settlement->normalized_status,
+            'paid_amount' => (float) $settlement->paid_amount,
+            'transaction_at' => $settlement->transaction_at
+                ? Carbon::parse($settlement->transaction_at)->toIso8601String()
+                : null,
+        ]);
     }
 }

@@ -13,6 +13,7 @@ class Partner extends Model
 {
     use HasFactory, DocumentNumberTrait;
     protected $guarded = [];
+    protected $hidden = ['callback_secret'];
 
     public const LIFECYCLE_DRAFT = 'draft';
     public const LIFECYCLE_SUBMITTED = 'submitted';

@@ -128,9 +128,9 @@ class PaymentMandateWorkflowService
         $debitOrder->save();
         $debitOrder->refresh();
 
-        if ($response['success']) {
+        if ($response['success'] && $debitOrder->channel !== 'NMB') {
             $this->externalCallbackService->dispatchMandateStatus($debitOrder, 'MANDATE_SUBMITTED');
-        } else {
+        } elseif (!$response['success']) {
             $this->externalCallbackService->dispatchMandateStatus($debitOrder, 'MANDATE_FAILED');
         }
 
@@ -201,7 +201,7 @@ class PaymentMandateWorkflowService
         $debitOrder->save();
         $debitOrder->refresh();
 
-        if ($success && $responseCode === 202) {
+        if ($success && $responseCode === 202 && $debitOrder->channel !== 'NMB') {
             $this->externalCallbackService->dispatchMandateStatus($debitOrder, 'MANDATE_VERIFIED');
         } elseif (!$success || $responseCode >= 400) {
             $this->externalCallbackService->dispatchMandateStatus($debitOrder, 'MANDATE_FAILED');
@@ -268,7 +268,10 @@ class PaymentMandateWorkflowService
         $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_ACTIVE;
         $debitOrder->save();
         $debitOrder->refresh();
-        $this->externalCallbackService->dispatchMandateStatus($debitOrder, 'MANDATE_ACTIVE');
+
+        if ($debitOrder->channel !== 'NMB') {
+            $this->externalCallbackService->dispatchMandateStatus($debitOrder, 'MANDATE_ACTIVE');
+        }
 
         return $debitOrder->fresh();
     }
