@@ -260,8 +260,8 @@ class PaymentMandateController extends Controller
     #[BodyParameter('account_name', description: 'Required when the payment_channel is a BANK channel.', type: 'string', example: 'Tony Missokia')]
     #[BodyParameter('account_number', description: 'Required when the payment_channel is a BANK channel.', type: 'string', example: '015123456789')]
     #[BodyParameter('phone', description: 'Customer phone number. This should be number connected to bank account if payment channel is BANK.', type: 'string', required: true, example: '255712345678')]
-    #[BodyParameter('NIN', description: 'Customer identification number.', type: 'string', required: true, example: '19900101123456789012')]
-    #[BodyParameter('address', description: 'Customer address.', type: 'string', required: true, example: 'Dar es Salaam')]
+    #[BodyParameter('NIN', description: 'Optional customer identification number.', type: 'string', example: '19900101123456789012')]
+    #[BodyParameter('address', description: 'Optional customer address.', type: 'string', example: 'Dar es Salaam')]
     #[BodyParameter('total_amount', description: 'Total mandate amount. Minimum 1,000.', type: 'number', required: true, example: 500000)]
     #[BodyParameter('debit_type', description: 'Mandate debit type. {FIXED, DYNAMIC}', type: 'string', required: true, example: 'FIXED')]
     #[BodyParameter('installment_amount', description: 'Required when debit_type is FIXED.', type: 'number', example: 50000)]
@@ -317,7 +317,7 @@ class PaymentMandateController extends Controller
             'account_number' => $request->account_number,
             'email' => $request->email,
             'id_number' => $request->NIN,
-            'address' => $request->address,
+            'address' => $request->input('address', 'Dar es Salaam'),
         ], Auth::id(), (string) Str::uuid());
 
         $installmentNumber = $this->deductionService->calculateNumberOfInstallments(

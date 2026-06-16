@@ -758,12 +758,12 @@
                                             },
                                             "NIN": {
                                                 "type": "string",
-                                                "description": "Customer identification number.",
+                                                "description": "Optional customer identification number.",
                                                 "example": "19900101123456789012"
                                             },
                                             "address": {
                                                 "type": "string",
-                                                "description": "Customer address.",
+                                                "description": "Optional customer address. Defaults to Dar es Salaam when omitted.",
                                                 "example": "Dar es Salaam"
                                             },
                                             "total_amount": {
@@ -806,8 +806,6 @@
                                         "required": [
                                             "payment_channel",
                                             "phone",
-                                            "NIN",
-                                            "address",
                                             "total_amount",
                                             "debit_type",
                                             "periodicity",
@@ -2200,10 +2198,16 @@
                         "type": "string"
                     },
                     "NIN": {
-                        "type": "string"
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     },
                     "address": {
-                        "type": "string"
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     },
                     "total_amount": {
                         "type": "string"
@@ -2231,8 +2235,6 @@
                 "required": [
                     "payment_channel",
                     "phone",
-                    "NIN",
-                    "address",
                     "total_amount",
                     "debit_type",
                     "periodicity",

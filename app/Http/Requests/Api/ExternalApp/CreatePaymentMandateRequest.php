@@ -37,6 +37,10 @@ class CreatePaymentMandateRequest extends FormRequest
             $normalized['NIN'] = $this->input('id_number');
         }
 
+        if (!$this->filled('address')) {
+            $normalized['address'] = 'Dar es Salaam';
+        }
+
         if (!$this->filled('total_amount') && $this->filled('loan_amount')) {
             $normalized['total_amount'] = $this->input('loan_amount');
         }
@@ -69,8 +73,8 @@ class CreatePaymentMandateRequest extends FormRequest
             'payment_channel' => 'required',
             'corporate_reference' => 'nullable|string',
             'phone' => 'required',
-            'NIN' => 'required',
-            'address' => 'required',
+            'NIN' => 'nullable|string',
+            'address' => 'nullable|string',
             'total_amount' => [
                 'required',
                 function ($attribute, $value, $fail) {
