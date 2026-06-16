@@ -260,7 +260,7 @@
                                 <label class="input-group-text">Year</label>
                             </div>
                         </div>
-                        <h4 class="card-title mb-3">Expected vs Collected</h4>
+                        <h4 class="card-title mb-3">Expected vs Collected Values</h4>
                     </div>
 
                     <div class="row">
@@ -303,7 +303,7 @@
                 <div class="card-body">
                     <div class="dashboard-report-panel__head">
                         <div>
-                            <h4 class="card-title">Mandates Posted vs Deducted</h4>
+                            <h4 class="card-title">Number of Mandates Posted vs Deducted</h4>
                             <p class="dashboard-report-panel__hint">Collected mandates against the remaining gap for
                                 each month.</p>
                         </div>
@@ -334,10 +334,11 @@
                     <div class="dashboard-report-panel__head">
                         <div>
                             <h4 class="card-title">Payment Channel Performance</h4>
+                            <p class="dashboard-report-panel__hint">Current month collection value by channel.</p>
                         </div>
                     </div>
 
-                    {{-- <div class="dashboard-channel-list">
+                    <div class="dashboard-channel-list">
                         @foreach ($bank_channel_performance as $channelItem)
                             <div class="dashboard-channel-item">
                                 <div class="dashboard-channel-item__badge">
@@ -350,7 +351,13 @@
 
                                 <div>
                                     <div class="dashboard-channel-item__name">{{ $channelItem['name'] }}</div>
-                                    <div class="dashboard-channel-item__meta">{{ $channelItem['subtitle'] }}</div>
+                                    <div class="dashboard-channel-item__meta">
+                                        {{ number_format($channelItem['mandates']) }} mandates
+                                    </div>
+                                    <div class="dashboard-channel-item__amounts">
+                                        <span>Expected {{ format_short_amount($channelItem['expected_amount']) }} TZS</span>
+                                        <span>Collected {{ format_short_amount($channelItem['paid_amount']) }} TZS</span>
+                                    </div>
                                     <div class="dashboard-channel-item__track">
                                         <div class="dashboard-channel-item__bar channel-{{ $channelItem['tone'] }}"
                                             style="width: {{ $channelItem['bar_width'] }}%"></div>
@@ -358,11 +365,12 @@
                                 </div>
 
                                 <div class="dashboard-channel-item__status channel-{{ $channelItem['tone'] }}">
-                                    {{ $channelItem['status'] }}
+                                    <span>{{ $channelItem['status'] }}</span>
+                                    {{-- <small>rate</small> --}}
                                 </div>
                             </div>
                         @endforeach
-                    </div> --}}
+                    </div>
                 </div>
             </div>
         </div>

@@ -190,9 +190,9 @@
 
 .dashboard-channel-item {
     display: grid;
-    grid-template-columns: 52px 1fr auto;
+    grid-template-columns: 52px minmax(0, 1fr) auto;
     gap: 0.85rem;
-    align-items: center;
+    align-items: start;
 }
 
 .dashboard-channel-item__badge {
@@ -228,6 +228,17 @@
 .dashboard-channel-item__meta {
     color: #7b8798;
     font-size: 0.78rem;
+    margin-bottom: 0.35rem;
+}
+
+.dashboard-channel-item__amounts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.55rem;
+    color: #4b5d75;
+    font-size: 0.76rem;
+    font-weight: 700;
+    line-height: 1.25;
     margin-bottom: 0.45rem;
 }
 
@@ -260,10 +271,24 @@
 }
 
 .dashboard-channel-item__status {
-    min-width: 52px;
+    min-width: 54px;
     text-align: right;
-    font-size: 0.82rem;
+    font-size: 0.9rem;
+    font-weight: 800;
+}
+
+.dashboard-channel-item__status span {
+    display: block;
+    line-height: 1.05;
+}
+
+.dashboard-channel-item__status small {
+    color: #8a97aa;
+    display: block;
+    font-size: 0.68rem;
     font-weight: 700;
+    margin-top: 0.15rem;
+    text-transform: uppercase;
 }
 
 .dashboard-channel-item__status.channel-success {
