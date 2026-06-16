@@ -58,6 +58,9 @@ class ApiCallbackJob implements ShouldQueue
         $log = ExternalCallbackLog::find($this->data['callback_log_id']);
 
         if (!$log) {
+            Log::warning('External callback skipped: callback log was not found.', [
+                'callback_log_id' => $this->data['callback_log_id'],
+            ]);
             return;
         }
 
@@ -109,6 +112,13 @@ class ApiCallbackJob implements ShouldQueue
         Log::debug($decodedResponse);
 
         if ($this->shouldRetryResponse($response->status())) {
+            Log::warning('External callback returned retryable response status.', [
+                'callback_log_id' => $log->id,
+                'callback_url' => $log->callback_url,
+                'status_code' => $response->status(),
+                'response_body' => $response->body(),
+            ]);
+
             throw new \RuntimeException("External callback failed with retryable status [{$response->status()}].");
         }
     }

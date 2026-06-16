@@ -292,6 +292,13 @@ class MandateController extends Controller
                             strtoupper((string) $transferResponse),
                             md5(json_encode($request->all()))
                         );
+                    } else {
+                        Log::info('CRDB payment status skipped: transaction reference already settled.', [
+                            'debit_order_id' => $debitOrder->id,
+                            'mandate_reference' => $debitOrder->reference,
+                            'crdb_reference' => $mandateReference,
+                            'transaction_reference' => $transactionReference,
+                        ]);
                     }
                 } else if (strtolower($transferResponse) == "insufficient_amount") {
                     // select installment for this month
@@ -448,16 +455,32 @@ class MandateController extends Controller
     protected function dispatchCrdbCollectionCallback(PaymentSettlement $settlement, bool $shouldDispatch = true): void
     {
         if (!$shouldDispatch) {
+            Log::info('External CRDB collection callback skipped: settlement status did not change.', [
+                'settlement_id' => $settlement->id,
+                'installment_id' => $settlement->installment_id,
+                'payment_reference' => $settlement->payment_reference,
+                'normalized_status' => $settlement->normalized_status,
+            ]);
             return;
         }
 
         if (!$settlement->installment_id) {
+            Log::warning('External CRDB collection callback skipped: settlement has no installment.', [
+                'settlement_id' => $settlement->id,
+                'payment_reference' => $settlement->payment_reference,
+                'normalized_status' => $settlement->normalized_status,
+            ]);
             return;
         }
 
         $settlement->loadMissing('installment.debitOrder.partner');
 
         if (!$settlement->installment) {
+            Log::warning('External CRDB collection callback skipped: settlement installment could not be loaded.', [
+                'settlement_id' => $settlement->id,
+                'installment_id' => $settlement->installment_id,
+                'payment_reference' => $settlement->payment_reference,
+            ]);
             return;
         }
 

@@ -508,6 +508,13 @@ class DeductionService
                 $responseHash = md5(trim($row));
 
                 if ($line && $line->response_hash === $responseHash && $line->processed_at) {
+                    Log::info('Collection status row skipped: bank response already processed.', [
+                        'batch_id' => $batch->id,
+                        'collection_reference' => $batch->collectionReference,
+                        'installment_id' => $installment->id,
+                        'line_id' => $line->id,
+                        'response_hash' => $responseHash,
+                    ]);
                     continue;
                 }
 
@@ -640,6 +647,13 @@ class DeductionService
                 $responseHash = md5(trim($row));
 
                 if ($line && $line->response_hash === $responseHash && $line->processed_at) {
+                    Log::info('Failed collection status row skipped: bank response already processed.', [
+                        'batch_id' => $batch->id,
+                        'collection_reference' => $batch->collectionReference,
+                        'installment_id' => $installment->id,
+                        'line_id' => $line->id,
+                        'response_hash' => $responseHash,
+                    ]);
                     continue;
                 }
 
@@ -790,13 +804,33 @@ class DeductionService
 
     protected function dispatchCollectionCallback(PaymentSettlement $settlement, bool $shouldDispatch = true): void
     {
-        if (!$shouldDispatch || !$settlement->installment_id) {
+        if (!$shouldDispatch) {
+            Log::info('External collection callback skipped: settlement status did not change.', [
+                'settlement_id' => $settlement->id,
+                'installment_id' => $settlement->installment_id,
+                'payment_reference' => $settlement->payment_reference,
+                'normalized_status' => $settlement->normalized_status,
+            ]);
+            return;
+        }
+
+        if (!$settlement->installment_id) {
+            Log::warning('External collection callback skipped: settlement has no installment.', [
+                'settlement_id' => $settlement->id,
+                'payment_reference' => $settlement->payment_reference,
+                'normalized_status' => $settlement->normalized_status,
+            ]);
             return;
         }
 
         $settlement->loadMissing('installment.debitOrder.partner');
 
         if (!$settlement->installment) {
+            Log::warning('External collection callback skipped: settlement installment could not be loaded.', [
+                'settlement_id' => $settlement->id,
+                'installment_id' => $settlement->installment_id,
+                'payment_reference' => $settlement->payment_reference,
+            ]);
             return;
         }
 
