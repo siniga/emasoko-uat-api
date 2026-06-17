@@ -15,8 +15,15 @@ use Illuminate\Support\Facades\DB;
 
 class CollectionBatchService
 {
+    protected array $candidateSkipReasons = [];
+
     public function __construct(protected DeductionService $deductionService)
     {
+    }
+
+    public function candidateSkipReasons(): array
+    {
+        return $this->candidateSkipReasons;
     }
 
     public function previewInstallments(Partner $partner, string $debitDate, int $limit = 250): array
@@ -48,6 +55,8 @@ class CollectionBatchService
 
     public function createBatchFromInstallments(Partner $partner, Collection $installments, ?User $actor = null, array $attributes = []): ?CollectionBatch
     {
+        $this->candidateSkipReasons = [];
+
         $candidates = $this->buildCandidates(
             $installments,
             $attributes['forced_collection_date'] ?? null,
@@ -86,6 +95,9 @@ class CollectionBatchService
                     ->first();
 
                 if (!$installment) {
+                    $this->recordCandidateSkip(null, 'installment_not_found_after_lock', [
+                        'installment_id' => $candidate['installment']->id,
+                    ]);
                     continue;
                 }
 
@@ -95,10 +107,14 @@ class CollectionBatchService
                     ->first();
 
                 if (!$debitOrder) {
+                    $this->recordCandidateSkip($installment, 'debit_order_not_found_after_lock');
                     continue;
                 }
 
-                if ($this->hasCollectionCycleDuplicate($installment, $candidate['collection_date'], $attributes['source_batch_id'] ?? null)) {
+                if ($duplicate = $this->collectionCycleDuplicate($installment, $candidate['collection_date'], $attributes['source_batch_id'] ?? null)) {
+                    $this->recordCandidateSkip($installment, 'active_cycle_duplicate_after_lock', [
+                        'collection_date' => $candidate['collection_date']->toDateString(),
+                    ] + $this->duplicateContext($duplicate));
                     continue;
                 }
 
@@ -116,6 +132,10 @@ class CollectionBatchService
                     : CollectionDebitOrder::createForCycle($lineAttributes);
 
                 if ((string) $line->collection_batch_id !== (string) $batch->id) {
+                    $this->recordCandidateSkip($installment, 'existing_cycle_line_returned', [
+                        'collection_batch_id' => $line->collection_batch_id,
+                        'collection_date' => $candidate['collection_date']->toDateString(),
+                    ]);
                     continue;
                 }
 
@@ -249,7 +269,13 @@ class CollectionBatchService
 
     public function hasCollectionCycleDuplicate(Installment $installment, Carbon $collectionDate, ?string $excludedBatchId = null): bool
     {
+        return $this->collectionCycleDuplicate($installment, $collectionDate, $excludedBatchId) !== null;
+    }
+
+    public function collectionCycleDuplicate(Installment $installment, Carbon $collectionDate, ?string $excludedBatchId = null): ?CollectionDebitOrder
+    {
         return CollectionDebitOrder::query()
+            ->with('batch:id,collectionReference,deleted')
             ->forCycle($installment->debit_order_id, $collectionDate)
             ->when($excludedBatchId, function ($query) use ($excludedBatchId) {
                 $query->where('collection_batch_id', '!=', $excludedBatchId);
@@ -257,7 +283,7 @@ class CollectionBatchService
             ->whereHas('batch', function ($query) {
                 $query->where('deleted', 0);
             })
-            ->exists();
+            ->first();
     }
 
     protected function buildCandidates(iterable $installments, string|Carbon|null $forcedCollectionDate = null, ?string $excludedBatchId = null): Collection
@@ -267,7 +293,19 @@ class CollectionBatchService
         return collect($installments)
             ->map(function (Installment $installment) use (&$collectionCycles, $forcedCollectionDate, $excludedBatchId) {
                 $debitOrder = $installment->debitOrder;
+                if (!$debitOrder) {
+                    $this->recordCandidateSkip($installment, 'missing_debit_order');
+
+                    return null;
+                }
+
                 $account = $debitOrder->customerAccount;
+                if (!$account) {
+                    $this->recordCandidateSkip($installment, 'missing_customer_account');
+
+                    return null;
+                }
+
                 $paymentDate = Carbon::parse($installment->payment_date);
                 $collectionDate = $forcedCollectionDate
                     ? Carbon::parse($forcedCollectionDate)
@@ -275,22 +313,58 @@ class CollectionBatchService
                 $cycleKey = $debitOrder->id . ':' . $collectionDate->format('Y-m');
 
                 if (strtoupper((string) $debitOrder->periodicity) !== 'MONTHLY') {
+                    $this->recordCandidateSkip($installment, 'unsupported_periodicity', [
+                        'periodicity' => $debitOrder->periodicity,
+                    ]);
+
                     return null;
                 }
 
-                if ((int) $debitOrder->deleted === 1 || strtoupper((string) $debitOrder->contract_status) !== 'OPEN') {
+                if ((int) $debitOrder->deleted === 1) {
+                    $this->recordCandidateSkip($installment, 'debit_order_deleted');
+
                     return null;
                 }
 
-                if (Carbon::parse($debitOrder->start_date)->gt(now()) || Carbon::parse($debitOrder->end_date)->lt(now())) {
+                if (strtoupper((string) $debitOrder->contract_status) !== 'OPEN') {
+                    $this->recordCandidateSkip($installment, 'contract_not_open', [
+                        'contract_status' => $debitOrder->contract_status,
+                    ]);
+
+                    return null;
+                }
+
+                if (!empty($debitOrder->start_date) && Carbon::parse($debitOrder->start_date)->gt($collectionDate)) {
+                    $this->recordCandidateSkip($installment, 'mandate_not_started_on_collection_date', [
+                        'start_date' => Carbon::parse($debitOrder->start_date)->toDateString(),
+                        'collection_date' => $collectionDate->toDateString(),
+                    ]);
+
+                    return null;
+                }
+
+                if (!empty($debitOrder->end_date) && Carbon::parse($debitOrder->end_date)->lt($collectionDate)) {
+                    $this->recordCandidateSkip($installment, 'mandate_ended_before_collection_date', [
+                        'end_date' => Carbon::parse($debitOrder->end_date)->toDateString(),
+                        'collection_date' => $collectionDate->toDateString(),
+                    ]);
+
                     return null;
                 }
 
                 if (in_array($cycleKey, $collectionCycles, true)) {
+                    $this->recordCandidateSkip($installment, 'duplicate_in_candidate_list', [
+                        'cycle_key' => $cycleKey,
+                    ]);
+
                     return null;
                 }
 
-                if ($this->hasCollectionCycleDuplicate($installment, $collectionDate, $excludedBatchId)) {
+                if ($duplicate = $this->collectionCycleDuplicate($installment, $collectionDate, $excludedBatchId)) {
+                    $this->recordCandidateSkip($installment, 'active_cycle_duplicate', [
+                        'collection_date' => $collectionDate->toDateString(),
+                    ] + $this->duplicateContext($duplicate));
+
                     return null;
                 }
 
@@ -308,5 +382,23 @@ class CollectionBatchService
             })
             ->filter()
             ->values();
+    }
+
+    protected function recordCandidateSkip(?Installment $installment, string $reason, array $context = []): void
+    {
+        $this->candidateSkipReasons[] = array_merge([
+            'reason' => $reason,
+            'installment_id' => $installment?->id,
+            'debit_order_id' => $installment?->debit_order_id,
+        ], $context);
+    }
+
+    protected function duplicateContext(CollectionDebitOrder $duplicate): array
+    {
+        return [
+            'duplicate_collection_debit_order_id' => $duplicate->id,
+            'duplicate_batch_id' => $duplicate->collection_batch_id,
+            'duplicate_batch_reference' => $duplicate->batch?->collectionReference,
+        ];
     }
 }

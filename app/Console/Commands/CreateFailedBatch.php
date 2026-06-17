@@ -106,6 +106,7 @@ class CreateFailedBatch extends Command
 
                 if (!$batch) {
                     $this->warn("Batch {$sourceBatch->collectionReference} candidates were blocked by duplicate or mandate validity checks.");
+                    $this->reportBlockedCandidates($sourceBatch);
 
                     return null;
                 }
@@ -208,5 +209,36 @@ class CreateFailedBatch extends Command
         $installment->current_balance = 0;
         $installment->outstanding_amount = $expectedAmount;
         $installment->save();
+    }
+
+    protected function reportBlockedCandidates(CollectionBatch $sourceBatch): void
+    {
+        $reasons = collect($this->collectionBatchService->candidateSkipReasons());
+
+        if ($reasons->isEmpty()) {
+            Log::warning('Failed batch repair was blocked without candidate skip details.', [
+                'source_batch_id' => $sourceBatch->id,
+                'source_reference' => $sourceBatch->collectionReference,
+            ]);
+
+            return;
+        }
+
+        $this->line('Blocked candidate reasons:');
+
+        $reasons
+            ->groupBy('reason')
+            ->map(fn ($items) => $items->count())
+            ->sortDesc()
+            ->each(function (int $count, string $reason) {
+                $this->line(" - {$reason}: {$count}");
+            });
+
+        Log::warning('Failed batch repair candidates were blocked.', [
+            'source_batch_id' => $sourceBatch->id,
+            'source_reference' => $sourceBatch->collectionReference,
+            'reason_counts' => $reasons->groupBy('reason')->map(fn ($items) => $items->count())->all(),
+            'reasons' => $reasons->values()->all(),
+        ]);
     }
 }
