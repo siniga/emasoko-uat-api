@@ -12,6 +12,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class CollectionBatchService
 {
@@ -137,7 +138,7 @@ class CollectionBatchService
 
                 $repairDuplicateContext = [];
                 $line = !empty($attributes['source_batch_id'])
-                    ? $this->createRepairCollectionLine($lineAttributes, $attributes['source_batch_id'], $repairDuplicateContext)
+                    ? $this->createRepairCollectionLine($lineAttributes, $attributes['source_batch_id'], $installment, $repairDuplicateContext)
                     : CollectionDebitOrder::createForCycle($lineAttributes);
 
                 if (!$line) {
@@ -421,7 +422,7 @@ class CollectionBatchService
         ];
     }
 
-    protected function createRepairCollectionLine(array $attributes, string $sourceBatchId, array &$blockedContext = []): ?CollectionDebitOrder
+    protected function createRepairCollectionLine(array $attributes, string $sourceBatchId, Installment $installment, array &$blockedContext = []): ?CollectionDebitOrder
     {
         $attributes['payment_at'] = Carbon::parse($attributes['payment_at'])->toDateString();
 
@@ -436,16 +437,58 @@ class CollectionBatchService
             return CollectionDebitOrder::create($attributes);
         }
 
+        $existingBatchId = (string) $existing->collection_batch_id;
         if ((string) $existing->collection_batch_id !== (string) $sourceBatchId
             && (string) $existing->collection_batch_id !== (string) $attributes['collection_batch_id']) {
             $blockedContext = $this->duplicateContext($existing);
 
-            return null;
+            if (!$this->isCollectableRepairRemark($installment->remarks)) {
+                return null;
+            }
+
+            Log::info('Moving collectable repair line from another batch into repaired batch.', [
+                'installment_id' => $installment->id,
+                'debit_order_id' => $installment->debit_order_id,
+                'mandate_reference' => $installment->debitOrder?->reference,
+                'remark' => $installment->remarks,
+                'from_batch_id' => $existing->collection_batch_id,
+                'from_batch_reference' => $existing->batch?->collectionReference,
+                'to_batch_id' => $attributes['collection_batch_id'],
+                'payment_at' => $attributes['payment_at'],
+            ]);
         }
 
         $existing->fill($attributes);
         $existing->save();
 
+        if ($existingBatchId !== (string) $existing->collection_batch_id) {
+            $this->refreshBatchLineSummary($existingBatchId);
+        }
+
         return $existing;
+    }
+
+    protected function isCollectableRepairRemark(?string $remark): bool
+    {
+        return trim((string) $remark) === 'Item Can Be Collected And Has Been Tracked Successfully.';
+    }
+
+    protected function refreshBatchLineSummary(?string $batchId): void
+    {
+        if (empty($batchId)) {
+            return;
+        }
+
+        $installmentIds = CollectionDebitOrder::query()
+            ->where('collection_batch_id', $batchId)
+            ->whereNotNull('installment_id')
+            ->pluck('installment_id')
+            ->filter()
+            ->values();
+
+        CollectionBatch::whereKey($batchId)->update([
+            'number_of_collections' => $installmentIds->count(),
+            'installment_ids' => $installmentIds->implode(','),
+        ]);
     }
 }
