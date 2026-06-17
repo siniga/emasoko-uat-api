@@ -46,13 +46,13 @@ class CreateFailedCollection extends Command
      */
     public function handle()
     {
-        //current month
-        $previous_month = now()->subMonth()->month;
-        $current_year = now()->year;
+        $previousMonth = now()->subMonth();
+        $previous_month = $previousMonth->month;
+        $previous_year = $previousMonth->year;
         Log::debug("== Previous Month: '{$previous_month}' ==");
-        Log::debug("== Current Year: '{$current_year}' ==");
+        Log::debug("== Previous Year: '{$previous_year}' ==");
 
-        $count = $this->collectionBatchService->recreateFailedBatchesForMonth($previous_month, $current_year);
+        $count = $this->collectionBatchService->recreateFailedBatchesForMonth($previous_month, $previous_year);
 
         //TODO: Messaging module
 
@@ -69,7 +69,7 @@ class CreateFailedCollection extends Command
         }
 
         // Log the collection batches
-        Log::debug("== {$previous_month} - {$current_year} failed collection batches created ==");
+        Log::debug("== {$previous_month} - {$previous_year} failed collection batches created ==");
         return 200;
     }
 }

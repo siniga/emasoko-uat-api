@@ -70,6 +70,42 @@ class CreateFailedBatch extends Command
             return self::SUCCESS;
         }
 
+        $currentMonthStart = now()->startOfMonth();
+        $currentMonthEnd = now()->endOfMonth();
+        $outOfMonthBatches = $batches->reject(function (CollectionBatch $batch) use ($currentMonthStart, $currentMonthEnd) {
+            return $batch->created_at
+                && Carbon::parse($batch->created_at)->betweenIncluded($currentMonthStart, $currentMonthEnd);
+        });
+
+        $outOfMonthBatches->each(function (CollectionBatch $batch) {
+            $createdAt = $batch->created_at
+                ? Carbon::parse($batch->created_at)->toDateString()
+                : 'missing created date';
+            $collectionDate = $batch->collectionDate
+                ? Carbon::parse($batch->collectionDate)->toDateString()
+                : 'missing collection date';
+
+            $this->warn("Skipping batch {$batch->collectionReference}: created date {$createdAt} is not in the current month.");
+
+            Log::warning('Skipped failed batch repair outside current month.', [
+                'source_batch_id' => $batch->id,
+                'source_reference' => $batch->collectionReference,
+                'created_at' => $createdAt,
+                'collection_date' => $collectionDate,
+            ]);
+        });
+
+        $batches = $batches->filter(function (CollectionBatch $batch) use ($currentMonthStart, $currentMonthEnd) {
+            return $batch->created_at
+                && Carbon::parse($batch->created_at)->betweenIncluded($currentMonthStart, $currentMonthEnd);
+        })->values();
+
+        if ($batches->isEmpty()) {
+            $this->warn('No current-month collection batches found for the provided references.');
+
+            return self::SUCCESS;
+        }
+
         $created = 0;
         $createdReferences = [];
 
