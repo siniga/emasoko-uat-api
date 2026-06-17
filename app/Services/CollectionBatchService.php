@@ -135,14 +135,16 @@ class CollectionBatchService
                     'payment_at' => $candidate['collection_date']->toDateString(),
                 ];
 
+                $repairDuplicateContext = [];
                 $line = !empty($attributes['source_batch_id'])
-                    ? $this->createRepairCollectionLine($lineAttributes, $attributes['source_batch_id'])
+                    ? $this->createRepairCollectionLine($lineAttributes, $attributes['source_batch_id'], $repairDuplicateContext)
                     : CollectionDebitOrder::createForCycle($lineAttributes);
 
                 if (!$line) {
                     $this->recordCandidateSkip($installment, 'existing_unique_line_in_other_batch', [
                         'collection_date' => $candidate['collection_date']->toDateString(),
-                    ]);
+                        'mandate_reference' => $candidate['mandate_reference'],
+                    ] + $repairDuplicateContext);
 
                     continue;
                 }
@@ -406,6 +408,7 @@ class CollectionBatchService
             'reason' => $reason,
             'installment_id' => $installment?->id,
             'debit_order_id' => $installment?->debit_order_id,
+            'mandate_reference' => $installment?->debitOrder?->reference,
         ], $context);
     }
 
@@ -418,11 +421,12 @@ class CollectionBatchService
         ];
     }
 
-    protected function createRepairCollectionLine(array $attributes, string $sourceBatchId): ?CollectionDebitOrder
+    protected function createRepairCollectionLine(array $attributes, string $sourceBatchId, array &$blockedContext = []): ?CollectionDebitOrder
     {
         $attributes['payment_at'] = Carbon::parse($attributes['payment_at'])->toDateString();
 
         $existing = CollectionDebitOrder::query()
+            ->with('batch:id,collectionReference,deleted')
             ->where('installment_id', $attributes['installment_id'])
             ->whereDate('payment_at', $attributes['payment_at'])
             ->lockForUpdate()
@@ -434,6 +438,8 @@ class CollectionBatchService
 
         if ((string) $existing->collection_batch_id !== (string) $sourceBatchId
             && (string) $existing->collection_batch_id !== (string) $attributes['collection_batch_id']) {
+            $blockedContext = $this->duplicateContext($existing);
+
             return null;
         }
 

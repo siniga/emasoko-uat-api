@@ -234,6 +234,18 @@ class CreateFailedBatch extends Command
                 $this->line(" - {$reason}: {$count}");
             });
 
+        $reasons
+            ->where('reason', 'existing_unique_line_in_other_batch')
+            ->take(10)
+            ->each(function (array $reason) {
+                $mandateReference = $reason['mandate_reference'] ?? 'unknown mandate';
+                $batchReference = $reason['duplicate_batch_reference'] ?? 'unknown batch';
+                $installmentId = $reason['installment_id'] ?? 'unknown installment';
+                $collectionDate = $reason['collection_date'] ?? 'unknown date';
+
+                $this->line("   * {$mandateReference} / installment {$installmentId} already exists in batch {$batchReference} for {$collectionDate}");
+            });
+
         Log::warning('Failed batch repair candidates were blocked.', [
             'source_batch_id' => $sourceBatch->id,
             'source_reference' => $sourceBatch->collectionReference,
