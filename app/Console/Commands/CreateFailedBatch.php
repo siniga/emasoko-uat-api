@@ -93,7 +93,7 @@ class CreateFailedBatch extends Command
                     ? Carbon::parse($sourceBatch->collectionDate)
                     : now();
 
-                $batch = $this->collectionBatchService->createBatchFromInstallments(
+                $batch = $this->collectionBatchService->createRepairBatchFromInstallments(
                     $sourceBatch->partner,
                     $installments,
                     null,

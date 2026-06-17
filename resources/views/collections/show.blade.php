@@ -45,11 +45,11 @@
                     </div>
 
                     <div class="pm-actions">
-                        @if ($show_create_button && $number_of_failed_installments > 0)
+                        {{-- @if ($show_create_button && $number_of_failed_installments > 0)
                             <a href="{{ route('collections.create-failed', $batch->id) }}" class="btn btn-outline-primary btn-sm">
                                 <i class="bx bx-repeat"></i> Create Failed Batch
                             </a>
-                        @endif
+                        @endif --}}
 
                         <template x-if="deleted==0">
                             <template

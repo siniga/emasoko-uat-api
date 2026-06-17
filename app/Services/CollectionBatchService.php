@@ -53,6 +53,13 @@ class CollectionBatchService
         return $this->createBatchFromInstallments($partner, $installments, $actor);
     }
 
+    public function createRepairBatchFromInstallments(Partner $partner, Collection $installments, ?User $actor = null, array $attributes = []): ?CollectionBatch
+    {
+        return $this->createBatchFromInstallments($partner, $installments, $actor, array_merge($attributes, [
+            'skip_cycle_duplicate_check' => true,
+        ]));
+    }
+
     public function createBatchFromInstallments(Partner $partner, Collection $installments, ?User $actor = null, array $attributes = []): ?CollectionBatch
     {
         $this->candidateSkipReasons = [];
@@ -60,7 +67,8 @@ class CollectionBatchService
         $candidates = $this->buildCandidates(
             $installments,
             $attributes['forced_collection_date'] ?? null,
-            $attributes['source_batch_id'] ?? null
+            $attributes['source_batch_id'] ?? null,
+            (bool) ($attributes['skip_cycle_duplicate_check'] ?? false)
         );
 
         if ($candidates->isEmpty()) {
@@ -111,7 +119,7 @@ class CollectionBatchService
                     continue;
                 }
 
-                if ($duplicate = $this->collectionCycleDuplicate($installment, $candidate['collection_date'], $attributes['source_batch_id'] ?? null)) {
+                if (empty($attributes['skip_cycle_duplicate_check']) && $duplicate = $this->collectionCycleDuplicate($installment, $candidate['collection_date'], $attributes['source_batch_id'] ?? null)) {
                     $this->recordCandidateSkip($installment, 'active_cycle_duplicate_after_lock', [
                         'collection_date' => $candidate['collection_date']->toDateString(),
                     ] + $this->duplicateContext($duplicate));
@@ -286,12 +294,12 @@ class CollectionBatchService
             ->first();
     }
 
-    protected function buildCandidates(iterable $installments, string|Carbon|null $forcedCollectionDate = null, ?string $excludedBatchId = null): Collection
+    protected function buildCandidates(iterable $installments, string|Carbon|null $forcedCollectionDate = null, ?string $excludedBatchId = null, bool $skipCycleDuplicateCheck = false): Collection
     {
         $collectionCycles = [];
 
         return collect($installments)
-            ->map(function (Installment $installment) use (&$collectionCycles, $forcedCollectionDate, $excludedBatchId) {
+            ->map(function (Installment $installment) use (&$collectionCycles, $forcedCollectionDate, $excludedBatchId, $skipCycleDuplicateCheck) {
                 $debitOrder = $installment->debitOrder;
                 if (!$debitOrder) {
                     $this->recordCandidateSkip($installment, 'missing_debit_order');
@@ -360,7 +368,7 @@ class CollectionBatchService
                     return null;
                 }
 
-                if ($duplicate = $this->collectionCycleDuplicate($installment, $collectionDate, $excludedBatchId)) {
+                if (!$skipCycleDuplicateCheck && $duplicate = $this->collectionCycleDuplicate($installment, $collectionDate, $excludedBatchId)) {
                     $this->recordCandidateSkip($installment, 'active_cycle_duplicate', [
                         'collection_date' => $collectionDate->toDateString(),
                     ] + $this->duplicateContext($duplicate));
