@@ -75,30 +75,23 @@ class CreateFailedBatch extends Command
 
         foreach ($batches as $sourceBatch) {
             $batch = DB::transaction(function () use ($sourceBatch) {
-                $installmentIds = $sourceBatch->installment_id_list;
+                $installmentIds = $this->sourceInstallmentIds($sourceBatch);
 
                 if (empty($installmentIds)) {
+                    $this->warn("Batch {$sourceBatch->collectionReference} has no installment ids.");
                     return null;
                 }
 
                 $installments = $this->repairableInstallments($installmentIds);
 
                 if ($installments->isEmpty()) {
+                    $this->warn("Batch {$sourceBatch->collectionReference} has no repairable FAILED/FUNDSCHECK installments.");
                     return null;
                 }
 
                 $collectionDate = $sourceBatch->collectionDate
                     ? Carbon::parse($sourceBatch->collectionDate)
                     : now();
-
-                $originalState = [
-                    'deleted' => $sourceBatch->deleted,
-                    'recreated' => $sourceBatch->recreated,
-                    'lifecycle_status' => $sourceBatch->lifecycle_status,
-                ];
-
-                $sourceBatch->deleted = 1;
-                $sourceBatch->save();
 
                 $batch = $this->collectionBatchService->createBatchFromInstallments(
                     $sourceBatch->partner,
@@ -107,16 +100,17 @@ class CreateFailedBatch extends Command
                     [
                         'forced_collection_date' => $collectionDate,
                         'batch_collection_date' => $collectionDate->toDateString(),
+                        'source_batch_id' => $sourceBatch->id,
                     ]
                 );
 
                 if (!$batch) {
-                    $sourceBatch->fill($originalState);
-                    $sourceBatch->save();
+                    $this->warn("Batch {$sourceBatch->collectionReference} candidates were blocked by duplicate or mandate validity checks.");
 
                     return null;
                 }
 
+                $sourceBatch->deleted = 1;
                 $sourceBatch->recreated = 1;
                 $sourceBatch->lifecycle_status = CollectionBatch::LIFECYCLE_RECREATED;
                 $sourceBatch->save();
@@ -166,15 +160,34 @@ class CreateFailedBatch extends Command
     protected function repairableInstallments(array $installmentIds)
     {
         return Installment::whereIn('id', $installmentIds)
-            ->where('status', 'FAILED')
-            ->whereIn('remarks', [
-                'Item Can Be Collected And Has Been Tracked Successfully.',
-                'Insufficient funds Archive',
-            ])
+            ->whereIn('status', ['FAILED', 'FUNDSCHECK'])
+            ->where(function ($query) {
+                $query->whereNull('remarks')
+                    ->orWhereIn('remarks', [
+                        'Item Can Be Collected And Has Been Tracked Successfully.',
+                        'Insufficient funds Archive',
+                        'Insufficient Funds',
+                        'Insufficient funds',
+                        'Insufficient funds.',
+                    ]);
+            })
             ->get()
             ->each(function (Installment $installment) {
                 $this->normalizeInstallmentAmount($installment);
             });
+    }
+
+    protected function sourceInstallmentIds(CollectionBatch $batch): array
+    {
+        if (!empty($batch->installment_ids)) {
+            return collect(explode(',', (string) $batch->installment_ids))
+                ->filter()
+                ->map(fn ($id) => (int) trim($id))
+                ->values()
+                ->all();
+        }
+
+        return $batch->installment_id_list;
     }
 
     protected function normalizeInstallmentAmount(Installment $installment): void

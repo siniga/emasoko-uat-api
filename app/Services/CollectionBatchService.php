@@ -48,7 +48,11 @@ class CollectionBatchService
 
     public function createBatchFromInstallments(Partner $partner, Collection $installments, ?User $actor = null, array $attributes = []): ?CollectionBatch
     {
-        $candidates = $this->buildCandidates($installments, $attributes['forced_collection_date'] ?? null);
+        $candidates = $this->buildCandidates(
+            $installments,
+            $attributes['forced_collection_date'] ?? null,
+            $attributes['source_batch_id'] ?? null
+        );
 
         if ($candidates->isEmpty()) {
             return null;
@@ -94,18 +98,22 @@ class CollectionBatchService
                     continue;
                 }
 
-                if ($this->hasCollectionCycleDuplicate($installment, $candidate['collection_date'])) {
+                if ($this->hasCollectionCycleDuplicate($installment, $candidate['collection_date'], $attributes['source_batch_id'] ?? null)) {
                     continue;
                 }
 
-                $line = CollectionDebitOrder::createForCycle([
+                $lineAttributes = [
                     'collection_batch_id' => $batch->id,
                     'debit_order_id' => $installment->debit_order_id,
                     'installment_id' => $installment->id,
                     'status' => 'CREATED',
                     'bank_status' => 'CREATED',
                     'payment_at' => $candidate['collection_date']->toDateString(),
-                ]);
+                ];
+
+                $line = !empty($attributes['source_batch_id'])
+                    ? CollectionDebitOrder::create($lineAttributes)
+                    : CollectionDebitOrder::createForCycle($lineAttributes);
 
                 if ((string) $line->collection_batch_id !== (string) $batch->id) {
                     continue;
@@ -239,22 +247,25 @@ class CollectionBatchService
         })->get();
     }
 
-    public function hasCollectionCycleDuplicate(Installment $installment, Carbon $collectionDate): bool
+    public function hasCollectionCycleDuplicate(Installment $installment, Carbon $collectionDate, ?string $excludedBatchId = null): bool
     {
         return CollectionDebitOrder::query()
             ->forCycle($installment->debit_order_id, $collectionDate)
+            ->when($excludedBatchId, function ($query) use ($excludedBatchId) {
+                $query->where('collection_batch_id', '!=', $excludedBatchId);
+            })
             ->whereHas('batch', function ($query) {
                 $query->where('deleted', 0);
             })
             ->exists();
     }
 
-    protected function buildCandidates(iterable $installments, string|Carbon|null $forcedCollectionDate = null): Collection
+    protected function buildCandidates(iterable $installments, string|Carbon|null $forcedCollectionDate = null, ?string $excludedBatchId = null): Collection
     {
         $collectionCycles = [];
 
         return collect($installments)
-            ->map(function (Installment $installment) use (&$collectionCycles, $forcedCollectionDate) {
+            ->map(function (Installment $installment) use (&$collectionCycles, $forcedCollectionDate, $excludedBatchId) {
                 $debitOrder = $installment->debitOrder;
                 $account = $debitOrder->customerAccount;
                 $paymentDate = Carbon::parse($installment->payment_date);
@@ -279,7 +290,7 @@ class CollectionBatchService
                     return null;
                 }
 
-                if ($this->hasCollectionCycleDuplicate($installment, $collectionDate)) {
+                if ($this->hasCollectionCycleDuplicate($installment, $collectionDate, $excludedBatchId)) {
                     return null;
                 }
 
