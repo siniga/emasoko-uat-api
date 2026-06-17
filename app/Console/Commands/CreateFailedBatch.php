@@ -202,6 +202,7 @@ class CreateFailedBatch extends Command
                 $query->whereNull('remarks')
                     ->orWhereIn('remarks', [
                         'Item Can Be Collected And Has Been Tracked Successfully.',
+                        'Duplicate Account No Found In File',
                         'Insufficient funds Archive',
                         'Insufficient Funds',
                         'Insufficient funds',

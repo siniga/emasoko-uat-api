@@ -120,6 +120,13 @@ class CollectionBatchService
                     continue;
                 }
 
+                if (!$this->isOpenDebitOrder($debitOrder)) {
+                    $this->recordCandidateSkip($installment, 'contract_not_open_after_lock', [
+                        'contract_status' => $debitOrder->contract_status,
+                    ]);
+                    continue;
+                }
+
                 if (empty($attributes['skip_cycle_duplicate_check']) && $duplicate = $this->collectionCycleDuplicate($installment, $candidate['collection_date'], $attributes['source_batch_id'] ?? null)) {
                     $this->recordCandidateSkip($installment, 'active_cycle_duplicate_after_lock', [
                         'collection_date' => $candidate['collection_date']->toDateString(),
@@ -345,7 +352,7 @@ class CollectionBatchService
                     return null;
                 }
 
-                if (strtoupper((string) $debitOrder->contract_status) !== 'OPEN') {
+                if (!$this->isOpenDebitOrder($debitOrder)) {
                     $this->recordCandidateSkip($installment, 'contract_not_open', [
                         'contract_status' => $debitOrder->contract_status,
                     ]);
@@ -411,6 +418,11 @@ class CollectionBatchService
             'debit_order_id' => $installment?->debit_order_id,
             'mandate_reference' => $installment?->debitOrder?->reference,
         ], $context);
+    }
+
+    protected function isOpenDebitOrder(DebitOrder $debitOrder): bool
+    {
+        return strtoupper((string) $debitOrder->contract_status) === 'OPEN';
     }
 
     protected function duplicateContext(CollectionDebitOrder $duplicate): array
