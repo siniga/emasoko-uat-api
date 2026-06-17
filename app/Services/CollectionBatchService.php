@@ -136,8 +136,16 @@ class CollectionBatchService
                 ];
 
                 $line = !empty($attributes['source_batch_id'])
-                    ? CollectionDebitOrder::create($lineAttributes)
+                    ? $this->createRepairCollectionLine($lineAttributes, $attributes['source_batch_id'])
                     : CollectionDebitOrder::createForCycle($lineAttributes);
+
+                if (!$line) {
+                    $this->recordCandidateSkip($installment, 'existing_unique_line_in_other_batch', [
+                        'collection_date' => $candidate['collection_date']->toDateString(),
+                    ]);
+
+                    continue;
+                }
 
                 if ((string) $line->collection_batch_id !== (string) $batch->id) {
                     $this->recordCandidateSkip($installment, 'existing_cycle_line_returned', [
@@ -408,5 +416,30 @@ class CollectionBatchService
             'duplicate_batch_id' => $duplicate->collection_batch_id,
             'duplicate_batch_reference' => $duplicate->batch?->collectionReference,
         ];
+    }
+
+    protected function createRepairCollectionLine(array $attributes, string $sourceBatchId): ?CollectionDebitOrder
+    {
+        $attributes['payment_at'] = Carbon::parse($attributes['payment_at'])->toDateString();
+
+        $existing = CollectionDebitOrder::query()
+            ->where('installment_id', $attributes['installment_id'])
+            ->whereDate('payment_at', $attributes['payment_at'])
+            ->lockForUpdate()
+            ->first();
+
+        if (!$existing) {
+            return CollectionDebitOrder::create($attributes);
+        }
+
+        if ((string) $existing->collection_batch_id !== (string) $sourceBatchId
+            && (string) $existing->collection_batch_id !== (string) $attributes['collection_batch_id']) {
+            return null;
+        }
+
+        $existing->fill($attributes);
+        $existing->save();
+
+        return $existing;
     }
 }
