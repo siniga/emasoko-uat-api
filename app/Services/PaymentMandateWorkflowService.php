@@ -322,7 +322,6 @@ class PaymentMandateWorkflowService
         if ($response['success']) {
             if ($debitOrder->lifecycle_status !== DebitOrder::LIFECYCLE_CANCELLED) {
                 $debitOrder->cancelled = 1;
-                $debitOrder->deleted = 1;
                 $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_CANCELLED;
                 $debitOrder->remarks = $response['remarks'];
                 $debitOrder->save();
@@ -356,7 +355,6 @@ class PaymentMandateWorkflowService
         $debitOrder = $debitOrderRequest->debitOrder;
         if ($debitOrder) {
             $debitOrder->cancelled = 1;
-            $debitOrder->deleted = 1;
             $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_CANCELLED;
             $debitOrder->save();
             $debitOrder->refresh();

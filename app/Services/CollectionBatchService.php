@@ -124,6 +124,9 @@ class CollectionBatchService
                 if (!$this->isOpenDebitOrder($debitOrder)) {
                     $this->recordCandidateSkip($installment, 'contract_not_open_after_lock', [
                         'contract_status' => $debitOrder->contract_status,
+                        'lifecycle_status' => $debitOrder->resolved_lifecycle_status,
+                        'cancelled' => (int) $debitOrder->cancelled,
+                        'deleted' => (int) $debitOrder->deleted,
                     ]);
                     continue;
                 }
@@ -441,6 +444,8 @@ class CollectionBatchService
                 if (!$this->isOpenDebitOrder($debitOrder)) {
                     $this->recordCandidateSkip($installment, 'contract_not_open', [
                         'contract_status' => $debitOrder->contract_status,
+                        'lifecycle_status' => $debitOrder->resolved_lifecycle_status,
+                        'cancelled' => (int) $debitOrder->cancelled,
                     ]);
 
                     return null;
@@ -527,7 +532,10 @@ class CollectionBatchService
 
     protected function isOpenDebitOrder(DebitOrder $debitOrder): bool
     {
-        return strtoupper((string) $debitOrder->contract_status) === 'OPEN';
+        return strtoupper((string) $debitOrder->contract_status) === 'OPEN'
+            && (int) $debitOrder->deleted === 0
+            && (int) $debitOrder->cancelled === 0
+            && $debitOrder->resolved_lifecycle_status === DebitOrder::LIFECYCLE_ACTIVE;
     }
 
     protected function duplicateContext(CollectionDebitOrder $duplicate): array
