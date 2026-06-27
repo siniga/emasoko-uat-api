@@ -25,6 +25,25 @@ class Partner extends Model
     public const LIFECYCLE_FAILED = 'failed';
     public const LIFECYCLE_ARCHIVED = 'archived';
 
+    public const REGISTRATION_SOURCE_SELF_MOBILE = 'self-mobile';
+    public const REGISTRATION_SOURCE_SELF_WEB = 'self-web';
+    public const REGISTRATION_SOURCE_OFFICER = 'officer';
+
+    public static function registrationSourceOptions(): array
+    {
+        return [
+            self::REGISTRATION_SOURCE_SELF_MOBILE => 'Self Registration (Mobile)',
+            self::REGISTRATION_SOURCE_SELF_WEB => 'Self Registration (Web)',
+            self::REGISTRATION_SOURCE_OFFICER => 'Officer',
+        ];
+    }
+
+    public function getRegistrationSourceLabelAttribute(): string
+    {
+        return static::registrationSourceOptions()[$this->registration_source]
+            ?? ucwords(str_replace('-', ' ', (string) $this->registration_source));
+    }
+
     public static function boot()
     {
         parent::boot();

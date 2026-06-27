@@ -23,6 +23,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SmsLogsController;
 use App\Http\Controllers\SmsTemplatesController;
+use App\Http\Controllers\SelfCompanyRegistrationController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Auth;
@@ -58,6 +59,24 @@ Route::controller(AuthOtpController::class)->group(function () {
 Route::get('login', [AuthOtpController::class, 'login'])->name('login');
 Route::get('auth/logout', [LoginController::class, 'logout'])->name('auth.logout');
 
+Route::prefix('service-provider/register')
+    ->name('self-registration.')
+    ->middleware('throttle:60,1')
+    ->controller(SelfCompanyRegistrationController::class)
+    ->group(function () {
+        Route::get('success', 'success')->name('success');
+        Route::get('{uuid?}', 'registrationForm')->name('information');
+        Route::post('information', 'storeCompanyDetail')->name('store-detail');
+        Route::get('{uuid}/documents', 'companyDocumentsForm')->name('documents');
+        Route::post('documents', 'storeCompanyDocuments')->name('store-documents');
+        Route::get('{uuid}/representative', 'companyStaffForm')->name('staff');
+        Route::post('representative', 'storeCompanyStaff')->name('store-staff');
+        Route::get('{uuid}/preview', 'companyPreview')->name('preview');
+        Route::post('save', 'savingRegistration')->name('save');
+        Route::post('cancel', 'cancelSelfRegistration')->name('cancel');
+        Route::post('submit', 'confirmRegistration')->name('submit');
+    });
+
 Route::middleware('auth')->group(function () {
 
     //After Login
@@ -71,18 +90,6 @@ Route::middleware('auth')->group(function () {
     Route::get('charts/mandate-channel', [DashboardChartController::class, 'mandate_channel']);
     Route::get('charts/collected-mandate', [DashboardChartController::class, 'collected_mandates']);
     Route::get('charts/weekly-collected-mandate', [DashboardChartController::class, 'weekly_collected_mandates']);
-
-    // //track company registration
-    // Route::get('track-company-registration', [RegisterController::class, 'trackCompanyRegistrationForm'])->name('company.track-registration');
-    // Route::post('track-company-registration', [RegisterController::class, 'trackCompanyRegistration'])->name('company.track-registration');
-
-    // //verify company registration
-    // Route::get('verify-company-registration/{uuid}', [RegisterController::class, 'verifyCompanyRegistrationForm'])->name('company.verify-registration');
-    // Route::post('verify-company-registration/{uuid}', [RegisterController::class, 'verifyCompanyRegistration'])->name('company.verify-registration');
-
-    // //success verification
-    // Route::get('verify-company-registration-success', [RegisterController::class, 'verifyCompanyRegistrationSuccess'])->name('company.verify-registration-success');
-
 
     //account types
     Route::get('account-types/{id}', [AccountController::class, 'account_types'])->name('account-types');
@@ -102,7 +109,7 @@ Route::middleware('auth')->group(function () {
     Route::get('companies/show/{uuid}', [CompanyController::class, 'show'])->name('companies.show');
     Route::get('companies/edit/{uuid}', [CompanyController::class, 'edit'])->name('companies.edit');
     Route::post('companies/update/{uuid}', [CompanyController::class, 'update'])->name('companies.update');
-    Route::get('companies/delete/{uuid}', [CompanyController::class, 'destroy'])->name('companies.delete');
+    Route::delete('companies/delete/{uuid}', [CompanyController::class, 'destroy'])->name('companies.delete');
     Route::get('companies/export-xls', [CompanyController::class, 'exportXLS'])->name('companies.export-xls');
     Route::get('companies/export-pdf', [CompanyController::class, 'exportPDF'])->name('companies.export-pdf');
 
@@ -132,7 +139,7 @@ Route::middleware('auth')->group(function () {
 
     //company details overview
     Route::get('companies/preview/{uuid}', [CompanyController::class, 'companyPreview'])->name('companies.preview');
-    Route::get('companies/cancel-registration/{uuid}', [CompanyController::class, 'cancelRegistration'])->name('companies.cancel-registration');
+    Route::delete('companies/cancel-registration/{uuid}', [CompanyController::class, 'cancelRegistration'])->name('companies.cancel-registration');
     Route::post('companies/saving-registration', [CompanyController::class, 'savingRegistration'])->name('companies.saving-registration');
     Route::post('companies/confirm-registration', [CompanyController::class, 'confirmRegistration'])->name('companies.confirm-registration');
 

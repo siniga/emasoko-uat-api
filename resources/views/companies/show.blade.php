@@ -185,6 +185,10 @@
                                     <span class="detail-grid__value">{{ $company->reference }}</span>
                                 </div>
                                 <div class="detail-grid__item">
+                                    <span class="detail-grid__label">Registration Source</span>
+                                    <span class="detail-grid__value">{{ $company->registration_source_label }}</span>
+                                </div>
+                                <div class="detail-grid__item">
                                     <span class="detail-grid__label">Corporate ShortCode</span>
                                     <span class="detail-grid__value">{{ $company->short_code }}</span>
                                 </div>

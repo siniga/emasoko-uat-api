@@ -55,6 +55,20 @@ return [
         ],
     ],
 
+    'recaptcha' => [
+        'site_key' => env('RECAPTCHA_SITE_KEY'),
+        'secret_key' => env('RECAPTCHA_SECRET_KEY'),
+        'verify_url' => env('RECAPTCHA_VERIFY_URL', 'https://www.google.com/recaptcha/api/siteverify'),
+    ],
+
+    'company_registration' => [
+        'reviewer_roles' => array_values(array_filter(array_map(
+            'trim',
+            explode(',', env('COMPANY_REGISTRATION_REVIEWER_ROLES', 'Manager'))
+        ))),
+        'sms_sender' => env('COMPANY_REGISTRATION_SMS_SENDER', 'EMAKATO'),
+    ],
+
     'daily_report' => [
         'recipient_ids' => array_values(array_filter(array_map(
             'intval',

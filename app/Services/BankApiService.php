@@ -32,7 +32,7 @@ class BankApiService
     }
 
     //corporate registration
-    public function corporateRegistrationRequest($data)
+    public function corporateRegistrationRequest($data, ?PartnerAccount $partnerAccount = null)
     {
         //declare code
         $http_response_code = 200;
@@ -83,7 +83,8 @@ class BankApiService
             }
 
             //updated partner account
-            $partner_account = PartnerAccount::where(['partner_id' => $partner->id, 'channel' => "NMB"])->first();
+            $partner_account = $partnerAccount
+                ?? PartnerAccount::where(['partner_id' => $partner->id, 'channel' => "NMB"])->firstOrFail();
             $partner_account->remarks = $remarks;
             if ($http_response_code === 201) {
                 $partner_account->send_verification = 2;

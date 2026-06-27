@@ -1,4 +1,4 @@
-@extends('layouts.master')
+@extends(($selfRegistration ?? false) ? 'layouts.self-registration' : 'layouts.master')
 
 @section('title')
     Register Service Provider
@@ -14,6 +14,7 @@
             <div class="page-title-box d-sm-flex align-items-center justify-content-between">
                 <h4 class="mb-sm-0 font-size-18">Register Service Provider</h4>
 
+                @unless($selfRegistration ?? false)
                 <div class="page-title-right">
                     <ol class="breadcrumb m-0">
                         <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
@@ -21,6 +22,7 @@
                         <li class="breadcrumb-item active">Register New</li>
                     </ol>
                 </div>
+                @endunless
 
             </div>
         </div>
@@ -449,7 +451,7 @@
                     // Post data
                     $.ajax({
                         type: "POST",
-                        url: "/companies/store-accounts",
+                        url: @json(route('companies.store-accounts')),
                         data: formData,
                         processData: false,
                         contentType: false,
@@ -466,8 +468,7 @@
 
                             // Set timer
                             setTimeout(function() {
-                                window.location.href = "/companies/staff/" +
-                                    response.uuid;
+                                window.location.href = @json(url('/companies/staff')) + "/" + response.uuid;
                             }, 300);
                         },
                         error: function(error) {

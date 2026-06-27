@@ -234,6 +234,7 @@
                                                 <th>Year of Inc</th>
                                                 <th>Phone</th>
                                                 <th>Region</th>
+                                                <th>Source</th>
                                                 <th>Approved</th>
                                                 <th>Actions</th>
                                             </tr>
@@ -250,6 +251,7 @@
                                                     <td>{{ $company->phone }}</td>
                                                     <td>{{ $company->region ? ucfirst(strtolower($company->region->name)) : '' }}
                                                     </td>
+                                                    <td>{{ $company->registration_source_label }}</td>
                                                     <td>
                                                         @php
                                                             $lifecycle = $company->resolved_lifecycle_status;
@@ -294,10 +296,16 @@
                                                                 </a>
 
                                                                 @if ($company->approved == 0 || $company->approved == 99)
-                                                                    <a href="{{ route('companies.delete', $company->uuid) }}"
-                                                                        class="dropdown-item text-danger delete">
-                                                                        <i class='bx bx-trash'></i> Delete
-                                                                    </a>
+                                                                    <form method="POST"
+                                                                        action="{{ route('companies.delete', $company->uuid) }}"
+                                                                        onsubmit="return confirm('Delete this service provider and all related information?')">
+                                                                        @csrf
+                                                                        @method('DELETE')
+                                                                        <button type="submit"
+                                                                            class="dropdown-item text-danger">
+                                                                            <i class='bx bx-trash'></i> Delete
+                                                                        </button>
+                                                                    </form>
                                                                 @endif
                                                             </div>
                                                         </div>

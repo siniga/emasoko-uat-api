@@ -137,6 +137,14 @@
                                                     Login
                                                 </button>
                                             </div>
+
+                                            <div class="text-center mt-3">
+                                                <span class="text-muted">New service provider?</span>
+                                                <a href="{{ route('self-registration.information') }}"
+                                                    class="auth-link text-decoration-none ms-1">
+                                                    Register your company
+                                                </a>
+                                            </div>
                                         </form>
                                     </div>
 
