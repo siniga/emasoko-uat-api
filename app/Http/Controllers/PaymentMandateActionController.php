@@ -64,7 +64,11 @@ class PaymentMandateActionController extends BasePaymentMandateController
             'customerAccount.customer',
             'partner',
             'userCreated',
+            'cancellationStarted',
+            'cancellationApproved',
             'installments',
+            'debitOrderRequests.requestedBy',
+            'debitOrderRequests.approvedBy',
         ])->where(['uuid' => $id])->firstOrFail();
         $customer_account = $debit_order->customerAccount ?? null;
         $installments = $debit_order->installments->sortBy('payment_date')->values();
@@ -81,8 +85,74 @@ class PaymentMandateActionController extends BasePaymentMandateController
                 $installments->first(fn ($item) => in_array(strtoupper($item->status ?? 'OPEN'), ['OPEN', 'FAILED', 'FUNDSCHECK'], true))
             )->payment_date,
         ];
+        $canReopenMandate = Auth::user()->hasRole(['admin'])
+            && $this->paymentMandateWorkflowService->canReopenClosedMandate($debit_order);
+        $lifecycleAudit = $this->lifecycleAudit($debit_order);
 
-        return view('payment_mandate.show', compact('title', 'debit_order', 'customer_account', 'installments', 'installmentStats'));
+        return view('payment_mandate.show', compact(
+            'title',
+            'debit_order',
+            'customer_account',
+            'installments',
+            'installmentStats',
+            'canReopenMandate',
+            'lifecycleAudit'
+        ));
+    }
+
+    private function lifecycleAudit(DebitOrder $debitOrder): ?array
+    {
+        $lifecycleStatus = $debitOrder->resolved_lifecycle_status;
+
+        if ($lifecycleStatus === DebitOrder::LIFECYCLE_CANCELLED) {
+            $request = $debitOrder->debitOrderRequests
+                ->where('request_type', 'CANCELLATION')
+                ->where('status', 'APPROVED')
+                ->sortByDesc('approved_at')
+                ->first();
+
+            return [
+                'action' => 'Cancelled',
+                'user' => $debitOrder->cancellationApproved?->name
+                    ?? $request?->approvedBy?->name
+                    ?? $debitOrder->cancellationStarted?->name
+                    ?? $request?->requestedBy?->name
+                    ?? 'System',
+                'at' => $debitOrder->cancellationApprovedAt
+                    ?? $request?->approved_at
+                    ?? $debitOrder->updated_at,
+            ];
+        }
+
+        if ($lifecycleStatus === DebitOrder::LIFECYCLE_CLOSED) {
+            $request = $debitOrder->debitOrderRequests
+                ->where('request_type', 'CLOSING')
+                ->where('status', 'APPROVED')
+                ->sortByDesc('approved_at')
+                ->first();
+
+            return [
+                'action' => 'Closed',
+                'user' => $request?->approvedBy?->name
+                    ?? $request?->requestedBy?->name
+                    ?? 'System',
+                'at' => $request?->approved_at ?? $debitOrder->updated_at,
+            ];
+        }
+
+        return null;
+    }
+
+    public function reopen_mandate(string $uuid)
+    {
+        abort_unless(Auth::user()->hasRole(['admin']), 403);
+
+        $debitOrder = DebitOrder::where('uuid', $uuid)->firstOrFail();
+        $this->paymentMandateWorkflowService->reopenClosedMandate($debitOrder);
+
+        return redirect()
+            ->route('payment-mandate.show', $debitOrder->uuid)
+            ->with('success', 'Payment mandate reopened and activated for collection.');
     }
 
     public function edit($id)

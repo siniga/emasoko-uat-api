@@ -61,6 +61,23 @@
                     return this.channel === 'NMB' && ['submitted', 'awaiting_otp', 'verified', 'failed'].includes(this.lifecycleStatus);
                 },
 
+                confirmReopenMandate() {
+                    Swal.fire({
+                        title: 'Reopen this mandate?',
+                        text: 'The mandate will become active and eligible for collection again.',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#198754',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: 'Yes, reopen',
+                        cancelButtonText: 'Cancel'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            document.getElementById('reopen-mandate-form').submit();
+                        }
+                    });
+                },
+
                 lifecycleBadgeHtml() {
                     const config = {
                         draft: ['Draft', 'secondary'],

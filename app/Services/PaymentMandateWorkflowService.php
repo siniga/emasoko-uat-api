@@ -454,6 +454,63 @@ class PaymentMandateWorkflowService
         return $debitOrderRequest;
     }
 
+    public function canReopenClosedMandate(DebitOrder $debitOrder): bool
+    {
+        $isClosed = $debitOrder->resolved_lifecycle_status === DebitOrder::LIFECYCLE_CLOSED
+            || (int) $debitOrder->closed === 1
+            || strtoupper((string) $debitOrder->contract_status) === 'CLOSED';
+
+        return $isClosed
+            && (int) $debitOrder->cancelled === 0
+            && (int) $debitOrder->deleted === 0
+            && (int) $debitOrder->archived === 0
+            && (float) $debitOrder->outstanding_amount > 0
+            && $debitOrder->installments()
+                ->where('status', '!=', 'CLOSED')
+                ->where('outstanding_amount', '>', 0)
+                ->exists();
+    }
+
+    public function reopenClosedMandate(DebitOrder $debitOrder): DebitOrder
+    {
+        $debitOrder = DB::transaction(function () use ($debitOrder) {
+            $debitOrder = DebitOrder::query()
+                ->whereKey($debitOrder->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if (!$this->canReopenClosedMandate($debitOrder)) {
+                throw ValidationException::withMessages([
+                    'mandate' => 'This mandate is not eligible to be reopened.',
+                ]);
+            }
+
+            $nextInstallment = $debitOrder->installments()
+                ->where('status', '!=', 'CLOSED')
+                ->where('outstanding_amount', '>', 0)
+                ->orderBy('payment_date')
+                ->firstOrFail();
+            $nextDebitDate = Carbon::parse($nextInstallment->payment_date);
+
+            $debitOrder->closed = 0;
+            $debitOrder->contract_status = 'OPEN';
+            $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_ACTIVE;
+            $debitOrder->status = 240;
+            $debitOrder->next_debit_date = $nextDebitDate->isPast()
+                ? now()->toDateString()
+                : $nextDebitDate->toDateString();
+            $debitOrder->save();
+
+            return $debitOrder->fresh();
+        });
+
+        $this->externalCallbackService->dispatchMandateStatus($debitOrder, 'MANDATE_ACTIVE', [
+            'reopened_by_admin' => true,
+        ]);
+
+        return $debitOrder;
+    }
+
     public function archive(DebitOrder $debitOrder, int $userId): DebitOrderRequest
     {
         return $this->createRequest($debitOrder, 'ARCHIVE', $userId);

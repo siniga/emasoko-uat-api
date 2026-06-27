@@ -7,6 +7,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Laravel\Passport\HasApiTokens;
 
@@ -39,6 +40,36 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (User $user) {
+            if (!$user->created_by && Auth::check()) {
+                $user->created_by = Auth::id();
+            }
+        });
+
+        static::updating(function (User $user) {
+            $changedAttributes = array_diff(
+                array_keys($user->getDirty()),
+                ['updated_at', 'updated_by']
+            );
+
+            if (Auth::check() && !empty($changedAttributes)) {
+                $user->updated_by = Auth::id();
+            }
+        });
+    }
+
+    public function createdBy()
+    {
+        return $this->belongsTo(self::class, 'created_by');
+    }
+
+    public function updatedBy()
+    {
+        return $this->belongsTo(self::class, 'updated_by');
+    }
 
     //roles
     public function roles()

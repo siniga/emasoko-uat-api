@@ -35,7 +35,7 @@ class UserController extends Controller
         $title = 'Users';
         //has_allowed('roles', 'lists');
 
-        $baseUsersQuery = User::query()->with('roles', 'partners.partner');
+        $baseUsersQuery = User::query()->with('roles', 'partners.partner', 'createdBy:id,name', 'updatedBy:id,name');
 
         if (isset($_POST['filter'])) {
             //request 
@@ -200,6 +200,7 @@ class UserController extends Controller
             'otp_password' => base64_encode($password),
             'is_api_user' => $request->input('is_api_user') ? 1 : 0,
             'active' => 1,
+            'created_by' => Auth::id(),
         ]);
         $user->save();
 
@@ -321,6 +322,7 @@ class UserController extends Controller
         $user->phone = $request->input('phone');
         $user->is_api_user = $request->input('is_api_user') ? 1 : 0;
         $user->username = $request->input('is_api_user') ? $request->input('username') : null;
+        $user->updated_by = Auth::id();
 
         if ($request->input('password') != null || $request->input('password') != '') {
             $user->password = Hash::make($password);

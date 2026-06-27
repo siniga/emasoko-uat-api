@@ -26,7 +26,15 @@
             </div>
         </div>
 
-        <div id="message_wrp" class="mb-3"></div>
+        <div id="message_wrp" class="mb-3">
+            @if (session('success'))
+                <div class="alert alert-success">{{ session('success') }}</div>
+            @elseif (session('warning'))
+                <div class="alert alert-warning">{{ session('warning') }}</div>
+            @elseif ($errors->any())
+                <div class="alert alert-danger">{{ $errors->first() }}</div>
+            @endif
+        </div>
 
         <div class="row g-4">
             <div class="col-lg-12">
@@ -65,6 +73,16 @@
                                                 Cancel Mandate
                                             </a>
                                         </template>
+                                        @if ($canReopenMandate)
+                                            <form id="reopen-mandate-form" method="POST"
+                                                action="{{ route('payment-mandate.reopen', $debit_order->uuid) }}">
+                                                @csrf
+                                                <button type="button" class="dropdown-item text-sm"
+                                                    x-on:click="confirmReopenMandate();">
+                                                    Reopen Mandate
+                                                </button>
+                                            </form>
+                                        @endif
                                     </div>
                                 </div>
 
@@ -97,6 +115,23 @@
                                 <div class="pm-grid__label">Created By</div>
                                 <div class="pm-grid__value">{{ $debit_order->userCreated->name ?? 'NIL' }}</div>
                             </div>
+
+                            @if ($lifecycleAudit)
+                                <div class="pm-grid__item">
+                                    <div class="pm-grid__label">Lifecycle Action</div>
+                                    <div class="pm-grid__value">{{ $lifecycleAudit['action'] }}</div>
+                                </div>
+                                <div class="pm-grid__item">
+                                    <div class="pm-grid__label">Actioned By</div>
+                                    <div class="pm-grid__value">{{ $lifecycleAudit['user'] }}</div>
+                                </div>
+                                <div class="pm-grid__item">
+                                    <div class="pm-grid__label">Actioned At</div>
+                                    <div class="pm-grid__value">
+                                        {{ $lifecycleAudit['at'] ? date('M d, Y H:i', strtotime($lifecycleAudit['at'])) : 'NIL' }}
+                                    </div>
+                                </div>
+                            @endif
 
                             <div class="pm-grid__item">
                                 <div class="pm-grid__label">Payment Channel</div>
