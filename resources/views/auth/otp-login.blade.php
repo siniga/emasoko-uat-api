@@ -23,7 +23,8 @@
                                             Direct Debit Platform
                                         </span>
 
-                                        <h2 class="auth-story-title">Manage mandates and collections from one secure workspace.</h2>
+                                        <h2 class="auth-story-title">Manage mandates and collections from one secure
+                                            workspace.</h2>
 
                                         <p class="auth-story-copy">
                                             Built for teams handling direct debit operations with clear approvals,
@@ -44,14 +45,16 @@
                                                 <i class='bx bxs-chart'></i>
                                                 <span>
                                                     <span class="auth-point-title">Collections oversight</span>
-                                                    <span class="auth-point-copy">Track mandate activity, schedules, and payment progress in one place.</span>
+                                                    <span class="auth-point-copy">Track mandate activity, schedules, and
+                                                        payment progress in one place.</span>
                                                 </span>
                                             </li>
                                             <li>
                                                 <i class='bx bxs-chart'></i>
                                                 <span>
                                                     <span class="auth-point-title">Built for providers</span>
-                                                    <span class="auth-point-copy">Designed for service providers managing direct debit operations at scale.</span>
+                                                    <span class="auth-point-copy">Designed for service providers managing
+                                                        direct debit operations at scale.</span>
                                                 </span>
                                             </li>
                                         </ul>
@@ -62,7 +65,10 @@
                             <div class="col-lg-6">
                                 <div class="auth-form-wrap">
                                     <div class="auth-brand">
-                                        <img src="{{ URL::asset('assets/images/emakato_logo_colored.png') }}" alt="eMakato">
+                                        <a href="{{ url('https://emakato.co.tz') }}">
+                                            <img src="{{ URL::asset('assets/images/emakato_logo_colored.png') }}"
+                                                alt="eMakato">
+                                        </a>
                                     </div>
 
                                     <h1 class="auth-form-title">Sign in to eMakato</h1>
@@ -99,7 +105,7 @@
                                                 <label class="form-label" for="userpassword">Password</label>
                                                 <div
                                                     class="input-group auth-pass-inputgroup @error('password') is-invalid @enderror">
-                                                <input type="password" name="password"
+                                                    <input type="password" name="password"
                                                         class="form-control @error('password') is-invalid @enderror"
                                                         id="userpassword" placeholder="Enter your password"
                                                         aria-label="Password" aria-describedby="password-addon" required>

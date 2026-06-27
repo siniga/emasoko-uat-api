@@ -13,7 +13,7 @@
     <div class="self-registration-frame">
         <aside class="self-registration-brand">
             <div class="self-registration-brand__content">
-                <a href="{{ route('self-registration.information') }}" class="self-registration-brand__logo">
+                <a href="{{ url('https://emakato.co.tz') }}" class="self-registration-brand__logo">
                     <img src="{{ URL::asset('assets/images/emakato_logo_white.png') }}" alt="eMakato">
                 </a>
 
@@ -25,7 +25,7 @@
 
                 <div class="self-registration-brand__signin">
                     <span>Already registered?</span>
-                    <a href="{{ route('login') }}">Sign in</a>
+                    <a href="{{ route('login') }}">Login</a>
                 </div>
             </div>
         </aside>
