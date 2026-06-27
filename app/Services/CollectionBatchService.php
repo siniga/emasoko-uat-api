@@ -31,7 +31,7 @@ class CollectionBatchService
     {
         $installments = $this->deductionService->getInstallments($partner, $debitDate, $limit);
 
-        return $this->buildCandidates($installments)->map(function (array $candidate) {
+        return $this->buildCandidates($installments, $debitDate)->map(function (array $candidate) {
             return [
                 'id' => $candidate['installment']->id,
                 'reference' => $candidate['mandate_reference'],
@@ -217,9 +217,19 @@ class CollectionBatchService
         });
     }
 
-    public function recreateFailedBatch(CollectionBatch $sourceBatch, ?User $actor = null, ?Carbon $targetCollectionDate = null): ?CollectionBatch
+    public function recreateFailedBatch(CollectionBatch $sourceBatch, ?User $actor = null, ?Carbon $paymentDate = null): ?CollectionBatch
     {
-        $targetCollectionDate = $targetCollectionDate ?: Carbon::parse($sourceBatch->collectionDate)->addMonth();
+        if (empty($sourceBatch->collectionDate)) {
+            Log::warning('Cannot recreate failed batch without a collection date.', [
+                'source_batch_id' => $sourceBatch->id,
+                'source_reference' => $sourceBatch->collectionReference,
+            ]);
+
+            return null;
+        }
+
+        $batchCollectionDate = Carbon::parse($sourceBatch->collectionDate)->addMonthNoOverflow();
+        $paymentDate = $paymentDate ? $paymentDate->copy() : now();
         $installmentIds = $sourceBatch->installment_id_list;
 
         $installments = Installment::whereIn('id', $installmentIds)
@@ -230,17 +240,19 @@ class CollectionBatchService
             })
             ->get();
 
-        $batch = $this->createBatchFromInstallments(
+        $batch = $this->createRepairBatchFromInstallments(
             $sourceBatch->partner,
             $installments,
             $actor,
             [
-                'forced_collection_date' => $targetCollectionDate,
-                'batch_collection_date' => $targetCollectionDate->toDateString(),
+                'forced_collection_date' => $paymentDate,
+                'batch_collection_date' => $batchCollectionDate->toDateString(),
+                'source_batch_id' => $sourceBatch->id,
             ]
         );
 
         if ($batch) {
+            $sourceBatch->deleted = 1;
             $sourceBatch->recreated = 1;
             $sourceBatch->lifecycle_status = CollectionBatch::LIFECYCLE_RECREATED;
             $sourceBatch->save();
@@ -253,8 +265,8 @@ class CollectionBatchService
     {
         $count = 0;
 
-        $batches = CollectionBatch::whereMonth('created_at', $month)
-            ->whereYear('created_at', $year)
+        $batches = CollectionBatch::whereMonth('collectionDate', $month)
+            ->whereYear('collectionDate', $year)
             ->where('recreated', 0)
             ->where('deleted', 0)
             ->orderBy('collectionReference', 'ASC')
@@ -276,8 +288,8 @@ class CollectionBatchService
         $year = (int) $previousMonth->format('Y');
 
         $batches = CollectionBatch::filterCondition()
-            ->whereMonth('created_at', $month)
-            ->whereYear('created_at', $year)
+            ->whereMonth('collectionDate', $month)
+            ->whereYear('collectionDate', $year)
             ->where('deleted', 0)
             ->orderByDesc('collectionDate')
             ->get();

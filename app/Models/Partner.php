@@ -34,7 +34,7 @@ class Partner extends Model
         return [
             self::REGISTRATION_SOURCE_SELF_MOBILE => 'Self Registration (Mobile)',
             self::REGISTRATION_SOURCE_SELF_WEB => 'Self Registration (Web)',
-            self::REGISTRATION_SOURCE_OFFICER => 'Officer',
+            self::REGISTRATION_SOURCE_OFFICER => 'Officer Registration',
         ];
     }
 

@@ -19,7 +19,8 @@ class CreateCollectionBatch extends Command
      *
      * @var string
      */
-    protected $signature = 'create:batches';
+    protected $signature = 'create:batches
+                            {--date= : Collection date in YYYY-MM-DD format (defaults to today)}';
 
     /**
      * The console command description.
@@ -48,7 +49,12 @@ class CreateCollectionBatch extends Command
      */
     public function handle()
     {
-        $current_date = Carbon::now();
+        $current_date = $this->collectionDate();
+
+        if (!$current_date) {
+            return self::FAILURE;
+        }
+
         $this->info("== Collection for Current Date: '{$current_date}' ==");
 
         $partners = $this->collectionBatchService->candidatePartnersForDate($current_date);
@@ -58,7 +64,15 @@ class CreateCollectionBatch extends Command
             $installments = $this->deductionService->getInstallments($partner, $current_date);
 
             foreach ($installments->chunk(250) as $chunk) {
-                $batch = $this->collectionBatchService->createBatchFromInstallments($partner, $chunk->values());
+                $batch = $this->collectionBatchService->createBatchFromInstallments(
+                    $partner,
+                    $chunk->values(),
+                    null,
+                    [
+                        'forced_collection_date' => $current_date,
+                        'batch_collection_date' => $current_date,
+                    ]
+                );
 
                 if ($batch) {
                     $success += 1;
@@ -90,7 +104,30 @@ class CreateCollectionBatch extends Command
         }
 
         // Log the collection batches
-        $this->info("== {$current_date} collection batches created ==");
+        $this->info("== {$success} collection batches created on {$current_date} ==");
         return self::SUCCESS;
+    }
+
+    private function collectionDate(): ?string
+    {
+        $value = $this->option('date');
+
+        if (!$value) {
+            return now()->toDateString();
+        }
+
+        try {
+            $date = Carbon::createFromFormat('!Y-m-d', (string) $value);
+        } catch (\Throwable) {
+            $date = null;
+        }
+
+        if (!$date || $date->toDateString() !== $value) {
+            $this->components->error('The --date option must use the YYYY-MM-DD format.');
+
+            return null;
+        }
+
+        return $date->toDateString();
     }
 }
