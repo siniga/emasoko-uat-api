@@ -4,36 +4,28 @@ namespace App\Http\Controllers;
 
 use App\Classes\Authentication;
 use App\Classes\Messaging;
-use App\Events\CorporateStatus;
 use App\Exports\CompanyExport;
 use App\Http\Requests\CompanyAccountRequest;
 use App\Http\Requests\CompanyDetailRequest;
 use App\Http\Requests\CompanyStaffRequest;
-use App\Jobs\CorporateRegistrationJob;
-use App\Listeners\FetchCorporateStatus;
 use App\Models\Account;
 use App\Models\AccountType;
 use App\Models\Country;
 use App\Models\Currency;
 use App\Models\DocumentCategory;
-use App\Models\DebitOrder;
-use App\Models\Installment;
 use App\Models\Partner;
 use App\Models\PartnerAccount;
-use App\Models\PartnerApproval;
 use App\Models\PartnerCategory;
 use App\Models\PartnerDocument;
 use App\Models\PartnerStaff;
-use App\Models\PartnerUser;
 use App\Models\Region;
-use App\Models\User;
 use App\Services\BankApiService;
 use App\Services\CompanyService;
+use App\Services\CompanySummaryService;
 use App\Services\BankPayloadService;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Validator;
@@ -41,11 +33,18 @@ use Stidges\CountryFlags\CountryFlag;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Str;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class CompanyController extends Controller
 {
-    public function __construct(protected CompanyService $companyService, protected BankPayloadService $payloadService, protected Messaging $messaging, protected BankApiService $bankApi, protected Authentication $auth)
+    public function __construct(
+        protected CompanyService $companyService,
+        protected CompanySummaryService $companySummaryService,
+        protected BankPayloadService $payloadService,
+        protected Messaging $messaging,
+        protected BankApiService $bankApi,
+        protected Authentication $auth
+    )
     {
         $this->middleware('auth');
     }
@@ -61,12 +60,13 @@ class CompanyController extends Controller
         //has_allowed('roles', 'lists');
 
         //companies
-        $companies = Partner::filterCondition();
+        $companies = Partner::filterCondition()
+            ->with(['partnerCategory', 'region']);
 
         //all request
         $requests = $request->all();
 
-        if (isset($_POST['filter'])) {
+        if ($request->has('filter')) {
             $companies = $companies->when($requests, function ($query) use ($requests) {
                 $query->withFilters($requests);
             });
@@ -77,6 +77,8 @@ class CompanyController extends Controller
             'approved' => (clone $companies)->where('approved', 1)->count(),
             'pending' => (clone $companies)->where('approved', 0)->count(),
             'failed' => (clone $companies)->where('approved', 99)->count(),
+            'active' => (clone $companies)->where('lifecycle_status', Partner::LIFECYCLE_ACTIVE)->count(),
+            'pending_account_activation' => (clone $companies)->where('lifecycle_status', Partner::LIFECYCLE_PENDING_ACCOUNT_ACTIVATION)->count(),
             'verified_accounts' => (clone $companies)->whereHas('partnerAccounts', function ($query) {
                 $query->where('is_verified', 1);
             })->count(),
@@ -86,7 +88,7 @@ class CompanyController extends Controller
         $number_of_companies = $companyStats['total'];
 
         //companies
-        if (isset($_POST['filter'])) {
+        if ($request->has('filter')) {
             $companies = $companies->get();
         } else {
             $companies = $companies->paginate(50);
@@ -102,6 +104,7 @@ class CompanyController extends Controller
             'category_id' => $request->category_id ?? null,
             'region_id' => $request->region_id ?? null,
             'approved' => $request->approved ?? null,
+            'lifecycle_status' => $request->lifecycle_status ?? null,
             'is_verified' => $request->is_verified ?? null,
             'keyword' => $request->keyword ?? null
         ];
@@ -123,7 +126,9 @@ class CompanyController extends Controller
         $requests = $request->all();
 
         //companies
-        $companies = Partner::where('complete', '=', 1);
+        $companies = Partner::filterCondition()
+            ->with(['partnerCategory', 'region'])
+            ->where('complete', 1);
 
         $companies = $companies->when($requests, function ($query) use ($requests) {
             $query->withFilters($requests);
@@ -170,8 +175,9 @@ class CompanyController extends Controller
 
         //if uuid =! null
         $company = [];
-        if ($uuid != null)
-            $company = Partner::where(['uuid' => $uuid])->firstOrFail();
+        if ($uuid != null) {
+            $company = $this->findAccessiblePartner($uuid);
+        }
 
         //populate data
         $categories = PartnerCategory::all();
@@ -194,13 +200,16 @@ class CompanyController extends Controller
         $validated = $request->validated();
 
         //capture if uuid is not null
-        if ($request->input('partner_uuid') != null)
+        if ($request->input('partner_uuid') != null) {
             $uuid = $request->input('partner_uuid');
-        else
+            $this->findAccessiblePartner($uuid);
+        } else {
             $uuid = Str::uuid();
+        }
 
         //validate tin number
         $partner = Partner::where(['tin_number' => $request->input('tin_number')])->first();
+        
         if ($partner) {
             //check if uuid with db_uuid
             if ($partner->uuid != $uuid)
@@ -215,9 +224,14 @@ class CompanyController extends Controller
                 return response()->json(['success' => false, 'message' => 'Email already taken.'], 200);
         }
 
-        DB::beginTransaction();
-        $partner = $this->companyService->createInformation((object) $request->all(), $uuid);
-        DB::commit();
+        $partner = DB::transaction(fn () => $this->companyService->createInformation(
+            (object) $request->all(),
+            $uuid,
+            $request->attributes->get(
+                'registration_source',
+                Partner::REGISTRATION_SOURCE_OFFICER
+            )
+        ));
 
         //response
         return response()->json(['success' => true, 'uuid' => $uuid, 'message' => 'Service provider information saved!'], 200);
@@ -229,7 +243,7 @@ class CompanyController extends Controller
         $title = 'Company Registration';
 
         //company
-        $company = Partner::where(['uuid' => $uuid])->firstOrFail();
+        $company = $this->findAccessiblePartner($uuid);
 
         //document categories
         $categories = DocumentCategory::all();
@@ -281,31 +295,64 @@ class CompanyController extends Controller
         }
 
         //post data
-        $id = $request->input('partner_id');
-        $uuid = $request->input('partner_uuid');
-
-        //next stage
-        $partner = $this->companyService->updateNextStep($id, 'companies/accounts/' . $uuid);
+        $partner = $this->findRequestPartner($request);
+        $uuid = $partner->uuid;
 
         //categories
         $categories = DocumentCategory::all();
 
-        foreach ($categories as $val) {
-            if ($request->hasFile($val->key)) {
-                $path = $request->file($val->key);
-                $docsName = $path->getClientOriginalName();
+        $uploadPath = public_path('assets/uploads/docs');
+        $newAttachments = [];
+        $replacedAttachments = [];
 
-                $path->move('assets/uploads/docs', $docsName);
+        try {
+            DB::transaction(function () use (
+                $categories,
+                $partner,
+                $request,
+                $uploadPath,
+                $uuid,
+                &$newAttachments,
+                &$replacedAttachments
+            ) {
+                $this->companyService->updateNextStep($partner->id, 'companies/accounts/' . $uuid);
+                File::ensureDirectoryExists($uploadPath);
 
-                //partner documents
-                $partner_document = PartnerDocument::firstOrNew([
-                    'partner_id' => $partner->id,
-                    'partner_uuid' => $partner->uuid,
-                    'key' => $val->key,
-                    'name' => $val->name
-                ]);
-                $partner_document->attachment = $docsName;
-                $partner_document->save();
+                foreach ($categories as $val) {
+                    if (!$request->hasFile($val->key)) {
+                        continue;
+                    }
+
+                    $storedName = Str::uuid() . '.pdf';
+                    $request->file($val->key)->move($uploadPath, $storedName);
+                    $newAttachments[] = $storedName;
+
+                    $partnerDocument = PartnerDocument::firstOrNew([
+                        'partner_id' => $partner->id,
+                        'partner_uuid' => $partner->uuid,
+                        'key' => $val->key,
+                        'name' => $val->name,
+                    ]);
+
+                    if ($partnerDocument->attachment) {
+                        $replacedAttachments[] = $partnerDocument->attachment;
+                    }
+
+                    $partnerDocument->attachment = $storedName;
+                    $partnerDocument->save();
+                }
+            });
+        } catch (\Throwable $exception) {
+            foreach ($newAttachments as $attachment) {
+                File::delete($uploadPath . DIRECTORY_SEPARATOR . basename($attachment));
+            }
+
+            throw $exception;
+        }
+
+        foreach ($replacedAttachments as $attachment) {
+            if (!PartnerDocument::where('attachment', $attachment)->exists()) {
+                File::delete($uploadPath . DIRECTORY_SEPARATOR . basename($attachment));
             }
         }
 
@@ -319,7 +366,7 @@ class CompanyController extends Controller
         $title = 'Company Registration';
 
         //company
-        $company = Partner::where(['uuid' => $uuid])->firstOrFail();
+        $company = $this->findAccessiblePartner($uuid);
 
         //populate data
         $account_types = AccountType::toBase()->get();
@@ -337,17 +384,15 @@ class CompanyController extends Controller
         $validated = $request->validated();
 
         //post data
-        $id = $request->input('partner_id');
-        $uuid = $request->input('partner_uuid');
+        $partner = $this->findRequestPartner($request);
+        $uuid = $partner->uuid;
 
         //TODO: validate account number and customer code
 
-        //next stage
-        $partner = $this->companyService->updateNextStep($id, 'companies/staff/' . $uuid);
-
-        DB::beginTransaction();
-        $this->companyService->createCollectionAccount($request->all(), $partner);
-        DB::commit();
+        DB::transaction(function () use ($partner, $request, $uuid) {
+            $this->companyService->updateNextStep($partner->id, 'companies/staff/' . $uuid);
+            $this->companyService->createCollectionAccount($request->all(), $partner);
+        });
 
         //response
         return response()->json(['success' => true, 'uuid' => $uuid, 'message' => 'Service Provider collection account(s) saved'], 200);
@@ -359,7 +404,7 @@ class CompanyController extends Controller
         $title = 'Company Registration';
 
         //company
-        $company = Partner::where(['uuid' => $uuid])->firstOrFail();
+        $company = $this->findAccessiblePartner($uuid);
         $countries = Country::all();
 
         //render view
@@ -373,8 +418,9 @@ class CompanyController extends Controller
         $validated = $request->validated();
 
         //post data
-        $id = $request->input('partner_id');
-        $uuid = $request->input('partner_uuid');
+        $partner = $this->findRequestPartner($request);
+        $id = $partner->id;
+        $uuid = $partner->uuid;
 
         //validate email and nida number
         if ($validated['staff_name']) {
@@ -397,12 +443,10 @@ class CompanyController extends Controller
             }
         }
 
-        //next stage
-        $partner = $this->companyService->updateNextStep($id, 'companies/preview/' . $uuid);
-
-        DB::beginTransaction();
-        $this->companyService->createStaff($request->all(), $partner);
-        DB::commit();
+        DB::transaction(function () use ($partner, $request, $uuid) {
+            $this->companyService->updateNextStep($partner->id, 'companies/preview/' . $uuid);
+            $this->companyService->createStaff($request->all(), $partner);
+        });
 
         //response
         return response()->json(['success' => true, 'uuid' => $uuid, 'message' => 'Service Provider staff saved'], 200);
@@ -414,7 +458,7 @@ class CompanyController extends Controller
         $title = 'Company Registration';
 
         //company
-        $company = Partner::where(['uuid' => $uuid])->firstOrFail();
+        $company = $this->findAccessiblePartner($uuid);
 
         //render view
         return view('companies.create.authorized_person', compact('title', 'company'));
@@ -423,29 +467,12 @@ class CompanyController extends Controller
     //store company authorized person
     public function storeCompanyAuthorizedPerson(Request $request)
     {
-        //validate the request data
-        Log::debug("== validation ==");
-        Log::debug($request->all());
-
-
-        // $validator = Validator::make($request->all(), [
-        //     'email'  =>  'required|email|max:255|unique:users',
-        // ]);
-
-        // if ($validator->fails()) {
-        //     return new JsonResponse(['success' => false, 'message' => $validator->errors()], 422);
-        // }
-
         //post data
-        $id = $request->input('partner_id');
-        $uuid = $request->input('partner_uuid');
+        $partner = $this->findRequestPartner($request);
+        $uuid = $partner->uuid;
 
         //next stage
-        $partner = $this->companyService->updateNextStep($id, 'companies/preview/' . $uuid);
-
-        // DB::beginTransaction();
-        // $this->companyService->createCredential((object) $request->all(), $partner);
-        // DB::commit();
+        $partner = $this->companyService->updateNextStep($partner->id, 'companies/preview/' . $uuid);
 
         //response
         return response()->json(['success' => true, 'uuid' => $uuid, 'message' => 'Authorised person saved'], 200);
@@ -457,7 +484,7 @@ class CompanyController extends Controller
         $title = 'New Collection Account';
 
         //company
-        $company = Partner::where(['uuid' => $uuid])->firstOrFail();
+        $company = $this->findAccessiblePartner($uuid);
 
         //populate data
         $account_types = AccountType::toBase()->get();
@@ -470,9 +497,21 @@ class CompanyController extends Controller
 
     public function storeCollectionAccount(Request $request)
     {
-        //post data
-        $id = $request->input('partner_id');
-        $uuid = $request->input('partner_uuid');
+        $validated = $request->validate([
+            'partner_id' => ['required', 'integer'],
+            'partner_uuid' => ['required', 'uuid'],
+            'account_type_id' => ['required', 'integer'],
+            'account_id' => ['required', 'integer', 'exists:accounts,id'],
+            'customer_code' => ['required', 'string'],
+            'account_name' => ['required', 'string'],
+            'account_number' => ['required', 'string'],
+            'corporate_limit' => ['required'],
+            'currency_id' => ['required', 'integer'],
+        ]);
+
+        $partner = $this->findRequestPartner($request);
+        $id = $partner->id;
+        $uuid = $partner->uuid;
 
         //check if partner account exists with account number, account type, currency, is_verified
         $partner_account = PartnerAccount::where(
@@ -489,25 +528,28 @@ class CompanyController extends Controller
         }
 
         // detect account channel
-        $account = Account::where(['id' => $request->account_id])->first();
+        $account = Account::findOrFail($validated['account_id']);
 
-        //create new partner account
-        $partner_account = PartnerAccount::firstOrNew([
-            'partner_id' => $id,
-            'partner_uuid' => $uuid,
-            'account_type_id' => $request->account_type_id,
-            'account_id' => $request->account_id
-        ]);
+        $partner_account = DB::transaction(function () use ($account, $id, $request, $uuid) {
+            $partnerAccount = PartnerAccount::firstOrNew([
+                'partner_id' => $id,
+                'partner_uuid' => $uuid,
+                'account_type_id' => $request->account_type_id,
+                'account_id' => $request->account_id,
+            ]);
 
-        $partner_account->send_verification = 1;
-        $partner_account->customer_code = $request->customer_code;
-        $partner_account->account_name = $request->account_name;
-        $partner_account->account_number = $request->account_number;
-        $partner_account->corporate_limit = floatval(str_replace(',', '', $request->corporate_limit));
-        $partner_account->branch_code = substr($request->account_number, 0, 3);
-        $partner_account->currency_id = $request->currency_id;
-        $partner_account->channel = $account->slug;
-        $partner_account->save();
+            $partnerAccount->send_verification = 1;
+            $partnerAccount->customer_code = $request->customer_code;
+            $partnerAccount->account_name = $request->account_name;
+            $partnerAccount->account_number = $request->account_number;
+            $partnerAccount->corporate_limit = floatval(str_replace(',', '', $request->corporate_limit));
+            $partnerAccount->branch_code = substr($request->account_number, 0, 3);
+            $partnerAccount->currency_id = $request->currency_id;
+            $partnerAccount->channel = $account->slug;
+            $partnerAccount->save();
+
+            return $partnerAccount;
+        });
 
         //response
         return response()->json(['success' => true, 'uuid' => $uuid, 'message' => "{$partner_account->channel} collection account added"], 200);
@@ -519,7 +561,7 @@ class CompanyController extends Controller
         $title = 'Company Registration';
 
         //company
-        $company = Partner::where(['uuid' => $uuid])->firstOrFail();
+        $company = $this->findAccessiblePartner($uuid);
 
         //render view
         return view('companies.create.preview', compact('title', 'company'));
@@ -528,71 +570,67 @@ class CompanyController extends Controller
     //confirm  application
     public function confirmRegistration(Request $request)
     {
-        //post data
-        $uuid = $request->input('uuid');
+        $validated = $request->validate([
+            'uuid' => ['required', 'uuid'],
+        ]);
+        $uuid = $validated['uuid'];
 
         //partner
-        $partner = Partner::where(['uuid' => $uuid])->firstOrFail();
+        $partner = $this->findAccessiblePartner($uuid);
 
         //update status of partner
-        $partner->next_step = 'companies/preview/' . $uuid;
+        $partner->next_step = $partner->registration_source === Partner::REGISTRATION_SOURCE_SELF_WEB
+            ? "service-provider/register/{$uuid}/preview"
+            : "companies/preview/{$uuid}";
         $partner->status = 'pending';
+        $partner->lifecycle_status = Partner::LIFECYCLE_SUBMITTED;
         $partner->complete = 1;
-        $partner->updated_by = auth()->id();
+        $partner->updated_by = Auth::id();
         $partner->save();
 
-        //send assessment alert
-        $this->companyService->sendAssessmentAlert($partner);
+        try {
+            $this->companyService->sendAssessmentAlert($partner);
+        } catch (\Throwable $exception) {
+            Log::error('Service provider application submitted, but reviewer notification failed.', [
+                'partner_id' => $partner->id,
+                'partner_uuid' => $partner->uuid,
+                'exception' => $exception->getMessage(),
+            ]);
+        }
 
         //response
-        return response()->json(['success' => false, 'success_msg' => 'Service provider successful registered', 'uuid' => $uuid], 200);
+        return response()->json(['success' => true, 'success_msg' => 'Service provider successful registered', 'uuid' => $uuid], 200);
     }
 
     //saving application
     public function savingRegistration(Request $request)
     {
-        //post data
-        $uuid = $request->input('uuid');
+        $validated = $request->validate([
+            'uuid' => ['required', 'uuid'],
+        ]);
+        $uuid = $validated['uuid'];
 
         //partner
-        $partner = Partner::where(['uuid' => $uuid])->firstOrFail();
+        $partner = $this->findAccessiblePartner($uuid);
 
         //update status of partner
         $partner->status = 'pending';
+        $partner->lifecycle_status = Partner::LIFECYCLE_DRAFT;
         $partner->complete = 0;
         $partner->save();
 
         //response
-        return response()->json(['success' => false, 'success_msg' => 'Service Provider information saved!', 'uuid' => $uuid], 200);
+        return response()->json(['success' => true, 'success_msg' => 'Service Provider information saved!', 'uuid' => $uuid], 200);
     }
 
     //cancel registration
     public function cancelRegistration($uuid)
     {
         //company
-        $company = Partner::where(['uuid' => $uuid])->firstOrFail();
+        $company = $this->findAccessiblePartner($uuid);
+        $this->companyService->deleteRegistration($company);
 
-        if ($del = $company->delete()) {
-            //delete partner accounts
-            PartnerAccount::where(['partner_id' => $company->id])->delete();
-
-            //delete partner approvals
-            PartnerApproval::where(['partner_id' => $company->id])->delete();
-
-            //delete partner docs
-            PartnerDocument::where(['partner_id' => $company->id])->delete();
-
-            //delete partner staff
-            PartnerStaff::where(['partner_id' => $company->id])->delete();
-
-            //delete partner users
-            PartnerUser::where(['partner_id' => $company->id])->delete();
-
-            //redirect
-            return Redirect::route('companies.lists')->with('success', 'Service Provider registration canceled');
-        } else {
-            return Redirect::route('companies.lists')->with('danger', 'Failed to cancel service provider registration');
-        }
+        return Redirect::route('companies.lists')->with('success', 'Service Provider registration canceled');
     }
 
     /**
@@ -606,7 +644,7 @@ class CompanyController extends Controller
         $title = 'Service Provider Information';
 
         //service provider
-        $company = Partner::where(['uuid' => $uuid])->firstOrFail();
+        $company = $this->findAccessiblePartner($uuid);
 
         //is_verified_false partner accounts
         $is_verified_false = PartnerAccount::where(['partner_id' => $company->id, 'is_verified' => 0])->count();
@@ -614,86 +652,7 @@ class CompanyController extends Controller
         //nmb is verified_false partner accounts
         $is_nmb_verified_false = PartnerAccount::where(['partner_id' => $company->id, 'is_verified' => 0, 'channel' => 'NMB'])->count();
 
-        $currentMonth = (int) now()->format('m');
-        $currentYear = (int) now()->format('Y');
-        $currentMonthLabel = now()->format('F');
-        $today = now()->toDateString();
-
-        $mandateBase = DebitOrder::query()
-            ->where('partner_id', $company->id)
-            ->where('deleted', 0);
-
-        $installmentBase = Installment::query()
-            ->whereHas('debitOrder', function ($query) use ($company) {
-                $query->where('partner_id', $company->id)
-                    ->where('approved', 1)
-                    ->where('status', 240)
-                    ->where('deleted', 0);
-            });
-
-        $monthlyCollection = Installment::monthlyCollectionStats($company->id, $currentMonth, $currentYear, 240, 0, null);
-        $todayCollection = Installment::todayCollectionStats($company->id, $today, 240, 0, null);
-
-        $totalMandates = (clone $mandateBase)
-            ->selectRaw('COUNT(*) as total_count')
-            ->selectRaw('COALESCE(SUM(total_amount), 0) as total_amount')
-            ->first();
-
-        $pendingMandates = (clone $mandateBase)
-            ->where('approved', 0)
-            ->selectRaw('COUNT(*) as total_count')
-            ->selectRaw('COALESCE(SUM(total_amount), 0) as total_amount')
-            ->first();
-
-        $failedMandates = (clone $mandateBase)
-            ->where('approved', 99)
-            ->selectRaw('COUNT(*) as total_count')
-            ->selectRaw('COALESCE(SUM(total_amount), 0) as total_amount')
-            ->first();
-
-        $activeMandates = (clone $mandateBase)
-            ->where('approved', 1)
-            ->where('status', 240)
-            ->where('contract_status', 'OPEN')
-            ->selectRaw('COUNT(*) as total_count')
-            ->selectRaw('COALESCE(SUM(total_amount), 0) as total_amount')
-            ->first();
-
-        $overdue = (clone $installmentBase)
-            ->whereHas('debitOrder', function ($query) {
-                $query->where('contract_status', 'OPEN');
-            })
-            ->whereDate('payment_date', '<', $today)
-            ->whereIn('status', ['OPEN', 'FAILED', 'FUNDSCHECK'])
-            ->selectRaw('COUNT(*) as overdue_count')
-            ->selectRaw('COALESCE(SUM(outstanding_amount), 0) as overdue_amount')
-            ->first();
-
-        $summaryStats = [
-            'documents' => $company->partnerDocuments->count(),
-            'accounts' => $company->partnerAccounts->count(),
-            'verified_accounts' => $company->partnerAccounts->where('is_verified', 1)->count(),
-            'representatives' => $company->partnerStaff->count(),
-            'total_mandates' => (int) $totalMandates->total_count,
-            'total_mandates_amount' => (float) $totalMandates->total_amount,
-            'pending_mandates' => (int) $pendingMandates->total_count,
-            'pending_mandates_amount' => (float) $pendingMandates->total_amount,
-            'failed_mandates' => (int) $failedMandates->total_count,
-            'failed_mandates_amount' => (float) $failedMandates->total_amount,
-            'active_mandates' => (int) $activeMandates->total_count,
-            'active_mandates_amount' => (float) $activeMandates->total_amount,
-            'current_month_label' => $currentMonthLabel,
-            'this_month_expected' => (float) $monthlyCollection->total_amount,
-            'this_month_collected' => (float) $monthlyCollection->paid_amount,
-            'today_expected' => (float) $todayCollection->total_amount,
-            'today_collected' => (float) $todayCollection->paid_amount,
-            'overdue_count' => (int) $overdue->overdue_count,
-            'overdue_amount' => (float) $overdue->overdue_amount,
-        ];
-
-        $summaryStats['collection_rate'] = $summaryStats['this_month_expected'] > 0
-            ? round(($summaryStats['this_month_collected'] / $summaryStats['this_month_expected']) * 100, 2)
-            : 0;
+        $summaryStats = $this->companySummaryService->forPartner($company);
 
         //render view
         return view('companies.show', compact('title', 'company', 'is_verified_false', 'is_nmb_verified_false', 'summaryStats'));
@@ -703,7 +662,7 @@ class CompanyController extends Controller
     public function createInvoice($uuid)
     {
         //service provider
-        $company = Partner::where(['uuid' => $uuid])->firstOrFail();
+        $company = $this->findAccessiblePartner($uuid);
 
         //Create Evidence of Agreement
         view()->share('company', $company);
@@ -731,7 +690,7 @@ class CompanyController extends Controller
         $title = 'Edit Service Provider';
 
         //service provider
-        $company = Partner::where(['uuid' => $uuid])->firstOrFail();
+        $company = $this->findAccessiblePartner($uuid);
 
         //populate data
         $flag = new CountryFlag;
@@ -770,12 +729,13 @@ class CompanyController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $uuid)
+    public function update(CompanyDetailRequest $request, $uuid)
     {
-        //todo: validate data
+        $this->findAccessiblePartner($uuid);
 
-        //create or update service provider    
-        $partner = $this->companyService->createInformation((object) $request->all(), $uuid);
+        $partner = DB::transaction(
+            fn () => $this->companyService->createInformation((object) $request->all(), $uuid)
+        );
 
         //response
         return response()->json(['success' => true, 'uuid' => $uuid, 'message' => 'Service provider information updated'], 200);
@@ -793,103 +753,111 @@ class CompanyController extends Controller
         // has_allowed('cars', 'delete');
 
         //service provider
-        $company = Partner::where(['uuid' => $uuid])->firstOrFail();
+        $company = $this->findAccessiblePartner($uuid);
+        $this->companyService->deleteRegistration($company);
 
-        if ($del = $company->delete()) {
-            //delete partner accounts
-            PartnerAccount::where(['partner_id' => $company->id])->delete();
-
-            //delete partner approvals
-            PartnerApproval::where(['partner_id' => $company->id])->delete();
-
-            //delete partner docs
-            PartnerDocument::where(['partner_id' => $company->id])->delete();
-
-            //delete partner staff
-            PartnerStaff::where(['partner_id' => $company->id])->delete();
-
-            //delete partner users
-            PartnerUser::where(['partner_id' => $company->id])->delete();
-
-            //redirect
-            return Redirect::route('companies.lists')->with('success', 'Service provider deleted');
-        } else {
-            return Redirect::route('companies.lists')->with('danger', 'Failed to delete service provider');
-        }
+        return Redirect::route('companies.lists')->with('success', 'Service provider deleted');
     }
 
     //confirm/reject company approval
     public function confirmAssessment(Request $request)
     {
-        //default status code
-        $http_status_code = 200;
+        $validated = $request->validate([
+            'uuid' => ['required', 'uuid'],
+            'action' => ['required', 'in:APPROVE,REJECT'],
+            'remarks' => ['nullable', 'required_if:action,REJECT', 'string'],
+        ]);
 
-        //requests
-        $uuid = $request->post('uuid');
+        $partner = $this->findAccessiblePartner($validated['uuid']);
 
-        //service provider
-        $partner = Partner::where(['uuid' => $uuid])->firstOrFail();
+        if ($validated['action'] === 'REJECT') {
+            $this->companyService->processAssessment($partner, $validated);
 
-        //process assessment
-        $http_status_code = $this->companyService->processAssessment($partner, $request->all());
+            return response()->json([
+                'error' => false,
+                'status' => 500,
+                'remarks' => $validated['remarks'],
+                'message' => 'Service provider rejected and notification sent to service provider.',
+            ]);
+        }
 
-        if ($http_status_code == 200) {
-            //TODO: Check if corporate has NMB or CRDB partner accounts
-            $partner_account = PartnerAccount::where(['partner_id' => $partner->id, 'is_verified' => 0]);
+        if (!$partner->partnerAccounts()->exists()) {
+            return response()->json([
+                'error' => true,
+                'status' => 422,
+                'message' => 'Add at least one collection account before approving this service provider.',
+            ], 422);
+        }
 
-            $success_msg = "";
-            $nmb_account = 0;
-            $crdb_account = 0;
-            if ($partner_account->count() > 0) {
-                // iterate through partner accounts
-                foreach ($partner_account->get() as $partner_account) {
-                    if ($partner_account->channel == "CRDB") {
-                        //update partner account
-                        $partner_account->is_verified = 1;
-                        $partner_account->verified_at = Carbon::now();
-                        $partner_account->remarks = "Account processing completed successfully and is active.";
-                        $partner_account->save();
+        $nmbAccounts = 0;
+        $crdbAccounts = 0;
+        $failedAccounts = 0;
 
-                        $crdb_account += 1; //iterate crdb account
-                    } else if ($partner_account->channel == "NMB") {
-                        //create payload
-                        $payload = $this->payloadService->corporateRegistrationPayload($partner, $partner_account);
-
-                        //arr response
-                        $arrResponse = $this->bankApi->corporateRegistrationRequest($payload);
-
-                        if ($arrResponse)
-                            $nmb_account += 1; //iterate nmb account
-                    }
-                }
-
-                if ($nmb_account && $crdb_account) {
-                    $success_msg = "Service provider approved and pending approval from NMB.";
-                } elseif ($nmb_account) {
-                    $success_msg = "Service provider approved and pending approval from NMB.";
-                } elseif ($crdb_account) {
-                    $success_msg = "Account processing completed successfully and is active";
-                } else {
-                    $http_status_code = 400;
-                    $success_msg = "Failed to approve service provider. Review accounts remarks and try again.";
-                }
+        foreach ($partner->partnerAccounts()->where('is_verified', 0)->get() as $partnerAccount) {
+            if ($partnerAccount->channel === 'CRDB') {
+                DB::transaction(function () use ($partnerAccount) {
+                    $partnerAccount->is_verified = 1;
+                    $partnerAccount->verified_at = now();
+                    $partnerAccount->rejected_at = null;
+                    $partnerAccount->remarks = 'Account processing completed successfully and is active.';
+                    $partnerAccount->save();
+                });
+                $crdbAccounts++;
+                continue;
             }
 
-            //response
-            return response()->json(['error' => false, "status" => $http_status_code, "message" => $success_msg], 200);
-        } else if ($http_status_code == 500) {
-            return response()->json(['error' => false, "status" => $http_status_code, "remarks" => $request->remarks, "message" => 'Service provider rejected and notification sent to service provider.'], 200);
+            if ($partnerAccount->channel === 'NMB') {
+                $payload = $this->payloadService->corporateRegistrationPayload($partner, $partnerAccount);
+                [$responseCode] = $this->bankApi->corporateRegistrationRequest($payload, $partnerAccount);
+
+                if ($responseCode === 201) {
+                    $nmbAccounts++;
+                } else {
+                    $failedAccounts++;
+                }
+                continue;
+            }
+
+            $failedAccounts++;
         }
+
+        if ($failedAccounts > 0) {
+            $partner->refreshLifecycleStatus()->save();
+
+            return response()->json([
+                'error' => true,
+                'status' => 400,
+                'message' => 'Failed to approve service provider. Review account remarks and try again.',
+            ]);
+        }
+
+        DB::transaction(function () use ($partner, $validated) {
+            $this->companyService->processAssessment($partner, $validated);
+            $partner->refresh()->refreshLifecycleStatus()->save();
+        });
+
+        $message = $nmbAccounts > 0
+            ? 'Service provider approved and pending approval from NMB.'
+            : 'Account processing completed successfully and is active.';
+
+        return response()->json([
+            'error' => false,
+            'status' => 200,
+            'message' => $message,
+            'processed_accounts' => $nmbAccounts + $crdbAccounts,
+        ]);
     }
 
     //query status
     function fetchCorporateStatus(Request $request)
     {
-        //requests
-        $uuid = $request->post('uuid');
+        $validated = $request->validate([
+            'uuid' => ['required', 'uuid'],
+        ]);
+        $uuid = $validated['uuid'];
 
         //service provider
-        $partner = Partner::where(['uuid' => $uuid])->firstOrFail();
+        $partner = $this->findAccessiblePartner($uuid);
 
         $partner_account = PartnerAccount::where(['partner_id' => $partner->id, 'is_verified' => 0, 'channel' => 'NMB'])->first();
 
@@ -957,5 +925,31 @@ class CompanyController extends Controller
                 200
             );
         }
+    }
+
+    protected function findAccessiblePartner(string $uuid): Partner
+    {
+        $query = Auth::check()
+            ? Partner::filterCondition()
+            : Partner::query();
+
+        return $query->where('partners.uuid', $uuid)->firstOrFail();
+    }
+
+    protected function findRequestPartner(Request $request): Partner
+    {
+        $request->validate([
+            'partner_id' => ['required', 'integer'],
+            'partner_uuid' => ['required', 'uuid'],
+        ]);
+
+        $query = Auth::check()
+            ? Partner::filterCondition()
+            : Partner::query();
+
+        return $query
+            ->where('partners.id', $request->input('partner_id'))
+            ->where('partners.uuid', $request->input('partner_uuid'))
+            ->firstOrFail();
     }
 }

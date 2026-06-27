@@ -85,11 +85,6 @@ class PollNmbMandateStatusJob implements ShouldQueue
             if (in_array($responseCode, [201, 202, 200, 249], true) && $this->pollNumber < $this->maxPolls) {
                 self::dispatch($this->debitOrderId, $this->pollNumber + 1, $this->maxPolls)
                     ->delay(now()->addSeconds($this->nextDelaySeconds()));
-            } elseif ($this->pollNumber >= $this->maxPolls) {
-                $debitOrder->refresh();
-                $externalCallbackService->dispatchMandateStatus($debitOrder, 'MANDATE_STATUS_PENDING', [
-                    'poll_number' => $this->pollNumber,
-                ]);
             }
         }
     }

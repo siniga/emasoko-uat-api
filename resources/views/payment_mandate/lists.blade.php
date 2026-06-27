@@ -18,8 +18,7 @@
         <div class="row">
             <div class="col-lg-12">
                 <div class="sp-list-filter mb-3">
-                    {!! Form::open(['url' => route('payment-mandate.lists'), 'method' => 'POST', 'class' => 'form-horizontal']) !!}
-                    {{ Form::token() }}
+                    {!! Form::open(['url' => route('payment-mandate.lists'), 'method' => 'GET', 'class' => 'form-horizontal']) !!}
 
                     <div class="row">
                         <div class="col-lg-2">
@@ -34,7 +33,7 @@
                             </div>
                         </div>
 
-                        <div class="col-lg-3">
+                        <div class="col-lg-4">
                             <div class="mb-3">
                                 @php
                                     $options = [
@@ -57,33 +56,18 @@
                             </div>
                         </div>
 
-                        <div class="col-lg-2">
+                        <div class="col-lg-4">
                             <div class="mb-3">
                                 @php
                                     $options = ['' => '-- Payment Channel --'];
                                 @endphp
-                                @foreach ($account_types as $val)
-                                    @php
-                                        $options[$val->id] = $val->name;
-                                    @endphp
-                                @endforeach
-
-                                {{ Form::select('account_type_id', $options, old('account_type_id', $post_data['account_type_id']), ['class' => 'form-control account_type_id', 'id' => 'account_type_id']) }}
-                            </div>
-                        </div>
-
-                        <div class="col-lg-3">
-                            <div class="mb-3">
-                                @php
-                                    $options = ['' => '-- Bank/MNO name --'];
-                                @endphp
                                 @foreach ($accounts as $val)
                                     @php
-                                        $options[$val->id] = $val->name;
+                                        $options[$val->slug] = $val->name;
                                     @endphp
                                 @endforeach
 
-                                {{ Form::select('account_id', $options, old('account_id', $post_data['account_id']), ['class' => 'form-control account_id', 'id' => 'account_id']) }}
+                                {{ Form::select('payment_channel', $options, old('payment_channel', $post_data['payment_channel']), ['class' => 'form-control payment_channel', 'id' => 'payment_channel']) }}
                             </div>
                         </div>
                     </div>
@@ -106,7 +90,7 @@
 
                         <div class="col-lg-5">
                             <div class="mb-3">
-                                {{ Form::text('keyword', old('keyword', $post_data['keyword']), ['class' => 'form-control', 'placeholder' => 'Search by account name, account number, or mandate reference']) }}
+                                {{ Form::text('keyword', old('keyword', $post_data['keyword']), ['class' => 'form-control', 'placeholder' => 'Search by account number or mandate reference']) }}
                             </div>
                         </div>
 
@@ -233,7 +217,7 @@
                                             </a>
 
                                             <a title="Export" class="btn btn-outline-success btn-sm"
-                                                href="{{ route('payment-mandate.export-xls', ['start_at' => $post_data['start_at'], 'end_at' => $post_data['end_at'], 'account_type_id' => $post_data['account_type_id'], 'account_id' => $post_data['account_id'], 'partner_id' => $post_data['partner_id'], 'status' => $post_data['status'], 'keyword' => $post_data['keyword']]) }}">
+                                                href="{{ route('payment-mandate.export-xls', ['start_at' => $post_data['start_at'], 'end_at' => $post_data['end_at'], 'payment_channel' => $post_data['payment_channel'], 'partner_id' => $post_data['partner_id'], 'status' => $post_data['status'], 'keyword' => $post_data['keyword']]) }}">
                                                 <i class="bx bx-export"></i> Export XLS
                                             </a>
                                         </div>
@@ -255,7 +239,7 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @php $serial = 1; @endphp
+                                            @php $serial = method_exists($debit_orders, 'firstItem') ? $debit_orders->firstItem() : 1; @endphp
                                             @foreach ($debit_orders as $values)
                                                 @php
                                                     $lifecycle =
@@ -352,7 +336,7 @@
 @endsection
 
 @section('script')
-    <script type="text/javascript">
+    {{-- <script type="text/javascript">
         $(document).ready(function() {
             $('.account_type_id').on('change', function(e) {
                 e.preventDefault();
@@ -367,5 +351,5 @@
                 });
             });
         });
-    </script>
+    </script> --}}
 @endsection

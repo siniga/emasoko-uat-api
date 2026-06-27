@@ -2,8 +2,6 @@
 
 namespace App\Services;
 
-use App\Http\Resources\InstallmentResource;
-use App\Jobs\ApiCallbackJob;
 use App\Jobs\SendSMSJob;
 use App\Models\AppVariable;
 use App\Models\CollectionBatch;
@@ -37,6 +35,11 @@ class DeductionService
     protected function settlementPosting(): SettlementPostingService
     {
         return app(SettlementPostingService::class);
+    }
+
+    protected function externalCallback(): ExternalCallbackService
+    {
+        return app(ExternalCallbackService::class);
     }
 
     protected function appVariable(): AppVariable
@@ -511,6 +514,13 @@ class DeductionService
                 $responseHash = md5(trim($row));
 
                 if ($line && $line->response_hash === $responseHash && $line->processed_at) {
+                    Log::info('Collection status row skipped: bank response already processed.', [
+                        'batch_id' => $batch->id,
+                        'collection_reference' => $batch->collectionReference,
+                        'installment_id' => $installment->id,
+                        'line_id' => $line->id,
+                        'response_hash' => $responseHash,
+                    ]);
                     continue;
                 }
 
@@ -530,7 +540,10 @@ class DeductionService
                             ? PaymentSettlement::STATUS_FUNDSCHECK
                             : PaymentSettlement::STATUS_FAILED;
 
-                        $this->settlementPosting()->post([
+                        $paymentReference = "COL-{$batch->collectionReference}-{$installment->id}";
+                        $existingSettlement = $this->existingSettlement('NMB', $paymentReference, $installment);
+
+                        $settlement = $this->settlementPosting()->post([
                             'channel' => 'NMB',
                             'batch' => $batch,
                             'line' => $line,
@@ -541,9 +554,11 @@ class DeductionService
                             'normalized_status' => $normalizedStatus,
                             'remarks' => $message,
                             'effective_payment_date' => $installment->effective_payment_date ?: now()->toDateString(),
-                            'payment_reference' => "COL-{$batch->collectionReference}-{$installment->id}",
+                            'payment_reference' => $paymentReference,
                             'raw_payload_hash' => $responseHash,
                         ]);
+
+                        $this->dispatchCollectionCallback($settlement, $this->shouldDispatchCollectionCallback($existingSettlement, $normalizedStatus));
 
                         //increment failed installments
                         $failed_installments += 1;
@@ -565,7 +580,10 @@ class DeductionService
                             ? PaymentSettlement::STATUS_PARTIAL
                             : PaymentSettlement::STATUS_SUCCESS;
 
-                        $this->settlementPosting()->post([
+                        $paymentReference = "COL-{$batch->collectionReference}-{$installment->id}";
+                        $existingSettlement = $this->existingSettlement('NMB', $paymentReference, $installment);
+
+                        $settlement = $this->settlementPosting()->post([
                             'channel' => 'NMB',
                             'batch' => $batch,
                             'line' => $line,
@@ -576,9 +594,11 @@ class DeductionService
                             'normalized_status' => $normalizedStatus,
                             'remarks' => $message,
                             'effective_payment_date' => $installment->effective_payment_date ?: date('Y-m-d'),
-                            'payment_reference' => "COL-{$batch->collectionReference}-{$installment->id}",
+                            'payment_reference' => $paymentReference,
                             'raw_payload_hash' => $responseHash,
                         ]);
+
+                        $this->dispatchCollectionCallback($settlement, $this->shouldDispatchCollectionCallback($existingSettlement, $normalizedStatus));
 
                         //increment success installments
                         $success_installments += 1;
@@ -633,6 +653,13 @@ class DeductionService
                 $responseHash = md5(trim($row));
 
                 if ($line && $line->response_hash === $responseHash && $line->processed_at) {
+                    Log::info('Failed collection status row skipped: bank response already processed.', [
+                        'batch_id' => $batch->id,
+                        'collection_reference' => $batch->collectionReference,
+                        'installment_id' => $installment->id,
+                        'line_id' => $line->id,
+                        'response_hash' => $responseHash,
+                    ]);
                     continue;
                 }
 
@@ -645,7 +672,10 @@ class DeductionService
                         ? PaymentSettlement::STATUS_FUNDSCHECK
                         : PaymentSettlement::STATUS_FAILED;
 
-                    $this->settlementPosting()->post([
+                    $paymentReference = "COL-{$batch->collectionReference}-{$installment->id}";
+                    $existingSettlement = $this->existingSettlement('NMB', $paymentReference, $installment);
+
+                    $settlement = $this->settlementPosting()->post([
                         'channel' => 'NMB',
                         'batch' => $batch,
                         'line' => $line,
@@ -656,9 +686,11 @@ class DeductionService
                         'normalized_status' => $normalizedStatus,
                         'remarks' => $message,
                         'effective_payment_date' => $installment->effective_payment_date ?: now()->toDateString(),
-                        'payment_reference' => "COL-{$batch->collectionReference}-{$installment->id}",
+                        'payment_reference' => $paymentReference,
                         'raw_payload_hash' => $responseHash,
                     ]);
+
+                    $this->dispatchCollectionCallback($settlement, $this->shouldDispatchCollectionCallback($existingSettlement, $normalizedStatus));
 
                     //increment failed installments
                     $failed_installments += 1;
@@ -755,22 +787,78 @@ class DeductionService
                 //trigger background job for send SMS
                 dispatch(new SendSMSJob(['messageId' => $messageId]));
 
-                //check if partner has callback url
-                if ($debitOrder->partner->callback_url && $debitOrder->partner->callback_url != "") {
-                    //dispatch callback job
-                    $callback_data = [
-                        'callback_type' => "COLLECTION_STATUS",
-                        'callback_url' => $debitOrder->partner->callback_url,
-                        'collection' => InstallmentResource::collection($installment),
-                    ];
-
-                    // call CollectionCallbackJob
-                    dispatch(new ApiCallbackJob($callback_data));
-                }
+                $this->externalCallback()->dispatchCollectionStatus($installment, 'COLLECTION_PAID');
             }
         }
 
         return 200;
+    }
+
+    protected function existingSettlement(string $channel, string $paymentReference, Installment $installment): ?PaymentSettlement
+    {
+        return PaymentSettlement::where([
+            'channel' => $channel,
+            'payment_reference' => $paymentReference,
+            'installment_id' => $installment->id,
+        ])->first();
+    }
+
+    protected function shouldDispatchCollectionCallback(?PaymentSettlement $existingSettlement, string $normalizedStatus): bool
+    {
+        return !$existingSettlement || strtoupper((string) $existingSettlement->normalized_status) !== strtoupper($normalizedStatus);
+    }
+
+    protected function dispatchCollectionCallback(PaymentSettlement $settlement, bool $shouldDispatch = true): void
+    {
+        if (!$shouldDispatch) {
+            Log::info('External collection callback skipped: settlement status did not change.', [
+                'settlement_id' => $settlement->id,
+                'installment_id' => $settlement->installment_id,
+                'payment_reference' => $settlement->payment_reference,
+                'normalized_status' => $settlement->normalized_status,
+            ]);
+            return;
+        }
+
+        if (!$settlement->installment_id) {
+            Log::warning('External collection callback skipped: settlement has no installment.', [
+                'settlement_id' => $settlement->id,
+                'payment_reference' => $settlement->payment_reference,
+                'normalized_status' => $settlement->normalized_status,
+            ]);
+            return;
+        }
+
+        $settlement->loadMissing('installment.debitOrder.partner');
+
+        if (!$settlement->installment) {
+            Log::warning('External collection callback skipped: settlement installment could not be loaded.', [
+                'settlement_id' => $settlement->id,
+                'installment_id' => $settlement->installment_id,
+                'payment_reference' => $settlement->payment_reference,
+            ]);
+            return;
+        }
+
+        $eventType = match (strtoupper((string) $settlement->normalized_status)) {
+            PaymentSettlement::STATUS_SUCCESS => 'COLLECTION_PAID',
+            PaymentSettlement::STATUS_PARTIAL => 'COLLECTION_PARTIAL_PAID',
+            PaymentSettlement::STATUS_FUNDSCHECK => 'COLLECTION_FUNDSCHECK',
+            PaymentSettlement::STATUS_UNALLOCATED => 'COLLECTION_UNALLOCATED',
+            default => 'COLLECTION_FAILED',
+        };
+
+        $this->externalCallback()->dispatchCollectionStatus($settlement->installment, $eventType, [
+            'channel' => $settlement->channel,
+            'settlement_reference' => $settlement->payment_reference,
+            'external_reference' => $settlement->external_reference,
+            'bank_status' => $settlement->raw_status,
+            'settlement_status' => $settlement->normalized_status,
+            'paid_amount' => (float) $settlement->paid_amount,
+            'transaction_at' => $settlement->transaction_at
+                ? Carbon::parse($settlement->transaction_at)->toIso8601String()
+                : null,
+        ]);
     }
 
     protected function resolveCollectionLine(CollectionBatch $batch, Installment $installment): ?CollectionDebitOrder

@@ -147,7 +147,8 @@ class DashboardChartController extends Controller
         $expectedByMonth = Installment::filterCondition()
             ->select([
                 DB::raw('MONTH(installments.payment_date) as month_number'),
-                DB::raw('COALESCE(SUM(installments.installment_amount), 0) as total_amount'),
+                DB::raw('COALESCE(COUNT(installments.id), 0) as all_mandates'),
+                DB::raw('COALESCE(SUM(installments.installment_amount), 0) as expected_amount'),
             ])
             ->whereYear('installments.payment_date', $year)
             ->whereHas('debitOrder', function ($query) use ($channel) {
@@ -161,18 +162,19 @@ class DashboardChartController extends Controller
                     });
             })
             ->groupBy(DB::raw('MONTH(installments.payment_date)'))
-            ->pluck('total_amount', 'month_number');
+            ->get()
+            ->keyBy('month_number');
 
         $paidByMonth = Installment::filterCondition()
             ->select([
                 DB::raw('MONTH(installments.effective_payment_date) as month_number'),
+                DB::raw('COALESCE(COUNT(installments.id), 0) as paid_mandates'),
                 DB::raw('COALESCE(SUM(installments.current_balance), 0) as paid_amount'),
             ])
             ->whereYear('installments.effective_payment_date', $year)
             ->whereIn('installments.status', ['CLOSED', 'PARTIAL_PAID'])
             ->whereHas('debitOrder', function ($query) use ($channel) {
                 $query->where(['debit_orders.approved' => 1])
-                    ->whereIn('debit_orders.lifecycle_status', DebitOrder::lifecycleStatusesForSummary(DebitOrder::SUMMARY_APPROVED))
                     ->when(!is_null($channel), function ($query) use ($channel) {
                         $query->where('debit_orders.channel', $channel);
                     })
@@ -181,14 +183,20 @@ class DashboardChartController extends Controller
                     });
             })
             ->groupBy(DB::raw('MONTH(installments.effective_payment_date)'))
-            ->pluck('paid_amount', 'month_number');
+            ->get()
+            ->keyBy('month_number');
 
         $data_array = [];
         for ($i = 1; $i <= 12; $i++) {
+            $expected = $expectedByMonth->get($i);
+            $paid = $paidByMonth->get($i);
+
             $data_array[] = [
                 "month" => date("M", mktime(0, 0, 0, $i, 10)),
-                "total" => (int) ($expectedByMonth[$i] ?? 0),
-                "paid" => (int) ($paidByMonth[$i] ?? 0),
+                "total" => (int) ($expected->all_mandates ?? 0),
+                "paid" => (int) ($paid->paid_mandates ?? 0),
+                "total_amount" => (float) ($expected->expected_amount ?? 0),
+                "paid_amount" => (float) ($paid->paid_amount ?? 0),
             ];
         }
 

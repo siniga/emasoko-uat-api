@@ -1,4 +1,4 @@
-@extends('layouts.master')
+@extends(($selfRegistration ?? false) ? 'layouts.self-registration' : 'layouts.master')
 
 @section('title')
     Register Service Provider
@@ -14,13 +14,15 @@
             <div class="page-title-box d-sm-flex align-items-center justify-content-between">
                 <h4 class="mb-sm-0 font-size-18">Register Service Provider</h4>
 
-                <div class="page-title-right">
+                        @unless($selfRegistration ?? false)
+                        <div class="page-title-right">
                     <ol class="breadcrumb m-0">
                         <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
                         <li class="breadcrumb-item"><a href="{{ route('companies.lists') }}">Service Providers</a></li>
                         <li class="breadcrumb-item active">Register New</li>
                     </ol>
-                </div>
+                        </div>
+                        @endunless
 
             </div>
         </div>
@@ -29,7 +31,9 @@
     @include('companies.create.partials.hero', [
         'currentStep' => 2,
         'heading' => 'Upload supporting documents',
-        'subtitle' => 'Add the compliance documents required to move this service provider to account setup and final review.',
+        'subtitle' => ($selfRegistration ?? false)
+            ? 'Add the compliance documents required before providing your contact representative.'
+            : 'Add the compliance documents required to move this service provider to account setup and final review.',
         'company' => $company,
     ])
 
@@ -98,7 +102,7 @@
                             <div class="sp-actionbar">
                                 <div class="sp-actionbar__meta"></div>
                                 <div class="d-flex gap-2">
-                                        <a href="{{ route('companies.registration', $company->uuid) }}"
+                                        <a href="{{ ($selfRegistration ?? false) ? route('self-registration.information', $company->uuid) : route('companies.registration', $company->uuid) }}"
                                             class="btn btn-outline-secondary text-medium">Previous</a>
 
                                         <button type="submit" id="submitButton" class="btn btn-primary">Save and Continue</button>
@@ -128,8 +132,9 @@
                 submitHandler: function(form, e) {
                     e.preventDefault();
 
-                    //change submit button text
-                    $('#submitButton').text('Submitting...');
+                    const submitButton = $('#submitButton');
+                    const defaultSubmitText = submitButton.text();
+                    submitButton.prop('disabled', true).text('Submitting...');
 
                     //form data
                     const formData = new FormData(form);
@@ -140,16 +145,13 @@
                     //post data 
                     $.ajax({
                         type: "POST",
-                        url: "/companies/store-documents",
+                        url: @json(($selfRegistration ?? false) ? route('self-registration.store-documents') : route('companies.store-documents')),
                         data: formData,
                         processData: false,
                         contentType: false,
                         cache: false,
                         timeout: 800000,
                         success: function(response) {
-                            //change submit button text
-                            $('#submitButton').text('Next');
-
                             //display message
                             $('.form-message').html(
                                 "<div class='alert alert-success py-2.5 px-2'>Service Provider documents uploaded</div>"
@@ -157,23 +159,25 @@
 
                             //set timer
                             setTimeout(function() {
-                                window.location.href = "/companies/accounts/" +
-                                    response.uuid;
+                                window.location.href = @json(($selfRegistration ?? false) ? url('/service-provider/register') : url('/companies/accounts')) +
+                                    "/" + response.uuid + @json(($selfRegistration ?? false) ? '/representative' : '');
                             }, 300);
                         },
                         error: function(error) {
-                            //display errors
-                            if (jQuery.type(error.responseJSON.errors) == "object") {
+                            const errors = error.responseJSON?.errors;
+                            const message = error.responseJSON?.message || 'Failed to upload documents.';
+
+                            if (jQuery.type(errors) == "object") {
                                 $('.form-message').html('');
-                                $.each(error.responseJSON.errors, function(key, value) {
+                                $.each(errors, function(key, value) {
                                     $('.form-message').append('<div class="alert alert-danger">' + value + '</div>');
                                 });
                             } else {
-                                $('.form-message').html('<div class="alert alert-danger">' + error.responseJSON.errors + '</div>');
+                                $('.form-message').html('<div class="alert alert-danger">' + message + '</div>');
                             }
-
-                            //change submit button
-                            $('#submitButton').text('Next');
+                        },
+                        complete: function() {
+                            submitButton.prop('disabled', false).text(defaultSubmitText);
                         }
                     });
 

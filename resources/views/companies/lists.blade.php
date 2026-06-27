@@ -83,15 +83,10 @@
                                 <div class="col-lg-3">
                                     <div class="mb-3">
                                         @php
-                                            $options = [
-                                                0 => 'Pending Review',
-                                                1 => 'Approved',
-                                                99 => 'Failed',
-                                            ];
-                                            $options = ['' => '-- Select eMakato Status --'] + $options;
+                                            $options = ['' => '-- Select Lifecycle --'] + \App\Models\Partner::lifecycleOptions();
                                         @endphp
 
-                                        {{ Form::select('approved', $options, old('approved', $post_data['approved']), ['class' => 'form-control']) }}
+                                        {{ Form::select('lifecycle_status', $options, old('lifecycle_status', $post_data['lifecycle_status']), ['class' => 'form-control']) }}
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -219,7 +214,7 @@
                                         </a>
                                         @if (isset($companies) && $companies->isNotEmpty())
                                             <a class="btn btn-outline-success btn-sm"
-                                                href="{{ route('companies.export-xls', ['start_at' => $post_data['start_at'], 'end_at' => $post_data['end_at'], 'category_id' => $post_data['category_id'], 'region_id' => $post_data['region_id'], 'approved' => $post_data['approved'], 'is_verified' => $post_data['is_verified'], 'keyword' => $post_data['keyword']]) }}">
+                                                href="{{ route('companies.export-xls', ['start_at' => $post_data['start_at'], 'end_at' => $post_data['end_at'], 'category_id' => $post_data['category_id'], 'region_id' => $post_data['region_id'], 'approved' => $post_data['approved'], 'lifecycle_status' => $post_data['lifecycle_status'], 'is_verified' => $post_data['is_verified'], 'keyword' => $post_data['keyword']]) }}">
                                                 <i class="fas fa-file-excel"></i> Export XLS
                                             </a>
                                         @endif
@@ -239,6 +234,7 @@
                                                 <th>Year of Inc</th>
                                                 <th>Phone</th>
                                                 <th>Region</th>
+                                                <th>Source</th>
                                                 <th>Approved</th>
                                                 <th>Actions</th>
                                             </tr>
@@ -255,14 +251,24 @@
                                                     <td>{{ $company->phone }}</td>
                                                     <td>{{ $company->region ? ucfirst(strtolower($company->region->name)) : '' }}
                                                     </td>
+                                                    <td>{{ $company->registration_source_label }}</td>
                                                     <td>
-                                                        @if ($company->approved == 0)
-                                                            <span class="badge badge-soft-warning">Pending Review</span>
-                                                        @elseif($company->approved == 1)
-                                                            <span class="badge badge-soft-success">Approved</span>
-                                                        @elseif($company->approved == 99)
-                                                            <span class="badge badge-soft-danger">Failed</span>
-                                                        @endif
+                                                        @php
+                                                            $lifecycle = $company->resolved_lifecycle_status;
+                                                            $badgeType = match ($lifecycle) {
+                                                                \App\Models\Partner::LIFECYCLE_ACTIVE => 'success',
+                                                                \App\Models\Partner::LIFECYCLE_APPROVED => 'success',
+                                                                \App\Models\Partner::LIFECYCLE_PENDING_ACCOUNT_ACTIVATION => 'warning',
+                                                                \App\Models\Partner::LIFECYCLE_SUBMITTED => 'warning',
+                                                                \App\Models\Partner::LIFECYCLE_UNDER_REVIEW => 'info',
+                                                                \App\Models\Partner::LIFECYCLE_REJECTED => 'danger',
+                                                                \App\Models\Partner::LIFECYCLE_FAILED => 'danger',
+                                                                default => 'secondary',
+                                                            };
+                                                        @endphp
+                                                        <span class="badge badge-soft-{{ $badgeType }}">
+                                                            {{ \App\Models\Partner::lifecycleOptions()[$lifecycle] ?? ucwords(str_replace('_', ' ', $lifecycle)) }}
+                                                        </span>
                                                     </td>
                                                     <td class="text-center">
                                                         <div class="dropdown sp-row-actions">
@@ -290,10 +296,16 @@
                                                                 </a>
 
                                                                 @if ($company->approved == 0 || $company->approved == 99)
-                                                                    <a href="{{ route('companies.delete', $company->uuid) }}"
-                                                                        class="dropdown-item text-danger delete">
-                                                                        <i class='bx bx-trash'></i> Delete
-                                                                    </a>
+                                                                    <form method="POST"
+                                                                        action="{{ route('companies.delete', $company->uuid) }}"
+                                                                        onsubmit="return confirm('Delete this service provider and all related information?')">
+                                                                        @csrf
+                                                                        @method('DELETE')
+                                                                        <button type="submit"
+                                                                            class="dropdown-item text-danger">
+                                                                            <i class='bx bx-trash'></i> Delete
+                                                                        </button>
+                                                                    </form>
                                                                 @endif
                                                             </div>
                                                         </div>

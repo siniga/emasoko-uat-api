@@ -1,4 +1,4 @@
-@extends('layouts.master')
+@extends(($selfRegistration ?? false) ? 'layouts.self-registration' : 'layouts.master')
 
 @section('title')
     Register Service Provider
@@ -14,6 +14,7 @@
             <div class="page-title-box d-sm-flex align-items-center justify-content-between">
                 <h4 class="mb-sm-0 font-size-18">Register Service Provider</h4>
 
+                @unless($selfRegistration ?? false)
                 <div class="page-title-right">
                     <ol class="breadcrumb m-0">
                         <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
@@ -21,6 +22,7 @@
                         <li class="breadcrumb-item active">Register New</li>
                     </ol>
                 </div>
+                @endunless
 
             </div>
         </div>
@@ -29,7 +31,9 @@
     @include('companies.create.partials.hero', [
         'currentStep' => 1,
         'heading' => 'Create a new service provider',
-        'subtitle' => 'Start with the legal profile and operating address. This draft will continue through documents, accounts, representative details, and final review.',
+        'subtitle' => ($selfRegistration ?? false)
+            ? 'Start with your legal profile and operating address. You will continue with supporting documents and contact representative details.'
+            : 'Start with the legal profile and operating address. This draft will continue through documents, accounts, representative details, and final review.',
         'company' => $company ?? null,
     ])
 
@@ -116,7 +120,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-lg-3">
+                                <div class="col-lg-6">
                                     <div class="mb-3">
                                         <label>Company Email <span class="text-danger">*</span>
                                         </label>
@@ -182,9 +186,20 @@
                             </div>
 
                             <div class="sp-actionbar">
-                                <div class="sp-actionbar__meta"></div>
+                                <div class="sp-actionbar__meta">
+                                    @if ($selfRegistration ?? false)
+                                        @if (config('services.recaptcha.site_key'))
+                                            <div class="g-recaptcha"
+                                                data-sitekey="{{ config('services.recaptcha.site_key') }}"></div>
+                                        @else
+                                            <div class="alert alert-warning mb-0">
+                                                Google reCAPTCHA is not configured. Registration is temporarily unavailable.
+                                            </div>
+                                        @endif
+                                    @endif
+                                </div>
                                 <div class="d-flex gap-2">
-                                        <a href="{{ route('companies.lists') }}"
+                                        <a href="{{ ($selfRegistration ?? false) ? route('login') : route('companies.lists') }}"
                                             class="btn btn-outline-danger btn-xs text-medium">
                                             Cancel
                                         </a>
@@ -267,15 +282,33 @@
                 submitHandler: function(form, e) {
                     e.preventDefault();
 
-                    //change submit button text
-                    $('#submitButton').text('Submitting...');
+                    @if ($selfRegistration ?? false)
+                        const recaptchaResponse = typeof grecaptcha !== "undefined"
+                            ? grecaptcha.getResponse()
+                            : "";
+
+                        if (!recaptchaResponse) {
+                            $('.form-message').html(
+                                "<div class='alert alert-danger'>Please confirm that you are not a robot.</div>"
+                            );
+                            return false;
+                        }
+                    @endif
+
+                    const submitButton = $('#submitButton');
+                    const defaultSubmitText = submitButton.text();
+                    submitButton.prop('disabled', true).text('Submitting...');
 
                     //form data
                     const formData = new FormData(form);
                     const jsonData = Object.fromEntries(formData);
 
+                    @if ($selfRegistration ?? false)
+                        jsonData["g-recaptcha-response"] = recaptchaResponse;
+                    @endif
+
                     //post data => URL
-                    fetch("/companies/store-detail", {
+                    fetch(@json(($selfRegistration ?? false) ? route('self-registration.store-detail') : route('companies.store-detail')), {
                             method: "POST",
                             headers: {
                                 "Content-Type": "application/json",
@@ -311,12 +344,19 @@
 
                                     //set timer
                                     setTimeout(function() {
-                                        window.location.href = "/companies/documents/" + responseJson.uuid;
+                                        window.location.href = @json(($selfRegistration ?? false) ? url('/service-provider/register') : url('/companies/documents')) +
+                                            "/" + responseJson.uuid + @json(($selfRegistration ?? false) ? '/documents' : '');
                                     }, 300);
                                 }else if(responseJson.success == false){
                                      $('.form-message').html(
                                         '<div class="alert alert-danger py-2.5 px-2">' + responseJson.message + '</div>'
                                     );
+
+                                    @if ($selfRegistration ?? false)
+                                        if (typeof grecaptcha !== "undefined") {
+                                            grecaptcha.reset();
+                                        }
+                                    @endif
                                 }
                             }
                         }).catch(async (error) => {
@@ -334,13 +374,21 @@
                             }
 
                             $('.form-message').html('<div class="alert alert-danger">' + message + '</div>');
+
+                            @if ($selfRegistration ?? false)
+                                if (typeof grecaptcha !== "undefined") {
+                                    grecaptcha.reset();
+                                }
+                            @endif
                         }).finally(() => {
-                            //change submit button text
-                            $('#submitButton').text('Save and Continue');
+                            submitButton.prop('disabled', false).text(defaultSubmitText);
                         });
                     return false;
                 }
             });
         });
     </script>
+    @if (($selfRegistration ?? false) && config('services.recaptcha.site_key'))
+        <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    @endif
 @endsection

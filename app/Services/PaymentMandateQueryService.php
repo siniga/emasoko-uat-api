@@ -22,6 +22,11 @@ class PaymentMandateQueryService
     public function listQuery(array $filters = [], ?User $user = null): Builder
     {
         return $this->baseQuery($filters, $user)
+            ->with([
+                'customerAccount:id,account_name,account_number,phone,customer_id,account_id',
+                'customerAccount.customer:id,id_number',
+                'customerAccount.account:id,name',
+            ])
             ->select(
                 'id',
                 'uuid',
@@ -46,6 +51,7 @@ class PaymentMandateQueryService
                 'approved',
                 'cancelled',
                 'closed',
+                'archived',
                 'lifecycle_status',
                 'created_at',
                 'created_by'
@@ -55,6 +61,12 @@ class PaymentMandateQueryService
     public function exportQuery(array $filters = [], ?User $user = null): Builder
     {
         return $this->baseQuery($filters, $user)
+            ->with([
+                'partner:id,business_name',
+                'customerAccount:id,account_name,account_number,phone,customer_id,account_id',
+                'customerAccount.account:id,name',
+                'userCreated:id,name',
+            ])
             ->select(
                 'id',
                 'uuid',
@@ -79,6 +91,7 @@ class PaymentMandateQueryService
                 'approved',
                 'cancelled',
                 'closed',
+                'archived',
                 'lifecycle_status',
                 'created_at',
                 'created_by'
@@ -127,13 +140,16 @@ class PaymentMandateQueryService
             ->when($filters['payment_channel'] ?? null, function ($query, $paymentChannel) {
                 $query->where('debit_orders.channel', $paymentChannel);
             })
+            ->when($filters['partner_id'] ?? null, function ($query, $partnerId) {
+                $query->where('debit_orders.partner_id', $partnerId);
+            })
             ->when($filters['corporate_reference'] ?? null, function ($query, $corporateReference) {
                 $query->whereHas('partner', function ($partnerQuery) use ($corporateReference) {
                     $partnerQuery->where('partners.reference', $corporateReference);
                 });
             })
-            ->when($filters['lifecycle_status'] ?? null, function ($query, $lifecycleStatus) {
-                $query->where('debit_orders.lifecycle_status', $lifecycleStatus);
+            ->when($filters['lifecycle_status'] ?? $filters['status'] ?? null, function ($query, $lifecycleStatus) {
+                $this->applyLifecycleStatusFilter($query, $lifecycleStatus);
             })
             ->when($filters['keyword'] ?? null, function ($query, $keyword) {
                 $lowered = strtolower($keyword);
@@ -148,5 +164,25 @@ class PaymentMandateQueryService
                         });
                 });
             });
+    }
+
+    protected function applyLifecycleStatusFilter(Builder $query, string $lifecycleStatus): void
+    {
+        match ($lifecycleStatus) {
+            DebitOrder::LIFECYCLE_CANCELLED => $query->where(function ($statusQuery) {
+                $statusQuery->where('debit_orders.lifecycle_status', DebitOrder::LIFECYCLE_CANCELLED)
+                    ->orWhere('debit_orders.cancelled', 1);
+            }),
+            DebitOrder::LIFECYCLE_CLOSED => $query->where(function ($statusQuery) {
+                $statusQuery->where('debit_orders.lifecycle_status', DebitOrder::LIFECYCLE_CLOSED)
+                    ->orWhere('debit_orders.closed', 1)
+                    ->orWhere('debit_orders.contract_status', 'CLOSED');
+            }),
+            DebitOrder::LIFECYCLE_ARCHIVED => $query->where(function ($statusQuery) {
+                $statusQuery->where('debit_orders.lifecycle_status', DebitOrder::LIFECYCLE_ARCHIVED)
+                    ->orWhere('debit_orders.archived', 1);
+            }),
+            default => $query->where('debit_orders.lifecycle_status', $lifecycleStatus),
+        };
     }
 }

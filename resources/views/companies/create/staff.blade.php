@@ -1,4 +1,4 @@
-@extends('layouts.master')
+@extends(($selfRegistration ?? false) ? 'layouts.self-registration' : 'layouts.master')
 
 @section('title')
     Register Service Provider
@@ -14,6 +14,7 @@
             <div class="page-title-box d-sm-flex align-items-center justify-content-between">
                 <h4 class="mb-sm-0 font-size-18">Register Service Provider</h4>
 
+                @unless($selfRegistration ?? false)
                 <div class="page-title-right">
                     <ol class="breadcrumb m-0">
                         <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
@@ -21,6 +22,7 @@
                         <li class="breadcrumb-item active">Register New</li>
                     </ol>
                 </div>
+                @endunless
 
             </div>
         </div>
@@ -161,7 +163,7 @@
                             <div class="sp-actionbar">
                                 <div class="sp-actionbar__meta"></div>
                                 <div class="d-flex gap-2">
-                                        <a href="{{ route('companies.register-accounts', $company->uuid) }}"
+                                        <a href="{{ ($selfRegistration ?? false) ? route('self-registration.documents', $company->uuid) : route('companies.register-accounts', $company->uuid) }}"
                                             class="btn btn-outline-secondary text-medium">Previous</a>
                                         <button type="submit" id="submitButton" class="btn btn-primary">Save and Continue</button>
                                 </div>
@@ -271,8 +273,9 @@
                 submitHandler: function(form, e) {
                     e.preventDefault();
 
-                    //change submit button text
-                    $('#submitButton').text('Submitting...');
+                    const submitButton = $('#submitButton');
+                    const defaultSubmitText = submitButton.text();
+                    submitButton.prop('disabled', true).text('Submitting...');
 
                     //form data
                     const formData = new FormData(form);
@@ -283,7 +286,7 @@
                     //post data 
                     $.ajax({
                         type: "POST",
-                        url: "/companies/store-staff",
+                        url: @json(($selfRegistration ?? false) ? route('self-registration.store-staff') : route('companies.store-staff')),
                         data: formData,
                         processData: false,
                         contentType: false,
@@ -291,9 +294,6 @@
                         timeout: 800000,
                         success: function(response) {
                             if(response.success == true){
-                                //change submit button text
-                                $('#submitButton').text('Next');
-
                                 //display message
                                 $('.form-message').html(
                                     "<div class='alert alert-success py-2.5 px-2'>Service Provider credential saved</div>"
@@ -301,7 +301,8 @@
 
                                 //set timer
                                 setTimeout(function() {
-                                    window.location.href = "/companies/preview/" + response.uuid;
+                                    window.location.href = @json(($selfRegistration ?? false) ? url('/service-provider/register') : url('/companies/preview')) +
+                                        "/" + response.uuid + @json(($selfRegistration ?? false) ? '/preview' : '');
                                 }, 300);
                             }   else if(response.success == false){
                                      $('.form-message').html(
@@ -310,18 +311,20 @@
                             }
                         },
                         error: function(error) {
-                            //display errors
-                            if (jQuery.type(error.response.errors) == "object") {
+                            const errors = error.responseJSON?.errors;
+                            const message = error.responseJSON?.message || 'Failed to save representative information.';
+
+                            if (jQuery.type(errors) == "object") {
                                 $('.form-message').html('');
-                                $.each(error.response.errors, function(key, value) {
+                                $.each(errors, function(key, value) {
                                     $('.form-message').append('<div class="alert alert-danger">' + value + '</div>');
                                 });
                             } else {
-                                $('.form-message').html('<div class="alert alert-danger">' + error.response.errors + '</div>');
+                                $('.form-message').html('<div class="alert alert-danger">' + message + '</div>');
                             }
-
-                            //change submit button
-                            $('#submitButton').text('Next');
+                        },
+                        complete: function() {
+                            submitButton.prop('disabled', false).text(defaultSubmitText);
                         }
                     });
 

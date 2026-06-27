@@ -191,7 +191,6 @@
                 <div class="card pm-card">
                     <div class="card-body">
                         <div class="pm-card__title">Deduction History</div>
-                        <div class="pm-card__hint">Expected deduction dates</div>
 
                         <div class="table-responsive">
                             <table class="table table-bordered align-middle mb-0">

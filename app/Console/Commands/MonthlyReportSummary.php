@@ -7,136 +7,232 @@ use App\Models\DebitOrder;
 use App\Models\Installment;
 use App\Models\Partner;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class MonthlyReportSummary extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
-    protected $signature = 'send:monthly-report-summary';
+    private const MANDATE_SUMMARIES = [
+        DebitOrder::SUMMARY_PENDING,
+        DebitOrder::SUMMARY_APPROVED,
+        DebitOrder::SUMMARY_FAILED,
+    ];
+    private const PAID_INSTALLMENT_STATUSES = ['CLOSED', 'PARTIAL_PAID'];
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Send daily report summary to Company Approver';
+    protected $signature = 'send:monthly-report-summary
+                            {--month= : Report month in YYYY-MM format (defaults to the current month)}';
 
-    /**
-     * Create a new command instance.
-     *
-     * @return void
-     */
-    public function __construct()
+    protected $description = 'Queue monthly report summaries for configured partner approvers';
+
+    public function handle(): int
     {
-        parent::__construct();
-    }
+        $reportMonth = $this->reportMonth();
 
-    /**
-     * Execute the console command.
-     *
-     * @return int
-     */
-    public function handle()
-    {
-        $current_date = Carbon::now();
-        Log::debug("== Send monthly summary report: '{$current_date}' ==");
+        if (!$reportMonth) {
+            return self::FAILURE;
+        }
 
-        //current month and year
-        $month = date('m');
-        $year = date('Y');
+        $periodStart = $reportMonth->copy()->startOfMonth();
+        $periodEnd = $periodStart->copy()->addMonth();
+        $partners = $this->reportPartners();
 
-        //status
-        $approvedStatuses = [0, 1, 2];
+        if ($partners->isEmpty()) {
+            $this->components->warn('No eligible monthly report partners were found.');
 
-        //partners
-        $partners = Partner::where('status', '=', 202)->where('id', '=', 6)->get();
+            Log::warning('Monthly report summaries were not queued because no partners were found.', [
+                'report_month' => $reportMonth->format('Y-m'),
+                'partner_ids' => config('services.monthly_report.partner_ids', []),
+            ]);
 
-        Log::debug($partners);
+            return self::SUCCESS;
+        }
+
+        $formattedMonth = $reportMonth->format('F Y');
+        $subject = "Monthly Summary Report: {$formattedMonth}";
+        $fromAddress = config('mail.from.address');
+        $queued = 0;
+        $skippedPartners = [];
 
         foreach ($partners as $partner) {
-            //query
-            $debit_orders = DebitOrder::select('debit_orders.approved', DB::raw('COALESCE(SUM(debit_orders.total_amount), 0) as total_amount'), DB::raw('COUNT(id) as number_of_mandate'))
-                ->where(function ($query) {
-                    $query->whereIn('debit_orders.approved', [0, 1, 2]);
-                })
-                ->where('partner_id', '=', $partner->id)
-                ->groupBy('debit_orders.approved')->orderBy('debit_orders.approved')->toBase();
+            $recipient = $partner->partnerStaff
+                ->first(fn ($staff) => filled($staff->email));
 
-            $debit_orders = $debit_orders->whereMonth('created_at', $month)->whereYear('created_at', $year)->get();
+            if (!$recipient) {
+                $skippedPartners[] = $partner->id;
+                continue;
+            }
 
-            // Map over all approved statuses to ensure complete results
-            $mandates = collect($approvedStatuses)->map(function ($status) use ($debit_orders) {
-                $order = $debit_orders->firstWhere('approved', $status);
-                return [
-                    'approved' => $status,
-                    'number_of_mandate' => $order ? $order->number_of_mandate : 0,
-                    'total_amount' => $order ? $order->total_amount : 0,
-                ];
+            $mandates = $this->mandateSummary($partner->id, $periodStart, $periodEnd);
+            $collections = $this->collectionSummary($partner->id, $periodStart, $periodEnd);
+
+            SendEmailJob::dispatch([
+                'to_email' => $recipient->email,
+                'from_email' => $fromAddress,
+                'name' => $recipient->name,
+                'subject' => $subject,
+                'body' => $this->buildReportBody($formattedMonth, $mandates, $collections),
+            ]);
+
+            $queued++;
+
+            Log::info('Monthly report summary queued for partner.', [
+                'report_month' => $reportMonth->format('Y-m'),
+                'partner_id' => $partner->id,
+                'recipient_id' => $recipient->id,
+                'mandates' => $mandates,
+                'collections' => $collections,
+            ]);
+        }
+
+        if ($skippedPartners) {
+            $this->components->warn(
+                'Skipped partner(s) without an email recipient: ' . implode(', ', $skippedPartners)
+            );
+        }
+
+        $this->components->info(
+            sprintf(
+                'Queued %d monthly %s for %s.',
+                $queued,
+                $queued === 1 ? 'summary' : 'summaries',
+                $reportMonth->format('Y-m')
+            )
+        );
+
+        return self::SUCCESS;
+    }
+
+    private function reportMonth(): ?Carbon
+    {
+        $value = $this->option('month');
+
+        if (!$value) {
+            return now()->startOfMonth();
+        }
+
+        try {
+            $month = Carbon::createFromFormat('!Y-m', (string) $value);
+        } catch (Throwable) {
+            $month = null;
+        }
+
+        if (!$month || $month->format('Y-m') !== $value) {
+            $this->components->error('The --month option must use the YYYY-MM format.');
+
+            return null;
+        }
+
+        return $month;
+    }
+
+    private function reportPartners()
+    {
+        $partnerIds = collect(config('services.monthly_report.partner_ids', []))
+            ->map(fn ($id) => (int) $id)
+            ->filter()
+            ->unique()
+            ->values();
+
+        return Partner::query()
+            ->select(['id'])
+            ->with(['partnerStaff:id,partner_id,name,email'])
+            ->where('status', 202)
+            ->whereIn('id', $partnerIds)
+            ->get();
+    }
+
+    private function mandateSummary(int $partnerId, Carbon $periodStart, Carbon $periodEnd): array
+    {
+        $lifecycleRows = DebitOrder::query()
+            ->selectRaw('lifecycle_status, COUNT(*) AS mandate_count, COALESCE(SUM(total_amount), 0) AS total_amount')
+            ->where('partner_id', $partnerId)
+            ->whereIn('lifecycle_status', array_merge(...array_map(
+                fn ($summary) => DebitOrder::lifecycleStatusesForSummary($summary),
+                self::MANDATE_SUMMARIES
+            )))
+            ->where('created_at', '>=', $periodStart)
+            ->where('created_at', '<', $periodEnd)
+            ->groupBy('lifecycle_status')
+            ->get();
+
+        $summary = [];
+
+        foreach (self::MANDATE_SUMMARIES as $summaryStatus) {
+            $statuses = DebitOrder::lifecycleStatusesForSummary($summaryStatus);
+            $rows = $lifecycleRows->whereIn('lifecycle_status', $statuses);
+            $summary[$summaryStatus] = [
+                'count' => (int) $rows->sum('mandate_count'),
+                'amount' => (float) $rows->sum('total_amount'),
+            ];
+        }
+
+        $summary['total'] = [
+            'count' => array_sum(array_column($summary, 'count')),
+            'amount' => array_sum(array_column($summary, 'amount')),
+        ];
+
+        return $summary;
+    }
+
+    private function collectionSummary(int $partnerId, Carbon $periodStart, Carbon $periodEnd): array
+    {
+        $eligibleInstallments = fn () => Installment::query()
+            ->whereHas('debitOrder', function ($query) use ($partnerId) {
+                $query->where('partner_id', $partnerId)
+                    ->whereIn(
+                        'lifecycle_status',
+                        DebitOrder::lifecycleStatusesForSummary(DebitOrder::SUMMARY_APPROVED)
+                    );
             });
 
-            //total number of mandates
-            $total_number_of_mandate = $mandates[0]['number_of_mandate'] + $mandates[1]['number_of_mandate'] + $mandates[2]['number_of_mandate'];
+        $expected = $eligibleInstallments()
+            ->where('payment_date', '>=', $periodStart)
+            ->where('payment_date', '<', $periodEnd)
+            ->sum('installment_amount');
 
-            //summation of mandate values
-            $total_mandate_value = $mandates[0]['total_amount'] + $mandates[1]['total_amount'] + $mandates[2]['total_amount'];
+        $actual = $eligibleInstallments()
+            ->whereIn('status', self::PAID_INSTALLMENT_STATUSES)
+            ->where('effective_payment_date', '>=', $periodStart)
+            ->where('effective_payment_date', '<', $periodEnd)
+            ->sum('current_balance');
 
-            //collection stats
-            $installments = Installment::whereHas('debitOrder', function ($query) use ($partner) {
-                $query->where('debit_orders.partner_id', '=', $partner->id)
-                    ->where('debit_orders.approved', '=', 1)
-                    ->where('debit_orders.status', '=', 240);
-            })->select(DB::raw('COALESCE(SUM(installments.installment_amount), 0) as total_amount'), DB::raw('COALESCE(SUM(installments.current_balance), 0) as paid_amount'))->toBase();
+        return [
+            'expected' => (float) $expected,
+            'actual' => (float) $actual,
+        ];
+    }
 
-            //monthly collection
-            $monthly = $installments->whereMonth('payment_date', $month)->whereYear('payment_date', $year)->get();
+    private function buildReportBody(string $formattedMonth, array $mandates, array $collections): string
+    {
+        $rows = [
+            ['Registered Mandate', $mandates['total']['amount'], $mandates['total']['count']],
+            ['Approved Mandate', $mandates[DebitOrder::SUMMARY_APPROVED]['amount'], $mandates[DebitOrder::SUMMARY_APPROVED]['count']],
+            ['Pending Mandate', $mandates[DebitOrder::SUMMARY_PENDING]['amount'], $mandates[DebitOrder::SUMMARY_PENDING]['count']],
+            ['Failed Mandate', $mandates[DebitOrder::SUMMARY_FAILED]['amount'], $mandates[DebitOrder::SUMMARY_FAILED]['count']],
+        ];
 
-            $table = '<table>';
-            $table .= '<tr><td>Registered Mandate: </td>';
-            $table .= '<td>' . number_format($total_mandate_value) . ' (' . number_format($total_number_of_mandate) . ')</td></tr>';
+        $tableRows = collect($rows)
+            ->map(fn ($row) => sprintf(
+                '<tr><td>%s:</td><td>%s (%s)</td></tr>',
+                $row[0],
+                number_format($row[1]),
+                number_format($row[2])
+            ))
+            ->push(sprintf(
+                '<tr><td>Expected Collection:</td><td>%s</td></tr>',
+                number_format($collections['expected'])
+            ))
+            ->push(sprintf(
+                '<tr><td>Actual Collection:</td><td>%s</td></tr>',
+                number_format($collections['actual'])
+            ))
+            ->implode('');
 
-            $table .= '<tr><td>Approved Mandate: </td>';
-            $table .= '<td>' . number_format($mandates[1]['total_amount']) . ' (' . number_format($mandates[1]['number_of_mandate']) . ')</td></tr>';
-
-            $table .= '<tr><td>Pending Mandate: </td>';
-            $table .= '<td>' . number_format($mandates[0]['total_amount']) . ' (' . number_format($mandates[0]['number_of_mandate']) . ')</td></tr>';
-
-            $table .= '<tr><td>Failed Mandate: </td>';
-            $table .= '<td>' . number_format($mandates[2]['total_amount']) . ' (' . number_format($mandates[2]['number_of_mandate']) . ')</td></tr>';
-
-            $table .= '<tr><td>Expected Collection: </td>';
-            $table .= '<td>' . number_format($monthly[0]->total_amount) . '</td></tr>';
-
-            $table .= '<tr><td>Actual Collection: </td>';
-            $table .= '<td>' . number_format($monthly[0]->paid_amount) . '</td></tr>';
-
-            $table .= '</table>';
-
-            //format date
-            $month_year = date('F Y');
-
-            //construct message
-            $message = '<h4>Monthly Summary Report: ' . $month_year . '</h4>';
-            $message .= $table;
-
-            //partner staff 
-            $staff = $partner->partnerStaff;
-
-            if ($staff) {
-                $data = [
-                    "to_email" => $staff[0]->email,
-                    "from_email" => "support@solocodes.io",
-                    "name" => $staff[0]->name,
-                    "subject" => "Monthly Summary Report: " . $month_year,
-                    "body" => $message
-                ];
-                dispatch(new SendEmailJob($data));
-            }
-        }
+        return sprintf(
+            '<h4>Monthly Summary Report: %s</h4><table>%s</table>',
+            $formattedMonth,
+            $tableRows
+        );
     }
 }

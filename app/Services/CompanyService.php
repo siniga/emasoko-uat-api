@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Jobs\SendEmailJob;
+use App\Jobs\SendSMSJob;
 use App\Models\Account;
 use App\Models\AppVariable;
 use App\Models\CompanyUser;
@@ -14,6 +15,7 @@ use App\Models\PartnerDocument;
 use App\Models\PartnerStaff;
 use App\Models\PartnerUser;
 use App\Models\RoleUser;
+use App\Models\SmsLog;
 use App\Models\User;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Str;
@@ -21,23 +23,29 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 
 class CompanyService
 {
     protected $app_variable;
-    public function __construct() {}
+    public function __construct(protected MessagingService $messagingService) {}
 
     //create company information
-    public function createInformation($data, $uuid): Partner
+    public function createInformation(
+        $data,
+        $uuid,
+        string $registrationSource = Partner::REGISTRATION_SOURCE_OFFICER
+    ): Partner
     {
-        //logged in user
-        $user = User::findOrFail(Auth::user()->id);
+        /** @var User|null $user */
+        $user = Auth::user();
 
         //declare company
         $company_id = null;
 
-        if ($user->hasRole('Partner')) {
-            $company_user = CompanyUser::where(['user_id' => Auth::user()->id])->first();
+        if ($user instanceof User && $user->hasRole('Partner')) {
+            $company_user = CompanyUser::where(['user_id' => $user->id])->first();
 
             if ($company_user)
                 $company_id = $company_user->company_id;
@@ -49,7 +57,12 @@ class CompanyService
         //create or update partner information
         $partner = Partner::firstOrNew(['uuid' => $uuid]);
         if ($partner->created_by == null) {
-            $partner->created_by = auth()->id();
+            $partner->created_by = $user?->id;
+            $partner->lifecycle_status = Partner::LIFECYCLE_DRAFT;
+            $partner->registration_source = $registrationSource;
+        }
+        if (empty($partner->lifecycle_status)) {
+            $partner->lifecycle_status = $partner->resolved_lifecycle_status;
         }
         $partner->partner_category_id = $data->category_id;
         $partner->business_name = ucwords($data->business_name);
@@ -61,7 +74,9 @@ class CompanyService
         $partner->email = $data->company_email;
         $partner->postal_address = $data->postal_address;
         $partner->physical_address = $data->physical_address;
-        $partner->next_step = 'companies/documents/' . $data->partner_uuid;
+        $partner->next_step = $partner->registration_source === Partner::REGISTRATION_SOURCE_SELF_WEB
+            ? "service-provider/register/{$uuid}/documents"
+            : "companies/documents/{$uuid}";
         $partner->company_id = $company_id;
         $partner->save();
 
@@ -73,10 +88,52 @@ class CompanyService
     {
         //partner
         $partner = Partner::findOrFail($id);
-        $partner->next_step = $next_stage;
+        $partner->next_step = $this->registrationNextStep($partner, $next_stage);
         $partner->save();
 
         return $partner;
+    }
+
+    public function deleteRegistration(Partner $partner): void
+    {
+        $attachments = $partner->partnerDocuments()
+            ->pluck('attachment')
+            ->filter()
+            ->map(fn ($attachment) => basename((string) $attachment))
+            ->values();
+
+        DB::transaction(function () use ($partner) {
+            $partner->partnerAccounts()->delete();
+            $partner->partnerApprovals()->delete();
+            $partner->partnerDocuments()->delete();
+            $partner->partnerStaff()->delete();
+            $partner->users()->delete();
+            $partner->delete();
+        });
+
+        foreach ($attachments as $attachment) {
+            if (!PartnerDocument::where('attachment', $attachment)->exists()) {
+                File::delete(public_path("assets/uploads/docs/{$attachment}"));
+            }
+        }
+    }
+
+    private function registrationNextStep(Partner $partner, string $nextStep): string
+    {
+        if ($partner->registration_source !== Partner::REGISTRATION_SOURCE_SELF_WEB) {
+            return $nextStep;
+        }
+
+        $step = match (true) {
+            str_contains($nextStep, '/accounts/') => 'representative',
+            str_contains($nextStep, '/staff/') => 'representative',
+            str_contains($nextStep, '/preview/') => 'preview',
+            default => null,
+        };
+
+        return $step
+            ? "service-provider/register/{$partner->uuid}/{$step}"
+            : $nextStep;
     }
 
     //create collection account
@@ -161,7 +218,7 @@ class CompanyService
     public function sendAssessmentAlert(Partner $partner): void
     {
         //construct message
-        $message = "<p><span class='font-weight-600'>{$partner->business_name}</span> completed registration process. Now your are required to perform assessment and approval process.</p>";
+        $message = "<p><span class='font-weight-600'>{$partner->business_name}</span> submitted a service provider application that is ready for assessment.</p>";
         $message .= "<p>Below are the information of service provider:</p>";
         $message .= "<p>Business Name: <span class='font-weight-500'>{$partner->business_name}</span><br />";
         $message .= "Category: <span class='font-weight-500'>{$partner->partnerCategory->name}</span><br />";
@@ -169,23 +226,51 @@ class CompanyService
         $message .= "Year of Incorporation: <span class='font-weight-500'>{$partner->year_of_incorporation}</span><br />";
         $message .= "Email: <span class='font-weight-500'>{$partner->email}</span><br />";
         $message .= "Phone: <span class='font-weight-500'>{$partner->phone}</span></p>";
+        $message .= "<p><a href='" . route('companies.show', $partner->uuid) . "'>View application</a></p>";
 
-        //query for users
-        $users = User::whereHas('roles', function ($q) {
-            $q->where('name', 'Manager');
-        })->get();
+        $reviewerRoles = config('services.company_registration.reviewer_roles', ['Manager']);
+        $users = User::query()
+            ->whereHas('roles', function ($query) use ($reviewerRoles) {
+                $query->whereIn('name', $reviewerRoles);
+            })
+            ->get();
 
         if ($users->isNotEmpty()) {
             foreach ($users as $user) {
-                //send email in background
-                $data = [
-                    "to_email" => $user->email,
-                    "from_email" => "support@solocodes.io",
-                    "name" => $user->name,
-                    "subject" => "Corporate Registration",
-                    "body" => $message
-                ];
-                dispatch(new SendEmailJob($data));
+                if (filled($user->email)) {
+                    SendEmailJob::dispatch([
+                        'to_email' => $user->email,
+                        'from_email' => config('mail.from.address'),
+                        'name' => $user->name,
+                        'subject' => "Service Provider Application: {$partner->business_name}",
+                        'body' => $message,
+                    ]);
+                }
+            }
+
+            $smsRecipients = $users
+                ->filter(fn (User $user) => filled($user->phone))
+                ->unique('phone');
+
+            if ($smsRecipients->isNotEmpty()) {
+                $smsMessage = "New service provider application {$partner->reference} from {$partner->business_name} is ready for review.";
+                $messageId = $this->messagingService->generateMessageId();
+
+                foreach ($smsRecipients as $user) {
+                    $smsLog = SmsLog::firstOrNew([
+                        'message_id' => $messageId,
+                        'phone' => $this->messagingService->castPhone(trim($user->phone)),
+                    ]);
+                    $smsLog->uuid = $smsLog->uuid ?: Str::uuid();
+                    $smsLog->message = $smsMessage;
+                    $smsLog->sender = config('services.company_registration.sms_sender', 'EMAKATO');
+                    $smsLog->number_of_sms = $this->messagingService->countNumberOfSms($smsMessage);
+                    $smsLog->status = 'PENDING';
+                    $smsLog->created_by = Auth::id();
+                    $smsLog->save();
+                }
+
+                SendSMSJob::dispatch(['messageId' => $messageId]);
             }
         }
     }
@@ -197,8 +282,9 @@ class CompanyService
             //update company registration status
             $partner->complete = 0;
             $partner->approved = 99;
+            $partner->lifecycle_status = Partner::LIFECYCLE_REJECTED;
             $partner->remarks = $data['remarks'];
-            $partner->updated_by = auth()->id();
+            $partner->updated_by = Auth::user()->id;
             $partner->save();
 
             //construct message
@@ -221,10 +307,11 @@ class CompanyService
         } else if ($data['action'] == "APPROVE") {
             //update company registration status
             $partner->complete = 1;
-            $partner->approved = 1; //approved
+            $partner->approved = 1;
             $partner->remarks = "Service provider registration approved by eMakato Team";
             $partner->status = 'pending_approval';
-            $partner->updated_by = auth()->id();
+            $partner->lifecycle_status = Partner::LIFECYCLE_PENDING_ACCOUNT_ACTIVATION;
+            $partner->updated_by = Auth::user()->id;
             $partner->save();
 
             return 200;

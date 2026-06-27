@@ -233,13 +233,17 @@ class CollectionAnalyticsService
     {
         $query = Installment::filterCondition()
             ->with([
-                'debitOrder:id,reference,periodicity,channel,start_date,end_date,partner_id,customer_account_id',
+                'debitOrder:id,reference,periodicity,channel,start_date,end_date,partner_id,customer_account_id,contract_status,deleted',
                 'debitOrder.partner:id,uuid,business_name',
                 'debitOrder.customerAccount:id,account_name,account_number,customer_id',
                 'debitOrder.customerAccount.customer:id,address',
             ])
-            ->whereHas('debitOrder', function ($query) use ($filters, $partner) {
+            ->whereHas('debitOrder', function ($query) use ($type, $filters, $partner) {
                 $query->where('debit_orders.approved', 1)
+                    ->when($type === self::TYPE_EXPECTED, function ($q) {
+                        $q->where('debit_orders.deleted', 0)
+                            ->where('debit_orders.contract_status', 'OPEN');
+                    })
                     ->when(!empty($filters['channel']), function ($q) use ($filters) {
                         $q->where('debit_orders.channel', $filters['channel']);
                     })

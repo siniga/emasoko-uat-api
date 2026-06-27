@@ -114,6 +114,7 @@ class NmbRequest extends BankMnoProcedure
             $partnerAccount->response_sms = $response->data->data->response[0]->responseDescription;
             $partnerAccount->send_verification = 0;
             $partnerAccount->save();
+            $partner->refreshLifecycleStatus()->save();
             return response()->json([
                 'status' => true,
                 'message' => $data->response[0]->responseDescription,
@@ -126,6 +127,7 @@ class NmbRequest extends BankMnoProcedure
             $partnerAccount->response_sms = $data->response[0]->responseDescription;
             $partnerAccount->send_verification = 2;
             $partnerAccount->save();
+            $partner->refreshLifecycleStatus()->save();
             return response()->json([
                 'status' => true,
                 'message' => $data->response[0]->responseDescription,
@@ -138,6 +140,7 @@ class NmbRequest extends BankMnoProcedure
         $partnerAccount->response_sms = $response->data->data->response[0]->responseDescription;
         $partnerAccount->send_verification = 0;
         $partnerAccount->save();
+        $partner->refreshLifecycleStatus()->save();
         return response()->json([
             'status' => false,
             'message' => $data->response[0]->responseDescription,

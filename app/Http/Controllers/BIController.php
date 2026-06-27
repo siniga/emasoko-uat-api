@@ -727,7 +727,7 @@ class BIController extends Controller
         )
             ->selectRaw("COALESCE(customers.fullname, customer_accounts.account_name, 'Unknown Borrower') as borrower_name")
             ->selectRaw("COALESCE(customers.id_number, '-') as national_id")
-            ->selectRaw("COALESCE(debit_orders.crdb_reference, debit_orders.otp_reference, debit_orders.reference) as loan_reference")
+            ->selectRaw("COALESCE(debit_orders.crdb_reference, debit_orders.crdb_reference, debit_orders.reference) as loan_reference")
             ->addSelect([
                 'installments.installment_amount',
                 'installments.current_balance',

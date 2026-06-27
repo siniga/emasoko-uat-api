@@ -26,7 +26,8 @@ class CompanyExport implements FromQuery, WithHeadings, ShouldAutoSize, WithEven
         $requests = $this->data;
 
         //companies
-        $companies = Partner::query();
+        $companies = Partner::filterCondition()
+            ->with(['partnerCategory', 'region']);
 
         $companies = $companies->when($requests, function ($query) use ($requests) {
             $query->withFilters($requests);

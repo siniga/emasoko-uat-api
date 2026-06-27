@@ -10,10 +10,23 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class ApiCallbackJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    public int $tries = 5;
+
+    public function backoff(): array
+    {
+        return [60, 300, 900, 1800];
+    }
+
+    public function retryUntil()
+    {
+        return now()->addDay();
+    }
 
     /**
      * Create a new job instance.
@@ -35,65 +48,83 @@ class ApiCallbackJob implements ShouldQueue
      */
     public function handle()
     {
-        if (isset($this->data['callback_log_id'])) {
-            $log = ExternalCallbackLog::find($this->data['callback_log_id']);
-
-            if (!$log) {
-                return;
-            }
-
-            $headers = ['Content-Type' => 'application/json'];
-            $payload = $log->payload;
-            $response = Http::withHeaders($headers)->post($log->callback_url, $payload);
-            $decodedResponse = json_decode($response->body(), true);
-
-            $log->attempts = (int) $log->attempts + 1;
-            $log->last_response_code = $response->status();
-            $log->response_body = $decodedResponse;
-            $log->last_attempt_at = now();
-            $log->status = $response->successful() ? 'DELIVERED' : 'FAILED';
-            $log->last_error = $response->successful() ? null : $response->body();
-
-            if ($response->successful()) {
-                $log->delivered_at = now();
-            }
-
-            $log->save();
-
-            Log::debug('== External Callback Payload Request ==');
-            Log::debug($payload);
-            Log::debug('== External Callback Response ==');
-            Log::debug($decodedResponse);
-
+        if (!isset($this->data['callback_log_id'])) {
+            Log::warning('External callback skipped: callback_log_id is required.', [
+                'payload_keys' => array_keys((array) $this->data),
+            ]);
             return;
         }
 
-        //Create Headers
-        $headers = ['Content-Type' => 'application/json'];
+        $log = ExternalCallbackLog::find($this->data['callback_log_id']);
 
-        //Create Payload
-        $payload["callback_type"] = $this->data['callback_type'];
+        if (!$log) {
+            Log::warning('External callback skipped: callback log was not found.', [
+                'callback_log_id' => $this->data['callback_log_id'],
+            ]);
+            return;
+        }
 
-        if ($this->data['callback_type'] == "MANDATE_STATUS")
-            $payload['mandate'] = $this->data['mandate'];
-        else if ($this->data['callback_type'] == "COLLECTION_STATUS")
-            $payload['collection'] = $this->data['collection'];
+        $payload = $log->payload;
+        $body = json_encode($payload, JSON_UNESCAPED_SLASHES);
+        $headers = [
+            'Content-Type' => 'application/json',
+            'Accept' => 'application/json',
+        ];
 
-        //Create Payload
-        Log::debug('== Callback Payload Request ==');
+        if ($log->partner?->callback_secret) {
+            $headers['X-Signature'] = 'sha256=' . hash_hmac('sha256', $body, $log->partner->callback_secret);
+            $headers['X-Signature-Algorithm'] = 'HMAC-SHA256';
+        }
+
+        try {
+            $response = Http::timeout(30)
+                ->withHeaders($headers)
+                ->withBody($body, 'application/json')
+                ->post($log->callback_url);
+        } catch (Throwable $exception) {
+            $log->attempts = (int) $log->attempts + 1;
+            $log->last_attempt_at = now();
+            $log->status = 'FAILED';
+            $log->last_error = $exception->getMessage();
+            $log->save();
+
+            throw $exception;
+        }
+
+        $decodedResponse = json_decode($response->body(), true);
+
+        $log->attempts = (int) $log->attempts + 1;
+        $log->last_response_code = $response->status();
+        $log->response_body = $decodedResponse;
+        $log->last_attempt_at = now();
+        $log->status = $response->successful() ? 'DELIVERED' : 'FAILED';
+        $log->last_error = $response->successful() ? null : $response->body();
+
+        if ($response->successful()) {
+            $log->delivered_at = now();
+        }
+
+        $log->save();
+
+        Log::debug('== External Callback Payload Request ==');
         Log::debug($payload);
+        Log::debug('== External Callback Response ==');
+        Log::debug($decodedResponse);
 
-        //API URL 
-        $API_URL = $this->data['callback_url'];
+        if ($this->shouldRetryResponse($response->status())) {
+            Log::warning('External callback returned retryable response status.', [
+                'callback_log_id' => $log->id,
+                'callback_url' => $log->callback_url,
+                'status_code' => $response->status(),
+                'response_body' => $response->body(),
+            ]);
 
-        //response
-        $response = Http::withHeaders($headers)->post($API_URL, $payload);
+            throw new \RuntimeException("External callback failed with retryable status [{$response->status()}].");
+        }
+    }
 
-        //decode the response 
-        $response = json_decode($response, true);
-
-        //logging response
-        Log::debug('== Callback Response ==');
-        Log::debug($response);
+    protected function shouldRetryResponse(int $statusCode): bool
+    {
+        return $statusCode === 408 || $statusCode === 429 || $statusCode >= 500;
     }
 }

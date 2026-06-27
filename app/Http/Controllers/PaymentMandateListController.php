@@ -19,21 +19,19 @@ class PaymentMandateListController extends BasePaymentMandateController
         $filters = $this->filters($request);
         $listQuery = $this->paymentMandateQueryService->listQuery($filters, $request->user());
 
-        if (isset($_POST['filter'])) {
-            $number_of_debit_orders = (clone $listQuery)->count();
-            $debit_orders = $listQuery->orderBy('debit_orders.created_at', 'DESC')->get();
-        } else {
-            $number_of_debit_orders = (clone $listQuery)->count();
-            $debit_orders = $listQuery->orderBy('debit_orders.created_at', 'DESC')->paginate(50)->withQueryString();
-        }
+        $number_of_debit_orders = (clone $listQuery)->count();
+        $debit_orders = $listQuery
+            ->orderBy('debit_orders.created_at', 'DESC')
+            ->paginate(50)
+            ->withQueryString();
 
         $listStats = $this->paymentMandateQueryService->stats($filters, $request->user());
 
         $post_data = $filters;
 
         $account_types = AccountType::all();
-        $accounts = Account::where('active', '=', 1)->get();
-        $partners = Partner::filterCondition()->where('approved', '=', 1)->get();
+        $accounts = Account::where('active', '=', 1)->select('id', 'name', 'slug')->get();
+        $partners = Partner::filterCondition()->where('approved', '=', 1)->select('id', 'business_name')->get();
 
         return view('payment_mandate.lists', compact('title', 'account_types', 'accounts', 'partners', 'debit_orders', 'number_of_debit_orders', 'post_data', 'listStats'));
     }
@@ -100,10 +98,9 @@ class PaymentMandateListController extends BasePaymentMandateController
         return [
             'start_at' => $request->start_at ?? null,
             'end_at' => $request->end_at ?? null,
-            'account_type_id' => $request->account_type_id ?? null,
-            'account_id' => $request->account_id ?? null,
-            'partner_id' => $request->partner_id ?? null,
             'status' => $request->status ?? null,
+            'payment_channel' => $request->payment_channel ?? null,
+            'partner_id' => $request->partner_id ?? null,
             'keyword' => $request->keyword ?? null,
         ];
     }

@@ -249,19 +249,19 @@ class DashboardController extends Controller
                 $expected = (float) ($dashboardSupplementary['channel_amounts'][$lookupKey]['expected_amount'] ?? 0);
                 $paid = (float) ($dashboardSupplementary['channel_amounts'][$lookupKey]['paid_amount'] ?? 0);
                 $mandates = (int) ($dashboardSupplementary['channel_mandates'][$lookupKey] ?? 0);
-                $rate = $expected > 0 ? round(($paid / $expected) * 100) : null;
+                $rate = $expected > 0 ? round(($paid / $expected) * 100, 1) : null;
                 $isLive = $expected > 0 || $paid > 0;
 
                 return [
                     'slug' => strtoupper(substr((string) ($paymentChannel->slug ?: $paymentChannel->name), 0, 3)),
                     'logo' => $paymentChannel->logo ? asset($paymentChannel->logo) : null,
                     'name' => $paymentChannel->name,
-                    'subtitle' => $isLive
-                        ? 'Monthly success · ' . number_format($mandates) . ' mandates · TZS ' . number_format($paid, 0)
-                        : 'Onboarding',
+                    'mandates' => $mandates,
+                    'expected_amount' => $expected,
+                    'paid_amount' => $paid,
                     'rate' => $rate,
-                    'status' => $isLive ? $rate . '%' : 'Soon',
-                    'bar_width' => $isLive ? max(min($rate, 100), 8) : 12,
+                    'status' => $isLive ? $rate . '%' : 'No data',
+                    'bar_width' => $isLive ? max(min($rate, 100), 4) : 0,
                     'tone' => $isLive ? ($rate >= 60 ? 'success' : ($rate >= 35 ? 'warning' : 'danger')) : 'muted',
                 ];
             })

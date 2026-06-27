@@ -74,7 +74,7 @@ const renderMandatesPostedVsDeductedChart = (selector, data) => {
                 rotate: -35,
             },
         },
-        colors: ["#2E7D32", "#F8BBD0"],
+        colors: ["#2E7D32", "#EF5350"],
     };
 
     $(selector).html("");
@@ -336,8 +336,8 @@ $.getJSON("charts/collected-mandate", { channel: channel, year: selectedYear }, 
 
         for (k = 0; k < data.chart.length; k++) {
             arr_month.push(data.chart[k].month);
-            arr_total.push(data.chart[k].total);
-            arr_paid.push(data.chart[k].paid);
+            arr_total.push(data.chart[k].total_amount || 0);
+            arr_paid.push(data.chart[k].paid_amount || 0);
         }
 
         var options = {
@@ -424,8 +424,8 @@ $("#collected-mandate-value-select-year").on("change", function (e) {
 
             for (k = 0; k < data.chart.length; k++) {
                 arr_month.push(data.chart[k].month);
-                arr_total.push(data.chart[k].total);
-                arr_paid.push(data.chart[k].paid);
+                arr_total.push(data.chart[k].total_amount || 0);
+                arr_paid.push(data.chart[k].paid_amount || 0);
             }
 
             var options = {

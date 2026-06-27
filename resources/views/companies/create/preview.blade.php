@@ -1,4 +1,4 @@
-@extends('layouts.master')
+@extends(($selfRegistration ?? false) ? 'layouts.self-registration' : 'layouts.master')
 
 @section('title')
     Register Service Provider
@@ -16,6 +16,7 @@
                 <div class="page-title-box d-sm-flex align-items-center justify-content-between">
                     <h4 class="mb-sm-0 font-size-18">Register Service Provider</h4>
 
+                    @unless($selfRegistration ?? false)
                     <div class="page-title-right">
                         <ol class="breadcrumb m-0">
                             <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
@@ -23,6 +24,7 @@
                             <li class="breadcrumb-item active">Register New</li>
                         </ol>
                     </div>
+                    @endunless
                 </div>
             </div>
         </div>
@@ -56,14 +58,16 @@
                                 <span class="detail-grid__label">Business Category</span>
                                 <span class="detail-grid__value">{{ $company->partnerCategory->name ?? '-' }}</span>
                             </div>
-                            <div class="detail-grid__item">
-                                <span class="detail-grid__label">Corporate Reference</span>
-                                <span class="detail-grid__value">{{ $company->reference }}</span>
-                            </div>
-                            <div class="detail-grid__item">
-                                <span class="detail-grid__label">Corporate ShortCode</span>
-                                <span class="detail-grid__value">{{ $company->short_code }}</span>
-                            </div>
+                            @unless($selfRegistration ?? false)
+                                <div class="detail-grid__item">
+                                    <span class="detail-grid__label">Corporate Reference</span>
+                                    <span class="detail-grid__value">{{ $company->reference }}</span>
+                                </div>
+                                <div class="detail-grid__item">
+                                    <span class="detail-grid__label">Corporate ShortCode</span>
+                                    <span class="detail-grid__value">{{ $company->short_code }}</span>
+                                </div>
+                            @endunless
                             <div class="detail-grid__item">
                                 <span class="detail-grid__label">TIN Number</span>
                                 <span class="detail-grid__value">{{ $company->tin_number }}</span>
@@ -72,24 +76,26 @@
                                 <span class="detail-grid__label">Year of Incorporation</span>
                                 <span class="detail-grid__value">{{ $company->year_of_incorporation }}</span>
                             </div>
-                            <div class="detail-grid__item">
-                                <span class="detail-grid__label">eMakato Status</span>
-                                <span class="detail-grid__value" id="company-status">
-                                    <template x-if="approved==0">
-                                        <span class="badge badge-soft-warning">Pending Review</span>
-                                    </template>
-                                    <template x-if="approved==1">
-                                        <span class="badge badge-soft-success">Approved</span>
-                                    </template>
-                                    <template x-if="approved==99">
-                                        <span class="badge badge-soft-danger">Failed</span>
-                                    </template>
-                                </span>
-                            </div>
-                            <div class="detail-grid__item">
-                                <span class="detail-grid__label">Created On</span>
-                                <span class="detail-grid__value">{{ date('M d, Y H:i', strtotime($company->created_at)) }}</span>
-                            </div>
+                            @unless($selfRegistration ?? false)
+                                <div class="detail-grid__item">
+                                    <span class="detail-grid__label">eMakato Status</span>
+                                    <span class="detail-grid__value" id="company-status">
+                                        <template x-if="approved==0">
+                                            <span class="badge badge-soft-warning">Pending Review</span>
+                                        </template>
+                                        <template x-if="approved==1">
+                                            <span class="badge badge-soft-success">Approved</span>
+                                        </template>
+                                        <template x-if="approved==99">
+                                            <span class="badge badge-soft-danger">Failed</span>
+                                        </template>
+                                    </span>
+                                </div>
+                                <div class="detail-grid__item">
+                                    <span class="detail-grid__label">Created On</span>
+                                    <span class="detail-grid__value">{{ date('M d, Y H:i', strtotime($company->created_at)) }}</span>
+                                </div>
+                            @endunless
                             <div class="detail-grid__item">
                                 <span class="detail-grid__label">Email</span>
                                 <span class="detail-grid__value">{{ $company->email ?? '-' }}</span>
@@ -143,6 +149,7 @@
                         @endif
                     </div>
 
+                    @unless($selfRegistration ?? false)
                     <div class="detail-section">
                         <div class="detail-section__head">
                             <div>
@@ -188,11 +195,12 @@
                             <div class="detail-empty">No collection account has been added to this registration yet.</div>
                         @endif
                     </div>
+                    @endunless
 
                     <div class="detail-section">
                         <div class="detail-section__head">
                             <div>
-                                <h5>Authorized Representatives</h5>
+                                <h5>{{ ($selfRegistration ?? false) ? 'Contact Representative' : 'Authorized Representatives' }}</h5>
                             </div>
                         </div>
 
@@ -231,17 +239,31 @@
 
                     <div id="message_wrp"></div>
 
+                    @if ($selfRegistration ?? false)
+                        <div class="sp-actionbar">
+                            <div class="sp-actionbar__meta"></div>
+                            <div class="d-flex flex-wrap gap-2 justify-content-end">
+                                <button type="button" class="btn btn-outline-danger text-medium"
+                                    x-text="buttonCancel" :disabled="cancelLoading"
+                                    x-on:click="cancelForm();"></button>
+
+                                <button type="submit" name="submit" class="btn btn-success text-medium"
+                                    x-text="buttonSubmit" :disabled="submitLoading || cancelLoading"
+                                    x-on:click="submitForm();"></button>
+                            </div>
+                        </div>
+                    @else
                     <template x-if="complete=='0' || complete=='1'">
                         <div class="sp-actionbar">
                             <div class="sp-actionbar__meta"></div>
                             <div class="d-flex flex-wrap gap-2 justify-content-end">
-                                <template x-if="approved==0">
-                                    <a href="{{ route('companies.cancel-registration', $company->uuid) }}"
-                                        class="btn btn-danger cancel text-medium">Cancel</a>
+                                <template x-if="approved==0 && {{ ($selfRegistration ?? false) ? 'false' : 'true' }}">
+                                    <button type="submit" form="backendCancelRegistration"
+                                        class="btn btn-danger text-medium">Cancel</button>
                                 </template>
 
                                 <template x-if="approved==0 || approved==99">
-                                    <a href="{{ route('companies.registration', $company->uuid) }}"
+                                    <a href="{{ ($selfRegistration ?? false) ? route('self-registration.information', $company->uuid) : route('companies.registration', $company->uuid) }}"
                                         class="btn btn-outline-primary text-medium">Edit</a>
                                 </template>
 
@@ -260,7 +282,16 @@
                             </div>
                         </div>
                     </template>
+                    @endif
                 </form>
+                @unless($selfRegistration ?? false)
+                    <form id="backendCancelRegistration" method="POST"
+                        action="{{ route('companies.cancel-registration', $company->uuid) }}"
+                        onsubmit="return confirm('Cancel this registration and delete all submitted information?')">
+                        @csrf
+                        @method('DELETE')
+                    </form>
+                @endunless
             </div>
         </div>
     </div>

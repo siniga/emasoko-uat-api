@@ -77,33 +77,6 @@
                                 $totalOutstanding = collect($arr_installments)->sum('outstanding_amount');
                             @endphp
 
-                            <div class="row g-3 mb-4">
-                                <div class="col-md-3">
-                                    <div class="cc-summary">
-                                        <div class="cc-summary__label">Eligible Accounts</div>
-                                        <div class="cc-summary__value">{{ number_format(sizeof($arr_installments)) }}</div>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="cc-summary">
-                                        <div class="cc-summary__label">Expected Amount</div>
-                                        <div class="cc-summary__value text-primary">{{ number_format($totalExpected) }}</div>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="cc-summary">
-                                        <div class="cc-summary__label">Outstanding Amount</div>
-                                        <div class="cc-summary__value text-warning">{{ number_format($totalOutstanding) }}</div>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="cc-summary">
-                                        <div class="cc-summary__label">Batch Scope</div>
-                                        <div class="cc-summary__value text-info">{{ $partner_id ? 'Provider Selected' : 'Review Needed' }}</div>
-                                    </div>
-                                </div>
-                            </div>
-
                             {{ Form::open(['url' => route('collections.store'), 'class' => 'form-horizontal']) }}
                             @method('POST')
                             {{ Form::token() }}

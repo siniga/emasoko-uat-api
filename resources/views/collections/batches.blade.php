@@ -24,16 +24,6 @@
                     <div class="row">
                         <div class="col-lg-3">
                             <div class="mb-3">
-                                @php $options = ['' => '-- Service Provider --']; @endphp
-                                @foreach ($providers as $val)
-                                    @php $options[$val->id] = $val->business_name; @endphp
-                                @endforeach
-                                {{ Form::select('partner_id', $options, old('partner_id', $post_data['partner_id']), ['class' => 'form-control select2', 'id' => 'partner_id']) }}
-                            </div>
-                        </div>
-
-                        <div class="col-lg-3">
-                            <div class="mb-3">
                                 {{ Form::date('start_at', old('start_at', $post_data['start_at']), ['class' => 'form-control']) }}
                             </div>
                         </div>
@@ -41,6 +31,16 @@
                         <div class="col-lg-3">
                             <div class="mb-3">
                                 {{ Form::date('end_at', old('end_at', $post_data['end_at']), ['class' => 'form-control']) }}
+                            </div>
+                        </div>
+
+                        <div class="col-lg-3">
+                            <div class="mb-3">
+                                @php $options = ['' => '-- Service Provider --']; @endphp
+                                @foreach ($providers as $val)
+                                    @php $options[$val->id] = $val->business_name; @endphp
+                                @endforeach
+                                {{ Form::select('partner_id', $options, old('partner_id', $post_data['partner_id']), ['class' => 'form-control select2', 'id' => 'partner_id']) }}
                             </div>
                         </div>
 
