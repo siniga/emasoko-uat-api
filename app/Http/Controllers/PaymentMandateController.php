@@ -1051,8 +1051,7 @@ class PaymentMandateController extends Controller
                     // Step 4: Update the debit order status
                     $debitOrder = $cancellationRequest->debitOrder;
                     if ($debitOrder) {
-                        $debitOrder->$debitOrder->cancelled = 1; // Mark as cancelled
-                        $debitOrder->deleted = 1; // Mark as deleted
+                        $debitOrder->cancelled = 1; // Mark as cancelled
                         $debitOrder->save();
                     }
 

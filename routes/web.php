@@ -207,6 +207,7 @@ Route::middleware('auth')->group(function () {
     Route::get('payment-mandate/delete/{uuid}', [PaymentMandateActionController::class, 'destroy'])->name('payment-mandate.delete');
     Route::post('payment-mandate/fetch-status', [PaymentMandateActionController::class, 'fetch_status'])->name('payment-mandate.fetch-status');
     Route::post('payment-mandate/cancel-mandate', [PaymentMandateActionController::class, 'cancel_mandate'])->name('payment-mandate.cancel-mandate');
+    Route::post('payment-mandate/reopen/{uuid}', [PaymentMandateActionController::class, 'reopen_mandate'])->name('payment-mandate.reopen');
 
     Route::get('payment-mandate/unarchieve/{uuid}', [PaymentMandateActionController::class, 'unarchieve'])->name('payment-mandate.unarchieve');
     Route::get('payment-mandate/send-remainder/{uuid}', [PaymentMandateActionController::class, 'sendRemainder'])->name('payment-mandate.send-remainder');
@@ -231,6 +232,7 @@ Route::middleware('auth')->group(function () {
     Route::any('collections/create', [CollectionController::class, 'create'])->name('collections.create');
     Route::post('collections/store', [CollectionController::class, 'store'])->name('collections.store');
     Route::get('collections/show/{id}', [CollectionController::class, 'show'])->name('collections.show');
+    Route::post('collections/show/{id}/repair-failed', [CollectionController::class, 'repair_failed_batch'])->name('collections.repair-failed');
     Route::get('collections/export-created/{id}', [CollectionController::class, 'export_created'])->name('collections.export-created');
     Route::get('collections/export-processed/{id}', [CollectionController::class, 'export_processed'])->name('collections.export-processed');
     Route::get('collections/create-failed/{id?}', [CollectionController::class, 'create_failed'])->name('collections.create-failed');

@@ -11,7 +11,16 @@ class PaymentMandateQueryService
 {
     public function baseQuery(array $filters = [], ?User $user = null): Builder
     {
-        $query = DebitOrder::filterCondition()
+        $query = DebitOrder::filterCondition(includeDeleted: true)
+            ->where(function ($visibilityQuery) {
+                $visibilityQuery->where('debit_orders.deleted', 0)
+                    ->orWhere('debit_orders.cancelled', 1)
+                    ->orWhere('debit_orders.archived', 1)
+                    ->orWhereIn('debit_orders.lifecycle_status', [
+                        DebitOrder::LIFECYCLE_CANCELLED,
+                        DebitOrder::LIFECYCLE_ARCHIVED,
+                    ]);
+            })
             ->whereHas('partner', function ($q) {
                 $q->where('partners.approved', '=', 1);
             });

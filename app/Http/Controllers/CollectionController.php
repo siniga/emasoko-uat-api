@@ -257,8 +257,41 @@ class CollectionController extends Controller
             }
         }
 
+        $repair_failed_batch_eligibility = $this->collectionBatchService->failedBankRepairEligibility($batch);
+        $can_repair_failed_batch = $repair_failed_batch_eligibility['allowed'];
+
         //render view
-        return view('collections.show', compact('title', 'batch', 'arr_installments', 'show_create_button', 'number_of_failed_installments'));
+        return view('collections.show', compact(
+            'title',
+            'batch',
+            'arr_installments',
+            'show_create_button',
+            'number_of_failed_installments',
+            'can_repair_failed_batch',
+            'repair_failed_batch_eligibility'
+        ));
+    }
+
+    public function repair_failed_batch(string $id)
+    {
+        $sourceBatch = CollectionBatch::filterCondition()
+            ->whereKey($id)
+            ->firstOrFail();
+
+        if (!$this->collectionBatchService->canRepairFailedBankBatch($sourceBatch)) {
+            return Redirect::route('collections.show', $sourceBatch->id)
+                ->with('warning', 'This batch is not eligible for same-month failed batch repair.');
+        }
+
+        $batch = $this->collectionBatchService->repairFailedBankBatch($sourceBatch, Auth::user());
+
+        if (!$batch) {
+            return Redirect::route('collections.show', $sourceBatch->id)
+                ->with('warning', 'No repaired batch was created. Candidates may be blocked by duplicate or mandate validity checks.');
+        }
+
+        return Redirect::route('collections.show', $batch->id)
+            ->with('success', "Repaired batch {$batch->collectionReference} created from {$sourceBatch->collectionReference}.");
     }
 
     //export xls

@@ -590,7 +590,6 @@ class BankApiService
                 //update debit order => approved
                 if ($response_code == 201) {
                     $debit_order->cancelled = 1; // Mark as cancelled
-                    $debit_order->deleted = 1; // Mark as deleted
                     $debit_order->lifecycle_status = DebitOrder::LIFECYCLE_CANCELLED;
                 }
             } else if (strtolower($response['status']) == "fail") {
@@ -661,7 +660,6 @@ class BankApiService
 
         if ($statusCode === 1000 || $isAlreadyCancelled) {
             $debitOrder->cancelled = 1;
-            $debitOrder->deleted = 1;
             $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_CANCELLED;
             $debitOrder->remarks = $statusDesc ?: 'Mandate cancelled successfully.';
             $debitOrder->http_response_code = $statusCode;

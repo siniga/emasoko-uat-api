@@ -5,12 +5,10 @@ namespace App\Console\Commands;
 use App\Jobs\SendSMSJob;
 use App\Models\SmsLog;
 use App\Models\CollectionBatch;
-use App\Models\Installment;
 use App\Services\CollectionBatchService;
 use App\Services\MessagingService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -73,27 +71,31 @@ class CreateFailedBatch extends Command
         $currentMonthStart = now()->startOfMonth();
         $currentMonthEnd = now()->endOfMonth();
         $outOfMonthBatches = $batches->reject(function (CollectionBatch $batch) use ($currentMonthStart, $currentMonthEnd) {
-            return $batch->collectionDate
-                && Carbon::parse($batch->collectionDate)->betweenIncluded($currentMonthStart, $currentMonthEnd);
+            return $batch->created_at
+                && Carbon::parse($batch->created_at)->betweenIncluded($currentMonthStart, $currentMonthEnd);
         });
 
         $outOfMonthBatches->each(function (CollectionBatch $batch) {
+            $createdAt = $batch->created_at
+                ? Carbon::parse($batch->created_at)->toDateString()
+                : 'missing created date';
             $collectionDate = $batch->collectionDate
                 ? Carbon::parse($batch->collectionDate)->toDateString()
                 : 'missing collection date';
 
-            $this->warn("Skipping batch {$batch->collectionReference}: collection date {$collectionDate} is not in the current month.");
+            $this->warn("Skipping batch {$batch->collectionReference}: created date {$createdAt} is not in the current month.");
 
             Log::warning('Skipped failed batch repair outside current month.', [
                 'source_batch_id' => $batch->id,
                 'source_reference' => $batch->collectionReference,
+                'created_at' => $createdAt,
                 'collection_date' => $collectionDate,
             ]);
         });
 
         $batches = $batches->filter(function (CollectionBatch $batch) use ($currentMonthStart, $currentMonthEnd) {
-            return $batch->collectionDate
-                && Carbon::parse($batch->collectionDate)->betweenIncluded($currentMonthStart, $currentMonthEnd);
+            return $batch->created_at
+                && Carbon::parse($batch->created_at)->betweenIncluded($currentMonthStart, $currentMonthEnd);
         })->values();
 
         if ($batches->isEmpty()) {
@@ -106,56 +108,14 @@ class CreateFailedBatch extends Command
         $createdReferences = [];
 
         foreach ($batches as $sourceBatch) {
-            $batch = DB::transaction(function () use ($sourceBatch) {
-                $installmentIds = $this->sourceInstallmentIds($sourceBatch);
-
-                if (empty($installmentIds)) {
-                    $this->warn("Batch {$sourceBatch->collectionReference} has no installment ids.");
-                    return null;
-                }
-
-                $installments = $this->repairableInstallments($installmentIds);
-
-                if ($installments->isEmpty()) {
-                    $this->warn("Batch {$sourceBatch->collectionReference} has no repairable FAILED/FUNDSCHECK installments.");
-                    return null;
-                }
-
-                $collectionDate = $sourceBatch->collectionDate
-                    ? Carbon::parse($sourceBatch->collectionDate)
-                    : now();
-
-                $batch = $this->collectionBatchService->createRepairBatchFromInstallments(
-                    $sourceBatch->partner,
-                    $installments,
-                    null,
-                    [
-                        'forced_collection_date' => $collectionDate,
-                        'batch_collection_date' => $collectionDate->toDateString(),
-                        'source_batch_id' => $sourceBatch->id,
-                    ]
-                );
-
-                if (!$batch) {
-                    $this->warn("Batch {$sourceBatch->collectionReference} candidates were blocked by duplicate or mandate validity checks.");
-                    $this->reportBlockedCandidates($sourceBatch);
-
-                    return null;
-                }
-
-                $sourceBatch->deleted = 1;
-                $sourceBatch->recreated = 1;
-                $sourceBatch->lifecycle_status = CollectionBatch::LIFECYCLE_RECREATED;
-                $sourceBatch->save();
-
-                return $batch;
-            });
+            $batch = $this->collectionBatchService->repairFailedBankBatch($sourceBatch);
 
             if ($batch) {
                 $created++;
                 $createdReferences[] = $batch->collectionReference;
                 $this->info("Created repaired batch {$batch->collectionReference} from {$sourceBatch->collectionReference}.");
             } else {
+                $this->reportBlockedCandidates($sourceBatch);
                 $this->warn("No repaired batch created from {$sourceBatch->collectionReference}.");
             }
         }
@@ -184,61 +144,6 @@ class CreateFailedBatch extends Command
 
         $this->info("== {$created} repaired failed collection batches created ==");
         return self::SUCCESS;
-    }
-
-    protected function repairableInstallments(array $installmentIds)
-    {
-        return Installment::whereIn('id', $installmentIds)
-            ->whereIn('status', ['FAILED', 'FUNDSCHECK'])
-            ->where(function ($query) {
-                $query->whereNull('remarks')
-                    ->orWhereIn('remarks', [
-                        'Item Can Be Collected And Has Been Tracked Successfully.',
-                        'Duplicate Account No Found In File',
-                        'Insufficient funds Archive',
-                        'Posting Successful',
-                        'Insufficient Funds',
-                        'Insufficient funds',
-                        'Insufficient funds.',
-                    ]);
-            })
-            ->get()
-            ->each(function (Installment $installment) {
-                $this->normalizeInstallmentAmount($installment);
-            });
-    }
-
-    protected function sourceInstallmentIds(CollectionBatch $batch): array
-    {
-        if (!empty($batch->installment_ids)) {
-            return collect(explode(',', (string) $batch->installment_ids))
-                ->filter()
-                ->map(fn($id) => (int) trim($id))
-                ->values()
-                ->all();
-        }
-
-        return $batch->installment_id_list;
-    }
-
-    protected function normalizeInstallmentAmount(Installment $installment): void
-    {
-        $debitOrder = $installment->debitOrder;
-        $debitType = strtoupper((string) $debitOrder->debit_type);
-        $expectedAmount = $debitType === 'FIXED'
-            ? $debitOrder->installment_amount
-            : $debitOrder->max_installment_amount;
-
-        if ((float) $installment->installment_amount === (float) $expectedAmount) {
-            return;
-        }
-
-        $installment->installment_amount = $expectedAmount;
-        $installment->min_installment_amount = $debitOrder->min_installment_amount;
-        $installment->max_installment_amount = $debitOrder->max_installment_amount;
-        $installment->current_balance = 0;
-        $installment->outstanding_amount = $expectedAmount;
-        $installment->save();
     }
 
     protected function reportBlockedCandidates(CollectionBatch $sourceBatch): void

@@ -45,11 +45,21 @@
                     </div>
 
                     <div class="pm-actions">
-                        {{-- @if ($show_create_button && $number_of_failed_installments > 0)
-                            <a href="{{ route('collections.create-failed', $batch->id) }}" class="btn btn-outline-primary btn-sm">
-                                <i class="bx bx-repeat"></i> Create Failed Batch
-                            </a>
-                        @endif --}}
+                        @if ($can_repair_failed_batch)
+                            <form id="repair-failed-batch-form" method="POST"
+                                action="{{ route('collections.repair-failed', $batch->id) }}">
+                                @csrf
+                                <button type="button" class="btn btn-success btn-sm"
+                                    x-on:click="confirmFailedBatchRepair();">
+                                    <i class="bx bx-repeat"></i> Recreate Failed Batch
+                                </button>
+                            </form>
+                        @else
+                            <button type="button" class="btn btn-success btn-sm" disabled
+                                title="{{ $repair_failed_batch_eligibility['reason'] }}">
+                                <i class="bx bx-repeat"></i> Recreate Failed Batch
+                            </button>
+                        @endif
 
                         <template x-if="deleted==0">
                             <template
@@ -280,6 +290,23 @@
             formMessage: "",
             btnPush: '<i class="fa fa-file-import"></i> Upload Collection',
             btnStatus: '<i class="fa fa-check"></i> Fetch Status',
+
+            confirmFailedBatchRepair() {
+                Swal.fire({
+                    title: 'Recreate failed batch?',
+                    text: 'A new batch will be created from the eligible failed collections in this batch.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#198754',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Yes, recreate',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        document.getElementById('repair-failed-batch-form').submit();
+                    }
+                });
+            },
 
             pushCollectionBatch() {
                 this.formLoading = true;

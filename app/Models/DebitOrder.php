@@ -30,12 +30,13 @@ class DebitOrder extends Model
     public const SUMMARY_FAILED = 'failed';
 
     //filter condition
-    public static function filterCondition()
+    public static function filterCondition(bool $includeDeleted = false)
     {
         $user = User::findOrFail(Auth::user()->id);
 
         //debit orders
-        $debit_orders = static::query()->where('deleted', '=', 0);
+        $debit_orders = static::query()
+            ->when(!$includeDeleted, fn ($query) => $query->where('deleted', 0));
 
         if ($user->hasRole('Partner')) {
             $company_user = CompanyUser::where(['user_id' => $user->id])->first();

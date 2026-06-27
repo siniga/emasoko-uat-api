@@ -139,6 +139,8 @@
                                             <th width="18%">Role</th>
                                             <th width="16%">Provider</th>
                                             <th width="10%">Created</th>
+                                            <th width="12%">Created By</th>
+                                            <th width="12%">Updated By</th>
                                             <th width="8%">Status</th>
                                             <th style="width: 40px;">Actions</th>
                                         </tr>
@@ -166,6 +168,13 @@
                                                 </td>
                                                 <td>{{ $primaryPartner->business_name ?? 'NIL' }}</td>
                                                 <td>{{ date('d-m-Y', strtotime($values->created_at)) }}</td>
+                                                <td>{{ $values->createdBy->name ?? 'Legacy/System' }}</td>
+                                                <td>
+                                                    {{ $values->updatedBy->name ?? 'NIL' }}
+                                                    @if ($values->updated_by && $values->updated_at)
+                                                        <br><span class="text-muted">{{ date('d-m-Y H:i', strtotime($values->updated_at)) }}</span>
+                                                    @endif
+                                                </td>
                                                 <td>
                                                     @if ($values->active == 1)
                                                         <span class="badge badge-soft-success">Active</span>

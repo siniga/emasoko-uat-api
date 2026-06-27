@@ -10,12 +10,23 @@ use App\Models\Partner;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class CollectionBatchService
 {
+    private const REPAIRABLE_FAILED_REMARKS = [
+        'Item Can Be Collected And Has Been Tracked Successfully.',
+        'Duplicate Account No Found In File',
+        'Insufficient funds Archive',
+        'Posting Successful',
+        'Insufficient Funds',
+        'Insufficient funds',
+        'Insufficient funds.',
+    ];
+
     protected array $candidateSkipReasons = [];
 
     public function __construct(protected DeductionService $deductionService)
@@ -59,6 +70,80 @@ class CollectionBatchService
         return $this->createBatchFromInstallments($partner, $installments, $actor, array_merge($attributes, [
             'skip_cycle_duplicate_check' => true,
         ]));
+    }
+
+    public function canRepairFailedBankBatch(CollectionBatch $sourceBatch): bool
+    {
+        return $this->failedBankRepairEligibility($sourceBatch)['allowed'];
+    }
+
+    public function failedBankRepairEligibility(CollectionBatch $sourceBatch): array
+    {
+        if ((int) $sourceBatch->deleted === 1) {
+            return ['allowed' => false, 'reason' => 'Archived batches cannot be repaired.'];
+        }
+
+        if ((int) $sourceBatch->recreated === 1) {
+            return ['allowed' => false, 'reason' => 'This batch has already been recreated.'];
+        }
+
+        if (empty($sourceBatch->collectionDate)) {
+            return ['allowed' => false, 'reason' => 'The batch has no collection date.'];
+        }
+
+        if (empty($sourceBatch->created_at)
+            || !Carbon::parse($sourceBatch->created_at)->isSameMonth(now(), true)) {
+            return ['allowed' => false, 'reason' => 'Same-month repair is available only for batches created this month.'];
+        }
+
+        if (!$this->repairableFailedInstallmentsQuery($sourceBatch->installment_id_list)->exists()) {
+            return ['allowed' => false, 'reason' => 'The batch has no repairable failed installments.'];
+        }
+
+        return ['allowed' => true, 'reason' => null];
+    }
+
+    public function repairFailedBankBatch(CollectionBatch $sourceBatch, ?User $actor = null): ?CollectionBatch
+    {
+        $this->candidateSkipReasons = [];
+
+        return DB::transaction(function () use ($sourceBatch, $actor) {
+            $sourceBatch = CollectionBatch::query()
+                ->whereKey($sourceBatch->id)
+                ->lockForUpdate()
+                ->first();
+
+            if (!$sourceBatch || !$this->canRepairFailedBankBatch($sourceBatch)) {
+                return null;
+            }
+
+            $installments = $this->repairableFailedInstallmentsQuery($sourceBatch->installment_id_list)
+                ->get()
+                ->each(fn (Installment $installment) => $this->normalizeFailedInstallmentAmount($installment));
+            $collectionDate = Carbon::parse($sourceBatch->collectionDate);
+
+            $batch = $this->createRepairBatchFromInstallments(
+                $sourceBatch->partner,
+                $installments,
+                $actor,
+                [
+                    'forced_collection_date' => $collectionDate,
+                    'batch_collection_date' => $collectionDate->toDateString(),
+                    'source_batch_id' => $sourceBatch->id,
+                ]
+            );
+
+            if (!$batch) {
+                return null;
+            }
+
+            $sourceBatch->deleted = 1;
+            $sourceBatch->recreated = 1;
+            $sourceBatch->lifecycle_status = CollectionBatch::LIFECYCLE_RECREATED;
+            $sourceBatch->save();
+
+            return $batch;
+        });
     }
 
     public function createBatchFromInstallments(Partner $partner, Collection $installments, ?User $actor = null, array $attributes = []): ?CollectionBatch
@@ -124,6 +209,9 @@ class CollectionBatchService
                 if (!$this->isOpenDebitOrder($debitOrder)) {
                     $this->recordCandidateSkip($installment, 'contract_not_open_after_lock', [
                         'contract_status' => $debitOrder->contract_status,
+                        'lifecycle_status' => $debitOrder->resolved_lifecycle_status,
+                        'cancelled' => (int) $debitOrder->cancelled,
+                        'deleted' => (int) $debitOrder->deleted,
                     ]);
                     continue;
                 }
@@ -228,7 +316,7 @@ class CollectionBatchService
             return null;
         }
 
-        $batchCollectionDate = Carbon::parse($sourceBatch->collectionDate)->addMonthNoOverflow();
+        $batchCollectionDate = Carbon::parse($sourceBatch->collectionDate);
         $paymentDate = $paymentDate ? $paymentDate->copy() : now();
         $installmentIds = $sourceBatch->installment_id_list;
 
@@ -441,6 +529,8 @@ class CollectionBatchService
                 if (!$this->isOpenDebitOrder($debitOrder)) {
                     $this->recordCandidateSkip($installment, 'contract_not_open', [
                         'contract_status' => $debitOrder->contract_status,
+                        'lifecycle_status' => $debitOrder->resolved_lifecycle_status,
+                        'cancelled' => (int) $debitOrder->cancelled,
                     ]);
 
                     return null;
@@ -527,7 +617,40 @@ class CollectionBatchService
 
     protected function isOpenDebitOrder(DebitOrder $debitOrder): bool
     {
-        return strtoupper((string) $debitOrder->contract_status) === 'OPEN';
+        return strtoupper((string) $debitOrder->contract_status) === 'OPEN'
+            && (int) $debitOrder->deleted === 0
+            && (int) $debitOrder->cancelled === 0
+            && $debitOrder->resolved_lifecycle_status === DebitOrder::LIFECYCLE_ACTIVE;
+    }
+
+    protected function repairableFailedInstallmentsQuery(array $installmentIds): Builder
+    {
+        return Installment::query()
+            ->whereIn('id', $installmentIds)
+            ->whereIn('status', ['FAILED', 'FUNDSCHECK'])
+            ->where(function ($query) {
+                $query->whereNull('remarks')
+                    ->orWhereIn('remarks', self::REPAIRABLE_FAILED_REMARKS);
+            });
+    }
+
+    protected function normalizeFailedInstallmentAmount(Installment $installment): void
+    {
+        $debitOrder = $installment->debitOrder;
+        $expectedAmount = strtoupper((string) $debitOrder->debit_type) === 'FIXED'
+            ? $debitOrder->installment_amount
+            : $debitOrder->max_installment_amount;
+
+        if ((float) $installment->installment_amount === (float) $expectedAmount) {
+            return;
+        }
+
+        $installment->installment_amount = $expectedAmount;
+        $installment->min_installment_amount = $debitOrder->min_installment_amount;
+        $installment->max_installment_amount = $debitOrder->max_installment_amount;
+        $installment->current_balance = 0;
+        $installment->outstanding_amount = $expectedAmount;
+        $installment->save();
     }
 
     protected function duplicateContext(CollectionDebitOrder $duplicate): array

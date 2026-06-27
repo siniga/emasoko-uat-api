@@ -14,6 +14,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class PaymentMandateWorkflowService
 {
@@ -278,6 +279,8 @@ class PaymentMandateWorkflowService
 
     public function requestCancellation(DebitOrder $debitOrder, int $userId, ?string $reason = null, bool $immediate = false): DebitOrder|DebitOrderRequest
     {
+        $this->ensureCancellationCanBeRequested($debitOrder);
+
         if ($immediate) {
             $debitOrder->cancellation_reason = $reason;
             $debitOrder->cancellationStartedBy = $userId;
@@ -303,8 +306,47 @@ class PaymentMandateWorkflowService
         return $request;
     }
 
+    private function ensureCancellationCanBeRequested(DebitOrder $debitOrder): void
+    {
+        $lifecycleStatus = $debitOrder->resolved_lifecycle_status;
+        $hasPendingRequest = DebitOrderRequest::query()
+            ->where('debit_order_id', $debitOrder->id)
+            ->where('request_type', 'CANCELLATION')
+            ->where('status', 'PENDING')
+            ->exists();
+
+        if ($lifecycleStatus === DebitOrder::LIFECYCLE_CANCELLATION_REQUESTED || $hasPendingRequest) {
+            throw ValidationException::withMessages([
+                'mandate' => 'Mandate cancellation has already been requested.',
+            ]);
+        }
+
+        if ($lifecycleStatus === DebitOrder::LIFECYCLE_CANCELLED || (int) $debitOrder->cancelled === 1) {
+            throw ValidationException::withMessages([
+                'mandate' => 'Mandate is already cancelled.',
+            ]);
+        }
+
+        $canRequest = in_array($lifecycleStatus, [
+            DebitOrder::LIFECYCLE_SUBMITTED,
+            DebitOrder::LIFECYCLE_AWAITING_OTP,
+            DebitOrder::LIFECYCLE_VERIFIED,
+            DebitOrder::LIFECYCLE_ACTIVE,
+        ], true);
+        $canRetryFailedCancellation = $lifecycleStatus === DebitOrder::LIFECYCLE_FAILED
+            && !empty($debitOrder->cancellationStartedAt);
+
+        if (!$canRequest && !$canRetryFailedCancellation) {
+            throw ValidationException::withMessages([
+                'mandate' => 'Mandate is not eligible for cancellation.',
+            ]);
+        }
+    }
+
     public function cancel(DebitOrder $debitOrder, int $userId, string $reason): array
     {
+        $this->ensureCancellationCanBeRequested($debitOrder);
+
         $debitOrder->cancellation_reason = $reason;
         $debitOrder->cancellationStartedBy = $userId;
         $debitOrder->cancellationStartedAt = now();
@@ -322,7 +364,6 @@ class PaymentMandateWorkflowService
         if ($response['success']) {
             if ($debitOrder->lifecycle_status !== DebitOrder::LIFECYCLE_CANCELLED) {
                 $debitOrder->cancelled = 1;
-                $debitOrder->deleted = 1;
                 $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_CANCELLED;
                 $debitOrder->remarks = $response['remarks'];
                 $debitOrder->save();
@@ -331,6 +372,7 @@ class PaymentMandateWorkflowService
 
             $this->externalCallbackService->dispatchMandateStatus($debitOrder, 'MANDATE_CANCELLED');
         } else {
+            $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_FAILED;
             $debitOrder->remarks = $response['remarks'];
             $debitOrder->save();
             $debitOrder->refresh();
@@ -356,7 +398,6 @@ class PaymentMandateWorkflowService
         $debitOrder = $debitOrderRequest->debitOrder;
         if ($debitOrder) {
             $debitOrder->cancelled = 1;
-            $debitOrder->deleted = 1;
             $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_CANCELLED;
             $debitOrder->save();
             $debitOrder->refresh();
@@ -411,6 +452,63 @@ class PaymentMandateWorkflowService
         }
 
         return $debitOrderRequest;
+    }
+
+    public function canReopenClosedMandate(DebitOrder $debitOrder): bool
+    {
+        $isClosed = $debitOrder->resolved_lifecycle_status === DebitOrder::LIFECYCLE_CLOSED
+            || (int) $debitOrder->closed === 1
+            || strtoupper((string) $debitOrder->contract_status) === 'CLOSED';
+
+        return $isClosed
+            && (int) $debitOrder->cancelled === 0
+            && (int) $debitOrder->deleted === 0
+            && (int) $debitOrder->archived === 0
+            && (float) $debitOrder->outstanding_amount > 0
+            && $debitOrder->installments()
+                ->where('status', '!=', 'CLOSED')
+                ->where('outstanding_amount', '>', 0)
+                ->exists();
+    }
+
+    public function reopenClosedMandate(DebitOrder $debitOrder): DebitOrder
+    {
+        $debitOrder = DB::transaction(function () use ($debitOrder) {
+            $debitOrder = DebitOrder::query()
+                ->whereKey($debitOrder->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if (!$this->canReopenClosedMandate($debitOrder)) {
+                throw ValidationException::withMessages([
+                    'mandate' => 'This mandate is not eligible to be reopened.',
+                ]);
+            }
+
+            $nextInstallment = $debitOrder->installments()
+                ->where('status', '!=', 'CLOSED')
+                ->where('outstanding_amount', '>', 0)
+                ->orderBy('payment_date')
+                ->firstOrFail();
+            $nextDebitDate = Carbon::parse($nextInstallment->payment_date);
+
+            $debitOrder->closed = 0;
+            $debitOrder->contract_status = 'OPEN';
+            $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_ACTIVE;
+            $debitOrder->status = 240;
+            $debitOrder->next_debit_date = $nextDebitDate->isPast()
+                ? now()->toDateString()
+                : $nextDebitDate->toDateString();
+            $debitOrder->save();
+
+            return $debitOrder->fresh();
+        });
+
+        $this->externalCallbackService->dispatchMandateStatus($debitOrder, 'MANDATE_ACTIVE', [
+            'reopened_by_admin' => true,
+        ]);
+
+        return $debitOrder;
     }
 
     public function archive(DebitOrder $debitOrder, int $userId): DebitOrderRequest
