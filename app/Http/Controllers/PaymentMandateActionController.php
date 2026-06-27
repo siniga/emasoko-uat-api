@@ -46,15 +46,13 @@ class PaymentMandateActionController extends BasePaymentMandateController
     public function cancel_mandate(Request $request)
     {
         $debitOrder = DebitOrder::where('uuid', $request->uuid)->firstOrFail();
-        $this->paymentMandateWorkflowService->requestCancellation($debitOrder, Auth::id(), $request->remarks, true);
+        $result = $this->paymentMandateWorkflowService->cancel(
+            $debitOrder,
+            Auth::id(),
+            (string) $request->remarks
+        );
 
-        return response()->json([
-            'success' => true,
-            'channel' => $debitOrder->channel,
-            'response_code' => 201,
-            'success_msg' => 'Mandate cancellation request sent successfully. Wait for few minutes for the cancellation to take effect.',
-            'lifecycle_status' => $debitOrder->fresh()->lifecycle_status,
-        ], 200);
+        return response()->json($result, 200);
     }
 
     public function show($id)
@@ -149,7 +147,7 @@ class PaymentMandateActionController extends BasePaymentMandateController
         $debit_order->deduction_end_date = $request->input('deduction_end');
 
         if ($debit_order->created_by == null) {
-            $debit_order->created_by = auth()->id();
+            $debit_order->created_by = Auth::user()->id;
         }
 
         if ($request->input('deduction_end') === 'totalLoanCovered') {

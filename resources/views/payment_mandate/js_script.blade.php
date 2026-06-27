@@ -9,6 +9,7 @@
                 lifecycleStatus: "{{ $debit_order->lifecycle_status ?? $debit_order->resolved_lifecycle_status }}",
                 channel: "{{ $debit_order->channel }}",
                 deleted: "{{ $debit_order->deleted }}",
+                cancellationAttempted: @js(!empty($debit_order->cancellationStartedAt)),
                 // remarks: "{{ $debit_order->remarks }}",
                 remarks: @js($debit_order->remarks_message),
                 approved: "{{ $debit_order->approved }}",
@@ -48,7 +49,8 @@
                 },
 
                 canCancel() {
-                    return ['submitted', 'awaiting_otp', 'verified', 'active', 'cancellation_requested'].includes(this.lifecycleStatus);
+                    return ['submitted', 'awaiting_otp', 'verified', 'active'].includes(this.lifecycleStatus) ||
+                        (this.lifecycleStatus === 'failed' && this.cancellationAttempted);
                 },
 
                 canVerifyOtp() {
@@ -98,6 +100,8 @@
                                 data
                             };
                         }
+
+                        this.cancellationAttempted = true;
 
                         //check if response is success
                         if (data.success == true) {
@@ -222,13 +226,15 @@
                                 //check for other channels
                             }
                         } else if (data.success == false) {
+                            this.lifecycleStatus = data.lifecycle_status || this.lifecycleStatus;
                             $('#message_wrp_2').html("<div class='alert alert-danger rounded-sm'>" + data.success_msg + "</div>");
                         }
                     }).catch(error => {
                         console.error("Error caught:", error);
-                        let message = "Something went wrong.";
-                        // display error message
-                        $('#message_wrp_w').html("<div class='alert alert-danger py-3 px-2'>" + message + "</div>");
+                        const message = error.data?.errors?.mandate?.[0] ||
+                            error.data?.message ||
+                            "Something went wrong.";
+                        $('#message_wrp_2').html("<div class='alert alert-danger py-3 px-2'>" + message + "</div>");
                     }).finally(() => {
                         this.formLoading = false;
                         this.buttonSubmit = 'Submit';

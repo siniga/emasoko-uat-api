@@ -14,6 +14,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class PaymentMandateWorkflowService
 {
@@ -278,6 +279,8 @@ class PaymentMandateWorkflowService
 
     public function requestCancellation(DebitOrder $debitOrder, int $userId, ?string $reason = null, bool $immediate = false): DebitOrder|DebitOrderRequest
     {
+        $this->ensureCancellationCanBeRequested($debitOrder);
+
         if ($immediate) {
             $debitOrder->cancellation_reason = $reason;
             $debitOrder->cancellationStartedBy = $userId;
@@ -303,8 +306,47 @@ class PaymentMandateWorkflowService
         return $request;
     }
 
+    private function ensureCancellationCanBeRequested(DebitOrder $debitOrder): void
+    {
+        $lifecycleStatus = $debitOrder->resolved_lifecycle_status;
+        $hasPendingRequest = DebitOrderRequest::query()
+            ->where('debit_order_id', $debitOrder->id)
+            ->where('request_type', 'CANCELLATION')
+            ->where('status', 'PENDING')
+            ->exists();
+
+        if ($lifecycleStatus === DebitOrder::LIFECYCLE_CANCELLATION_REQUESTED || $hasPendingRequest) {
+            throw ValidationException::withMessages([
+                'mandate' => 'Mandate cancellation has already been requested.',
+            ]);
+        }
+
+        if ($lifecycleStatus === DebitOrder::LIFECYCLE_CANCELLED || (int) $debitOrder->cancelled === 1) {
+            throw ValidationException::withMessages([
+                'mandate' => 'Mandate is already cancelled.',
+            ]);
+        }
+
+        $canRequest = in_array($lifecycleStatus, [
+            DebitOrder::LIFECYCLE_SUBMITTED,
+            DebitOrder::LIFECYCLE_AWAITING_OTP,
+            DebitOrder::LIFECYCLE_VERIFIED,
+            DebitOrder::LIFECYCLE_ACTIVE,
+        ], true);
+        $canRetryFailedCancellation = $lifecycleStatus === DebitOrder::LIFECYCLE_FAILED
+            && !empty($debitOrder->cancellationStartedAt);
+
+        if (!$canRequest && !$canRetryFailedCancellation) {
+            throw ValidationException::withMessages([
+                'mandate' => 'Mandate is not eligible for cancellation.',
+            ]);
+        }
+    }
+
     public function cancel(DebitOrder $debitOrder, int $userId, string $reason): array
     {
+        $this->ensureCancellationCanBeRequested($debitOrder);
+
         $debitOrder->cancellation_reason = $reason;
         $debitOrder->cancellationStartedBy = $userId;
         $debitOrder->cancellationStartedAt = now();
@@ -330,6 +372,7 @@ class PaymentMandateWorkflowService
 
             $this->externalCallbackService->dispatchMandateStatus($debitOrder, 'MANDATE_CANCELLED');
         } else {
+            $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_FAILED;
             $debitOrder->remarks = $response['remarks'];
             $debitOrder->save();
             $debitOrder->refresh();
