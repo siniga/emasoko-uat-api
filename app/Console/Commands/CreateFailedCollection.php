@@ -4,11 +4,14 @@ namespace App\Console\Commands;
 
 use App\Jobs\SendSMSJob;
 use App\Models\CollectionBatch;
+use App\Models\SmsLog;
 use App\Services\CollectionBatchService;
 use App\Services\DeductionService;
+use App\Services\MessagingService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class CreateFailedCollection extends Command
 {
@@ -33,9 +36,9 @@ class CreateFailedCollection extends Command
      */
     public function __construct(
         protected DeductionService $deductionService,
-        protected CollectionBatchService $collectionBatchService
-    )
-    {
+        protected CollectionBatchService $collectionBatchService,
+        protected MessagingService $messagingService
+    ) {
         parent::__construct();
     }
 
@@ -49,27 +52,35 @@ class CreateFailedCollection extends Command
         $previousMonth = now()->subMonth();
         $previous_month = $previousMonth->month;
         $previous_year = $previousMonth->year;
-        Log::debug("== Previous Month: '{$previous_month}' ==");
-        Log::debug("== Previous Year: '{$previous_year}' ==");
+        $this->info("== Previous Month: '{$previous_month}' ==");
+        $this->info("== Previous Year: '{$previous_year}' ==");
 
-        $count = $this->collectionBatchService->recreateFailedBatchesForMonth($previous_month, $previous_year);
+        $created = $this->collectionBatchService->recreateFailedBatchesForMonth($previous_month, $previous_year);
 
-        //TODO: Messaging module
-
-        //send Notification of batch creation
-        if ($count > 0) {
-            $message = "Collection batches created. Review and approve batches to the next stage.";
+        //Messaging Module
+        if ($created > 0) {
+            $message = "Collection batch" . ($created > 1 ? 'es' : '') . " created. Review and approve to the next stage.";
             $arr_phone = [255717705746, 255656314330];
 
+            $messageId = $this->messagingService->generateMessageId(); //messageId
+
             foreach ($arr_phone as $phone) {
-                //send sms
-                $data = ["phone" => $phone, "message" => $message];
-                dispatch(new SendSMSJob($data));
+                $sms_log = SmsLog::firstOrNew([
+                    'message_id' => $messageId,
+                    'phone' => $this->messagingService->castPhone($phone),
+                ]);
+                $sms_log->message = $message;
+                $sms_log->uuid = Str::uuid();
+                $sms_log->number_of_sms = $this->messagingService->countNumberOfSms($message);
+                $sms_log->status = 'PENDING';
+                $sms_log->created_by = 1;
+                $sms_log->save();
             }
+
+            $response = $this->messagingService->actionSendSMS($messageId);
         }
 
-        // Log the collection batches
-        Log::debug("== {$previous_month} - {$previous_year} failed collection batches created ==");
-        return 200;
+        $this->info("== {$previous_month} - {$previous_year} failed collection batches created ==");
+        return self::SUCCESS;
     }
 }

@@ -78,8 +78,7 @@ class PushCollectionBatch extends Command
             }
         }
 
-        // Log the collection batches
-        Log::debug("== Success on pushing collection batch ==");
-        return 200;
+        $this->info("== Success on pushing collection batch ==");
+        return self::SUCCESS;
     }
 }

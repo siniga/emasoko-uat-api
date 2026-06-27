@@ -4,94 +4,155 @@ namespace App\Console\Commands;
 
 use App\Models\CollectionBatch;
 use App\Models\Installment;
+use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class DailyCollectionReport extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
-    protected $signature = 'daily:collection';
+    protected $signature = 'daily:collection
+                            {--month= : Reporting month in YYYY-MM format (defaults to the current month)}';
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Daily Collection Report';
+    protected $description = 'Display a month-to-date collection status report';
 
-    /**
-     * Create a new command instance.
-     *
-     * @return void
-     */
-    public function __construct()
+    public function handle(): int
     {
-        parent::__construct();
+        $month = $this->reportingMonth();
+
+        if (!$month) {
+            return self::FAILURE;
+        }
+
+        $batches = CollectionBatch::query()
+            ->select(['id', 'collectionReference', 'installment_ids', 'created_at'])
+            ->with(['debits:id,collection_batch_id,installment_id'])
+            ->where('pushed', 1)
+            ->where('deleted', 0)
+            ->where('created_at', '>=', $month->copy()->startOfMonth())
+            ->where('created_at', '<', $month->copy()->addMonth()->startOfMonth())
+            ->orderBy('collectionReference')
+            ->get();
+
+        $installmentIds = $this->installmentIdsByBatch($batches);
+        $statuses = Installment::query()
+            ->whereIn('id', $installmentIds->flatten()->unique()->values())
+            ->pluck('status', 'id');
+
+        $summary = $this->summarize($installmentIds, $statuses);
+        $missingCount = $summary['missing'];
+
+        $this->components->info(
+            sprintf(
+                'Collection report for %s (%d pushed %s)',
+                $month->format('F Y'),
+                $batches->count(),
+                $batches->count() === 1 ? 'batch' : 'batches'
+            )
+        );
+
+        $this->table(
+            ['Total', 'Paid', 'Insufficient funds', 'Failed', 'Other'],
+            [[
+                $summary['total'],
+                $summary['paid'],
+                $summary['insufficient_funds'],
+                $summary['failed'],
+                $summary['other'],
+            ]]
+        );
+
+        if ($missingCount > 0) {
+            $this->components->warn(
+                "{$missingCount} referenced installment(s) no longer exist and were excluded."
+            );
+        }
+
+        Log::info('Daily collection report generated.', [
+            'reporting_month' => $month->format('Y-m'),
+            'batch_count' => $batches->count(),
+            'summary' => $summary,
+        ]);
+
+        return self::SUCCESS;
     }
 
-    /**
-     * Execute the console command.
-     *
-     * @return int
-     */
-    public function handle()
+    private function reportingMonth(): ?Carbon
     {
-        //current month
-        $current_month = now()->month;
-        $current_year = now()->year;
+        $value = $this->option('month');
 
-        //get unprocessed collection batch
-        $collection_batches = CollectionBatch::where(['pushed' => 1, 'deleted' => 0])
-            ->whereMonth("created_at", "=", $current_month)
-            ->whereYear("created_at", "=", $current_year)
-            ->orderBy('collectionReference', 'ASC');
+        if (!$value) {
+            return now()->startOfMonth();
+        }
 
-        if ($collection_batches->count() > 0) {
-            //take the first 10 collection batches
-            $collection_batches = $collection_batches->get();
+        try {
+            $month = Carbon::createFromFormat('!Y-m', (string) $value);
+        } catch (Throwable) {
+            $month = null;
+        }
 
-            $total = 0;
-            $paid = 0;
-            $insufficient_funds = 0;
-            $failed = 0;
-            foreach ($collection_batches as $value) {
-                //batch information
-                $batch = CollectionBatch::findOrFail($value->id);
+        if (!$month || $month->format('Y-m') !== $value) {
+            $this->components->error('The --month option must use the YYYY-MM format.');
 
-                //arr installments
-                $arr_installments = explode(",", $batch->installment_ids);
-                Log::debug("== Array Installments ==");
-                Log::debug($arr_installments);
+            return null;
+        }
 
-                foreach ($arr_installments as $installment_id) {
-                    $installment = Installment::where(['id' => $installment_id])->firstOrFail();
-                    Log::debug("== Installment status: '{$installment->status}' ==");
-                    $status = $installment->status;
-                    
-                    if ($status == "CLOSED") {
-                        $paid++;
-                    } else if ($status == "FAILED") {
-                        $failed++;
-                    } else if ($status == "FUNDSCHECK") {
-                        $insufficient_funds++;
-                    }
+        return $month;
+    }
 
-                    $total++;
-                }
+    private function installmentIdsByBatch(Collection $batches): Collection
+    {
+        return $batches->mapWithKeys(function (CollectionBatch $batch) {
+            $lineIds = $batch->debits
+                ->pluck('installment_id')
+                ->filter()
+                ->map(fn ($id) => (int) $id)
+                ->values();
+
+            if ($lineIds->isNotEmpty()) {
+                return [$batch->id => $lineIds];
             }
 
-            //Log the collection batches
-            echo "== Total: '{$total}' ==";
-            echo "<br />";
-            echo "== Paid: '{$paid}' ==";
-            echo "<br />";
-            echo "== Insufficient funds: '{$insufficient_funds}' ==";
-            echo "<br />";
-            echo "== Failed: '{$failed}' ==";
+            $legacyIds = collect(explode(',', (string) $batch->installment_ids))
+                ->map(fn ($id) => trim($id))
+                ->filter(fn ($id) => ctype_digit($id))
+                ->map(fn ($id) => (int) $id)
+                ->values();
+
+            return [$batch->id => $legacyIds];
+        });
+    }
+
+    private function summarize(Collection $installmentIds, Collection $statuses): array
+    {
+        $summary = [
+            'total' => 0,
+            'paid' => 0,
+            'insufficient_funds' => 0,
+            'failed' => 0,
+            'other' => 0,
+            'missing' => 0,
+        ];
+
+        foreach ($installmentIds->flatten() as $installmentId) {
+            $status = $statuses->get($installmentId);
+
+            if ($status === null) {
+                $summary['missing']++;
+                continue;
+            }
+
+            $summary['total']++;
+
+            match ($status) {
+                'CLOSED' => $summary['paid']++,
+                'FUNDSCHECK' => $summary['insufficient_funds']++,
+                'FAILED' => $summary['failed']++,
+                default => $summary['other']++,
+            };
         }
+
+        return $summary;
     }
 }

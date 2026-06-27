@@ -168,8 +168,7 @@ class CreateFailedBatch extends Command
             $message = "Repaired collection batch" . ($created > 1 ? 'es' : '') . " " . implode(', ', $createdReferences) . " created. Review and approve to the next stage.";
             $arr_phone = [255717705746, 255656314330];
 
-            //messageid
-            $messageId = $this->messagingService->generateMessageId();
+            $messageId = $this->messagingService->generateMessageId(); //messageId
 
             foreach ($arr_phone as $phone) {
                 $sms_log = SmsLog::firstOrNew([
@@ -184,13 +183,10 @@ class CreateFailedBatch extends Command
                 $sms_log->save();
             }
 
-            //send sms
             $response = $this->messagingService->actionSendSMS($messageId);
-            Log::debug("== Collection SMS sent ==");
         }
 
-        Log::debug("== {$created} repaired failed collection batches created ==");
-
+        $this->info("== {$created} repaired failed collection batches created ==");
         return self::SUCCESS;
     }
 
@@ -220,7 +216,7 @@ class CreateFailedBatch extends Command
         if (!empty($batch->installment_ids)) {
             return collect(explode(',', (string) $batch->installment_ids))
                 ->filter()
-                ->map(fn ($id) => (int) trim($id))
+                ->map(fn($id) => (int) trim($id))
                 ->values()
                 ->all();
         }
@@ -265,7 +261,7 @@ class CreateFailedBatch extends Command
 
         $reasons
             ->groupBy('reason')
-            ->map(fn ($items) => $items->count())
+            ->map(fn($items) => $items->count())
             ->sortDesc()
             ->each(function (int $count, string $reason) {
                 $this->line(" - {$reason}: {$count}");
@@ -286,7 +282,7 @@ class CreateFailedBatch extends Command
         Log::warning('Failed batch repair candidates were blocked.', [
             'source_batch_id' => $sourceBatch->id,
             'source_reference' => $sourceBatch->collectionReference,
-            'reason_counts' => $reasons->groupBy('reason')->map(fn ($items) => $items->count())->all(),
+            'reason_counts' => $reasons->groupBy('reason')->map(fn($items) => $items->count())->all(),
             'reasons' => $reasons->values()->all(),
         ]);
     }

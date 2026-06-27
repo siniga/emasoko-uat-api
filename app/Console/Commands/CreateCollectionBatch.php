@@ -48,8 +48,8 @@ class CreateCollectionBatch extends Command
      */
     public function handle()
     {
-        $current_date = Carbon::now(); //today batch ;
-        Log::debug("== Collection for Current Date: '{$current_date}' ==");
+        $current_date = Carbon::now();
+        $this->info("== Collection for Current Date: '{$current_date}' ==");
 
         $partners = $this->collectionBatchService->candidatePartnersForDate($current_date);
 
@@ -66,14 +66,12 @@ class CreateCollectionBatch extends Command
             }
         }
 
-        //send Notification of batch creation
+        //Messaging Module
         if ($success > 0) {
-            // create messages
-            $message = "Collection batches created. Review and approve batches to the next stage.";
+            $message = "Collection batch" . ($success > 1 ? 'es' : '') . " created. Review and approve to the next stage.";
             $arr_phone = [255717705746, 255656314330];
 
-            //messageid
-            $messageId = $this->messagingService->generateMessageId();
+            $messageId = $this->messagingService->generateMessageId(); //messageId
 
             foreach ($arr_phone as $phone) {
                 $sms_log = SmsLog::firstOrNew([
@@ -88,13 +86,11 @@ class CreateCollectionBatch extends Command
                 $sms_log->save();
             }
 
-            //send sms
             $response = $this->messagingService->actionSendSMS($messageId);
-            Log::debug("== Collection SMS sent ==");
         }
 
         // Log the collection batches
-        Log::debug("== {$current_date} collection batches created ==");
-        return 200;
+        $this->info("== {$current_date} collection batches created ==");
+        return self::SUCCESS;
     }
 }

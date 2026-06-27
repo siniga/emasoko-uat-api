@@ -55,4 +55,18 @@ return [
         ],
     ],
 
+    'daily_report' => [
+        'recipient_ids' => array_values(array_filter(array_map(
+            'intval',
+            explode(',', env('DAILY_REPORT_RECIPIENT_IDS', '37,38'))
+        ))),
+    ],
+
+    'monthly_report' => [
+        'partner_ids' => array_values(array_filter(array_map(
+            'intval',
+            explode(',', env('MONTHLY_REPORT_PARTNER_IDS', '6'))
+        ))),
+    ],
+
 ];

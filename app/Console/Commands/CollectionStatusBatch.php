@@ -47,7 +47,7 @@ class CollectionStatusBatch extends Command
     public function handle()
     {
         $current_date = Carbon::now();
-        Log::debug("== Creating collection status: '{$current_date}' ==");
+        $this->info("== Creating collection status: '{$current_date}' ==");
 
         //get the start and end of the month
         $start = now()->startOfMonth();
@@ -56,7 +56,6 @@ class CollectionStatusBatch extends Command
         // get the start and end of the last month
         // $start = now()->subMonth()->startOfMonth();
         // $end   = now()->subMonth()->endOfMonth();
-        //->whereDate('created_at', $current_date)
 
         //1. Get all collection batches created in the current month
         $collection_batches = CollectionBatch::where(['deleted' => 0])
@@ -86,8 +85,7 @@ class CollectionStatusBatch extends Command
             sleep(5); // sleep for 5 seconds
         }
 
-        //logging successiong
-        Log::debug("== Success on creating collection batch status ==");
-        return 200;
+        $this->info("== Success on creating collection batch status ==");
+        return self::SUCCESS;
     }
 }

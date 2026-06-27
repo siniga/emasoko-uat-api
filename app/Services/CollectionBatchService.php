@@ -95,6 +95,7 @@ class CollectionBatchService
 
             $csv = "SERIAL No.;BANK CODE;BRANCH NAME;EMPLOYEE NUMBER;CUSTOMER NAME;ACCOUNT NO;AMOUNT\n";
             $installmentIds = [];
+            $batchAccountNumbers = [];
 
             foreach ($candidates as $candidate) {
                 /** @var \App\Models\Installment $installment */
@@ -127,6 +128,29 @@ class CollectionBatchService
                     continue;
                 }
 
+                $debitOrder->loadMissing('customerAccount');
+                $accountNumber = $this->normalizeAccountNumber($debitOrder->customerAccount?->account_number);
+
+                if ($accountNumber === '') {
+                    $this->recordCandidateSkip($installment, 'missing_account_number_after_lock');
+                    continue;
+                }
+
+                if (in_array($accountNumber, $batchAccountNumbers, true)) {
+                    $this->recordCandidateSkip($installment, 'duplicate_account_in_batch_after_lock', [
+                        'account_number' => $accountNumber,
+                    ]);
+                    continue;
+                }
+
+                if ($duplicate = $this->collectionAccountMonthDuplicate($accountNumber, $candidate['collection_date'], $attributes['source_batch_id'] ?? null)) {
+                    $this->recordCandidateSkip($installment, 'active_monthly_account_duplicate_after_lock', [
+                        'account_number' => $accountNumber,
+                        'collection_date' => $candidate['collection_date']->toDateString(),
+                    ] + $this->duplicateContext($duplicate));
+                    continue;
+                }
+
                 if (empty($attributes['skip_cycle_duplicate_check']) && $duplicate = $this->collectionCycleDuplicate($installment, $candidate['collection_date'], $attributes['source_batch_id'] ?? null)) {
                     $this->recordCandidateSkip($installment, 'active_cycle_duplicate_after_lock', [
                         'collection_date' => $candidate['collection_date']->toDateString(),
@@ -138,9 +162,12 @@ class CollectionBatchService
                     'collection_batch_id' => $batch->id,
                     'debit_order_id' => $installment->debit_order_id,
                     'installment_id' => $installment->id,
+                    'account_number' => $accountNumber,
                     'status' => 'CREATED',
                     'bank_status' => 'CREATED',
                     'payment_at' => $candidate['collection_date']->toDateString(),
+                    'payment_month' => $candidate['collection_date']->format('Y-m'),
+                    'account_month_unique_key' => $this->accountMonthUniqueKey($accountNumber, $candidate['collection_date']),
                 ];
 
                 $repairDuplicateContext = [];
@@ -165,6 +192,7 @@ class CollectionBatchService
                     continue;
                 }
 
+                $batchAccountNumbers[] = $accountNumber;
                 $csv .= "{$installment->id};016;NMB;{$candidate['mandate_reference']};{$candidate['account_name']};{$candidate['account_number']};{$candidate['payment_amount']}\n";
 
                 $installment->effective_payment_date = $candidate['collection_date']->toDateString();
@@ -312,12 +340,50 @@ class CollectionBatchService
             ->first();
     }
 
+    public function collectionAccountMonthDuplicate(string $accountNumber, Carbon $collectionDate, ?string $excludedBatchId = null): ?CollectionDebitOrder
+    {
+        $normalizedAccountNumber = $this->normalizeAccountNumber($accountNumber);
+
+        if ($normalizedAccountNumber === '') {
+            return null;
+        }
+
+        $accountMonthUniqueKey = $this->accountMonthUniqueKey($normalizedAccountNumber, $collectionDate);
+
+        return CollectionDebitOrder::query()
+            ->with([
+                'batch:id,collectionReference,deleted',
+                'debitOrder:id,reference,customer_account_id',
+                'debitOrder.customerAccount:id,account_number',
+            ])
+            ->where(function ($query) use ($accountMonthUniqueKey, $normalizedAccountNumber, $collectionDate) {
+                $query->where('account_month_unique_key', $accountMonthUniqueKey)
+                    ->orWhere(function ($legacyQuery) use ($normalizedAccountNumber, $collectionDate) {
+                        $legacyQuery
+                            ->whereNull('account_month_unique_key')
+                            ->whereMonth('payment_at', $collectionDate->format('m'))
+                            ->whereYear('payment_at', $collectionDate->format('Y'))
+                            ->whereHas('debitOrder.customerAccount', function ($accountQuery) use ($normalizedAccountNumber) {
+                                $accountQuery->whereRaw("REPLACE(account_number, ' ', '') = ?", [$normalizedAccountNumber]);
+                            });
+                    });
+            })
+            ->when($excludedBatchId, function ($query) use ($excludedBatchId) {
+                $query->where('collection_batch_id', '!=', $excludedBatchId);
+            })
+            ->whereHas('batch', function ($query) {
+                $query->where('deleted', 0);
+            })
+            ->first();
+    }
+
     protected function buildCandidates(iterable $installments, string|Carbon|null $forcedCollectionDate = null, ?string $excludedBatchId = null, bool $skipCycleDuplicateCheck = false): Collection
     {
         $collectionCycles = [];
+        $collectionAccountNumbers = [];
 
         return collect($installments)
-            ->map(function (Installment $installment) use (&$collectionCycles, $forcedCollectionDate, $excludedBatchId, $skipCycleDuplicateCheck) {
+            ->map(function (Installment $installment) use (&$collectionCycles, &$collectionAccountNumbers, $forcedCollectionDate, $excludedBatchId, $skipCycleDuplicateCheck) {
                 $debitOrder = $installment->debitOrder;
                 if (!$debitOrder) {
                     $this->recordCandidateSkip($installment, 'missing_debit_order');
@@ -332,11 +398,19 @@ class CollectionBatchService
                     return null;
                 }
 
+                $accountNumber = $this->normalizeAccountNumber($account->account_number);
+                if ($accountNumber === '') {
+                    $this->recordCandidateSkip($installment, 'missing_account_number');
+
+                    return null;
+                }
+
                 $paymentDate = Carbon::parse($installment->payment_date);
                 $collectionDate = $forcedCollectionDate
                     ? Carbon::parse($forcedCollectionDate)
                     : Carbon::parse($this->deductionService->createCollectionDate($paymentDate));
                 $cycleKey = $debitOrder->id . ':' . $collectionDate->format('Y-m');
+                $accountMonthKey = $this->accountMonthUniqueKey($accountNumber, $collectionDate);
 
                 if (strtoupper((string) $debitOrder->periodicity) !== 'MONTHLY') {
                     $this->recordCandidateSkip($installment, 'unsupported_periodicity', [
@@ -386,6 +460,24 @@ class CollectionBatchService
                     return null;
                 }
 
+                if (in_array($accountMonthKey, $collectionAccountNumbers, true)) {
+                    $this->recordCandidateSkip($installment, 'duplicate_account_in_candidate_list', [
+                        'account_number' => $accountNumber,
+                        'collection_date' => $collectionDate->toDateString(),
+                    ]);
+
+                    return null;
+                }
+
+                if ($duplicate = $this->collectionAccountMonthDuplicate($accountNumber, $collectionDate, $excludedBatchId)) {
+                    $this->recordCandidateSkip($installment, 'active_monthly_account_duplicate', [
+                        'account_number' => $accountNumber,
+                        'collection_date' => $collectionDate->toDateString(),
+                    ] + $this->duplicateContext($duplicate));
+
+                    return null;
+                }
+
                 if (!$skipCycleDuplicateCheck && $duplicate = $this->collectionCycleDuplicate($installment, $collectionDate, $excludedBatchId)) {
                     $this->recordCandidateSkip($installment, 'active_cycle_duplicate', [
                         'collection_date' => $collectionDate->toDateString(),
@@ -395,11 +487,12 @@ class CollectionBatchService
                 }
 
                 $collectionCycles[] = $cycleKey;
+                $collectionAccountNumbers[] = $accountMonthKey;
 
                 return [
                     'installment' => $installment,
                     'account_name' => strtoupper($account->account_name),
-                    'account_number' => $account->account_number,
+                    'account_number' => $accountNumber,
                     'mandate_reference' => $debitOrder->reference,
                     'payment_amount' => $installment->installment_amount,
                     'payment_date' => $paymentDate,
@@ -431,12 +524,39 @@ class CollectionBatchService
             'duplicate_collection_debit_order_id' => $duplicate->id,
             'duplicate_batch_id' => $duplicate->collection_batch_id,
             'duplicate_batch_reference' => $duplicate->batch?->collectionReference,
+            'duplicate_mandate_reference' => $duplicate->debitOrder?->reference,
         ];
+    }
+
+    protected function normalizeAccountNumber(?string $accountNumber): string
+    {
+        return CollectionDebitOrder::normalizeAccountNumber($accountNumber);
+    }
+
+    protected function accountMonthUniqueKey(string $accountNumber, Carbon $collectionDate): string
+    {
+        return CollectionDebitOrder::accountMonthUniqueKey($accountNumber, $collectionDate);
     }
 
     protected function createRepairCollectionLine(array $attributes, string $sourceBatchId, Installment $installment, array &$blockedContext = []): ?CollectionDebitOrder
     {
         $attributes['payment_at'] = Carbon::parse($attributes['payment_at'])->toDateString();
+
+        if (!empty($attributes['account_month_unique_key'])) {
+            $existingAccountMonth = CollectionDebitOrder::query()
+                ->with('batch:id,collectionReference,deleted')
+                ->forAccountMonth($attributes['account_month_unique_key'])
+                ->lockForUpdate()
+                ->first();
+
+            if ($existingAccountMonth
+                && ((int) $existingAccountMonth->installment_id !== (int) $attributes['installment_id']
+                    || Carbon::parse($existingAccountMonth->payment_at)->toDateString() !== $attributes['payment_at'])) {
+                $blockedContext = $this->duplicateContext($existingAccountMonth);
+
+                return null;
+            }
+        }
 
         $existing = CollectionDebitOrder::query()
             ->with('batch:id,collectionReference,deleted')
