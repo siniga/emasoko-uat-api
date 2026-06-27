@@ -32,6 +32,17 @@ class SettlementPostingService
             if (!$debitOrder) {
                 throw new \InvalidArgumentException('A debit order is required for settlement posting.');
             }
+
+            $debitOrder = DebitOrder::query()
+                ->lockForUpdate()
+                ->findOrFail($debitOrder->getKey());
+
+            if ($installment) {
+                $installment = Installment::query()
+                    ->lockForUpdate()
+                    ->findOrFail($installment->getKey());
+            }
+
             $batch = $payload['batch'] ?? null;
             $line = $payload['line'] ?? null;
             $amount = (float) ($payload['amount'] ?? 0);
@@ -247,10 +258,9 @@ class SettlementPostingService
 
     protected function recalculateDebitOrder(DebitOrder $debitOrder, Installment $installment): void
     {
-        $paidAmount = (float) PaymentSettlement::query()
+        $paidAmount = (float) Installment::query()
             ->where('debit_order_id', $debitOrder->id)
-            ->whereIn('normalized_status', [PaymentSettlement::STATUS_SUCCESS, PaymentSettlement::STATUS_PARTIAL])
-            ->sum('paid_amount');
+            ->sum('current_balance');
 
         $debitOrder->current_balance = $paidAmount;
         $debitOrder->paid_amount = $paidAmount;
@@ -307,11 +317,12 @@ class SettlementPostingService
         $smsLog->debit_order_id = $debitOrder->id;
         $smsLog->message = $message;
         $smsLog->number_of_sms = $this->messagingService->countNumberOfSms($message);
+        $smsLog->sender = 'EMAKATO';
         $smsLog->status = 'PENDING';
         $smsLog->created_by = Auth::id();
         $smsLog->save();
 
-        dispatch(new SendSMSJob(['messageId' => $messageId]));
+        dispatch(new SendSMSJob(['messageId' => $messageId]))->afterCommit();
     }
 
     protected function defaultPaymentReference(?CollectionBatch $batch, ?Installment $installment): string
