@@ -196,6 +196,7 @@ class CreateFailedBatch extends Command
                         'Item Can Be Collected And Has Been Tracked Successfully.',
                         'Duplicate Account No Found In File',
                         'Insufficient funds Archive',
+                        'Posting Successful',
                         'Insufficient Funds',
                         'Insufficient funds',
                         'Insufficient funds.',
