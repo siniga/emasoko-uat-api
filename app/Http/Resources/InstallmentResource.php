@@ -21,19 +21,20 @@ class InstallmentResource extends JsonResource
                 "debit_type" => $this->debitOrder->debit_type ?? null,
                 'start_date' => $this->debitOrder->start_date,
                 'end_date' => $this->debitOrder->end_date,
-                'contract_status' => $this->debitOrder->contract_status,
-                'approved' => $this->debitOrder->approved
+                'lifecycle_status' => $this->debitOrder->lifecycle_status,
             ],
-            "installment_order" => $this->installment_order,
             "installment_amount" => $this->installment_amount,
-            "min_installment_amount" => $this->min_installment_amount,
-            "max_installment_amount" => $this->max_installment_amount,
             "current_balance" => $this->current_balance,
             "outstanding_amount" => $this->outstanding_amount,
-            "payment_date" => $this->payment_date,
             "last_paid_amount" => $this->last_paid_amount,
+            "payment_date" => $this->payment_date,
+            "effective_payment_date" => $this->effective_payment_date,
             "reference" => $this->payment_reference,
-            "status" => $this->status,
+            "status" => match ($this->status) {
+                'CLOSED' => 'PAID',
+                'OPEN' => 'PENDING',
+                default => $this->status,
+            },
             "remarks" => $this->remarks,
         ];
     }

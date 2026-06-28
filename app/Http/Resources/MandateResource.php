@@ -15,7 +15,8 @@ class MandateResource extends JsonResource
     public function toArray($request)
     {
         return [
-            'channel' => $this->channel,
+            'payment_channel' => $this->channel,
+
             'reference' => $this->reference,
             "periodicity" => $this->periodicity,
             "debit_type" => $this->debit_type,
@@ -28,8 +29,8 @@ class MandateResource extends JsonResource
             'number_of_installment' => $this->installment_number,
             'start_date' => $this->start_date,
             'end_date' => $this->end_date,
-            'contract_status' => $this->contract_status,
-            'approved' => $this->approved
+            'lifecycle_status' => $this->lifecycle_status,
+            'remarks' => $this->remarks,
         ];
     }
 }

@@ -2,19 +2,15 @@
 
 namespace App\Console\Commands;
 
-use App\Jobs\PushCollectionJob;
 use App\Jobs\SendSMSJob;
-use App\Models\CollectionBatch;
-use App\Models\CollectionDebitOrder;
-use App\Models\Installment;
-use App\Models\Partner;
-use App\Models\DebitOrder;
-use App\Services\BankPayloadService;
-use App\Services\BankApiService;
+use App\Models\SmsLog;
+use App\Services\CollectionBatchService;
 use App\Services\DeductionService;
+use App\Services\MessagingService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class CreateCollectionBatch extends Command
 {
@@ -23,7 +19,8 @@ class CreateCollectionBatch extends Command
      *
      * @var string
      */
-    protected $signature = 'create:batches';
+    protected $signature = 'create:batches
+                            {--date= : Collection date in YYYY-MM-DD format (defaults to today)}';
 
     /**
      * The console command description.
@@ -37,8 +34,11 @@ class CreateCollectionBatch extends Command
      *
      * @return void
      */
-    public function __construct(protected DeductionService $deductionService)
-    {
+    public function __construct(
+        protected DeductionService $deductionService,
+        protected CollectionBatchService $collectionBatchService,
+        protected MessagingService $messagingService
+    ) {
         parent::__construct();
     }
 
@@ -49,160 +49,85 @@ class CreateCollectionBatch extends Command
      */
     public function handle()
     {
-        //Limit
-        $limit = 250;
-        $current_date = Carbon::now(); //today batch ;
-        //$current_date = Carbon::now()->addDays(15);
-        Log::debug("== Collection for Current Date: '{$current_date}' ==");
+        $current_date = $this->collectionDate();
 
-        //initiate batch collection date
-        $batch_collection_date = Carbon::now();
+        if (!$current_date) {
+            return self::FAILURE;
+        }
 
-        // initialize deduction service
-        $partners = Partner::whereHas('debitOrders', function ($query) use ($current_date) {
-            return $query->where(['contract_status' => 'OPEN', 'channel' => 'NMB', 'approved' => 1, 'status' => 240, 'deleted' => 0])
-                ->whereDate('next_debit_date', "=", $current_date);
-        })->where('partners.status', '=', 202)->get();
+        $this->info("== Collection for Current Date: '{$current_date}' ==");
+
+        $partners = $this->collectionBatchService->candidatePartnersForDate($current_date);
 
         $success = 0;
         foreach ($partners as $partner) {
-            //1.0: Number of installments
             $installments = $this->deductionService->getInstallments($partner, $current_date);
-            $number_installments = $installments->count();
 
-            if ($number_installments > 0) {
-                //looping
-                $looping = $number_installments / $limit;
+            foreach ($installments->chunk(250) as $chunk) {
+                $batch = $this->collectionBatchService->createBatchFromInstallments(
+                    $partner,
+                    $chunk->values(),
+                    null,
+                    [
+                        'forced_collection_date' => $current_date,
+                        'batch_collection_date' => $current_date,
+                    ]
+                );
 
-                //iterate looping
-                for ($i = 1; $i <= ceil($looping); $i++) {
-                    //2.0 Create collection batch based on partner 
-                    $batch = CollectionBatch::create([
-                        'partner_id' => $partner->id,
-                        "collectionReference" => $this->deductionService->getCollectionReference(),
-                        "corporateReference" => $partner->reference,
-                        "selectedPostingDate" => Carbon::now(),
-                        "createdBy" => 1,
-                        "verifiedBy" => 1,
-                        "createdDate" => Carbon::now(),
-                        "verifyDate" => Carbon::now(),
-                    ]);
-
-                    if ($batch->wasRecentlyCreated) {
-                        //2.1 Declare variables
-                        $number_of_collections = 0;
-                        $arr_installments = [];
-                        $arr_accounts = [];
-
-                        //3. Create CSV file based installment
-                        $csv = "SERIAL No.;BANK CODE;BRANCH NAME;EMPLOYEE NUMBER;CUSTOMER NAME;ACCOUNT NO;AMOUNT\n";
-
-                        //installments
-                        $installments = $this->deductionService->getInstallments($partner, $current_date, 250);
-
-                        foreach ($installments as $installment) {
-                            //account details
-                            $account_name = strtoupper($installment->debitOrder->customerAccount->account_name);
-                            $account_number = $installment->debitOrder->customerAccount->account_number;
-                            $mandate_reference = $installment->debitOrder->reference;
-                            $debit_order_id = $installment->debitOrder->id;
-                            $periodicity = $installment->debitOrder->periodicity;
-                            $installment_id = $installment->id;
-                            $payment_amount = $installment->installment_amount;
-                            $payment_date = $installment->payment_date;
-                            $debit_start_date = Carbon::parse($installment->debitOrder->start_date);
-                            $debit_end_date = Carbon::parse($installment->debitOrder->end_date);
-
-                            //debit status
-                            $deleted = $installment->debitOrder->deleted;
-                            $contract_status = $installment->debitOrder->contract_status;
-
-                            //Batch Collection Date
-                            $batch_collection_date = $installment->payment_date;
-
-                            //1.0: check if periodicity == MONTHLY and deleted = 0
-                            if ($periodicity == "MONTHLY" && $contract_status == "OPEN" && $deleted == 0) {
-                                //2.0: Check if mandate start date <= today
-                                if ($debit_start_date->lte(Carbon::now())) {
-                                    //2.1: check if debit mandate expire
-                                    if ($debit_end_date->gte(Carbon::now())) {
-                                        //3.0: check if account exists in this batch
-                                        if (!in_array($account_number, $arr_accounts)) {
-                                            // 3.1: create new collection date from previous month
-                                            $collection_date = $this->deductionService->createCollectionDate($payment_date);
-
-                                            //4.0: check if the mandate reference is exists for this month
-                                            $collection_debit_order = CollectionDebitOrder::where(['debit_order_id' => $debit_order_id])
-                                                ->whereMonth('payment_at', Carbon::parse($collection_date)->format('m'))
-                                                ->whereYear('payment_at', Carbon::parse($collection_date)->format('Y'));
-
-                                            if (!$collection_debit_order->exists()) {
-                                                //create csv file
-                                                $csv .= "{$installment_id};016;NMB;{$mandate_reference};{$account_name};{$account_number};{$payment_amount}\n";
-
-                                                //append account in array
-                                                array_push($arr_accounts, $account_number);
-
-                                                //update array installments
-                                                array_push($arr_installments, $installment_id);
-
-                                                //update installment status => created = 1 and effective payment date
-                                                $updated_installment = Installment::findOrFail($installment_id);
-                                                $updated_installment->effective_payment_date = $collection_date;
-                                                $updated_installment->created = 1;
-                                                $updated_installment->save();
-
-                                                // create collection debit order
-                                                CollectionDebitOrder::create([
-                                                    'collection_batch_id' => $batch->id,
-                                                    'debit_order_id' => $debit_order_id,
-                                                    'installment_id' => $installment_id,
-                                                    'status' => 'CREATED',
-                                                    'payment_at' => $collection_date
-                                                ]);
-
-                                                //increment number of collections
-                                                $number_of_collections += 1;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        //check if installments is not null
-                        if ($arr_installments) {
-                            $batch->request_csv = $csv;
-                            $batch->collectionDate = $batch_collection_date;
-                            $batch->number_of_collections = $number_of_collections;
-                            $batch->installment_ids = implode(",", $arr_installments);
-                            $batch->save();
-
-                            //increment success
-                            $success += 1;
-                        } else {
-                            $batch->delete();
-                        }
-                    }
+                if ($batch) {
+                    $success += 1;
                 }
             }
         }
 
-        //send Notification of batch creation
+        //Messaging Module
         if ($success > 0) {
-            // create messages
-            $message = "Collection batches created. Review and approve batches to the next stage.";
+            $message = "Collection batch" . ($success > 1 ? 'es' : '') . " created. Review and approve to the next stage.";
             $arr_phone = [255717705746, 255656314330];
 
+            $messageId = $this->messagingService->generateMessageId(); //messageId
+
             foreach ($arr_phone as $phone) {
-                //send sms
-                $data = ["phone" => $phone, "message" => $message];
-                dispatch(new SendSMSJob($data));
+                $sms_log = SmsLog::firstOrNew([
+                    'message_id' => $messageId,
+                    'phone' => $this->messagingService->castPhone($phone),
+                ]);
+                $sms_log->message = $message;
+                $sms_log->uuid = Str::uuid();
+                $sms_log->number_of_sms = $this->messagingService->countNumberOfSms($message);
+                $sms_log->status = 'PENDING';
+                $sms_log->created_by = 1;
+                $sms_log->save();
             }
+
+            $response = $this->messagingService->actionSendSMS($messageId);
         }
 
         // Log the collection batches
-        Log::debug("== {$current_date} collection batches created ==");
-        return 200;
+        $this->info("== {$success} collection batches created on {$current_date} ==");
+        return self::SUCCESS;
+    }
+
+    private function collectionDate(): ?string
+    {
+        $value = $this->option('date');
+
+        if (!$value) {
+            return now()->toDateString();
+        }
+
+        try {
+            $date = Carbon::createFromFormat('!Y-m-d', (string) $value);
+        } catch (\Throwable) {
+            $date = null;
+        }
+
+        if (!$date || $date->toDateString() !== $value) {
+            $this->components->error('The --date option must use the YYYY-MM-DD format.');
+
+            return null;
+        }
+
+        return $date->toDateString();
     }
 }

@@ -2,302 +2,376 @@
 
 namespace App\Http\Controllers\Api\ExternalApp;
 
+use App\Http\Controllers\Api\ExternalApp\Concerns\RespondsWithApi;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\ExternalApp\CreatePaymentMandateRequest;
 use App\Http\Resources\MandateResource;
-use App\Models\Customer;
-use App\Models\CustomerAccount;
 use Illuminate\Http\Request;
-use App\Models\CustomerPartner;
 use App\Models\DebitOrder;
-use App\Models\OtpRequest;
-use App\Services\BankApiService;
-use App\Services\BankPayloadService;
 use App\Services\DeductionService;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\Validator;
+use App\Services\PaymentMandatePartyService;
+use App\Services\PaymentMandateQueryService;
+use App\Services\PaymentMandateWorkflowService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Log;
-use App\Jobs\MandateRegistrationJob;
-use App\Jobs\CRDBMandateRegistrationJob;
+use Carbon\Carbon;
 use App\Models\Account;
-use App\Models\Partner;
+use App\Models\Installment;
 use App\Models\PartnerAccount;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\MandateActionService;
+use Illuminate\Http\JsonResponse;
 
+use Dedoc\Scramble\Attributes\Group;
+use Dedoc\Scramble\Attributes\Endpoint;
+use Dedoc\Scramble\Attributes\QueryParameter;
+use Dedoc\Scramble\Attributes\PathParameter;
+use Dedoc\Scramble\Attributes\BodyParameter;
+use Dedoc\Scramble\Attributes\Response;
+
+#[Group('Payment Mandates', description: 'APIs for creating, verifying, querying, and cancelling payment mandates.', weight: 2)]
 class PaymentMandateController extends Controller
 {
-    public function __construct(protected DeductionService $deductionService, protected BankPayloadService $payloadService, protected BankApiService $bankApi) {}
+    use RespondsWithApi;
 
-    //Filter Mandates
-    protected function all(Request $request)
+    public function __construct(
+        protected MandateActionService $mandateActionService,
+        protected DeductionService $deductionService,
+        protected PaymentMandateQueryService $paymentMandateQueryService,
+        protected PaymentMandateWorkflowService $paymentMandateWorkflowService,
+        protected PaymentMandatePartyService $paymentMandatePartyService
+    ) {}
+
+    // #[Endpoint(
+    //     operationId: 'paymentMandateSummaries',
+    //     title: 'Get mandate summaries',
+    //     description: 'Returns mandate approval stats, mandate values, month collection, and today collection.'
+    // )]
+    // #[QueryParameter('channel', description: 'Optional payment channel filter.', type: 'string', example: 'NMB')]
+    // #[Response(200, 'Mandate summary fetched successfully.', type: 'array{
+    // success: bool,
+    // message: string,
+    // data: array{
+    //     number_of_pending_mandate: int,
+    //     number_of_approved_mandate: int,
+    //     number_of_failed_mandate: int,
+    //     total_number_of_mandate: int,
+    //     pending_mandate_value: float,
+    //     approved_mandate_value: float,
+    //     failed_mandate_value: float,
+    //     total_mandate_value: float,
+    //     month: string,
+    //     this_month_expected: float,
+    //     this_month_paid: float,
+    //     today_expected: float,
+    //     today_paid: float
+    // }}')]
+    // public function summaries(Request $request): JsonResponse
+    // {
+    //     $approvedStatuses = [0, 1, 2]; // status
+
+    //     //current year and month
+    //     $current_year = date('Y');
+    //     $current_month = date('m');
+    //     $channel = $request->channel;
+
+    //     //query
+    //     $debit_orders = DebitOrder::mandateApprovalStats($channel);
+
+    //     // Map over all approved statuses to ensure complete results
+    //     $mandates = collect($approvedStatuses)->map(function ($status) use ($debit_orders) {
+    //         $order = $debit_orders->firstWhere('approved', $status);
+    //         return [
+    //             'approved' => $status,
+    //             'number_of_mandate' => $order ? $order->number_of_mandate : 0,
+    //             'total_amount' => $order ? $order->total_amount : 0,
+    //         ];
+    //     });
+
+    //     //total number of mandates
+    //     $total_number_of_mandate = $mandates[0]['number_of_mandate'] + $mandates[1]['number_of_mandate'] + $mandates[2]['number_of_mandate'];
+
+    //     //summation of mandate values
+    //     $total_mandate_value = $mandates[0]['total_amount'] + $mandates[1]['total_amount'] + $mandates[2]['total_amount'];
+
+    //     // This Month’s Collection
+    //     $this_month = Installment::thisMonthStats($current_month, $current_year, $channel);
+
+    //     // Today’s Collection
+    //     $today = Installment::todayStats(now()->toDateString(), $channel);
+
+    //     //stats
+    //     $stats  = [
+    //         //number of mandates
+    //         'number_of_pending_mandate' =>  $mandates[0]['number_of_mandate'],
+    //         'number_of_approved_mandate' =>  $mandates[1]['number_of_mandate'],
+    //         'number_of_failed_mandate' =>  $mandates[2]['number_of_mandate'],
+    //         'total_number_of_mandate' => $total_number_of_mandate,
+
+    //         //mandates values
+    //         'pending_mandate_value' => $mandates[0]['total_amount'],
+    //         'approved_mandate_value' => $mandates[1]['total_amount'],
+    //         'failed_mandate_value' => $mandates[2]['total_amount'],
+    //         'total_mandate_value' => $total_mandate_value,
+
+    //         //this month and today collection
+    //         'month' => date('F'),
+    //         'this_month_expected' => $this_month->total_amount,
+    //         'this_month_paid' => $this_month->paid_amount,
+    //         'today_expected' => $today->total_amount,
+    //         'today_paid' => $today->paid_amount
+    //     ];
+
+    //     //response
+    //     return $this->successResponse('Mandate summary fetched successfully.', $stats);
+    // }
+
+    #[Endpoint(
+        operationId: 'listPaymentMandates',
+        title: 'All mandates',
+        description: 'Returns all mandates.'
+    )]
+    #[QueryParameter('start_at', description: 'Optional start date filter for mandate creation date.', type: 'string', format: 'date', example: '2026-06-01')]
+    #[QueryParameter('end_at', description: 'Optional end date filter for mandate creation date.', type: 'string', format: 'date', example: '2026-06-30')]
+    #[QueryParameter('payment_channel', description: 'Optional payment channel slug filter, for example NMB or CRDB.', type: 'string', example: 'NMB')]
+    #[QueryParameter('corporate_reference', description: 'Optional corporate reference filter. Use this when your user is linked to more than one partner.', type: 'string', example: 'CO0001')]
+    #[QueryParameter('lifecycle_status', description: 'Optional mandate lifecycle status filter.', type: 'string', example: 'ACTIVE')]
+    #[QueryParameter('keyword', description: 'Optional search term for mandate reference, account name, or account number.', type: 'string', example: 'DO0000123')]
+    #[Response(200, 'Mandates fetched successfully.', type: 'array{
+    success: bool,
+    message: string,
+    data: array{
+        mandates: array<array{
+            payment_channel: string|null,
+            reference: string,
+            periodicity: string|null,
+            debit_type: string|null,
+            installment_amount: float|null,
+            min_installment_amount: float|null,
+            max_installment_amount: float|null,
+            total_amount: float|null,
+            paid_amount: float|null,
+            outstanding_amount: float|null,
+            number_of_installment: int|null,
+            start_date: string|null,
+            end_date: string|null,
+            lifecycle_status: string|null,
+            contract_status: string|null,
+            remarks: string|null
+        }>
+    }}')]
+    public function all(Request $request): JsonResponse
     {
-        //all request
-        $requests = $request->all();
-
-        //debit orders
-        $debit_orders = DebitOrder::filterCondition();
-
-        $debit_orders = $debit_orders->when($requests, function ($query) use ($requests) {
-            $query->withFilters($requests);
-        });
-
-        //debit orders
-        $debit_orders = $debit_orders->orderBy('debit_orders.created_at', 'DESC')->get();
+        $debit_orders = $this->paymentMandateQueryService
+            ->listQuery($request->all(), Auth::user())
+            ->orderBy('debit_orders.created_at', 'DESC')
+            ->get();
 
         //response
-        return response()->json([
-            'success' => true,
-            'response_code' => 200,
-            'mandates' => MandateResource::collection($debit_orders)
+        return $this->successResponse('Mandates fetched successfully.', [
+            'mandates' => MandateResource::collection($debit_orders),
         ]);
     }
 
-    //get mandate by reference
-    protected function getMandate(Request $request)
+    #[Endpoint(
+        operationId: 'getPaymentMandate',
+        title: 'Get mandate',
+        description: 'Returns mandate by reference.'
+    )]
+    #[PathParameter('reference', description: 'Mandate reference number.', type: 'string', required: true, example: 'DO0000123')]
+    #[Response(200, 'Mandate fetched successfully.', type: 'array{
+    success: bool,
+    message: string,
+    data: array{
+        mandate: array{
+            payment_channel: string|null,
+            reference: string,
+            periodicity: string|null,
+            debit_type: string|null,
+            installment_amount: float|null,
+            min_installment_amount: float|null,
+            max_installment_amount: float|null,
+            total_amount: float|null,
+            paid_amount: float|null,
+            outstanding_amount: float|null,
+            number_of_installment: int|null,
+            start_date: string|null,
+            end_date: string|null,
+            lifecycle_status: string|null,
+            contract_status: string|null,
+            remarks: string|null
+        }
+    }}')]
+    #[Response(404, 'Mandate not found.')]
+    public function getMandate(Request $request): JsonResponse
     {
-        // debit order
-        $debit_order = DebitOrder::where(['reference' => $request->reference])->first();
+        $debit_order = $this->findMandateByReference($request->reference);
 
         if (!$debit_order) {
-            return response()->json([
-                'success' => false,
-                'response_code' => 404,
-                'message' => "Mandate not found",
-            ]);
+            return $this->errorResponse('Mandate not found.', null, 404);
         }
 
-        //response
-        return response()->json([
-            'success' => true,
-            'response_code' => 200,
+        return $this->successResponse('Mandate fetched successfully.', [
             'mandate' => new MandateResource($debit_order),
         ]);
     }
 
-    //create payment mandate
-    protected function create(Request $request)
+    #[Endpoint(
+        operationId: 'listMandatePaymentChannels',
+        title: 'Active payment channels',
+        description: 'Lists of active payment channels. Use slug as payment_channel when creating a mandate.'
+    )]
+    #[Response(200, 'Payment channels fetched successfully.', type: 'array{
+    success: bool,
+    message: string,
+    data: array{
+        payment_channels: array<array{
+            id: int,
+            name: string,
+            slug: string,
+        }>
+    }}')]
+    public function getPaymentChannels(): JsonResponse
     {
-        //post data
+        $accounts = Account::whereIn('account_type_id', [1, 2])
+            ->where('active', 1)
+            ->get();
+
+        $payment_channels = $accounts->map(function ($account) {
+            return [
+                'id' => $account->id,
+                'name' => $account->name,
+                'slug' => $account->slug,
+            ];
+        });
+
+        return $this->successResponse('Payment channels fetched successfully.', [
+            'payment_channels' => $payment_channels,
+        ]);
+    }
+
+    #[Endpoint(
+        operationId: 'createPaymentMandate',
+        title: 'Create mandate',
+        description: 'Creates a new payment mandate from the selected payment_channel.'
+    )]
+    #[BodyParameter('payment_channel', description: 'Payment provider slug returned by GET /api/mandate/channels.', type: 'string', required: true, example: 'CRDB')]
+    #[BodyParameter('corporate_reference', description: 'Partner corporate reference. Required only when your user is linked to more than one partner.', type: 'string', example: 'CO0001')]
+    #[BodyParameter('account_name', description: 'Required when the payment_channel is a BANK channel.', type: 'string', example: 'Tony Missokia')]
+    #[BodyParameter('account_number', description: 'Required when the payment_channel is a BANK channel.', type: 'string', example: '015123456789')]
+    #[BodyParameter('phone', description: 'Customer phone number. This should be number connected to bank account if payment channel is BANK.', type: 'string', required: true, example: '255712345678')]
+    #[BodyParameter('NIN', description: 'Optional customer identification number.', type: 'string', example: '19900101123456789012')]
+    #[BodyParameter('address', description: 'Optional customer address.', type: 'string', example: 'Dar es Salaam')]
+    #[BodyParameter('total_amount', description: 'Total mandate amount. Minimum 1,000.', type: 'number', required: true, example: 500000)]
+    #[BodyParameter('debit_type', description: 'Mandate debit type. {FIXED, DYNAMIC}', type: 'string', required: true, example: 'FIXED')]
+    #[BodyParameter('installment_amount', description: 'Required when debit_type is FIXED.', type: 'number', example: 50000)]
+    #[BodyParameter('min_installment_amount', description: 'Required when debit_type is DYNAMIC.', type: 'number', example: 10000)]
+    #[BodyParameter('max_installment_amount', description: 'Required when debit_type is DYNAMIC.', type: 'number', example: 100000)]
+    #[BodyParameter('periodicity', description: 'Deduction frequency.', type: 'string', required: true, example: 'MONTHLY')]
+    #[BodyParameter('deduction_start_date', description: 'Start date. Must be today or future date.', type: 'string', format: 'date', required: true, example: '2026-06-10')]
+    #[Response(200, 'Mandate created successfully.', type: 'array{
+    success: bool,
+    message: string,
+    data: array{
+        status: string,
+        lifecycle_status: string,
+        mandate_reference: string,
+        redirect_url: string|null
+    }}')]
+    #[Response(422, 'Validation failed.')]
+    #[Response(403, 'Partner has not linked to payment channel.')]
+    public function create(CreatePaymentMandateRequest $request): JsonResponse
+    {
+        $account = $request->paymentAccount();
+
         $total_amount = floatval(str_replace(',', '', $request->input('total_amount')));
         $installment_amount = floatval(str_replace(',', '', $request->input('installment_amount')));
         $min_installment_amount = floatval(str_replace(',', '', $request->input('min_installment_amount')));
         $max_installment_amount = floatval(str_replace(',', '', $request->input('max_installment_amount')));
 
-        //validation
-        $validator = Validator::make($request->all(), [
-            'channel' => 'required', //BANK or MNO
-            'payment_channel' => 'required', //NMB, CRDB, VODACOM, TIGO
-            'corporate_reference' => 'required',
-            'account_name' => 'required_if:debit_type,==,BANK',
-            'account_number' => 'required_if:debit_type,==,BANK',
-            'phone' => 'required',
-            'NIN' => 'required',
-            'address' => 'required',
-            'total_amount' => [
-                'required',
-                function ($attribute, $value, $fail) use ($total_amount) {
-                    if ($total_amount < 1000) {
-                        return $fail('Total amount should be greater than or equal to 1,000');
-                    }
-                }
-            ],
-            'debit_type' => 'required', //FIXED or DYNAMIC
-            'installment_amount' => [
-                'required_if:debit_type,==,FIXED',
-                function ($attribute, $value, $fail) use ($installment_amount) {
-                    if ($installment_amount < 1000) {
-                        return $fail('Installment amount should be greater than or equal to 1,000');
-                    }
-                }
-            ],
-            'min_installment_amount' => 'required_if:debit_type,==,DYNAMIC',
-            'max_installment_amount' => [
-                'required_if:debit_type,==,DYNAMIC',
-                function ($attribute, $value, $fail) use ($min_installment_amount, $max_installment_amount) {
-                    if ($min_installment_amount > $max_installment_amount) {
-                        return $fail('Maximum installment amount should not be less than minimum deduction amount');
-                    }
-                }
-            ],
-            'periodicity' => 'required', //MONTHLY, WEEKLY, DAILY, YEARLY
-            'deduction_start_date' => 'required|date|after_or_equal:today'
-        ]);
+        $account_type_id = (int) $account->account_type_id;
+        $account_id = $account->id;
 
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'response_code' => 422,
-                'error_msg' => $validator->errors()
-            ], 422);
-        }
+        $partner = $request->partner();
 
-        //Create or Update mandate
-        //1.1: Detect account_type id
-        $account_type_id = ($request->channel == "BANK") ? 1 : 2;
-
-        //1.2: Detect account_id
-        $account_id = $this->getAccountId($account_type_id, $request->payment_channel);
-
-        //1.3: Format uuid and unique phone
-        $customer_account_uuid = Str::uuid();
-        $unique_phone =  casting_phone($request->phone);
-
-        //1.4: TODO: Validate phone number to MNO for matching details
-
-        //1.5: get Bank code if account_type_id = 1
-        $bank_code = null;
-        if ($request->channel == "BANK")
-            $bank_code = substr($request->account_number, 0, 3);
-
-        //1.6: Create or Update Customer
-        $customer = Customer::firstOrNew(['phone' => $unique_phone]);
-        $customer->fullname = strtoupper($request->account_name);
-        $customer->email = $request->email;
-        $customer->id_number = $request->NIN;
-        $customer->address = $request->address;
-        $customer->created_by = Auth::user()->id;
-        $customer->updated_by = Auth::user()->id;
-        $customer->save();
-
-        //1.7: Create or Update Customer Account
-        $customer_account = CustomerAccount::firstOrNew([
-            'account_type_id' => $account_type_id,
-            'account_id' => $account_id,
-            'phone' => $unique_phone
-        ]);
-        $customer_account->uuid = $customer_account_uuid;
-        $customer_account->secondary_phone = $request->secondary_phone;
-        $customer_account->account_name = $request->account_name;
-        $customer_account->account_number = $request->account_number;
-        $customer_account->bank_code = $bank_code;
-        $customer_account->customer_id = $customer->id;
-        $customer_account->created_by = Auth::user()->id;
-        $customer_account->updated_by = Auth::user()->id;
-        $customer_account->save();
-
-        //1.8.1: generate otp
-        $otp_code = rand(10000, 99999);
-
-        //1.8.2: Get Partner by corporate reference
-        $partner  = Partner::where('reference', $request->corporate_reference)->first();
-
-        if (!$partner) {
-            return response()->json([
-                'success' => false,
-                'response_code' => 404,
-                'error_msg' => "Partner not found"
-            ]);
-        }
-
-        //partnerID
         $partner_id = $partner->id;
 
-        //1.8.4: Check if if partner has a payment channel
         if ($this->checkIfPartnerHasPaymentChannel($partner_id, $account_id) == false) {
-            return response()->json([
-                'success' => false,
-                'partner' => $partner_id,
-                'account_id' => $account_id,
-                'response_code' => 403,
-                'error_msg' => "Partner has not linked to any payment channel, Contact eMakato Support Team."
-            ]);
-        }
-
-        //1.9: Create Debit Order
-        $debit_order = new DebitOrder();
-        $debit_order->uuid = Str::uuid();
-        $debit_order->partner_id = $partner_id;
-        $debit_order->reference = Carbon::now()->format('dmY') . $this->deductionService->getMandateReference();
-        $debit_order->customer_account_id = $customer_account->id;
-        $debit_order->channel = $customer_account->account->slug;
-        $debit_order->total_amount = $total_amount;
-        $debit_order->outstanding_amount = $total_amount;
-        $debit_order->debit_type = $request->debit_type;
-        $debit_order->installment_amount = $installment_amount;
-        $debit_order->min_installment_amount = $min_installment_amount;
-        $debit_order->max_installment_amount = $max_installment_amount;
-        $debit_order->periodicity = $request->periodicity;
-        $debit_order->installment_number = $this->deductionService->calculateNumberOfInstallments($request->debit_type, $total_amount, $installment_amount, $max_installment_amount);
-        $debit_order->start_date = Carbon::parse($request->deduction_start_date)->format('Y-m-d');
-        $debit_order->next_debit_date = Carbon::parse($request->deduction_start_date)->format('Y-m-d');
-        $debit_order->deduction_end_date = "totalLoanCovered";
-        $debit_order->otp_code = $otp_code;
-        $debit_order->approved = 0;
-        $debit_order->created_by = Auth::user()->id;
-        $debit_order->save();
-
-        if ($debit_order) {
-            // add debit end date
-            $debit_order->end_date = $this->deductionService->calculateEndDate($debit_order);
-            $debit_order->save();
-
-            // Link customer with service provider
-            $customer_partner = CustomerPartner::firstOrNew(
+            return $this->errorResponse(
+                'Partner has not linked to any payment channel, contact eMakato support team.',
+                null,
+                403,
                 [
-                    'customer_id' => $customer_account->customer->id,
-                    'partner_id' => $partner_id
+                    'partner_id' => $partner_id,
+                    'account_id' => $account_id,
                 ]
             );
-            $customer_partner->created_by = Auth::user()->id; //get logged in user
-            $customer_partner->save();
-
-            //create evidence of aggrement
-            $filename = $this->createEvidence($debit_order);
-            $debit_order->aggrement_evidence = $filename;
-            $debit_order->status = 100;
-            $debit_order->save();
-
-            //2: Mandate registration => NMB or CRDB
-            //2.1: check if account is NMB/CRDB/EcoBank/NBC
-            if ($request->payment_channel == "NMB") {
-                //create payload
-                $payload = $this->payloadService->mandateRegistrationPayload($debit_order);
-
-                //arr response
-                $arr_response = $this->bankApi->mandateRegistrationRequest($payload);
-
-                if ($arr_response) {
-                    $response_code = $arr_response[0];
-                    if ($response_code == 200 || $response_code == 201) {
-                        //return success message
-                        return response()->json([
-                            'success' => true,
-                            'response_code' => 201,
-                            'success_msg' => "Mandate created successfully.",
-                            'data' => [
-                                'status' => 'success',
-                                'mandateReference' => $debit_order->reference,
-                            ]
-                        ]);
-                    } else {
-                        // error response
-                        return response()->json([
-                            'success' => false,
-                            'response_code' => 500,
-                            'error_msg' => $arr_response[1]
-                        ]);
-                    }
-                } else {
-                    // error response
-                    return response()->json([
-                        'success' => false,
-                        'response_code' => 500,
-                        'error_msg' => "API system error, contact eMakato support team."
-                    ]);
-                }
-            }
-        } else {
-            return response()->json([
-                'success' => false,
-                'response_code' => 400,
-                'error_msg' => "Failed to create mandate, review your request and submit again."
-            ]);
         }
+
+        $customerAccount = $this->paymentMandatePartyService->upsertCustomerAccount([
+            'account_type_id' => $account_type_id,
+            'account_id' => $account_id,
+            'phone' => $request->phone,
+            'secondary_phone' => $request->secondary_phone,
+            'account_name' => $request->account_name,
+            'account_number' => $request->account_number,
+            'email' => $request->email,
+            'id_number' => $request->NIN,
+            'address' => $request->input('address', 'Dar es Salaam'),
+        ], Auth::id(), (string) Str::uuid());
+
+        $installmentNumber = $this->deductionService->calculateNumberOfInstallments(
+            $request->debit_type,
+            $total_amount,
+            $installment_amount,
+            $max_installment_amount
+        );
+
+        $debitOrder = $this->paymentMandateWorkflowService->createDraft([
+            'partner_id' => $partner_id,
+            'customer_account_uuid' => $customerAccount->uuid,
+            'loan_amount' => $total_amount,
+            'debit_type' => $request->debit_type,
+            'installment_amount' => $installment_amount,
+            'min_installment_amount' => $min_installment_amount,
+            'max_installment_amount' => $max_installment_amount,
+            'periodicity' => $request->periodicity,
+            'number_of_installment' => $installmentNumber,
+            'start_date' => Carbon::parse($request->deduction_start_date)->format('Y-m-d'),
+        ], Auth::id());
+
+        if (!$debitOrder) {
+            return $this->errorResponse('Failed to create mandate, review your request and submit again.', null, 400);
+        }
+
+        $response = $this->paymentMandateWorkflowService->submit($debitOrder->uuid);
+
+        if ($response['success'] === true) {
+            return $this->successResponse(
+                $response['success_msg'] ?: 'Mandate created successfully.',
+                [
+                    'status' => 'success',
+                    'lifecycle_status' => $response['lifecycle_status'],
+                    'mandate_reference' => $debitOrder->reference,
+                ],
+                (int) $response['response_code']
+            );
+        }
+
+        return $this->errorResponse($response['success_msg'] ?? 'Unable to create mandate.', null, 500);
     }
 
-    //OTP Verification
-    protected function verifyOtp(Request $request)
+    #[Endpoint(
+        operationId: 'verifyMandateOtp',
+        title: 'Verify mandate OTP',
+        description: 'Verify OTP for a payment mandate using mandate reference.'
+    )]
+    #[BodyParameter('reference', description: 'Mandate reference number.', type: 'string', required: true, example: 'DO0000123')]
+    #[BodyParameter('otpPin', description: 'OTP received by customer.', type: 'string', required: true, example: '123456')]
+    #[Response(200, 'OTP verified successfully.')]
+    #[Response(422, 'Validation failed.')]
+    #[Response(404, 'Mandate not found.')]
+    public function verifyOtp(Request $request)
     {
         //validation
         $validator = Validator::make($request->all(), [
@@ -306,85 +380,51 @@ class PaymentMandateController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'response_code' => 422,
-                'error_msg' => $validator->errors()
-            ], 422);
+            return $this->errorResponse('Validation failed.', $validator->errors(), 422);
         }
 
-        // debit order
-        $debit_order = DebitOrder::where(['reference' => $request->reference])->first();
+        $debit_order = $this->findMandateByReference($request->reference);
 
         if (!$debit_order) {
-            return response()->json([
-                'success' => false,
-                'response_code' => 404,
-                'error_msg' => "Mandate not found",
+            return $this->errorResponse('Mandate not found.', null, 404);
+        }
+
+        $result = $this->paymentMandateWorkflowService->verifyOtp($debit_order->uuid, $request->otpPin, Auth::id());
+        $success = $result['success'];
+        $status = $success ? 'success' : 'failed';
+        $response_code = $result['response_code'];
+        $remarks = $result['success_msg'];
+
+        //response
+        if (!$success) {
+            return $this->errorResponse($remarks ?: 'OTP verification failed.', null, (int) $response_code, [
+                'status' => $status,
+                'mandate_reference' => $debit_order->reference,
             ]);
         }
 
-        //otp reference
-        $otpReference = $debit_order->reference;
-
-        //create otp request
-        $otp_request = new OtpRequest();
-        $otp_request->reference = $otpReference;
-        $otp_request->account_number = $debit_order->customerAccount->account_number;
-        $otp_request->action = 'verify';
-        $otp_request->created_by = Auth::user()->id;
-        $otp_request->save();
-
-        //declare channel and remarks
-        $success = true;
-        $status = 'success';
-        $response_code = 200;
-        $remarks = "";
-
-        //check if account is NMB/CRDB/EcoBank/NBC
-        if ($debit_order->channel == "NMB") {
-            //create payload
-            $payload = $this->payloadService->verifyOtpPayload($otp_request, $request->otpPin);
-
-            //api service
-            $arr_response = $this->bankApi->verifyOtpRequest($payload, $otpReference);
-
-            if ($arr_response) {
-                $response_code = $arr_response[0];
-                $remarks = $arr_response[1];
-
-                if ($response_code == 202) {
-                    //update response code
-                    $response_code = 202;
-                } else {
-                    $success = false;
-                    $status = 'failed';
-                    $response_code = 500;
-                }
-            } else {
-                $success = false;
-                $status = 'failed';
-                $remarks = "API system error, contact eMakato support team.";
-                $response_code = 500;
-            }
-        }
-
-        //response
-        return response()->json(
-            [
-                'success' => $success,
-                "response_code" => $response_code,
-                "message" => $remarks,
-                'data' => [
-                    'status' => $status,
-                    'mandateReference' => $debit_order->reference,
-                ]
-            ]
-        );
+        return $this->successResponse($remarks ?: 'OTP verified successfully.', [
+            'status' => $status,
+            'mandate_reference' => $debit_order->reference,
+        ], (int) $response_code);
     }
 
-    //create OTP
-    protected function createOtp(Request $request)
+    #[Endpoint(
+        operationId: 'createMandateOtp',
+        title: 'Create mandate OTP',
+        description: 'Requests or resends OTP for a mandate using mandate reference.'
+    )]
+    #[BodyParameter('reference', description: 'Mandate reference number.', type: 'string', required: true, example: 'DO0000123')]
+    #[Response(200, 'OTP created successfully.', type: 'array{
+    success: bool,
+    message: string,
+    data: array{
+        status: string,
+        mandate_reference: string
+    }}')]
+    #[Response(422, 'Validation failed.')]
+    #[Response(404, 'Mandate not found.')]
+    public function createOtp(Request $request): JsonResponse
     {
         //validation
         $validator = Validator::make($request->all(), [
@@ -392,84 +432,52 @@ class PaymentMandateController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'response_code' => 422,
-                'error_msg' => $validator->errors()
-            ], 422);
+            return $this->errorResponse('Validation failed.', $validator->errors(), 422);
         }
 
-        // debit order
-        $debit_order = DebitOrder::where(['reference' => $request->reference])->first();
+        $debit_order = $this->findMandateByReference($request->reference);
 
         if (!$debit_order) {
-            return response()->json([
-                'success' => false,
-                'response_code' => 404,
-                'error_msg' => "Mandate not found",
+            return $this->errorResponse('Mandate not found.', null, 404);
+        }
+
+        $result = $this->paymentMandateWorkflowService->resendOtp($debit_order->uuid, Auth::id());
+        $success = $result['success'];
+        $status = $success ? 'success' : 'failed';
+        $response_code = $result['response_code'];
+        $remarks = $result['success_msg'];
+
+        //response
+        if (!$success) {
+            return $this->errorResponse($remarks ?: 'OTP request failed.', null, (int) $response_code, [
+                'status' => $status,
+                'mandate_reference' => $debit_order->reference,
             ]);
         }
 
-        //create otp request
-        $otp_request = new OtpRequest();
-        $otp_request->reference = $debit_order->reference;
-        $otp_request->account_name = $debit_order->customerAccount->account_name;
-        $otp_request->account_number = $debit_order->customerAccount->account_number;
-        $otp_request->action = 'create';
-        $otp_request->created_by = Auth::user()->id;
-        $otp_request->save();
-
-        //declare channel and remarks
-        $success = true;
-        $status = 'success';
-        $response_code = 200;
-        $remarks = "";
-
-        //check if account is NMB/CRDB/EcoBank/NBC
-        if ($debit_order->channel == "NMB") {
-            //create payload
-            $payload = $this->payloadService->createOtpPayload($otp_request);
-
-            //api service
-            $arr_response = $this->bankApi->createOtpRequest($payload);
-
-            if ($arr_response) {
-                $response_code = $arr_response[0];
-                $remarks = $arr_response[1];
-
-                if ($response_code == 201) {
-                    //update response code
-                    $response_code = 201;
-                } else {
-                    $success = false;
-                    $status = 'failed';
-                    $response_code = 500;
-                }
-            } else {
-                $success = false;
-                $status = 'failed';
-                $remarks = "API system error, contact eMakato support team.";
-                $response_code = 500;
-            }
-        }
-
-        //response
-        return response()->json(
-            [
-                'success' => $success,
-                "response_code" => $response_code,
-                "message" => $remarks,
-                'data' => [
-                    'status' => $status,
-                    'mandateReference' => $debit_order->reference,
-                ]
-            ],
-            200
-        );
+        return $this->successResponse($remarks ?: 'OTP created successfully.', [
+            'status' => $status,
+            'mandate_reference' => $debit_order->reference,
+        ], (int) $response_code);
     }
 
-    //query mandate status
-    protected function fetchStatus(Request $request)
+    #[Endpoint(
+        operationId: 'fetchMandateStatus',
+        title: 'Fetch mandate status',
+        description: 'Fetches the latest mandate status from the payment channel.'
+    )]
+    #[BodyParameter('reference', description: 'Mandate reference number.', type: 'string', required: true, example: 'DO0000123')]
+    #[Response(200, 'Mandate status fetched successfully.', type: 'array{
+    success: bool,
+    message: string,
+    data: array{
+        status: string,
+        lifecycle_status: string,
+        mandate_reference: string
+    }}')]
+    #[Response(422, 'Validation failed.')]
+    #[Response(404, 'Mandate not found.')]
+    public function fetchStatus(Request $request): JsonResponse
     {
         //validation
         $validator = Validator::make($request->all(), [
@@ -477,77 +485,62 @@ class PaymentMandateController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'response_code' => 422,
-                'error_msg' => $validator->errors()
-            ], 422);
+            return $this->errorResponse('Validation failed.', $validator->errors(), 422);
         }
 
-        // debit order
-        $debit_order = DebitOrder::where(['reference' => $request->reference])->first();
+        $debit_order = $this->findMandateByReference($request->reference);
 
         if (!$debit_order) {
-            return response()->json([
-                'success' => false,
-                'response_code' => 404,
-                'error_msg' => "Mandate not found",
+            return $this->errorResponse('Mandate not found.', null, 404);
+        }
+
+        $result = $this->paymentMandateWorkflowService->fetchStatus($debit_order->uuid);
+        $success = $result['success'];
+        $status = $success ? 'success' : 'failed';
+        $response_code = $result['response_code'];
+        $remarks = $result['success_msg'];
+
+        // Always use shared status mapping for both NMB and non-NMB channels.
+        $debit_order->refresh();
+        $mandate_status_badge = mandate_status_badge($debit_order);
+        $mandate_status_text = $mandate_status_badge ? trim(strip_tags($mandate_status_badge)) : 'Unknown Status';
+        $remarks = $debit_order->remarks;
+
+        //response
+        if (!$success) {
+            return $this->errorResponse($remarks ?: 'Mandate status fetch failed.', null, (int) $response_code, [
+                'status' => $status,
+                'lifecycle_status' => $mandate_status_text,
+                'mandate_reference' => $debit_order->reference,
             ]);
         }
 
-        //declare channel and remarks
-        $success = true;
-        $status = 'success';
-        $response_code = 200;
-        $remarks = "";
-
-        //check if account is NMB/CRDB/EcoBank/NBC
-        if ($debit_order->channel == "NMB") {
-            //create payload
-            $payload = $this->payloadService->mandateStatusPayload($debit_order);
-
-            //api service
-            $arr_response = $this->bankApi->mandateStatusRequest($payload);
-
-            if ($arr_response) {
-                $response_code = $arr_response[0];
-                $remarks = $arr_response[1];
-
-                // Create debit order installments IF response code = 240
-                if ($response_code == 240) {
-                    $this->deductionService->createInstallment($debit_order);
-
-                    //update response code
-                    $response_code = 202;
-                } else {
-                    $success = false;
-                    $response_code = 500;
-                    $status = 'failed';
-                }
-            } else {
-                $success = false;
-                $status = 'failed';
-                $remarks = "API system error, contact eMakato support team.";
-                $response_code = 500;
-            }
-        }
-
-        //response
-        return response()->json(
-            [
-                'success' => $success,
-                "response_code" => $response_code,
-                "message" => $remarks,
-                'data' => [
-                    'status' => $status,
-                    'mandateReference' => $debit_order->reference,
-                ]
-            ]
-        );
+        return $this->successResponse($remarks ?: 'Mandate status fetched successfully.', [
+            'status' => $status,
+            'mandate_status' => $mandate_status_text,
+            'mandate_reference' => $debit_order->reference,
+        ], (int) $response_code);
     }
 
-    //mandate cancellation
-    protected function cancellation(Request $request)
+    #[Endpoint(
+        operationId: 'cancelPaymentMandate',
+        title: 'Cancel mandate',
+        description: 'Initiates cancellation for a mandate using mandate reference and cancellation reason.'
+    )]
+    #[BodyParameter('reference', description: 'Mandate reference number.', type: 'string', required: true, example: 'DO0000123')]
+    #[BodyParameter('reasons', description: 'Reason for cancelling the mandate.', type: 'string', required: true, example: 'Customer requested cancellation')]
+    #[Response(201, 'Mandate cancelled successfully.', type: 'array{
+    success: bool,
+    message: string,
+    data: array{
+        status: string,
+        lifecycle_status: string,
+        provider_response_code: int|null,
+        mandate_reference: string
+    }}')]
+    #[Response(422, 'Validation failed.')]
+    #[Response(404, 'Mandate not found.')]
+    public function cancellation(Request $request): JsonResponse
     {
         //validation
         $validator = Validator::make($request->all(), [
@@ -556,91 +549,33 @@ class PaymentMandateController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'response_code' => 422,
-                'error_msg' => $validator->errors()
-            ], 422);
+            return $this->errorResponse('Validation failed.', $validator->errors(), 422);
         }
 
-        // debit order
-        $debit_order = DebitOrder::where(['reference' => $request->reference])->first();
+        $debit_order = $this->findMandateByReference($request->reference);
 
         if (!$debit_order) {
-            return response()->json([
-                'success' => false,
-                'response_code' => 404,
-                'error_msg' => "Mandate not found",
+            return $this->errorResponse('Mandate not found.', null, 404);
+        }
+
+        $result = $this->paymentMandateWorkflowService->cancel($debit_order, Auth::id(), $request->reasons);
+        $status = $result['success'] ? 'success' : 'failed';
+
+        if (!$result['success']) {
+            return $this->errorResponse($result['success_msg'] ?: 'Mandate cancellation failed.', null, (int) $result['response_code'], [
+                'status' => $status,
+                'lifecycle_status' => $result['lifecycle_status'],
+                'provider_response_code' => $result['provider_response_code'],
+                'mandate_reference' => $debit_order->reference,
             ]);
         }
 
-        //save cancellation information
-        $debit_order->cancellation_reason = $request->reasons;
-        $debit_order->cancellationStartedBy = Auth::user()->id;
-        $debit_order->cancellationStartedAt = date('Y-m-d H:i:s');
-        $debit_order->cancellationApprovedBy = Auth::user()->id;
-        $debit_order->cancellationApprovedAt = date('Y-m-d H:i:s');
-        $debit_order->save();
-
-        //declare channel and remarks
-        $success = true;
-        $status = 'success';
-        $response_code = 200;
-        $remarks = "";
-
-        //check if account is NMB/CRDB/EcoBank/NBC
-        if ($debit_order->channel == "NMB") {
-            //create payload
-            $payload = $this->payloadService->mandateCancellationPayload($debit_order);
-
-            //api response
-            $arr_response = $this->bankApi->mandateCancellationRequest($payload);
-
-            if ($arr_response) {
-                $response_code = $arr_response[0];
-                $remarks = $arr_response[1];
-
-                if ($response_code == 201) {
-                    //update response code
-                    $response_code = 201;
-                } else {
-                    $success = false;
-                    $status = 'failed';
-                    $response_code = 500;
-                }
-            } else {
-                $success = false;
-                $status = 'failed';
-                $remarks = "API system error, contact eMakato support team.";
-                $response_code = 500;
-            }
-        }
-
-        //response
-        return response()->json(
-            [
-                'success' => $success,
-                "response_code" => $response_code,
-                "message" => $remarks,
-                'data' => [
-                    'status' => $status,
-                    'mandateReference' => $debit_order->reference,
-                ]
-            ],
-            200
-        );
-    }
-
-    //Get Customer Account Id
-    protected function getAccountId($account_type_id, $payment_channel)
-    {
-        $account = Account::where(['account_type_id' => $account_type_id, 'slug' => $payment_channel])->first();
-
-        if ($account) {
-            return $account->id;
-        } else {
-            return null;
-        }
+        return $this->successResponse($result['success_msg'] ?: 'Mandate cancelled successfully.', [
+            'status' => $status,
+            'lifecycle_status' => $result['lifecycle_status'],
+            'provider_response_code' => $result['provider_response_code'],
+            'mandate_reference' => $debit_order->reference,
+        ], (int) $result['response_code']);
     }
 
     //Check if partner has payment channel
@@ -654,21 +589,11 @@ class PaymentMandateController extends Controller
             return false;
     }
 
-    //Create Evidence of Agreement
-    protected function createEvidence(DebitOrder $debit_order)
+    protected function findMandateByReference(string $reference): ?DebitOrder
     {
-        //Create Evidence of Agreement
-        view()->share('debit_order', $debit_order);
-
-        //PDF Creation
-        $pdf = Pdf::loadView('payment_mandate.pdf.evidence');
-
-        //create filename
-        $filename = "{$debit_order->reference}.pdf";
-
-        $path = 'assets/uploads/pdf/';
-        $pdf->save($path  . $filename);
-
-        return $filename;
+        return $this->paymentMandateQueryService
+            ->baseQuery([], Auth::user())
+            ->where('reference', $reference)
+            ->first();
     }
 }

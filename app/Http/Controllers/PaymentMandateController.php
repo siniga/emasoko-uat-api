@@ -220,7 +220,7 @@ class PaymentMandateController extends Controller
                 'Contract_Status' => $val->contract_status,
                 'Remarks' => $val->remarks,
                 'Created_Date' => $val->created_at,
-                'Created_By' => strtoupper($val->userCreated->name),
+                'Created_By' => $val->userCreated->name ?? '',
             ];
         }
 
@@ -596,9 +596,16 @@ class PaymentMandateController extends Controller
         $response_code = $response['response_code'];
         $remarks = $response['remarks'];
         $channel = $debitOrder->channel;
+        $redirect_url  = $response['redirect_url'] ?? null;
 
         //response
-        return response()->json(['success' => $success, 'channel' => $channel, "response_code" => $response_code, "success_msg" => $remarks], 200);
+        return response()->json([
+            'success' => $success,
+            'channel' => $channel,
+            "response_code" => $response_code,
+            "success_msg" => $remarks,
+            'redirect_url' => $redirect_url
+        ], 200);
     }
 
     //resend otp
@@ -1044,8 +1051,7 @@ class PaymentMandateController extends Controller
                     // Step 4: Update the debit order status
                     $debitOrder = $cancellationRequest->debitOrder;
                     if ($debitOrder) {
-                        $debitOrder->$debitOrder->cancelled = 1; // Mark as cancelled
-                        $debitOrder->deleted = 1; // Mark as deleted
+                        $debitOrder->cancelled = 1; // Mark as cancelled
                         $debitOrder->save();
                     }
 

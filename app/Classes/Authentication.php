@@ -11,12 +11,10 @@ use InvalidArgumentException;
 class Authentication
 {
     private $username;
-    private $passPhrase;
 
     public function __construct()
     {
         $this->username = env("NMB_USERNAME");
-        $this->passPhrase = env("NMB_PASSPHRASE");
     }
 
     public function generateToken()
@@ -50,8 +48,7 @@ class Authentication
         return $jwtToken;
     }
 
-    //to Base64
-    function toBase64($source)
+    public function toBase64($source)
     {
         // Encode in classical base64
         $encoded_source = base64_encode($source);
@@ -66,8 +63,7 @@ class Authentication
         return $encoded_source;
     }
 
-    //base64 url
-    function u8Base64url($source)
+    private function u8Base64url($source)
     {
         $encoded_source = $this->base64_encode_source($source);
 
@@ -81,8 +77,7 @@ class Authentication
         return $encoded_source;
     }
 
-    //generate signature
-    function generateSignature($key, $message)
+    public function generateSignature($key, $message)
     {
         $base64_signature = '';
 
@@ -97,8 +92,7 @@ class Authentication
         return $base64_signature;
     }
 
-    // Assuming $source is a binary string
-    function base64_encode_source($source)
+    private function base64_encode_source($source)
     {
         // Convert the binary string into an array of ASCII values
         $characters = array_map('ord', str_split($source));

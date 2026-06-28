@@ -1,7 +1,11 @@
-@extends('layouts.master')
+@extends(($selfRegistration ?? false) ? 'layouts.self-registration' : 'layouts.master')
 
 @section('title')
     Register Service Provider
+@endsection
+
+@section('css')
+    <link href="{{ URL::asset('/assets/css/companies-create.css') }}" rel="stylesheet" type="text/css" />
 @endsection
 
 @section('content')
@@ -10,6 +14,7 @@
             <div class="page-title-box d-sm-flex align-items-center justify-content-between">
                 <h4 class="mb-sm-0 font-size-18">Register Service Provider</h4>
 
+                @unless($selfRegistration ?? false)
                 <div class="page-title-right">
                     <ol class="breadcrumb m-0">
                         <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
@@ -17,63 +22,32 @@
                         <li class="breadcrumb-item active">Register New</li>
                     </ol>
                 </div>
+                @endunless
 
             </div>
         </div>
     </div>
 
+    @include('companies.create.partials.hero', [
+        'currentStep' => 4,
+        'heading' => 'Capture the authorized representative',
+        'subtitle' => 'Add the representative details that will be used for approvals, operational follow-up, and formal communication.',
+        'company' => $company,
+    ])
+
     <div class="row">
         <div class="col-lg-12">
-            <div class="card">
-                <div class="card-body">
-                    <!--./form wizard -->
-                    <div class="stepwizard mb-4">
-                        <div class="stepwizard-row setup-panel">
-                            <div class="stepwizard-step bg-success">
-                                <a href="#step-1" type="button" class="btn btn-success btn-circle text-white">1</a>
-                                <span class="text-white">Company Information</span>
-                            </div>
-
-                            <div class="stepwizard-step bg-success">
-                                <a href="#step-2" type="button" class="btn btn-success btn-circle text-white"
-                                    disabled="disabled">2</a>
-                                <span class="text-white">Company Documents</span>
-                            </div>
-
-                            <div class="stepwizard-step bg-success">
-                                <a href="#step-2" type="button" class="btn btn-success btn-circle text-white"
-                                    disabled="disabled">3</a>
-                                <span class="text-white">Collection Accounts</span>
-                            </div>
-
-                            <div class="stepwizard-step bg-primary">
-                                <a href="#step-2" type="button" class="btn btn-secondary btn-circle"
-                                    disabled="disabled">4</a>
-                                <span class="text-white">Authorized Representative</span>
-                            </div>
-
-                            <div class="stepwizard-step">
-                                <a href="#step-5" type="button" class="btn btn-default btn-circle"
-                                    disabled="disabled">5</a>
-                                <span>Company Preview</span>
-                            </div>
-                        </div>
-                    </div>
-
-
-                    <!--form message => success or danger -->
-                    <div class="form-message"></div>
+            <div class="card sp-card">
+                <div class="card-body sp-card__body">
+                    <div class="form-message sp-form-message"></div>
 
                     <form action="#" id="companyForm" enctype="multipart/form-data" autocomplete="off">
                         <input type="hidden" name="partner_id" value="{{ $company->id }}">
                         <input type="hidden" name="partner_uuid" value="{{ $company->uuid }}">
 
                         <section data-step="4">
-                            <div class="row">
-                                <div class="col-lg-12">
-                                    <h5 class="text-capitalize">Company Authorized Representative</h5>
-                                </div>
-                            </div>
+                            <div class="sp-section">
+                                <div class="sp-section__title">Authorized Representative</div>
 
                             @if ($company->partnerStaff->isNotEmpty())
                                 @foreach ($company->partnerStaff as $data)
@@ -186,14 +160,14 @@
 
                             <div class="field_wrapper"></div>
 
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <div class="mb-3 text-sm-end d-none d-sm-block">
-                                        <a href="{{ route('companies.register-accounts', $company->uuid) }}"
-                                            class="btn btn-info text-medium">Previous</a>
-                                        <button type="submit" id="submitButton" class="btn btn-primary">Next </button>
-                                    </div>
+                            <div class="sp-actionbar">
+                                <div class="sp-actionbar__meta"></div>
+                                <div class="d-flex gap-2">
+                                        <a href="{{ ($selfRegistration ?? false) ? route('self-registration.documents', $company->uuid) : route('companies.register-accounts', $company->uuid) }}"
+                                            class="btn btn-outline-secondary text-medium">Previous</a>
+                                        <button type="submit" id="submitButton" class="btn btn-primary">Save and Continue</button>
                                 </div>
+                            </div>
                             </div>
                         </section>
                     </form>
@@ -299,8 +273,9 @@
                 submitHandler: function(form, e) {
                     e.preventDefault();
 
-                    //change submit button text
-                    $('#submitButton').text('Submitting...');
+                    const submitButton = $('#submitButton');
+                    const defaultSubmitText = submitButton.text();
+                    submitButton.prop('disabled', true).text('Submitting...');
 
                     //form data
                     const formData = new FormData(form);
@@ -311,7 +286,7 @@
                     //post data 
                     $.ajax({
                         type: "POST",
-                        url: "/companies/store-staff",
+                        url: @json(($selfRegistration ?? false) ? route('self-registration.store-staff') : route('companies.store-staff')),
                         data: formData,
                         processData: false,
                         contentType: false,
@@ -319,9 +294,6 @@
                         timeout: 800000,
                         success: function(response) {
                             if(response.success == true){
-                                //change submit button text
-                                $('#submitButton').text('Next');
-
                                 //display message
                                 $('.form-message').html(
                                     "<div class='alert alert-success py-2.5 px-2'>Service Provider credential saved</div>"
@@ -329,7 +301,8 @@
 
                                 //set timer
                                 setTimeout(function() {
-                                    window.location.href = "/companies/preview/" + response.uuid;
+                                    window.location.href = @json(($selfRegistration ?? false) ? url('/service-provider/register') : url('/companies/preview')) +
+                                        "/" + response.uuid + @json(($selfRegistration ?? false) ? '/preview' : '');
                                 }, 300);
                             }   else if(response.success == false){
                                      $('.form-message').html(
@@ -338,18 +311,20 @@
                             }
                         },
                         error: function(error) {
-                            //display errors
-                            if (jQuery.type(error.response.errors) == "object") {
+                            const errors = error.responseJSON?.errors;
+                            const message = error.responseJSON?.message || 'Failed to save representative information.';
+
+                            if (jQuery.type(errors) == "object") {
                                 $('.form-message').html('');
-                                $.each(error.response.errors, function(key, value) {
+                                $.each(errors, function(key, value) {
                                     $('.form-message').append('<div class="alert alert-danger">' + value + '</div>');
                                 });
                             } else {
-                                $('.form-message').html('<div class="alert alert-danger">' + error.response.errors + '</div>');
+                                $('.form-message').html('<div class="alert alert-danger">' + message + '</div>');
                             }
-
-                            //change submit button
-                            $('#submitButton').text('Next');
+                        },
+                        complete: function() {
+                            submitButton.prop('disabled', false).text(defaultSubmitText);
                         }
                     });
 

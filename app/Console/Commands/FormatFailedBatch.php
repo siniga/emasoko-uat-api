@@ -13,7 +13,7 @@ class FormatFailedBatch extends Command
      *
      * @var string
      */
-    protected $signature = 'format:failed-batches';
+    protected $signature = 'format:failed-batches {--references= : Comma-separated collection references to format}';
 
     /**
      * The console command description.
@@ -39,8 +39,19 @@ class FormatFailedBatch extends Command
      */
     public function handle()
     {
+        $references = collect(explode(',', (string) $this->option('references')))
+            ->map(fn ($reference) => trim($reference))
+            ->filter()
+            ->values();
+
+        if ($references->isEmpty()) {
+            $this->error('Pass affected batch references with --references=17916,17832.');
+
+            return self::FAILURE;
+        }
+
         //Query filed collection batches
-        $collection_batches = CollectionBatch::whereIn('collectionReference', [16901, 16906, 16972, 16973, 16977, 16996, 16999, 17074])->get();
+        $collection_batches = CollectionBatch::whereIn('collectionReference', $references)->get();
 
         if ($collection_batches) {
             foreach ($collection_batches as $batch) {

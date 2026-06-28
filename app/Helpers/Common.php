@@ -1,5 +1,28 @@
 <?php
 
+if (!function_exists('mask_account_number')) {
+    function mask_account_number($value, int $visibleStart = 3, int $visibleEnd = 3, string $mask = '*')
+    {
+        $value = trim((string) $value);
+
+        if ($value === '') {
+            return '';
+        }
+
+        $length = strlen($value);
+
+        if ($length <= ($visibleStart + $visibleEnd)) {
+            return str_repeat($mask, max($length, 1));
+        }
+
+        $start = substr($value, 0, $visibleStart);
+        $end = substr($value, -$visibleEnd);
+        $maskedLength = $length - ($visibleStart + $visibleEnd);
+
+        return $start . str_repeat($mask, $maskedLength) . $end;
+    }
+}
+
 use App\Models\Partner;
 
 if (!function_exists('calculate_end_date')) {
@@ -120,5 +143,28 @@ if (!function_exists('base64_to_csv_to_array')) {
             $data[] = array_combine($headers, $row);
         }
         return $data;
+    }
+}
+
+if (!function_exists('format_short_amount')) {
+    function format_short_amount($amount, int $precision = 1)
+    {
+        $amount = (float) $amount;
+        $negative = $amount < 0;
+        $value = abs($amount);
+
+        if ($value >= 1000000000) {
+            $formatted = round($value / 1000000000, $precision) . 'B';
+        } elseif ($value >= 1000000) {
+            $formatted = round($value / 1000000, $precision) . 'M';
+        } elseif ($value >= 1000) {
+            $formatted = round($value / 1000, $precision) . 'K';
+        } else {
+            $formatted = number_format($value, 0);
+        }
+
+        $formatted = preg_replace('/\.0(?=[BMK]$)/', '', $formatted);
+
+        return $negative ? '-' . $formatted : $formatted;
     }
 }

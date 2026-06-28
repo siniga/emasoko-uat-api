@@ -47,7 +47,7 @@ class CollectionStatusBatch extends Command
     public function handle()
     {
         $current_date = Carbon::now();
-        Log::debug("== Creating collection status: '{$current_date}' ==");
+        $this->info("== Creating collection status: '{$current_date}' ==");
 
         //get the start and end of the month
         $start = now()->startOfMonth();
@@ -56,10 +56,18 @@ class CollectionStatusBatch extends Command
         // get the start and end of the last month
         // $start = now()->subMonth()->startOfMonth();
         // $end   = now()->subMonth()->endOfMonth();
-        //->whereDate('created_at', $current_date)
 
         //1. Get all collection batches created in the current month
-        $collection_batches = CollectionBatch::where(['pushed' => 1, 'deleted' => 0])
+        $collection_batches = CollectionBatch::where(['deleted' => 0])
+            ->where(function ($query) {
+                $query->whereIn('lifecycle_status', [
+                    CollectionBatch::LIFECYCLE_PUSHED,
+                    CollectionBatch::LIFECYCLE_STATUS_PENDING,
+                    CollectionBatch::LIFECYCLE_PARTIALLY_PROCESSED,
+                ])->orWhere(function ($legacy) {
+                    $legacy->whereNull('lifecycle_status')->where('pushed', 1)->where('processed', 0);
+                });
+            })
             ->whereBetween('created_at', [$start, $end])
             ->orderBy('collectionReference', 'ASC')->get();
 
@@ -71,16 +79,13 @@ class CollectionStatusBatch extends Command
             //collection batch
             $batch = CollectionBatch::findOrFail($value->id);
 
-            //create payload
-            $payload = $this->bankPayload->collectionStatusPayload($batch);
-
-            //3. BackgroundJob for creating collection batches
-            dispatch(new CollectionStatusJob($payload));
+            $batch->lifecycle_status = CollectionBatch::LIFECYCLE_STATUS_PENDING;
+            $batch->save();
+            dispatch(new CollectionStatusJob($batch->id));
             sleep(5); // sleep for 5 seconds
         }
 
-        //logging successiong
-        Log::debug("== Success on creating collection batch status ==");
-        return 200;
+        $this->info("== Success on creating collection batch status ==");
+        return self::SUCCESS;
     }
 }

@@ -2,15 +2,17 @@
 
 namespace App\Services;
 
-use App\Http\Resources\InstallmentResource;
-use App\Jobs\CollectionCallbackJob;
 use App\Jobs\SendSMSJob;
 use App\Models\AppVariable;
+use App\Models\CollectionBatch;
+use App\Models\CollectionDebitOrder;
 use App\Models\DebitOrder;
 use App\Models\Partner;
 use App\Models\PartnerAccount;
 use App\Models\Installment;
 use App\Models\InstallmentPayment;
+use App\Models\PaymentSettlement;
+use App\Models\SmsLog;
 use Carbon\Carbon;
 use DateTime;
 use Exception;
@@ -18,13 +20,39 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 
 class DeductionService
 {
     private $app_variable;
+    protected MessagingService $messagingService;
+
     public function __construct()
     {
-        $this->app_variable = AppVariable::first();
+        $this->messagingService = app(MessagingService::class);
+    }
+
+    protected function settlementPosting(): SettlementPostingService
+    {
+        return app(SettlementPostingService::class);
+    }
+
+    protected function externalCallback(): ExternalCallbackService
+    {
+        return app(ExternalCallbackService::class);
+    }
+
+    protected function appVariable(): AppVariable
+    {
+        if (!$this->app_variable) {
+            $this->app_variable = AppVariable::first();
+        }
+
+        if (!$this->app_variable) {
+            throw new Exception('App variables are not initialized');
+        }
+
+        return $this->app_variable;
     }
 
     // check if customer account has active debit order
@@ -80,57 +108,20 @@ class DeductionService
     // calculate debit end date
     public function calculateEndDate(DebitOrder $debitOrder)
     {
-        //1. Get debit order details
-        $periodicity = $debitOrder->periodicity;
-        $start_date = $debitOrder->start_date;
+        $startDate = Carbon::parse($debitOrder->start_date);
+        $installmentCount = (int) $debitOrder->installment_number;
+        $dayOfMonth = $startDate->day;
+        $lastInstallmentDate = $startDate->copy();
 
-        $last_installment_date = null;
-        $number_of_installment = $debitOrder->installment_number;
-
-        //dates
-        $dayOfMonth = date('d', strtotime($start_date));
-
-        //TODO:Check for each channel 
-
-        // 2. Set addition number of days from periodicity
-        $number_of_days = "+0 day";
-        if ($periodicity == "ANNUALLY")
-            $number_of_days = "+1 year";
-        if ($periodicity == "MONTHLY")
-            $number_of_days = '+30 day';
-        else if ($periodicity == "WEEKLY")
-            $number_of_days = '+1 week';
-        else if ($periodicity == "DAILY")
-            $number_of_days = "+1 day";
-
-
-        for ($i = 1; $i <= $number_of_installment; $i++) {
-            if ($last_installment_date == null) {
-                $installment_date = date('Y-m-d', strtotime($start_date));
-
-                //assign last installment date
-                $last_installment_date =  $installment_date;
-            } else {
-                $installment_date = date('Y-m-d', strtotime($last_installment_date . $number_of_days));
-
-                //formating all the dates if periodicity = "MONTHLY"
-                if ($periodicity == "MONTHLY") {
-                    $year = date('Y', strtotime($installment_date));
-                    $month = date('m', strtotime($installment_date));
-
-                    $date = Carbon::createFromDate($year, $month, $dayOfMonth);
-                    $installment_date = $date->format('Y-m-d'); // Format as dd-mm-yyyy
-                }
-
-                //assign last installment date
-                $last_installment_date =  $installment_date;
-            }
+        for ($i = 2; $i <= $installmentCount; $i++) {
+            $lastInstallmentDate = $this->advanceInstallmentDate(
+                $lastInstallmentDate,
+                (string) $debitOrder->periodicity,
+                $dayOfMonth
+            );
         }
 
-        //add buffer of 2 year
-        $debit_end_date = date('Y-m-d', strtotime($last_installment_date . " +2 year"));
-
-        return $debit_end_date;
+        return $lastInstallmentDate->copy()->addYears(2)->toDateString();
     }
 
     //create new collection date
@@ -163,11 +154,7 @@ class DeductionService
 
         // Stream debit orders in chunks to avoid loading everything at once
         DebitOrder::query()
-            ->where('approved', 1)
-            ->where('status', 240)
-            ->where('channel', 'NMB')
-            ->where('contract_status', 'OPEN')
-            ->where('deleted', 0)
+            ->eligibleForCollection('NMB')
             ->whereDate('next_debit_date', $current_date)
             ->whereHas('partner', function ($q) use ($partner) {
                 $q->where('partners.id', $partner->id);
@@ -180,21 +167,34 @@ class DeductionService
                         return false; // abort further chunking
                     }
 
-                    // 1) Prefer OPEN + not created + due today (earliest first)
+                    // 1) Prefer OPEN + not created + due today.
                     $open = $debitOrder->installments()
                         ->where('installments.status', 'OPEN')
                         ->where('installments.created', 0)
-                        ->whereDate('installments.payment_date', $current_date)
-                        ->orderBy('installments.payment_date')
+                        ->whereDate('installments.payment_date', '<=', $current_date)
+                        ->orderByRaw("
+                            CASE 
+                                WHEN DATE(installments.payment_date) = ? THEN 0
+                                ELSE 1
+                            END
+                        ", [$current_date])
+                        ->orderBy('installments.payment_date', 'desc')
                         ->first();
 
                     if ($open) {
                         $picked->push($open);
                     } else {
-                        // 2) Fallback: earliest FAILED/FUNDSCHECK before today, exclude "Account Is Valid"
+                        // 2) Fallback: earliest previous OPEN/FAILED/FUNDSCHECK installment.
                         $fallback = $debitOrder->installments()
-                            ->whereIn('status', ['FAILED', 'FUNDSCHECK'])
-                            ->where('remarks', '!=', 'Account Is Valid')
+                            ->whereIn('status', ['OPEN', 'FAILED', 'FUNDSCHECK'])
+                            ->where(function ($query) {
+                                $query->where('status', '!=', 'OPEN')
+                                    ->orWhere('created', 0);
+                            })
+                            ->where(function ($query) {
+                                $query->whereNull('remarks')
+                                    ->orWhere('remarks', '!=', 'Account Is Valid');
+                            })
                             ->whereDate('payment_date', '<', $current_date)
                             ->orderBy('installments.payment_date')
                             ->first();
@@ -211,166 +211,279 @@ class DeductionService
     }
 
     //create debit order installments
-    public function createInstallment(DebitOrder $debitOrder)
+    public function createInstallment(DebitOrder $debitOrder, bool $forceRegenerate = false)
     {
-        //1. Get debit order details
-        $debit_type = $debitOrder->debit_type;
-        $periodicity = $debitOrder->periodicity;
-        $start_date = $debitOrder->start_date;
+        $this->validateInstallmentGenerationInputs($debitOrder);
 
-        $last_installment_date = null;
-        $number_of_installment = $debitOrder->installment_number;
-        $total_amount = $debitOrder->total_amount;
+        return DB::transaction(function () use ($debitOrder, $forceRegenerate) {
+            $debitOrder = DebitOrder::query()->lockForUpdate()->findOrFail($debitOrder->id);
 
-        //dates
-        $dayOfMonth = date('d', strtotime($start_date));
+            $existingInstallments = Installment::where('debit_order_id', $debitOrder->id)
+                ->orderBy('installment_order')
+                ->get();
 
-        // 2. Set addition number of days from periodicity
-        $number_of_days = "+0 day";
-        if ($periodicity == "ANNUALLY")
-            $number_of_days = "+1 year";
-        if ($periodicity == "MONTHLY")
-            $number_of_days = '+30 day';
-        else if ($periodicity == "WEEKLY")
-            $number_of_days = '+1 week';
-        else if ($periodicity == "DAILY")
-            $number_of_days = "+1 day";
+            if ($existingInstallments->isNotEmpty()) {
+                $hasOperationalHistory = $this->hasInstallmentOperationalHistory($debitOrder, $existingInstallments);
 
-        //3. Delete all installments
-        $deleted_installment = Installment::where('debit_order_id', $debitOrder->id)->delete();
+                if ($hasOperationalHistory && !$forceRegenerate) {
+                    Log::warning('Skipping installment regeneration because operational history exists.', [
+                        'debit_order_id' => $debitOrder->id,
+                        'reference' => $debitOrder->reference,
+                    ]);
 
-        //4. Create FIXED and DYNAMIC installments
-        if ($debit_type == "FIXED")
-            $this->fixedInstallment($debitOrder, $number_of_days);
-        else if ($debit_type == "DYNAMIC")
-            $this->fixedInstallment($debitOrder, $number_of_days);
+                    return 200;
+                }
 
-        return 200;
+                if ($hasOperationalHistory && $forceRegenerate) {
+                    throw new Exception("Cannot force regenerate installments for mandate {$debitOrder->reference} because operational history already exists.");
+                }
+            }
+
+            $scheduleRows = $this->buildInstallmentSchedule($debitOrder);
+            $validOrders = [];
+
+            foreach ($scheduleRows as $row) {
+                $validOrders[] = $row['installment_order'];
+
+                Installment::updateOrCreate(
+                    [
+                        'debit_order_id' => $debitOrder->id,
+                        'installment_order' => $row['installment_order'],
+                    ],
+                    $row
+                );
+            }
+
+            if ($existingInstallments->isNotEmpty()) {
+                Installment::where('debit_order_id', $debitOrder->id)
+                    ->whereNotIn('installment_order', $validOrders)
+                    ->delete();
+            }
+
+            return 200;
+        });
     }
 
     //create fixed installment
-    protected function fixedInstallment(DebitOrder $debitOrder, $numberOfDays)
+    protected function fixedInstallment(DebitOrder $debitOrder)
+    {
+        foreach ($this->buildFixedInstallmentRows($debitOrder) as $row) {
+            Installment::updateOrCreate(
+                ['debit_order_id' => $debitOrder->id, 'installment_order' => $row['installment_order']],
+                $row
+            );
+        }
+    }
+
+    //create dynamic installment
+    protected function dynamicInstallment(DebitOrder $debitOrder)
+    {
+        foreach ($this->buildDynamicInstallmentRows($debitOrder) as $row) {
+            Installment::updateOrCreate(
+                ['debit_order_id' => $debitOrder->id, 'installment_order' => $row['installment_order']],
+                $row
+            );
+        }
+    }
+
+    protected function buildInstallmentSchedule(DebitOrder $debitOrder): array
+    {
+        return match (strtoupper((string) $debitOrder->debit_type)) {
+            'FIXED' => $this->buildFixedInstallmentRows($debitOrder),
+            'DYNAMIC' => $this->buildDynamicInstallmentRows($debitOrder),
+            default => throw new Exception("Unsupported debit type [{$debitOrder->debit_type}] for mandate {$debitOrder->reference}."),
+        };
+    }
+
+    protected function buildFixedInstallmentRows(DebitOrder $debitOrder): array
     {
         $periodicity = $debitOrder->periodicity;
         $startDate = Carbon::parse($debitOrder->start_date);
         $dayOfMonth = $startDate->day;
-
         $lastInstallmentDate = $startDate->copy();
-        $installmentCount = $debitOrder->installment_number;
-        $totalAmount = $debitOrder->total_amount;
-        $installmentAmount = $debitOrder->installment_amount;
-
+        $installmentCount = (int) $debitOrder->installment_number;
+        $totalAmount = (float) $debitOrder->total_amount;
+        $installmentAmount = (float) $debitOrder->installment_amount;
         $sumInstallmentAmount = 0;
+        $rows = [];
 
         for ($i = 1; $i <= $installmentCount; $i++) {
             if ($i === 1) {
                 $installmentDate = $lastInstallmentDate->copy();
             } else {
-                if ($periodicity === "MONTHLY") {
-                    $installmentDate = $lastInstallmentDate->copy()->addMonthNoOverflow();
-                    // Set same day, fallback to last valid day of month
-                    $installmentDate->day = min($dayOfMonth, $installmentDate->daysInMonth);
-                } else {
-                    $installmentDate = $lastInstallmentDate->copy()->addDays($numberOfDays);
-                }
+                $installmentDate = strtoupper($periodicity) === 'MONTHLY'
+                    ? $lastInstallmentDate->copy()->addMonthNoOverflow()->setDay(min($dayOfMonth, $lastInstallmentDate->copy()->addMonthNoOverflow()->daysInMonth))
+                    : $this->advanceInstallmentDate($lastInstallmentDate, $periodicity, $dayOfMonth);
             }
 
             $sumInstallmentAmount += $installmentAmount;
-
-            // Calculate paid amount safely
-            $paidAmount = ($sumInstallmentAmount > $totalAmount)
+            $scheduledAmount = ($sumInstallmentAmount > $totalAmount)
                 ? $totalAmount - ($sumInstallmentAmount - $installmentAmount)
                 : $installmentAmount;
 
-            // Save for next iteration
             $lastInstallmentDate = $installmentDate->copy();
-
-            // Create or update installment
-            Installment::updateOrCreate(
-                ['debit_order_id' => $debitOrder->id, 'installment_order' => $i],
-                [
-                    'installment_amount' => $paidAmount,
-                    'current_balance' => 0,
-                    'outstanding_amount' => $paidAmount,
-                    'payment_date' => $installmentDate->toDateString()
-                ]
-            );
+            $rows[] = $this->buildInstallmentAttributes($i, $scheduledAmount, $installmentDate);
         }
+
+        return $rows;
     }
-    //create dynamic installment
-    protected function dynamicInstallment(DebitOrder $debitOrder, $numberOfDays)
+
+    protected function buildDynamicInstallmentRows(DebitOrder $debitOrder): array
     {
         $periodicity = $debitOrder->periodicity;
-        $start_date = $debitOrder->start_date;
+        $startDate = Carbon::parse($debitOrder->start_date);
+        $installmentCount = (int) $debitOrder->installment_number;
+        $totalAmount = (float) $debitOrder->total_amount;
+        $maxInstallmentAmount = (float) $debitOrder->max_installment_amount;
+        $minInstallmentAmount = (float) $debitOrder->min_installment_amount;
+        $dayOfMonth = $startDate->day;
+        $lastInstallmentDate = $startDate->copy();
+        $sumInstallmentAmount = 0;
+        $rows = [];
 
-        $last_installment_date = null;
-        $number_of_installment = $debitOrder->installment_number;
-        $total_amount = $debitOrder->total_amount;
+        for ($i = 1; $i <= $installmentCount; $i++) {
+            $installmentDate = $i === 1
+                ? $lastInstallmentDate->copy()
+                : $this->advanceInstallmentDate($lastInstallmentDate, $periodicity, $dayOfMonth);
 
-        //dates
-        $dayOfMonth = date('d', strtotime($start_date));
+            $sumInstallmentAmount += $maxInstallmentAmount;
+            $scheduledAmount = ($sumInstallmentAmount > $totalAmount)
+                ? $totalAmount - ($sumInstallmentAmount - $maxInstallmentAmount)
+                : $maxInstallmentAmount;
 
-        $sum_installment_amount = 0;
-        for ($i = 1; $i <= $number_of_installment; $i++) {
-            if ($last_installment_date == null) {
-                $installment_date = date('Y-m-d', strtotime($start_date));
+            $lastInstallmentDate = $installmentDate->copy();
 
-                //SUMMATION installment Amount
-                $sum_installment_amount += $debitOrder->max_installment_amount;
+            $rows[] = $this->buildInstallmentAttributes(
+                $i,
+                $scheduledAmount,
+                $installmentDate,
+                min($minInstallmentAmount, $scheduledAmount),
+                $scheduledAmount
+            );
+        }
 
-                //PAID Amount
-                $paid_amount = $debitOrder->max_installment_amount;
+        return $rows;
+    }
 
-                //assign last installment date
-                $last_installment_date =  $installment_date;
-            } else {
-                $installment_date = date('Y-m-d', strtotime($last_installment_date . $numberOfDays));
+    protected function buildInstallmentAttributes(
+        int $order,
+        float $amount,
+        Carbon $paymentDate,
+        ?float $minInstallmentAmount = null,
+        ?float $maxInstallmentAmount = null
+    ): array {
+        return [
+            'installment_order' => $order,
+            'min_installment_amount' => $minInstallmentAmount,
+            'max_installment_amount' => $maxInstallmentAmount,
+            'installment_amount' => $amount,
+            'current_balance' => 0,
+            'outstanding_amount' => $amount,
+            'payment_date' => $paymentDate->toDateString(),
+            'status' => 'OPEN',
+            'remarks' => null,
+            'effective_payment_date' => null,
+            'payment_reference' => null,
+            'created' => 0,
+        ];
+    }
 
-                //formating all the dates if periodicity = "MONTHLY"
-                if ($periodicity == "MONTHLY") {
-                    $year = date('Y', strtotime($installment_date));
-                    $month = date('m', strtotime($installment_date));
+    protected function validateInstallmentGenerationInputs(DebitOrder $debitOrder): void
+    {
+        if (!$debitOrder->start_date) {
+            throw new Exception("Mandate {$debitOrder->reference} is missing start date.");
+        }
 
-                    $date = Carbon::createFromDate($year, $month, $dayOfMonth);
-                    $installment_date = $date->format('Y-m-d'); // Format as dd-mm-yyyy
-                }
+        if ((int) $debitOrder->installment_number <= 0) {
+            throw new Exception("Mandate {$debitOrder->reference} has invalid installment count.");
+        }
 
-                //SUMMATION installment Amount
-                $sum_installment_amount += $debitOrder->max_installment_amount;
+        if ((float) $debitOrder->total_amount <= 0) {
+            throw new Exception("Mandate {$debitOrder->reference} has invalid total amount.");
+        }
 
-                //PAID Amount
-                if ($sum_installment_amount > $total_amount)
-                    $paid_amount = $total_amount - ($sum_installment_amount - $debitOrder->max_installment_amount);
-                else
-                    $paid_amount = $debitOrder->max_installment_amount;
+        if (strtoupper((string) $debitOrder->debit_type) === 'FIXED' && (float) $debitOrder->installment_amount <= 0) {
+            throw new Exception("Mandate {$debitOrder->reference} has invalid fixed installment amount.");
+        }
 
-                //assign last installment date
-                $last_installment_date =  $installment_date;
+        if (strtoupper((string) $debitOrder->debit_type) === 'DYNAMIC') {
+            if ((float) $debitOrder->max_installment_amount <= 0) {
+                throw new Exception("Mandate {$debitOrder->reference} has invalid maximum installment amount.");
             }
 
-            //check for paid amount and min 
-            $min_paid_amount = $debitOrder->min_installment_amount;
-
-            if ($min_paid_amount > $paid_amount)
-                $min_paid_amount = $paid_amount;
-
-            //3. Create Installment deduction
-            $installment = Installment::firstOrNew(
-                ['debit_order_id' => $debitOrder->id, 'installment_order' => $i],
-                [
-                    'min_installment_amount' => $min_paid_amount,
-                    'max_installment_amount' => $paid_amount,
-                    'installment_amount' => $paid_amount,
-                    'current_balance' => 0,
-                    'outstanding_amount' => $paid_amount,
-                    'payment_date' => $installment_date
-                ]
-            );
-            $installment->save();
+            if ((float) $debitOrder->min_installment_amount > (float) $debitOrder->max_installment_amount) {
+                throw new Exception("Mandate {$debitOrder->reference} has minimum installment amount greater than maximum.");
+            }
         }
     }
 
-    public function updateInstallments($data)
+    protected function hasInstallmentOperationalHistory(DebitOrder $debitOrder, Collection $existingInstallments): bool
+    {
+        $installmentIds = $existingInstallments->pluck('id')->filter()->values();
+
+        if ($installmentIds->isEmpty()) {
+            return false;
+        }
+
+        if (CollectionDebitOrder::where('debit_order_id', $debitOrder->id)->exists()) {
+            return true;
+        }
+
+        if (PaymentSettlement::where('debit_order_id', $debitOrder->id)->exists()) {
+            return true;
+        }
+
+        if (InstallmentPayment::whereIn('installment_id', $installmentIds)->exists()) {
+            return true;
+        }
+
+        return $existingInstallments->contains(function ($installment) {
+            return strtoupper((string) ($installment->status ?? 'OPEN')) !== 'OPEN'
+                || (float) ($installment->current_balance ?? 0) > 0
+                || !is_null($installment->effective_payment_date)
+                || !is_null($installment->payment_reference)
+                || (int) ($installment->created ?? 0) === 1;
+        });
+    }
+
+    protected function advanceInstallmentDate(Carbon $currentDate, string $periodicity, int $dayOfMonth): Carbon
+    {
+        $periodicity = $this->normalizePeriodicity($periodicity);
+        $date = $currentDate->copy();
+
+        switch ($periodicity) {
+            case 'ANNUALLY':
+            case 'YEARLY':
+                return $date->addYear();
+            case 'QUARTERLY':
+                $date->addMonthsNoOverflow(3);
+                $date->day = min($dayOfMonth, $date->daysInMonth);
+                return $date;
+            case 'WEEKLY':
+                return $date->addWeek();
+            case 'DAILY':
+                return $date->addDay();
+            case 'MONTHLY':
+            default:
+                $date->addMonthNoOverflow();
+                $date->day = min($dayOfMonth, $date->daysInMonth);
+                return $date;
+        }
+    }
+
+    protected function normalizePeriodicity(string $periodicity): string
+    {
+        return match (strtoupper(trim($periodicity))) {
+            'DAILY' => 'DAILY',
+            'WEEKLY' => 'WEEKLY',
+            'MONTHLY' => 'MONTHLY',
+            'QUARTELY', 'QUARTERLY' => 'QUARTERLY',
+            'ANNUALLY', 'YEARLY' => 'YEARLY',
+            default => 'MONTHLY',
+        };
+    }
+
+    public function updateInstallments(CollectionBatch $batch, $data)
     {
         //Convert the data into an array of rows
         $rows = explode("\n", $data);
@@ -397,6 +510,20 @@ class DeductionService
 
             //check if installment exists AND channel == "NMB"
             if ($installment && $installment->debitOrder->channel == "NMB") {
+                $line = $this->resolveCollectionLine($batch, $installment);
+                $responseHash = md5(trim($row));
+
+                if ($line && $line->response_hash === $responseHash && $line->processed_at) {
+                    Log::info('Collection status row skipped: bank response already processed.', [
+                        'batch_id' => $batch->id,
+                        'collection_reference' => $batch->collectionReference,
+                        'installment_id' => $installment->id,
+                        'line_id' => $line->id,
+                        'response_hash' => $responseHash,
+                    ]);
+                    continue;
+                }
+
                 //check if installment status != CLOSED
                 if ($installment->status != "CLOSED") {
                     //installment amount
@@ -408,16 +535,30 @@ class DeductionService
                     $amount = floatval($fields[6]);
 
                     //check for status
-                    if ($status == "FAIL" || $status == "FUNDSCHECK") {
-                        //status
-                        if ($status == "FAIL")
-                            $installment->status = "FAILED";
-                        else if ($status == "FUNDSCHECK")
-                            $installment->status = "FUNDSCHECK";
+                    if (in_array($status, ["FAIL", "FAILED", "FUNDSCHECK"], true)) {
+                        $normalizedStatus = $status == "FUNDSCHECK"
+                            ? PaymentSettlement::STATUS_FUNDSCHECK
+                            : PaymentSettlement::STATUS_FAILED;
 
-                        //remarks
-                        $installment->remarks = $message;
-                        $installment->save();
+                        $paymentReference = "COL-{$batch->collectionReference}-{$installment->id}";
+                        $existingSettlement = $this->existingSettlement('NMB', $paymentReference, $installment);
+
+                        $settlement = $this->settlementPosting()->post([
+                            'channel' => 'NMB',
+                            'batch' => $batch,
+                            'line' => $line,
+                            'debit_order' => $installment->debitOrder,
+                            'installment' => $installment,
+                            'amount' => 0,
+                            'raw_status' => $status,
+                            'normalized_status' => $normalizedStatus,
+                            'remarks' => $message,
+                            'effective_payment_date' => $installment->effective_payment_date ?: now()->toDateString(),
+                            'payment_reference' => $paymentReference,
+                            'raw_payload_hash' => $responseHash,
+                        ]);
+
+                        $this->dispatchCollectionCallback($settlement, $this->shouldDispatchCollectionCallback($existingSettlement, $normalizedStatus));
 
                         //increment failed installments
                         $failed_installments += 1;
@@ -434,35 +575,46 @@ class DeductionService
 
                         }
                     } else if ($status == "SUCCESS") {
-                        //Generate a unique payment reference
-                        $payment_reference = $this->uniquePaymentReference(12);
+                        $openingBalance = (float) ($installment->outstanding_amount ?? 0);
+                        $normalizedStatus = $amount > 0 && $amount < $openingBalance
+                            ? PaymentSettlement::STATUS_PARTIAL
+                            : PaymentSettlement::STATUS_SUCCESS;
 
-                        //4. Create or update installment payment
-                        $payment = InstallmentPayment::firstOrNew(
-                            [
-                                'mandate_reference' => $installment->debitOrder->reference,
-                                'payment_reference' => $payment_reference,
-                            ]
-                        );
-                        $payment->amount = $amount;
-                        $payment->payment_at = date('Y-m-d');
-                        $payment->save();
+                        $paymentReference = "COL-{$batch->collectionReference}-{$installment->id}";
+                        $existingSettlement = $this->existingSettlement('NMB', $paymentReference, $installment);
 
-                        //updated status of installment
-                        $installment->payment_reference = $payment_reference;
-                        $installment->last_paid_amount = $amount;
-                        $installment->remarks = $message;
-                        $installment->save();
+                        $settlement = $this->settlementPosting()->post([
+                            'channel' => 'NMB',
+                            'batch' => $batch,
+                            'line' => $line,
+                            'debit_order' => $installment->debitOrder,
+                            'installment' => $installment,
+                            'amount' => $amount,
+                            'raw_status' => $status,
+                            'normalized_status' => $normalizedStatus,
+                            'remarks' => $message,
+                            'effective_payment_date' => $installment->effective_payment_date ?: date('Y-m-d'),
+                            'payment_reference' => $paymentReference,
+                            'raw_payload_hash' => $responseHash,
+                        ]);
+
+                        $this->dispatchCollectionCallback($settlement, $this->shouldDispatchCollectionCallback($existingSettlement, $normalizedStatus));
 
                         //increment success installments
                         $success_installments += 1;
-
-                        //process calculation for installment and debit order.
-                        $this->processInstallment($installment);
                     } else {
                         //updated status of installment
                         $installment->status = $status;
                         $installment->save();
+
+                        if ($line) {
+                            $line->status = $status;
+                            $line->bank_status = $status;
+                            $line->bank_message = $message;
+                            $line->response_hash = $responseHash;
+                            $line->processed_at = now();
+                            $line->save();
+                        }
                     }
                 }
             }
@@ -471,7 +623,7 @@ class DeductionService
         return [$success_installments, $failed_installments];
     }
 
-    public function updateFailedInstallments($data)
+    public function updateFailedInstallments(CollectionBatch $batch, $data)
     {
         //Convert the data into an array of rows
         $rows = explode("\n", $data);
@@ -497,15 +649,48 @@ class DeductionService
 
             //check if installment exists AND channel == "NMB"
             if ($installment && $installment->debitOrder->channel == "NMB") {
+                $line = $this->resolveCollectionLine($batch, $installment);
+                $responseHash = md5(trim($row));
+
+                if ($line && $line->response_hash === $responseHash && $line->processed_at) {
+                    Log::info('Failed collection status row skipped: bank response already processed.', [
+                        'batch_id' => $batch->id,
+                        'collection_reference' => $batch->collectionReference,
+                        'installment_id' => $installment->id,
+                        'line_id' => $line->id,
+                        'response_hash' => $responseHash,
+                    ]);
+                    continue;
+                }
+
                 //check if installment status != CLOSED
                 if ($installment->status != "CLOSED") {
                     //status and paid amount
+                    $status = strtoupper($fields[7] ?? 'FAILED');
                     $message = ucwords(strtolower($fields[8]));
+                    $normalizedStatus = $status === 'FUNDSCHECK'
+                        ? PaymentSettlement::STATUS_FUNDSCHECK
+                        : PaymentSettlement::STATUS_FAILED;
 
-                    //updated status of installment
-                    $installment->status = "FAILED";
-                    $installment->remarks = $message;
-                    $installment->save();
+                    $paymentReference = "COL-{$batch->collectionReference}-{$installment->id}";
+                    $existingSettlement = $this->existingSettlement('NMB', $paymentReference, $installment);
+
+                    $settlement = $this->settlementPosting()->post([
+                        'channel' => 'NMB',
+                        'batch' => $batch,
+                        'line' => $line,
+                        'debit_order' => $installment->debitOrder,
+                        'installment' => $installment,
+                        'amount' => 0,
+                        'raw_status' => $status,
+                        'normalized_status' => $normalizedStatus,
+                        'remarks' => $message,
+                        'effective_payment_date' => $installment->effective_payment_date ?: now()->toDateString(),
+                        'payment_reference' => $paymentReference,
+                        'raw_payload_hash' => $responseHash,
+                    ]);
+
+                    $this->dispatchCollectionCallback($settlement, $this->shouldDispatchCollectionCallback($existingSettlement, $normalizedStatus));
 
                     //increment failed installments
                     $failed_installments += 1;
@@ -517,8 +702,9 @@ class DeductionService
     }
 
     //process installment
-    public function processInstallment(Installment $installment)
+    public function processInstallment(Installment $installment, ?CollectionDebitOrder $line = null)
     {
+        // Legacy entry point. New settlement posting should go through SettlementPostingService.
         //installment status
         $installment_status = strtoupper($installment->status);
         $amount = $installment->last_paid_amount; //paid amount
@@ -554,6 +740,9 @@ class DeductionService
                 $current_balance = $debitOrder->current_balance + $amount;
                 $debitOrder->outstanding_amount = $outstanding_amount;
                 $debitOrder->current_balance = $current_balance;
+                if (isset($debitOrder->paid_amount)) {
+                    $debitOrder->paid_amount = ($debitOrder->paid_amount ?? 0) + $amount;
+                }
 
                 //6. Update contract status = outstanding amount <= 0
                 if ($outstanding_amount <= 0)
@@ -577,48 +766,148 @@ class DeductionService
 
                 //send message for outstanding amount and current balance from eMakato.
                 $phone = $installment->debitOrder->customerAccount->phone;
-                $message = "Makato ya tarehe {$payment_date} ya kiasi cha shilingi {$paidAmt} yamekamilishwa kwa {$businessName}. Kiasi kilichobaki ni Tsh {$outstandingAmt}. Asante kwa kutumia eMakato.";
+                $message = "Makato ya tarehe {$payment_date} ya kiasi cha shilingi {$paidAmt} yamekamilishwa kwa {$businessName}. Kiasi kilichobaki ni Tsh {$outstandingAmt}.";
 
-                //Send SMS
-                $data = ["phone" => $phone, "message" => $message];
-                dispatch(new SendSMSJob($data));
+                //message id
+                $messageId = $this->messagingService->generateMessageId();
 
-                if ($debitOrder->partner->callback_url && $debitOrder->partner->callback_url != "") {
-                    //dispatch callback job
-                    $callback_data = [
-                        'status' => $installment->status,
-                        'callback_url' => $debitOrder->partner->callback_url,
-                        'collection' => InstallmentResource::collection($installment),
-                    ];
+                //save sms to database
+                $sms_log = SmsLog::firstOrNew([
+                    'message_id' => $messageId,
+                    'phone' => $this->messagingService->castPhone(trim($phone)),
+                ]);
+                $sms_log->uuid = Str::uuid();
+                $sms_log->debit_order_id = $debitOrder->id;
+                $sms_log->message = $message;
+                $sms_log->number_of_sms = $this->messagingService->countNumberOfSms($message);
+                $sms_log->status = 'PENDING';
+                $sms_log->created_by = Auth::user()->id;
+                $sms_log->save();
 
-                    // call CollectionCallbackJob
-                    dispatch(new CollectionCallbackJob($callback_data));
-                }
+                //trigger background job for send SMS
+                dispatch(new SendSMSJob(['messageId' => $messageId]));
+
+                $this->externalCallback()->dispatchCollectionStatus($installment, 'COLLECTION_PAID');
             }
-        } else if ($installment->status == 'CLOSED') {
-            Log::debug("Installement => Closed");
         }
 
         return 200;
     }
 
+    protected function existingSettlement(string $channel, string $paymentReference, Installment $installment): ?PaymentSettlement
+    {
+        return PaymentSettlement::where([
+            'channel' => $channel,
+            'payment_reference' => $paymentReference,
+            'installment_id' => $installment->id,
+        ])->first();
+    }
+
+    protected function shouldDispatchCollectionCallback(?PaymentSettlement $existingSettlement, string $normalizedStatus): bool
+    {
+        return !$existingSettlement || strtoupper((string) $existingSettlement->normalized_status) !== strtoupper($normalizedStatus);
+    }
+
+    protected function dispatchCollectionCallback(PaymentSettlement $settlement, bool $shouldDispatch = true): void
+    {
+        if (!$shouldDispatch) {
+            Log::info('External collection callback skipped: settlement status did not change.', [
+                'settlement_id' => $settlement->id,
+                'installment_id' => $settlement->installment_id,
+                'payment_reference' => $settlement->payment_reference,
+                'normalized_status' => $settlement->normalized_status,
+            ]);
+            return;
+        }
+
+        if (!$settlement->installment_id) {
+            Log::warning('External collection callback skipped: settlement has no installment.', [
+                'settlement_id' => $settlement->id,
+                'payment_reference' => $settlement->payment_reference,
+                'normalized_status' => $settlement->normalized_status,
+            ]);
+            return;
+        }
+
+        $settlement->loadMissing('installment.debitOrder.partner');
+
+        if (!$settlement->installment) {
+            Log::warning('External collection callback skipped: settlement installment could not be loaded.', [
+                'settlement_id' => $settlement->id,
+                'installment_id' => $settlement->installment_id,
+                'payment_reference' => $settlement->payment_reference,
+            ]);
+            return;
+        }
+
+        $eventType = match (strtoupper((string) $settlement->normalized_status)) {
+            PaymentSettlement::STATUS_SUCCESS => 'COLLECTION_PAID',
+            PaymentSettlement::STATUS_PARTIAL => 'COLLECTION_PARTIAL_PAID',
+            PaymentSettlement::STATUS_FUNDSCHECK => 'COLLECTION_FUNDSCHECK',
+            PaymentSettlement::STATUS_UNALLOCATED => 'COLLECTION_UNALLOCATED',
+            default => 'COLLECTION_FAILED',
+        };
+
+        $this->externalCallback()->dispatchCollectionStatus($settlement->installment, $eventType, [
+            'channel' => $settlement->channel,
+            'settlement_reference' => $settlement->payment_reference,
+            'external_reference' => $settlement->external_reference,
+            'bank_status' => $settlement->raw_status,
+            'settlement_status' => $settlement->normalized_status,
+            'paid_amount' => (float) $settlement->paid_amount,
+            'transaction_at' => $settlement->transaction_at
+                ? Carbon::parse($settlement->transaction_at)->toIso8601String()
+                : null,
+        ]);
+    }
+
+    protected function resolveCollectionLine(CollectionBatch $batch, Installment $installment): ?CollectionDebitOrder
+    {
+        return CollectionDebitOrder::where('collection_batch_id', $batch->id)
+            ->where('installment_id', $installment->id)
+            ->latest('id')
+            ->first();
+    }
+
+    public function syncNextDebitDate(DebitOrder $debitOrder, ?Carbon $referenceDate = null): ?string
+    {
+        try {
+            $referenceDate = $referenceDate ?: now();
+            $startOfMonth = $referenceDate->copy()->startOfMonth()->toDateString();
+
+            $currentCycleInstallment = $debitOrder->installments()
+                ->where('status', '!=', 'CLOSED')
+                ->whereDate('payment_date', '>=', $startOfMonth)
+                ->orderBy('payment_date', 'asc')
+                ->first();
+
+            $nextInstallment = $currentCycleInstallment ?: $debitOrder->installments()
+                ->where('status', '!=', 'CLOSED')
+                ->orderBy('payment_date', 'asc')
+                ->first();
+
+            $debitOrder = DebitOrder::findOrFail($debitOrder->id);
+
+            if ($nextInstallment) {
+                $debitOrder->next_debit_date = Carbon::parse($nextInstallment->payment_date)->toDateString();
+            } else {
+                $debitOrder->next_debit_date = null;
+                $debitOrder->contract_status = 'CLOSED';
+            }
+
+            $debitOrder->save();
+
+            return $debitOrder->next_debit_date;
+        } catch (Exception $e) {
+            Log::debug("Invalid date format: " . $e->getMessage());
+            return null;
+        }
+    }
+
     //update debit date
     public function updateNextDebitDate(DebitOrder $debitOrder)
     {
-        try {
-            //next payment date
-            $date = new DateTime($debitOrder->next_debit_date);
-            $date->modify('+1 month');
-            $new_payment_date = $date->format('Y-m-d');
-
-            //update debit order
-            $debit_id = $debitOrder->id;
-            $debit_order = DebitOrder::findOrFail($debit_id);
-            $debit_order->next_debit_date = $new_payment_date;
-            $debit_order->save();
-        } catch (Exception $e) {
-            Log::debug("Invalid date format: " . $e->getMessage());
-        }
+        return $this->syncNextDebitDate($debitOrder);
     }
 
     //get installment amount from debit type
@@ -635,21 +924,24 @@ class DeductionService
     //get last installment order
     public function getLastInstallmentOrder(DebitOrder $debitOrder)
     {
-        return $debitOrder->installments()->orderBy('created_at', 'desc')->first();
+        $last = $debitOrder->installments()->orderBy('created_at', 'desc')->first();
+
+        if ($last)
+            return $last->installment_order;
+        else
+            return 0;
     }
 
     //get mandate reference
     public function getMandateReference()
     {
-        //app variable
-        static $number = $this->app_variable->cur_mandate_reference;
+        $appVariable = $this->appVariable();
 
-        $number++;
-        $cur_mandate_reference = $number;
+        $cur_mandate_reference = ((int) $appVariable->cur_mandate_reference) + 1;
 
         //update app variable
-        $this->app_variable->cur_mandate_reference = $cur_mandate_reference;
-        $this->app_variable->save();
+        $appVariable->cur_mandate_reference = $cur_mandate_reference;
+        $appVariable->save();
 
         return $cur_mandate_reference;
     }
@@ -657,15 +949,13 @@ class DeductionService
     //get collection reference
     public function getCollectionReference()
     {
-        //app variable
-        static $number = $this->app_variable->cur_collection_reference;
+        $appVariable = $this->appVariable();
 
-        $number++;
-        $cur_collection_reference = $number;
+        $cur_collection_reference = ((int) $appVariable->cur_collection_reference) + 1;
 
         //update app variable
-        $this->app_variable->cur_collection_reference = $cur_collection_reference;
-        $this->app_variable->save();
+        $appVariable->cur_collection_reference = $cur_collection_reference;
+        $appVariable->save();
 
         return $cur_collection_reference;
     }

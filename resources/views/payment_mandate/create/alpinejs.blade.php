@@ -4,6 +4,7 @@
         return {
             uuid: "{{ $debit_order->uuid }}",
             status: "{{ $debit_order->status }}",
+            lifecycleStatus: "{{ $debit_order->lifecycle_status ?? $debit_order->resolved_lifecycle_status }}",
             channel: "{{ $debit_order->channel }}",
             showModal: false,
 
@@ -28,6 +29,14 @@
 
             resendBtn: "Resend",
 
+            canSaveOrSubmit() {
+                return ['draft', 'submitted'].includes(this.lifecycleStatus);
+            },
+
+            canVerifyOtp() {
+                return this.channel === 'NMB' && this.lifecycleStatus === 'awaiting_otp';
+            },
+
             //Save Mandate
             saveMandateForm() {
                 this.formMessage = "";
@@ -45,8 +54,8 @@
                     }).then(response => response.json())
                     .then(responseJson => {
                         console.log(responseJson);
-                        // change status
-                        this.status = 200;
+                        this.status = 100;
+                        this.lifecycleStatus = 'draft';
 
                         // display message
                         $('#message_wrp').html(
@@ -78,7 +87,10 @@
 
                     if (!response.ok) {
                         // Manually throw error to enter .catch
-                        throw {status: response.status, data};
+                        throw {
+                            status: response.status,
+                            data
+                        };
                     }
 
                     //check if response is success
@@ -90,28 +102,49 @@
                                 //create modal for verifying OTP 
                                 $('#verifyOtpModal').modal('show');
                                 this.status = 201;
+                                this.lifecycleStatus = data.lifecycle_status || 'awaiting_otp';
 
                                 //display message
-                                $('#message_wrp_1').html("<div class='alert alert-success rounded-sm'>" + data.success_msg + "</div>");
+                                $('#message_wrp_1').html("<div class='alert alert-success rounded-sm'>" +
+                                    data.success_msg + "</div>");
 
                                 //TODO: redirect to success page
 
                             } else {
                                 //display message
-                                $('#message_wrp').html("<div class='alert alert-danger rounded-sm'>" + data.success_msg + "</div>");
+                                $('#message_wrp').html("<div class='alert alert-danger rounded-sm'>" + data
+                                    .success_msg + "</div>");
                             }
-                        } else if(data.channel == "CRDB") {
+                        } else if (data.channel == "CRDB") {
                             if (data.response_code == 201) {
-                               this.status = 201;
-                               
-                               //display message
-                                $('#message_wrp').html("<div class='alert alert-success rounded-sm'>" + data.success_msg + "</div>");
+                                this.status = 201;
+                                this.lifecycleStatus = data.lifecycle_status || 'awaiting_otp';
+
+                                //display message
+                                $('#message_wrp').html("<div class='alert alert-success rounded-sm'>" + data
+                                    .success_msg + "</div>");
+                            }
+                        } else if (data.channel == "YAS") {
+                            if (data.response_code == 201) {
+                                this.status = 201;
+                                this.lifecycleStatus = data.lifecycle_status || 'awaiting_otp';
+                                const url = data.redirect_url;
+
+                                //display message
+                                $('#message_wrp').html("<div class='alert alert-success rounded-sm'>" + data
+                                    .success_msg + "</div>");
+
+                                //redirect to URL
+                                setTimeout(function() {
+                                    window.location.href = url;
+                                }, 2000);
                             }
                         } else {
                             //other channels
                         }
                     } else if (data.success == false) {
-                        $('#message_wrp').html("<div class='alert alert-danger rounded-sm'>" + data.success_msg + "</div>");
+                        $('#message_wrp').html("<div class='alert alert-danger rounded-sm'>" + data
+                            .success_msg + "</div>");
                     }
                 }).catch(error => {
                     console.error("Error caught:", error);
@@ -155,7 +188,8 @@
                     if (!response.ok) {
                         // Manually throw error to enter .catch
                         throw {
-                            status: response.status, data
+                            status: response.status,
+                            data
                         };
                     }
 
@@ -166,19 +200,23 @@
                             //set show modal to true
                             if (data.response_code == 201) {
                                 this.status = 201;
+                                this.lifecycleStatus = data.lifecycle_status || 'awaiting_otp';
 
                                 //display message
-                                $('#message_wrp_1').html("<div class='alert alert-success rounded-sm'>" + data.success_msg + "</div>");
+                                $('#message_wrp_1').html("<div class='alert alert-success rounded-sm'>" +
+                                    data.success_msg + "</div>");
 
                             } else {
                                 //display message
-                                $('#message_wrp_1').html("<div class='alert alert-danger rounded-sm'>" + data.success_msg + "</div>");
+                                $('#message_wrp_1').html("<div class='alert alert-danger rounded-sm'>" +
+                                    data.success_msg + "</div>");
                             }
                         } else {
                             //check for other channels
                         }
                     } else if (data.success == false) {
-                        $('#message_wrp_1').html("<div class='alert alert-danger rounded-sm'>" + data.success_msg + "</div>");
+                        $('#message_wrp_1').html("<div class='alert alert-danger rounded-sm'>" + data
+                            .success_msg + "</div>");
                     }
                 }).catch(error => {
                     console.error("Error caught:", error);
@@ -226,25 +264,29 @@
                             //set show modal to true
                             if (data.response_code == 202) {
                                 this.status = 202;
+                                this.lifecycleStatus = data.lifecycle_status || 'verified';
 
                                 //display message
-                                $('#message_wrp_1').html("<div class='alert alert-success rounded-sm'>" + data.success_msg + "</div>");
+                                $('#message_wrp_1').html("<div class='alert alert-success rounded-sm'>" +
+                                    data.success_msg + "</div>");
 
                                 //Redirect to success page
                                 var redirectionURL = '/payment-mandate/show/' + this.uuid;
 
-                                setTimeout(function () {
+                                setTimeout(function() {
                                     window.location.href = redirectionURL
                                 }, 2000);
                             } else {
                                 //display message
-                                $('#message_wrp').html("<div class='alert alert-danger rounded-sm'>" + data.success_msg + "</div>");
+                                $('#message_wrp').html("<div class='alert alert-danger rounded-sm'>" + data
+                                    .success_msg + "</div>");
                             }
                         } else {
                             //check for other channels
                         }
                     } else if (data.success == false) {
-                        $('#message_wrp_1').html("<div class='alert alert-danger rounded-sm'>" + data.success_msg + "</div>");
+                        $('#message_wrp_1').html("<div class='alert alert-danger rounded-sm'>" + data
+                            .success_msg + "</div>");
                     }
                 }).catch(error => {
                     console.error("Error caught:", error);

@@ -1,109 +1,71 @@
 @extends('layouts.master')
 
 @section('title')
-    Activate/Deactivate Account
+    Change User Status
+@endsection
+
+@section('css')
+    <link href="{{ URL::asset('/assets/css/admin-directory.css') }}" rel="stylesheet" type="text/css" />
 @endsection
 
 @section('content')
-    @component('components.breadcrumb')
-        @slot('li_1')
-            Users
-        @endslot
-        @slot('title')
-            Activate/Deactivate Account
-        @endslot
-    @endcomponent
+    <div class="sp-list-shell admin-directory-shell">
+        @component('components.breadcrumb')
+            @slot('li_1')
+                Users
+            @endslot
+            @slot('title')
+                Change User Status
+            @endslot
+        @endcomponent
 
-    <div class="row">
-        <div class="col-lg-8 col-md-8 col-sm-8 col-12">
-            <div class="card">
-                <div class="card-body">
-                    @if (session()->get('success'))
-                        <div class="alert alert-success">
-                            {{ session()->get('success') }}
-                        </div><br />
-                    @endif
+        <div class="row">
+            <div class="col-lg-8 col-md-10 col-sm-12">
+                <div class="card sp-list-card admin-directory-card">
+                    <div class="card-body">
+                        {{ Form::open(['url' => route('users.store-status', $user->id), 'method' => 'PUT', 'class' => 'form-horizontal']) }}
+                        {{ Form::token() }}
 
-                    {{ Form::open(['url' => route('users.store-status', $user->id), 'method' => 'PUT', 'class' => 'form-horizontal needs-validation', 'novalidate']) }}
-                    {{ Form::token() }}
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <div class="mb-3">
+                                    <label>Name</label>
+                                    {{ Form::text('name', old('name', $user->name), ['class' => 'form-control', 'readonly']) }}
+                                </div>
+                            </div>
 
-                    <div class="row">
-                        <div class="col-lg-6 col-12">
-                            <div class="mb-3">
-                                <label>Name <span class="red">*</span></label>
-                                {{ Form::text('name', old('name', $user->name), ['class="form-control"', 'placeholder="Write a full name..."', 'required']) }}
-                                <span class="invalid-feedback">{{ $errors->first('name') }}</span>
+                            <div class="col-lg-6">
+                                <div class="mb-3">
+                                    <label>Email</label>
+                                    {{ Form::text('email', old('email', $user->email), ['class' => 'form-control', 'readonly']) }}
+                                </div>
+                            </div>
 
-                                <div class="invalid-feedback">
-                                    Name required
+                            <div class="col-lg-6">
+                                <div class="mb-3">
+                                    <label>Phone</label>
+                                    {{ Form::text('phone', old('phone', $user->phone), ['class' => 'form-control', 'readonly']) }}
+                                </div>
+                            </div>
+
+                            <div class="col-lg-6">
+                                <div class="mb-3">
+                                    <label>Status <span class="red">*</span></label>
+                                    @php $_options = ['' => '-- Select --', 1 => 'Active', 0 => 'Inactive']; @endphp
+                                    {{ Form::select('status', $_options, old('status', $user->active), ['class' => 'form-control', 'required']) }}
+                                    <span class="text-danger">{{ $errors->first('status') }}</span>
                                 </div>
                             </div>
                         </div>
-                        <!--./col-lg-4 -->
 
-                        <div class="col-lg-6 col-12">
-                            <div class="mb-3">
-                                <label>Email <span class="red">*</span></label>
-                                {{ Form::text('email', old('email', $user->email), ['class="form-control"', 'placeholder="Write a email address..."', 'required']) }}
-                                <span class="invalid-feedback">{{ $errors->first('email') }}</span>
-
-                                <div class="invalid-feedback">
-                                    Email required
-                                </div>
-                            </div>
+                        <div class="d-flex justify-content-end gap-2 mt-3">
+                            <a href="{{ route('users.lists') }}" class="btn btn-outline-danger">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Update Status</button>
                         </div>
-                        <!--./col-lg-4 -->
-
-                        <div class="col-lg-6 col-12">
-                            <div class="mb-3">
-                                <label>Phone <span class="red">*</span></label>
-                                {{ Form::text('phone', old('phone', $user->phone), ['class="form-control"', 'placeholder="Write a phone..."', 'required']) }}
-                                <span class="invalid-feedback">{{ $errors->first('phone') }}</span>
-
-                                <div class="invalid-feedback">
-                                    Phone required
-                                </div>
-                            </div>
-                        </div>
-                        <!--./col-lg-4 -->
-
-                        <div class="col-lg-6 col-12">
-                            <div class="mb-3">
-                                <label>Status <span class="red">*</span></label>
-                                @php
-                                    $_options = [
-                                        '' => '-- Select --',
-                                        1 => 'Active',
-                                        0 => 'Inactive',
-                                    ];
-                                @endphp
-                                {{ Form::select('status', $_options, old('status', $user->active), ['class' => 'form-control', 'required']) }}
-                                <span class="invalid-feedback">{{ $errors->first('status') }}</span>
-
-                                <div class="invalid-feedback">
-                                    Status required
-                                </div>
-                            </div>
-                            <!--./form-group -->
-                        </div>
-                        <!--./col -->
+                        {{ Form::close() }}
                     </div>
-                    <!--./row -->
-
-                    <div class="row">
-                        <div class="col-lg-12">
-                            <div class="mb-3 text-sm-end d-none d-sm-block">
-                                <a href="{{ route('users.index') }}" class="btn btn-danger text-medium">Cancel</a>
-                                <button type="submit" class="btn btn-primary text-medium">Update</button>
-                            </div>
-                        </div>
-                        <!--./col-lg-12 -->
-                    </div>
-                    <!--./row -->
-                    {{ Form::close() }}
                 </div>
             </div>
         </div>
     </div>
-    <!--./row -->
 @endsection

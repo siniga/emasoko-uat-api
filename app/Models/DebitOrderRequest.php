@@ -14,4 +14,14 @@ class DebitOrderRequest extends Model
     {
         return $this->belongsTo(DebitOrder::class, "debit_order_id");
     }
+
+    public function requestedBy()
+    {
+        return $this->belongsTo(User::class, 'requested_by');
+    }
+
+    public function approvedBy()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
 }

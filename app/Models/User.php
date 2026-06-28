@@ -7,6 +7,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Laravel\Passport\HasApiTokens;
 
@@ -39,6 +40,36 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (User $user) {
+            if (!$user->created_by && Auth::check()) {
+                $user->created_by = Auth::id();
+            }
+        });
+
+        static::updating(function (User $user) {
+            $changedAttributes = array_diff(
+                array_keys($user->getDirty()),
+                ['updated_at', 'updated_by']
+            );
+
+            if (Auth::check() && !empty($changedAttributes)) {
+                $user->updated_by = Auth::id();
+            }
+        });
+    }
+
+    public function createdBy()
+    {
+        return $this->belongsTo(self::class, 'created_by');
+    }
+
+    public function updatedBy()
+    {
+        return $this->belongsTo(self::class, 'updated_by');
+    }
 
     //roles
     public function roles()
@@ -91,6 +122,7 @@ class User extends Authenticatable
             'role_id' => 'required',
             'provider_ids' => 'required_if:role_id,==,2,4',
             'company_id' => 'required_if:role_id,==,6',
+            'username' => 'required_if:is_api_user,1|nullable|string|max:255|unique:users,username',
             'password' => 'required|string|min:8',
             'password_confirm' => 'required|same:password'
         ];
@@ -107,6 +139,8 @@ class User extends Authenticatable
             'role_id.required' => 'Role required',
             'provider_ids.required_if' => 'Service providers is required',
             'company_id.required_if' => 'eMakato partner is required',
+            'username.required_if' => 'Username is required for API users',
+            'username.unique' => 'Username must be unique',
             'password.required' => 'Password is required',
             'password_confirm.required' => 'Confirm password is required',
             'password_confirm.same:password' => 'Password must match',

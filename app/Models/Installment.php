@@ -89,13 +89,25 @@ class Installment extends Model
 
         return self::filterCondition()
             ->select([
+                //number of collection
                 DB::raw("COALESCE(SUM(CASE 
-                WHEN DATE(payment_date) = '{$date}' 
-                THEN installment_amount ELSE 0 END), 0) as total_amount"),
+                    WHEN DATE(payment_date) = '{$date}' 
+                    THEN 1 ELSE 0 END), 0) as total_collections"),
 
+                //expected collection amount
                 DB::raw("COALESCE(SUM(CASE 
-                WHEN DATE(effective_payment_date) = '{$date}' AND status IN ('CLOSED', 'PARTIAL_PAID')
-                THEN current_balance ELSE 0 END), 0) as paid_amount")
+                    WHEN DATE(payment_date) = '{$date}' 
+                    THEN installment_amount ELSE 0 END), 0) as total_amount"),
+
+                //number of successful collection
+                DB::raw("COALESCE(SUM(CASE 
+                    WHEN DATE(effective_payment_date) = '{$date}' AND status IN ('CLOSED', 'PARTIAL_PAID')
+                    THEN 1 ELSE 0 END), 0) as successful_collections"),
+
+                //actual collection amount
+                DB::raw("COALESCE(SUM(CASE 
+                    WHEN DATE(effective_payment_date) = '{$date}' AND status IN ('CLOSED', 'PARTIAL_PAID')
+                    THEN current_balance ELSE 0 END), 0) as paid_amount")
             ])
             ->whereHas('debitOrder', function ($query) use ($channel) {
                 $query->where(['debit_orders.approved' => 1])
@@ -117,10 +129,35 @@ class Installment extends Model
 
         return self::filterCondition()
             ->select([
+                //number of collection
+                DB::raw("
+                    COUNT(
+                        CASE
+                            WHEN MONTH(payment_date) = {$month}
+                            AND YEAR(payment_date) = {$year}
+                            THEN 1
+                        END
+                    ) as total_collections
+                "),
+
+                //expected collection amount
                 DB::raw("COALESCE(SUM(CASE 
                 WHEN MONTH(payment_date) = {$month} AND YEAR(payment_date) = {$year} 
                 THEN installment_amount ELSE 0 END), 0) as total_amount"),
 
+                //number of successful collection
+                DB::raw("
+                    COUNT(
+                        CASE
+                            WHEN MONTH(effective_payment_date) = {$month}
+                            AND YEAR(effective_payment_date) = {$year}
+                            AND status IN ('CLOSED', 'PARTIAL_PAID')
+                            THEN 1
+                        END
+                    ) as successful_collections
+                "),
+
+                //actual collection amount
                 DB::raw("COALESCE(SUM(CASE 
                 WHEN MONTH(effective_payment_date) = {$month} AND YEAR(effective_payment_date) = {$year} AND status IN ('CLOSED', 'PARTIAL_PAID')
                 THEN current_balance ELSE 0 END), 0) as paid_amount")
@@ -138,7 +175,7 @@ class Installment extends Model
     }
 
     // Get today's collection statistics for a specific partner
-    public static function todayCollectionStats($partnerId, $date = null, $status = null, $deleted = null, $channel = null , $paid = null)
+    public static function todayCollectionStats($partnerId, $date = null, $status = null, $deleted = null, $channel = null, $paid = null)
     {
         $date = $date ?? now()->toDateString(); // Default to today's date: 'Y-m-d'
 
@@ -164,7 +201,7 @@ class Installment extends Model
                     ->when($partnerId, function ($q) use ($partnerId) {
                         $q->where('debit_orders.partner_id', $partnerId);
                     })
-                     ->when(!is_null($channel), function ($query) use ($channel) {
+                    ->when(!is_null($channel), function ($query) use ($channel) {
                         $query->where('debit_orders.channel', $channel);
                     })
                     ->when($status, function ($q) use ($status) {

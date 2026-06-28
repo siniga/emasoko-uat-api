@@ -5,25 +5,25 @@
 @endsection
 
 @section('content')
-    <div class="row">
-        <div class="col-12">
-            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                <h4 class="mb-sm-0 font-size-18">Service Provider</h4>
+    <div class="sp-list-shell">
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                    <h4 class="mb-sm-0 font-size-18">Service Provider</h4>
 
-                <div class="page-title-right">
-                    <ol class="breadcrumb m-0">
-                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item active">Service Providers</li>
-                    </ol>
+                    <div class="page-title-right">
+                        <ol class="breadcrumb m-0">
+                            <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+                            <li class="breadcrumb-item active">Service Providers</li>
+                        </ol>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="row">
-        <div class="col-lg-12">
-            <div class="card">
-                <div class="card-body">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="sp-list-filter mb-3">
                     <div class="row">
                         <div class="col-lg-12">
                             {!! Form::open(['url' => route('companies.lists'), 'method' => 'POST', 'class' => 'form-horizontal']) !!}
@@ -75,7 +75,7 @@
                                             $options = ['' => '-- Select Region --'] + $options;
                                         @endphp
 
-                                        {{ Form::select('region_id', $options, old('region_id', $post_data['region_id']), ['class' => 'form-control', 'id' => 'region_id']) }}
+                                        {{ Form::select('region_id', $options, old('region_id', $post_data['region_id']), ['class' => 'form-control select2', 'id' => 'region_id']) }}
                                     </div>
                                 </div>
                                 <!--./col -->
@@ -83,20 +83,14 @@
                                 <div class="col-lg-3">
                                     <div class="mb-3">
                                         @php
-                                            $options = [
-                                                0 => 'Pending Review',
-                                                1 => 'Approved',
-                                                99 => 'Failed',
-                                            ];
-                                            $options = ['' => '-- Select eMakato Status --'] + $options;
+                                            $options = ['' => '-- Select Lifecycle --'] + \App\Models\Partner::lifecycleOptions();
                                         @endphp
 
-                                        {{ Form::select('approved', $options, old('approved', $post_data['approved']), ['class' => 'form-control']) }}
+                                        {{ Form::select('lifecycle_status', $options, old('lifecycle_status', $post_data['lifecycle_status']), ['class' => 'form-control']) }}
                                     </div>
                                 </div>
                                 <!--./col -->
                             </div>
-                            <!--./row -->
 
                             <div class="row">
                                 <div class="col-lg-6">
@@ -104,7 +98,7 @@
                                         {{ Form::text('keyword', old('keyword', $post_data['keyword']), ['class="form-control"', 'placeholder="Search by business name  or TIN number..."']) }}
                                     </div>
                                 </div>
-                                <!--./col -->
+
                                 <div class="col-lg-3">
                                     <div class="mb-3">
                                         @php
@@ -122,134 +116,216 @@
                                 <div class="col-lg-3">
                                     <div class="mb-3">
                                         <div class="text-sm-end d-none d-sm-block">
+                                            <button type="reset" name="reset" class="btn btn-outline-danger">
+                                                <i class='bx bx-reset'></i> Clear
+                                            </button>
+
                                             <button type="submit" name="filter" class="btn btn-secondary">
-                                                <i class="bx bx-search"></i> Filter
+                                                <i class="bx bx-search"></i> Apply Filters
                                             </button>
                                         </div>
                                     </div>
                                 </div>
                             </div>
+
+
                             {{ Form::close() }}
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="card">
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <div class="row">
-                            <div class="col-md-12">
-                                @if (session()->get('success'))
-                                    <div class="alert alert-success">
-                                        {{ session()->get('success') }}
-                                    </div>
-                                @elseif(session()->get('danger'))
-                                    <div class="alert alert-danger">
-                                        {{ session()->get('danger') }}
-                                    </div>
-                                @endif
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <div class="detail-summary shadow h-96 py-2">
+                            <div class="detail-summary__label text-muted">Total Subscribers</div>
+                            <div class="detail-summary__split">
+                                <div class="detail-summary__metric">
+                                    <div class="detail-summary__value text-primary">
+                                        {{ number_format($companyStats['total']) }}</div>
+                                </div>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="row mb-2">
-                            <div class="col-md-6">
-                                <span class="font-weight-500">No. of service providers:
-                                    {{ number_format($number_of_companies) }} </span>
+                    <div class="col-md-3">
+                        <div class="detail-summary shadow h-96 py-2">
+                            <div class="detail-summary__label text-muted">Approved</div>
+                            <div class="detail-summary__split">
+                                <div class="detail-summary__metric">
+                                    <div class="detail-summary__value text-success">
+                                        {{ number_format($companyStats['approved']) }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="detail-summary shadow h-96 py-2">
+                            <div class="detail-summary__label text-muted">Pending</div>
+                            <div class="detail-summary__split">
+                                <div class="detail-summary__metric">
+                                    <div class="detail-summary__value text-warning">
+                                        {{ number_format($companyStats['pending']) }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="detail-summary shadow h-96 py-2">
+                            <div class="detail-summary__label text-muted"> Failed</div>
+                            <div class="detail-summary__split">
+                                <div class="detail-summary__metric">
+                                    <div class="detail-summary__value text-danger">
+                                        {{ number_format($companyStats['failed']) }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card sp-list-card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    @if (session()->get('success'))
+                                        <div class="alert alert-success">
+                                            {{ session()->get('success') }}
+                                        </div>
+                                    @elseif(session()->get('danger'))
+                                        <div class="alert alert-danger">
+                                            {{ session()->get('danger') }}
+                                        </div>
+                                    @endif
+                                </div>
                             </div>
 
-                            <div class="col-md-6">
-                                <div class="text-sm-end d-none d-sm-block">
-                                    <a class="btn btn-primary btn-sm" href="{{ route('companies.registration') }}">
-                                        <i class="bx bx-list-plus"></i> Register New
-                                    </a>
-                                    @if (isset($companies) && $companies->isNotEmpty())
-                                        <a class="btn btn-outline-success btn-sm"
-                                            href="{{ route('companies.export-xls', ['start_at' => $post_data['start_at'], 'end_at' => $post_data['end_at'], 'category_id' => $post_data['category_id'], 'region_id' => $post_data['region_id'], 'approved' => $post_data['approved'], 'is_verified' => $post_data['is_verified'], 'keyword' => $post_data['keyword']]) }}">
-                                            <i class="fas fa-file-excel"></i> Export XLS
+                            <div class="row mb-2">
+                                <div class="col-md-6">
+                                    <span class="font-weight-500">No. of service providers:
+                                        {{ number_format($number_of_companies) }} </span>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="text-sm-end d-none d-sm-block">
+                                        <a class="btn btn-primary btn-sm" href="{{ route('companies.registration') }}">
+                                            <i class="bx bx-list-plus"></i> Register New
                                         </a>
-                                    @endif
+                                        @if (isset($companies) && $companies->isNotEmpty())
+                                            <a class="btn btn-outline-success btn-sm"
+                                                href="{{ route('companies.export-xls', ['start_at' => $post_data['start_at'], 'end_at' => $post_data['end_at'], 'category_id' => $post_data['category_id'], 'region_id' => $post_data['region_id'], 'approved' => $post_data['approved'], 'lifecycle_status' => $post_data['lifecycle_status'], 'is_verified' => $post_data['is_verified'], 'keyword' => $post_data['keyword']]) }}">
+                                                <i class="fas fa-file-excel"></i> Export XLS
+                                            </a>
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        @if (isset($companies) && $companies->isNotEmpty())
-                            <div class="table-responsive">
-                                <table class="table table-bordered dt-responsive  nowrap w-100" id="dynamicTable">
-                                    <thead>
-                                        <tr>
-                                            <th width="3%">#</th>
-                                            <th width="24%">Bussiness Name</th>
-                                            <th>Category</th>
-                                            <th>TIN Number</th>
-                                            <th>Year of Inc</th>
-                                            <th>Phone</th>
-                                            <th>Region</th>
-                                            <th>Approved</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @php $serial = 1; @endphp
-                                        @foreach ($companies as $company)
+                            @if (isset($companies) && $companies->isNotEmpty())
+                                <div class="table-responsive sp-list-table">
+                                    <table class="table table-bordered dt-responsive  nowrap w-100" id="dynamicTable">
+                                        <thead>
                                             <tr>
-                                                <td>{{ $serial }}</td>
-                                                <td>{{ $company->business_name }}</td>
-                                                <td>{{ $company->partnerCategory->name ?? '' }}</td>
-                                                <td>{{ $company->tin_number }}</td>
-                                                <td>{{ $company->year_of_incorporation }}</td>
-                                                <td>{{ $company->phone }}</td>
-                                                <td>{{ $company->region ? ucfirst(strtolower($company->region->name)) : '' }}
-                                                </td>
-                                                <td>
-                                                    @if ($company->approved == 0)
-                                                        <span class="badge badge-soft-warning">Pending Review</span>
-                                                    @elseif($company->approved == 1)
-                                                        <span class="badge badge-soft-success">Approved</span>
-                                                    @elseif($company->approved == 99)
-                                                        <span class="badge badge-soft-danger">Failed</span>
-                                                    @endif
-                                                </td>
-                                                <td>
-                                                    @if ($company->complete == 1)
-                                                        <a href="{{ route('companies.details', $company->uuid) }}"
-                                                            title="View" class="btn btn-xss">
-                                                            <i class="bx bxs-folder-open"></i>
-                                                        </a>
-                                                    @elseif($company->complete == 0)
-                                                        <a href="{{ route('companies.registration', $company->uuid) }}"
-                                                            title="View" class="btn btn-xss">
-                                                            <i class='bx bxs-plus-square bx-xs'></i>
-                                                        </a>
-                                                    @endif
-
-                                                    <a href="{{ route('companies.edit', $company->uuid) }}" title="Edit"
-                                                        class="btn btn-xss">
-                                                        <i class="bx bx-edit text-secondary"></i>
-                                                    </a>
-
-                                                    @if ($company->approved == 0 || $company->approved == 99)
-                                                        <a href="{{ route('companies.delete', $company->uuid) }}"
-                                                            title="Delete" class="btn btn-xss delete">
-                                                            <i class="bx bx-trash text-danger"></i>
-                                                        </a>
-                                                    @endif
-                                                </td>
+                                                <th width="3%">#</th>
+                                                <th width="24%">Bussiness Name</th>
+                                                <th>Category</th>
+                                                <th>TIN Number</th>
+                                                <th>Year of Inc</th>
+                                                <th>Phone</th>
+                                                <th>Region</th>
+                                                <th>Source</th>
+                                                <th>Approved</th>
+                                                <th>Actions</th>
                                             </tr>
-                                            @php $serial++; @endphp
-                                        @endforeach
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody>
+                                            @php $serial = 1; @endphp
+                                            @foreach ($companies as $company)
+                                                <tr>
+                                                    <td>{{ $serial }}</td>
+                                                    <td>{{ $company->business_name }}</td>
+                                                    <td>{{ $company->partnerCategory->name ?? '' }}</td>
+                                                    <td>{{ $company->tin_number }}</td>
+                                                    <td>{{ $company->year_of_incorporation }}</td>
+                                                    <td>{{ $company->phone }}</td>
+                                                    <td>{{ $company->region ? ucfirst(strtolower($company->region->name)) : '' }}
+                                                    </td>
+                                                    <td>{{ $company->registration_source_label }}</td>
+                                                    <td>
+                                                        @php
+                                                            $lifecycle = $company->resolved_lifecycle_status;
+                                                            $badgeType = match ($lifecycle) {
+                                                                \App\Models\Partner::LIFECYCLE_ACTIVE => 'success',
+                                                                \App\Models\Partner::LIFECYCLE_APPROVED => 'success',
+                                                                \App\Models\Partner::LIFECYCLE_PENDING_ACCOUNT_ACTIVATION => 'warning',
+                                                                \App\Models\Partner::LIFECYCLE_SUBMITTED => 'warning',
+                                                                \App\Models\Partner::LIFECYCLE_UNDER_REVIEW => 'info',
+                                                                \App\Models\Partner::LIFECYCLE_REJECTED => 'danger',
+                                                                \App\Models\Partner::LIFECYCLE_FAILED => 'danger',
+                                                                default => 'secondary',
+                                                            };
+                                                        @endphp
+                                                        <span class="badge badge-soft-{{ $badgeType }}">
+                                                            {{ \App\Models\Partner::lifecycleOptions()[$lifecycle] ?? ucwords(str_replace('_', ' ', $lifecycle)) }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <div class="dropdown sp-row-actions">
+                                                            <button class="btn dropdown-toggle" type="button"
+                                                                data-bs-toggle="dropdown" aria-expanded="false"
+                                                                title="Provider Actions">
+                                                                <i class="bx bx-dots-vertical-rounded fs-5"></i>
+                                                            </button>
+                                                            <div class="dropdown-menu dropdown-menu-end">
+                                                                @if ($company->complete == 1)
+                                                                    <a href="{{ route('companies.show', $company->uuid) }}"
+                                                                        class="dropdown-item">
+                                                                        <i class='bx bxs-folder-open'></i> View
+                                                                    </a>
+                                                                @elseif($company->complete == 0)
+                                                                    <a href="{{ route('companies.registration', $company->uuid) }}"
+                                                                        class="dropdown-item">
+                                                                        <i class='bx bx-plus'></i>Continue Registration
+                                                                    </a>
+                                                                @endif
 
-                                <div class="d-flex justify-content-end">
-                                    @if (method_exists($companies, 'links'))
-                                        {{ $companies->links() }}
-                                    @endif
+                                                                <a href="{{ route('companies.edit', $company->uuid) }}"
+                                                                    class="dropdown-item">
+                                                                    <i class='bx bxs-pencil'></i> Edit
+                                                                </a>
+
+                                                                @if ($company->approved == 0 || $company->approved == 99)
+                                                                    <form method="POST"
+                                                                        action="{{ route('companies.delete', $company->uuid) }}"
+                                                                        onsubmit="return confirm('Delete this service provider and all related information?')">
+                                                                        @csrf
+                                                                        @method('DELETE')
+                                                                        <button type="submit"
+                                                                            class="dropdown-item text-danger">
+                                                                            <i class='bx bx-trash'></i> Delete
+                                                                        </button>
+                                                                    </form>
+                                                                @endif
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                @php $serial++; @endphp
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+
+                                    <div class="d-flex justify-content-end">
+                                        @if (method_exists($companies, 'links'))
+                                            {{ $companies->links() }}
+                                        @endif
+                                    </div>
                                 </div>
-                            </div>
-                        @else
-                            <div class="alert alert-danger"> No any service provider registered</div>
-                        @endif
+                            @else
+                                <div class="alert alert-danger"> No any service provider registered</div>
+                            @endif
+                        </div>
                     </div>
                 </div>
             </div>

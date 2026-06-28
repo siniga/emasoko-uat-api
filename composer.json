@@ -8,31 +8,27 @@
     ],
     "license": "MIT",
     "require": {
-        "php": "^7.3|^8.0",
-        "barryvdh/laravel-dompdf": "^2.0",
-        "dedoc/scramble": "^0.8.6",
-        "firebase/php-jwt": "^6.10",
-        "fruitcake/laravel-cors": "^2.0",
+        "php": "^8.2",
+        "barryvdh/laravel-dompdf": "^3.0",
+        "dedoc/scramble": "^0.13",
+        "firebase/php-jwt": "^7.0",
         "guzzlehttp/guzzle": "^7.9.2",
-        "illuminate/support": "^8.83",
         "intervention/image": "^2.7",
-        "laravel/framework": "^8.65",
-        "laravel/passport": "^10.4",
-        "laravel/sanctum": "^2.11",
-        "laravel/tinker": "^2.5",
-        "laravel/ui": "^3.3",
-        "laravelcollective/html": "^6.1",
+        "laravel/framework": "^11.0",
+        "laravel/passport": "^12.0",
+        "laravel/sanctum": "^4.0",
+        "laravel/tinker": "^2.9",
+        "laravel/ui": "^4.0",
         "maatwebsite/excel": "^3.1",
         "stidges/country-flags": "^2.0"
     },
     "require-dev": {
-        "facade/ignition": "^2.5",
+        "barryvdh/laravel-ide-helper": "^3.0",
         "fakerphp/faker": "^1.9.1",
         "laravel/sail": "^1.0.1",
         "mockery/mockery": "^1.4.4",
-        "nunomaduro/collision": "^5.10",
-        "phpunit/phpunit": "^9.5.10",
-        "barryvdh/laravel-ide-helper": "^2.10"
+        "nunomaduro/collision": "^8.1",
+        "phpunit/phpunit": "^10.5"
     },
     "autoload": {
         "psr-4": {
