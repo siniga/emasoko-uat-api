@@ -15,9 +15,9 @@ class CrdbSession
 
     public function __construct()
     {
-        $this->password = env("CRDB_SESSION_PASSWORD");
-        $this->partnerId = env("CRDB_SESSION_PARTNER_ID");
-        $this->sessionUrl = env("CRDB_SESSION_URL");
+        $this->password = config('services.crdb.session.password');
+        $this->partnerId = config('services.crdb.session.partner_id');
+        $this->sessionUrl = config('services.crdb.session.url');
     }
 
     public function getToken(): string

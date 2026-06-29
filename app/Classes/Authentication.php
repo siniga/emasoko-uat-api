@@ -14,7 +14,7 @@ class Authentication
 
     public function __construct()
     {
-        $this->username = env("NMB_USERNAME");
+        $this->username = config('services.nmb.username');
     }
 
     public function generateToken()
@@ -32,7 +32,7 @@ class Authentication
         ];
 
         // Your secret key
-        $secretKey = env('JWT_SECRET');
+        $secretKey = config('services.nmb.jwt_secret');
 
         // Check the key type
         if (!is_string($secretKey)) {
@@ -42,7 +42,7 @@ class Authentication
         }
 
         // Encode the payload to generate the token
-        $jwtToken = JWT::encode($payload, $secretKey, 'HS256');
+        $jwtToken = JWT::encode($payload, $secretKey, config('services.nmb.jwt_algo'));
 
         // Return the token
         return $jwtToken;

@@ -32,9 +32,54 @@ return [
 
     'jumena' => [
         'token_url' => env('JUMENA_TOKEN_URL'),
+        'payment_token_url' => env('JUMENA_PAYMENT_TOKEN_URL'),
         'payment_session_url' => env('JUMENA_PAYMENT_SESSION_URL'),
         'client_id' => env('YAS_CLIENT_ID'),
         'client_secret' => env('YAS_CLIENT_SECRET'),
+        'periodic_credentials' => [
+            'daily' => [
+                'client_id' => env('JUMENA_DAILY_CLIENT_ID'),
+                'client_secret' => env('JUMENA_DAILY_CLIENT_SECRET'),
+            ],
+            'weekly' => [
+                'client_id' => env('JUMENA_WEEKLY_CLIENT_ID'),
+                'client_secret' => env('JUMENA_WEEKLY_CLIENT_SECRET'),
+            ],
+            'monthly' => [
+                'client_id' => env('JUMENA_MONTHLY_CLIENT_ID'),
+                'client_secret' => env('JUMENA_MONTHLY_CLIENT_SECRET'),
+            ],
+        ],
+    ],
+
+    'nmb' => [
+        'api_url' => env('NMB_API_URL'),
+        'username' => env('NMB_USERNAME'),
+        'jwt_secret' => env('NMB_JWT_SECRET'),
+        'jwt_algo' => env('NMB_JWT_ALGO', 'HS256'),
+    ],
+
+    'crdb' => [
+        'api_url' => env('CRDB_API_URL'),
+        'token_url' => env('CRDB_TOKEN_URL'),
+        'batch_url' => env('CRDB_BATCH_URL'),
+        'consumer_key' => env('CRDB_CONSUMER_KEY'),
+        'consumer_secret' => env('CRDB_CONSUMER_SECRET'),
+        'salt' => env('CRDB_SALT'),
+        'partner_id' => env('CRDB_PARTNER_ID'),
+        'channel_id' => env('CRDB_CHANNEL_ID'),
+        'app_id' => env('CRDB_APP_ID'),
+        'session' => [
+            'url' => env('CRDB_SESSION_URL'),
+            'password' => env('CRDB_SESSION_PASSWORD'),
+            'partner_id' => env('CRDB_SESSION_PARTNER_ID'),
+        ],
+    ],
+
+    'airtel' => [
+        'client_id' => env('AIRTEL_CLIENT_ID'),
+        'client_secret' => env('AIRTEL_CLIENT_SECRET'),
+        'token_url' => env('AIRTEL_TOKEN_URL', 'https://openapiuat.airtel.africa/auth/oauth2/token'),
     ],
 
     'callbacks' => [

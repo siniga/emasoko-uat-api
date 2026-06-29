@@ -21,7 +21,7 @@ class BearerToken
 
         $this->clientId = $clientId;
         $this->clientSecret = $clientSecret;
-        $this->tokenUrl = $tokenUrl ?: env("JUMENA_PAYMENT_TOKEN_URL");
+        $this->tokenUrl = $tokenUrl ?: config('services.jumena.payment_token_url');
     }
 
     public function generate()
@@ -39,14 +39,14 @@ class BearerToken
             }
 
             if ($this->debitOrder->periodicity === "DAILY") {
-                $this->clientId = env("JUMENA_DAILY_CLIENT_ID");
-                $this->clientSecret = env("JUMENA_DAILY_CLIENT_SECRET");
+                $this->clientId = config('services.jumena.periodic_credentials.daily.client_id');
+                $this->clientSecret = config('services.jumena.periodic_credentials.daily.client_secret');
             } else if ($this->debitOrder->periodicity === "WEEKLY") {
-                $this->clientId = env("JUMENA_WEEKLY_CLIENT_ID");
-                $this->clientSecret = env("JUMENA_WEEKLY_CLIENT_SECRET");
+                $this->clientId = config('services.jumena.periodic_credentials.weekly.client_id');
+                $this->clientSecret = config('services.jumena.periodic_credentials.weekly.client_secret');
             } else if ($this->debitOrder->periodicity === "MONTHLY") {
-                $this->clientId = env("JUMENA_MONTHLY_CLIENT_ID");
-                $this->clientSecret = env("JUMENA_MONTHLY_CLIENT_SECRET");
+                $this->clientId = config('services.jumena.periodic_credentials.monthly.client_id');
+                $this->clientSecret = config('services.jumena.periodic_credentials.monthly.client_secret');
             }
         }
 

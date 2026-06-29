@@ -44,7 +44,7 @@ class MandateController extends Controller
         $frequency = $request->frequency;
 
         //validate mandatory fields
-        $partnerId = env('CRDB_PARTNER_ID');
+        $partnerId = config('services.crdb.partner_id');
         $requestId = Str::uuid()->toString();
 
         //data and salt
@@ -62,8 +62,8 @@ class MandateController extends Controller
 
         //headers
         $headers = [
-            'Channel' => env('CRDB_CHANNEL_ID'),
-            'AppId' => env('CRDB_APP_ID'),
+            'Channel' => config('services.crdb.channel_id'),
+            'AppId' => config('services.crdb.app_id'),
             'AppVersion' => '1.0.0',
             "RequestId" => $requestId,
             'Authorization' => 'Bearer ' . $AUTH_BEARER_TOKEN,
@@ -94,7 +94,7 @@ class MandateController extends Controller
         Log::debug($payload);
 
         //API URL
-        $API_URL = env('CRDB_API_URL');
+        $API_URL = config('services.crdb.api_url');
         Log::debug("== CRDB API URL ==");
         Log::debug($API_URL);
 
@@ -122,7 +122,7 @@ class MandateController extends Controller
         $frequency = $request->frequency;
 
         //validate mandatory fields
-        $partnerId = env('CRDB_PARTNER_ID');
+        $partnerId = config('services.crdb.partner_id');
 
         //data and salt
         $data = $requestId . substr($debitAccount, -4) . $partnerId;
@@ -139,8 +139,8 @@ class MandateController extends Controller
 
         //headers
         $headers = [
-            'Channel' => env('CRDB_CHANNEL_ID'),
-            'AppId' => env('CRDB_APP_ID'),
+            'Channel' => config('services.crdb.channel_id'),
+            'AppId' => config('services.crdb.app_id'),
             'AppVersion' => '1.0.0',
             "RequestId" => $requestId,
             'Authorization' => 'Bearer ' . $AUTH_BEARER_TOKEN,
@@ -171,7 +171,7 @@ class MandateController extends Controller
         Log::debug($payload);
 
         //API URL
-        $API_URL = env('CRDB_API_URL');
+        $API_URL = config('services.crdb.api_url');
         Log::debug("== CRDB API URL ==");
         Log::debug($API_URL);
 

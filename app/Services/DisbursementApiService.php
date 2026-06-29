@@ -18,7 +18,7 @@ class DisbursementApiService
 
     public function createAndPost(BatchDisbursementRequest $dto): DisbursementBatch
     {
-        $partnerID = env("CRDB_SESSION_PARTNER_ID");
+        $partnerID = config('services.crdb.session.partner_id');
         $token     = $this->session->getToken();
 
         //headers
@@ -55,7 +55,7 @@ class DisbursementApiService
         }
 
         //API URL
-        $API_URL = env("CRDB_BATCH_URL");
+        $API_URL = config('services.crdb.batch_url');
 
         //push payload 
         $response = Http::withHeaders($headers)->post($API_URL, $payload);
@@ -115,7 +115,7 @@ class DisbursementApiService
         ];
 
         //API URL
-        $API_URL = env("CRDB_BATCH_URL");
+        $API_URL = config('services.crdb.batch_url');
 
         //push payload 
         $response = Http::withHeaders($headers)->post($API_URL, $payload);

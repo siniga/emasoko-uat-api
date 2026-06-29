@@ -129,7 +129,7 @@ class BankPayloadService
     public function CRDBMandateRegistrationPayload(DebitOrder $debitOrder, $requestId)
     {
         $customerAccount = $debitOrder->customerAccount;
-        $partnerId = env("CRDB_PARTNER_ID");
+        $partnerId = config('services.crdb.partner_id');
 
         //data and salt
         $data = $requestId . substr($customerAccount->account_number, -4) . $partnerId;
@@ -202,7 +202,7 @@ class BankPayloadService
     public function CRDBMandateCancellationPayload(DebitOrder $debitOrder, $requestId)
     {
         $customerAccount = $debitOrder->customerAccount;
-        $partnerId = env("CRDB_PARTNER_ID");
+        $partnerId = config('services.crdb.partner_id');
 
         //data and salt
         $data = $requestId . substr($customerAccount->account_number, -4) . $partnerId;

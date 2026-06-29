@@ -59,7 +59,7 @@ class MandateRegistrationJob implements ShouldQueue
         Log::debug($payload);
 
         //API URL 
-        $API_URL = env('API_URL');
+        $API_URL = config('services.nmb.api_url');
         Log::debug("API URL =>" . $API_URL);
 
         //response

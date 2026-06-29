@@ -58,7 +58,7 @@ class BankApiService
         Log::debug($payload);
 
         //API URL 
-        $API_URL = env('API_URL');
+        $API_URL = config('services.nmb.api_url');
 
         //response
         $response = Http::withHeaders($headers)->post($API_URL, $payload);
@@ -133,7 +133,7 @@ class BankApiService
         Log::debug($payload);
 
         //API URL 
-        $API_URL = env('API_URL');
+        $API_URL = config('services.nmb.api_url');
 
         //response
         $response = Http::withHeaders($headers)->post($API_URL, $payload);
@@ -219,7 +219,7 @@ class BankApiService
         Log::debug($payload);
 
         //API URL 
-        $API_URL = env('API_URL');
+        $API_URL = config('services.nmb.api_url');
 
         //response
         $response = Http::withHeaders($headers)->post($API_URL, $payload);
@@ -292,8 +292,8 @@ class BankApiService
 
         //headers
         $headers = [
-            'Channel' => env('CRDB_CHANNEL_ID'),
-            'AppId' => env('CRDB_APP_ID'),
+            'Channel' => config('services.crdb.channel_id'),
+            'AppId' => config('services.crdb.app_id'),
             'AppVersion' => '1.0.0',
             "RequestId" => $data['requestId'],
             'Authorization' => 'Bearer ' . $bearerToken,
@@ -306,7 +306,7 @@ class BankApiService
         Log::debug($data['payload']);
 
         //API URL
-        $API_URL = env('CRDB_API_URL');
+        $API_URL = config('services.crdb.api_url');
 
         //push payload => NMB Direct Debits
         $httpResponse = Http::withHeaders($headers)->post($API_URL, $data['payload']);
@@ -416,7 +416,7 @@ class BankApiService
         ];
 
         //API URL
-        $API_URL = env("JUMENA_PAYMENT_SESSION_URL");
+        $API_URL = config('services.jumena.payment_session_url');
 
         //push payload => JUMENA Direct Debits
         $response = Http::withHeaders($headers)->post($API_URL, $data);
@@ -484,7 +484,7 @@ class BankApiService
         Log::debug($payload);
 
         //API URL 
-        $API_URL = env('API_URL');
+        $API_URL = config('services.nmb.api_url');
 
         //response
         $response = Http::withHeaders($headers)->post($API_URL, $payload);
@@ -565,7 +565,7 @@ class BankApiService
         Log::debug($payload);
 
         //API URL 
-        $API_URL = env('API_URL');
+        $API_URL = config('services.nmb.api_url');
 
         //response
         $response = Http::withHeaders($headers)->post($API_URL, $payload);
@@ -622,8 +622,8 @@ class BankApiService
         $authBearerToken = $this->crdbAuth?->generateToken() ?? (new Checksum())->generateToken();
 
         $headers = [
-            'Channel' => env('CRDB_CHANNEL_ID'),
-            'AppId' => env('CRDB_APP_ID'),
+            'Channel' => config('services.crdb.channel_id'),
+            'AppId' => config('services.crdb.app_id'),
             'AppVersion' => '1.0.0',
             'RequestId' => $data['requestId'],
             'Authorization' => 'Bearer ' . $authBearerToken,
@@ -634,7 +634,7 @@ class BankApiService
         Log::debug('== CRDB Mandate Cancellation Request ==');
         Log::debug($data['payload']);
 
-        $httpResponse = Http::withHeaders($headers)->post(env('CRDB_API_URL'), $data['payload']);
+        $httpResponse = Http::withHeaders($headers)->post(config('services.crdb.api_url'), $data['payload']);
         $raw = $httpResponse->body();
         $raw = preg_replace('/^\xEF\xBB\xBF/', '', trim($raw ?? ''));
         $sanitized = preg_replace('/,\s*(\}|\])/m', '$1', $raw);
@@ -698,7 +698,7 @@ class BankApiService
         ];
 
         //API URL 
-        $API_URL = env('API_URL');
+        $API_URL = config('services.nmb.api_url');
 
         //response
         $response = Http::withHeaders($headers)->post($API_URL, $payload);
@@ -765,7 +765,7 @@ class BankApiService
         Log::debug($payload);
 
         //API URL 
-        $API_URL = env('API_URL');
+        $API_URL = config('services.nmb.api_url');
 
         //response
         $response = Http::withHeaders($headers)->post($API_URL, $payload);
@@ -839,7 +839,7 @@ class BankApiService
         ];
 
         //API URL 
-        $API_URL = env('API_URL');
+        $API_URL = config('services.nmb.api_url');
 
         //response
         $response = Http::withHeaders($headers)->post($API_URL, $payload);
@@ -893,7 +893,7 @@ class BankApiService
         Log::debug($payload);
 
         //API URL 
-        $API_URL = env('API_URL');
+        $API_URL = config('services.nmb.api_url');
 
         //response
         $response = Http::withHeaders($headers)->post($API_URL, $payload);

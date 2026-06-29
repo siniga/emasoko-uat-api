@@ -54,8 +54,8 @@ class CRDBMandateCancellationJob implements ShouldQueue
 
         //headers
         $headers = [
-            'Channel' => env('CRDB_CHANNEL_ID'),
-            'AppId' => env('CRDB_APP_ID'),
+            'Channel' => config('services.crdb.channel_id'),
+            'AppId' => config('services.crdb.app_id'),
             'AppVersion' => '1.0.0',
             "RequestId" => $this->data['requestId'],
             'Authorization' => 'Bearer ' . $AUTH_BEARER_TOKEN,
@@ -68,7 +68,7 @@ class CRDBMandateCancellationJob implements ShouldQueue
         Log::debug($this->data['payload']);
 
         //API URL
-        $API_URL = env('CRDB_API_URL');
+        $API_URL = config('services.crdb.api_url');
 
         //push payload => NMB Direct Debits
         $httpResponse = Http::withHeaders($headers)->post($API_URL, $this->data['payload']);

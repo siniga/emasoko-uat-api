@@ -12,8 +12,8 @@ class AirtelToken
 
     public function __construct()
     {
-        $this->client_id = env("AIRTEL_CLIENT_ID");
-        $this->client_secret = env("AIRTEL_CLIENT_SECRET");
+        $this->client_id = config('services.airtel.client_id');
+        $this->client_secret = config('services.airtel.client_secret');
     }
 
     public function generate()
@@ -25,7 +25,7 @@ class AirtelToken
         ];
 
         //API URL
-        $API_URL = 'https://openapiuat.airtel.africa/auth/oauth2/token';
+        $API_URL = config('services.airtel.token_url');
 
         // Send the POST request using Laravel's HTTP client
         $response = Http::withHeaders($headers)->post(

@@ -71,7 +71,7 @@ class MandateController extends Controller
         Log::debug($payload);
 
         //API URL 
-        $API_URL = env('API_URL');
+        $API_URL = config('services.nmb.api_url');
 
         //headers
         $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer '.$AUTH_BEARER_TOKEN];
