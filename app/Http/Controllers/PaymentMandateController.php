@@ -479,7 +479,7 @@ class PaymentMandateController extends Controller
         $debit_order->total_amount = $loan_amount;
         $debit_order->outstanding_amount = $loan_amount;
         if ($debit_order->created_by == null) {
-            $debit_order->created_by = auth()->id();
+            $debit_order->created_by = Auth::user()->id;
         }
         $debit_order->reference = Carbon::now()->format('dmY') . $this->deductionService->getMandateReference();
         $debit_order->debit_type = $request->input('debit_type');
@@ -867,7 +867,7 @@ class PaymentMandateController extends Controller
         $debit_order->deduction_end_date = $request->input('deduction_end');
 
         if ($debit_order->created_by == null) {
-            $debit_order->created_by = auth()->id();
+            $debit_order->created_by = Auth::user()->id;
         }
         //calculate end date
         if ($request->input('deduction_end') === 'totalLoanCovered') {
