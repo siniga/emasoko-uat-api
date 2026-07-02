@@ -178,9 +178,14 @@ class PaymentMandateQueryService
     protected function applyLifecycleStatusFilter(Builder $query, string $lifecycleStatus): void
     {
         match ($lifecycleStatus) {
-            DebitOrder::SUMMARY_PENDING => $query->where('debit_orders.approved', 0),
-            DebitOrder::SUMMARY_APPROVED => $query->where('debit_orders.approved', 1),
-            DebitOrder::SUMMARY_FAILED => $query->where('debit_orders.approved', 2),
+            DebitOrder::SUMMARY_PENDING => $query->whereIn(
+                'debit_orders.lifecycle_status',
+                DebitOrder::lifecycleStatusesForSummary(DebitOrder::SUMMARY_PENDING)
+            ),
+            DebitOrder::SUMMARY_APPROVED => $query->where(
+                'debit_orders.lifecycle_status',
+                DebitOrder::LIFECYCLE_ACTIVE
+            ),
             DebitOrder::LIFECYCLE_CANCELLED => $query->where(function ($statusQuery) {
                 $statusQuery->where('debit_orders.lifecycle_status', DebitOrder::LIFECYCLE_CANCELLED)
                     ->orWhere('debit_orders.cancelled', 1);

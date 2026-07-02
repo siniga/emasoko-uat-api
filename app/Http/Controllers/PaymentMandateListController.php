@@ -98,7 +98,7 @@ class PaymentMandateListController extends BasePaymentMandateController
         return [
             'start_at' => $request->start_at ?? null,
             'end_at' => $request->end_at ?? null,
-            'status' => $request->status ?? null,
+            'lifecycle_status' => $request->input('lifecycle_status', $request->input('status')),
             'payment_channel' => $request->payment_channel ?? null,
             'partner_id' => $request->partner_id ?? null,
             'keyword' => $request->keyword ?? null,

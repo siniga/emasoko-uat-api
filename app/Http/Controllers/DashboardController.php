@@ -8,6 +8,7 @@ use App\Models\Installment;
 use App\Models\Partner;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
@@ -66,7 +67,7 @@ class DashboardController extends Controller
         //form action
         $payment_channels = Account::where('active', '=', 1)->get();
         $form_action = route('dashboard');
-        $userId = auth()->id() ?? 0;
+        $userId = Auth::user()->id ?? 0;
 
         //stats
         $stats  = [

@@ -4,12 +4,10 @@ use App\Http\Controllers\Api\Airtel\CollectionController as AirtelCollectionCont
 use App\Http\Controllers\Api\Airtel\MandateController as AirtelMandateController;
 use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\Crdb\DisbursementController;
-use App\Http\Controllers\Api\NMB\CorporateController;
 use App\Http\Controllers\Api\CRDB\MandateController as CRDBMandateController;
-use App\Http\Controllers\Api\NMB\MandateController;
-use App\Http\Controllers\Api\NMB\OtpController;
 use App\Http\Controllers\Api\Yas\MandateController as YasMandateController;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -48,7 +46,8 @@ Route::post('collection/airtel/recovery-refund', [AirtelCollectionController::cl
 //CRDB APIs
 Route::post('v1/mandate/crdb', [CRDBMandateController::class, 'create']);
 Route::post('v1/mandate/crdb/cancel', [CRDBMandateController::class, 'cancel']);
-Route::post('v1/mandate/crdb/callback', [CRDBMandateController::class, 'callback']);
+Route::post('v1/mandate/crdb/callback', [CRDBMandateController::class, 'callback'])
+    ->withoutMiddleware(ThrottleRequests::class);
 Route::post('v1/mandate/crdb/request', [CRDBMandateController::class, 'request']);
 Route::post('v1/mandate/crdb/response', [CRDBMandateController::class, 'response']);
 

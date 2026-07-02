@@ -45,9 +45,9 @@
         </div>
 
         <div class="col-md-3">
-            <a href="{{ route('payment-mandate.lists', ['status' => 'approved']) }}">
+            <a href="{{ route('payment-mandate.lists', ['lifecycle_status' => \App\Models\DebitOrder::LIFECYCLE_ACTIVE]) }}">
                 <div class="detail-summary shadow h-96 py-2">
-                    <div class="detail-summary__label text-muted">Approved Mandate</div>
+                    <div class="detail-summary__label text-muted">Active Mandate</div>
                     <div class="detail-summary__split">
                         <div class="detail-summary__metric">
                             <div class="detail-summary__value text-success">
@@ -63,7 +63,7 @@
         </div>
 
         <div class="col-md-3">
-            <a href="{{ route('payment-mandate.lists', ['status' => 'pending']) }}">
+            <a href="{{ route('payment-mandate.lists', ['lifecycle_status' => \App\Models\DebitOrder::SUMMARY_PENDING]) }}">
                 <div class="detail-summary shadow h-96 py-2">
                     <div class="detail-summary__label text-muted">Pending Mandate</div>
                     <div class="detail-summary__split">
@@ -81,7 +81,7 @@
         </div>
 
         <div class="col-md-3">
-            <a href="{{ route('payment-mandate.lists', ['status' => 'failed']) }}">
+            <a href="{{ route('payment-mandate.lists', ['lifecycle_status' => \App\Models\DebitOrder::LIFECYCLE_FAILED]) }}">
                 <div class="detail-summary shadow h-96 py-2">
                     <div class="detail-summary__label text-muted">Failed Mandate</div>
                     <div class="detail-summary__split">

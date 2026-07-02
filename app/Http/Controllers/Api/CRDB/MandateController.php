@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\CRDB;
 
 use App\Classes\Checksum;
 use App\Http\Controllers\Controller;
+use App\Jobs\CRDBCollectionJob;
 use App\Models\DebitOrder;
 use App\Models\Installment;
 use App\Models\PaymentSettlement;
@@ -195,11 +196,14 @@ class MandateController extends Controller
         $callback_type = $request->input('callbackType');
 
         if ($callback_type == "REQUEST_STATUS") {
+            Log::debug('== CRDB Mandate Request Status Callback ==');
+            Log::debug($request->all());
+
             $data = $request->input('data', []);
             $mandateReference = $data['reference'] ?? null;
             $approved = $data['status'] ?? null;
 
-            if (!$mandateReference || !$approved) {
+            if (!$mandateReference) {
                 Log::warning('Invalid CRDB request status callback payload.', [
                     'payload' => $request->all(),
                 ]);
@@ -265,77 +269,8 @@ class MandateController extends Controller
             if ($debitOrder->exists()) {
                 $debitOrder = $debitOrder->first();
 
-                //payment responses
-                $transferResponse = $request['data']['transferResponse'];
-                $collectionDate = $request['data']['collectionDate'];
-
-                if (strtolower($transferResponse) == "success") {
-                    // get success data
-                    $phoneNumber = $request['data']['phoneNumber'];
-                    $accountNumber = $request['data']['accountNumber'];
-                    $amount = $request['data']['amount'];
-                    $transactionReference = $request['data']['transactionReference'];
-                    $transactionDateTime = $request['data']['transactionDateTime'];
-
-                    if (!PaymentSettlement::where('channel', 'CRDB')
-                        ->where(function ($query) use ($transactionReference) {
-                            $query->where('external_reference', $transactionReference)
-                                ->orWhere('payment_reference', $transactionReference);
-                        })
-                        ->exists()) {
-                        $this->postCrdbSuccessfulPayment(
-                            $debitOrder,
-                            (float) $amount,
-                            $transactionReference,
-                            $transactionDateTime ?: $collectionDate,
-                            $collectionDate,
-                            strtoupper((string) $transferResponse),
-                            md5(json_encode($request->all()))
-                        );
-                    } else {
-                        Log::info('CRDB payment status skipped: transaction reference already settled.', [
-                            'debit_order_id' => $debitOrder->id,
-                            'mandate_reference' => $debitOrder->reference,
-                            'crdb_reference' => $mandateReference,
-                            'transaction_reference' => $transactionReference,
-                        ]);
-                    }
-                } else if (strtolower($transferResponse) == "insufficient_amount") {
-                    // select installment for this month
-                    $installments = Installment::where('debit_order_id', "=", $debitOrder->id)
-                        ->whereMonth('payment_date', "=", date('m', strtotime($collectionDate)))
-                        ->whereYear('payment_date', "=", date('Y', strtotime($collectionDate)));
-
-                    if ($installments->exists()) {
-                        $installment = $installments->first();
-                        $paymentReference = "CRDB-FAILED-{$debitOrder->id}-" . date('Ym', strtotime($collectionDate));
-                        $existingSettlement = PaymentSettlement::where([
-                            'channel' => 'CRDB',
-                            'payment_reference' => $paymentReference,
-                            'installment_id' => $installment->id,
-                        ])->first();
-
-                        $settlement = $this->settlementPostingService->post([
-                            'channel' => 'CRDB',
-                            'debit_order' => $debitOrder,
-                            'installment' => $installment,
-                            'amount' => 0,
-                            'raw_status' => strtoupper((string) $transferResponse),
-                            'normalized_status' => PaymentSettlement::STATUS_FUNDSCHECK,
-                            'remarks' => 'Insufficient funds',
-                            'effective_payment_date' => date('Y-m-d', strtotime($collectionDate)),
-                            'transaction_at' => $collectionDate,
-                            'payment_reference' => $paymentReference,
-                            'raw_payload_hash' => md5(json_encode($request->all())),
-                        ]);
-
-                        $this->dispatchCrdbCollectionCallback($settlement, !$existingSettlement
-                            || strtoupper((string) $existingSettlement->normalized_status) !== PaymentSettlement::STATUS_FUNDSCHECK);
-
-                        Log::debug("== update installment : insufficient amount ===");
-                        Log::debug($installment->toArray());
-                    }
-                }
+                //dispatch to background job for processing
+                dispatch(new CRDBCollectionJob($debitOrder, $request->all()));
             }
         }
 
@@ -346,162 +281,5 @@ class MandateController extends Controller
         ], 200);
     }
 
-    protected function postCrdbSuccessfulPayment(
-        DebitOrder $debitOrder,
-        float $paymentAmount,
-        string $transactionReference,
-        string $transactionAt,
-        string $collectionDate,
-        string $rawStatus,
-        string $rawPayloadHash
-    ): void {
-        $remainingAmount = $paymentAmount;
-        $sequence = 1;
 
-        while ($remainingAmount > 0) {
-            $installment = $this->nextPayableCrdbInstallment($debitOrder, $collectionDate);
-
-            if (!$installment) {
-                $this->settlementPostingService->postUnallocated([
-                    'channel' => 'CRDB',
-                    'debit_order' => $debitOrder,
-                    'amount' => $remainingAmount,
-                    'raw_status' => $rawStatus,
-                    'normalized_status' => PaymentSettlement::STATUS_UNALLOCATED,
-                    'settlement_type' => 'OVERPAYMENT_UNALLOCATED',
-                    'remarks' => 'Excess deduction held for reconciliation',
-                    'effective_payment_date' => date('Y-m-d', strtotime($collectionDate)),
-                    'transaction_at' => $transactionAt,
-                    'payment_reference' => $transactionReference . '-EXCESS',
-                    'external_reference' => $transactionReference,
-                    'raw_payload_hash' => $rawPayloadHash,
-                ]);
-
-                return;
-            }
-
-            $openingBalance = (float) ($installment->outstanding_amount ?? $installment->installment_amount ?? 0);
-
-            if ($openingBalance <= 0) {
-                $installment->status = 'CLOSED';
-                $installment->save();
-                continue;
-            }
-
-            $amountToApply = min($remainingAmount, $openingBalance);
-            $remainingAmount -= $amountToApply;
-            $normalizedStatus = $amountToApply < $openingBalance
-                ? PaymentSettlement::STATUS_PARTIAL
-                : PaymentSettlement::STATUS_SUCCESS;
-
-            $settlement = $this->settlementPostingService->post([
-                'channel' => 'CRDB',
-                'debit_order' => $debitOrder,
-                'installment' => $installment,
-                'amount' => $amountToApply,
-                'raw_status' => $rawStatus,
-                'normalized_status' => $normalizedStatus,
-                'remarks' => $normalizedStatus === PaymentSettlement::STATUS_PARTIAL ? 'Partial amount paid' : 'Amount paid',
-                'effective_payment_date' => date('Y-m-d', strtotime($collectionDate)),
-                'transaction_at' => $transactionAt,
-                'payment_reference' => $sequence === 1 ? $transactionReference : "{$transactionReference}-PART-{$sequence}",
-                'external_reference' => $transactionReference,
-                'raw_payload_hash' => $rawPayloadHash,
-            ]);
-
-            $this->dispatchCrdbCollectionCallback($settlement);
-
-            $sequence++;
-        }
-    }
-
-    protected function nextPayableCrdbInstallment(DebitOrder $debitOrder, string $collectionDate): ?Installment
-    {
-        $debitOrder->refresh();
-
-        if ((float) ($debitOrder->outstanding_amount ?? 0) <= 0) {
-            return null;
-        }
-
-        $installment = Installment::where('debit_order_id', $debitOrder->id)
-            ->whereNotIn('status', ['CLOSED'])
-            ->where('outstanding_amount', '>', 0)
-            ->orderByRaw("CASE WHEN status = 'PARTIAL_PAID' THEN 0 ELSE 1 END")
-            ->orderBy('payment_date')
-            ->orderBy('installment_order')
-            ->first();
-
-        if ($installment) {
-            return $installment;
-        }
-
-        $installmentAmount = $this->deductionService->getInstallmentAmount($debitOrder);
-        $lastInstallmentOrder = $this->deductionService->getLastInstallmentOrder($debitOrder);
-
-        $installment = new Installment();
-        $installment->debit_order_id = $debitOrder->id;
-        $installment->installment_order = $lastInstallmentOrder + 1;
-        $installment->installment_amount = $installmentAmount;
-        $installment->current_balance = 0;
-        $installment->outstanding_amount = $installmentAmount;
-        $installment->payment_date = date('Y-m-d', strtotime($collectionDate));
-        $installment->status = 'OPEN';
-        $installment->remarks = 'CRDB amount paid';
-        $installment->save();
-
-        return $installment;
-    }
-
-    protected function dispatchCrdbCollectionCallback(PaymentSettlement $settlement, bool $shouldDispatch = true): void
-    {
-        if (!$shouldDispatch) {
-            Log::info('External CRDB collection callback skipped: settlement status did not change.', [
-                'settlement_id' => $settlement->id,
-                'installment_id' => $settlement->installment_id,
-                'payment_reference' => $settlement->payment_reference,
-                'normalized_status' => $settlement->normalized_status,
-            ]);
-            return;
-        }
-
-        if (!$settlement->installment_id) {
-            Log::warning('External CRDB collection callback skipped: settlement has no installment.', [
-                'settlement_id' => $settlement->id,
-                'payment_reference' => $settlement->payment_reference,
-                'normalized_status' => $settlement->normalized_status,
-            ]);
-            return;
-        }
-
-        $settlement->loadMissing('installment.debitOrder.partner');
-
-        if (!$settlement->installment) {
-            Log::warning('External CRDB collection callback skipped: settlement installment could not be loaded.', [
-                'settlement_id' => $settlement->id,
-                'installment_id' => $settlement->installment_id,
-                'payment_reference' => $settlement->payment_reference,
-            ]);
-            return;
-        }
-
-        $eventType = match (strtoupper((string) $settlement->normalized_status)) {
-            PaymentSettlement::STATUS_SUCCESS => 'COLLECTION_PAID',
-            PaymentSettlement::STATUS_PARTIAL => 'COLLECTION_PARTIAL_PAID',
-            PaymentSettlement::STATUS_FUNDSCHECK => 'COLLECTION_FUNDSCHECK',
-            PaymentSettlement::STATUS_UNALLOCATED => 'COLLECTION_UNALLOCATED',
-            default => 'COLLECTION_FAILED',
-        };
-
-        $this->externalCallbackService->dispatchCollectionStatus($settlement->installment, $eventType, [
-            'channel' => $settlement->channel,
-            'settlement_reference' => $settlement->payment_reference,
-            'external_reference' => $settlement->external_reference,
-            'bank_status' => $settlement->raw_status,
-            'settlement_status' => $settlement->normalized_status,
-            'paid_amount' => (float) $settlement->paid_amount,
-            'transaction_at' => $settlement->transaction_at
-                ? Carbon::parse($settlement->transaction_at)->toIso8601String()
-                : null,
-        ]);
-    }
 }

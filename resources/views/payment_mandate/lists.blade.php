@@ -37,6 +37,7 @@
                             <div class="mb-3">
                                 @php
                                     $options = [
+                                        \App\Models\DebitOrder::SUMMARY_PENDING => 'Pending (All)',
                                         \App\Models\DebitOrder::LIFECYCLE_DRAFT => 'Draft',
                                         \App\Models\DebitOrder::LIFECYCLE_SUBMITTED => 'Submitted',
                                         \App\Models\DebitOrder::LIFECYCLE_AWAITING_OTP => 'Awaiting OTP',
@@ -52,7 +53,7 @@
                                     $options = ['' => '-- Lifecycle Status --'] + $options;
                                 @endphp
 
-                                {{ Form::select('status', $options, old('status', $post_data['status']), ['class' => 'form-control']) }}
+                                {{ Form::select('lifecycle_status', $options, old('lifecycle_status', $post_data['lifecycle_status']), ['class' => 'form-control']) }}
                             </div>
                         </div>
 
@@ -217,7 +218,7 @@
                                             </a>
 
                                             <a title="Export" class="btn btn-outline-success btn-sm"
-                                                href="{{ route('payment-mandate.export-xls', ['start_at' => $post_data['start_at'], 'end_at' => $post_data['end_at'], 'payment_channel' => $post_data['payment_channel'], 'partner_id' => $post_data['partner_id'], 'status' => $post_data['status'], 'keyword' => $post_data['keyword']]) }}">
+                                                href="{{ route('payment-mandate.export-xls', ['start_at' => $post_data['start_at'] ?? null, 'end_at' => $post_data['end_at'] ?? null, 'payment_channel' => $post_data['payment_channel'] ?? null, 'partner_id' => $post_data['partner_id'] ?? null, 'lifecycle_status' => $post_data['lifecycle_status'] ?? null, 'keyword' => $post_data['keyword'] ?? null]) }}">
                                                 <i class="bx bx-export"></i> Export XLS
                                             </a>
                                         </div>

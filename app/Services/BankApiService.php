@@ -269,7 +269,7 @@ class BankApiService
     public function crdbMandateRegistrationRequest($data)
     {
         //responce code
-        $http_status_code = 200;
+        $httpStatusCode = 200;
         $remarks = "";
 
         //update the debit order
@@ -302,7 +302,7 @@ class BankApiService
         ];
 
         //Payload
-        Log::debug("== CRDB Payload ==");
+        Log::debug("== CRDB Registration Payload ==");
         Log::debug($data['payload']);
 
         //API URL
@@ -344,31 +344,59 @@ class BankApiService
         $statusDesc = data_get($response, 'ResponseHeader.StatusDesc');
         $responseId = data_get($response, 'ResponseHeader.RequestId');
         $reference  = data_get($response, 'ResponseBody.Reference');
-        Log::debug('Parsed header', compact('statusCode', 'statusDesc', 'reference'));
+        Log::debug('Parsed header', compact('statusCode', 'statusDesc', 'statusMessage', 'reference'));
 
         // Handle business logic only if StatusCode is present
         if ($statusCode === 1000) {
+            //get status message
+            $statusMessage = data_get($response, 'ResponseHeader.StatusMessage');
+
+            //update mandate
             $debitOrder->status = 201;  // success
             if ($reference) {
                 $debitOrder->request_id = $responseId;
                 $debitOrder->crdb_reference = $reference;
-                $debitOrder->remarks = preg_replace('/[^A-Za-z0-9\-]/', '', $statusDesc) ?: 'No StatusDesc in response';
+                $debitOrder->remarks = $statusMessage ?: 'Successful mandate registration';
             }
 
             //update http_status_code and remarks
-            $http_status_code = 201;
-            $remarks = preg_replace('/[^A-Za-z0-9\-]/', '', $statusDesc) ?: 'No StatusDesc in response';
+            $httpStatusCode = 201;
+            $remarks = $statusMessage ?: 'Successful mandate registration';
         } elseif ($statusCode === 1001) {
-            // get error metadata
-            $errorMetadata = data_get($response, 'ResponseHeader.ErrorMetadata', []);
+            //get error metadata
+            $errorCode = data_get($response, 'ResponseHeader.ErrorCode');
+            $statusDesc = data_get($response, 'ResponseHeader.StatusDesc');
 
-            //set update params
-            $debitOrder->status = 403;
-            $debitOrder->remarks = $errorMetadata ?: 'No StatusDesc in response';
+            if ($errorCode === 'ERR_1000012' && $statusDesc === 'Duplicate request') {
+                Log::info('MandateRegistration skipped: mandate already exists.', [
+                    'mandate_reference' => $reference,
+                    'request_id' => $responseId,
+                ]);
+
+                //update remarks
+                $debitOrder->remarks = data_get($response, 'ResponseHeader.ErrorMessage') ?? 'Duplicate request';
+            } elseif ($errorCode === '' && $statusDesc === 'Payment was Invalid') {
+                Log::info('MandateRegistration failed: payment was invalid.', [
+                    'mandate_reference' => $reference,
+                    'request_id' => $responseId,
+                ]);
+
+                //update remarks
+                $debitOrder->remarks = data_get($response, 'ResponseHeader.ErrorMessage') ?? 'Mandate was Invalid';
+            } else {
+                Log::warning('MandateRegistration failed.', [
+                    'mandate_reference' => $reference,
+                    'request_id' => $responseId,
+                    'error_code' => $errorCode,
+                ]);
+                //set update params
+                $debitOrder->status = 403;
+                $debitOrder->remarks = data_get($response, 'ResponseHeader.ErrorMessage') ?: 'No StatusDesc in response';
+            }
 
             //update http_status_code and remarks
-            $http_status_code = 500;
-            $remarks = $errorMetadata ?: 'No StatusDesc in response';
+            $httpStatusCode = 500;
+            $remarks = data_get($response, 'ResponseHeader.ErrorMessage') ?: 'No StatusDesc in response';
         } else {
             // Unknown/other code: record it for investigation
             Log::warning('MandateRegistration returned unexpected StatusCode', [
@@ -377,7 +405,7 @@ class BankApiService
             ]);
 
             //update http_status_code and remarks
-            $http_status_code = 500;
+            $httpStatusCode = 500;
             $remarks = 'MandateRegistration returned unexpected StatusCode';
         }
 
@@ -385,7 +413,7 @@ class BankApiService
         $debitOrder->http_response_code = $statusCode ?? $httpResponse->status();
         $debitOrder->save();
 
-        return [$http_status_code, $remarks];
+        return [$httpStatusCode, $remarks];
     }
 
     //yas mandate registration
@@ -609,6 +637,11 @@ class BankApiService
 
     public function crdbMandateCancellationRequest(array $data): array
     {
+        //responce code
+        $httpStatusCode = 200;
+        $remarks = "";
+
+        //debit order
         $debitOrder = DebitOrder::where('reference', '=', $data['mandateReferenceNumber'])->first();
 
         if (!$debitOrder) {
@@ -619,60 +652,127 @@ class BankApiService
             return [404, 'Mandate not found.', null];
         }
 
-        $authBearerToken = $this->crdbAuth?->generateToken() ?? (new Checksum())->generateToken();
+        //authentication
+        $this->crdbAuth = new Checksum();
 
+        //token
+        $bearerToken = $this->crdbAuth->generateToken();
+        Log::debug("== CRDB Bearer Token ==");
+        Log::debug($bearerToken);
+
+        //headers
         $headers = [
             'Channel' => config('services.crdb.channel_id'),
             'AppId' => config('services.crdb.app_id'),
             'AppVersion' => '1.0.0',
             'RequestId' => $data['requestId'],
-            'Authorization' => 'Bearer ' . $authBearerToken,
+            'Authorization' => 'Bearer ' . $bearerToken,
             'Content-Type' => 'application/json',
             'Accept' => 'application/json',
         ];
 
-        Log::debug('== CRDB Mandate Cancellation Request ==');
+        Log::debug('== CRDB Cancellation Request ==');
         Log::debug($data['payload']);
 
-        $httpResponse = Http::withHeaders($headers)->post(config('services.crdb.api_url'), $data['payload']);
+        //API URL
+        $API_URL = config('services.crdb.api_url');
+
+        //push payload => NMB Direct Debits
+        $httpResponse = Http::withHeaders($headers)->post($API_URL, $data['payload']);
+
+        Log::debug('== Raw Response Body ==');
+        Log::debug($httpResponse->body());
+
+        //http response
         $raw = $httpResponse->body();
+
+        // strip UTF-8 BOM + trim
         $raw = preg_replace('/^\xEF\xBB\xBF/', '', trim($raw ?? ''));
+
+        // remove trailing commas before } or ] (JSON5-style but not valid JSON)
         $sanitized = preg_replace('/,\s*(\}|\])/m', '$1', $raw);
+
+        // now decode with error reporting
         $response = json_decode($sanitized, true);
 
-        Log::debug('== CRDB Mandate Cancellation Response ==');
-        Log::debug($response ?: $raw);
-
         if (!is_array($response)) {
-            Log::error('CRDB mandate cancellation failed: invalid JSON response', [
-                'json_error' => json_last_error_msg(),
-                'sample' => Str::limit($raw, 800),
-                'http_status' => $httpResponse->status(),
-            ]);
-
-            return [$httpResponse->status() ?: 500, 'Invalid response from CRDB endpoint.', null];
-        }
-
-        $statusCode = data_get($response, 'ResponseHeader.StatusCode');
-        $statusCode = is_numeric($statusCode) ? (int) $statusCode : $statusCode;
-        $statusDesc = data_get($response, 'ResponseHeader.StatusDesc') ?: 'CRDB mandate cancellation response received.';
-        $isAlreadyCancelled = $statusCode === 1001 && data_get($response, 'ErrorMetadata.400') !== null;
-
-        if ($statusCode === 1000 || $isAlreadyCancelled) {
-            $debitOrder->cancelled = 1;
-            $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_CANCELLED;
-            $debitOrder->remarks = $statusDesc ?: 'Mandate cancelled successfully.';
-            $debitOrder->http_response_code = $statusCode;
+            $debitOrder->status = 403;
+            $debitOrder->http_response_code = $httpResponse->status();
+            $debitOrder->remarks = 'HTTP error or invalid JSON from gateway';
             $debitOrder->save();
 
-            return [201, $debitOrder->remarks, $statusCode];
+            Log::error('MandateCancellation failed: HTTP error or invalid JSON', [
+                'json_error' => json_last_error_msg(),
+                'sample'     => Str::limit($raw, 800),
+            ]);
+            return [$httpResponse->status() ?: 500, 'MandateCancellation failed: HTTP error or invalid JSON', null];
         }
 
+        // safely read values
+        $statusCode = data_get($response, 'ResponseHeader.StatusCode');
+        $statusDesc = data_get($response, 'ResponseHeader.StatusDesc');
+        $responseId = data_get($response, 'ResponseHeader.RequestId');
+        $reference  = data_get($response, 'ResponseBody.Reference');
+        Log::debug('Parsed header', compact('statusCode', 'statusDesc', 'statusMessage', 'reference'));
+
+        // Handle business logic only if StatusCode is present
+        if ($statusCode === 1000) {
+            //get status message
+            $statusMessage = data_get($response, 'ResponseHeader.StatusMessage');
+
+            //update mandate
+            $debitOrder->status = 201;  // success
+
+            //update debit order with request_id and crdb_reference if available
+            $debitOrder->cancelled = 1;
+            $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_CANCELLED;
+            $debitOrder->remarks = $statusMessage ?: 'Mandate cancelled successfully.';
+
+            //update http_status_code and remarks
+            $httpStatusCode = 201;
+            $remarks = $statusMessage ?: 'Mandate cancelled successfully.';
+        } else if ($statusCode === 1001) {
+            //get error metadata
+            $errorCode = data_get($response, 'ResponseHeader.ErrorCode');
+            $statusDesc = data_get($response, 'ResponseHeader.StatusDesc');
+
+            if ($errorCode === 'ERR_1000012' && $statusDesc === 'Duplicate request') {
+                Log::info('MandateCancellation skipped: mandate already cancelled.', [
+                    'mandate_reference' => $reference,
+                    'request_id' => $responseId,
+                ]);
+
+                //update remarks
+                $debitOrder->remarks = data_get($response, 'ResponseHeader.ErrorMessage') ?? 'Duplicate request';
+            } elseif ($errorCode === '' && $statusDesc === 'Payment was Invalid') {
+                Log::info('MandateRegistration failed: payment was invalid.', [
+                    'mandate_reference' => $reference,
+                    'request_id' => $responseId,
+                ]);
+
+                //update remarks
+                $debitOrder->remarks = data_get($response, 'ResponseHeader.ErrorMessage') ?? 'Mandate was Invalid';
+            } else {
+                Log::warning('MandateCancellation failed', [
+                    'mandate_reference' => $reference,
+                    'request_id' => $responseId,
+                    'error_code' => $errorCode,
+                ]);
+                //set update params
+                $debitOrder->status = 403;
+                $debitOrder->remarks = data_get($response, 'ResponseHeader.ErrorMessage') ?: 'No StatusDesc in response';
+            }
+
+            //update http_status_code and remarks
+            $httpStatusCode = 500;
+            $remarks = data_get($response, 'ResponseHeader.ErrorMessage') ?: 'No StatusDesc in response';
+        }
+
+        // Persist shared fields (guard nulls)
         $debitOrder->http_response_code = $statusCode ?? $httpResponse->status();
-        $debitOrder->remarks = $statusDesc;
         $debitOrder->save();
 
-        return [$httpResponse->successful() ? 400 : ($httpResponse->status() ?: 500), $statusDesc, $statusCode];
+        return [$httpStatusCode, $remarks, $statusCode];
     }
 
     //create Otp 
