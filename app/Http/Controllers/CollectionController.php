@@ -102,6 +102,7 @@ class CollectionController extends Controller
             'partner_id' => $request->partner_id ?? null,
             'cl_status' => $request->cl_status ?? null,
             'mandate_reference' => $request->mandate_reference ?? null,
+            'account_number' => $request->account_number ?? null,
         ];
 
         //render view

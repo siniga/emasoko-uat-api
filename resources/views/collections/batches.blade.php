@@ -60,9 +60,15 @@
                             </div>
                         </div>
 
-                        <div class="col-lg-6">
+                        <div class="col-lg-3">
                             <div class="mb-3">
                                 {{ Form::text('mandate_reference', old('mandate_reference', $post_data['mandate_reference']), ['class' => 'form-control', 'placeholder' => 'Search by mandate reference...']) }}
+                            </div>
+                        </div>
+
+                        <div class="col-lg-3">
+                            <div class="mb-3">
+                                {{ Form::text('account_number', old('account_number', $post_data['account_number']), ['class' => 'form-control', 'placeholder' => 'Search by account number...']) }}
                             </div>
                         </div>
 
