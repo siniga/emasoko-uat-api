@@ -344,7 +344,7 @@ class BankApiService
         $statusDesc = data_get($response, 'ResponseHeader.StatusDesc');
         $responseId = data_get($response, 'ResponseHeader.RequestId');
         $reference  = data_get($response, 'ResponseBody.Reference');
-        Log::debug('Parsed header', compact('statusCode', 'statusDesc', 'statusMessage', 'reference'));
+        Log::debug('Parsed header', compact('statusCode', 'statusDesc', 'reference'));
 
         // Handle business logic only if StatusCode is present
         if ($statusCode === 1000) {
@@ -713,7 +713,7 @@ class BankApiService
         $statusDesc = data_get($response, 'ResponseHeader.StatusDesc');
         $responseId = data_get($response, 'ResponseHeader.RequestId');
         $reference  = data_get($response, 'ResponseBody.Reference');
-        Log::debug('Parsed header', compact('statusCode', 'statusDesc', 'statusMessage', 'reference'));
+        Log::debug('Parsed header', compact('statusCode', 'statusDesc', 'reference'));
 
         // Handle business logic only if StatusCode is present
         if ($statusCode === 1000) {
