@@ -262,7 +262,6 @@ class CollectionBatch extends Model
         $partner_id        = $request['partner_id'] ?? null;
         $status            = $request['cl_status'] ?? $request['status'] ?? null;
         $mandate_reference = $request['mandate_reference'] ?? null;
-        $account_number    = preg_replace('/\s+/', '', trim((string) ($request['account_number'] ?? '')));
 
         return $query->when($start_date, function ($query) use ($start_date, $end_date) {
             if ($start_date != null || $end_date != null) {
@@ -292,15 +291,16 @@ class CollectionBatch extends Model
                     $query->where('collection_batches.failed', 1);
                 }
             })
-            ->when($mandate_reference || $account_number, function ($query) use ($mandate_reference, $account_number) {
+            ->when($mandate_reference, function ($query) use ($mandate_reference) {
+                $normalizedSearch = preg_replace('/\s+/', '', trim((string) $mandate_reference));
+
                 $ids = \App\Models\Installment::query()
                     ->join('debit_orders as d', 'd.id', '=', 'installments.debit_order_id')
-                    ->leftJoin('accounts as a', 'a.id', '=', 'd.customer_account_id')
-                    ->when($mandate_reference, function ($installmentQuery) use ($mandate_reference) {
-                        $installmentQuery->where('d.reference', $mandate_reference);
-                    })
-                    ->when($account_number, function ($installmentQuery) use ($account_number) {
-                        $installmentQuery->whereRaw("REPLACE(a.account_number, ' ', '') = ?", [$account_number]);
+                    ->leftJoin('customer_accounts as ca', 'ca.id', '=', 'd.customer_account_id')
+                    ->where(function ($installmentQuery) use ($mandate_reference, $normalizedSearch) {
+                        $installmentQuery
+                            ->where('d.reference', trim((string) $mandate_reference))
+                            ->orWhereRaw("REPLACE(ca.account_number, ' ', '') = ?", [$normalizedSearch]);
                     })
                     ->pluck('installments.id')
                     ->all();
