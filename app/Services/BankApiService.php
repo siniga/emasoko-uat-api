@@ -275,11 +275,20 @@ class BankApiService
         //update the debit order
         $debitOrder = DebitOrder::where('reference', '=', $data['mandateReferenceNumber'])->first();
         if (!$debitOrder) {
-            Log::warning('Debit order not found for mandateReferenceNumber', [
-                'mandateReferenceNumber' => $this->data['mandateReferenceNumber'] ?? null
+            Log::warning('Mandate not found for mandateReferenceNumber', [
+                'mandateReferenceNumber' => $data['mandateReferenceNumber'] ?? null
             ]);
             // Bail early; nothing to update
-            return [500, 'Debit order not found for mandateReferenceNumber.'];
+            return [500, 'Mandate not found for mandateReferenceNumber.'];
+        }
+
+        //check if mandate is already registered
+        if ($debitOrder->status === 201) {
+            Log::info('Mandate already registered; skipping CRDB mandate registration.', [
+                'mandateReferenceNumber' => $data['mandateReferenceNumber'],
+                'requestId' => $data['requestId'] ?? null,
+            ]);
+            return [200, 'Mandate already registered; skipping CRDB mandate registration.'];
         }
 
         //authentication
@@ -352,8 +361,8 @@ class BankApiService
             $statusMessage = data_get($response, 'ResponseHeader.StatusMessage');
 
             //update mandate
-            $debitOrder->status = 201;  // success
             if ($reference) {
+                $debitOrder->status = 201;
                 $debitOrder->request_id = $responseId;
                 $debitOrder->crdb_reference = $reference;
                 $debitOrder->remarks = $statusMessage ?: 'Successful mandate registration';
@@ -650,6 +659,24 @@ class BankApiService
             ]);
 
             return [404, 'Mandate not found.', null];
+        }
+
+        //check if mandate if cancelled
+        if ($debitOrder->lifecycle_status === DebitOrder::LIFECYCLE_CANCELLED) {
+            Log::info('Mandate already cancelled; skipping CRDB mandate cancellation.', [
+                'mandateReferenceNumber' => $data['mandateReferenceNumber'],
+                'requestId' => $data['requestId'] ?? null,
+            ]);
+            return [200, 'Mandate already cancelled; skipping CRDB mandate cancellation.', null];
+        }
+
+        // check if mandate cancellation is sent to CRDB before
+        if ($debitOrder->lifecycle_status === DebitOrder::LIFECYCLE_CANCELLATION_REQUESTED) {
+            Log::info('Mandate cancellation already pending; skipping CRDB mandate cancellation.', [
+                'mandateReferenceNumber' => $data['mandateReferenceNumber'],
+                'requestId' => $data['requestId'] ?? null,
+            ]);
+            return [200, 'Mandate cancellation already pending; skipping CRDB mandate cancellation.', null];
         }
 
         //authentication
