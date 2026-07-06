@@ -120,6 +120,10 @@ class ReportQueryService
 
     public function preview(string $type, array $filters): array
     {
+        if ($type === self::TYPE_EXPECTED_COLLECTION) {
+            return $this->expectedCollectionPreview($filters);
+        }
+
         $records = $this->records($type, $filters);
         $mapper = $this->mapper($type);
 
@@ -134,6 +138,46 @@ class ReportQueryService
         ];
     }
 
+    protected function expectedCollectionPreview(array $filters): array
+    {
+        $query = $this->expectedCollectionBaseQuery($filters);
+        $mapper = new CollectionReportMapper(false);
+
+        $totals = (clone $query)
+            ->reorder()
+            ->select([])
+            ->selectRaw('COUNT(*) as total_records')
+            ->selectRaw('COALESCE(SUM(installments.installment_amount), 0) as expected_amount')
+            ->selectRaw('COALESCE(SUM(installments.current_balance), 0) as paid_amount')
+            ->selectRaw('COALESCE(SUM(installments.outstanding_amount), 0) as outstanding_amount')
+            ->first();
+
+        $totalRecords = (int) ($totals->total_records ?? 0);
+        $records = $query
+            ->with([
+                'debitOrder.partner',
+                'debitOrder.customerAccount.customer',
+            ])
+            ->orderBy('installments.payment_date', 'ASC')
+            ->limit(100)
+            ->get();
+
+        return [
+            'type' => self::TYPE_EXPECTED_COLLECTION,
+            'title' => $this->reportDefinitions()[self::TYPE_EXPECTED_COLLECTION]['label'],
+            'headings' => $mapper->headings(),
+            'summary' => [
+                ['label' => 'Installments', 'value' => number_format($totalRecords), 'tone' => 'primary'],
+                ['label' => 'Expected Amount', 'value' => number_format((float) ($totals->expected_amount ?? 0), 2), 'tone' => 'primary'],
+                ['label' => 'Outstanding', 'value' => number_format((float) ($totals->outstanding_amount ?? 0), 2), 'tone' => 'warning'],
+                ['label' => 'Paid Amount', 'value' => number_format((float) ($totals->paid_amount ?? 0), 2), 'tone' => 'info'],
+            ],
+            'rows' => $mapper->rows($records),
+            'total_records' => $totalRecords,
+            'preview_limited' => $totalRecords > 100,
+        ];
+    }
+
     public function exportPayload(string $type, array $filters): array
     {
         $records = $this->records($type, $filters);
@@ -144,6 +188,22 @@ class ReportQueryService
             'rows' => $mapper->rows($records),
             'filename' => $this->filename($type),
         ];
+    }
+
+    public function collectionExportQuery(string $type, array $filters): Builder
+    {
+        $query = match ($type) {
+            self::TYPE_EXPECTED_COLLECTION => $this->expectedCollectionBaseQuery($filters)
+                ->orderBy('installments.payment_date', 'ASC'),
+            self::TYPE_ACTUAL_COLLECTION => $this->actualCollectionBaseQuery($filters)
+                ->orderBy('installments.effective_payment_date', 'ASC'),
+            default => throw new \InvalidArgumentException("Report type [{$type}] is not a collection report."),
+        };
+
+        return $query->with([
+            'debitOrder.partner',
+            'debitOrder.customerAccount.customer',
+        ]);
     }
 
     public function filename(string $type): string

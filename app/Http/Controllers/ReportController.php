@@ -31,6 +31,19 @@ class ReportController extends Controller
         $reportPreview = null;
 
         if (isset($_POST['export_xls']) && !empty($filters['report_type'])) {
+            if (in_array($filters['report_type'], [
+                ReportQueryService::TYPE_EXPECTED_COLLECTION,
+                ReportQueryService::TYPE_ACTUAL_COLLECTION,
+            ], true)) {
+                $type = $filters['report_type'];
+
+                return $this->reportExportService->downloadCollectionXls(
+                    $this->reportQueryService->collectionExportQuery($type, $filters),
+                    $type === ReportQueryService::TYPE_ACTUAL_COLLECTION,
+                    $this->reportQueryService->filename($type)
+                );
+            }
+
             $payload = $this->reportQueryService->exportPayload($filters['report_type'], $filters);
             $title = $reportDefinitions[$filters['report_type']]['label'] ?? 'Report';
 

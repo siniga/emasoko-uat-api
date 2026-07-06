@@ -178,10 +178,6 @@
                                 </div>
                             </div>
 
-                            @if ($reportPreview['preview_limited'])
-                                <div class="rp-preview-note">Preview is limited to the first 100 rows.</div>
-                            @endif
-
                             <div class="table-responsive">
                                 <table class="table table-bordered dt-responsive nowrap w-100 mb-0">
                                     <thead>
