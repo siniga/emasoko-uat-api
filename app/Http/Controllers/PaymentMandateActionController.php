@@ -7,6 +7,7 @@ use App\Models\AccountType;
 use App\Models\DebitOrder;
 use App\Models\Installment;
 use App\Models\OtpRequest;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -85,7 +86,9 @@ class PaymentMandateActionController extends BasePaymentMandateController
                 $installments->first(fn ($item) => in_array(strtoupper($item->status ?? 'OPEN'), ['OPEN', 'FAILED', 'FUNDSCHECK'], true))
             )->payment_date,
         ];
-        $canReopenMandate = Auth::user()->hasRole(['admin'])
+        /** @var User|null $user */
+        $user = Auth::user();
+        $canReopenMandate = $user?->hasRole('admin') === true
             && $this->paymentMandateWorkflowService->canReopenClosedMandate($debit_order);
         $lifecycleAudit = $this->lifecycleAudit($debit_order);
 
@@ -145,7 +148,9 @@ class PaymentMandateActionController extends BasePaymentMandateController
 
     public function reopen_mandate(string $uuid)
     {
-        abort_unless(Auth::user()->hasRole(['admin']), 403);
+        /** @var User|null $user */
+        $user = Auth::user();
+        abort_unless($user?->hasRole('admin') === true, 403);
 
         $debitOrder = DebitOrder::where('uuid', $uuid)->firstOrFail();
         $this->paymentMandateWorkflowService->reopenClosedMandate($debitOrder);

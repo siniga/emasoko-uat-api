@@ -109,13 +109,16 @@ class CRDBMandateCancellationJob implements ShouldQueue
             $debitOrder->remarks = "Mandate cancelled successfully";
         } elseif ($statusCode === 1001) {
             $errorMetaData = data_get($response, 'ResponseHeader.ErrorMetadata');
-            Log::debug("== 400 ErrorCode ==");
-            Log::debug($errorMetaData['400']);
+            Log::debug("== ErrorCode ==");
+            Log::debug($errorMetaData);
 
             if (isset($errorMetaData['400'])) {
                 $debitOrder->cancelled = 1;
                 $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_CANCELLED;
                 $debitOrder->remarks = "Mandate cancelled successfully";
+            }else if(isset($errorMetaData['422'])){
+                // Handle 422 Unprocessable Entity error
+                $debitOrder->remarks = "Mandate cancellation failed: Unprocessable Entity";
             }
         } else {
             // Unknown/other code: record it for investigation
