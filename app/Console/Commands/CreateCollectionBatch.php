@@ -80,7 +80,7 @@ class CreateCollectionBatch extends Command
             }
         }
 
-        //Messaging Module
+        //send sms to the admin if any collection batch is created
         if ($success > 0) {
             $message = "Collection batch" . ($success > 1 ? 'es' : '') . " created. Review and approve to the next stage.";
             $arr_phone = [255717705746, 255656314330];

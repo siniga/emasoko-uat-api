@@ -183,7 +183,6 @@ class CollectionBatchService
             $batchAccountNumbers = [];
 
             foreach ($candidates as $candidate) {
-                /** @var \App\Models\Installment $installment */
                 $installment = Installment::query()
                     ->whereKey($candidate['installment']->id)
                     ->lockForUpdate()

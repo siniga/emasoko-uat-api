@@ -241,8 +241,7 @@ class CollectionAnalyticsService
             ->whereHas('debitOrder', function ($query) use ($type, $filters, $partner) {
                 $query->where('debit_orders.approved', 1)
                     ->when($type === self::TYPE_EXPECTED, function ($q) {
-                        $q->where('debit_orders.deleted', 0)
-                            ->where('debit_orders.contract_status', 'OPEN');
+                        $q->where('debit_orders.approved', 1);
                     })
                     ->when(!empty($filters['channel']), function ($q) use ($filters) {
                         $q->where('debit_orders.channel', $filters['channel']);
