@@ -315,11 +315,11 @@ class PaymentMandateWorkflowService
             ->where('status', 'PENDING')
             ->exists();
 
-        if ($lifecycleStatus === DebitOrder::LIFECYCLE_CANCELLATION_REQUESTED || $hasPendingRequest) {
-            throw ValidationException::withMessages([
-                'mandate' => 'Mandate cancellation has already been requested.',
-            ]);
-        }
+        // if ($lifecycleStatus === DebitOrder::LIFECYCLE_CANCELLATION_REQUESTED || $hasPendingRequest) {
+        //     throw ValidationException::withMessages([
+        //         'mandate' => 'Mandate cancellation has already been requested.',
+        //     ]);
+        // }
 
         if ($lifecycleStatus === DebitOrder::LIFECYCLE_CANCELLED || (int) $debitOrder->cancelled === 1) {
             throw ValidationException::withMessages([
@@ -328,10 +328,9 @@ class PaymentMandateWorkflowService
         }
 
         $canRequest = in_array($lifecycleStatus, [
-            DebitOrder::LIFECYCLE_SUBMITTED,
-            DebitOrder::LIFECYCLE_AWAITING_OTP,
             DebitOrder::LIFECYCLE_VERIFIED,
             DebitOrder::LIFECYCLE_ACTIVE,
+            DebitOrder::LIFECYCLE_CANCELLATION_REQUESTED,
         ], true);
         $canRetryFailedCancellation = $lifecycleStatus === DebitOrder::LIFECYCLE_FAILED
             && !empty($debitOrder->cancellationStartedAt);
@@ -356,8 +355,7 @@ class PaymentMandateWorkflowService
         $debitOrder->save();
         $debitOrder->refresh();
 
-        $this->externalCallbackService->dispatchMandateStatus($debitOrder, 'MANDATE_CANCELLATION_REQUESTED');
-
+        //call for cancellation API
         $response = $this->mandateActionService->cancelMandate($debitOrder);
         $debitOrder->refresh();
 

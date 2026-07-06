@@ -49,7 +49,7 @@
                 },
 
                 canCancel() {
-                    return ['submitted', 'awaiting_otp', 'verified', 'active'].includes(this.lifecycleStatus) ||
+                    return ['verified', 'active', 'cancellation_requested'].includes(this.lifecycleStatus) ||
                         (this.lifecycleStatus === 'failed' && this.cancellationAttempted);
                 },
 

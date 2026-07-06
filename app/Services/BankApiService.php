@@ -670,15 +670,6 @@ class BankApiService
             return [200, 'Mandate already cancelled; skipping CRDB mandate cancellation.', null];
         }
 
-        // check if mandate cancellation is sent to CRDB before
-        if ($debitOrder->lifecycle_status === DebitOrder::LIFECYCLE_CANCELLATION_REQUESTED) {
-            Log::info('Mandate cancellation already pending; skipping CRDB mandate cancellation.', [
-                'mandateReferenceNumber' => $data['mandateReferenceNumber'],
-                'requestId' => $data['requestId'] ?? null,
-            ]);
-            return [200, 'Mandate cancellation already pending; skipping CRDB mandate cancellation.', null];
-        }
-
         //authentication
         $this->crdbAuth = new Checksum();
 
