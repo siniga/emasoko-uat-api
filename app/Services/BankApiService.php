@@ -349,8 +349,9 @@ class BankApiService
         }
 
         // safely read values
-        $statusCode = data_get($response, 'ResponseHeader.StatusCode');
-        $statusDesc = data_get($response, 'ResponseHeader.StatusDesc');
+        $rawStatusCode = data_get($response, 'ResponseHeader.StatusCode');
+        $statusCode = is_numeric($rawStatusCode) ? (int) $rawStatusCode : null;
+        $statusDesc = trim((string) data_get($response, 'ResponseHeader.StatusDesc'));
         $responseId = data_get($response, 'ResponseHeader.RequestId');
         $reference  = data_get($response, 'ResponseBody.Reference');
         Log::debug('Parsed header', compact('statusCode', 'statusDesc', 'reference'));
@@ -405,7 +406,10 @@ class BankApiService
 
             //update http_status_code and remarks
             $httpStatusCode = 500;
-            $remarks = data_get($response, 'ResponseHeader.ErrorMessage') ?: 'No StatusDesc in response';
+            $remarks = $remarks
+                ?: data_get($response, 'ResponseHeader.ErrorMessage')
+                ?: $statusDesc
+                ?: 'No StatusDesc in response';
         } else {
             // Unknown/other code: record it for investigation
             Log::warning('MandateRegistration returned unexpected StatusCode', [
@@ -751,17 +755,29 @@ class BankApiService
             $remarks = $statusMessage ?: 'Mandate cancelled successfully.';
         } else if ($statusCode === 1001) {
             //get error metadata
-            $errorCode = data_get($response, 'ResponseHeader.ErrorCode');
-            $statusDesc = data_get($response, 'ResponseHeader.StatusDesc');
+            $errorCode = trim((string) data_get($response, 'ResponseHeader.ErrorCode'));
+            $statusDesc = trim((string) data_get($response, 'ResponseHeader.StatusDesc'));
 
-            if ($errorCode === 'ERR_1000012' && $statusDesc === 'Duplicate request') {
-                Log::info('MandateCancellation skipped: mandate already cancelled.', [
+            if ($errorCode === 'ERR_1000012' && in_array(strtolower($statusDesc), [
+                'duplicate request',
+                'request already exists',
+                'request already exist',
+            ], true)) {
+                $remarks = data_get($response, 'ResponseHeader.ErrorMessage')
+                    ?: $statusDesc
+                    ?: 'Cancellation request already exists.';
+
+                $debitOrder->cancelled = 0;
+                $debitOrder->status = 403;
+                $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_FAILED;
+                $debitOrder->remarks = $remarks;
+
+                Log::warning('CRDB mandate cancellation failed because the request already exists.', [
                     'mandate_reference' => $reference,
                     'request_id' => $responseId,
+                    'error_code' => $errorCode,
+                    'status_description' => $statusDesc,
                 ]);
-
-                //update remarks
-                $debitOrder->remarks = data_get($response, 'ResponseHeader.ErrorMessage') ?? 'Duplicate request';
             } elseif ($errorCode === '' && $statusDesc === 'Payment was Invalid') {
                 Log::info('MandateRegistration failed: payment was invalid.', [
                     'mandate_reference' => $reference,

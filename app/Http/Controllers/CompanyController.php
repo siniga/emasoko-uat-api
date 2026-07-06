@@ -506,7 +506,7 @@ class CompanyController extends Controller
             'account_name' => ['required', 'string'],
             'account_number' => ['required', 'string'],
             'corporate_limit' => ['required'],
-            'currency_id' => ['required', 'integer'],
+            'currency_id' => ['required', 'uuid', 'exists:currencies,id'],
         ]);
 
         $partner = $this->findRequestPartner($request);

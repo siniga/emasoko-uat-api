@@ -30,7 +30,7 @@ class CompanyAccountRequest extends FormRequest
             'account_number.*' => 'required',
             'customer_code.*' => 'required',
             'corporate_limit.*' => 'required',
-            'currency_id.*' => 'required',
+            'currency_id.*' => 'required|uuid|exists:currencies,id',
         ];
     }
 
@@ -49,6 +49,8 @@ class CompanyAccountRequest extends FormRequest
             'customer_code.*.required' => 'Customer code required',
             'corporate_limit.*.required' => 'Corporate limit required',
             'currency_id.*.required' => 'Currency required',
+            'currency_id.*.uuid' => 'Selected currency is invalid',
+            'currency_id.*.exists' => 'Selected currency does not exist',
         ];
     }
 }
