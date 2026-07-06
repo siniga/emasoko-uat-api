@@ -198,9 +198,9 @@
                                                         <i class="mdi mdi-chevron-down"></i>
                                                     </button>
                                                     <div class="dropdown-menu">
-                                                        <a class="dropdown-item text-sm"
+                                                        {{-- <a class="dropdown-item text-sm"
                                                             href="{{ route('payment-mandate.request-cancellation') }}">Request
-                                                            Cancellation</a>
+                                                            Cancellation</a> --}}
                                                         <a class="dropdown-item text-sm"
                                                             href="{{ route('payment-mandate.request-closing') }}">Request
                                                             Closing</a>

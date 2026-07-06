@@ -395,12 +395,41 @@ class PaymentMandateWorkflowService
 
         $debitOrder = $debitOrderRequest->debitOrder;
         if ($debitOrder) {
-            $debitOrder->cancelled = 1;
-            $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_CANCELLED;
+            $debitOrder->cancellationStartedBy = $debitOrder->cancellationStartedBy ?: $debitOrderRequest->requested_by;
+            $debitOrder->cancellationStartedAt = $debitOrder->cancellationStartedAt ?: $debitOrderRequest->requested_at ?: now();
+            $debitOrder->cancellationApprovedBy = $userId;
+            $debitOrder->cancellationApprovedAt = now();
+            $debitOrder->cancelled = 0;
+            $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_CANCELLATION_REQUESTED;
             $debitOrder->save();
             $debitOrder->refresh();
-            $this->externalCallbackService->dispatchMandateStatus($debitOrder, 'MANDATE_CANCELLED');
-            $this->mandateActionService->cancelMandate($debitOrder);
+
+            $response = $this->mandateActionService->cancelMandate($debitOrder);
+            $debitOrder->refresh();
+
+            if ($response['success']) {
+                $debitOrder->cancelled = 1;
+                $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_CANCELLED;
+                $debitOrder->remarks = $response['remarks'];
+                $debitOrder->save();
+                $debitOrder->refresh();
+
+                $this->externalCallbackService->dispatchMandateStatus($debitOrder, 'MANDATE_CANCELLED');
+            } else {
+                $debitOrder->cancelled = 0;
+                $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_FAILED;
+                $debitOrder->remarks = $response['remarks'];
+                $debitOrder->save();
+
+                Log::warning('Mandate cancellation approval was accepted internally but rejected by the provider.', [
+                    'debit_order_id' => $debitOrder->id,
+                    'mandate_reference' => $debitOrder->reference,
+                    'channel' => $debitOrder->channel,
+                    'response_code' => $response['response_code'] ?? null,
+                    'provider_response_code' => $response['provider_response_code'] ?? null,
+                    'remarks' => $response['remarks'] ?? null,
+                ]);
+            }
         }
 
         return $debitOrderRequest;
