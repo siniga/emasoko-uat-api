@@ -38,8 +38,15 @@ class CRDBCollectionJob implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle(): void
-    {
+    public function handle(
+        DeductionService $deductionService,
+        SettlementPostingService $settlementPostingService,
+        ExternalCallbackService $externalCallbackService
+    ): void {
+        $this->deductionService = $deductionService;
+        $this->settlementPostingService = $settlementPostingService;
+        $this->externalCallbackService = $externalCallbackService;
+
         //payment responses
         $transferResponse = $this->postData['data']['transferResponse'];
         $collectionDate = $this->postData['data']['collectionDate'];

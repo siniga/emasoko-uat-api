@@ -177,7 +177,7 @@ Route::middleware('auth')->group(function () {
     Route::get('payment-channels/{id}/delete', [PaymentChannelController::class, 'delete'])->name('payment-channels.delete');
 
     //payment mandate
-    Route::prefix('payment-mandate')->group(function () {});
+    //Route::prefix('payment-mandate')->group(function () {});
 
     //payment mandate
     Route::any('payment-mandate/lists', [PaymentMandateListController::class, 'lists'])->name('payment-mandate.lists');
@@ -226,7 +226,7 @@ Route::middleware('auth')->group(function () {
     Route::any('payment-mandate/approve-archive', [PaymentMandateApprovalController::class, 'approve_archive'])->name('payment-mandate.approve-archive');
 
     //collection batches
-    Route::prefix('collections')->group(function () {});
+    //Route::prefix('collections')->group(function () {});
 
     Route::any('collections/batches', [CollectionController::class, 'batches'])->name('collections.batches');
     Route::any('collections/create', [CollectionController::class, 'create'])->name('collections.create');
