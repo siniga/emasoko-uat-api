@@ -77,11 +77,11 @@ class RetryMandateCancellation extends Command
                 continue;
             }
 
-            if (!$this->isLocallyCancelled($mandate)) {
-                $this->warn("Skipping {$reference}: mandate is not locally marked as cancelled.");
-                $skipped++;
-                continue;
-            }
+            // if (!$this->isLocallyCancelled($mandate)) {
+            //     $this->warn("Skipping {$reference}: mandate is not locally marked as cancelled.");
+            //     $skipped++;
+            //     continue;
+            // }
 
             $mandate->cancelled = 0;
             $mandate->lifecycle_status = DebitOrder::LIFECYCLE_CANCELLATION_REQUESTED;
