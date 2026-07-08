@@ -130,7 +130,7 @@ class MandateActionService
     {
         if ($debitOrder->channel == "CRDB") {
             //requestId
-            $requestId = Str::uuid()->toString();
+            $requestId = $debitOrder->request_id;
             $debitOrder->request_id = $requestId;
             $debitOrder->save();
 
