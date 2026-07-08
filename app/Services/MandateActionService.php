@@ -131,8 +131,7 @@ class MandateActionService
         if ($debitOrder->channel == "CRDB") {
             //requestId
             $requestId = $debitOrder->request_id;
-            $debitOrder->request_id = $requestId;
-            $debitOrder->save();
+            Log::debug("== CRDB Cancel request id == {$requestId}");
 
             //create payload
             $payload = $this->payloadService->CRDBMandateCancellationPayload($debitOrder, $requestId);
