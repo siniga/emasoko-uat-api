@@ -23,7 +23,8 @@ class PaymentMandateWorkflowService
         protected BankPayloadService $payloadService,
         protected BankApiService $bankApi,
         protected MandateActionService $mandateActionService,
-        protected ExternalCallbackService $externalCallbackService
+        protected ExternalCallbackService $externalCallbackService,
+        protected CustomerSmsNotificationService $customerSmsNotificationService
     ) {}
 
     public function createDraft(array $attributes, int $userId): DebitOrder
@@ -128,6 +129,10 @@ class PaymentMandateWorkflowService
         }
         $debitOrder->save();
         $debitOrder->refresh();
+
+        if ($debitOrder->resolved_lifecycle_status === DebitOrder::LIFECYCLE_ACTIVE) {
+            $this->customerSmsNotificationService->queueMandateCreated($debitOrder);
+        }
 
         if ($response['success'] && $debitOrder->channel !== 'NMB') {
             $this->externalCallbackService->dispatchMandateStatus($debitOrder, 'MANDATE_SUBMITTED');
@@ -269,6 +274,7 @@ class PaymentMandateWorkflowService
         $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_ACTIVE;
         $debitOrder->save();
         $debitOrder->refresh();
+        $this->customerSmsNotificationService->queueMandateCreated($debitOrder);
 
         if ($debitOrder->channel !== 'NMB') {
             $this->externalCallbackService->dispatchMandateStatus($debitOrder, 'MANDATE_ACTIVE');

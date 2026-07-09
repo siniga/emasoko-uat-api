@@ -8,6 +8,7 @@ use App\Jobs\CRDBCollectionJob;
 use App\Models\DebitOrder;
 use App\Models\Installment;
 use App\Models\PaymentSettlement;
+use App\Services\CustomerSmsNotificationService;
 use App\Services\DeductionService;
 use App\Services\ExternalCallbackService;
 use App\Services\SettlementPostingService;
@@ -25,7 +26,8 @@ class MandateController extends Controller
     public function __construct(
         protected DeductionService $deductionService,
         protected SettlementPostingService $settlementPostingService,
-        protected ExternalCallbackService $externalCallbackService
+        protected ExternalCallbackService $externalCallbackService,
+        protected CustomerSmsNotificationService $customerSmsNotificationService
     )
     {
         $this->auth = new Checksum();
@@ -234,6 +236,7 @@ class MandateController extends Controller
 
                     if ($previousLifecycleStatus !== DebitOrder::LIFECYCLE_ACTIVE) {
                         $this->deductionService->createInstallment($debitOrder);
+                        $this->customerSmsNotificationService->queueMandateCreated($debitOrder->fresh());
                     }
 
                     //Log response

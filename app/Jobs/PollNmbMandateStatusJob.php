@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Models\DebitOrder;
 use App\Services\BankApiService;
 use App\Services\BankPayloadService;
+use App\Services\CustomerSmsNotificationService;
 use App\Services\DeductionService;
 use App\Services\ExternalCallbackService;
 use Illuminate\Bus\Queueable;
@@ -29,7 +30,13 @@ class PollNmbMandateStatusJob implements ShouldQueue
         $this->maxPolls = $maxPolls;
     }
 
-    public function handle(BankPayloadService $payloadService, BankApiService $bankApi, DeductionService $deductionService, ExternalCallbackService $externalCallbackService): void
+    public function handle(
+        BankPayloadService $payloadService,
+        BankApiService $bankApi,
+        DeductionService $deductionService,
+        ExternalCallbackService $externalCallbackService,
+        CustomerSmsNotificationService $customerSmsNotificationService
+    ): void
     {
         $debitOrder = DebitOrder::find($this->debitOrderId);
 
@@ -67,6 +74,7 @@ class PollNmbMandateStatusJob implements ShouldQueue
                 }
 
                 $debitOrder->refresh();
+                $customerSmsNotificationService->queueMandateCreated($debitOrder);
                 $externalCallbackService->dispatchMandateStatus($debitOrder, 'MANDATE_ACTIVE', [
                     'poll_number' => $this->pollNumber,
                 ]);
