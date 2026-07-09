@@ -13,13 +13,12 @@ class PaymentMandatePartyService
         $accountTypeId = (int) $attributes['account_type_id'];
         $accountId = (int) $attributes['account_id'];
         $accountName = $attributes['account_name'] ?? null;
-        $accountNumber = $attributes['account_number'] ?? null;
+        $accountNumber = $this->normalizeAccountNumber($attributes['account_number'] ?? null);
         $secondaryPhone = $attributes['secondary_phone'] ?? null;
         $email = $attributes['email'] ?? null;
         $idNumber = $attributes['id_number'] ?? null;
         $address = $attributes['address'] ?? null;
         $phone = casting_phone($attributes['phone']);
-        $customerAccountUuid = $customerAccountUuid ?: (string) Str::uuid();
 
         $bankCode = null;
         if ($accountTypeId === 1 && $accountNumber) {
@@ -37,8 +36,18 @@ class PaymentMandatePartyService
         $customer->updated_by = $userId;
         $customer->save();
 
-        $customerAccount = CustomerAccount::firstOrNew(['uuid' => $customerAccountUuid]);
-        $customerAccount->uuid = $customerAccountUuid;
+        $customerAccount = $this->resolveCustomerAccount(
+            $customerAccountUuid,
+            $accountTypeId,
+            $accountId,
+            $phone,
+            $accountNumber
+        );
+
+        if (empty($customerAccount->uuid)) {
+            $customerAccount->uuid = $customerAccountUuid ?: (string) Str::uuid();
+        }
+
         $customerAccount->account_type_id = $accountTypeId;
         $customerAccount->account_id = $accountId;
         $customerAccount->phone = $phone;
@@ -54,5 +63,30 @@ class PaymentMandatePartyService
         $customerAccount->save();
 
         return $customerAccount;
+    }
+
+    protected function resolveCustomerAccount(?string $uuid, int $accountTypeId, int $accountId, string $phone, ?string $accountNumber): CustomerAccount
+    {
+        if ($uuid) {
+            return CustomerAccount::firstOrNew(['uuid' => $uuid]);
+        }
+
+        $query = CustomerAccount::query()
+            ->where('account_type_id', $accountTypeId)
+            ->where('account_id', $accountId)
+            ->where('phone', $phone);
+
+        if ($accountTypeId === 1) {
+            $query->where('account_number', $accountNumber);
+        }
+
+        return $query->first() ?: new CustomerAccount();
+    }
+
+    protected function normalizeAccountNumber(?string $accountNumber): ?string
+    {
+        $accountNumber = preg_replace('/\s+/', '', trim((string) $accountNumber));
+
+        return $accountNumber !== '' ? $accountNumber : null;
     }
 }

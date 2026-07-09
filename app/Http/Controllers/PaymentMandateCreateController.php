@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CustomerAccountRequest;
 use App\Models\Account;
-use App\Models\Customer;
 use App\Models\CustomerAccount;
 use App\Models\DebitOrder;
 use App\Models\Installment;
@@ -14,7 +13,6 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
-use Illuminate\Support\Str;
 
 class PaymentMandateCreateController extends BasePaymentMandateController
 {
@@ -53,7 +51,7 @@ class PaymentMandateCreateController extends BasePaymentMandateController
     {
         $validated = $request->validated();
         $debit_order_uuid = $request->debit_order_uuid;
-        $customer_account_uuid = $request->customer_account_uuid != null ? $request->customer_account_uuid : Str::uuid();
+        $customer_account_uuid = $request->customer_account_uuid;
 
         $unique_phone = null;
         if ($validated['account_type_id'] == 1) {
@@ -62,24 +60,19 @@ class PaymentMandateCreateController extends BasePaymentMandateController
             $unique_phone = casting_phone($validated['account_number_phone']);
         }
 
-        $bank_code = null;
-        if ($validated['account_type_id'] == 1) {
-            $bank_code = substr($validated['account_number'], 0, 3);
-        }
-
-        $this->paymentMandatePartyService->upsertCustomerAccount([
+        $customerAccount = $this->paymentMandatePartyService->upsertCustomerAccount([
             'account_type_id' => $validated['account_type_id'],
             'account_id' => $validated['account_id'],
             'phone' => $unique_phone,
-            'secondary_phone' => $validated['secondary_phone'],
-            'account_name' => $validated['account_name'],
-            'account_number' => $validated['account_number'],
+            'secondary_phone' => $validated['secondary_phone'] ?? null,
+            'account_name' => $validated['account_name'] ?? null,
+            'account_number' => $validated['account_number'] ?? null,
             'email' => $request->input('email'),
             'id_number' => $request->input('nida_number'),
             'address' => $request->input('address'),
         ], Auth::id(), $customer_account_uuid);
 
-        return Redirect::route('payment-mandate.create-deduction', [$customer_account_uuid, $debit_order_uuid])->with('success', 'Customer deduction channel saved');
+        return Redirect::route('payment-mandate.create-deduction', [$customerAccount->uuid, $debit_order_uuid])->with('success', 'Customer deduction channel saved');
     }
 
     public function create_deduction($customer_account_uuid, $debit_order_uuid = null)
