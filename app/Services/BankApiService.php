@@ -632,6 +632,7 @@ class BankApiService
                 if ($response_code == 201) {
                     $debit_order->cancelled = 1; // Mark as cancelled
                     $debit_order->lifecycle_status = DebitOrder::LIFECYCLE_CANCELLED;
+                    app(CustomerSmsNotificationService::class)->queueMandateCancellation($debit_order);
                 }
             } else if (strtolower($response['status']) == "fail") {
                 $response_code = $response['data']['response'][0]['responseCode'];
@@ -749,6 +750,7 @@ class BankApiService
             $debitOrder->cancelled = 1;
             $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_CANCELLED;
             $debitOrder->remarks = $statusMessage ?: 'Mandate cancelled successfully.';
+            app(CustomerSmsNotificationService::class)->queueMandateCancellation($debitOrder);
 
             //update http_status_code and remarks
             $httpStatusCode = 201;

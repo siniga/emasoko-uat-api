@@ -374,6 +374,7 @@ class PaymentMandateWorkflowService
                 $debitOrder->refresh();
             }
 
+            $this->customerSmsNotificationService->queueMandateCancellation($debitOrder);
             $this->externalCallbackService->dispatchMandateStatus($debitOrder, 'MANDATE_CANCELLED');
         } else {
             $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_FAILED;
@@ -420,6 +421,7 @@ class PaymentMandateWorkflowService
                 $debitOrder->save();
                 $debitOrder->refresh();
 
+                $this->customerSmsNotificationService->queueMandateCancellation($debitOrder);
                 $this->externalCallbackService->dispatchMandateStatus($debitOrder, 'MANDATE_CANCELLED');
             } else {
                 $debitOrder->cancelled = 0;
@@ -481,6 +483,8 @@ class PaymentMandateWorkflowService
             $debitOrder->contract_status = 'CLOSED';
             $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_CLOSED;
             $debitOrder->save();
+            $debitOrder->refresh();
+            $this->customerSmsNotificationService->queueMandateClosed($debitOrder);
             $this->mandateActionService->cancelMandate($debitOrder);
         }
 

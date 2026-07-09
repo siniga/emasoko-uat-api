@@ -54,6 +54,12 @@ class CustomerSmsTemplateSeeder extends Seeder
                 'message' => 'Kiasi cha TSh {amount} kimekatwa kwenda {service_provider}. Tafadhali weka TSh {outstanding_amount} kwenye akaunti yako ili kukamilisha makato ya mwezi. Asante.',
             ],
             [
+                'code' => 'mandate_closed',
+                'channel' => 'ALL',
+                'name' => 'Mandate Closed',
+                'message' => 'Habari, makato yenye namba ya kumbukumbu {mandate_reference} kwenda kwa {service_provider} yamefungwa kikamilifu. Asante kwa kutumia eMakato.',
+            ],
+            [
                 'code' => 'mandate_cancelled',
                 'channel' => 'NMB',
                 'name' => 'Closed/Canceled Mandate - NMB',
