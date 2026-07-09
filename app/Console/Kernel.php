@@ -16,6 +16,7 @@ class Kernel extends ConsoleKernel
         Commands\CreateCollectionBatch::class,
         Commands\PushCollectionBatch::class,
         Commands\CollectionStatusBatch::class,
+        Commands\PullCollectionStatusByReference::class,
         Commands\SyncDebitOrderDates::class,
         Commands\SyncMandateLifecycleStatus::class,
     ];
@@ -29,7 +30,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         // collection batches 
-        $schedule->command('debit-orders:sync-next-date')->monthlyOn(1, '00:00');
+        $schedule->command('debit-orders:sync-next-date')->monthlyOn(1, '00:10');
         $schedule->command('create:batches')->dailyAt('01:00');
         $schedule->command('push:batches')->dailyAt('02:00');
         $schedule->command('collection:status')->dailyAt('03:00');
