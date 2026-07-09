@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Classes\Authentication;
 use App\Models\CollectionBatch;
 use App\Models\CollectionDebitOrder;
+use App\Services\CustomerSmsNotificationService;
 use App\Services\DeductionService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
@@ -45,7 +46,7 @@ class PushCollectionJob implements ShouldQueue, ShouldBeUnique
      *
      * @return void
      */
-    public function handle()
+    public function handle(CustomerSmsNotificationService $customerSmsNotificationService)
     {
         //initialize deduction service
         $deduction_service = new DeductionService();
@@ -132,6 +133,8 @@ class PushCollectionJob implements ShouldQueue, ShouldBeUnique
                         'bank_status' => 'PUSHED',
                         'pushed_at' => now(),
                     ]);
+
+                    $customerSmsNotificationService->queueCollectionBatchUploaded($collection_batch->fresh());
                 }
             } else if (strtolower($response['status']) == "fail") {
                 $response_code = $response['data']['response'][0]['responseCode'];

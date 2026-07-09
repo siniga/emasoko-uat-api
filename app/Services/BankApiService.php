@@ -998,6 +998,10 @@ class BankApiService
                 $collection_batch->remarks = $response['data']['response'][0]['responseDescription'];
                 $collection_batch->pushed = 1;
                 $collection_batch->save();
+
+                if (strtolower($response['status']) == "success") {
+                    app(CustomerSmsNotificationService::class)->queueCollectionBatchUploaded($collection_batch->fresh());
+                }
             } else {
                 Log::debug('== CollectionCreate Response not success ==');
             }
