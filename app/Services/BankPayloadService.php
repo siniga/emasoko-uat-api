@@ -10,6 +10,7 @@ use App\Models\Partner;
 use App\Models\PartnerAccount;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
 
 class BankPayloadService
 {
@@ -111,7 +112,7 @@ class BankPayloadService
             "maxAmount" => $debitOrder->max_installment_amount,
             "minAmount" =>  $debitOrder->min_installment_amount,
             "createdBy" => static::userNameFormat($debitOrder->userCreated),
-            "verifiedBy" => static::userNameFormat(auth()->user()),
+            "verifiedBy" => static::userNameFormat(Auth::user()),
             "createdDate" => Carbon::parse($debitOrder->created_at)->format('Y-m-d H:i:s'),
             "verifyDate" => Carbon::parse($debitOrder->created_at)->format('Y-m-d H:i:s'),
             "file" => [
@@ -189,8 +190,8 @@ class BankPayloadService
             "mandateReferenceNumber" => $debitOrder->reference,
             "corporateReference" => $debitOrder->partner->reference,
             "cancelReason" => $debitOrder->cancellation_reason,
-            "createdBy" => static::userNameFormat(auth()->user()),
-            "verifiedBy" => static::userNameFormat(auth()->user()),
+            "createdBy" => static::userNameFormat(Auth::user()),
+            "verifiedBy" => static::userNameFormat(Auth::user()),
             "createdDate" => $debitOrder->cancellationStartedAt,
             "verifyDate" => $debitOrder->cancellationApprovedAt
         ];

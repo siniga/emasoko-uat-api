@@ -8,8 +8,13 @@ use Illuminate\Database\Eloquent\Model;
 class SmsTemplate extends Model
 {
     use HasFactory;
-    protected $table = "sms_templates";
+
+    protected $table = 'sms_templates';
     protected $guarded = ['id'];
+
+    protected $casts = [
+        'is_active' => 'boolean',
+    ];
 
     public function category()
     {

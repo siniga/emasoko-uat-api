@@ -2,136 +2,99 @@
 
 namespace App\Jobs;
 
-use App\Classes\Checksum;
 use App\Models\DebitOrder;
+use App\Services\BankApiService;
+use App\Services\BankPayloadService;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class CRDBMandateCancellationJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-    protected $data;
-    private $auth;
-    /**
-     * Create a new job instance.
-     *
-     * @return void
-     */
-    public function __construct($data)
+
+    protected array $data;
+
+    public function __construct(array $data)
     {
         $this->data = $data;
-        $this->auth = new Checksum();
     }
 
-    /**
-     * Execute the job.
-     *
-     * @return void
-     */
-    public function handle()
+    public function handle(BankApiService $bankApi, BankPayloadService $payloadService): void
     {
-        //update the debit order
-        $debitOrder = DebitOrder::where('reference', '=', $this->data['mandateReferenceNumber'])->first();
+        $mandateReferenceNumber = $this->data['mandateReferenceNumber'] ?? null;
+
+        if (!$mandateReferenceNumber) {
+            Log::warning('CRDB mandate cancellation job missing mandateReferenceNumber.', [
+                'data' => $this->safeLogData(),
+            ]);
+
+            return;
+        }
+
+        $debitOrder = DebitOrder::where('reference', $mandateReferenceNumber)->first();
+
         if (!$debitOrder) {
-            Log::warning('Debit order not found for mandateReferenceNumber', [
-                'mandateReferenceNumber' => $this->data['mandateReferenceNumber'] ?? null
+            Log::warning('Debit order not found for CRDB mandate cancellation job.', [
+                'mandateReferenceNumber' => $mandateReferenceNumber,
+                'requestId' => $this->data['requestId'] ?? null,
             ]);
-            // Bail early; nothing to update
+
             return;
         }
 
-        //create authentication token
-        $AUTH_BEARER_TOKEN = $this->auth->generateToken();
-        Log::debug("== CRDB Auth Token ==");
-        Log::debug($AUTH_BEARER_TOKEN);
+        $requestId = $this->data['requestId'] ?? $debitOrder->request_id ?? Str::uuid()->toString();
+        $payload = $this->data['payload'] ?? $payloadService->CRDBMandateCancellationPayload($debitOrder, $requestId);
 
-        //headers
-        $headers = [
-            'Channel' => config('services.crdb.channel_id'),
-            'AppId' => config('services.crdb.app_id'),
-            'AppVersion' => '1.0.0',
-            "RequestId" => $this->data['requestId'],
-            'Authorization' => 'Bearer ' . $AUTH_BEARER_TOKEN,
-            'Content-Type' => 'application/json',
-            'Accept' => 'application/json'
+        Log::info('Processing CRDB mandate cancellation job.', [
+            'debit_order_id' => $debitOrder->id,
+            'mandate_reference' => $mandateReferenceNumber,
+            'request_id' => $requestId,
+        ]);
+
+        try {
+            $response = $bankApi->crdbMandateCancellationRequest([
+                'payload' => $payload,
+                'requestId' => $requestId,
+                'mandateReferenceNumber' => $mandateReferenceNumber,
+            ]);
+        } catch (\Throwable $exception) {
+            $debitOrder->cancelled = 0;
+            $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_FAILED;
+            $debitOrder->remarks = 'CRDB mandate cancellation job failed: ' . $exception->getMessage();
+            $debitOrder->save();
+
+            Log::error('CRDB mandate cancellation job threw an exception.', [
+                'debit_order_id' => $debitOrder->id,
+                'mandate_reference' => $mandateReferenceNumber,
+                'request_id' => $requestId,
+                'exception' => $exception::class,
+                'message' => $exception->getMessage(),
+            ]);
+
+            throw $exception;
+        }
+
+        Log::info('CRDB mandate cancellation job completed.', [
+            'debit_order_id' => $debitOrder->id,
+            'mandate_reference' => $mandateReferenceNumber,
+            'request_id' => $requestId,
+            'response_code' => $response[0] ?? null,
+            'remarks' => $response[1] ?? null,
+            'provider_response_code' => $response[2] ?? null,
+        ]);
+    }
+
+    protected function safeLogData(): array
+    {
+        return [
+            'requestId' => $this->data['requestId'] ?? null,
+            'mandateReferenceNumber' => $this->data['mandateReferenceNumber'] ?? null,
+            'hasPayload' => array_key_exists('payload', $this->data),
         ];
-
-        //Payload
-        Log::debug("== CRDB Payload ==");
-        Log::debug($this->data['payload']);
-
-        //API URL
-        $API_URL = config('services.crdb.api_url');
-
-        //push payload => NMB Direct Debits
-        $httpResponse = Http::withHeaders($headers)->post($API_URL, $this->data['payload']);
-
-        Log::debug('== Raw Response Body ==');
-        Log::debug($httpResponse->body());
-
-        //http response
-        $raw = $httpResponse->body();
-
-        // strip UTF-8 BOM + trim
-        $raw = preg_replace('/^\xEF\xBB\xBF/', '', trim($raw ?? ''));
-
-        // remove trailing commas before } or ] (JSON5-style but not valid JSON)
-        $sanitized = preg_replace('/,\s*(\}|\])/m', '$1', $raw);
-
-        // now decode with error reporting
-        $response = json_decode($sanitized, true);
-
-        if (!is_array($response)) {
-            Log::error('MandateCancellation failed: HTTP error or invalid JSON', [
-                'json_error' => json_last_error_msg(),
-                'sample'     => Str::limit($raw, 800),
-            ]);
-            return;
-        }
-
-        // safely read values
-        $statusCode = data_get($response, 'ResponseHeader.StatusCode');
-        $statusDesc = data_get($response, 'ResponseHeader.StatusDesc');
-        $responseId = data_get($response, 'ResponseHeader.RequestId');
-        Log::debug('Parsed header', compact('statusCode', 'statusDesc'));
-
-        // Handle business logic only if StatusCode is present
-        if ($statusCode === 1000) {
-            $debitOrder->cancelled = 1;
-            $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_CANCELLED;
-            $debitOrder->remarks = "Mandate cancelled successfully";
-        } elseif ($statusCode === 1001) {
-            $errorMetaData = data_get($response, 'ResponseHeader.ErrorMetadata');
-            Log::debug("== ErrorCode ==");
-            Log::debug($errorMetaData);
-
-            if (isset($errorMetaData['400'])) {
-                $debitOrder->cancelled = 1;
-                $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_CANCELLED;
-                $debitOrder->remarks = "Mandate cancelled successfully";
-            }else if(isset($errorMetaData['422'])){
-                // Handle 422 Unprocessable Entity error
-                $debitOrder->remarks = "Mandate cancellation failed: Unprocessable Entity";
-            }
-        } else {
-            // Unknown/other code: record it for investigation
-            Log::warning('MandateCancellation returned unexpected StatusCode', [
-                'StatusCode' => $statusCode,
-                'response'    => $response,
-            ]);
-        }
-
-        // Persist shared fields (guard nulls)
-        $debitOrder->http_response_code = $statusCode ?? $httpResponse->status();
-        $debitOrder->save();
-
-        Log::debug('== CRDB Mandate cancellation successfully ===');
     }
 }

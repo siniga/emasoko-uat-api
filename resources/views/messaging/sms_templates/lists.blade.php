@@ -32,42 +32,53 @@
                         </div>
 
                         <div class="table-responsive">
-                            <table class="table table-bordered dt-responsive  nowrap w-100" id="dynamicTable">
+                            <table class="table table-bordered dt-responsive nowrap w-100" id="dynamicTable">
                                 <thead>
                                     <tr>
                                         <th width="3%">#</th>
                                         <th width="25%">Name</th>
+                                        <th width="18%">Code</th>
                                         <th>Message</th>
-                                        <th width="15%">Action</th>
+                                        <th width="10%">Status</th>
+                                        <th width="12%">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @if ($templates)
-                                        @foreach ($templates as $template)
-                                            <tr>
-                                                <td>{{ $loop->iteration }}</td>
-                                                <td>
-                                                    {{ $template->name }}<br />
-                                                    {{ $template->category->category_name }}
-                                                </td>
-                                                <td>{{ $template->message }}</td>
-                                                <td class="justify-content-between">
-                                                    <a x-on:click="updateData({{ $template->id }})" class="btn btn-xss">
-                                                        <i class="bx bx-edit"></i>
-                                                    </a>
-
-                                                    <a href="{{ route('sms-templates.delete', $template->id) }}"
-                                                        class="btn btn-xss delete">
-                                                        <i class="bx bx-trash text-danger"></i>
-                                                    </a>
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    @else
+                                    @forelse ($templates as $template)
                                         <tr>
-                                            <td colspan="8" class="text-center">No records were found</td>
+                                            <td>{{ $loop->iteration }}</td>
+                                            <td>
+                                                {{ $template->name }}<br />
+                                                <small class="text-muted">{{ optional($template->category)->name ?? 'Uncategorised' }}</small>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-soft-primary text-primary">{{ $template->code ?? 'manual' }}</span><br />
+                                                <small class="text-muted">{{ $template->channel ?? 'ALL' }}</small>
+                                            </td>
+                                            <td>{{ $template->message }}</td>
+                                            <td>
+                                                @if ($template->is_active)
+                                                    <span class="badge bg-success">Active</span>
+                                                @else
+                                                    <span class="badge bg-secondary">Inactive</span>
+                                                @endif
+                                            </td>
+                                            <td class="justify-content-between">
+                                                <a x-on:click="updateData({{ $template->id }})" class="btn btn-xss">
+                                                    <i class="bx bx-edit"></i>
+                                                </a>
+
+                                                <a href="{{ route('sms-templates.delete', $template->id) }}"
+                                                    class="btn btn-xss delete">
+                                                    <i class="bx bx-trash text-danger"></i>
+                                                </a>
+                                            </td>
                                         </tr>
-                                    @endif
+                                    @empty
+                                        <tr>
+                                            <td colspan="6" class="text-center">No records were found</td>
+                                        </tr>
+                                    @endforelse
                                 </tbody>
                             </table>
                             <div class="d-flex justify-content-end">
@@ -85,7 +96,6 @@
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-12">
-                                <!--form message => success or danger -->
                                 <div class="message_wrp"></div>
                             </div>
                         </div>
@@ -116,6 +126,31 @@
                                     <div class="mb-3">
                                         <label>Name<span style="color:red">*</span></label>
                                         <input name="name" placeholder="Write name..." class="form-control" x-model="template_form.name" required />
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-8 col-md-8 col-sm-8 col-12">
+                                    <div class="mb-3">
+                                        <label>Code</label>
+                                        <input name="code" placeholder="deduction_success" class="form-control" x-model="template_form.code" />
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-4 col-md-4 col-sm-4 col-12">
+                                    <div class="mb-3">
+                                        <label>Channel</label>
+                                        <select name="channel" class="form-control" x-model="template_form.channel">
+                                            <option value="ALL">ALL</option>
+                                            <option value="NMB">NMB</option>
+                                            <option value="CRDB">CRDB</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-12 col-md-12 col-sm-12 col-12">
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" type="checkbox" id="is_active" x-model="template_form.is_active">
+                                        <label class="form-check-label" for="is_active">Active</label>
                                     </div>
                                 </div>
 

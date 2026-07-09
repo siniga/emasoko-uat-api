@@ -19,8 +19,10 @@ use Illuminate\Support\Str;
 
 class SettlementPostingService
 {
-    public function __construct(protected MessagingService $messagingService)
-    {
+    public function __construct(
+        protected MessagingService $messagingService,
+        protected SmsTemplateService $smsTemplateService
+    ) {
     }
 
     public function post(array $payload): PaymentSettlement
@@ -304,8 +306,19 @@ class SettlementPostingService
         $outstandingAmount = number_format((float) $debitOrder->outstanding_amount);
         $paidAmount = number_format($paidAmount);
         $businessName = $debitOrder->partner?->business_name ?? 'mtoa huduma';
-
-        $message = "Makato ya tarehe {$paymentDate} ya kiasi cha shilingi {$paidAmount} yamekamilishwa kwa {$businessName}. Kiasi kilichobaki ni Tsh {$outstandingAmount}.";
+        $accountLastDigits = $this->smsTemplateService->accountLastDigits($debitOrder->customerAccount?->account_number);
+        $templateCode = strtoupper((string) $debitOrder->channel) === 'CRDB' && (float) $debitOrder->outstanding_amount > 0
+            ? 'partial_deduction'
+            : 'deduction_success';
+        $fallback = "Makato ya tarehe {$paymentDate} ya kiasi cha shilingi {$paidAmount} yamekamilishwa kwa {$businessName}. Kiasi kilichobaki ni Tsh {$outstandingAmount}.";
+        $message = $this->smsTemplateService->render($templateCode, $debitOrder->channel, [
+            'payment_date' => $paymentDate,
+            'amount' => $paidAmount,
+            'service_provider' => $businessName,
+            'outstanding_amount' => $outstandingAmount,
+            'account_last_digits' => $accountLastDigits,
+            'mandate_reference' => $debitOrder->reference,
+        ], $fallback);
         $messageId = $this->messagingService->generateMessageId();
 
         $smsLog = SmsLog::firstOrNew([
@@ -360,7 +373,11 @@ class SettlementPostingService
         }
 
         try {
-            $requestId = (string) Str::uuid();
+            //requestId
+            $requestId = $debitOrder->request_id;
+            Log::debug("== CRDB Cancel request id == {$requestId}");
+
+            //update debit order lifecycle status to cancellation requested
             $debitOrder->cancellation_reason = $debitOrder->cancellation_reason ?: 'Automatic cancellation after full settlement';
             $debitOrder->cancellationStartedBy = $debitOrder->cancellationStartedBy ?: $debitOrder->created_by;
             $debitOrder->cancellationStartedAt = $debitOrder->cancellationStartedAt ?: now();

@@ -26,10 +26,12 @@ class DeductionService
 {
     private $app_variable;
     protected MessagingService $messagingService;
+    protected SmsTemplateService $smsTemplateService;
 
     public function __construct()
     {
         $this->messagingService = app(MessagingService::class);
+        $this->smsTemplateService = app(SmsTemplateService::class);
     }
 
     protected function settlementPosting(): SettlementPostingService
@@ -766,7 +768,19 @@ class DeductionService
 
                 //send message for outstanding amount and current balance from eMakato.
                 $phone = $installment->debitOrder->customerAccount->phone;
-                $message = "Makato ya tarehe {$payment_date} ya kiasi cha shilingi {$paidAmt} yamekamilishwa kwa {$businessName}. Kiasi kilichobaki ni Tsh {$outstandingAmt}.";
+                $accountLastDigits = $this->smsTemplateService->accountLastDigits($debitOrder->customerAccount?->account_number);
+                $templateCode = strtoupper((string) $debitOrder->channel) === 'CRDB' && (float) $outstanding_amount > 0
+                    ? 'partial_deduction'
+                    : 'deduction_success';
+                $fallback = "Makato ya tarehe {$payment_date} ya kiasi cha shilingi {$paidAmt} yamekamilishwa kwa {$businessName}. Kiasi kilichobaki ni Tsh {$outstandingAmt}.";
+                $message = $this->smsTemplateService->render($templateCode, $debitOrder->channel, [
+                    'payment_date' => $payment_date,
+                    'amount' => $paidAmt,
+                    'service_provider' => $businessName,
+                    'outstanding_amount' => $outstandingAmt,
+                    'account_last_digits' => $accountLastDigits,
+                    'mandate_reference' => $debitOrder->reference,
+                ], $fallback);
 
                 //message id
                 $messageId = $this->messagingService->generateMessageId();
