@@ -185,18 +185,23 @@ class BankPayloadService
     //create mandate cancellation Payload
     public function mandateCancellationPayload(DebitOrder $debitOrder)
     {
-        //create payload
-        $payload = [
-            "mandateReferenceNumber" => $debitOrder->reference,
-            "corporateReference" => $debitOrder->partner->reference,
-            "cancelReason" => $debitOrder->cancellation_reason ?? 'Mandate cancellation requested by the customer.',
-            "createdBy" => static::userNameFormat(Auth::user()) ?? 'Admin.Solocodes',
-            "verifiedBy" => static::userNameFormat(Auth::user()) ?? 'Admin.Solocodes',
-            "createdDate" => $debitOrder->cancellationStartedAt ?? Carbon::now(),
-            "verifyDate" => $debitOrder->cancellationApprovedAt ?? Carbon::now()
-        ];
+        $actor = Auth::user();
 
-        return $payload;
+        $createdBy = $actor
+            ? static::userNameFormat($actor)
+            : 'Admin.Solocodes';
+
+        $verifiedBy = $createdBy;
+
+        return [
+            'mandateReferenceNumber' => $debitOrder->reference,
+            'corporateReference' => $debitOrder->partner?->reference,
+            'cancelReason' => $debitOrder->cancellation_reason ?: 'Mandate cancellation requested by the customer.',
+            'createdBy' => $createdBy,
+            'verifiedBy' => $verifiedBy,
+            'createdDate' => $debitOrder->cancellationStartedAt ?: now()->format('Y-m-d H:i:s'),
+            'verifyDate' => $debitOrder->cancellationApprovedAt ?: now()->format('Y-m-d H:i:s'),
+        ];
     }
 
     //create CRDB mandate payload
