@@ -769,9 +769,7 @@ class BankApiService
                     ?: $statusDesc
                     ?: 'Cancellation request already exists.';
 
-                $debitOrder->cancelled = 0;
-                $debitOrder->status = 403;
-                $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_FAILED;
+                //update only remarks
                 $debitOrder->remarks = $remarks;
 
                 Log::warning('CRDB mandate cancellation failed because the request already exists.', [
