@@ -75,7 +75,6 @@
                     <h5 class="pm-existing-modal__title">Existing Debit Orders Found</h5>
                     <p class="pm-existing-modal__subtitle">This customer account already has active or recent mandate activity that should be reviewed first.</p>
                 </div>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
             <div class="modal-body">
@@ -122,7 +121,7 @@
                 <button type="button" class="btn btn-outline-danger" x-on:click="cancelExistingMandateRequest()">
                     Cancel Request
                 </button>
-                <button type="button" class="btn btn-danger" x-on:click="proceedWithNewMandate()">
+                <button type="button" class="btn btn-success" x-on:click="proceedWithMandate()">
                     Proceed Anyway
                 </button>
             </div>

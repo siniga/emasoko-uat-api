@@ -174,6 +174,16 @@ class PaymentMandateCreateController extends BasePaymentMandateController
                 ->withInput();
         }
 
+        if (!$request->filled('debit_order_uuid') && (string) $request->input('confirm_new_mandate') !== '1') {
+            $existingDebitOrders = $this->deductionService->hasActiveDebitOrder($request->input('customer_account_uuid'));
+
+            if (!empty($existingDebitOrders)) {
+                return Redirect::back()
+                    ->with('danger', 'Existing debit orders were found. Please review them and click Proceed Anyway before creating another mandate.')
+                    ->withInput();
+            }
+        }
+
         $debit_order = $this->paymentMandateWorkflowService->createDraft($request->all(), Auth::id());
 
         return Redirect::route('payment-mandate.preview', [$debit_order->uuid])->with('success', 'Customer deduction information saved, OTP PIN sent to customer for Terms and Condition consent.');

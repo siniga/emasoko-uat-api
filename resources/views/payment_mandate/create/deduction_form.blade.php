@@ -40,7 +40,7 @@
                     <div class="alert alert-danger mb-2">{{ session()->get('danger') }}</div>
                 @endif
 
-                {{ Form::open(['url' => route('payment-mandate.store-deduction'), 'class' => 'form-horizontal', 'enctype' => 'multipart/form-data']) }}
+                {{ Form::open(['url' => route('payment-mandate.store-deduction'), 'class' => 'form-horizontal', 'enctype' => 'multipart/form-data', 'x-ref' => 'mandateForm', '@submit.prevent' => 'submitMandateForm()']) }}
                 @method('POST')
                 {{ Form::token() }}
 
@@ -182,6 +182,7 @@
             return {
                 debitType: "{{ old('debit_type', $debit_order->debit_type ?? 'FIXED') }}",
                 hasExistingMandates: @json(!empty($arr_debit_orders) && count($arr_debit_orders) > 0),
+                pendingSubmit: false,
 
                 get showFixedDeduction() {
                     return this.debitType === 'FIXED' || this.debitType === '';
@@ -193,16 +194,7 @@
 
                 init() {
                     if (this.hasExistingMandates) {
-                        const modalElement = document.getElementById('existingDebitOrdersModal');
-
-                        if (modalElement && window.bootstrap) {
-                            const modal = new bootstrap.Modal(modalElement, {
-                                backdrop: 'static',
-                                keyboard: false
-                            });
-
-                            modal.show();
-                        }
+                        this.showExistingMandatesModal();
                     }
 
                     this.numberOfInstallment();
@@ -212,7 +204,31 @@
                     window.location.href = "{{ route('payment-mandate.lists') }}";
                 },
 
-                proceedWithNewMandate() {
+                submitMandateForm() {
+                    const confirmField = document.getElementById('confirm_new_mandate');
+
+                    if (this.hasExistingMandates && (!confirmField || confirmField.value !== '1')) {
+                        this.pendingSubmit = true;
+                        this.showExistingMandatesModal();
+                        return;
+                    }
+
+                    this.$refs.mandateForm.submit();
+                },
+
+                showExistingMandatesModal() {
+                    const modalElement = document.getElementById('existingDebitOrdersModal');
+
+                    if (modalElement && window.bootstrap) {
+                        const modal = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement, {
+                            backdrop: 'static',
+                            keyboard: false
+                        });
+                        modal.show();
+                    }
+                },
+
+                proceedWithMandate() {
                     const confirmField = document.getElementById('confirm_new_mandate');
                     const modalElement = document.getElementById('existingDebitOrdersModal');
 
@@ -223,6 +239,11 @@
                     if (modalElement && window.bootstrap) {
                         const modal = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
                         modal.hide();
+                    }
+
+                    if (this.pendingSubmit) {
+                        this.pendingSubmit = false;
+                        this.$nextTick(() => this.$refs.mandateForm.submit());
                     }
                 },
 

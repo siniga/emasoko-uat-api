@@ -66,7 +66,11 @@ class DeductionService
         // debit order
         $debit_order = DebitOrder::whereHas("customerAccount", function ($q) use ($customer_account_uuid) {
             $q->where('customer_accounts.uuid', $customer_account_uuid);
-        })->where('debit_orders.contract_status', 'OPEN');
+        })->where([
+            'debit_orders.contract_status' => 'OPEN',
+            'debit_orders.lifecycle_status' => 'active'
+        ])
+            ->orderBy('debit_orders.created_at', 'desc');
 
         if ($debit_order->exists()) {
             foreach ($debit_order->get() as $debit_order) {
