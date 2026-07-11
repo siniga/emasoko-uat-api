@@ -793,7 +793,6 @@ class BankApiService
                     'error_code' => $errorCode,
                 ]);
                 //set update params
-                $debitOrder->status = 403;
                 $debitOrder->remarks = data_get($response, 'ResponseHeader.ErrorMessage') ?: 'No StatusDesc in response';
             }
 
