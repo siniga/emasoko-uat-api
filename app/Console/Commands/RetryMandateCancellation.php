@@ -54,7 +54,7 @@ class RetryMandateCancellation extends Command
                         $mandate?->channel ?? '-',
                         $mandate?->lifecycle_status ?? '-',
                         $mandate?->cancelled ?? '-',
-                        $mandate && $this->isLocallyCancelled($mandate) ? 'YES' : 'NO',
+                        $mandate ? 'YES' : 'NO',
                     ];
                 })->all()
             );
@@ -76,12 +76,6 @@ class RetryMandateCancellation extends Command
                 $skipped++;
                 continue;
             }
-
-            // if (!$this->isLocallyCancelled($mandate)) {
-            //     $this->warn("Skipping {$reference}: mandate is not locally marked as cancelled.");
-            //     $skipped++;
-            //     continue;
-            // }
 
             $mandate->cancelled = 0;
             $mandate->lifecycle_status = DebitOrder::LIFECYCLE_CANCELLATION_REQUESTED;
@@ -133,11 +127,5 @@ class RetryMandateCancellation extends Command
         $this->info("Completed: {$successful} confirmed, {$failed} failed, {$skipped} skipped.");
 
         return $failed > 0 ? self::FAILURE : self::SUCCESS;
-    }
-
-    private function isLocallyCancelled(DebitOrder $mandate): bool
-    {
-        return (int) $mandate->cancelled === 1
-            || $mandate->lifecycle_status === DebitOrder::LIFECYCLE_CANCELLED;
     }
 }
