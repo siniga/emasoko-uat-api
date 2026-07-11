@@ -22,7 +22,7 @@ class CollectionReportMapper extends ReportMapper
             'Account Number',
             'Customer Address',
             'Expected Amount',
-            'Paid Amount',
+            $this->actual ? 'Collected Amount' : 'Last Paid Amount',
             'Current Balance',
             'Outstanding Amount',
             'Payment Status',
@@ -46,6 +46,8 @@ class CollectionReportMapper extends ReportMapper
             default => strtoupper(str_replace('_', ' ', (string) $record->status)),
         };
 
+        $collectedAmount = $record->current_balance ?? 0;
+
         return [
             strtoupper($record->debitOrder->partner->business_name ?? ''),
             $record->debitOrder->reference ?? '',
@@ -55,8 +57,8 @@ class CollectionReportMapper extends ReportMapper
             $record->debitOrder->customerAccount->account_number ?? '',
             $record->debitOrder->customerAccount->customer->address ?? '',
             $record->installment_amount ?? 0,
-            $record->last_paid_amount ?? 0,
-            $record->current_balance ?? 0,
+            $this->actual ? $collectedAmount : ($record->last_paid_amount ?? 0),
+            $collectedAmount,
             $record->outstanding_amount ?? 0,
             $status,
             $record->payment_date ? \Carbon\Carbon::parse($record->payment_date)->format('d-m-Y') : '',

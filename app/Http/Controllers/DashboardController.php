@@ -109,14 +109,24 @@ class DashboardController extends Controller
                         $query->where('debit_orders.channel', $channel);
                     });
 
+                $expectedAmountSql = 'COALESCE(SUM(installments.installment_amount), 0) as expected_amount';
+                $paidAmountSql = "COALESCE(SUM(CASE
+                    WHEN installments.status IN ('CLOSED', 'PARTIAL_PAID')
+                    THEN installments.current_balance ELSE 0 END), 0) as paid_amount";
+
+                if ($selected_year != null) {
+                    $expectedAmountSql = "COALESCE(SUM(CASE
+                        WHEN YEAR(installments.payment_date) = {$selected_year}
+                        THEN installments.installment_amount ELSE 0 END), 0) as expected_amount";
+                    $paidAmountSql = "COALESCE(SUM(CASE
+                        WHEN YEAR(installments.effective_payment_date) = {$selected_year}
+                        AND installments.status IN ('CLOSED', 'PARTIAL_PAID')
+                        THEN installments.current_balance ELSE 0 END), 0) as paid_amount";
+                }
+
                 $year_summary = (clone $yearSummaryQuery)
-                    ->selectRaw('COALESCE(SUM(installments.installment_amount), 0) as expected_amount')
-                    ->selectRaw("COALESCE(SUM(CASE
-                        WHEN installments.status IN ('CLOSED', 'PARTIAL_PAID')
-                        THEN installments.current_balance ELSE 0 END), 0) as paid_amount")
-                    ->when($selected_year != null, function ($query) use ($selected_year) {
-                        $query->whereYear('installments.payment_date', $selected_year);
-                    })
+                    ->selectRaw($expectedAmountSql)
+                    ->selectRaw($paidAmountSql)
                     ->first();
 
                 $service_provider_count = Partner::filterCondition()->count();
