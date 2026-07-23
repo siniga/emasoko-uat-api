@@ -13,7 +13,9 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
+        Commands\BackfillCollectionDebitOrderAccountMonthKeys::class,
         Commands\CreateCollectionBatch::class,
+        Commands\CreateCollectionBatchByMandate::class,
         Commands\PushCollectionBatch::class,
         Commands\CollectionStatusBatch::class,
         Commands\PullCollectionStatusByReference::class,
