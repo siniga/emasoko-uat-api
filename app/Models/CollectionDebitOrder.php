@@ -101,9 +101,11 @@ class CollectionDebitOrder extends Model
         return $line;
     }
 
-    public static function accountMonthUniqueKey(string $accountNumber, $paymentAt): string
+    public static function accountMonthUniqueKey(string $accountNumber, $paymentAt, ?int $partnerId = null): string
     {
-        return static::normalizeAccountNumber($accountNumber) . '|' . Carbon::parse($paymentAt)->format('Y-m');
+        $key = static::normalizeAccountNumber($accountNumber) . '|' . Carbon::parse($paymentAt)->format('Y-m');
+
+        return $partnerId !== null ? $partnerId . '|' . $key : $key;
     }
 
     public static function normalizeAccountNumber(?string $accountNumber): string
