@@ -16,6 +16,7 @@ class Kernel extends ConsoleKernel
         Commands\BackfillCollectionDebitOrderAccountMonthKeys::class,
         Commands\CreateCollectionBatch::class,
         Commands\CreateCollectionBatchByMandate::class,
+        Commands\CreateTrackedFailedCollectionBatches::class,
         Commands\PushCollectionBatch::class,
         Commands\CollectionStatusBatch::class,
         Commands\PullCollectionStatusByReference::class,
