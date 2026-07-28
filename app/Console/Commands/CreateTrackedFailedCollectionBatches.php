@@ -14,8 +14,6 @@ class CreateTrackedFailedCollectionBatches extends Command
 {
     private const TRACKED_REMARK = 'Item Can Be Collected And Has Been Tracked Successfully.';
 
-    private const SUCCESSFUL_CREATE_REMARK = 'Successfully Created Collection Request';
-
     protected $signature = 'collections:create-tracked-failed-batches
                             {--month= : Collection month number, defaults to current month}
                             {--year= : Collection year, defaults to current year}
@@ -144,8 +142,7 @@ class CreateTrackedFailedCollectionBatches extends Command
             ->with(['partner'])
             ->where('deleted', 0)
             ->where(function ($query) {
-                $query->where('lifecycle_status', CollectionBatch::LIFECYCLE_PROCESSED_SUCCESS)
-                    ->orWhere('remarks', self::SUCCESSFUL_CREATE_REMARK);
+                $query->where('lifecycle_status', CollectionBatch::LIFECYCLE_PARTIALLY_PROCESSED);
             })
             ->whereMonth('collectionDate', $month)
             ->whereYear('collectionDate', $year)
