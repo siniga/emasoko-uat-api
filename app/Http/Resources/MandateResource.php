@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\DebitOrder;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class MandateResource extends JsonResource
@@ -29,8 +30,12 @@ class MandateResource extends JsonResource
             'number_of_installment' => $this->installment_number,
             'start_date' => $this->start_date,
             'end_date' => $this->end_date,
-            'lifecycle_status' => $this->lifecycle_status,
-            'remarks' => $this->remarks,
+            'lifecycle_status' => $this->resolved_lifecycle_status,
+            'lifecycle_status_label' => DebitOrder::lifecycleStatusLabel($this->resolved_lifecycle_status),
+            'summary_status' => $this->summary_status,
+            'summary_status_label' => strtoupper($this->summary_status),
+            'contract_status' => $this->contract_status,
+            'remarks' => $this->remarks_message,
         ];
     }
 }

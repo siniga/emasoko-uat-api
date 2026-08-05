@@ -151,15 +151,10 @@ class DashboardChartController extends Controller
                 DB::raw('COALESCE(SUM(installments.installment_amount), 0) as expected_amount'),
             ])
             ->whereYear('installments.payment_date', $year)
-            ->whereHas('debitOrder', function ($query) use ($channel) {
-                $query->where(['debit_orders.approved' => 1])
-                    ->whereIn('debit_orders.lifecycle_status', DebitOrder::lifecycleStatusesForSummary(DebitOrder::SUMMARY_APPROVED))
-                    ->when(!is_null($channel), function ($query) use ($channel) {
-                        $query->where('debit_orders.channel', $channel);
-                    })
-                    ->whereHas('partner', function ($q) {
-                        $q->where('partners.approved', 1);
-                    });
+            ->when(!is_null($channel), function ($query) use ($channel) {
+                $query->whereHas('debitOrder', function ($debitOrderQuery) use ($channel) {
+                    $debitOrderQuery->where('debit_orders.channel', $channel);
+                });
             })
             ->groupBy(DB::raw('MONTH(installments.payment_date)'))
             ->get()
@@ -173,14 +168,10 @@ class DashboardChartController extends Controller
             ])
             ->whereYear('installments.effective_payment_date', $year)
             ->whereIn('installments.status', ['CLOSED', 'PARTIAL_PAID'])
-            ->whereHas('debitOrder', function ($query) use ($channel) {
-                $query->where(['debit_orders.approved' => 1])
-                    ->when(!is_null($channel), function ($query) use ($channel) {
-                        $query->where('debit_orders.channel', $channel);
-                    })
-                    ->whereHas('partner', function ($q) {
-                        $q->where('partners.approved', 1);
-                    });
+            ->when(!is_null($channel), function ($query) use ($channel) {
+                $query->whereHas('debitOrder', function ($debitOrderQuery) use ($channel) {
+                    $debitOrderQuery->where('debit_orders.channel', $channel);
+                });
             })
             ->groupBy(DB::raw('MONTH(installments.effective_payment_date)'))
             ->get()
@@ -231,15 +222,10 @@ class DashboardChartController extends Controller
                 DB::raw('COALESCE(SUM(installments.installment_amount), 0) as total_amount'),
             ])
             ->whereBetween('installments.payment_date', [$startDate, $endDate])
-            ->whereHas('debitOrder', function ($query) use ($channel) {
-                $query->where(['debit_orders.approved' => 1])
-                    ->whereIn('debit_orders.lifecycle_status', DebitOrder::lifecycleStatusesForSummary(DebitOrder::SUMMARY_APPROVED))
-                    ->when(!is_null($channel), function ($query) use ($channel) {
-                        $query->where('debit_orders.channel', $channel);
-                    })
-                    ->whereHas('partner', function ($q) {
-                        $q->where('partners.approved', 1);
-                    });
+            ->when(!is_null($channel), function ($query) use ($channel) {
+                $query->whereHas('debitOrder', function ($debitOrderQuery) use ($channel) {
+                    $debitOrderQuery->where('debit_orders.channel', $channel);
+                });
             })
             ->groupBy(DB::raw('DATE(installments.payment_date)'))
             ->pluck('total_amount', 'day_date');
@@ -251,15 +237,10 @@ class DashboardChartController extends Controller
             ])
             ->whereBetween('installments.effective_payment_date', [$startDate, $endDate])
             ->whereIn('installments.status', ['CLOSED', 'PARTIAL_PAID'])
-            ->whereHas('debitOrder', function ($query) use ($channel) {
-                $query->where(['debit_orders.approved' => 1])
-                    ->whereIn('debit_orders.lifecycle_status', DebitOrder::lifecycleStatusesForSummary(DebitOrder::SUMMARY_APPROVED))
-                    ->when(!is_null($channel), function ($query) use ($channel) {
-                        $query->where('debit_orders.channel', $channel);
-                    })
-                    ->whereHas('partner', function ($q) {
-                        $q->where('partners.approved', 1);
-                    });
+            ->when(!is_null($channel), function ($query) use ($channel) {
+                $query->whereHas('debitOrder', function ($debitOrderQuery) use ($channel) {
+                    $debitOrderQuery->where('debit_orders.channel', $channel);
+                });
             })
             ->groupBy(DB::raw('DATE(installments.effective_payment_date)'))
             ->pluck('paid_amount', 'day_date');

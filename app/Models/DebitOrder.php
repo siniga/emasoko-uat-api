@@ -201,6 +201,55 @@ class DebitOrder extends Model
         return static::lifecycleSummaryMap()[$summary] ?? [];
     }
 
+    public static function lifecycleStatusLabels(): array
+    {
+        return [
+            self::SUMMARY_PENDING => 'Pending (All)',
+            self::LIFECYCLE_DRAFT => 'Draft',
+            self::LIFECYCLE_SUBMITTED => 'Submitted',
+            self::LIFECYCLE_AWAITING_OTP => 'Awaiting OTP',
+            self::LIFECYCLE_VERIFIED => 'Verified',
+            self::LIFECYCLE_ACTIVE => 'Active',
+            self::LIFECYCLE_CANCELLATION_REQUESTED => 'Cancellation Requested',
+            self::LIFECYCLE_CANCELLED => 'Cancelled',
+            self::LIFECYCLE_CLOSED => 'Closed',
+            self::LIFECYCLE_ARCHIVED => 'Archived',
+            self::LIFECYCLE_FAILED => 'Failed',
+        ];
+    }
+
+    public static function lifecycleStatusLabel(?string $status): string
+    {
+        $normalized = static::normalizeLifecycleStatus($status);
+
+        return static::lifecycleStatusLabels()[$normalized]
+            ?? ucwords(str_replace('_', ' ', (string) $normalized));
+    }
+
+    public static function normalizeLifecycleStatus(?string $status): ?string
+    {
+        if ($status === null) {
+            return null;
+        }
+
+        $normalized = strtolower(trim($status));
+        $normalized = str_replace(['-', ' '], '_', $normalized);
+
+        return match ($normalized) {
+            'awaitingotp' => self::LIFECYCLE_AWAITING_OTP,
+            'cancellationrequested' => self::LIFECYCLE_CANCELLATION_REQUESTED,
+            default => $normalized,
+        };
+    }
+
+    public static function lifecycleStatusFilterOptions(): array
+    {
+        return collect(static::lifecycleStatusLabels())
+            ->map(fn ($label, $value) => ['value' => $value, 'label' => $label])
+            ->values()
+            ->all();
+    }
+
     public function getSummaryStatusAttribute(): string
     {
         $resolved = $this->resolved_lifecycle_status;

@@ -78,8 +78,12 @@ class PaymentCollectionController extends Controller
             ->whereYear('installments.payment_date', $current_year);
 
         //apply status
-        if ($request->has('status'))
-            $collections = $collections->where('installments.status', $request->status); // OPEN, CLOSED, FUNDSCHECK, FAILED
+        if ($request->filled('status')) {
+            $collections = $collections->whereIn(
+                'installments.status',
+                $this->normalizeCollectionStatuses($request->status)
+            );
+        }
 
         //order
         $collections = $collections->orderBy('installments.payment_date', 'ASC')->get();
@@ -145,8 +149,12 @@ class PaymentCollectionController extends Controller
         }
 
         //apply status
-        if ($request->has('status'))
-            $collections = $collections->where('installments.status', $request->status); // OPEN, CLOSED, FUNDSCHECK, FAILED
+        if ($request->filled('status')) {
+            $collections = $collections->whereIn(
+                'installments.status',
+                $this->normalizeCollectionStatuses($request->status)
+            );
+        }
 
         //order
         $collections = $collections->orderBy('installments.payment_date', 'ASC')->get();
@@ -229,5 +237,20 @@ class PaymentCollectionController extends Controller
         return $this->successResponse('Actual collections fetched successfully.', [
             'collections' => $collections,
         ]);
+    }
+
+    protected function normalizeCollectionStatuses(string $status): array
+    {
+        $normalized = strtoupper(trim($status));
+        $normalized = str_replace(['-', ' '], '_', $normalized);
+
+        return match ($normalized) {
+            'PAID', 'FULLY_PAID' => ['CLOSED'],
+            'PARTIAL', 'PARTIALPAID' => ['PARTIAL_PAID'],
+            'COLLECTED', 'SUCCESSFUL' => ['CLOSED', 'PARTIAL_PAID'],
+            'PENDING' => ['OPEN'],
+            'FUND_CHECK' => ['FUNDSCHECK'],
+            default => [$normalized],
+        };
     }
 }

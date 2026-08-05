@@ -15,6 +15,20 @@ use Illuminate\Support\Facades\Auth;
 #[Group('Payment Mandates', description: 'Mobile APIs for creating, viewing, and managing payment mandates.', weight: 2)]
 class PaymentMandateController extends ExternalPaymentMandateController
 {
+    public function all(Request $request): JsonResponse
+    {
+        $filters = $request->all();
+        $debitOrders = $this->paymentMandateQueryService
+            ->listQuery($filters, Auth::user())
+            ->orderBy('debit_orders.created_at', 'DESC')
+            ->get();
+
+        return $this->successResponse('Mandates fetched successfully.', [
+            'mandates' => MandateResource::collection($debitOrders),
+            'filters' => $this->filterPayload($filters),
+        ]);
+    }
+
     public function summaries(Request $request): JsonResponse
     {
         return $this->successResponse('Mobile summaries fetched successfully.', $this->summaryPayload($request));
@@ -39,18 +53,26 @@ class PaymentMandateController extends ExternalPaymentMandateController
         $year = (int) $request->input('year', now()->year);
         $channel = $request->input('payment_channel', $request->input('channel'));
 
-        $rows = DebitOrder::filterCondition()
+        $rows = $this->paymentMandateQueryService
+            ->baseQuery($request->all(), Auth::user())
             ->selectRaw('MONTH(debit_orders.created_at) as month')
             ->selectRaw('COUNT(debit_orders.id) as total_count')
             ->selectRaw('COALESCE(SUM(debit_orders.total_amount), 0) as total_amount')
-            ->selectRaw("SUM(CASE WHEN debit_orders.lifecycle_status = ? THEN 1 ELSE 0 END) as active_count", [DebitOrder::LIFECYCLE_ACTIVE])
-            ->selectRaw("SUM(CASE WHEN debit_orders.lifecycle_status = ? THEN 1 ELSE 0 END) as failed_count", [DebitOrder::LIFECYCLE_FAILED])
             ->selectRaw("SUM(CASE WHEN debit_orders.lifecycle_status IN (?, ?, ?, ?) THEN 1 ELSE 0 END) as pending_count", [
                 DebitOrder::LIFECYCLE_DRAFT,
                 DebitOrder::LIFECYCLE_SUBMITTED,
                 DebitOrder::LIFECYCLE_AWAITING_OTP,
                 DebitOrder::LIFECYCLE_VERIFIED,
             ])
+            ->selectRaw("SUM(CASE WHEN debit_orders.lifecycle_status IN (?, ?, ?, ?, ?) THEN 1 ELSE 0 END) as approved_count", [
+                DebitOrder::LIFECYCLE_ACTIVE,
+                DebitOrder::LIFECYCLE_CANCELLATION_REQUESTED,
+                DebitOrder::LIFECYCLE_CANCELLED,
+                DebitOrder::LIFECYCLE_CLOSED,
+                DebitOrder::LIFECYCLE_ARCHIVED,
+            ])
+            ->selectRaw("SUM(CASE WHEN debit_orders.lifecycle_status = ? THEN 1 ELSE 0 END) as active_count", [DebitOrder::LIFECYCLE_ACTIVE])
+            ->selectRaw("SUM(CASE WHEN debit_orders.lifecycle_status = ? THEN 1 ELSE 0 END) as failed_count", [DebitOrder::LIFECYCLE_FAILED])
             ->whereYear('debit_orders.created_at', $year)
             ->when($channel, function ($query) use ($channel) {
                 $query->where('debit_orders.channel', $channel);
@@ -67,8 +89,9 @@ class PaymentMandateController extends ExternalPaymentMandateController
                 'month' => $month,
                 'month_name' => now()->month($month)->format('F'),
                 'total_count' => (int) ($row->total_count ?? 0),
-                'active_count' => (int) ($row->active_count ?? 0),
                 'pending_count' => (int) ($row->pending_count ?? 0),
+                'approved_count' => (int) ($row->approved_count ?? 0),
+                'active_count' => (int) ($row->active_count ?? 0),
                 'failed_count' => (int) ($row->failed_count ?? 0),
                 'total_amount' => (float) ($row->total_amount ?? 0),
             ];
@@ -77,6 +100,7 @@ class PaymentMandateController extends ExternalPaymentMandateController
         return $this->successResponse('Debit order summaries fetched successfully.', [
             'year' => $year,
             'summaries' => $summaries,
+            'filters' => $this->filterPayload($request->all()),
         ]);
     }
 
@@ -213,6 +237,35 @@ class PaymentMandateController extends ExternalPaymentMandateController
                     'expected_amount' => (float) ($today->total_amount ?? 0),
                     'paid_amount' => (float) ($today->paid_amount ?? 0),
                 ],
+            ],
+            'filters' => $this->filterPayload($request->all()),
+        ];
+    }
+
+    protected function filterPayload(array $filters = []): array
+    {
+        unset($filters['status'], $filters['lifecycle_status']);
+
+        $stats = $this->paymentMandateQueryService->stats($filters, Auth::user());
+
+        return [
+            'lifecycle_statuses' => collect(DebitOrder::lifecycleStatusFilterOptions())
+                ->map(function (array $option) use ($stats) {
+                    $value = $option['value'];
+
+                    return [
+                        'value' => $value,
+                        'label' => $option['label'],
+                        'count' => (int) ($stats[$value] ?? 0),
+                    ];
+                })
+                ->all(),
+            'collection_statuses' => [
+                ['value' => 'OPEN', 'label' => 'Open'],
+                ['value' => 'CLOSED', 'label' => 'Fully Paid'],
+                ['value' => 'PARTIAL_PAID', 'label' => 'Partial Paid'],
+                ['value' => 'FAILED', 'label' => 'Failed'],
+                ['value' => 'FUNDSCHECK', 'label' => 'Fundscheck'],
             ],
         ];
     }

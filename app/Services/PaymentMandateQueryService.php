@@ -110,15 +110,20 @@ class PaymentMandateQueryService
     public function stats(array $filters = [], ?User $user = null): array
     {
         $query = $this->baseQuery($filters, $user);
+        $stats = ['total' => (clone $query)->count()];
 
-        return [
-            'total' => (clone $query)->count(),
-            'draft' => (clone $query)->where('lifecycle_status', DebitOrder::LIFECYCLE_DRAFT)->count(),
-            'submitted' => (clone $query)->where('lifecycle_status', DebitOrder::LIFECYCLE_SUBMITTED)->count(),
-            'awaiting_otp' => (clone $query)->where('lifecycle_status', DebitOrder::LIFECYCLE_AWAITING_OTP)->count(),
-            'active' => (clone $query)->where('lifecycle_status', DebitOrder::LIFECYCLE_ACTIVE)->count(),
-            'failed' => (clone $query)->where('lifecycle_status', DebitOrder::LIFECYCLE_FAILED)->count(),
-        ];
+        foreach (DebitOrder::lifecycleStatusLabels() as $status => $label) {
+            if ($status === DebitOrder::SUMMARY_PENDING) {
+                $stats[$status] = (clone $query)
+                    ->whereIn('lifecycle_status', DebitOrder::lifecycleStatusesForSummary(DebitOrder::SUMMARY_PENDING))
+                    ->count();
+                continue;
+            }
+
+            $stats[$status] = (clone $query)->where('lifecycle_status', $status)->count();
+        }
+
+        return $stats;
     }
 
     protected function applyFilters(Builder $query, array $filters): Builder
@@ -177,14 +182,20 @@ class PaymentMandateQueryService
 
     protected function applyLifecycleStatusFilter(Builder $query, string $lifecycleStatus): void
     {
+        $lifecycleStatus = DebitOrder::normalizeLifecycleStatus($lifecycleStatus);
+
         match ($lifecycleStatus) {
             DebitOrder::SUMMARY_PENDING => $query->whereIn(
                 'debit_orders.lifecycle_status',
                 DebitOrder::lifecycleStatusesForSummary(DebitOrder::SUMMARY_PENDING)
             ),
-            DebitOrder::SUMMARY_APPROVED => $query->where(
+            DebitOrder::SUMMARY_APPROVED => $query->whereIn(
                 'debit_orders.lifecycle_status',
-                DebitOrder::LIFECYCLE_ACTIVE
+                DebitOrder::lifecycleStatusesForSummary(DebitOrder::SUMMARY_APPROVED)
+            ),
+            DebitOrder::SUMMARY_FAILED => $query->whereIn(
+                'debit_orders.lifecycle_status',
+                DebitOrder::lifecycleStatusesForSummary(DebitOrder::SUMMARY_FAILED)
             ),
             DebitOrder::LIFECYCLE_CANCELLED => $query->where(function ($statusQuery) {
                 $statusQuery->where('debit_orders.lifecycle_status', DebitOrder::LIFECYCLE_CANCELLED)

@@ -321,15 +321,10 @@ class BIController extends Controller
     private function periodCollectionStats(?Carbon $start, ?Carbon $end, ?string $channel): object
     {
         $query = Installment::filterCondition()
-            ->whereHas('debitOrder', function ($query) use ($channel) {
-                $query->where('debit_orders.approved', 1)
-                    ->where('debit_orders.deleted', 0)
-                    ->when($channel, function ($innerQuery) use ($channel) {
-                        $innerQuery->where('debit_orders.channel', $channel);
-                    })
-                    ->whereHas('partner', function ($partnerQuery) {
-                        $partnerQuery->where('partners.approved', 1);
-                    });
+            ->when($channel, function ($query) use ($channel) {
+                $query->whereHas('debitOrder', function ($debitOrderQuery) use ($channel) {
+                    $debitOrderQuery->where('debit_orders.channel', $channel);
+                });
             });
 
         if ($start && $end) {
@@ -358,15 +353,10 @@ class BIController extends Controller
             ->when($year, function ($query) use ($year) {
                 $query->whereYear('installments.payment_date', $year);
             })
-            ->whereHas('debitOrder', function ($query) use ($channel) {
-                $query->where('debit_orders.approved', 1)
-                    ->where('debit_orders.deleted', 0)
-                    ->when($channel, function ($innerQuery) use ($channel) {
-                        $innerQuery->where('debit_orders.channel', $channel);
-                    })
-                    ->whereHas('partner', function ($partnerQuery) {
-                        $partnerQuery->where('partners.approved', 1);
-                    });
+            ->when($channel, function ($query) use ($channel) {
+                $query->whereHas('debitOrder', function ($debitOrderQuery) use ($channel) {
+                    $debitOrderQuery->where('debit_orders.channel', $channel);
+                });
             })
             ->groupBy(DB::raw('MONTH(installments.payment_date)'))
             ->pluck('total_amount', 'month_number');
@@ -380,15 +370,10 @@ class BIController extends Controller
                 $query->whereYear('installments.effective_payment_date', $year);
             })
             ->whereIn('installments.status', ['CLOSED', 'PARTIAL_PAID'])
-            ->whereHas('debitOrder', function ($query) use ($channel) {
-                $query->where('debit_orders.approved', 1)
-                    ->where('debit_orders.deleted', 0)
-                    ->when($channel, function ($innerQuery) use ($channel) {
-                        $innerQuery->where('debit_orders.channel', $channel);
-                    })
-                    ->whereHas('partner', function ($partnerQuery) {
-                        $partnerQuery->where('partners.approved', 1);
-                    });
+            ->when($channel, function ($query) use ($channel) {
+                $query->whereHas('debitOrder', function ($debitOrderQuery) use ($channel) {
+                    $debitOrderQuery->where('debit_orders.channel', $channel);
+                });
             })
             ->groupBy(DB::raw('MONTH(installments.effective_payment_date)'))
             ->pluck('paid_amount', 'month_number');
@@ -517,9 +502,6 @@ class BIController extends Controller
             ->join('partners', 'partners.id', '=', 'debit_orders.partner_id')
             ->leftJoin('customer_accounts', 'customer_accounts.id', '=', 'debit_orders.customer_account_id')
             ->leftJoin('accounts', 'accounts.id', '=', 'customer_accounts.account_id')
-            ->where('partners.approved', 1)
-            ->where('debit_orders.approved', 1)
-            ->where('debit_orders.deleted', 0)
             ->when($channel, function ($query) use ($channel) {
                 $query->where('debit_orders.channel', $channel);
             })
