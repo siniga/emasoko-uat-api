@@ -29,9 +29,7 @@ class CollectionBatchService
 
     protected array $candidateSkipReasons = [];
 
-    public function __construct(protected DeductionService $deductionService)
-    {
-    }
+    public function __construct(protected DeductionService $deductionService) {}
 
     public function candidateSkipReasons(): array
     {
@@ -91,8 +89,10 @@ class CollectionBatchService
             return ['allowed' => false, 'reason' => 'The batch has no collection date.'];
         }
 
-        if (empty($sourceBatch->created_at)
-            || !Carbon::parse($sourceBatch->created_at)->isSameMonth(now(), true)) {
+        if (
+            empty($sourceBatch->created_at)
+            || !Carbon::parse($sourceBatch->created_at)->isSameMonth(now(), true)
+        ) {
             return ['allowed' => false, 'reason' => 'Same-month repair is available only for batches created this month.'];
         }
 
@@ -119,7 +119,7 @@ class CollectionBatchService
 
             $installments = $this->repairableFailedInstallmentsQuery($sourceBatch->installment_id_list)
                 ->get()
-                ->each(fn (Installment $installment) => $this->normalizeFailedInstallmentAmount($installment));
+                ->each(fn(Installment $installment) => $this->normalizeFailedInstallmentAmount($installment));
             $collectionDate = Carbon::parse($sourceBatch->collectionDate);
 
             $batch = $this->createRepairBatchFromInstallments(
@@ -172,7 +172,7 @@ class CollectionBatchService
                 'selectedPostingDate' => $now,
                 'createdBy' => $userId,
                 'verifiedBy' => $userId,
-                'collectionDate' => $attributes['batch_collection_date'] ?? $candidates->max(fn ($row) => $row['collection_date'])->toDateString(),
+                'collectionDate' => $attributes['batch_collection_date'] ?? $candidates->max(fn($row) => $row['collection_date'])->toDateString(),
                 'createdDate' => $now,
                 'verifyDate' => $now,
                 'lifecycle_status' => CollectionBatch::LIFECYCLE_READY,
@@ -540,6 +540,7 @@ class CollectionBatchService
                     return null;
                 }
 
+                //2.1.1: mandate start date check
                 if (!empty($debitOrder->start_date) && Carbon::parse($debitOrder->start_date)->gt($collectionDate)) {
                     $this->recordCandidateSkip($installment, 'mandate_not_started_on_collection_date', [
                         'start_date' => Carbon::parse($debitOrder->start_date)->toDateString(),
@@ -549,6 +550,17 @@ class CollectionBatchService
                     return null;
                 }
 
+                //2.1.2: mandate start date check for the current date
+                if (!empty($debitOrder->start_date) && Carbon::parse($debitOrder->start_date)->gt(now())) {
+                    $this->recordCandidateSkip($installment, 'mandate_not_started_on_current_date', [
+                        'start_date' => Carbon::parse($debitOrder->start_date)->toDateString(),
+                        'current_date' => now()->toDateString(),
+                    ]);
+
+                    return null;
+                }
+
+                // 2.1.3: mandate end date check
                 if (!empty($debitOrder->end_date) && Carbon::parse($debitOrder->end_date)->lt($collectionDate)) {
                     $this->recordCandidateSkip($installment, 'mandate_ended_before_collection_date', [
                         'end_date' => Carbon::parse($debitOrder->end_date)->toDateString(),
@@ -558,6 +570,17 @@ class CollectionBatchService
                     return null;
                 }
 
+                // 2.1.4: mandate end date check for the current date
+                if (!empty($debitOrder->end_date) && Carbon::parse($debitOrder->end_date)->lt(now())) {
+                    $this->recordCandidateSkip($installment, 'mandate_ended_before_current_date', [
+                        'end_date' => Carbon::parse($debitOrder->end_date)->toDateString(),
+                        'current_date' => now()->toDateString(),
+                    ]);
+
+                    return null;
+                }
+
+                // 2.1.5: check for duplicates in the candidate list itself
                 if (in_array($cycleKey, $collectionCycles, true)) {
                     $this->recordCandidateSkip($installment, 'duplicate_in_candidate_list', [
                         'cycle_key' => $cycleKey,
@@ -688,9 +711,11 @@ class CollectionBatchService
                 ->lockForUpdate()
                 ->first();
 
-            if ($existingAccountMonth
+            if (
+                $existingAccountMonth
                 && ((int) $existingAccountMonth->installment_id !== (int) $attributes['installment_id']
-                    || Carbon::parse($existingAccountMonth->payment_at)->toDateString() !== $attributes['payment_at'])) {
+                    || Carbon::parse($existingAccountMonth->payment_at)->toDateString() !== $attributes['payment_at'])
+            ) {
                 $blockedContext = $this->duplicateContext($existingAccountMonth);
 
                 return null;
@@ -709,8 +734,10 @@ class CollectionBatchService
         }
 
         $existingBatchId = (string) $existing->collection_batch_id;
-        if ((string) $existing->collection_batch_id !== (string) $sourceBatchId
-            && (string) $existing->collection_batch_id !== (string) $attributes['collection_batch_id']) {
+        if (
+            (string) $existing->collection_batch_id !== (string) $sourceBatchId
+            && (string) $existing->collection_batch_id !== (string) $attributes['collection_batch_id']
+        ) {
             $blockedContext = $this->duplicateContext($existing);
 
             if (!$this->isCollectableRepairRemark($installment->remarks)) {
