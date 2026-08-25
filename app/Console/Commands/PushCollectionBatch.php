@@ -75,6 +75,8 @@ class PushCollectionBatch extends Command
                     dispatch(new PushCollectionJob($batch->id));
                 }
                 sleep(5); //sleep for 5 seconds
+
+                $this->info("== Pushed collection batch with reference: {$batch->collectionReference} ==");
             }
         }
 

@@ -18,6 +18,7 @@ class Kernel extends ConsoleKernel
         Commands\CreateCollectionBatchByMandate::class,
         Commands\CreateTrackedFailedCollectionBatches::class,
         Commands\PushCollectionBatch::class,
+        Commands\PushCollectionBatchByReference::class,
         Commands\CollectionStatusBatch::class,
         Commands\PullCollectionStatusByReference::class,
         Commands\SyncDebitOrderDates::class,
