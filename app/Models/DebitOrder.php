@@ -285,7 +285,7 @@ class DebitOrder extends Model
 
     public static function mandateApprovalStats($channel = null, $year = null)
     {
-        return self::filterCondition()
+        return self::filterCondition(includeDeleted: true)
             ->select([
                 'debit_orders.approved',
                 DB::raw('COALESCE(SUM(debit_orders.total_amount), 0) as total_amount'),

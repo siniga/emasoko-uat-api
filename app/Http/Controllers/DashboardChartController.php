@@ -49,7 +49,7 @@ class DashboardChartController extends Controller
             })
             ->whereYear('debit_orders.created_at', $year)
             ->whereHas('partner', function ($q) {
-                $q->where('partners.status', 202);
+                $q->where('partners.approved', 1);
             })
             ->groupBy(DB::raw('MONTH(debit_orders.created_at)'), 'debit_orders.lifecycle_status')
             ->orderBy(DB::raw('MONTH(debit_orders.created_at)'))
@@ -103,7 +103,7 @@ class DashboardChartController extends Controller
                 $q->where('debit_orders.channel', $channel);
             })
             ->whereHas('partner', function ($q) {
-                $q->where('partners.status', 202);
+                $q->where('partners.approved', 1);
             })->groupBy('debit_orders.lifecycle_status')->orderBy('debit_orders.lifecycle_status')->toBase();
 
         $debit_orders = $debit_orders->get();
