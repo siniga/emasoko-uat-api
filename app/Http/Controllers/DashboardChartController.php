@@ -134,33 +134,21 @@ class DashboardChartController extends Controller
     //Monthly Collected 
     public function collected_mandates(Request $request)
     {
-        //channel
-        $channel = null;
-        if ($request->has('channel'))
-            $channel = $request->channel;
+        $channel = $request->filled('channel') ? $request->channel : null;
+        $year = $request->filled('year') ? (int) $request->year : (int) date('Y');
 
-        //current or requested year
-        $year = date('Y');
-        if ($request->has('year'))
-            $year = $request->year;
-
-        $expectedByMonth = Installment::filterCondition()
+        $expectedByMonth = $this->dashboardCollectionQuery($channel)
             ->select([
                 DB::raw('MONTH(installments.payment_date) as month_number'),
                 DB::raw('COALESCE(COUNT(installments.id), 0) as all_mandates'),
                 DB::raw('COALESCE(SUM(installments.installment_amount), 0) as expected_amount'),
             ])
             ->whereYear('installments.payment_date', $year)
-            ->when(!is_null($channel), function ($query) use ($channel) {
-                $query->whereHas('debitOrder', function ($debitOrderQuery) use ($channel) {
-                    $debitOrderQuery->where('debit_orders.channel', $channel);
-                });
-            })
             ->groupBy(DB::raw('MONTH(installments.payment_date)'))
             ->get()
             ->keyBy('month_number');
 
-        $paidByMonth = Installment::filterCondition()
+        $paidByMonth = $this->dashboardCollectionQuery($channel)
             ->select([
                 DB::raw('MONTH(installments.effective_payment_date) as month_number'),
                 DB::raw('COALESCE(COUNT(installments.id), 0) as paid_mandates'),
@@ -168,11 +156,6 @@ class DashboardChartController extends Controller
             ])
             ->whereYear('installments.effective_payment_date', $year)
             ->whereIn('installments.status', ['CLOSED', 'PARTIAL_PAID'])
-            ->when(!is_null($channel), function ($query) use ($channel) {
-                $query->whereHas('debitOrder', function ($debitOrderQuery) use ($channel) {
-                    $debitOrderQuery->where('debit_orders.channel', $channel);
-                });
-            })
             ->groupBy(DB::raw('MONTH(installments.effective_payment_date)'))
             ->get()
             ->keyBy('month_number');
@@ -198,17 +181,10 @@ class DashboardChartController extends Controller
     //Weekly Collection
     public function weekly_collected_mandates(Request $request)
     {
-        //channel
-        $channel = null;
-        if ($request->has('channel'))
-            $channel = $request->channel;
-
-        //current date
-        $current_date = date('Y-m-d');
-        if ($request->has('curr_date'))
-            $current_date = date('Y-m-d', strtotime($request->input('curr_date')));
-        else
-            $current_date = $current_date;
+        $channel = $request->filled('channel') ? $request->channel : null;
+        $current_date = $request->filled('curr_date')
+            ? date('Y-m-d', strtotime($request->input('curr_date')))
+            : date('Y-m-d');
 
         //get dates
         $dates = $this->get_dates($current_date);
@@ -216,32 +192,22 @@ class DashboardChartController extends Controller
         $startDate = min($dates);
         $endDate = max($dates);
 
-        $expectedByDate = Installment::filterCondition()
+        $expectedByDate = $this->dashboardCollectionQuery($channel)
             ->select([
                 DB::raw('DATE(installments.payment_date) as day_date'),
                 DB::raw('COALESCE(SUM(installments.installment_amount), 0) as total_amount'),
             ])
             ->whereBetween('installments.payment_date', [$startDate, $endDate])
-            ->when(!is_null($channel), function ($query) use ($channel) {
-                $query->whereHas('debitOrder', function ($debitOrderQuery) use ($channel) {
-                    $debitOrderQuery->where('debit_orders.channel', $channel);
-                });
-            })
             ->groupBy(DB::raw('DATE(installments.payment_date)'))
             ->pluck('total_amount', 'day_date');
 
-        $paidByDate = Installment::filterCondition()
+        $paidByDate = $this->dashboardCollectionQuery($channel)
             ->select([
                 DB::raw('DATE(installments.effective_payment_date) as day_date'),
                 DB::raw('COALESCE(SUM(installments.current_balance), 0) as paid_amount'),
             ])
             ->whereBetween('installments.effective_payment_date', [$startDate, $endDate])
             ->whereIn('installments.status', ['CLOSED', 'PARTIAL_PAID'])
-            ->when(!is_null($channel), function ($query) use ($channel) {
-                $query->whereHas('debitOrder', function ($debitOrderQuery) use ($channel) {
-                    $debitOrderQuery->where('debit_orders.channel', $channel);
-                });
-            })
             ->groupBy(DB::raw('DATE(installments.effective_payment_date)'))
             ->pluck('paid_amount', 'day_date');
 
@@ -249,13 +215,27 @@ class DashboardChartController extends Controller
         foreach ($dates as $v) {
             $data_array[] = [
                 "date" => date("d-m", strtotime($v)),
-                "total" => (int) ($expectedByDate[$v] ?? 0),
-                "paid" => (int) ($paidByDate[$v] ?? 0),
+                "total" => (float) ($expectedByDate[$v] ?? 0),
+                "paid" => (float) ($paidByDate[$v] ?? 0),
             ];
         }
 
         //response
         return response()->json(['error' => FALSE, 'chart' => $data_array], 200);
+    }
+
+    protected function dashboardCollectionQuery(?string $channel = null)
+    {
+        return Installment::filterCondition()
+            ->whereHas('debitOrder', function ($query) use ($channel) {
+                $query->where('debit_orders.approved', 1)
+                    ->when($channel !== null, function ($q) use ($channel) {
+                        $q->where('debit_orders.channel', $channel);
+                    })
+                    ->whereHas('partner', function ($q) {
+                        $q->where('partners.approved', 1);
+                    });
+            });
     }
 
     //mandate per channel
