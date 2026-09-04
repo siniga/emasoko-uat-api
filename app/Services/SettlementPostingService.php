@@ -55,6 +55,7 @@ class SettlementPostingService
                 ? Carbon::parse($payload['effective_payment_date'])->toDateString()
                 : ($installment?->effective_payment_date ?: now()->toDateString());
             $applyToBalances = (bool) ($payload['apply_to_balances'] ?? true);
+            $shouldSendSms = (bool) ($payload['send_sms'] ?? true);
 
             $openingInstallmentBalance = (float) ($installment->outstanding_amount ?? $installment->installment_amount ?? 0);
             $openingDebitOrderBalance = (float) ($debitOrder->outstanding_amount ?? 0);
@@ -121,7 +122,7 @@ class SettlementPostingService
                 $settlement->settlement_type = $this->settlementType($settlement, $installment);
                 $settlement->save();
 
-                if (in_array($normalizedStatus, [PaymentSettlement::STATUS_SUCCESS, PaymentSettlement::STATUS_PARTIAL], true)) {
+                if ($shouldSendSms && in_array($normalizedStatus, [PaymentSettlement::STATUS_SUCCESS, PaymentSettlement::STATUS_PARTIAL], true)) {
                     $this->queueSuccessfulCollectionSms($debitOrder, $installment, $amount);
                 }
 
@@ -177,7 +178,7 @@ class SettlementPostingService
             $settlement->settlement_type = $settlement->settlement_type ?: $this->settlementType($settlement, $installment);
             $settlement->save();
 
-            if (in_array($normalizedStatus, [PaymentSettlement::STATUS_SUCCESS, PaymentSettlement::STATUS_PARTIAL], true)) {
+            if ($shouldSendSms && in_array($normalizedStatus, [PaymentSettlement::STATUS_SUCCESS, PaymentSettlement::STATUS_PARTIAL], true)) {
                 $this->queueSuccessfulCollectionSms($debitOrder, $installment, $amount);
             }
 

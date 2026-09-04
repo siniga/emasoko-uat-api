@@ -21,6 +21,7 @@ class Kernel extends ConsoleKernel
         Commands\PushCollectionBatchByReference::class,
         Commands\CollectionStatusBatch::class,
         Commands\PullCollectionStatusByReference::class,
+        Commands\ReconcileNmbCollectionsFromCsv::class,
         Commands\SyncDebitOrderDates::class,
         Commands\SyncMandateLifecycleStatus::class,
     ];

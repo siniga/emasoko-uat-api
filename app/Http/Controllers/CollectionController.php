@@ -1009,7 +1009,7 @@ class CollectionController extends Controller
     public function reconciliation(Request $request)
     {
         //read file
-        $file = fopen(public_path('assets/reports/03/Waningo_MicroCredit_31110037602.csv'), 'r');
+        $file = fopen(public_path('assets/reports/08/Solocodes_NMB.csv'), 'r');
         fgetcsv($file); // Skip the first row
 
         //array of installments
@@ -1031,7 +1031,9 @@ class CollectionController extends Controller
 
             //query installment which are failed
             $installment = Installment::where(['debit_order_id' => $debit_order->id])
-                ->whereMonth('payment_date', '03')->first();
+                ->whereMonth('payment_date', '08')
+                ->whereYear('payment_date', '2026')
+                ->first();
 
             //installmentAmount
             $installmentAmount = $installment->installment_amount ?? $installment->max_installment_amount;
@@ -1059,10 +1061,10 @@ class CollectionController extends Controller
             //     $process_data = $this->deductionService->processInstallment($installment, $paid_amount, $mandate_ref);
             // }
         }
-        //fclose($file);
+        fclose($file);
 
-        // echo "<pre>";
-        // print_r($arr_installments);
+        echo "<pre>";
+        print_r($arr_installments);
 
         //response
         return response()->json(['success' => false, 'success_msg' => "File Processed"]);
