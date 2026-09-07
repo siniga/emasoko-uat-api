@@ -320,15 +320,23 @@
                             'X-CSRF-TOKEN': document.head.querySelector('meta[name=csrf-token]').content
                         },
                         body: JSON.stringify(this.formData),
-                    }).then(response => response.json())
-                    .then(() => {
-                        $('#message_wrp').html(
-                            "<div class='alert alert-success rounded-sm'>Collection batch uploaded, wait for 2-5 minutes and refresh the page.</div>"
-                            );
+                    }).then(async response => {
+                        const data = await response.json();
+
+                        if (!response.ok || !data.success) {
+                            throw data;
+                        }
+
+                        return data;
+                    }).then((data) => {
+                        const message = data.success_msg || 'Collection batch uploaded successfully.';
+
+                        $('#message_wrp').html("<div class='alert alert-success rounded-sm'>" + message + "</div>");
                         this.pushed = 1
-                    }).catch(() => {
-                        $('#message_wrp').html(
-                            "<div class='alert alert-danger rounded-sm'>Something went wrong.</div>");
+                    }).catch((error) => {
+                        const message = error?.error_msg || error?.message || 'Collection batch upload failed.';
+
+                        $('#message_wrp').html("<div class='alert alert-danger rounded-sm'>" + message + "</div>");
                     }).finally(() => {
                         this.formLoading = false;
                         this.btnPush = '<i class="fa fa-file-import"></i> Upload Collection';

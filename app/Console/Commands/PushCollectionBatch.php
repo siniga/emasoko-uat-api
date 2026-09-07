@@ -2,13 +2,9 @@
 
 namespace App\Console\Commands;
 
-use App\Jobs\PushCollectionJob;
 use App\Models\CollectionBatch;
-use App\Services\BankApiService;
-use App\Services\BankPayloadService;
-use Carbon\Carbon;
+use App\Services\CollectionBatchPushService;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Log;
 
 class PushCollectionBatch extends Command
 {
@@ -24,31 +20,19 @@ class PushCollectionBatch extends Command
      *
      * @var string
      */
-    protected $description = 'Push collection batches';
-
-    /**
-     * Create a new command instance.
-     *
-     * @return void
-     */
-    public function __construct(protected BankPayloadService $bankPayload)
-    {
-        parent::__construct();
-    }
+    protected $description = 'Push collection batches directly without dispatching background jobs';
 
     /**
      * Execute the console command.
      *
      * @return int
      */
-    public function handle()
+    public function handle(CollectionBatchPushService $pushService): int
     {
-        //current month
-        $current_month = now()->month;
-        $current_year = now()->year;
+        $currentMonth = now()->month;
+        $currentYear = now()->year;
 
-        //get unprocessed collection batch
-        $collection_batches = CollectionBatch::where(['deleted' => 0])
+        $collectionBatches = CollectionBatch::where('deleted', 0)
             ->where(function ($query) {
                 $query->whereIn('lifecycle_status', [
                     CollectionBatch::LIFECYCLE_READY,
@@ -57,30 +41,45 @@ class PushCollectionBatch extends Command
                     $legacy->whereNull('lifecycle_status')->where('pushed', 0);
                 });
             })
-            ->whereMonth("created_at", "=", $current_month)
-            ->whereYear("created_at", "=", $current_year)
-            ->orderBy('collectionReference', 'ASC');
+            ->whereMonth('created_at', $currentMonth)
+            ->whereYear('created_at', $currentYear)
+            ->orderBy('collectionReference')
+            ->get();
 
-        if ($collection_batches->count() > 0) {
-            //take the first 10 collection batches
-            $collection_batches = $collection_batches->get();
+        if ($collectionBatches->isEmpty()) {
+            $this->info('No collection batches are ready to push for the current month.');
 
-            foreach ($collection_batches as $value) {
-                //batch information
-                $batch = CollectionBatch::findOrFail($value->id);
-
-                if ($batch->canBePushed()) {
-                    $batch->lifecycle_status = CollectionBatch::LIFECYCLE_QUEUED_FOR_PUSH;
-                    $batch->save();
-                    dispatch(new PushCollectionJob($batch->id));
-                }
-                sleep(5); //sleep for 5 seconds
-
-                $this->info("== Pushed collection batch with reference: {$batch->collectionReference} ==");
-            }
+            return self::SUCCESS;
         }
 
-        $this->info("== Success on pushing collection batch ==");
+        $failed = 0;
+
+        foreach ($collectionBatches as $batch) {
+            $this->line("Pushing collection batch {$batch->collectionReference}...");
+
+            $result = $pushService->push($batch);
+            $message = $result['message'] ?? 'No response message.';
+            $responseCode = $result['response_code'] ?? 'N/A';
+            $correlationId = $result['correlation_id'] ?? 'N/A';
+
+            if ($result['success'] ?? false) {
+                $this->info("Pushed {$batch->collectionReference}. Response: {$responseCode}. Correlation: {$correlationId}. {$message}");
+            } else {
+                $failed++;
+                $this->warn("Failed {$batch->collectionReference}. Response: {$responseCode}. Correlation: {$correlationId}. {$message}");
+            }
+
+            sleep(5);
+        }
+
+        if ($failed > 0) {
+            $this->warn("Collection batch push completed with {$failed} failure(s).");
+
+            return self::FAILURE;
+        }
+
+        $this->info('Collection batch push completed successfully.');
+
         return self::SUCCESS;
     }
 }

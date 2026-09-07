@@ -7,7 +7,6 @@ use App\Exports\CollectionCreatedExport;
 use App\Exports\CollectionProcessedExport;
 use App\Http\Requests\CollectionRequest;
 use App\Jobs\CollectionStatusJob;
-use App\Jobs\PushCollectionJob;
 use App\Jobs\SendSMSJob;
 use App\Models\Account;
 use App\Models\CollectionBatch;
@@ -21,6 +20,7 @@ use App\Models\SmsLog;
 use App\Models\User;
 use App\Services\BankApiService;
 use App\Services\CollectionBatchService;
+use App\Services\CollectionBatchPushService;
 use App\Services\BankPayloadService;
 use App\Services\CollectionAnalyticsService;
 use App\Services\DeductionService;
@@ -47,6 +47,7 @@ class CollectionController extends Controller
         protected DeductionService $deductionService,
         protected CollectionAnalyticsService $collectionAnalytics,
         protected CollectionBatchService $collectionBatchService,
+        protected CollectionBatchPushService $collectionBatchPushService,
         protected ReportExportService $reportExportService,
         protected MessagingService $messagingService,
         protected SettlementPostingService $settlementPostingService,
@@ -379,17 +380,20 @@ class CollectionController extends Controller
 
     public function upload(Request $request)
     {
-        $title = "Upload Collection Batch";
+        $collectionBatch = CollectionBatch::where('id', $request->batch_id)->firstOrFail();
+        $result = $this->collectionBatchPushService->push($collectionBatch);
+        $success = (bool) ($result['success'] ?? false);
+        $message = $result['message'] ?? ($success
+            ? 'Collection batch uploaded.'
+            : 'Collection batch upload failed.');
 
-        //collection batch
-        $collection_batch = CollectionBatch::where(['id' => $request->batch_id])->firstOrFail();
-
-        if ($collection_batch->canBePushed()) {
-            dispatch(new PushCollectionJob($collection_batch->id));
-        }
-
-        //response
-        return response()->json(['success' => true, 'success_msg' => "Collection batch uploaded."], 200);
+        return response()->json([
+            'success' => $success,
+            'success_msg' => $success ? "Collection batch {$collectionBatch->collectionReference} uploaded. {$message}" : null,
+            'error_msg' => $success ? null : $message,
+            'response_code' => $result['response_code'] ?? null,
+            'correlation_id' => $result['correlation_id'] ?? null,
+        ], $success ? 200 : 422);
     }
 
     public function archive($id)
