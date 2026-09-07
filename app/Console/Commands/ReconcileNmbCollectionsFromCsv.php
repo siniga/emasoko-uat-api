@@ -21,6 +21,7 @@ class ReconcileNmbCollectionsFromCsv extends Command
         {--apply : Apply settlement updates. Without this option the command only previews matches}
         {--amount-tolerance=1 : Allowed difference between CSV credit and installment amount}
         {--allow-duplicate-references : Allow more than one CSV row for the same mandate reference}
+        {--match-august-collection-lines : If no August installment exists, match August collection_debit_orders.payment_month/payment_at and post to the linked FAILED/FUNDSCHECK installment}
         {--send-sms : Send customer SMS for successful reconciled settlements}
         {--limit= : Limit the number of CSV rows processed}
         {--report= : Optional output CSV report path}';
@@ -36,6 +37,8 @@ class ReconcileNmbCollectionsFromCsv extends Command
     protected $debitOrdersByReference;
     protected $installmentsByDebitOrderId;
     protected $settlementsByMandateReference;
+    protected $collectionLinesByDebitOrderId;
+    protected $collectionLineInstallmentsById;
 
     public function handle(SettlementPostingService $settlementPostingService): int
     {
@@ -63,6 +66,7 @@ class ReconcileNmbCollectionsFromCsv extends Command
         $apply = (bool) $this->option('apply');
         $sendSms = (bool) $this->option('send-sms');
         $allowDuplicateReferences = (bool) $this->option('allow-duplicate-references');
+        $matchAugustCollectionLines = (bool) $this->option('match-august-collection-lines');
         $tolerance = (float) $this->option('amount-tolerance');
 
         $this->preloadReferenceData($rows, $month);
@@ -70,6 +74,7 @@ class ReconcileNmbCollectionsFromCsv extends Command
         $this->info(($apply ? 'Applying' : 'Dry run for') . " NMB CSV reconciliation for {$month->format('F Y')}");
         $this->line('SMS notifications: ' . ($sendSms ? 'enabled' : 'disabled'));
         $this->line('Duplicate references: ' . ($allowDuplicateReferences ? 'allowed' : 'second and later rows skipped'));
+        $this->line('August collection_debit_orders fallback: ' . ($matchAugustCollectionLines ? 'enabled' : 'disabled'));
 
         foreach ($rows as $index => $row) {
             if ($limit && $index >= $limit) {
@@ -77,7 +82,7 @@ class ReconcileNmbCollectionsFromCsv extends Command
             }
 
             $this->increment('rows');
-            $result = $this->processRow($row, $month, $tolerance, $apply, $sendSms, $allowDuplicateReferences, $settlementPostingService);
+            $result = $this->processRow($row, $month, $tolerance, $apply, $sendSms, $allowDuplicateReferences, $matchAugustCollectionLines, $settlementPostingService);
             $this->recordReportRow($row, $result);
         }
 
@@ -98,13 +103,14 @@ class ReconcileNmbCollectionsFromCsv extends Command
         bool $apply,
         bool $sendSms,
         bool $allowDuplicateReferences,
+        bool $matchAugustCollectionLines,
         SettlementPostingService $settlementPostingService
     ): array {
-        $narration = (string) ($row['Narration'] ?? '');
-        $mandateReference = $this->extractMandateReference($narration);
-        $creditAmount = $this->parseMoney($row['Credit'] ?? null);
-        $effectiveDate = $this->parseDate($row['Value Date'] ?? null) ?: $this->parseDate($row['Book Date'] ?? null);
-        $bookDate = $this->parseDate($row['Book Date'] ?? null) ?: $effectiveDate;
+        $narration = (string) ($this->rowValue($row, ['Narration', 'narration']) ?? '');
+        $mandateReference = $this->rowMandateReference($row);
+        $creditAmount = $this->rowCreditAmount($row);
+        $effectiveDate = $this->rowValueDate($row);
+        $bookDate = $this->rowBookDate($row) ?: $effectiveDate;
 
         if (!$mandateReference) {
             return $this->skip('missing_reference', 'No mandate reference found in narration.');
@@ -168,12 +174,18 @@ class ReconcileNmbCollectionsFromCsv extends Command
         }
 
         $candidate = $this->findInstallmentCandidate($debitOrder, $month, $creditAmount, $tolerance);
+
+        if (!$candidate['installment'] && $matchAugustCollectionLines && ($candidate['code'] ?? null) === 'no_august_candidate') {
+            $candidate = $this->findAugustCollectionLineCandidate($debitOrder, $creditAmount, $tolerance);
+        }
+
         if (!$candidate['installment']) {
             return $this->skip($candidate['code'], $candidate['message'], $mandateReference, $debitOrder->id);
         }
 
         /** @var Installment $installment */
         $installment = $candidate['installment'];
+        $candidateLine = $candidate['collection_line'] ?? null;
         $paymentReference = 'NMB-CSV-' . $month->format('Ym') . '-' . $installment->id;
 
         $existing = PaymentSettlement::where([
@@ -208,8 +220,13 @@ class ReconcileNmbCollectionsFromCsv extends Command
         $line = null;
 
         if ($apply) {
-            $batch = $this->resolveBatch($installment);
-            $line = $this->resolveCollectionLine($installment, $batch);
+            if ($candidateLine) {
+                $line = $candidateLine;
+                $batch = CollectionBatch::find($candidateLine->collection_batch_id);
+            } else {
+                $batch = $this->resolveBatch($installment);
+                $line = $this->resolveCollectionLine($installment, $batch);
+            }
         }
         $openingOutstanding = (float) ($installment->outstanding_amount ?: $installment->installment_amount);
         $normalizedStatus = $creditAmount + $tolerance < $openingOutstanding
@@ -219,6 +236,7 @@ class ReconcileNmbCollectionsFromCsv extends Command
             $row,
             'mandate_reference' => $mandateReference,
             'installment_id' => $installment->id,
+            'collection_debit_order_id' => $candidateLine?->id,
         ]));
 
         if ($apply) {
@@ -266,6 +284,8 @@ class ReconcileNmbCollectionsFromCsv extends Command
             'debit_order_id' => $debitOrder->id,
             'installment_id' => $installment->id,
             'batch_reference' => $batch?->collectionReference,
+            'collection_debit_order_id' => $candidateLine?->id,
+            'collection_debit_order_status' => $candidateLine?->status,
             'amount' => $creditAmount,
             'match_type' => $candidate['match_type'],
             'effective_payment_date' => $effectiveDate->toDateString(),
@@ -275,7 +295,7 @@ class ReconcileNmbCollectionsFromCsv extends Command
     protected function preloadReferenceData(array $rows, Carbon $month): void
     {
         $referenceValues = collect($rows)
-            ->map(fn (array $row) => $this->extractMandateReference((string) ($row['Narration'] ?? '')))
+            ->map(fn (array $row) => $this->rowMandateReference($row))
             ->filter()
             ->values();
 
@@ -305,12 +325,29 @@ class ReconcileNmbCollectionsFromCsv extends Command
             ->orderBy('installment_id')
             ->get()
             ->groupBy('mandate_reference');
+
+        $collectionLines = CollectionDebitOrder::whereIn('debit_order_id', $debitOrders->pluck('id'))
+            ->where(function ($query) use ($month) {
+                $query->where('payment_month', $month->format('Y-m'))
+                    ->orWhereBetween('payment_at', [
+                        $month->copy()->startOfMonth()->toDateString(),
+                        $month->copy()->endOfMonth()->toDateString() . ' 23:59:59',
+                    ]);
+            })
+            ->orderBy('payment_at')
+            ->orderBy('id')
+            ->get();
+
+        $this->collectionLinesByDebitOrderId = $collectionLines->groupBy('debit_order_id');
+        $this->collectionLineInstallmentsById = Installment::whereIn('id', $collectionLines->pluck('installment_id')->filter()->unique())
+            ->get()
+            ->keyBy(fn (Installment $installment) => (string) $installment->id);
     }
 
     protected function findExistingCommandSettlement(DebitOrder $debitOrder, Carbon $month, float $amount, float $tolerance): ?PaymentSettlement
     {
         return ($this->settlementsByMandateReference->get($debitOrder->reference) ?? collect())
-            ->reject(fn (PaymentSettlement $settlement) => in_array((int) $settlement->installment_id, $this->reservedInstallmentIds, true))
+            ->reject(fn (PaymentSettlement $settlement) => in_array((string) $settlement->installment_id, $this->reservedInstallmentIds, true))
             ->filter(function (PaymentSettlement $settlement) use ($amount, $tolerance) {
                 return abs((float) $settlement->paid_amount - $amount) <= $tolerance;
             })
@@ -323,7 +360,7 @@ class ReconcileNmbCollectionsFromCsv extends Command
         $monthStart = $month->copy()->startOfMonth();
         $monthEnd = $month->copy()->endOfMonth();
         $candidates = ($this->installmentsByDebitOrderId->get($debitOrder->id) ?? collect())
-            ->reject(fn (Installment $installment) => in_array($installment->id, $this->reservedInstallmentIds, true))
+            ->reject(fn (Installment $installment) => in_array((string) $installment->id, $this->reservedInstallmentIds, true))
             ->filter(function (Installment $installment) use ($monthStart, $monthEnd) {
                 if (empty($installment->payment_date)) {
                     return false;
@@ -367,6 +404,54 @@ class ReconcileNmbCollectionsFromCsv extends Command
             'installment' => null,
             'code' => 'no_august_candidate',
             'message' => 'No August installment found with status FAILED or FUNDSCHECK.',
+        ];
+    }
+
+    protected function findAugustCollectionLineCandidate(DebitOrder $debitOrder, float $amount, float $tolerance): array
+    {
+        $matches = ($this->collectionLinesByDebitOrderId->get($debitOrder->id) ?? collect())
+            ->reject(fn (CollectionDebitOrder $line) => in_array((string) $line->installment_id, $this->reservedInstallmentIds, true))
+            ->map(function (CollectionDebitOrder $line) use ($amount, $tolerance) {
+                $installment = $this->collectionLineInstallmentsById->get((string) $line->installment_id);
+
+                if (!$installment || !in_array($installment->status, ['FAILED', 'FUNDSCHECK'], true)) {
+                    return null;
+                }
+
+                if (!$this->amountMatches($installment, $amount, $tolerance)) {
+                    return null;
+                }
+
+                return [
+                    'line' => $line,
+                    'installment' => $installment,
+                ];
+            })
+            ->filter()
+            ->values();
+
+        if ($matches->count() === 1) {
+            $match = $matches->first();
+
+            return [
+                'installment' => $match['installment'],
+                'collection_line' => $match['line'],
+                'match_type' => 'august_collection_debit_order_failed_fundscheck_amount_match',
+            ];
+        }
+
+        if ($matches->count() > 1) {
+            return [
+                'installment' => null,
+                'code' => 'duplicate_collection_line_candidate',
+                'message' => 'More than one August collection_debit_orders line links to FAILED/FUNDSCHECK installments matching the CSV amount.',
+            ];
+        }
+
+        return [
+            'installment' => null,
+            'code' => 'no_august_collection_line_candidate',
+            'message' => 'No August collection_debit_orders line links to a FAILED/FUNDSCHECK installment matching the CSV amount.',
         ];
     }
 
@@ -509,13 +594,57 @@ class ReconcileNmbCollectionsFromCsv extends Command
         }
 
         foreach ($rows as $row) {
-            $date = $this->parseDate($row['Value Date'] ?? null) ?: $this->parseDate($row['Book Date'] ?? null);
+            $date = $this->rowValueDate($row) ?: $this->rowBookDate($row);
             if ($date) {
                 return $date->copy()->startOfMonth();
             }
         }
 
         return null;
+    }
+
+    protected function rowValue(array $row, array $keys)
+    {
+        foreach ($keys as $key) {
+            if (array_key_exists($key, $row) && trim((string) $row[$key]) !== '') {
+                return $row[$key];
+            }
+        }
+
+        return null;
+    }
+
+    protected function rowMandateReference(array $row): ?string
+    {
+        $directReference = $this->rowValue($row, [
+            'mandate_reference',
+            'Mandate Reference',
+            'mandateReference',
+            'mandate_ref',
+        ]);
+
+        if ($directReference !== null) {
+            $reference = preg_replace('/\D+/', '', (string) $directReference);
+
+            return $reference !== '' ? $reference : null;
+        }
+
+        return $this->extractMandateReference((string) ($this->rowValue($row, ['Narration', 'narration']) ?? ''));
+    }
+
+    protected function rowCreditAmount(array $row): float
+    {
+        return $this->parseMoney($this->rowValue($row, ['Credit', 'credit', 'amount', 'csv_credit']));
+    }
+
+    protected function rowValueDate(array $row): ?Carbon
+    {
+        return $this->parseDate($this->rowValue($row, ['Value Date', 'value_date', 'effective_payment_date']));
+    }
+
+    protected function rowBookDate(array $row): ?Carbon
+    {
+        return $this->parseDate($this->rowValue($row, ['Book Date', 'book_date', 'transaction_at']));
     }
 
     protected function parseDate($value): ?Carbon
@@ -571,7 +700,7 @@ class ReconcileNmbCollectionsFromCsv extends Command
 
     protected function reserveInstallment(Installment $installment): void
     {
-        $this->reservedInstallmentIds[] = $installment->id;
+        $this->reservedInstallmentIds[] = (string) $installment->id;
     }
 
     protected function increment(string $key): void
@@ -582,20 +711,22 @@ class ReconcileNmbCollectionsFromCsv extends Command
     protected function recordReportRow(array $row, array $result): void
     {
         $this->reportRows[] = [
-            'book_date' => $row['Book Date'] ?? null,
-            'value_date' => $row['Value Date'] ?? null,
+            'book_date' => $this->rowValue($row, ['Book Date', 'book_date', 'transaction_at']),
+            'value_date' => $this->rowValue($row, ['Value Date', 'value_date', 'effective_payment_date']),
             'mandate_reference' => $result['mandate_reference'] ?? null,
             'debit_order_id' => $result['debit_order_id'] ?? null,
             'installment_id' => $result['installment_id'] ?? null,
             'batch_reference' => $result['batch_reference'] ?? null,
-            'csv_credit' => $result['amount'] ?? $this->parseMoney($row['Credit'] ?? null),
+            'collection_debit_order_id' => $result['collection_debit_order_id'] ?? null,
+            'collection_debit_order_status' => $result['collection_debit_order_status'] ?? null,
+            'csv_credit' => $result['amount'] ?? $this->rowCreditAmount($row),
             'duplicate_reference_count' => !empty($result['mandate_reference'])
                 ? ($this->csvReferenceCounts[$result['mandate_reference']] ?? 0)
                 : 0,
             'status' => $result['status'] ?? null,
             'match_type' => $result['match_type'] ?? null,
             'message' => $result['message'] ?? null,
-            'narration' => $row['Narration'] ?? null,
+            'narration' => $this->rowValue($row, ['Narration', 'narration']),
         ];
     }
 
