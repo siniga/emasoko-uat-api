@@ -20,6 +20,7 @@ use App\Http\Controllers\PaymentMandateApprovalController;
 use App\Http\Controllers\PaymentMandateCreateController;
 use App\Http\Controllers\PaymentMandateListController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\QuickActionController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SmsLogsController;
 use App\Http\Controllers\SmsTemplatesController;
@@ -83,6 +84,11 @@ Route::middleware('auth')->group(function () {
     Route::any('dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::any('index', [DashboardController::class, 'index'])->name('index');
     Route::any('bi/dashboard', [BIController::class, 'index'])->name('bi.dashboard');
+
+    //quick actions
+    Route::get('quick-actions', [QuickActionController::class, 'index'])->name('quick-actions.index');
+    Route::post('quick-actions/mandate', [QuickActionController::class, 'mandate'])->name('quick-actions.mandate');
+    Route::post('quick-actions/collection-batch', [QuickActionController::class, 'collectionBatch'])->name('quick-actions.collection-batch');
 
     //charts
     Route::get('charts/mandate-values', [DashboardChartController::class, 'mandate_values']);

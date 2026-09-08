@@ -20,6 +20,8 @@
                         'payment-mandate.approve-closing',
                     ];
                     $dashboardOpen = Route::is('dashboard') || request()->is('dashboard');
+                    $quickActionsOpen = Route::is('quick-actions.*') || request()->is('quick-actions') || request()->is('quick-actions/*');
+                    $canAccessQuickActions = Auth::user() && (Auth::user()->hasRole('admin') || Auth::user()->hasRole('Manager') || Auth::user()->hasRole('manager'));
                     $providersOpen =
                         Route::is(
                             'companies.lists',
@@ -96,6 +98,15 @@
                         <span key="t-dashboards">Dashboard</span>
                     </a>
                 </li>
+
+                @if ($canAccessQuickActions)
+                    <li class="{{ $quickActionsOpen ? 'mm-active' : '' }}">
+                        <a href="{{ route('quick-actions.index') }}" class="waves-effect">
+                            <i class="bx bx-bolt-circle"></i>
+                            <span>Quick Actions</span>
+                        </a>
+                    </li>
+                @endif
 
                 @if (Auth::user()->hasRole(['admin']) || Auth::user()->hasRole(['Partner']))
                     <li class="{{ Route::is('bi.dashboard') ? 'mm-active' : '' }}">

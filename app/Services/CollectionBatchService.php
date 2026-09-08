@@ -63,6 +63,99 @@ class CollectionBatchService
         return $this->createBatchFromInstallments($partner, $installments, $actor);
     }
 
+    public function createBatchesByMandateReferences(array|Collection $references, ?User $actor = null, int $chunkSize = 250): array
+    {
+        $this->candidateSkipReasons = [];
+        $references = $this->normalizeMandateReferences($references);
+
+        if ($references->isEmpty()) {
+            return [
+                'created_batches' => collect(),
+                'messages' => ['No mandate references were provided.'],
+                'skipped' => [],
+            ];
+        }
+
+        $orders = DebitOrder::query()
+            ->with(['installments', 'customerAccount', 'partner'])
+            ->eligibleForCollection('NMB')
+            ->whereIn('reference', $references->all())
+            ->whereNotNull('next_debit_date')
+            ->whereHas('partner', function ($query) {
+                $query->where('approved', 1);
+            })
+            ->orderBy('partner_id')
+            ->orderBy('next_debit_date')
+            ->orderBy('id')
+            ->get();
+
+        $messages = [];
+        $foundReferences = $orders->pluck('reference')->map(fn ($reference) => (string) $reference);
+
+        $references->diff($foundReferences)->each(function (string $reference) use (&$messages) {
+            $exists = DebitOrder::query()
+                ->where('reference', $reference)
+                ->exists();
+
+            $messages[] = $exists
+                ? "Mandate {$reference} is not eligible for NMB collection or has no next debit date."
+                : "Mandate {$reference} was not found.";
+        });
+
+        $installmentGroups = $orders
+            ->map(function (DebitOrder $debitOrder) {
+                $collectionDate = $debitOrder->next_debit_date;
+
+                return $collectionDate
+                    ? $this->selectedInstallmentForMandate($debitOrder, $collectionDate)
+                    : null;
+            })
+            ->filter()
+            ->groupBy(function (Installment $installment) {
+                $debitOrder = $installment->debitOrder;
+
+                return $this->effectiveBankPartnerId($debitOrder) . '|' . $debitOrder->next_debit_date;
+            });
+
+        $createdBatches = collect();
+
+        foreach ($installmentGroups as $groupKey => $installments) {
+            [$partnerId, $collectionDate] = explode('|', (string) $groupKey, 2);
+            $partner = Partner::find($partnerId);
+
+            if (!$partner) {
+                $messages[] = "Skipping partner {$partnerId}: service provider was not found.";
+                continue;
+            }
+
+            foreach ($installments->chunk($chunkSize) as $chunk) {
+                $batch = $this->createBatchFromInstallments(
+                    $partner,
+                    $chunk->values(),
+                    $actor,
+                    [
+                        'forced_collection_date' => $collectionDate,
+                        'batch_collection_date' => $collectionDate,
+                    ]
+                );
+
+                if ($batch) {
+                    $createdBatches->push($batch);
+                    continue;
+                }
+
+                $messages[] = "No batch created for {$partner->business_name} on {$collectionDate} after applying batch creation rules.";
+            }
+        }
+
+        return [
+            'created_batches' => $createdBatches,
+            'messages' => $messages,
+            'skipped' => $this->candidateSkipReasons(),
+        ];
+    }
+
+
     public function createRepairBatchFromInstallments(Partner $partner, Collection $installments, ?User $actor = null, array $attributes = []): ?CollectionBatch
     {
         return $this->createBatchFromInstallments($partner, $installments, $actor, array_merge($attributes, [
@@ -230,7 +323,7 @@ class CollectionBatchService
                     continue;
                 }
 
-                $partnerId = (int) $debitOrder->partner_id;
+                $partnerId = $this->effectiveBankPartnerId($debitOrder);
 
                 if ($duplicate = $this->collectionAccountMonthDuplicate($accountNumber, $candidate['collection_date'], $attributes['source_batch_id'] ?? null, $partnerId)) {
                     $this->recordCandidateSkip($installment, 'active_monthly_account_duplicate_after_lock', [
@@ -514,7 +607,7 @@ class CollectionBatchService
                     ? Carbon::parse($forcedCollectionDate)
                     : Carbon::parse($this->deductionService->createCollectionDate($paymentDate));
                 $cycleKey = $debitOrder->id . ':' . $collectionDate->format('Y-m');
-                $partnerId = (int) $debitOrder->partner_id;
+                $partnerId = $this->effectiveBankPartnerId($debitOrder);
 
                 if (strtoupper((string) $debitOrder->periodicity) !== 'MONTHLY') {
                     $this->recordCandidateSkip($installment, 'unsupported_periodicity', [
@@ -630,6 +723,50 @@ class CollectionBatchService
             })
             ->filter()
             ->values();
+    }
+
+    protected function normalizeMandateReferences(array|Collection $references): Collection
+    {
+        return collect($references)
+            ->flatMap(fn ($reference) => explode(',', (string) $reference))
+            ->map(fn ($reference) => trim($reference))
+            ->filter()
+            ->unique()
+            ->values();
+    }
+
+    protected function selectedInstallmentForMandate(DebitOrder $debitOrder, string $collectionDate): ?Installment
+    {
+        $open = $debitOrder->installments()
+            ->where('installments.status', 'OPEN')
+            ->where('installments.created', 0)
+            ->whereDate('installments.payment_date', '<=', $collectionDate)
+            ->orderByRaw("CASE WHEN DATE(installments.payment_date) = ? THEN 0 ELSE 1 END", [$collectionDate])
+            ->orderBy('installments.payment_date', 'desc')
+            ->first();
+
+        if ($open) {
+            return $open;
+        }
+
+        return $debitOrder->installments()
+            ->whereIn('status', ['OPEN', 'FAILED', 'FUNDSCHECK'])
+            ->where(function ($query) {
+                $query->where('status', '!=', 'OPEN')
+                    ->orWhere('created', 0);
+            })
+            ->where(function ($query) {
+                $query->whereNull('remarks')
+                    ->orWhere('remarks', '!=', 'Account Is Valid');
+            })
+            ->whereDate('payment_date', '<', $collectionDate)
+            ->orderBy('installments.payment_date')
+            ->first();
+    }
+
+    protected function effectiveBankPartnerId(DebitOrder $debitOrder): int
+    {
+        return (int) ($debitOrder->bank_sponsor_partner_id ?: $debitOrder->bank_partner_sponsor_id ?: $debitOrder->partner_id);
     }
 
     protected function recordCandidateSkip(?Installment $installment, string $reason, array $context = []): void
