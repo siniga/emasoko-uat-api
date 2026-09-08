@@ -666,13 +666,15 @@ class BankApiService
             return [404, 'Mandate not found.', null];
         }
 
-        //check if mandate if cancelled
-        if ($debitOrder->lifecycle_status === DebitOrder::LIFECYCLE_CANCELLED) {
-            Log::info('Mandate already cancelled; skipping CRDB mandate cancellation.', [
+        if ($debitOrder->lifecycle_status === DebitOrder::LIFECYCLE_CANCELLED || (int) $debitOrder->cancelled === 1) {
+            Log::warning('CRDB mandate cancellation blocked because mandate is already marked cancelled locally.', [
                 'mandateReferenceNumber' => $data['mandateReferenceNumber'],
                 'requestId' => $data['requestId'] ?? null,
+                'lifecycle_status' => $debitOrder->lifecycle_status,
+                'cancelled' => $debitOrder->cancelled,
             ]);
-            return [200, 'Mandate already cancelled; skipping CRDB mandate cancellation.', null];
+
+            return [409, 'Mandate is already marked cancelled locally. Reset it before retrying bank cancellation.', null];
         }
 
         //authentication
@@ -732,8 +734,9 @@ class BankApiService
         }
 
         // safely read values
-        $statusCode = data_get($response, 'ResponseHeader.StatusCode');
-        $statusDesc = data_get($response, 'ResponseHeader.StatusDesc');
+        $rawStatusCode = data_get($response, 'ResponseHeader.StatusCode');
+        $statusCode = is_numeric($rawStatusCode) ? (int) $rawStatusCode : null;
+        $statusDesc = trim((string) data_get($response, 'ResponseHeader.StatusDesc'));
         $responseId = data_get($response, 'ResponseHeader.RequestId');
         $reference  = data_get($response, 'ResponseBody.Reference');
         Log::debug('Parsed header', compact('statusCode', 'statusDesc', 'reference'));

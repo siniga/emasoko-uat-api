@@ -7,6 +7,7 @@ use App\Models\DebitOrderRequest;
 use App\Services\BankApiService;
 use App\Services\BankPayloadService;
 use App\Services\DeductionService;
+use App\Services\CustomerSmsNotificationService;
 use App\Services\ExternalCallbackService;
 use App\Services\MandateActionService;
 use App\Services\PaymentMandateWorkflowService;
@@ -73,12 +74,16 @@ class PaymentMandateCancellationWorkflowTest extends TestCase
         $actionService = Mockery::mock(MandateActionService::class);
         $callbackService = Mockery::mock(ExternalCallbackService::class);
 
+        $smsService = Mockery::mock(CustomerSmsNotificationService::class);
+        $smsService->shouldIgnoreMissing();
+
         $service = new PaymentMandateWorkflowService(
             Mockery::mock(DeductionService::class),
             Mockery::mock(BankPayloadService::class),
             Mockery::mock(BankApiService::class),
             $actionService,
-            $callbackService
+            $callbackService,
+            $smsService
         );
 
         return [$service, $actionService, $callbackService];

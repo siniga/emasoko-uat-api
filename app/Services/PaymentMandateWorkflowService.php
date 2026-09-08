@@ -357,12 +357,38 @@ class PaymentMandateWorkflowService
         $debitOrder->cancellationStartedAt = now();
         $debitOrder->cancellationApprovedBy = $userId;
         $debitOrder->cancellationApprovedAt = now();
+        $debitOrder->cancelled = 0;
         $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_CANCELLATION_REQUESTED;
         $debitOrder->save();
         $debitOrder->refresh();
 
-        //call for cancellation API
-        $response = $this->mandateActionService->cancelMandate($debitOrder);
+        try {
+            $response = $this->mandateActionService->cancelMandate($debitOrder);
+        } catch (\Throwable $exception) {
+            $debitOrder->cancelled = 0;
+            $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_FAILED;
+            $debitOrder->remarks = 'Mandate cancellation failed: ' . $exception->getMessage();
+            $debitOrder->save();
+            $debitOrder->refresh();
+
+            Log::error('Mandate cancellation threw an exception from portal.', [
+                'debit_order_id' => $debitOrder->id,
+                'mandate_reference' => $debitOrder->reference,
+                'channel' => $debitOrder->channel,
+                'exception' => $exception::class,
+                'message' => $exception->getMessage(),
+            ]);
+
+            return [
+                'success' => false,
+                'channel' => $debitOrder->channel,
+                'response_code' => 500,
+                'provider_response_code' => null,
+                'success_msg' => $debitOrder->remarks,
+                'lifecycle_status' => $debitOrder->lifecycle_status,
+            ];
+        }
+
         $debitOrder->refresh();
 
         if ($response['success']) {
