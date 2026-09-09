@@ -1,0 +1,1505 @@
+{
+  "info": {
+    "name": "eMakato Mobile API",
+    "description": "Postman collection for testing all current mobile API endpoints under /api/mobile/v1. Login first; the login test saves access_token automatically.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/mobile/v1/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "mobile",
+                "v1",
+                "login"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Login succeeded', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "const token = json.data && json.data.token;",
+                  "if (token) {",
+                  "    pm.environment.set('access_token', token);",
+                  "}",
+                  "const corporateReference = json.data && json.data.corporate_reference;",
+                  "if (corporateReference) {",
+                  "    pm.environment.set('corporate_reference', corporateReference);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/mobile/v1/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "mobile",
+                "v1",
+                "logout"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "User & Notifications",
+      "item": [
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/mobile/v1/user/profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "mobile",
+                "v1",
+                "user",
+                "profile"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/mobile/v1/user/profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "mobile",
+                "v1",
+                "user",
+                "profile"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"{{user_name}}\",\n  \"phone\": \"{{phone}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/mobile/v1/user/profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "mobile",
+                "v1",
+                "user",
+                "profile"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"current_password\": \"{{password}}\",\n  \"password\": \"{{new_password}}\",\n  \"password_confirmation\": \"{{new_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Notifications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/mobile/v1/notifications?per_page=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "mobile",
+                "v1",
+                "notifications"
+              ],
+              "query": [
+                {
+                  "key": "per_page",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const notifications = json.data && json.data.notifications;",
+                  "if (Array.isArray(notifications) && notifications.length && notifications[0].id) {",
+                  "    pm.environment.set('notification_id', notifications[0].id);",
+                  "}",
+                  "pm.test('Notifications endpoint responded', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mark Notification As Read",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/mobile/v1/notifications/{{notification_id}}/read",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "mobile",
+                "v1",
+                "notifications",
+                "{{notification_id}}",
+                "read"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Mark All Notifications As Read",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/mobile/v1/notifications/read-all",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "mobile",
+                "v1",
+                "notifications",
+                "read-all"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Dashboard Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/mobile/v1/dashboard?year={{year}}&month={{month}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "mobile",
+                "v1",
+                "dashboard"
+              ],
+              "query": [
+                {
+                  "key": "year",
+                  "value": "{{year}}"
+                },
+                {
+                  "key": "month",
+                  "value": "{{month}}"
+                },
+                {
+                  "key": "payment_channel",
+                  "value": "{{payment_channel}}",
+                  "disabled": true
+                },
+                {
+                  "key": "corporate_reference",
+                  "value": "{{corporate_reference}}",
+                  "disabled": true
+                },
+                {
+                  "key": "mandate_type",
+                  "value": "{{mandate_type}}",
+                  "disabled": true
+                },
+                {
+                  "key": "keyword",
+                  "value": "{{keyword}}",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "Mandates",
+      "item": [
+        {
+          "name": "Service Provider Homepage",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/mobile/v1/sp-homepage?year={{year}}&month={{month}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "mobile",
+                "v1",
+                "sp-homepage"
+              ],
+              "query": [
+                {
+                  "key": "year",
+                  "value": "{{year}}"
+                },
+                {
+                  "key": "month",
+                  "value": "{{month}}"
+                },
+                {
+                  "key": "payment_channel",
+                  "value": "{{payment_channel}}",
+                  "disabled": true
+                },
+                {
+                  "key": "corporate_reference",
+                  "value": "{{corporate_reference}}",
+                  "disabled": true
+                },
+                {
+                  "key": "mandate_type",
+                  "value": "{{mandate_type}}",
+                  "disabled": true
+                },
+                {
+                  "key": "keyword",
+                  "value": "{{keyword}}",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Debit Order Summaries",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/mobile/v1/debit-orders-summaries?year={{year}}&month={{month}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "mobile",
+                "v1",
+                "debit-orders-summaries"
+              ],
+              "query": [
+                {
+                  "key": "year",
+                  "value": "{{year}}"
+                },
+                {
+                  "key": "month",
+                  "value": "{{month}}"
+                },
+                {
+                  "key": "payment_channel",
+                  "value": "{{payment_channel}}",
+                  "disabled": true
+                },
+                {
+                  "key": "corporate_reference",
+                  "value": "{{corporate_reference}}",
+                  "disabled": true
+                },
+                {
+                  "key": "mandate_type",
+                  "value": "{{mandate_type}}",
+                  "disabled": true
+                },
+                {
+                  "key": "keyword",
+                  "value": "{{keyword}}",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Mandate Summaries",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/mobile/v1/mandates/summaries",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "mobile",
+                "v1",
+                "mandates",
+                "summaries"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"year\": \"{{year}}\",\n  \"month\": \"{{month}}\",\n  \"payment_channel\": \"{{payment_channel}}\",\n  \"corporate_reference\": \"{{corporate_reference}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "List Mandates",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/mobile/v1/mandates/all?year={{year}}&month={{month}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "mobile",
+                "v1",
+                "mandates",
+                "all"
+              ],
+              "query": [
+                {
+                  "key": "year",
+                  "value": "{{year}}"
+                },
+                {
+                  "key": "month",
+                  "value": "{{month}}"
+                },
+                {
+                  "key": "payment_channel",
+                  "value": "{{payment_channel}}",
+                  "disabled": true
+                },
+                {
+                  "key": "corporate_reference",
+                  "value": "{{corporate_reference}}",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "{{mandate_status}}",
+                  "disabled": true
+                },
+                {
+                  "key": "keyword",
+                  "value": "{{keyword}}",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Payment Channels",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/mobile/v1/mandates/channels",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "mobile",
+                "v1",
+                "mandates",
+                "channels"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Get Mandate By Reference",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/mobile/v1/mandates/{{mandate_reference}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "mobile",
+                "v1",
+                "mandates",
+                "{{mandate_reference}}"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Deduction Histories",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/mobile/v1/deduction-histories/{{mandate_uuid}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "mobile",
+                "v1",
+                "deduction-histories",
+                "{{mandate_uuid}}"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Create Mandate - Fixed",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/mobile/v1/mandates/create",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "mobile",
+                "v1",
+                "mandates",
+                "create"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"payment_channel\": \"{{payment_channel}}\",\n  \"corporate_reference\": \"{{corporate_reference}}\",\n  \"phone\": \"{{customer_phone}}\",\n  \"email\": \"{{customer_email}}\",\n  \"account_name\": \"{{customer_name}}\",\n  \"account_number\": \"{{customer_account_number}}\",\n  \"NIN\": \"{{customer_nin}}\",\n  \"address\": \"Dar es Salaam\",\n  \"total_amount\": \"{{total_amount}}\",\n  \"debit_type\": \"FIXED\",\n  \"installment_amount\": \"{{installment_amount}}\",\n  \"periodicity\": \"MONTHLY\",\n  \"deduction_start_date\": \"{{deduction_start_date}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const data = json.data || {};",
+                  "const mandate = data.mandate || {};",
+                  "const reference = data.mandate_reference || mandate.reference || mandate.mandate_reference;",
+                  "const uuid = data.mandate_uuid || mandate.uuid || mandate.mandate_uuid;",
+                  "if (reference) pm.environment.set('mandate_reference', reference);",
+                  "if (uuid) pm.environment.set('mandate_uuid', uuid);",
+                  "pm.test('Request completed', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 202, 400, 422, 500]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Mandate - Dynamic",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/mobile/v1/mandates/create",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "mobile",
+                "v1",
+                "mandates",
+                "create"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"payment_channel\": \"{{payment_channel}}\",\n  \"corporate_reference\": \"{{corporate_reference}}\",\n  \"phone\": \"{{customer_phone}}\",\n  \"email\": \"{{customer_email}}\",\n  \"account_name\": \"{{customer_name}}\",\n  \"account_number\": \"{{customer_account_number}}\",\n  \"NIN\": \"{{customer_nin}}\",\n  \"address\": \"Dar es Salaam\",\n  \"total_amount\": \"{{total_amount}}\",\n  \"debit_type\": \"DYNAMIC\",\n  \"min_installment_amount\": \"{{min_installment_amount}}\",\n  \"max_installment_amount\": \"{{max_installment_amount}}\",\n  \"periodicity\": \"MONTHLY\",\n  \"deduction_start_date\": \"{{deduction_start_date}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const data = json.data || {};",
+                  "const mandate = data.mandate || {};",
+                  "const reference = data.mandate_reference || mandate.reference || mandate.mandate_reference;",
+                  "const uuid = data.mandate_uuid || mandate.uuid || mandate.mandate_uuid;",
+                  "if (reference) pm.environment.set('mandate_reference', reference);",
+                  "if (uuid) pm.environment.set('mandate_uuid', uuid);",
+                  "pm.test('Request completed', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 202, 400, 422, 500]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create OTP / Resend OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/mobile/v1/mandates/otp/create",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "mobile",
+                "v1",
+                "mandates",
+                "otp",
+                "create"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reference\": \"{{mandate_reference}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const data = json.data || {};",
+                  "const mandate = data.mandate || {};",
+                  "const reference = data.mandate_reference || mandate.reference || mandate.mandate_reference;",
+                  "const uuid = data.mandate_uuid || mandate.uuid || mandate.mandate_uuid;",
+                  "if (reference) pm.environment.set('mandate_reference', reference);",
+                  "if (uuid) pm.environment.set('mandate_uuid', uuid);",
+                  "pm.test('Request completed', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 202, 400, 422, 500]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Verify OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/mobile/v1/mandates/otp/verify",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "mobile",
+                "v1",
+                "mandates",
+                "otp",
+                "verify"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reference\": \"{{mandate_reference}}\",\n  \"otpPin\": \"{{otp_pin}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const data = json.data || {};",
+                  "const mandate = data.mandate || {};",
+                  "const reference = data.mandate_reference || mandate.reference || mandate.mandate_reference;",
+                  "const uuid = data.mandate_uuid || mandate.uuid || mandate.mandate_uuid;",
+                  "if (reference) pm.environment.set('mandate_reference', reference);",
+                  "if (uuid) pm.environment.set('mandate_uuid', uuid);",
+                  "pm.test('Request completed', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 202, 400, 422, 500]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Fetch Mandate Status",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/mobile/v1/mandates/status",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "mobile",
+                "v1",
+                "mandates",
+                "status"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reference\": \"{{mandate_reference}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const data = json.data || {};",
+                  "const mandate = data.mandate || {};",
+                  "const reference = data.mandate_reference || mandate.reference || mandate.mandate_reference;",
+                  "const uuid = data.mandate_uuid || mandate.uuid || mandate.mandate_uuid;",
+                  "if (reference) pm.environment.set('mandate_reference', reference);",
+                  "if (uuid) pm.environment.set('mandate_uuid', uuid);",
+                  "pm.test('Request completed', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 202, 400, 422, 500]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cancel Mandate",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/mobile/v1/mandates/cancellation",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "mobile",
+                "v1",
+                "mandates",
+                "cancellation"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reference\": \"{{mandate_reference}}\",\n  \"reasons\": \"Customer requested cancellation\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const data = json.data || {};",
+                  "const mandate = data.mandate || {};",
+                  "const reference = data.mandate_reference || mandate.reference || mandate.mandate_reference;",
+                  "const uuid = data.mandate_uuid || mandate.uuid || mandate.mandate_uuid;",
+                  "if (reference) pm.environment.set('mandate_reference', reference);",
+                  "if (uuid) pm.environment.set('mandate_uuid', uuid);",
+                  "pm.test('Request completed', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 202, 400, 422, 500]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Archive Mandate",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/mobile/v1/mandates/archive",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "mobile",
+                "v1",
+                "mandates",
+                "archive"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reference\": \"{{mandate_reference}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const data = json.data || {};",
+                  "const mandate = data.mandate || {};",
+                  "const reference = data.mandate_reference || mandate.reference || mandate.mandate_reference;",
+                  "const uuid = data.mandate_uuid || mandate.uuid || mandate.mandate_uuid;",
+                  "if (reference) pm.environment.set('mandate_reference', reference);",
+                  "if (uuid) pm.environment.set('mandate_uuid', uuid);",
+                  "pm.test('Request completed', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 202, 400, 422, 500]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Close Mandate",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/mobile/v1/mandates/close",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "mobile",
+                "v1",
+                "mandates",
+                "close"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reference\": \"{{mandate_reference}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const data = json.data || {};",
+                  "const mandate = data.mandate || {};",
+                  "const reference = data.mandate_reference || mandate.reference || mandate.mandate_reference;",
+                  "const uuid = data.mandate_uuid || mandate.uuid || mandate.mandate_uuid;",
+                  "if (reference) pm.environment.set('mandate_reference', reference);",
+                  "if (uuid) pm.environment.set('mandate_uuid', uuid);",
+                  "pm.test('Request completed', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 202, 400, 422, 500]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Collections",
+      "item": [
+        {
+          "name": "Expected Collections",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/mobile/v1/collections/all",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "mobile",
+                "v1",
+                "collections",
+                "all"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"year\": \"{{year}}\",\n  \"month\": \"{{month}}\",\n  \"payment_channel\": \"{{payment_channel}}\",\n  \"corporate_reference\": \"{{corporate_reference}}\",\n  \"collection_status\": \"{{collection_status}}\",\n  \"keyword\": \"{{keyword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Collections By Mandate",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/mobile/v1/collections/filtering",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "mobile",
+                "v1",
+                "collections",
+                "filtering"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"year\": \"{{year}}\",\n  \"month\": \"{{month}}\",\n  \"payment_channel\": \"{{payment_channel}}\",\n  \"corporate_reference\": \"{{corporate_reference}}\",\n  \"collection_status\": \"{{collection_status}}\",\n  \"keyword\": \"{{keyword}}\",\n  \"reference\": \"{{mandate_reference}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Actual Collections",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/mobile/v1/collections/actual",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "mobile",
+                "v1",
+                "collections",
+                "actual"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"year\": \"{{year}}\",\n  \"month\": \"{{month}}\",\n  \"payment_channel\": \"{{payment_channel}}\",\n  \"corporate_reference\": \"{{corporate_reference}}\",\n  \"collection_status\": \"{{collection_status}}\",\n  \"keyword\": \"{{keyword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Expected Collections - Date Range",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/mobile/v1/collections/all",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "mobile",
+                "v1",
+                "collections",
+                "all"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"start_at\": \"{{start_at}}\",\n  \"end_at\": \"{{end_at}}\",\n  \"payment_channel\": \"{{payment_channel}}\",\n  \"corporate_reference\": \"{{corporate_reference}}\",\n  \"collection_status\": \"{{collection_status}}\",\n  \"keyword\": \"{{keyword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Actual Collections - Date Range",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/mobile/v1/collections/actual",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "mobile",
+                "v1",
+                "collections",
+                "actual"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"start_at\": \"{{start_at}}\",\n  \"end_at\": \"{{end_at}}\",\n  \"payment_channel\": \"{{payment_channel}}\",\n  \"corporate_reference\": \"{{corporate_reference}}\",\n  \"collection_status\": \"COLLECTED\",\n  \"keyword\": \"{{keyword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.request.headers.upsert({ key: 'Accept', value: 'application/json' });",
+          "pm.request.headers.upsert({ key: 'Content-Type', value: 'application/json' });"
+        ]
+      }
+    }
+  ]
+}
