@@ -20,6 +20,7 @@ class Kernel extends ConsoleKernel
         Commands\PushCollectionBatch::class,
         Commands\PushCollectionBatchByReference::class,
         Commands\CollectionStatusBatch::class,
+        Commands\CheckBankConnectivity::class,
         Commands\PullCollectionStatusByReference::class,
         Commands\ReconcileNmbCollectionsFromCsv::class,
         Commands\SyncDebitOrderDates::class,
@@ -40,6 +41,11 @@ class Kernel extends ConsoleKernel
         $schedule->command('push:batches')->dailyAt('02:00');
         $schedule->command('collection:status')->dailyAt('03:00');
         $schedule->command('create:failed-collection')->monthlyOn(1, '04:00');
+
+        // bank connectivity
+        $schedule->command('system-health:check-banks')
+            ->everyFiveMinutes()
+            ->withoutOverlapping();
 
         //summary reports
         $schedule->command('send:daily-report-summary')->dailyAt('23:50');

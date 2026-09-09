@@ -21,6 +21,7 @@
                     ];
                     $dashboardOpen = Route::is('dashboard') || request()->is('dashboard');
                     $quickActionsOpen = Route::is('quick-actions.*') || request()->is('quick-actions') || request()->is('quick-actions/*');
+                    $systemHealthOpen = Route::is('system-health.*') || request()->is('system-health') || request()->is('system-health/*');
                     $canAccessQuickActions = Auth::user() && (Auth::user()->hasRole('admin') || Auth::user()->hasRole('Manager') || Auth::user()->hasRole('manager'));
                     $providersOpen =
                         Route::is(
@@ -104,6 +105,15 @@
                         <a href="{{ route('quick-actions.index') }}" class="waves-effect">
                             <i class="bx bx-bolt-circle"></i>
                             <span>Quick Actions</span>
+                        </a>
+                    </li>
+                @endif
+
+                @if ($canAccessQuickActions)
+                    <li class="{{ $systemHealthOpen ? 'mm-active' : '' }}">
+                        <a href="{{ route('system-health.index') }}" class="waves-effect">
+                            <i class="bx bx-pulse"></i>
+                            <span>System Health</span>
                         </a>
                     </li>
                 @endif

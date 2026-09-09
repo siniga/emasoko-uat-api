@@ -76,6 +76,28 @@ return [
         ],
     ],
 
+    'bank_health' => [
+        'connect_timeout' => env('BANK_HEALTH_CONNECT_TIMEOUT', 5),
+        'retention_days' => env('BANK_HEALTH_RETENTION_DAYS', 30),
+        'targets' => [
+            'nmb_gateway' => [
+                'service' => 'NMB',
+                'label' => 'NMB API Gateway',
+                'url' => env('NMB_API_URL'),
+            ],
+            'crdb_gateway' => [
+                'service' => 'CRDB',
+                'label' => 'CRDB Mandate Gateway',
+                'url' => env('CRDB_API_URL'),
+            ],
+            'crdb_auth_gateway' => [
+                'service' => 'CRDB',
+                'label' => 'CRDB Authentication Gateway',
+                'url' => env('CRDB_TOKEN_URL'),
+            ],
+        ],
+    ],
+
     'airtel' => [
         'client_id' => env('AIRTEL_CLIENT_ID'),
         'client_secret' => env('AIRTEL_CLIENT_SECRET'),

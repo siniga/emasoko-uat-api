@@ -24,6 +24,7 @@ use App\Http\Controllers\QuickActionController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SmsLogsController;
 use App\Http\Controllers\SmsTemplatesController;
+use App\Http\Controllers\SystemHealthController;
 use App\Http\Controllers\SelfCompanyRegistrationController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\UserController;
@@ -89,6 +90,10 @@ Route::middleware('auth')->group(function () {
     Route::get('quick-actions', [QuickActionController::class, 'index'])->name('quick-actions.index');
     Route::post('quick-actions/mandate', [QuickActionController::class, 'mandate'])->name('quick-actions.mandate');
     Route::post('quick-actions/collection-batch', [QuickActionController::class, 'collectionBatch'])->name('quick-actions.collection-batch');
+
+    //system health
+    Route::get('system-health', [SystemHealthController::class, 'index'])->name('system-health.index');
+    Route::post('system-health/check', [SystemHealthController::class, 'run'])->name('system-health.run');
 
     //charts
     Route::get('charts/mandate-values', [DashboardChartController::class, 'mandate_values']);
