@@ -19,8 +19,14 @@ class InstallmentResource extends JsonResource
         $debitOrder = $this->debitOrder;
 
         return [
+            'id' => $this->id,
+            'installment_order' => $this->installment_order,
             'mandate' => [
+                'uuid' => $debitOrder->uuid ?? null,
                 'reference' => $debitOrder->reference ?? null,
+                'mandate_type' => $debitOrder ? $this->mandateType($debitOrder) : null,
+                'mandate_type_label' => $debitOrder ? $this->mandateTypeLabel($debitOrder) : null,
+                'payment_channel' => $debitOrder->channel ?? null,
                 'debit_type' => $debitOrder->debit_type ?? null,
                 'start_date' => $debitOrder->start_date ?? null,
                 'end_date' => $debitOrder->end_date ?? null,
@@ -31,6 +37,17 @@ class InstallmentResource extends JsonResource
                 'summary_status' => $debitOrder?->summary_status,
                 'summary_status_label' => $debitOrder ? strtoupper($debitOrder->summary_status) : null,
             ],
+            'service_provider' => $debitOrder && $debitOrder->partner ? [
+                'uuid' => $debitOrder->partner->uuid,
+                'corporate_reference' => $debitOrder->partner->reference,
+                'name' => $debitOrder->partner->business_name,
+            ] : null,
+            'customer_account' => $debitOrder && $debitOrder->customerAccount ? [
+                'name' => $debitOrder->customerAccount->account_name,
+                'account_number' => $debitOrder->customerAccount->account_number,
+                'phone' => $debitOrder->customerAccount->phone,
+                'channel_name' => $debitOrder->customerAccount->account->name ?? null,
+            ] : null,
             'installment_amount' => $this->installment_amount,
             'current_balance' => $this->current_balance,
             'outstanding_amount' => $this->outstanding_amount,
@@ -52,5 +69,20 @@ class InstallmentResource extends JsonResource
             'FUNDSCHECK' => 'FUNDSCHECK',
             default => ucwords(strtolower(str_replace('_', ' ', $status))),
         };
+    }
+
+    protected function mandateType(DebitOrder $debitOrder): string
+    {
+        $type = $debitOrder->getAttribute('mandate_type')
+            ?: $debitOrder->getAttribute('mandate_service')
+            ?: $debitOrder->getAttribute('service_type')
+            ?: 'NORMAL';
+
+        return strtoupper((string) $type);
+    }
+
+    protected function mandateTypeLabel(DebitOrder $debitOrder): string
+    {
+        return ucwords(strtolower(str_replace('_', ' ', $this->mandateType($debitOrder))));
     }
 }
