@@ -51,9 +51,10 @@ class SystemHealthController extends Controller
     {
         $user = Auth::user();
 
-        abort_unless(
-            $user && ($user->hasRole('admin') || $user->hasRole('Manager') || $user->hasRole('manager')),
-            403
-        );
+        $hasRoleAccess = $user && method_exists($user, 'hasRole')
+            ? $user->hasRole('admin') || $user->hasRole('Manager') || $user->hasRole('manager')
+            : false;
+
+        abort_unless($hasRoleAccess, 403);
     }
 }
