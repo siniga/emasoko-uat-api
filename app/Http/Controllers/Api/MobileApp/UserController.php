@@ -134,12 +134,31 @@ class UserController extends Controller
 
     protected function profilePayload($user): array
     {
+        $userGroups = $this->userGroups($user);
+
         return [
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
             'phone' => $user->phone ?? null,
             'username' => $user->username ?? null,
+            'user_group' => data_get($userGroups->first(), 'name'),
+            'user_group_label' => data_get($userGroups->first(), 'description'),
+            'user_groups' => $userGroups,
         ];
+    }
+
+    protected function userGroups($user)
+    {
+        return $user->roles()
+            ->select('roles.id', 'roles.name', 'roles.description')
+            ->orderBy('roles.name')
+            ->get()
+            ->map(fn ($role) => [
+                'id' => $role->id,
+                'name' => $role->name,
+                'description' => $role->description,
+            ])
+            ->values();
     }
 }

@@ -24,9 +24,20 @@ class AuthController extends ExternalAuthController
         if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
             $user = User::findOrFail(Auth::user()->id);
             $linkedPartners = $this->getLinkedPartners($user);
+            $userGroups = $this->userGroups($user);
+            $primaryUserGroup = data_get($userGroups->first(), 'name');
+            $primaryUserGroupLabel = data_get($userGroups->first(), 'description');
+            $userPayload = array_merge($user->toArray(), [
+                'user_group' => $primaryUserGroup,
+                'user_group_label' => $primaryUserGroupLabel,
+                'user_groups' => $userGroups,
+            ]);
 
             return $this->successResponse('Login successful.', [
-                'user' => $user,
+                'user' => $userPayload,
+                'user_group' => $primaryUserGroup,
+                'user_group_label' => $primaryUserGroupLabel,
+                'user_groups' => $userGroups,
                 'corporate_reference' => $linkedPartners->first()['corporate_reference'] ?? null,
                 'corporate_references' => $linkedPartners->pluck('corporate_reference')->values(),
                 'partners' => $linkedPartners,
@@ -35,5 +46,19 @@ class AuthController extends ExternalAuthController
         }
 
         return $this->errorResponse('Invalid credentials.', null, 401);
+    }
+
+    protected function userGroups(User $user)
+    {
+        return $user->roles()
+            ->select('roles.id', 'roles.name', 'roles.description')
+            ->orderBy('roles.name')
+            ->get()
+            ->map(fn ($role) => [
+                'id' => $role->id,
+                'name' => $role->name,
+                'description' => $role->description,
+            ])
+            ->values();
     }
 }
