@@ -642,10 +642,10 @@ class BankApiService
             $debit_order->remarks = $remarks;
             $debit_order->save();
 
-            return [$response_code, $remarks];
+            return [$response_code, $remarks, true];
         } else {
             Log::debug("No response from NMB end");
-            return [500, 'No response from NMB endpoint.'];
+            return [500, 'No response from NMB endpoint.', false];
         }
     }
 
@@ -721,16 +721,12 @@ class BankApiService
         $response = json_decode($sanitized, true);
 
         if (!is_array($response)) {
-            $debitOrder->status = 403;
-            $debitOrder->http_response_code = $httpResponse->status();
-            $debitOrder->remarks = 'HTTP error or invalid JSON from gateway';
-            $debitOrder->save();
-
             Log::error('MandateCancellation failed: HTTP error or invalid JSON', [
                 'json_error' => json_last_error_msg(),
                 'sample'     => Str::limit($raw, 800),
             ]);
-            return [$httpResponse->status() ?: 500, 'MandateCancellation failed: HTTP error or invalid JSON', null];
+
+            return [$httpResponse->status() ?: 500, 'The bank gateway did not return a valid response. Please try again.', null, false];
         }
 
         // safely read values
@@ -804,11 +800,12 @@ class BankApiService
             $remarks = data_get($response, 'ResponseHeader.ErrorMessage') ?: 'No StatusDesc in response';
         }
 
-        // Persist shared fields (guard nulls)
-        $debitOrder->http_response_code = $statusCode ?? $httpResponse->status();
-        $debitOrder->save();
+        if ($statusCode !== null) {
+            $debitOrder->http_response_code = $statusCode;
+            $debitOrder->save();
+        }
 
-        return [$httpStatusCode, $remarks, $statusCode];
+        return [$httpStatusCode, $remarks, $statusCode, $statusCode !== null];
     }
 
     //create Otp 

@@ -315,18 +315,6 @@ class PaymentMandateWorkflowService
     private function ensureCancellationCanBeRequested(DebitOrder $debitOrder): void
     {
         $lifecycleStatus = $debitOrder->resolved_lifecycle_status;
-        $hasPendingRequest = DebitOrderRequest::query()
-            ->where('debit_order_id', $debitOrder->id)
-            ->where('request_type', 'CANCELLATION')
-            ->where('status', 'PENDING')
-            ->exists();
-
-        // if ($lifecycleStatus === DebitOrder::LIFECYCLE_CANCELLATION_REQUESTED || $hasPendingRequest) {
-        //     throw ValidationException::withMessages([
-        //         'mandate' => 'Mandate cancellation has already been requested.',
-        //     ]);
-        // }
-
         if ($lifecycleStatus === DebitOrder::LIFECYCLE_CANCELLED || (int) $debitOrder->cancelled === 1) {
             throw ValidationException::withMessages([
                 'mandate' => 'Mandate is already cancelled.',
@@ -352,22 +340,26 @@ class PaymentMandateWorkflowService
     {
         $this->ensureCancellationCanBeRequested($debitOrder);
 
+        $originalState = [
+            'cancelled' => $debitOrder->cancelled,
+            'lifecycle_status' => $debitOrder->lifecycle_status,
+            'remarks' => $debitOrder->remarks,
+        ];
+
         $debitOrder->cancellation_reason = $reason;
         $debitOrder->cancellationStartedBy = $userId;
         $debitOrder->cancellationStartedAt = now();
         $debitOrder->cancellationApprovedBy = $userId;
         $debitOrder->cancellationApprovedAt = now();
-        $debitOrder->cancelled = 0;
-        $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_CANCELLATION_REQUESTED;
         $debitOrder->save();
         $debitOrder->refresh();
 
         try {
             $response = $this->mandateActionService->cancelMandate($debitOrder);
         } catch (\Throwable $exception) {
-            $debitOrder->cancelled = 0;
-            $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_FAILED;
-            $debitOrder->remarks = 'Mandate cancellation failed: ' . $exception->getMessage();
+            $debitOrder->cancelled = $originalState['cancelled'];
+            $debitOrder->lifecycle_status = $originalState['lifecycle_status'];
+            $debitOrder->remarks = $originalState['remarks'];
             $debitOrder->save();
             $debitOrder->refresh();
 
@@ -384,7 +376,8 @@ class PaymentMandateWorkflowService
                 'channel' => $debitOrder->channel,
                 'response_code' => 500,
                 'provider_response_code' => null,
-                'success_msg' => $debitOrder->remarks,
+                'provider_responded' => false,
+                'success_msg' => 'The bank service could not be reached. The mandate status was not changed. Please try again.',
                 'lifecycle_status' => $debitOrder->lifecycle_status,
             ];
         }
@@ -402,9 +395,16 @@ class PaymentMandateWorkflowService
 
             $this->customerSmsNotificationService->queueMandateCancellation($debitOrder);
             $this->externalCallbackService->dispatchMandateStatus($debitOrder, 'MANDATE_CANCELLED');
-        } else {
+        } elseif ((bool) ($response['provider_responded'] ?? false)) {
+            $debitOrder->cancelled = 0;
             $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_FAILED;
             $debitOrder->remarks = $response['remarks'];
+            $debitOrder->save();
+            $debitOrder->refresh();
+        } else {
+            $debitOrder->cancelled = $originalState['cancelled'];
+            $debitOrder->lifecycle_status = $originalState['lifecycle_status'];
+            $debitOrder->remarks = $originalState['remarks'];
             $debitOrder->save();
             $debitOrder->refresh();
         }
@@ -414,6 +414,7 @@ class PaymentMandateWorkflowService
             'channel' => $debitOrder->channel,
             'response_code' => $response['response_code'],
             'provider_response_code' => $response['provider_response_code'] ?? null,
+            'provider_responded' => (bool) ($response['provider_responded'] ?? false),
             'success_msg' => $response['remarks'],
             'lifecycle_status' => $debitOrder->lifecycle_status,
         ];

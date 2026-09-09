@@ -11,6 +11,7 @@ use App\Services\CustomerSmsNotificationService;
 use App\Services\ExternalCallbackService;
 use App\Services\MandateActionService;
 use App\Services\PaymentMandateWorkflowService;
+use Illuminate\Validation\ValidationException;
 use Mockery;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use Tests\TestCase;
@@ -69,6 +70,73 @@ class PaymentMandateCancellationWorkflowTest extends TestCase
         $this->assertSame(0, $debitOrder->cancelled);
     }
 
+    public function test_transport_failure_preserves_current_mandate_status(): void
+    {
+        [$service, $actionService, $callbackService] = $this->workflow();
+        $debitOrder = $this->directCancellationMandate();
+
+        $actionService->shouldReceive('cancelMandate')
+            ->once()
+            ->andReturn([
+                'success' => false,
+                'response_code' => 504,
+                'provider_response_code' => null,
+                'provider_responded' => false,
+                'remarks' => 'The bank gateway did not return a valid response. Please try again.',
+            ]);
+
+        $callbackService->shouldNotReceive('dispatchMandateStatus');
+
+        $result = $service->cancel($debitOrder, 9, 'Customer request.');
+
+        $this->assertFalse($result['success']);
+        $this->assertFalse($result['provider_responded']);
+        $this->assertSame(DebitOrder::LIFECYCLE_ACTIVE, $debitOrder->lifecycle_status);
+        $this->assertSame(0, $debitOrder->cancelled);
+        $this->assertSame('Mandate active.', $debitOrder->remarks);
+    }
+
+    public function test_confirmed_provider_rejection_updates_lifecycle_to_failed(): void
+    {
+        [$service, $actionService, $callbackService] = $this->workflow();
+        $debitOrder = $this->directCancellationMandate();
+
+        $actionService->shouldReceive('cancelMandate')
+            ->once()
+            ->andReturn([
+                'success' => false,
+                'response_code' => 500,
+                'provider_response_code' => 1001,
+                'provider_responded' => true,
+                'remarks' => 'Cancellation rejected by bank.',
+            ]);
+
+        $callbackService->shouldNotReceive('dispatchMandateStatus');
+
+        $result = $service->cancel($debitOrder, 9, 'Customer request.');
+
+        $this->assertFalse($result['success']);
+        $this->assertTrue($result['provider_responded']);
+        $this->assertSame(DebitOrder::LIFECYCLE_FAILED, $debitOrder->lifecycle_status);
+        $this->assertSame(0, $debitOrder->cancelled);
+        $this->assertSame('Cancellation rejected by bank.', $debitOrder->remarks);
+    }
+
+    public function test_already_cancelled_mandate_stops_before_bank_request(): void
+    {
+        [$service, $actionService] = $this->workflow();
+        $debitOrder = $this->directCancellationMandate();
+        $debitOrder->cancelled = 1;
+        $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_CANCELLED;
+
+        $actionService->shouldNotReceive('cancelMandate');
+
+        $this->expectException(ValidationException::class);
+        $this->expectExceptionMessage('Mandate is already cancelled.');
+
+        $service->cancel($debitOrder, 9, 'Duplicate request.');
+    }
+
     private function workflow(): array
     {
         $actionService = Mockery::mock(MandateActionService::class);
@@ -87,6 +155,21 @@ class PaymentMandateCancellationWorkflowTest extends TestCase
         );
 
         return [$service, $actionService, $callbackService];
+    }
+
+    private function directCancellationMandate(): DebitOrder
+    {
+        $debitOrder = Mockery::mock(DebitOrder::class)->makePartial();
+        $debitOrder->id = 101;
+        $debitOrder->reference = 'MANDATE-101';
+        $debitOrder->channel = 'CRDB';
+        $debitOrder->cancelled = 0;
+        $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_ACTIVE;
+        $debitOrder->remarks = 'Mandate active.';
+        $debitOrder->shouldReceive('save')->andReturnTrue();
+        $debitOrder->shouldReceive('refresh')->andReturnSelf();
+
+        return $debitOrder;
     }
 
     private function cancellationRequest(): array

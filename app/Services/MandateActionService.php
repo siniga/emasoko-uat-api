@@ -142,12 +142,14 @@ class MandateActionService
             $data['mandateReferenceNumber'] = $debitOrder->reference;
 
             $arrResponse = $this->bankApi->crdbMandateCancellationRequest($data);
+            $providerResponded = (bool) ($arrResponse[3] ?? false);
 
             return [
-                'success' => (int) $arrResponse[0] < 400,
+                'success' => $providerResponded && (int) ($arrResponse[2] ?? 0) === 1000,
                 'response_code' => $arrResponse[0],
                 'remarks' => $arrResponse[1],
                 'provider_response_code' => $arrResponse[2] ?? null,
+                'provider_responded' => $providerResponded,
             ];
         } else if ($debitOrder->channel == "NMB") {
             //cancel mandate
@@ -157,12 +159,14 @@ class MandateActionService
             $payload = $this->payloadService->mandateCancellationPayload($debitOrder);
 
             $arrResponse = $this->bankApi->mandateCancellationRequest($payload);
+            $providerResponded = (bool) ($arrResponse[2] ?? false);
 
             return [
-                'success' => (int) $arrResponse[0] < 400,
+                'success' => $providerResponded && (int) $arrResponse[0] === 201,
                 'response_code' => $arrResponse[0],
                 'remarks' => $arrResponse[1],
                 'provider_response_code' => $arrResponse[0],
+                'provider_responded' => $providerResponded,
             ];
         }
 
@@ -171,6 +175,7 @@ class MandateActionService
             'response_code' => 400,
             'remarks' => 'Mandate cancellation is not supported for this payment channel.',
             'provider_response_code' => null,
+            'provider_responded' => false,
         ];
     }
 }

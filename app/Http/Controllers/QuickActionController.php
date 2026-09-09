@@ -145,6 +145,17 @@ class QuickActionController extends Controller
 
     protected function cancelMandate(DebitOrder $debitOrder, string $remarks): array
     {
+        if ($debitOrder->resolved_lifecycle_status === DebitOrder::LIFECYCLE_CANCELLED
+            || (int) $debitOrder->cancelled === 1) {
+            return $this->mandateResult(
+                $debitOrder->reference,
+                'cancellation',
+                false,
+                'Mandate is already cancelled.',
+                $debitOrder
+            );
+        }
+
         $response = $this->paymentMandateWorkflowService->cancel($debitOrder, Auth::id(), $remarks);
 
         return $this->mandateResult(
@@ -210,7 +221,10 @@ class QuickActionController extends Controller
         $user = Auth::user();
 
         abort_unless(
-            $user && ($user->hasRole('admin') || $user->hasRole('Manager') || $user->hasRole('manager')),
+            $user && collect($user->roles ?? [])
+                ->pluck('name')
+                ->intersect(['admin', 'Manager', 'manager'])
+                ->isNotEmpty(),
             403
         );
     }
