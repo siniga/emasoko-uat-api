@@ -6,6 +6,7 @@ use App\Models\DebitOrder;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Schema;
 
 class PaymentMandateQueryService
 {
@@ -21,7 +22,7 @@ class PaymentMandateQueryService
 
     public function listQuery(array $filters = [], ?User $user = null): Builder
     {
-        return $this->baseQuery($filters, $user)
+        $query = $this->baseQuery($filters, $user)
             ->with([
                 'customerAccount:id,account_name,account_number,phone,customer_id,account_id',
                 'customerAccount.customer:id,id_number',
@@ -56,11 +57,13 @@ class PaymentMandateQueryService
                 'created_at',
                 'created_by'
             );
+
+        return $this->applyOptionalMandateTypeSelects($query);
     }
 
     public function exportQuery(array $filters = [], ?User $user = null): Builder
     {
-        return $this->baseQuery($filters, $user)
+        $query = $this->baseQuery($filters, $user)
             ->with([
                 'partner:id,business_name',
                 'customerAccount:id,account_name,account_number,phone,customer_id,account_id',
@@ -96,6 +99,19 @@ class PaymentMandateQueryService
                 'created_at',
                 'created_by'
             );
+
+        return $this->applyOptionalMandateTypeSelects($query);
+    }
+
+    protected function applyOptionalMandateTypeSelects(Builder $query): Builder
+    {
+        foreach (['mandate_type', 'mandate_service', 'service_type'] as $column) {
+            if (Schema::hasColumn('debit_orders', $column)) {
+                $query->addSelect("debit_orders.{$column}");
+            }
+        }
+
+        return $query;
     }
 
     public function stats(array $filters = [], ?User $user = null): array

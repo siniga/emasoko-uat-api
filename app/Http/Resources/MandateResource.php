@@ -19,6 +19,8 @@ class MandateResource extends JsonResource
             'payment_channel' => $this->channel,
 
             'reference' => $this->reference,
+            'mandate_type' => $this->mandateType(),
+            'mandate_type_label' => $this->mandateTypeLabel(),
             "periodicity" => $this->periodicity,
             "debit_type" => $this->debit_type,
             'installment_amount' => $this->installment_amount,
@@ -37,5 +39,20 @@ class MandateResource extends JsonResource
             'contract_status' => $this->contract_status,
             'remarks' => $this->remarks_message,
         ];
+    }
+
+    protected function mandateType(): string
+    {
+        $type = $this->getAttribute('mandate_type')
+            ?: $this->getAttribute('mandate_service')
+            ?: $this->getAttribute('service_type')
+            ?: 'NORMAL';
+
+        return strtoupper((string) $type);
+    }
+
+    protected function mandateTypeLabel(): string
+    {
+        return ucwords(strtolower(str_replace('_', ' ', $this->mandateType())));
     }
 }
