@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\MobileApp\AuthController;
 use App\Http\Controllers\Api\MobileApp\DashboardController;
+use App\Http\Controllers\Api\MobileApp\LeaderboardController;
 use App\Http\Controllers\Api\MobileApp\PaymentCollectionController;
 use App\Http\Controllers\Api\MobileApp\PaymentMandateController;
 use App\Http\Controllers\Api\MobileApp\UserController;
@@ -19,6 +20,7 @@ Route::middleware('auth:api')->group(function () {
     Route::patch('notifications/{id}/read', [UserController::class, 'markNotificationAsRead']);
     Route::patch('notifications/read-all', [UserController::class, 'markAllNotificationsAsRead']);
     Route::get('dashboard', [DashboardController::class, 'index']);
+    Route::get('leaderboard', [LeaderboardController::class, 'index']);
 
 
     Route::get('sp-homepage', [PaymentMandateController::class, 'spHomepage']);

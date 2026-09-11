@@ -32,6 +32,7 @@
                         Route::is('collection-integrity.*') ||
                         request()->is('collection-integrity') ||
                         request()->is('collection-integrity/*');
+                    $leaderboardOpen = Route::is('leaderboard.*') || request()->is('leaderboard');
                     $canAccessQuickActions =
                         Auth::user() &&
                         (Auth::user()->hasRole('admin') ||
@@ -119,6 +120,15 @@
                         <a href="{{ route('bi.dashboard') }}" class="waves-effect">
                             <i class="bx bx-line-chart"></i>
                             <span>BI Dashboard</span>
+                        </a>
+                    </li>
+                @endif
+
+                @if (Auth::user()->hasAnyRole(['admin', 'Manager', 'manager', 'Company_Approver']))
+                    <li class="{{ $leaderboardOpen ? 'mm-active' : '' }}">
+                        <a href="{{ route('leaderboard.index') }}" class="waves-effect">
+                            <i class="bx bx-trophy"></i>
+                            <span>Leaderboard</span>
                         </a>
                     </li>
                 @endif

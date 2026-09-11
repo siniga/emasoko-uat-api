@@ -15,6 +15,7 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FrontPageController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\PaymentChannelController;
 use App\Http\Controllers\PaymentMandateActionController;
 use App\Http\Controllers\PaymentMandateApprovalController;
@@ -86,6 +87,7 @@ Route::middleware('auth')->group(function () {
     Route::any('dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::any('index', [DashboardController::class, 'index'])->name('index');
     Route::any('bi/dashboard', [BIController::class, 'index'])->name('bi.dashboard');
+    Route::get('leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard.index');
 
     //quick actions
     Route::get('quick-actions', [QuickActionController::class, 'index'])->name('quick-actions.index');
