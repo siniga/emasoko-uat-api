@@ -33,6 +33,7 @@
                         request()->is('collection-integrity') ||
                         request()->is('collection-integrity/*');
                     $leaderboardOpen = Route::is('leaderboard.*') || request()->is('leaderboard');
+                    $paymentCollectionsOpen = Route::is('payment-collections.*') || request()->is('payment-collections*');
                     $canAccessQuickActions =
                         Auth::user() &&
                         (Auth::user()->hasRole('admin') ||
@@ -181,6 +182,15 @@
                         <span key="t-layouts">Payment Mandate</span>
                     </a>
                 </li>
+
+                @if (Auth::user()->hasAnyRole(['admin', 'Manager', 'manager', 'Partner', 'Company_Approver', 'Company_User']))
+                    <li class="{{ $paymentCollectionsOpen ? 'mm-active' : '' }}">
+                        <a href="{{ route('payment-collections.index') }}" class="waves-effect">
+                            <i class="bx bx-money"></i>
+                            <span>Payment Collections</span>
+                        </a>
+                    </li>
+                @endif
 
                 @if (Auth::user()->hasRole(['admin']))
                     <li class="{{ $mandateApprovalsOpen ? 'mm-active' : '' }}">

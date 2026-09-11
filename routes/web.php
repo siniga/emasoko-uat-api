@@ -17,6 +17,7 @@ use App\Http\Controllers\FrontPageController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\PaymentChannelController;
+use App\Http\Controllers\PaymentCollectionListController;
 use App\Http\Controllers\PaymentMandateActionController;
 use App\Http\Controllers\PaymentMandateApprovalController;
 use App\Http\Controllers\PaymentMandateCreateController;
@@ -88,6 +89,8 @@ Route::middleware('auth')->group(function () {
     Route::any('index', [DashboardController::class, 'index'])->name('index');
     Route::any('bi/dashboard', [BIController::class, 'index'])->name('bi.dashboard');
     Route::get('leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard.index');
+    Route::get('payment-collections', [PaymentCollectionListController::class, 'index'])->name('payment-collections.index');
+    Route::get('payment-collections/export', [PaymentCollectionListController::class, 'export'])->name('payment-collections.export');
 
     //quick actions
     Route::get('quick-actions', [QuickActionController::class, 'index'])->name('quick-actions.index');
