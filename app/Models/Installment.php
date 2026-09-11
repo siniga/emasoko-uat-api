@@ -13,6 +13,18 @@ class Installment extends Model
     use HasFactory;
     protected $guarded = [];
 
+    protected $casts = [
+        'installment_amount' => 'decimal:2',
+        'min_installment_amount' => 'decimal:2',
+        'max_installment_amount' => 'decimal:2',
+        'current_balance' => 'decimal:2',
+        'outstanding_amount' => 'decimal:2',
+        'last_paid_amount' => 'decimal:2',
+        'past_due_amount' => 'decimal:2',
+        'payment_date' => 'date',
+        'effective_payment_date' => 'date',
+    ];
+
     //filter condition
     public static function filterCondition()
     {
@@ -33,6 +45,8 @@ class Installment extends Model
                         $query->where('partners.company_id', '=', $company_user->company_id);
                     });
                 });
+            } else {
+                $installments->whereRaw('1 = 0');
             }
         } else if ($user->hasRole('Company_Approver')) {
             $arr_partners = [];
@@ -47,6 +61,8 @@ class Installment extends Model
                 $installments = $installments->whereHas('debitOrder', function ($query) use ($arr_partners) {
                     $query->whereIn('debit_orders.partner_id', $arr_partners);
                 });
+            } else {
+                $installments->whereRaw('1 = 0');
             }
         } else if ($user->hasRole('Company_User')) {
             $installments = $installments->whereHas('debitOrder', function ($query) use ($user) {

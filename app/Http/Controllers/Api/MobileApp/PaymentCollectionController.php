@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\MobileApp;
 use App\Http\Controllers\Api\ExternalApp\PaymentCollectionController as ExternalPaymentCollectionController;
 use App\Http\Resources\InstallmentResource;
 use App\Models\Installment;
+use App\Models\PaymentSettlement;
 use Carbon\Carbon;
 use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Database\Eloquent\Builder;
@@ -58,32 +59,39 @@ class PaymentCollectionController extends ExternalPaymentCollectionController
         [$startAt, $endAt] = $this->periodRange($filters);
         $paidStatuses = $this->actualStatuses($filters);
 
-        $dueDateExpression = 'installments.payment_date BETWEEN ? AND ?';
-        $paidDateExpression = 'installments.effective_payment_date BETWEEN ? AND ? AND installments.status IN (' . $this->placeholders($paidStatuses) . ')';
-
-        $bindingsForPaidExpression = array_merge([$startAt, $endAt], $paidStatuses);
+        $settlementStatuses = array_filter([
+            in_array('CLOSED', $paidStatuses, true) ? PaymentSettlement::STATUS_SUCCESS : null,
+            in_array('PARTIAL_PAID', $paidStatuses, true) ? PaymentSettlement::STATUS_PARTIAL : null,
+        ]);
+        if ($settlementStatuses !== []) {
+            $settlementStatuses[] = PaymentSettlement::STATUS_REVERSED;
+        }
+        $settlementSummary = PaymentSettlement::filterCondition()
+            ->select('installment_id')
+            ->selectRaw('COALESCE(SUM(paid_amount), 0) as paid_amount')
+            ->selectRaw('COUNT(*) as payment_event_count')
+            ->whereBetween('effective_payment_date', [$startAt, $endAt])
+            ->reportable()
+            ->whereIn('normalized_status', $settlementStatuses ?: ['__NO_ACTUAL_STATUS__'])
+            ->groupBy('installment_id');
 
         $collections = Installment::filterCondition()
             ->join('debit_orders', 'debit_orders.id', '=', 'installments.debit_order_id')
             ->join('partners', 'partners.id', '=', 'debit_orders.partner_id')
-            ->where('debit_orders.approved', 1)
-            ->where('partners.approved', 1)
-            ->where(function ($query) use ($startAt, $endAt, $paidStatuses) {
-                $query->whereBetween('installments.payment_date', [$startAt, $endAt])
-                    ->orWhere(function ($paidQuery) use ($startAt, $endAt, $paidStatuses) {
-                        $paidQuery->whereBetween('installments.effective_payment_date', [$startAt, $endAt])
-                            ->whereIn('installments.status', $paidStatuses);
-                    });
-            });
+            ->leftJoinSub($settlementSummary, 'settlement_summary', function ($join) {
+                $join->on('settlement_summary.installment_id', '=', 'installments.id');
+            })
+            ->whereNotNull('settlement_summary.installment_id');
 
         $this->applyJoinedFilters($collections, $filters);
 
         $collections = $collections
             ->select('partners.uuid', 'partners.reference', 'partners.business_name as partner_name')
-            ->selectRaw("COALESCE(SUM(CASE WHEN {$dueDateExpression} THEN 1 ELSE 0 END), 0) as number_of_collection", [$startAt, $endAt])
-            ->selectRaw("COALESCE(SUM(CASE WHEN {$dueDateExpression} THEN installments.installment_amount ELSE 0 END), 0) as total_amount", [$startAt, $endAt])
-            ->selectRaw("COALESCE(SUM(CASE WHEN {$dueDateExpression} THEN installments.outstanding_amount ELSE 0 END), 0) as outstanding_amount", [$startAt, $endAt])
-            ->selectRaw("COALESCE(SUM(CASE WHEN {$paidDateExpression} THEN installments.current_balance ELSE 0 END), 0) as paid_amount", $bindingsForPaidExpression)
+            ->selectRaw('COUNT(settlement_summary.installment_id) as number_of_collection')
+            ->selectRaw('COUNT(settlement_summary.installment_id) as paid_count')
+            ->selectRaw('COALESCE(SUM(settlement_summary.payment_event_count), 0) as payment_event_count')
+            ->selectRaw('COALESCE(SUM(installments.installment_amount), 0) as total_amount')
+            ->selectRaw('COALESCE(SUM(settlement_summary.paid_amount), 0) as paid_amount')
             ->groupBy('partners.id', 'partners.uuid', 'partners.reference', 'partners.business_name')
             ->having('paid_amount', '>', 0)
             ->orderByDesc('number_of_collection')
@@ -97,9 +105,11 @@ class PaymentCollectionController extends ExternalPaymentCollectionController
                     'corporate_reference' => $row->reference,
                     'partner_uuid' => $row->uuid,
                     'partner_name' => $row->partner_name,
+                    'paid_count' => (int) $row->paid_count,
                     'number_of_collection' => (int) $row->number_of_collection,
+                    'payment_event_count' => (int) $row->payment_event_count,
                     'total_amount' => $totalAmount,
-                    'outstanding_amount' => (float) $row->outstanding_amount,
+                    'outstanding_amount' => max($totalAmount - $paidAmount, 0),
                     'paid_amount' => $paidAmount,
                     'percent' => $totalAmount > 0 ? round(($paidAmount / $totalAmount) * 100, 2) : 0,
                 ];
@@ -107,9 +117,20 @@ class PaymentCollectionController extends ExternalPaymentCollectionController
             ->values()
             ->all();
 
+        $expectedAmount = (float) array_sum(array_column($collections, 'total_amount'));
+        $paidAmount = (float) array_sum(array_column($collections, 'paid_amount'));
+        $summary = [
+            'expected_count' => (int) array_sum(array_column($collections, 'number_of_collection')),
+            'paid_count' => (int) array_sum(array_column($collections, 'paid_count')),
+            'payment_event_count' => (int) array_sum(array_column($collections, 'payment_event_count')),
+            'expected_amount' => $expectedAmount,
+            'paid_amount' => $paidAmount,
+            'outstanding_amount' => max($expectedAmount - $paidAmount, 0),
+            'success_rate' => $expectedAmount > 0 ? round(($paidAmount / $expectedAmount) * 100, 2) : 0,
+        ];
         return $this->successResponse('Actual collections fetched successfully.', [
             'collections' => $collections,
-            'summary' => $this->summaryPayload($filters),
+            'summary' => $summary,
             'filters' => $this->filterPayload($filters),
         ]);
     }

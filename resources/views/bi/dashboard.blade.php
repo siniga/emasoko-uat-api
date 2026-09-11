@@ -13,7 +13,10 @@
     <div class="row">
         <div class="col-12">
             <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                <h4 class="mb-sm-0 font-size-18">BI Dashboard : {{ $headerMeta }}</h4>
+                <div>
+                    <h4 class="mb-0 font-size-18">BI Dashboard : {{ $headerMeta }}</h4>
+                    <small class="text-muted">Data updated {{ $dataFreshAt?->format('d M Y H:i') ?? 'N/A' }}</small>
+                </div>
 
                 <div class="page-title-right">
                     <ol class="breadcrumb m-0">
@@ -101,7 +104,7 @@
 
     <div class="bi-tab-bar mb-3">
         <button type="button" class="bi-tab is-active" data-bi-tab="growth">Growth Tracker</button>
-        <button type="button" class="bi-tab" data-bi-tab="reconciliation">Subscriber Reconciliation</button>
+        <button type="button" class="bi-tab" data-bi-tab="reconciliation">Installment Reconciliation</button>
     </div>
 
     <div class="bi-pane is-active" data-bi-pane="growth">
@@ -116,7 +119,7 @@
 
             <div class="col-md-3">
                 <div class="detail-summary shadow h-96 py-2">
-                    <div class="detail-summary__label text-muted">Active Mandates</div>
+                    <div class="detail-summary__label text-muted">Approved Mandates</div>
                     <div class="detail-summary__value text-success">
                         {{ number_format($growthSummary['active_mandate_count']) }}</div>
                     <div class="detail-summary__meta">Value {{ number_format($growthSummary['active_mandate_value']) }} TZS
@@ -134,7 +137,7 @@
 
             <div class="col-md-3">
                 <div class="detail-summary shadow h-96 py-2">
-                    <div class="detail-summary__label text-muted">Collected Amount</div>
+                    <div class="detail-summary__label text-muted" title="Net posted settlement cash received in the selected period.">Cash Received</div>
                     <div class="detail-summary__value text-success">{{ number_format($growthSummary['period_collected']) }}
                     </div>
                     <div class="detail-summary__meta">{{ number_format($growthSummary['period_success_rate'], 2) }}%
@@ -224,11 +227,11 @@
     <div class="bi-pane" data-bi-pane="reconciliation">
         <div class="bi-recon-kpi-grid">
             <div class="detail-summary shadow h-96 py-2">
-                <div class="detail-summary__label text-muted">Total mandates</div>
+                <div class="detail-summary__label text-muted">Scheduled Installments</div>
                 <div class="detail-summary__value text-primary">{{ number_format($reconciliationSummary['total_count']) }}</div>
             </div>
             <div class="detail-summary shadow h-96 py-2">
-                <div class="detail-summary__label text-muted">Collected</div>
+                <div class="detail-summary__label text-muted">Paid Schedule Lines</div>
                 <div class="detail-summary__value text-success">{{ number_format($reconciliationSummary['collected_count']) }}</div>
                 <div class="detail-summary__sub">
                 {{-- {{ number_format($reconciliationSummary['collected_percent'], 1) }}% · --}}
@@ -255,7 +258,7 @@
                 <div class="dashboard-report-panel__head">
                     <div>
                         <div class="card-title">
-                            {{ $selectedSubscriberName ?: 'All Subscribers' }} — {{ $headerMeta }} reconciliation detail
+                            {{ $selectedSubscriberName ?: 'All Service Providers' }} - {{ $headerMeta }} scheduled-installment reconciliation
                         </div>
                     </div>
                 </div>

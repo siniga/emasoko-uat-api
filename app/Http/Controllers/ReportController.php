@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Account;
 use App\Models\AccountType;
 use App\Models\Partner;
+use App\Services\DashboardReportingQueryService;
 use App\Services\Reports\ReportExportService;
 use App\Services\Reports\ReportQueryService;
 use Illuminate\Http\Request;
@@ -13,7 +14,8 @@ class ReportController extends Controller
 {
     public function __construct(
         protected ReportQueryService $reportQueryService,
-        protected ReportExportService $reportExportService
+        protected ReportExportService $reportExportService,
+        protected DashboardReportingQueryService $reporting
     ) {
         $this->middleware('auth');
     }
@@ -67,6 +69,7 @@ class ReportController extends Controller
         $partners = Partner::filterCondition()->where('approved', '=', 1)->get();
         $mandateStatusOptions = $this->reportQueryService->mandateStatusOptions();
         $collectionStatusOptions = $this->reportQueryService->collectionStatusOptions();
+        $dataFreshAt = $this->reporting->lastUpdatedAt();
 
         return view('reports.index', compact(
             'title',
@@ -77,7 +80,8 @@ class ReportController extends Controller
             'reportDefinitions',
             'mandateStatusOptions',
             'collectionStatusOptions',
-            'reportPreview'
+            'reportPreview',
+            'dataFreshAt'
         ));
     }
 

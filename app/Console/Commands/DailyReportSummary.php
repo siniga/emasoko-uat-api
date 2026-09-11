@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Jobs\SendEmailJob;
 use App\Models\DebitOrder;
 use App\Models\Installment;
+use App\Models\PaymentSettlement;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
@@ -19,7 +20,6 @@ class DailyReportSummary extends Command
         DebitOrder::SUMMARY_APPROVED,
         DebitOrder::SUMMARY_FAILED,
     ];
-    private const PAID_INSTALLMENT_STATUSES = ['CLOSED', 'PARTIAL_PAID'];
 
     protected $signature = 'send:daily-report-summary
                             {--date= : Report date in YYYY-MM-DD format (defaults to today)}';
@@ -155,11 +155,11 @@ class DailyReportSummary extends Command
             ->where('payment_date', '<', $periodEnd)
             ->sum('installment_amount');
 
-        $actual = $eligibleInstallments()
-            ->whereIn('status', self::PAID_INSTALLMENT_STATUSES)
+        $actual = PaymentSettlement::query()
+            ->reportable()
             ->where('effective_payment_date', '>=', $periodStart)
             ->where('effective_payment_date', '<', $periodEnd)
-            ->sum('current_balance');
+            ->sum('paid_amount');
 
         return [
             'expected' => (float) $expected,

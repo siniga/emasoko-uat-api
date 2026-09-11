@@ -7,6 +7,8 @@ use App\Models\DebitOrder;
 use App\Models\Installment;
 use App\Models\PaymentSettlement;
 use App\Models\Partner;
+use App\Models\User;
+use App\Services\DashboardReportingQueryService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -14,13 +16,16 @@ use Illuminate\Support\Facades\DB;
 
 class BIController extends Controller
 {
-    public function __construct()
+    protected User $authenticatedUser;
+
+    public function __construct(private DashboardReportingQueryService $reporting)
     {
         $this->middleware('auth');
     }
 
     public function index(Request $request)
     {
+        $this->authenticatedUser = $request->user();
         $title = 'BI Dashboard';
         $today = Carbon::today();
         $selectedYear = $request->filled('year') ? (int) $request->input('year') : (int) $today->format('Y');
@@ -39,26 +44,46 @@ class BIController extends Controller
             ->orderBy('business_name')
             ->get(['id', 'business_name']);
 
-        $mandates = $this->buildMandateSummary($channel, $selectedYear);
-        $periodCollection = $this->periodCollectionStats($periodStart, $periodEnd, $channel);
-        $collectionSeries = $this->buildCollectionSeries($selectedYear, $channel);
+        $mandates = $this->buildMandateSummary($channel, $periodStart, $periodEnd);
+        $cachedReporting = $this->reporting->remember(
+            $this->authenticatedUser,
+            'bi-collections',
+            ['year' => $selectedYear, 'month' => $selectedMonth, 'channel' => $channel],
+            function () use ($periodStart, $periodEnd, $selectedYear, $channel) {
+                $periodCollection = $this->periodCollectionStats($periodStart, $periodEnd, $channel);
+                $collectionSeries = $this->buildCollectionSeries($selectedYear, $channel);
+
+                return [
+                    'period_collection' => $periodCollection,
+                    'collection_series' => $collectionSeries,
+                    'success_rate_series' => $this->buildSuccessRateSeries($collectionSeries),
+                    'channel_performance' => $this->buildChannelPerformance($periodStart, $periodEnd, $channel),
+                    'partner_attention' => $this->buildPartnerAttentionData($channel, $periodStart, $periodEnd),
+                ];
+            }
+        );
+        $periodCollection = $cachedReporting['period_collection'];
+        $collectionSeries = $cachedReporting['collection_series'];
+        $successRateSeries = $cachedReporting['success_rate_series'];
+        $channelPerformance = $cachedReporting['channel_performance'];
+        $partnerAttention = $cachedReporting['partner_attention'];
         $mandateValueSeries = $this->buildMandateValueSeries($selectedYear, $channel);
         $newMandatesSeries = $this->buildNewMandatesSeries($selectedYear, $channel);
-        $successRateSeries = $this->buildSuccessRateSeries($collectionSeries);
-        $channelMix = $this->buildChannelMix($channel);
-        $channelPerformance = $this->buildChannelPerformance($periodStart, $periodEnd, $channel);
+        $channelMix = $this->buildChannelMix($channel, $periodStart, $periodEnd);
         $statusBreakdown = $this->buildStatusBreakdown($periodStart, $periodEnd, $channel);
-        $partnerAttention = $this->buildPartnerAttentionData($channel, $periodStart, $periodEnd);
 
         $overdue = $this->buildOverdueStats($today, $channel);
         $failedPeriod = $this->buildFailedPeriodStats($periodStart, $periodEnd, $channel);
         $partialPaid = $this->buildPartialPaidStats($channel);
         $upcoming = $this->buildUpcomingStats($today, $channel);
 
+        $approvedPartners = Partner::filterCondition()->where('approved', 1)
+            ->when($periodStart && $periodEnd, fn ($query) => $query->whereBetween('partners.created_at', [$periodStart, $periodEnd]));
+        $approvedMandates = $this->approvedMandatesQuery($channel, $periodStart, $periodEnd);
         $growthSummary = [
-            'partners_count' => (int) Partner::filterCondition()->where('approved', 1)->count(),
-            'active_mandate_count' => $this->activeMandatesQuery($channel)->count(),
-            'active_mandate_value' => (float) $this->activeMandatesQuery($channel)->sum('debit_orders.total_amount'),
+            'partners_count' => (int) (clone $approvedPartners)->count(),
+            'active_mandate_count' => (clone $approvedMandates)->count(),
+            'active_mandate_value' => (float) (clone $approvedMandates)->sum('debit_orders.total_amount'),
             'period_expected' => (float) ($periodCollection->expected_amount ?? 0),
             'period_collected' => (float) ($periodCollection->collected_amount ?? 0),
             'period_success_rate' => $this->percentage($periodCollection->collected_amount ?? 0, $periodCollection->expected_amount ?? 0),
@@ -102,7 +127,8 @@ class BIController extends Controller
             'recon_status' => $selectedReconciliationStatus,
         ];
 
-        $highestSingleMandate = (float) $this->baseMandateQuery($channel)->max('debit_orders.total_amount');
+        $highestSingleMandate = (float) $this->periodMandatesQuery($channel, $periodStart, $periodEnd)
+            ->max('debit_orders.total_amount');
         $pipelineTotal = (float) $mandates['total_value'];
         $mandatePipeline = [
             [
@@ -200,6 +226,7 @@ class BIController extends Controller
 
         $selectedChannelLabel = optional($paymentChannels->firstWhere('slug', $channel))->name ?? $channel;
         $headerMeta = $this->buildHeaderMeta($selectedYear, $selectedMonth, $selectedChannelLabel);
+        $dataFreshAt = $this->reporting->lastUpdatedAt();
 
         return view('bi.dashboard', compact(
             'title',
@@ -217,7 +244,8 @@ class BIController extends Controller
             'reconciliationDetail',
             'channelPerformance',
             'partnerAttention',
-            'chartPayload'
+            'chartPayload',
+            'dataFreshAt'
         ));
     }
 
@@ -253,7 +281,7 @@ class BIController extends Controller
 
     private function baseMandateQuery(?string $channel = null): Builder
     {
-        return DebitOrder::filterCondition()
+        return DebitOrder::filterCondition(true)
             ->whereHas('partner', function ($query) {
                 $query->where('partners.approved', 1);
             })
@@ -262,13 +290,16 @@ class BIController extends Controller
             });
     }
 
-    private function activeMandatesQuery(?string $channel = null): Builder
+    private function periodMandatesQuery(?string $channel, ?Carbon $start, ?Carbon $end): Builder
     {
         return $this->baseMandateQuery($channel)
-            ->where('debit_orders.approved', 1)
-            ->where('debit_orders.status', 240)
-            ->where('debit_orders.deleted', 0)
-            ->where('debit_orders.contract_status', 'OPEN');
+            ->when($start && $end, fn ($query) => $query->whereBetween('debit_orders.created_at', [$start, $end]));
+    }
+
+    private function approvedMandatesQuery(?string $channel, ?Carbon $start, ?Carbon $end): Builder
+    {
+        return $this->periodMandatesQuery($channel, $start, $end)
+            ->where('debit_orders.approved', 1);
     }
 
     private function operationalInstallments(?string $channel, bool $openContractsOnly): Builder
@@ -290,10 +321,16 @@ class BIController extends Controller
             });
     }
 
-    private function buildMandateSummary(?string $channel, ?int $year = null): array
+    private function buildMandateSummary(?string $channel, ?Carbon $start, ?Carbon $end): array
     {
         $approvedStatuses = [0, 1, 2];
-        $debitOrders = DebitOrder::mandateApprovalStats($channel, $year);
+        $debitOrders = $this->periodMandatesQuery($channel, $start, $end)
+            ->whereIn('debit_orders.approved', $approvedStatuses)
+            ->select('debit_orders.approved')
+            ->selectRaw('COUNT(*) as number_of_mandate')
+            ->selectRaw('COALESCE(SUM(debit_orders.total_amount), 0) as total_amount')
+            ->groupBy('debit_orders.approved')
+            ->get();
 
         $mandates = collect($approvedStatuses)->mapWithKeys(function ($status) use ($debitOrders) {
             $order = $debitOrders->firstWhere('approved', $status);
@@ -320,62 +357,36 @@ class BIController extends Controller
 
     private function periodCollectionStats(?Carbon $start, ?Carbon $end, ?string $channel): object
     {
-        $query = Installment::filterCondition()
-            ->when($channel, function ($query) use ($channel) {
-                $query->whereHas('debitOrder', function ($debitOrderQuery) use ($channel) {
-                    $debitOrderQuery->where('debit_orders.channel', $channel);
-                });
-            });
+        $filters = ['channel' => $channel];
+        $expected = $this->reporting->expectedCollections($this->authenticatedUser, $filters);
+        $collected = $this->reporting->paymentCollections($this->authenticatedUser, $filters);
 
         if ($start && $end) {
-            $query->selectRaw(
-                'COALESCE(SUM(CASE WHEN installments.payment_date BETWEEN ? AND ? THEN installments.installment_amount ELSE 0 END), 0) as expected_amount',
-                [$start->toDateString(), $end->toDateString()]
-            )->selectRaw(
-                "COALESCE(SUM(CASE WHEN installments.effective_payment_date BETWEEN ? AND ? AND installments.status IN ('CLOSED', 'PARTIAL_PAID') THEN installments.current_balance ELSE 0 END), 0) as collected_amount",
-                [$start->toDateString(), $end->toDateString()]
-            );
-        } else {
-            $query->selectRaw('COALESCE(SUM(installments.installment_amount), 0) as expected_amount')
-                ->selectRaw("COALESCE(SUM(CASE WHEN installments.status IN ('CLOSED', 'PARTIAL_PAID') THEN installments.current_balance ELSE 0 END), 0) as collected_amount");
+            $expected->whereBetween('payment_date', [$start, $end]);
+            $collected->whereBetween('effective_payment_date', [$start, $end]);
         }
 
-        return $query->first();
+        return (object) [
+            'expected_amount' => (float) $expected->sum('installment_amount'),
+            'collected_amount' => (float) $collected->sum('paid_amount'),
+        ];
     }
 
     private function buildCollectionSeries(?int $year, ?string $channel): array
     {
-        $expectedByMonth = Installment::filterCondition()
-            ->select([
-                DB::raw('MONTH(installments.payment_date) as month_number'),
-                DB::raw('COALESCE(SUM(installments.installment_amount), 0) as total_amount'),
-            ])
-            ->when($year, function ($query) use ($year) {
-                $query->whereYear('installments.payment_date', $year);
-            })
-            ->when($channel, function ($query) use ($channel) {
-                $query->whereHas('debitOrder', function ($debitOrderQuery) use ($channel) {
-                    $debitOrderQuery->where('debit_orders.channel', $channel);
-                });
-            })
-            ->groupBy(DB::raw('MONTH(installments.payment_date)'))
+        $filters = ['channel' => $channel];
+        $expectedByMonth = $this->reporting->expectedCollections($this->authenticatedUser, $filters)
+            ->select('expected_month as month_number')
+            ->selectRaw('COALESCE(SUM(installment_amount), 0) as total_amount')
+            ->when($year, fn ($query, $value) => $query->where('expected_year', $value))
+            ->groupBy('expected_month')
             ->pluck('total_amount', 'month_number');
 
-        $paidByMonth = Installment::filterCondition()
-            ->select([
-                DB::raw('MONTH(installments.effective_payment_date) as month_number'),
-                DB::raw('COALESCE(SUM(installments.current_balance), 0) as paid_amount'),
-            ])
-            ->when($year, function ($query) use ($year) {
-                $query->whereYear('installments.effective_payment_date', $year);
-            })
-            ->whereIn('installments.status', ['CLOSED', 'PARTIAL_PAID'])
-            ->when($channel, function ($query) use ($channel) {
-                $query->whereHas('debitOrder', function ($debitOrderQuery) use ($channel) {
-                    $debitOrderQuery->where('debit_orders.channel', $channel);
-                });
-            })
-            ->groupBy(DB::raw('MONTH(installments.effective_payment_date)'))
+        $paidByMonth = $this->reporting->paymentCollections($this->authenticatedUser, $filters)
+            ->select('collected_month as month_number')
+            ->selectRaw('COALESCE(SUM(paid_amount), 0) as paid_amount')
+            ->when($year, fn ($query, $value) => $query->where('collected_year', $value))
+            ->groupBy('collected_month')
             ->pluck('paid_amount', 'month_number');
 
         $rows = [];
@@ -474,9 +485,9 @@ class BIController extends Controller
         return $rows;
     }
 
-    private function buildChannelMix(?string $channel): array
+    private function buildChannelMix(?string $channel, ?Carbon $start, ?Carbon $end): array
     {
-        return $this->activeMandatesQuery($channel)
+        return $this->approvedMandatesQuery($channel, $start, $end)
             ->leftJoin('customer_accounts', 'customer_accounts.id', '=', 'debit_orders.customer_account_id')
             ->leftJoin('accounts', 'accounts.id', '=', 'customer_accounts.account_id')
             ->selectRaw("COALESCE(accounts.name, 'Unassigned') as label")
@@ -497,41 +508,40 @@ class BIController extends Controller
 
     private function buildChannelPerformance(?Carbon $start, ?Carbon $end, ?string $channel)
     {
-        $query = Installment::filterCondition()
-            ->join('debit_orders', 'debit_orders.id', '=', 'installments.debit_order_id')
-            ->join('partners', 'partners.id', '=', 'debit_orders.partner_id')
-            ->leftJoin('customer_accounts', 'customer_accounts.id', '=', 'debit_orders.customer_account_id')
-            ->leftJoin('accounts', 'accounts.id', '=', 'customer_accounts.account_id')
-            ->when($channel, function ($query) use ($channel) {
-                $query->where('debit_orders.channel', $channel);
-            })
-            ->selectRaw("COALESCE(accounts.name, 'Unassigned') as label");
+        $filters = ['channel' => $channel];
+        $expectedQuery = $this->reporting->expectedCollections($this->authenticatedUser, $filters);
+        $collectedQuery = $this->reporting->paymentCollections($this->authenticatedUser, $filters);
 
         if ($start && $end) {
-            $query->selectRaw(
-                'COALESCE(SUM(CASE WHEN installments.payment_date BETWEEN ? AND ? THEN installments.installment_amount ELSE 0 END), 0) as expected_amount',
-                [$start->toDateString(), $end->toDateString()]
-            )->selectRaw(
-                "COALESCE(SUM(CASE WHEN installments.effective_payment_date BETWEEN ? AND ? AND installments.status IN ('CLOSED', 'PARTIAL_PAID') THEN installments.current_balance ELSE 0 END), 0) as collected_amount",
-                [$start->toDateString(), $end->toDateString()]
-            );
-        } else {
-            $query->selectRaw('COALESCE(SUM(installments.installment_amount), 0) as expected_amount')
-                ->selectRaw("COALESCE(SUM(CASE WHEN installments.status IN ('CLOSED', 'PARTIAL_PAID') THEN installments.current_balance ELSE 0 END), 0) as collected_amount");
+            $expectedQuery->whereBetween('payment_date', [$start, $end]);
+            $collectedQuery->whereBetween('effective_payment_date', [$start, $end]);
         }
 
-        return $query
-            ->groupBy('accounts.name')
+        $expected = $expectedQuery
+            ->selectRaw("COALESCE(channel_name, 'Unassigned') as label")
+            ->selectRaw('COALESCE(SUM(installment_amount), 0) as expected_amount')
+            ->groupBy('channel_name')
             ->get()
-            ->map(function ($row) {
-                $expected = (float) $row->expected_amount;
-                $collected = (float) $row->collected_amount;
+            ->keyBy('label');
+        $collected = $collectedQuery
+            ->selectRaw("COALESCE(channel_name, 'Unassigned') as label")
+            ->selectRaw('COALESCE(SUM(paid_amount), 0) as collected_amount')
+            ->groupBy('channel_name')
+            ->get()
+            ->keyBy('label');
+
+        return $expected->keys()
+            ->merge($collected->keys())
+            ->unique()
+            ->map(function ($label) use ($expected, $collected) {
+                $expectedAmount = (float) ($expected->get($label)->expected_amount ?? 0);
+                $collectedAmount = (float) ($collected->get($label)->collected_amount ?? 0);
 
                 return [
-                    'label' => $row->label,
-                    'expected_amount' => $expected,
-                    'collected_amount' => $collected,
-                    'success_rate' => $this->percentage($collected, $expected),
+                    'label' => $label,
+                    'expected_amount' => $expectedAmount,
+                    'collected_amount' => $collectedAmount,
+                    'success_rate' => $this->percentage($collectedAmount, $expectedAmount),
                 ];
             })
             ->sortByDesc('expected_amount')
@@ -574,46 +584,48 @@ class BIController extends Controller
 
     private function buildPartnerAttentionData(?string $channel, ?Carbon $start = null, ?Carbon $end = null): array
     {
-        return Installment::filterCondition()
-            ->join('debit_orders', 'debit_orders.id', '=', 'installments.debit_order_id')
-            ->join('partners', 'partners.id', '=', 'debit_orders.partner_id')
-            ->where('partners.approved', 1)
-            ->where('debit_orders.approved', 1)
-            ->where('debit_orders.deleted', 0)
-            ->when($start && $end, function ($query) use ($start, $end) {
-                $query->where(function ($innerQuery) use ($start, $end) {
-                    $innerQuery->whereBetween('installments.payment_date', [$start->toDateString(), $end->toDateString()])
-                        ->orWhereBetween('installments.effective_payment_date', [$start->toDateString(), $end->toDateString()]);
-                });
-            })
-            ->when($channel, function ($query) use ($channel) {
-                $query->where('debit_orders.channel', $channel);
-            })
-            ->select('partners.id', 'partners.uuid')
-            ->selectRaw('COALESCE(partners.business_name, ?) as partner_name', ['Unknown'])
-            ->selectRaw('COALESCE(SUM(installments.installment_amount), 0) as expected_amount')
-            ->selectRaw("COALESCE(SUM(CASE WHEN installments.status IN ('CLOSED', 'PARTIAL_PAID') THEN installments.current_balance ELSE 0 END), 0) as collected_amount")
-            ->selectRaw('COALESCE(SUM(installments.outstanding_amount), 0) as outstanding_amount')
-            ->selectRaw('COUNT(*) as number_of_collection')
-            ->groupBy('partners.id', 'partners.uuid', 'partners.business_name')
+        $filters = ['channel' => $channel];
+        $expectedQuery = $this->reporting->expectedCollections($this->authenticatedUser, $filters);
+        $collectedQuery = $this->reporting->paymentCollections($this->authenticatedUser, $filters);
+
+        if ($start && $end) {
+            $expectedQuery->whereBetween('payment_date', [$start, $end]);
+            $collectedQuery->whereBetween('effective_payment_date', [$start, $end]);
+        }
+
+        $expected = $expectedQuery
+            ->select('partner_id', 'partner_uuid', 'partner_name')
+            ->selectRaw('COALESCE(SUM(installment_amount), 0) as expected_amount')
+            ->selectRaw('COUNT(installment_id) as number_of_collection')
+            ->groupBy('partner_id', 'partner_uuid', 'partner_name')
             ->get()
-            ->map(function ($row) {
-                $expected = (float) $row->expected_amount;
-                $collected = (float) $row->collected_amount;
+            ->keyBy('partner_id');
+        $collected = $collectedQuery
+            ->select('partner_id')
+            ->selectRaw('COALESCE(SUM(paid_amount), 0) as collected_amount')
+            ->groupBy('partner_id')
+            ->get()
+            ->keyBy('partner_id');
+
+        return $expected
+            ->map(function ($row) use ($collected) {
+                $expectedAmount = (float) $row->expected_amount;
+                $collectedAmount = (float) ($collected->get($row->partner_id)->collected_amount ?? 0);
 
                 return [
-                    'uuid' => $row->uuid,
+                    'uuid' => $row->partner_uuid,
                     'partner_name' => $row->partner_name,
-                    'expected_amount' => $expected,
-                    'collected_amount' => $collected,
-                    'outstanding_amount' => (float) $row->outstanding_amount,
+                    'expected_amount' => $expectedAmount,
+                    'collected_amount' => $collectedAmount,
+                    'outstanding_amount' => max($expectedAmount - $collectedAmount, 0),
                     'number_of_collection' => (int) $row->number_of_collection,
-                    'rate' => $this->percentage($collected, $expected),
+                    'rate' => $this->percentage($collectedAmount, $expectedAmount),
                 ];
             })
-            ->filter(fn ($item) => $item['expected_amount'] > 0)
-            ->sortBy('rate')
-            ->sortByDesc('outstanding_amount')
+            ->sortBy([
+                ['rate', 'asc'],
+                ['outstanding_amount', 'desc'],
+            ])
             ->take(8)
             ->values()
             ->all();
@@ -623,8 +635,10 @@ class BIController extends Controller
     {
         $settlementSummary = PaymentSettlement::query()
             ->select('installment_id')
-            ->selectRaw("MAX(CASE WHEN reconciliation_status = 'POSTED' OR applied_to_balances = 1 THEN 1 ELSE 0 END) as is_matched")
+            ->selectRaw('1 as is_matched')
             ->selectRaw('MAX(payment_reference) as payment_reference')
+            ->selectRaw('COALESCE(SUM(paid_amount), 0) as collected_amount')
+            ->reportable()
             ->groupBy('installment_id');
 
         return Installment::filterCondition()
@@ -637,7 +651,6 @@ class BIController extends Controller
             })
             ->where('partners.approved', 1)
             ->where('debit_orders.approved', 1)
-            ->where('debit_orders.deleted', 0)
             ->when($start && $end, function ($query) use ($start, $end) {
                 $query->whereBetween('installments.payment_date', [$start->toDateString(), $end->toDateString()]);
             })
@@ -653,9 +666,13 @@ class BIController extends Controller
     {
         return $query->when($status, function ($innerQuery) use ($status) {
             return match ($status) {
-                'COLLECTED' => $innerQuery->whereIn('installments.status', ['CLOSED', 'PARTIAL_PAID']),
-                'FAILED' => $innerQuery->whereIn('installments.status', ['FAILED', 'FUNDSCHECK']),
-                'PENDING' => $innerQuery->where('installments.status', 'OPEN'),
+                'COLLECTED' => $innerQuery->where('settlement_summary.is_matched', 1),
+                'FAILED' => $innerQuery
+                    ->whereNull('settlement_summary.is_matched')
+                    ->whereIn('installments.status', ['FAILED', 'FUNDSCHECK']),
+                'PENDING' => $innerQuery
+                    ->whereNull('settlement_summary.is_matched')
+                    ->where('installments.status', 'OPEN'),
                 default => $innerQuery,
             };
         });
@@ -665,12 +682,12 @@ class BIController extends Controller
     {
         $row = $this->reconciliationBaseQuery($start, $end, $channel, $subscriberId)
             ->selectRaw('COUNT(*) as total_count')
-            ->selectRaw("SUM(CASE WHEN installments.status IN ('CLOSED', 'PARTIAL_PAID') THEN 1 ELSE 0 END) as collected_count")
-            ->selectRaw("SUM(CASE WHEN installments.status IN ('FAILED', 'FUNDSCHECK') THEN 1 ELSE 0 END) as failed_count")
-            ->selectRaw("SUM(CASE WHEN installments.status = 'OPEN' THEN 1 ELSE 0 END) as pending_count")
-            ->selectRaw("COALESCE(SUM(CASE WHEN installments.status IN ('CLOSED', 'PARTIAL_PAID') THEN installments.current_balance ELSE 0 END), 0) as collected_amount")
-            ->selectRaw("COALESCE(SUM(CASE WHEN installments.status IN ('FAILED', 'FUNDSCHECK') THEN installments.installment_amount ELSE 0 END), 0) as failed_amount")
-            ->selectRaw("COALESCE(SUM(CASE WHEN installments.status = 'OPEN' THEN installments.outstanding_amount ELSE installments.installment_amount END), 0) as pending_amount")
+            ->selectRaw('SUM(CASE WHEN COALESCE(settlement_summary.is_matched, 0) = 1 THEN 1 ELSE 0 END) as collected_count')
+            ->selectRaw("SUM(CASE WHEN settlement_summary.is_matched IS NULL AND installments.status IN ('FAILED', 'FUNDSCHECK') THEN 1 ELSE 0 END) as failed_count")
+            ->selectRaw("SUM(CASE WHEN settlement_summary.is_matched IS NULL AND installments.status = 'OPEN' THEN 1 ELSE 0 END) as pending_count")
+            ->selectRaw('COALESCE(SUM(LEAST(GREATEST(settlement_summary.collected_amount, 0), installments.installment_amount)), 0) as collected_amount')
+            ->selectRaw("COALESCE(SUM(CASE WHEN settlement_summary.is_matched IS NULL AND installments.status IN ('FAILED', 'FUNDSCHECK') THEN installments.outstanding_amount ELSE 0 END), 0) as failed_amount")
+            ->selectRaw("COALESCE(SUM(CASE WHEN settlement_summary.is_matched IS NULL AND installments.status = 'OPEN' THEN installments.outstanding_amount ELSE 0 END), 0) as pending_amount")
             ->selectRaw("SUM(CASE WHEN COALESCE(settlement_summary.is_matched, 0) = 0 THEN 1 ELSE 0 END) as unmatched_count")
             ->selectRaw("SUM(CASE WHEN COALESCE(settlement_summary.is_matched, 0) = 1 THEN 1 ELSE 0 END) as matched_count")
             ->first();
@@ -712,12 +729,12 @@ class BIController extends Controller
             ->selectRaw("COALESCE(debit_orders.crdb_reference, debit_orders.crdb_reference, debit_orders.reference) as loan_reference")
             ->addSelect([
                 'installments.installment_amount',
-                'installments.current_balance',
                 'installments.payment_date',
                 'installments.status',
                 'debit_orders.reference as emakato_reference',
                 'debit_orders.channel',
                 'partners.business_name as subscriber_name',
+                DB::raw('LEAST(GREATEST(COALESCE(settlement_summary.collected_amount, 0), 0), installments.installment_amount) as settled_amount'),
                 DB::raw('COALESCE(settlement_summary.payment_reference, "-") as statement_reference'),
                 DB::raw('COALESCE(settlement_summary.is_matched, 0) as statement_matched'),
             ])
@@ -725,17 +742,23 @@ class BIController extends Controller
             ->limit(150)
             ->get()
             ->map(function ($row) {
+                $status = $row->status;
+
+                if ((int) $row->statement_matched === 1) {
+                    $status = (float) $row->settled_amount >= (float) $row->installment_amount ? 'CLOSED' : 'PARTIAL_PAID';
+                }
+
                 return [
                     'borrower_name' => $row->borrower_name,
                     'national_id' => $row->national_id,
                     'loan_reference' => $row->loan_reference,
                     'scheduled_amount' => (float) $row->installment_amount,
-                    'collected_amount' => in_array($row->status, ['CLOSED', 'PARTIAL_PAID'], true) ? (float) $row->current_balance : 0,
+                    'collected_amount' => (float) $row->settled_amount,
                     'payment_date' => $row->payment_date,
                     'channel' => $row->channel,
                     'emakato_reference' => $row->emakato_reference,
                     'subscriber_name' => $row->subscriber_name,
-                    'status' => $row->status,
+                    'status' => $status,
                     'statement_reference' => $row->statement_reference,
                     'statement_matched' => (int) $row->statement_matched === 1,
                 ];

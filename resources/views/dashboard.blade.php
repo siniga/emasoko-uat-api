@@ -12,7 +12,10 @@
     <div class="row">
         <div class="col-12">
             <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                <h4 class="mb-sm-0 font-size-18">Summaries : {{ request('channel') ?? 'All Channels' }}</h4>
+                <div>
+                    <h4 class="mb-0 font-size-18">Summaries : {{ request('channel') ?? 'All Channels' }}</h4>
+                    <small class="text-muted">Data updated {{ $dataFreshAt?->format('d M Y H:i') ?? 'N/A' }}</small>
+                </div>
 
                 <div class="page-title-right">
                     <ol class="breadcrumb m-0">
@@ -103,7 +106,7 @@
         <div class="col-md-3">
             <a href="{{ route('collections.expected-monthly') }}">
                 <div class="detail-summary shadow h-96 py-2">
-                    <div class="detail-summary__label text-muted">Expected Collection - {{ $stats['month'] }}</div>
+                    <div class="detail-summary__label text-muted" title="Installments scheduled in this month.">Expected Collection - {{ $stats['month'] }}</div>
                     <div class="detail-summary__split">
                         <div class="detail-summary__metric">
                             <div class="detail-summary__value text-primary">
@@ -120,7 +123,7 @@
         <div class="col-md-3">
             <a href="{{ route('collections.actual-monthly') }}">
                 <div class="detail-summary shadow h-96 py-2">
-                    <div class="detail-summary__label text-muted">Actual Collection - {{ $stats['month'] }}</div>
+                    <div class="detail-summary__label text-muted" title="Net posted settlement cash received this month.">Actual Collection - {{ $stats['month'] }}</div>
                     <div class="detail-summary__split">
                         <div class="detail-summary__metric">
                             <div class="detail-summary__value text-success">{{ number_format($stats['this_month_paid']) }}
@@ -304,8 +307,8 @@
                     <div class="dashboard-report-panel__head">
                         <div>
                             <h4 class="card-title">Number of Mandates Posted vs Deducted</h4>
-                            <p class="dashboard-report-panel__hint">Collected mandates against the remaining gap for
-                                each month.</p>
+                            <p class="dashboard-report-panel__hint">Unique mandates sent for collection and mandates
+                                successfully deducted each month.</p>
                         </div>
 
                         <div>

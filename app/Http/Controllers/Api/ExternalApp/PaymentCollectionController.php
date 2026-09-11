@@ -7,12 +7,14 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\InstallmentResource;
 use App\Models\DebitOrder;
 use App\Models\Installment;
+use App\Models\PaymentSettlement;
 use Dedoc\Scramble\Attributes\BodyParameter;
 use Dedoc\Scramble\Attributes\Endpoint;
 use Dedoc\Scramble\Attributes\Group;
 use Dedoc\Scramble\Attributes\Response;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 #[Group('Payment Collections', description: 'APIs for viewing and filtering payment collections.', weight: 3)]
@@ -187,48 +189,48 @@ class PaymentCollectionController extends Controller
     }}')]
     public function actualCollections(Request $request): JsonResponse
     {
-        $current_year = (int) $request->input('year', date('Y'));
-        $current_month = (int) $request->input('month', date('m'));
+        $year = (int) $request->input('year', date('Y'));
+        $month = (int) $request->input('month', date('m'));
+        $authorizedInstallments = Installment::filterCondition()->select('installments.id');
 
-        $dueDateExpression = 'MONTH(installments.payment_date) = ? AND YEAR(installments.payment_date) = ?';
-        $paidDateExpression = "MONTH(installments.effective_payment_date) = ? AND YEAR(installments.effective_payment_date) = ? AND installments.status IN ('CLOSED', 'PARTIAL_PAID')";
+        $settledInstallments = PaymentSettlement::filterCondition()
+            ->join('installments', 'installments.id', '=', 'payment_settlements.installment_id')
+            ->whereIn('payment_settlements.installment_id', $authorizedInstallments)
+            ->whereYear('payment_settlements.effective_payment_date', $year)
+            ->whereMonth('payment_settlements.effective_payment_date', $month)
+            ->reportable('payment_settlements')
+            ->select('payment_settlements.debit_order_id', 'payment_settlements.installment_id')
+            ->selectRaw('MAX(installments.installment_amount) as expected_amount')
+            ->selectRaw('SUM(payment_settlements.paid_amount) as paid_amount')
+            ->selectRaw('COUNT(payment_settlements.id) as payment_event_count')
+            ->groupBy('payment_settlements.debit_order_id', 'payment_settlements.installment_id')
+            ->havingRaw('SUM(payment_settlements.paid_amount) > 0');
 
-        $collections = Installment::filterCondition()
-            ->join('debit_orders', 'debit_orders.id', '=', 'installments.debit_order_id')
+        $collections = DB::query()
+            ->fromSub($settledInstallments, 'settled_installments')
+            ->join('debit_orders', 'debit_orders.id', '=', 'settled_installments.debit_order_id')
             ->join('partners', 'partners.id', '=', 'debit_orders.partner_id')
-            ->where('debit_orders.approved', 1)
-            ->where(function ($query) use ($current_month, $current_year) {
-                $query->where(function ($dueQuery) use ($current_month, $current_year) {
-                    $dueQuery->whereMonth('installments.payment_date', $current_month)
-                        ->whereYear('installments.payment_date', $current_year);
-                })->orWhere(function ($paidQuery) use ($current_month, $current_year) {
-                    $paidQuery->whereMonth('installments.effective_payment_date', $current_month)
-                        ->whereYear('installments.effective_payment_date', $current_year)
-                        ->whereIn('installments.status', ['CLOSED', 'PARTIAL_PAID']);
-                });
-            })
             ->select('partners.uuid', 'partners.reference', 'partners.business_name as partner_name')
-            ->selectRaw("COALESCE(SUM(CASE WHEN {$dueDateExpression} THEN 1 ELSE 0 END), 0) as number_of_collection", [$current_month, $current_year])
-            ->selectRaw("COALESCE(SUM(CASE WHEN {$dueDateExpression} THEN installments.installment_amount ELSE 0 END), 0) as total_amount", [$current_month, $current_year])
-            ->selectRaw("COALESCE(SUM(CASE WHEN {$dueDateExpression} THEN installments.outstanding_amount ELSE 0 END), 0) as outstanding_amount", [$current_month, $current_year])
-            ->selectRaw("COALESCE(SUM(CASE WHEN {$paidDateExpression} THEN installments.current_balance ELSE 0 END), 0) as paid_amount", [$current_month, $current_year])
+            ->selectRaw('COUNT(*) as number_of_collection')
+            ->selectRaw('SUM(settled_installments.payment_event_count) as payment_event_count')
+            ->selectRaw('COALESCE(SUM(settled_installments.expected_amount), 0) as total_amount')
+            ->selectRaw('COALESCE(SUM(settled_installments.paid_amount), 0) as paid_amount')
             ->groupBy('partners.id', 'partners.uuid', 'partners.reference', 'partners.business_name')
-            ->having('paid_amount', '>', 0)
-            ->orderByDesc('number_of_collection')
             ->orderByDesc('paid_amount')
             ->get()
             ->map(function ($row) {
-                $totalAmount = (float) $row->total_amount;
-                $paidAmount = (float) $row->paid_amount;
+                $expected = (float) $row->total_amount;
+                $paid = (float) $row->paid_amount;
 
                 return [
                     'corporate_reference' => $row->reference,
                     'partner_name' => $row->partner_name,
                     'number_of_collection' => (int) $row->number_of_collection,
-                    'total_amount' => $totalAmount,
-                    'outstanding_amount' => (float) $row->outstanding_amount,
-                    'paid_amount' => $paidAmount,
-                    'percent' => $totalAmount > 0 ? round(($paidAmount / $totalAmount) * 100, 2) : 0,
+                    'payment_event_count' => (int) $row->payment_event_count,
+                    'total_amount' => $expected,
+                    'outstanding_amount' => max($expected - $paid, 0),
+                    'paid_amount' => $paid,
+                    'percent' => $expected > 0 ? round(($paid / $expected) * 100, 2) : 0,
                 ];
             })
             ->values()
@@ -236,6 +238,7 @@ class PaymentCollectionController extends Controller
 
         return $this->successResponse('Actual collections fetched successfully.', [
             'collections' => $collections,
+            'filters' => ['year' => $year, 'month' => $month],
         ]);
     }
 

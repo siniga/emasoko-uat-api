@@ -20,9 +20,23 @@
                         'payment-mandate.approve-closing',
                     ];
                     $dashboardOpen = Route::is('dashboard') || request()->is('dashboard');
-                    $quickActionsOpen = Route::is('quick-actions.*') || request()->is('quick-actions') || request()->is('quick-actions/*');
-                    $systemHealthOpen = Route::is('system-health.*') || request()->is('system-health') || request()->is('system-health/*');
-                    $canAccessQuickActions = Auth::user() && (Auth::user()->hasRole('admin') || Auth::user()->hasRole('Manager') || Auth::user()->hasRole('manager'));
+                    $quickActionsOpen =
+                        Route::is('quick-actions.*') ||
+                        request()->is('quick-actions') ||
+                        request()->is('quick-actions/*');
+                    $systemHealthOpen =
+                        Route::is('system-health.*') ||
+                        request()->is('system-health') ||
+                        request()->is('system-health/*');
+                    $collectionIntegrityOpen =
+                        Route::is('collection-integrity.*') ||
+                        request()->is('collection-integrity') ||
+                        request()->is('collection-integrity/*');
+                    $canAccessQuickActions =
+                        Auth::user() &&
+                        (Auth::user()->hasRole('admin') ||
+                            Auth::user()->hasRole('Manager') ||
+                            Auth::user()->hasRole('manager'));
                     $providersOpen =
                         Route::is(
                             'companies.lists',
@@ -100,24 +114,6 @@
                     </a>
                 </li>
 
-                @if ($canAccessQuickActions)
-                    <li class="{{ $quickActionsOpen ? 'mm-active' : '' }}">
-                        <a href="{{ route('quick-actions.index') }}" class="waves-effect">
-                            <i class="bx bx-bolt-circle"></i>
-                            <span>Quick Actions</span>
-                        </a>
-                    </li>
-                @endif
-
-                @if ($canAccessQuickActions)
-                    <li class="{{ $systemHealthOpen ? 'mm-active' : '' }}">
-                        <a href="{{ route('system-health.index') }}" class="waves-effect">
-                            <i class="bx bx-pulse"></i>
-                            <span>System Health</span>
-                        </a>
-                    </li>
-                @endif
-
                 @if (Auth::user()->hasRole(['admin']) || Auth::user()->hasRole(['Partner']))
                     <li class="{{ Route::is('bi.dashboard') ? 'mm-active' : '' }}">
                         <a href="{{ route('bi.dashboard') }}" class="waves-effect">
@@ -128,6 +124,15 @@
                 @endif
 
                 @if (Auth::user()->hasRole(['admin']) || Auth::user()->hasRole(['Partner']))
+                    @if ($canAccessQuickActions)
+                        <li class="{{ $quickActionsOpen ? 'mm-active' : '' }}">
+                            <a href="{{ route('quick-actions.index') }}" class="waves-effect">
+                                <i class="bx bx-bolt-circle"></i>
+                                <span>Quick Actions</span>
+                            </a>
+                        </li>
+                    @endif
+
                     <li class="{{ $providersOpen ? 'mm-active' : '' }}">
                         <a href="{{ route('companies.lists') }}" class="waves-effect ">
                             <i class="bx bx-building"></i>
@@ -179,12 +184,23 @@
                     </li>
                 @endif
 
-                <li class="{{ $collectionRoutesOpen ? 'mm-active' : '' }}">
-                    <a href="{{ route('collections.batches') }}" class="waves-effect">
-                        <i class="bx bx-wallet"></i>
-                        <span key="t-layouts">Collection Batches</span>
-                    </a>
-                </li>
+                @if (Auth::user()->hasRole(['admin']))
+                    <li class="{{ $collectionRoutesOpen ? 'mm-active' : '' }}">
+                        <a href="{{ route('collections.batches') }}" class="waves-effect">
+                            <i class="bx bx-wallet"></i>
+                            <span key="t-layouts">Collection Batches</span>
+                        </a>
+                    </li>
+                @endif
+
+                @if ($canAccessQuickActions)
+                    <li class="{{ $collectionIntegrityOpen ? 'mm-active' : '' }}">
+                        <a href="{{ route('collection-integrity.index') }}" class="waves-effect">
+                            <i class="bx bx-check-shield"></i>
+                            <span>Collection Integrity</span>
+                        </a>
+                    </li>
+                @endif
 
                 @if (Auth::user()->hasRole(['admin']))
                     <li class="{{ $paymentChannelsOpen ? 'mm-active' : '' }}">
@@ -224,6 +240,15 @@
                             <span key="t-chat">Audit Logs</span>
                         </a>
                     </li> --}}
+                @endif
+
+                @if ($canAccessQuickActions)
+                    <li class="{{ $systemHealthOpen ? 'mm-active' : '' }}">
+                        <a href="{{ route('system-health.index') }}" class="waves-effect">
+                            <i class="bx bx-pulse"></i>
+                            <span>System Health</span>
+                        </a>
+                    </li>
                 @endif
             </ul>
         </div>

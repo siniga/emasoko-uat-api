@@ -45,7 +45,7 @@ class ReportQueryService
             ],
             self::TYPE_ACTUAL_COLLECTION => [
                 'label' => 'Actual Payment Collection',
-                'description' => 'Realized collections based on effective payment dates.',
+                'description' => 'Net posted settlement cash based on effective payment dates; reversals appear as negative events.',
                 'status_filter' => 'collection',
             ],
             self::TYPE_OVERDUE_INSTALLMENTS => [
@@ -55,7 +55,7 @@ class ReportQueryService
             ],
             self::TYPE_PARTNER_PERFORMANCE => [
                 'label' => 'Partner Performance',
-                'description' => 'Provider-level expected versus collected performance for the selected period.',
+                'description' => 'Provider schedule performance: scheduled installments versus net settlement amounts allocated to them.',
                 'status_filter' => 'none',
             ],
             self::TYPE_MANDATE_LIFECYCLE => [
@@ -124,6 +124,10 @@ class ReportQueryService
             return $this->expectedCollectionPreview($filters);
         }
 
+        if ($type === self::TYPE_ACTUAL_COLLECTION) {
+            return $this->actualCollectionPreview($filters);
+        }
+
         $records = $this->records($type, $filters);
         $mapper = $this->mapper($type);
 
@@ -148,8 +152,8 @@ class ReportQueryService
             ->select([])
             ->selectRaw('COUNT(*) as total_records')
             ->selectRaw('COALESCE(SUM(installments.installment_amount), 0) as expected_amount')
-            ->selectRaw('COALESCE(SUM(installments.current_balance), 0) as paid_amount')
-            ->selectRaw('COALESCE(SUM(installments.outstanding_amount), 0) as outstanding_amount')
+            ->selectRaw('COALESCE(SUM(LEAST(GREATEST(COALESCE(settlement_totals.ledger_paid_amount, 0), 0), installments.installment_amount)), 0) as paid_amount')
+            ->selectRaw('COALESCE(SUM(installments.installment_amount - LEAST(GREATEST(COALESCE(settlement_totals.ledger_paid_amount, 0), 0), installments.installment_amount)), 0) as outstanding_amount')
             ->first();
 
         $totalRecords = (int) ($totals->total_records ?? 0);
@@ -178,6 +182,41 @@ class ReportQueryService
         ];
     }
 
+    protected function actualCollectionPreview(array $filters): array
+    {
+        $query = $this->actualCollectionBaseQuery($filters);
+        $mapper = new CollectionReportMapper(true);
+        $totals = (clone $query)
+            ->reorder()
+            ->select([])
+            ->selectRaw('COUNT(*) as total_records')
+            ->selectRaw('COUNT(DISTINCT payment_settlements.installment_id) as paid_installments')
+            ->selectRaw("SUM(CASE WHEN payment_settlements.normalized_status = 'PARTIAL' THEN 1 ELSE 0 END) as partial_events")
+            ->selectRaw('COALESCE(SUM(payment_settlements.paid_amount), 0) as paid_amount')
+            ->first();
+        $totalRecords = (int) ($totals->total_records ?? 0);
+        $paidAmount = (float) ($totals->paid_amount ?? 0);
+        $records = $query
+            ->orderBy('payment_settlements.effective_payment_date', 'ASC')
+            ->limit(100)
+            ->get();
+
+        return [
+            'type' => self::TYPE_ACTUAL_COLLECTION,
+            'title' => $this->reportDefinitions()[self::TYPE_ACTUAL_COLLECTION]['label'],
+            'headings' => $mapper->headings(),
+            'summary' => [
+                ['label' => 'Payment Events', 'value' => number_format($totalRecords), 'tone' => 'primary'],
+                ['label' => 'Collected Amount', 'value' => number_format($paidAmount, 2), 'tone' => 'success'],
+                ['label' => 'Paid Installments', 'value' => number_format((int) ($totals->paid_installments ?? 0)), 'tone' => 'primary'],
+                ['label' => 'Partial Events', 'value' => number_format((int) ($totals->partial_events ?? 0)), 'tone' => 'warning'],
+            ],
+            'rows' => $mapper->rows($records),
+            'total_records' => $totalRecords,
+            'preview_limited' => $totalRecords > 100,
+        ];
+    }
+
     public function exportPayload(string $type, array $filters): array
     {
         $records = $this->records($type, $filters);
@@ -196,7 +235,7 @@ class ReportQueryService
             self::TYPE_EXPECTED_COLLECTION => $this->expectedCollectionBaseQuery($filters)
                 ->orderBy('installments.payment_date', 'ASC'),
             self::TYPE_ACTUAL_COLLECTION => $this->actualCollectionBaseQuery($filters)
-                ->orderBy('installments.effective_payment_date', 'ASC'),
+                ->orderBy('payment_settlements.effective_payment_date', 'ASC'),
             default => throw new \InvalidArgumentException("Report type [{$type}] is not a collection report."),
         };
 
@@ -229,7 +268,7 @@ class ReportQueryService
         return match ($type) {
             self::TYPE_MANDATE => $this->mandateBaseQuery($filters)->orderBy('debit_orders.created_at', 'DESC')->get(),
             self::TYPE_EXPECTED_COLLECTION => $this->expectedCollectionBaseQuery($filters)->orderBy('installments.payment_date', 'ASC')->get(),
-            self::TYPE_ACTUAL_COLLECTION => $this->actualCollectionBaseQuery($filters)->orderBy('installments.effective_payment_date', 'ASC')->get(),
+            self::TYPE_ACTUAL_COLLECTION => $this->actualCollectionBaseQuery($filters)->orderBy('payment_settlements.effective_payment_date', 'ASC')->get(),
             self::TYPE_OVERDUE_INSTALLMENTS => $this->overdueInstallmentsBaseQuery($filters)->orderBy('installments.payment_date', 'ASC')->get(),
             self::TYPE_PARTNER_PERFORMANCE => $this->partnerPerformanceRecords($filters),
             self::TYPE_MANDATE_LIFECYCLE => $this->mandateLifecycleRecords($filters),
@@ -323,16 +362,37 @@ class ReportQueryService
 
     protected function actualCollectionBaseQuery(array $filters): Builder
     {
-        $query = $this->collectionBaseQuery($filters);
         $mappedStatus = match ($filters['collection_status'] ?? null) {
-            'paid' => ['CLOSED'],
-            'partial_paid' => ['PARTIAL_PAID'],
-            null, '' => ['CLOSED', 'PARTIAL_PAID'],
+            'paid' => [PaymentSettlement::STATUS_SUCCESS, PaymentSettlement::STATUS_REVERSED],
+            'partial_paid' => [PaymentSettlement::STATUS_PARTIAL, PaymentSettlement::STATUS_REVERSED],
+            null, '' => PaymentSettlement::reportableStatuses(),
             default => [],
         };
 
-        $query->whereIn('installments.status', $mappedStatus);
-        $this->applyDateRange($query, 'installments.effective_payment_date', $filters['start_at'], $filters['end_at']);
+        $authorizedInstallments = Installment::filterCondition()->select('installments.id');
+        $settlementTotals = PaymentSettlement::query()
+            ->select('installment_id')
+            ->selectRaw('COALESCE(SUM(paid_amount), 0) as ledger_paid_amount')
+            ->reportable()
+            ->groupBy('installment_id');
+
+        $query = PaymentSettlement::filterCondition()
+            ->leftJoinSub($settlementTotals, 'settlement_totals', function ($join) {
+                $join->on('settlement_totals.installment_id', '=', 'payment_settlements.installment_id');
+            })
+            ->select('payment_settlements.*')
+            ->selectRaw('COALESCE(settlement_totals.ledger_paid_amount, 0) as ledger_paid_amount')
+            ->with([
+                'debitOrder.partner',
+                'debitOrder.customerAccount.customer',
+                'installment',
+            ])
+            ->whereIn('payment_settlements.installment_id', $authorizedInstallments)
+            ->reportable('payment_settlements')
+            ->whereIn('payment_settlements.normalized_status', $mappedStatus);
+
+        $this->applyDateRange($query, 'payment_settlements.effective_payment_date', $filters['start_at'], $filters['end_at']);
+        $this->applyInstallmentRelationFilters($query, $filters);
 
         return $query;
     }
@@ -352,8 +412,30 @@ class ReportQueryService
 
     protected function collectionBaseQuery(array $filters): Builder
     {
+        $settlementTotals = PaymentSettlement::query()
+            ->select('installment_id')
+            ->selectRaw('COALESCE(SUM(paid_amount), 0) as ledger_paid_amount')
+            ->reportable()
+            ->groupBy('installment_id');
+
         $query = Installment::filterCondition()
-            ->select('id', 'debit_order_id', 'installment_amount', 'last_paid_amount', 'current_balance', 'outstanding_amount', 'status', 'remarks', 'payment_date', 'effective_payment_date', 'created_at')
+            ->leftJoinSub($settlementTotals, 'settlement_totals', function ($join) {
+                $join->on('settlement_totals.installment_id', '=', 'installments.id');
+            })
+            ->select(
+                'installments.id',
+                'installments.debit_order_id',
+                'installments.installment_amount',
+                'installments.last_paid_amount',
+                'installments.current_balance',
+                'installments.outstanding_amount',
+                'installments.status',
+                'installments.remarks',
+                'installments.payment_date',
+                'installments.effective_payment_date',
+                'installments.created_at'
+            )
+            ->selectRaw('COALESCE(settlement_totals.ledger_paid_amount, 0) as ledger_paid_amount')
             ->whereHas('debitOrder', function ($query) {
                 $query->where('debit_orders.approved', '=', 1)
                     ->whereHas('partner', function ($q) {
@@ -377,8 +459,11 @@ class ReportQueryService
                 return [
                     'partner_name' => $partner->business_name ?? 'Unknown',
                     'expected_amount' => $items->sum('installment_amount'),
-                    'collected_amount' => $items->sum('current_balance'),
-                    'outstanding_amount' => $items->sum('outstanding_amount'),
+                    'collected_amount' => $items->sum(fn ($item) => min((float) $item->ledger_paid_amount, (float) $item->installment_amount)),
+                    'outstanding_amount' => $items->sum(fn ($item) => max(
+                        (float) $item->installment_amount - min((float) $item->ledger_paid_amount, (float) $item->installment_amount),
+                        0
+                    )),
                     'installments' => $items->count(),
                 ];
             })
@@ -451,7 +536,7 @@ class ReportQueryService
 
     protected function accountingRecords(array $filters): Collection
     {
-        $query = PaymentSettlement::query()
+        $query = PaymentSettlement::filterCondition()
             ->with([
                 'debitOrder:id,reference,partner_id,customer_account_id,start_date,end_date,channel',
                 'debitOrder.partner:id,business_name',

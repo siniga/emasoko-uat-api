@@ -13,7 +13,9 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
+        Commands\AuditCollectionIntegrity::class,
         Commands\BackfillCollectionDebitOrderAccountMonthKeys::class,
+        Commands\BackfillSettlementsFromInstallmentPayments::class,
         Commands\CreateCollectionBatch::class,
         Commands\CreateCollectionBatchByMandate::class,
         Commands\CreateTrackedFailedCollectionBatches::class,
@@ -23,6 +25,7 @@ class Kernel extends ConsoleKernel
         Commands\CheckBankConnectivity::class,
         Commands\PullCollectionStatusByReference::class,
         Commands\ReconcileNmbCollectionsFromCsv::class,
+        Commands\RestoreInstallmentPaymentSettlementBackfill::class,
         Commands\SyncDebitOrderDates::class,
         Commands\SyncMandateLifecycleStatus::class,
     ];
@@ -45,6 +48,10 @@ class Kernel extends ConsoleKernel
         // bank connectivity
         $schedule->command('system-health:check-banks')
             ->everyFiveMinutes()
+            ->withoutOverlapping();
+
+        $schedule->command('collections:audit-integrity')
+            ->dailyAt('00:30')
             ->withoutOverlapping();
 
         //summary reports

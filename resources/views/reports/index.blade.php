@@ -28,6 +28,7 @@
                     <div class="rp-filter__head">
                         <div>
                             <div class="rp-filter__title">Reports</div>
+                            <small class="text-muted">Data updated {{ $dataFreshAt?->format('d M Y H:i') ?? 'N/A' }}</small>
                         </div>
 
                         <div class="rp-filter__actions">

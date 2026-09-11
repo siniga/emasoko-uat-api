@@ -45,6 +45,8 @@ class DebitOrder extends Model
                 $debit_orders = $debit_orders->whereHas('partner', function ($query) use ($company_user) {
                     $query->where('partners.company_id', '=', $company_user->company_id);
                 });
+            } else {
+                $debit_orders->whereRaw('1 = 0');
             }
         } else if ($user->hasRole('Company_Approver')) {
             $arr_partners = [];
@@ -56,6 +58,8 @@ class DebitOrder extends Model
             if ($arr_partners) {
                 $debit_orders = $debit_orders
                     ->whereIn('debit_orders.partner_id', $arr_partners);
+            } else {
+                $debit_orders->whereRaw('1 = 0');
             }
         } else if ($user->hasRole('Company_User')) {
             $debit_orders = $debit_orders

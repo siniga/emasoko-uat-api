@@ -5,9 +5,14 @@ namespace App\Services;
 use App\Models\DebitOrder;
 use App\Models\Installment;
 use App\Models\Partner;
+use Illuminate\Support\Facades\Auth;
 
 class CompanySummaryService
 {
+    public function __construct(private DashboardReportingQueryService $reporting)
+    {
+    }
+
     public function forPartner(Partner $partner): array
     {
         $currentMonth = (int) now()->format('m');
@@ -26,21 +31,13 @@ class CompanySummaryService
                     ->where('deleted', 0);
             });
 
-        $monthlyCollection = Installment::monthlyCollectionStats(
-            $partner->id,
-            $currentMonth,
-            $currentYear,
-            240,
-            0,
-            null
-        );
-        $todayCollection = Installment::todayCollectionStats(
-            $partner->id,
-            $today,
-            240,
-            0,
-            null
-        );
+        $filters = ['partner_id' => $partner->id];
+        $monthlyExpected = $this->reporting->expectedCollections(Auth::user(), $filters)
+            ->where('expected_year', $currentYear)->where('expected_month', $currentMonth);
+        $monthlyPaid = $this->reporting->paymentCollections(Auth::user(), $filters)
+            ->where('collected_year', $currentYear)->where('collected_month', $currentMonth);
+        $todayExpected = $this->reporting->expectedCollections(Auth::user(), $filters)->whereDate('payment_date', $today);
+        $todayPaid = $this->reporting->paymentCollections(Auth::user(), $filters)->whereDate('effective_payment_date', $today);
 
         $totalMandates = $this->mandateTotals(clone $mandateBase);
         $pendingMandates = $this->mandateTotals(
@@ -80,10 +77,10 @@ class CompanySummaryService
             'active_mandates' => (int) $activeMandates->total_count,
             'active_mandates_amount' => (float) $activeMandates->total_amount,
             'current_month_label' => now()->format('F'),
-            'this_month_expected' => (float) $monthlyCollection->total_amount,
-            'this_month_collected' => (float) $monthlyCollection->paid_amount,
-            'today_expected' => (float) $todayCollection->total_amount,
-            'today_collected' => (float) $todayCollection->paid_amount,
+            'this_month_expected' => (float) (clone $monthlyExpected)->sum('installment_amount'),
+            'this_month_collected' => (float) (clone $monthlyPaid)->sum('paid_amount'),
+            'today_expected' => (float) (clone $todayExpected)->sum('installment_amount'),
+            'today_collected' => (float) (clone $todayPaid)->sum('paid_amount'),
             'overdue_count' => (int) $overdue->overdue_count,
             'overdue_amount' => (float) $overdue->overdue_amount,
         ];

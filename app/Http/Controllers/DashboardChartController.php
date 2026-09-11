@@ -2,326 +2,225 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Models\Account;
 use App\Models\DebitOrder;
-use App\Models\Installment;
 use App\Models\Partner;
+use App\Services\DashboardReportingQueryService;
 use Carbon\Carbon;
-use Carbon\CarbonPeriod;
-use DateInterval;
-use DatePeriod;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class DashboardChartController extends Controller
 {
-    //Pending and Approved Mandates
+    public function __construct(private DashboardReportingQueryService $reporting)
+    {
+        $this->middleware('auth');
+    }
+
     public function mandate_values(Request $request)
     {
-        //channel
-        $channel = null;
-        if ($request->has('channel'))
-            $channel = $request->channel;
-
-        //current or requested year
-        $year = date('Y');
-        if ($request->has('year'))
-            $year = $request->year;
-
-
-        $summaryStatuses = [
-            DebitOrder::SUMMARY_PENDING,
-            DebitOrder::SUMMARY_APPROVED,
-            DebitOrder::SUMMARY_FAILED,
-        ];
-
-        $grouped = DebitOrder::filterCondition()
-            ->select([
-                DB::raw('MONTH(debit_orders.created_at) as month_number'),
-                'debit_orders.lifecycle_status',
-                DB::raw('COALESCE(SUM(debit_orders.total_amount), 0) as total_amount'),
-            ])
-            ->whereIn('debit_orders.lifecycle_status', array_merge(...array_values(DebitOrder::lifecycleSummaryMap())))
-            ->when($channel != null, function ($q) use ($channel) {
-                $q->where('debit_orders.channel', $channel);
-            })
-            ->whereYear('debit_orders.created_at', $year)
-            ->whereHas('partner', function ($q) {
-                $q->where('partners.approved', 1);
-            })
-            ->groupBy(DB::raw('MONTH(debit_orders.created_at)'), 'debit_orders.lifecycle_status')
-            ->orderBy(DB::raw('MONTH(debit_orders.created_at)'))
-            ->orderBy('debit_orders.lifecycle_status')
+        $year = $request->filled('year') ? (int) $request->year : now()->year;
+        $filters = $this->filters($request);
+        $grouped = $this->reporting->mandates($request->user(), $filters)
+            ->select('mandate_created_month as month_number', 'lifecycle_status')
+            ->selectRaw('COALESCE(SUM(total_amount), 0) as total_amount')
+            ->whereIn('lifecycle_status', array_merge(...array_values(DebitOrder::lifecycleSummaryMap())))
+            ->where('mandate_created_year', $year)
+            ->groupBy('mandate_created_month', 'lifecycle_status')
             ->get()
             ->groupBy('month_number');
 
-        $data_array = [];
-        for ($i = 1; $i <= 12; $i++) {
-            $monthRows = collect($grouped->get($i, []));
-            $results = collect($summaryStatuses)->mapWithKeys(function ($summary) use ($monthRows) {
-                $amount = $monthRows
-                    ->filter(fn ($row) => in_array($row->lifecycle_status, DebitOrder::lifecycleStatusesForSummary($summary), true))
-                    ->sum('total_amount');
+        $chart = collect(range(1, 12))->map(function ($month) use ($grouped) {
+            $rows = collect($grouped->get($month, []));
+            $pending = $this->summaryAmount($rows, DebitOrder::SUMMARY_PENDING);
+            $approved = $this->summaryAmount($rows, DebitOrder::SUMMARY_APPROVED);
+            $failed = $this->summaryAmount($rows, DebitOrder::SUMMARY_FAILED);
 
-                return [$summary => (float) $amount];
-            });
-
-            $pending_amount = $results[DebitOrder::SUMMARY_PENDING] ?? 0;
-            $approved_amount = $results[DebitOrder::SUMMARY_APPROVED] ?? 0;
-            $rejected_amount = $results[DebitOrder::SUMMARY_FAILED] ?? 0;
-            $total_amount = $pending_amount + $approved_amount + $rejected_amount;
-
-            $data_array[] = [
-                "month" => date("M", mktime(0, 0, 0, $i, 10)),
-                "total" => (int) $total_amount,
-                "approved" => (int) $approved_amount,
-                "rejected" => (int) $rejected_amount,
-                "pending" => (int) $pending_amount
+            return [
+                'month' => Carbon::create(null, $month, 1)->format('M'),
+                'total' => (int) ($pending + $approved + $failed),
+                'approved' => (int) $approved,
+                'rejected' => (int) $failed,
+                'pending' => (int) $pending,
             ];
-        }
+        })->all();
 
-        //response
-        return response()->json(['error' => FALSE, 'chart' => $data_array]);
+        return response()->json(['error' => false, 'chart' => $chart]);
     }
 
-    //aggregate consent percentage
     public function mandate_percentages(Request $request)
     {
-        //declare array
-        $data_array = [];
-        //channel
-        $channel = null;
-        if ($request->has('channel'))
-            $channel = $request->channel;
+        $rows = $this->reporting->mandates($request->user(), $this->filters($request))
+            ->select('lifecycle_status')
+            ->selectRaw('COUNT(debit_order_id) as number_of_mandate')
+            ->whereIn('lifecycle_status', array_merge(...array_values(DebitOrder::lifecycleSummaryMap())))
+            ->groupBy('lifecycle_status')
+            ->get();
 
-        //query
-        $debit_orders = DebitOrder::filterCondition()->select('debit_orders.lifecycle_status', DB::raw('COALESCE(COUNT(debit_orders.id), 0) as number_of_approved'))
-            ->whereIn('debit_orders.lifecycle_status', array_merge(...array_values(DebitOrder::lifecycleSummaryMap())))
-            ->when($channel != null, function ($q) use ($channel) {
-                $q->where('debit_orders.channel', $channel);
-            })
-            ->whereHas('partner', function ($q) {
-                $q->where('partners.approved', 1);
-            })->groupBy('debit_orders.lifecycle_status')->orderBy('debit_orders.lifecycle_status')->toBase();
+        $pending = $this->summaryCount($rows, DebitOrder::SUMMARY_PENDING);
+        $approved = $this->summaryCount($rows, DebitOrder::SUMMARY_APPROVED);
+        $failed = $this->summaryCount($rows, DebitOrder::SUMMARY_FAILED);
+        $total = max($pending + $approved + $failed, 1);
 
-        $debit_orders = $debit_orders->get();
-
-        $pending = collect($debit_orders)
-            ->filter(fn ($row) => in_array($row->lifecycle_status, DebitOrder::lifecycleStatusesForSummary(DebitOrder::SUMMARY_PENDING), true))
-            ->sum('number_of_approved');
-        $approved = collect($debit_orders)
-            ->filter(fn ($row) => in_array($row->lifecycle_status, DebitOrder::lifecycleStatusesForSummary(DebitOrder::SUMMARY_APPROVED), true))
-            ->sum('number_of_approved');
-        $rejected = collect($debit_orders)
-            ->filter(fn ($row) => in_array($row->lifecycle_status, DebitOrder::lifecycleStatusesForSummary(DebitOrder::SUMMARY_FAILED), true))
-            ->sum('number_of_approved');
-
-        //aggregate
-        $aggregate = $pending + $approved + $rejected;
-
-        //percentage
-        $aggregate = $aggregate ? $aggregate : 1;
-        $percent_approved = round(($approved / $aggregate) * 100, 2);
-        $percent_rejected = round(($rejected / $aggregate) * 100, 2);
-        $percent_pending = round(($pending / $aggregate) * 100, 2);
-
-        //response
-        return response()->json(['error' => FALSE, 'approved' => $percent_approved, 'rejected' => $percent_rejected, 'pending' => $percent_pending], 200);
+        return response()->json([
+            'error' => false,
+            'approved' => round(($approved / $total) * 100, 2),
+            'rejected' => round(($failed / $total) * 100, 2),
+            'pending' => round(($pending / $total) * 100, 2),
+        ]);
     }
 
-    //Monthly Collected 
     public function collected_mandates(Request $request)
     {
-        $channel = $request->filled('channel') ? $request->channel : null;
-        $year = $request->filled('year') ? (int) $request->year : (int) date('Y');
+        $year = $request->filled('year') ? (int) $request->year : now()->year;
+        $filters = $this->filters($request);
 
-        $expectedByMonth = $this->dashboardCollectionQuery($channel)
-            ->select([
-                DB::raw('MONTH(installments.payment_date) as month_number'),
-                DB::raw('COALESCE(COUNT(installments.id), 0) as all_mandates'),
-                DB::raw('COALESCE(SUM(installments.installment_amount), 0) as expected_amount'),
-            ])
-            ->whereYear('installments.payment_date', $year)
-            ->groupBy(DB::raw('MONTH(installments.payment_date)'))
+        $expected = $this->reporting->expectedCollections($request->user(), $filters)
+            ->select('expected_month as month_number')
+            ->selectRaw('COALESCE(SUM(installment_amount), 0) as expected_amount')
+            ->where('expected_year', $year)
+            ->groupBy('expected_month')
             ->get()
             ->keyBy('month_number');
 
-        $paidByMonth = $this->dashboardCollectionQuery($channel)
-            ->select([
-                DB::raw('MONTH(installments.effective_payment_date) as month_number'),
-                DB::raw('COALESCE(COUNT(installments.id), 0) as paid_mandates'),
-                DB::raw('COALESCE(SUM(installments.current_balance), 0) as paid_amount'),
-            ])
-            ->whereYear('installments.effective_payment_date', $year)
-            ->whereIn('installments.status', ['CLOSED', 'PARTIAL_PAID'])
-            ->groupBy(DB::raw('MONTH(installments.effective_payment_date)'))
+        $posted = $this->reporting->collectionPostings($request->user(), $filters)
+            ->select('posted_month as month_number')
+            ->selectRaw('COUNT(DISTINCT debit_order_id) as posted_mandates')
+            ->where('posted_year', $year)
+            ->groupBy('posted_month')
             ->get()
             ->keyBy('month_number');
 
-        $data_array = [];
-        for ($i = 1; $i <= 12; $i++) {
-            $expected = $expectedByMonth->get($i);
-            $paid = $paidByMonth->get($i);
+        $paid = $this->reporting->paymentCollections($request->user(), $filters)
+            ->select('collected_month as month_number')
+            ->selectRaw('COUNT(DISTINCT debit_order_id) as deducted_mandates')
+            ->selectRaw('COALESCE(SUM(paid_amount), 0) as paid_amount')
+            ->where('collected_year', $year)
+            ->groupBy('collected_month')
+            ->get()
+            ->keyBy('month_number');
 
-            $data_array[] = [
-                "month" => date("M", mktime(0, 0, 0, $i, 10)),
-                "total" => (int) ($expected->all_mandates ?? 0),
-                "paid" => (int) ($paid->paid_mandates ?? 0),
-                "total_amount" => (float) ($expected->expected_amount ?? 0),
-                "paid_amount" => (float) ($paid->paid_amount ?? 0),
+        $chart = collect(range(1, 12))->map(function ($month) use ($expected, $posted, $paid) {
+            $expectedMonth = $expected->get($month);
+            $postedMonth = $posted->get($month);
+            $paidMonth = $paid->get($month);
+            $postedMandates = (int) ($postedMonth->posted_mandates ?? 0);
+            $deductedMandates = (int) ($paidMonth->deducted_mandates ?? 0);
+
+            return [
+                'month' => Carbon::create(null, $month, 1)->format('M'),
+                'posted' => $postedMandates,
+                'deducted' => $deductedMandates,
+                'total' => $postedMandates,
+                'paid' => $deductedMandates,
+                'total_amount' => (float) ($expectedMonth->expected_amount ?? 0),
+                'paid_amount' => (float) ($paidMonth->paid_amount ?? 0),
             ];
-        }
+        })->all();
 
-        //response
-        return response()->json(['error' => FALSE, 'chart' => $data_array], 200);
+        return response()->json(['error' => false, 'chart' => $chart]);
     }
 
-    //Weekly Collection
     public function weekly_collected_mandates(Request $request)
     {
-        $channel = $request->filled('channel') ? $request->channel : null;
-        $current_date = $request->filled('curr_date')
-            ? date('Y-m-d', strtotime($request->input('curr_date')))
-            : date('Y-m-d');
+        $currentDate = $request->filled('curr_date')
+            ? Carbon::parse($request->curr_date)->toDateString()
+            : now()->toDateString();
+        $dates = $this->get_dates($currentDate);
+        $filters = $this->filters($request);
 
-        //get dates
-        $dates = $this->get_dates($current_date);
-
-        $startDate = min($dates);
-        $endDate = max($dates);
-
-        $expectedByDate = $this->dashboardCollectionQuery($channel)
-            ->select([
-                DB::raw('DATE(installments.payment_date) as day_date'),
-                DB::raw('COALESCE(SUM(installments.installment_amount), 0) as total_amount'),
-            ])
-            ->whereBetween('installments.payment_date', [$startDate, $endDate])
-            ->groupBy(DB::raw('DATE(installments.payment_date)'))
+        $expected = $this->reporting->expectedCollections($request->user(), $filters)
+            ->select('expected_date as day_date')
+            ->selectRaw('COALESCE(SUM(installment_amount), 0) as total_amount')
+            ->whereBetween('expected_date', [min($dates), max($dates)])
+            ->groupBy('expected_date')
             ->pluck('total_amount', 'day_date');
 
-        $paidByDate = $this->dashboardCollectionQuery($channel)
-            ->select([
-                DB::raw('DATE(installments.effective_payment_date) as day_date'),
-                DB::raw('COALESCE(SUM(installments.current_balance), 0) as paid_amount'),
-            ])
-            ->whereBetween('installments.effective_payment_date', [$startDate, $endDate])
-            ->whereIn('installments.status', ['CLOSED', 'PARTIAL_PAID'])
-            ->groupBy(DB::raw('DATE(installments.effective_payment_date)'))
+        $paid = $this->reporting->paymentCollections($request->user(), $filters)
+            ->select('collected_date as day_date')
+            ->selectRaw('COALESCE(SUM(paid_amount), 0) as paid_amount')
+            ->whereBetween('collected_date', [min($dates), max($dates)])
+            ->groupBy('collected_date')
             ->pluck('paid_amount', 'day_date');
 
-        $data_array = [];
-        foreach ($dates as $v) {
-            $data_array[] = [
-                "date" => date("d-m", strtotime($v)),
-                "total" => (float) ($expectedByDate[$v] ?? 0),
-                "paid" => (float) ($paidByDate[$v] ?? 0),
-            ];
-        }
+        $chart = collect($dates)->map(fn ($date) => [
+            'date' => Carbon::parse($date)->format('d-m'),
+            'total' => (float) ($expected[$date] ?? 0),
+            'paid' => (float) ($paid[$date] ?? 0),
+        ])->all();
 
-        //response
-        return response()->json(['error' => FALSE, 'chart' => $data_array], 200);
+        return response()->json(['error' => false, 'chart' => $chart]);
     }
 
-    protected function dashboardCollectionQuery(?string $channel = null)
-    {
-        return Installment::filterCondition()
-            ->whereHas('debitOrder', function ($query) use ($channel) {
-                $query->where('debit_orders.approved', 1)
-                    ->when($channel !== null, function ($q) use ($channel) {
-                        $q->where('debit_orders.channel', $channel);
-                    })
-                    ->whereHas('partner', function ($q) {
-                        $q->where('partners.approved', 1);
-                    });
-            });
-    }
-
-    //mandate per channel
     public function mandate_channel(Request $request)
     {
-        //acounts
-        $accounts = Account::toBase()->get();
+        $month = $request->filled('month') ? (int) $request->month : null;
+        $year = $request->filled('year') ? (int) $request->year : now()->year;
+        $filters = $this->filters($request);
 
-        //declare array
-        $data_array = [];
-        $summaryStatuses = [
-            DebitOrder::SUMMARY_PENDING,
-            DebitOrder::SUMMARY_APPROVED,
-            DebitOrder::SUMMARY_FAILED,
-        ];
-
-        //channel
-        $channel = null;
-        if ($request->has('channel'))
-            $channel = $request->channel;
-
-        foreach ($accounts as $key => $val) {
-            //query per channel
-            $debit_orders = DebitOrder::filterCondition()->select('debit_orders.lifecycle_status', DB::raw('COALESCE(COUNT(debit_orders.id), 0) as number_of_approved'))
-                ->whereHas('customerAccount', function ($q) use ($val) {
-                    $q->where('account_id', $val->id);
+        $chart = Account::query()->get()->map(function ($account) use ($request, $filters, $month, $year) {
+            $rows = $this->reporting->mandates($request->user(), $filters)
+                ->select('lifecycle_status')
+                ->selectRaw('COUNT(debit_order_id) as number_of_mandate')
+                ->where('account_id', $account->id)
+                ->whereIn('lifecycle_status', array_merge(...array_values(DebitOrder::lifecycleSummaryMap())))
+                ->when($month, function ($query) use ($month, $year) {
+                    $query->where('mandate_created_month', $month)
+                        ->where('mandate_created_year', $year);
                 })
-                ->whereIn('debit_orders.lifecycle_status', array_merge(...array_values(DebitOrder::lifecycleSummaryMap())))
-                ->when($channel != null, function ($q) use ($channel) {
-                    $q->where('debit_orders.channel', $channel);
-                })
-                ->groupBy('debit_orders.lifecycle_status')->orderBy('debit_orders.lifecycle_status');
+                ->groupBy('lifecycle_status')
+                ->get();
 
-            if ($request->has('month')) {
-                $debit_orders = $debit_orders->whereMonth('debit_orders.created_at', $request->month)
-                    ->whereYear('debit_orders.created_at', date('Y'));
-            }
-
-            $debit_orders = $debit_orders->get();
-
-            // Map over all approved statuses to ensure complete results
-            $results = collect($summaryStatuses)->mapWithKeys(function ($summary) use ($debit_orders) {
-                $count = collect($debit_orders)
-                    ->filter(fn ($row) => in_array($row->lifecycle_status, DebitOrder::lifecycleStatusesForSummary($summary), true))
-                    ->sum('number_of_approved');
-
-                return [$summary => (int) $count];
-            });
-
-            $pending = $results[DebitOrder::SUMMARY_PENDING] ?? 0;
-            $approved = $results[DebitOrder::SUMMARY_APPROVED] ?? 0;
-            $rejected = $results[DebitOrder::SUMMARY_FAILED] ?? 0;
-
-            //create data array
-            $data_array[] = [
-                "name" => $val->name,
-                "pending" =>  (int) $pending,
-                "approved" => (int) $approved,
-                "rejected" => (int) $rejected
+            return [
+                'name' => $account->name,
+                'pending' => $this->summaryCount($rows, DebitOrder::SUMMARY_PENDING),
+                'approved' => $this->summaryCount($rows, DebitOrder::SUMMARY_APPROVED),
+                'rejected' => $this->summaryCount($rows, DebitOrder::SUMMARY_FAILED),
             ];
-        }
+        })->all();
 
-        //response
-        return response()->json(['error' => FALSE, 'chart' => $data_array], 200);
+        return response()->json(['error' => false, 'chart' => $chart]);
     }
 
-    //collection success rate
     public function monthly_collection_rate($uuid)
     {
-        //current date
-        $current_year = date('Y');
-        $current_month = date('m');
+        Partner::where('uuid', $uuid)->firstOrFail();
 
-        //partner
-        $partner = Partner::where(['uuid' => $uuid])->firstOrfail();
+        return response()->json(['error' => false]);
     }
 
     public function get_dates($currentDate)
     {
-        $arr_dates = [];
-        for ($i = 0; $i < 7; $i++) {
-            $installment_date = date('Y-m-d', strtotime($currentDate . "-{$i} day"));
-            array_push($arr_dates, $installment_date);
-        }
+        return collect(range(0, 6))
+            ->map(fn ($offset) => Carbon::parse($currentDate)->subDays($offset)->toDateString())
+            ->reverse()
+            ->values()
+            ->all();
+    }
 
-        // Output the dates
-        return array_reverse($arr_dates);
+    private function filters(Request $request): array
+    {
+        return ['channel' => $request->filled('channel') ? $request->channel : null];
+    }
+
+    private function summaryAmount($rows, string $summary): float
+    {
+        return (float) collect($rows)
+            ->filter(fn ($row) => in_array(
+                $row->lifecycle_status,
+                DebitOrder::lifecycleStatusesForSummary($summary),
+                true
+            ))
+            ->sum('total_amount');
+    }
+
+    private function summaryCount($rows, string $summary): int
+    {
+        return (int) collect($rows)
+            ->filter(fn ($row) => in_array(
+                $row->lifecycle_status,
+                DebitOrder::lifecycleStatusesForSummary($summary),
+                true
+            ))
+            ->sum('number_of_mandate');
     }
 }

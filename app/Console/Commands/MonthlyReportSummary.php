@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Jobs\SendEmailJob;
 use App\Models\DebitOrder;
 use App\Models\Installment;
+use App\Models\PaymentSettlement;
 use App\Models\Partner;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
@@ -18,7 +19,6 @@ class MonthlyReportSummary extends Command
         DebitOrder::SUMMARY_APPROVED,
         DebitOrder::SUMMARY_FAILED,
     ];
-    private const PAID_INSTALLMENT_STATUSES = ['CLOSED', 'PARTIAL_PAID'];
 
     protected $signature = 'send:monthly-report-summary
                             {--month= : Report month in YYYY-MM format (defaults to the current month)}';
@@ -191,11 +191,12 @@ class MonthlyReportSummary extends Command
             ->where('payment_date', '<', $periodEnd)
             ->sum('installment_amount');
 
-        $actual = $eligibleInstallments()
-            ->whereIn('status', self::PAID_INSTALLMENT_STATUSES)
+        $actual = PaymentSettlement::query()
+            ->reportable()
+            ->whereHas('debitOrder', fn ($query) => $query->where('partner_id', $partnerId))
             ->where('effective_payment_date', '>=', $periodStart)
             ->where('effective_payment_date', '<', $periodEnd)
-            ->sum('current_balance');
+            ->sum('paid_amount');
 
         return [
             'expected' => (float) $expected,

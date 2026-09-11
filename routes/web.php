@@ -8,6 +8,7 @@ use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\CollectionController;
+use App\Http\Controllers\CollectionIntegrityController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\CustomerAccountController;
 use App\Http\Controllers\CustomerController;
@@ -94,6 +95,10 @@ Route::middleware('auth')->group(function () {
     //system health
     Route::get('system-health', [SystemHealthController::class, 'index'])->name('system-health.index');
     Route::post('system-health/check', [SystemHealthController::class, 'run'])->name('system-health.run');
+
+    //collection integrity
+    Route::get('collection-integrity', [CollectionIntegrityController::class, 'index'])->name('collection-integrity.index');
+    Route::post('collection-integrity/run', [CollectionIntegrityController::class, 'run'])->name('collection-integrity.run');
 
     //charts
     Route::get('charts/mandate-values', [DashboardChartController::class, 'mandate_values']);
@@ -195,7 +200,7 @@ Route::middleware('auth')->group(function () {
     Route::get('payment-mandate/export-xls', [PaymentMandateListController::class, 'export_xls'])->name('payment-mandate.export-xls');
     Route::get('payment-mandate/export-pdf', [PaymentMandateListController::class, 'export_pdf'])->name('payment-mandate.export-pdf');
 
-    //customer account 
+    //customer account
     Route::get('payment-mandate/create-account/{ca_uuid?}/{do_uuid?}', [PaymentMandateCreateController::class, 'create_account'])->name('payment-mandate.create-account');
     Route::post('payment-mandate/store-account', [PaymentMandateCreateController::class, 'store_account'])->name('payment-mandate.store-account');
 
@@ -203,7 +208,7 @@ Route::middleware('auth')->group(function () {
     Route::get('payment-mandate/create-deduction/{ca_uuid}/{do_uuid?}', [PaymentMandateCreateController::class, 'create_deduction'])->name('payment-mandate.create-deduction');
     Route::post('payment-mandate/store-deduction', [PaymentMandateCreateController::class, 'store_deduction'])->name('payment-mandate.store-deduction');
 
-    //preview 
+    //preview
     Route::get('payment-mandate/preview/{do_uuid}', [PaymentMandateCreateController::class, 'preview'])->name('payment-mandate.preview');
     Route::get('payment-mandate/cancel/{do_uuid}', [PaymentMandateCreateController::class, 'cancel'])->name('payment-mandate.cancel');
     Route::post('payment-mandate/save', [PaymentMandateCreateController::class, 'save'])->name('payment-mandate.save');

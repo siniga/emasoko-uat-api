@@ -13,30 +13,30 @@ const renderMandatesPostedVsDeductedChart = (selector, data) => {
     }
 
     const arr_month = [];
-    const arr_paid = [];
-    const arr_gap = [];
+    const arr_posted = [];
+    const arr_deducted = [];
 
     for (let k = 0; k < data.chart.length; k++) {
         arr_month.push(data.chart[k].month);
-        arr_paid.push(data.chart[k].paid);
-        arr_gap.push(Math.max(data.chart[k].total - data.chart[k].paid, 0));
+        arr_posted.push(data.chart[k].posted || 0);
+        arr_deducted.push(data.chart[k].deducted || 0);
     }
 
     const options = {
         series: [
             {
-                name: "Deducted (collected)",
-                data: arr_paid,
+                name: "Posted",
+                data: arr_posted,
             },
             {
-                name: "Gap (not collected)",
-                data: arr_gap,
+                name: "Deducted",
+                data: arr_deducted,
             },
         ],
         chart: {
             type: "bar",
             height: 360,
-            stacked: true,
+            stacked: false,
             toolbar: {
                 show: false,
             },

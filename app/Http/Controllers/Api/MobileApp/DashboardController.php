@@ -6,29 +6,49 @@ use App\Http\Controllers\Api\ExternalApp\Concerns\RespondsWithApi;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\MandateResource;
 use App\Models\Account;
-use App\Models\CompanyUser;
 use App\Models\DebitOrder;
+use App\Models\PaymentSettlement;
 use App\Models\Partner;
+use App\Models\User;
+use App\Services\DashboardReportingQueryService;
 use Carbon\Carbon;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
     use RespondsWithApi;
 
+    protected User $authenticatedUser;
+
+    public function __construct(private DashboardReportingQueryService $reporting)
+    {
+    }
+
     public function index(Request $request): JsonResponse
     {
+        $this->authenticatedUser = $request->user();
         $filters = $this->filters($request);
         $selectedYear = $request->filled('year') ? $filters['year'] : null;
         $collectionYear = $selectedYear ?? now()->year;
         $selectedToday = $this->selectedToday($collectionYear);
 
-        $mandateStats = $this->mandateStats($filters, $selectedYear);
-        $collectionStats = $this->collectionStats($filters, $collectionYear, $filters['month'], $selectedToday);
-        $yearSummary = $this->yearCollectionSummary($filters, $selectedYear);
+        $cachedSummary = $this->reporting->remember(
+            $this->authenticatedUser,
+            'mobile-dashboard-summary',
+            array_merge($filters, ['selected_year' => $selectedYear, 'selected_today' => $selectedToday]),
+            function () use ($filters, $selectedYear, $collectionYear, $selectedToday) {
+                $mandateStats = $this->mandateStats($filters, $selectedYear);
+                $collectionStats = $this->collectionStats($filters, $collectionYear, $filters['month'], $selectedToday);
+                $yearSummary = $this->yearCollectionSummary($filters, $selectedYear);
+
+                return compact('mandateStats', 'collectionStats', 'yearSummary');
+            }
+        );
+        $mandateStats = $cachedSummary['mandateStats'];
+        $collectionStats = $cachedSummary['collectionStats'];
+        $yearSummary = $cachedSummary['yearSummary'];
         $yearSuccessRate = $this->percentage($yearSummary['paid_amount'], $yearSummary['expected_amount']);
         $paymentChannels = Account::where('active', 1)->orderBy('name')->get();
 
@@ -68,6 +88,7 @@ class DashboardController extends Controller
             ->get();
 
         return $this->successResponse('Dashboard fetched successfully.', [
+            'data_fresh_at' => optional($this->reporting->lastUpdatedAt())->toIso8601String(),
             'filters' => [
                 'year' => $selectedYear ?? now()->year,
                 'month' => $filters['month'],
@@ -133,7 +154,7 @@ class DashboardController extends Controller
             ->selectRaw('COUNT(debit_order_id) as number_of_mandate')
             ->whereIn('mandate_approved', [0, 1, 2])
             ->when($year !== null, function ($query) use ($year) {
-                $query->whereYear('created_at', $year);
+                $query->where('mandate_created_year', $year);
             })
             ->groupBy('mandate_approved')
             ->orderBy('mandate_approved')
@@ -162,52 +183,57 @@ class DashboardController extends Controller
 
     protected function collectionStats(array $filters, int $year, int $month, string $todayDate): array
     {
-        $monthStats = $this->collectionViewQuery($filters)
-            ->selectRaw('COUNT(CASE WHEN MONTH(payment_date) = ? AND YEAR(payment_date) = ? THEN 1 END) as total_collections', [$month, $year])
-            ->selectRaw('COALESCE(SUM(CASE WHEN MONTH(payment_date) = ? AND YEAR(payment_date) = ? THEN installment_amount ELSE 0 END), 0) as total_amount', [$month, $year])
-            ->selectRaw('COUNT(CASE WHEN MONTH(effective_payment_date) = ? AND YEAR(effective_payment_date) = ? AND collection_status IN (?, ?) THEN 1 END) as successful_collections', [$month, $year, ...$this->paidStatuses()])
-            ->selectRaw('COALESCE(SUM(CASE WHEN MONTH(effective_payment_date) = ? AND YEAR(effective_payment_date) = ? AND collection_status IN (?, ?) THEN current_balance ELSE 0 END), 0) as paid_amount', [$month, $year, ...$this->paidStatuses()])
+        $monthExpected = $this->expectedCollectionViewQuery($filters)
+            ->where('expected_year', $year)
+            ->where('expected_month', $month)
+            ->selectRaw('COUNT(installment_id) as total_collections')
+            ->selectRaw('COALESCE(SUM(installment_amount), 0) as total_amount')
             ->first();
 
-        $todayStats = $this->collectionViewQuery($filters)
-            ->selectRaw('COUNT(CASE WHEN DATE(payment_date) = ? THEN 1 END) as total_collections', [$todayDate])
-            ->selectRaw('COALESCE(SUM(CASE WHEN DATE(payment_date) = ? THEN installment_amount ELSE 0 END), 0) as total_amount', [$todayDate])
-            ->selectRaw('COUNT(CASE WHEN DATE(effective_payment_date) = ? AND collection_status IN (?, ?) THEN 1 END) as successful_collections', [$todayDate, ...$this->paidStatuses()])
-            ->selectRaw('COALESCE(SUM(CASE WHEN DATE(effective_payment_date) = ? AND collection_status IN (?, ?) THEN current_balance ELSE 0 END), 0) as paid_amount', [$todayDate, ...$this->paidStatuses()])
+        $monthPaid = $this->paymentCollectionViewQuery($filters)
+            ->where('collected_year', $year)
+            ->where('collected_month', $month)
+            ->selectRaw('COUNT(settlement_id) as successful_collections')
+            ->selectRaw('COALESCE(SUM(paid_amount), 0) as paid_amount')
+            ->first();
+
+        $todayExpected = $this->expectedCollectionViewQuery($filters)
+            ->whereDate('expected_date', $todayDate)
+            ->selectRaw('COUNT(installment_id) as total_collections')
+            ->selectRaw('COALESCE(SUM(installment_amount), 0) as total_amount')
+            ->first();
+
+        $todayPaid = $this->paymentCollectionViewQuery($filters)
+            ->whereDate('collected_date', $todayDate)
+            ->selectRaw('COUNT(settlement_id) as successful_collections')
+            ->selectRaw('COALESCE(SUM(paid_amount), 0) as paid_amount')
             ->first();
 
         return [
             'month' => Carbon::create($year, $month, 1)->format('F'),
-            'this_month_total_collections' => (int) ($monthStats->total_collections ?? 0),
-            'this_month_expected' => (float) ($monthStats->total_amount ?? 0),
-            'this_month_successful_collections' => (int) ($monthStats->successful_collections ?? 0),
-            'this_month_paid' => (float) ($monthStats->paid_amount ?? 0),
-            'today_total_collections' => (int) ($todayStats->total_collections ?? 0),
-            'today_expected' => (float) ($todayStats->total_amount ?? 0),
-            'today_successful_collections' => (int) ($todayStats->successful_collections ?? 0),
-            'today_paid' => (float) ($todayStats->paid_amount ?? 0),
+            'this_month_total_collections' => (int) ($monthExpected->total_collections ?? 0),
+            'this_month_expected' => (float) ($monthExpected->total_amount ?? 0),
+            'this_month_successful_collections' => (int) ($monthPaid->successful_collections ?? 0),
+            'this_month_paid' => (float) ($monthPaid->paid_amount ?? 0),
+            'today_total_collections' => (int) ($todayExpected->total_collections ?? 0),
+            'today_expected' => (float) ($todayExpected->total_amount ?? 0),
+            'today_successful_collections' => (int) ($todayPaid->successful_collections ?? 0),
+            'today_paid' => (float) ($todayPaid->paid_amount ?? 0),
         ];
     }
 
     protected function yearCollectionSummary(array $filters, ?int $year): array
     {
-        $query = $this->collectionViewQuery($filters);
-
-        if ($year !== null) {
-            $summary = $query
-                ->selectRaw('COALESCE(SUM(CASE WHEN YEAR(payment_date) = ? THEN installment_amount ELSE 0 END), 0) as expected_amount', [$year])
-                ->selectRaw('COALESCE(SUM(CASE WHEN YEAR(effective_payment_date) = ? AND collection_status IN (?, ?) THEN current_balance ELSE 0 END), 0) as paid_amount', [$year, ...$this->paidStatuses()])
-                ->first();
-        } else {
-            $summary = $query
-                ->selectRaw('COALESCE(SUM(installment_amount), 0) as expected_amount')
-                ->selectRaw('COALESCE(SUM(CASE WHEN collection_status IN (?, ?) THEN current_balance ELSE 0 END), 0) as paid_amount', $this->paidStatuses())
-                ->first();
-        }
+        $expected = $this->expectedCollectionViewQuery($filters)
+            ->when($year, fn ($query, $value) => $query->where('expected_year', $value))
+            ->sum('installment_amount');
+        $paid = $this->paymentCollectionViewQuery($filters)
+            ->when($year, fn ($query, $value) => $query->where('collected_year', $value))
+            ->sum('paid_amount');
 
         return [
-            'expected_amount' => (float) ($summary->expected_amount ?? 0),
-            'paid_amount' => (float) ($summary->paid_amount ?? 0),
+            'expected_amount' => (float) $expected,
+            'paid_amount' => (float) $paid,
         ];
     }
 
@@ -230,10 +256,20 @@ class DashboardController extends Controller
 
     protected function bankChannelPerformance($paymentChannels, array $filters, int $year, int $month)
     {
-        $amounts = $this->collectionViewQuery($filters)
+        $expectedAmounts = $this->expectedCollectionViewQuery($filters)
             ->select('channel')
-            ->selectRaw('COALESCE(SUM(CASE WHEN MONTH(payment_date) = ? AND YEAR(payment_date) = ? THEN installment_amount ELSE 0 END), 0) as expected_amount', [$month, $year])
-            ->selectRaw('COALESCE(SUM(CASE WHEN MONTH(effective_payment_date) = ? AND YEAR(effective_payment_date) = ? AND collection_status IN (?, ?) THEN current_balance ELSE 0 END), 0) as paid_amount', [$month, $year, ...$this->paidStatuses()])
+            ->selectRaw('COALESCE(SUM(installment_amount), 0) as expected_amount')
+            ->where('expected_year', $year)
+            ->where('expected_month', $month)
+            ->groupBy('channel')
+            ->get()
+            ->keyBy(fn ($row) => $this->normalizeChannelLookupKey($row->channel));
+
+        $paidAmounts = $this->paymentCollectionViewQuery($filters)
+            ->select('channel')
+            ->selectRaw('COALESCE(SUM(paid_amount), 0) as paid_amount')
+            ->where('collected_year', $year)
+            ->where('collected_month', $month)
             ->groupBy('channel')
             ->get()
             ->keyBy(fn ($row) => $this->normalizeChannelLookupKey($row->channel));
@@ -248,10 +284,10 @@ class DashboardController extends Controller
 
         return $paymentChannels
             ->when($filters['channel'], fn ($items) => $items->where('slug', $filters['channel']))
-            ->map(function ($paymentChannel) use ($amounts, $mandates) {
+            ->map(function ($paymentChannel) use ($expectedAmounts, $paidAmounts, $mandates) {
                 $lookupKey = $this->normalizeChannelLookupKey($paymentChannel->slug ?: $paymentChannel->name);
-                $expected = (float) data_get($amounts, "{$lookupKey}.expected_amount", 0);
-                $paid = (float) data_get($amounts, "{$lookupKey}.paid_amount", 0);
+                $expected = (float) data_get($expectedAmounts, "{$lookupKey}.expected_amount", 0);
+                $paid = (float) data_get($paidAmounts, "{$lookupKey}.paid_amount", 0);
                 $rate = $expected > 0 ? round(($paid / $expected) * 100, 1) : null;
                 $isLive = $expected > 0 || $paid > 0;
 
@@ -275,11 +311,11 @@ class DashboardController extends Controller
     {
         $summaryStatuses = [DebitOrder::SUMMARY_PENDING, DebitOrder::SUMMARY_APPROVED, DebitOrder::SUMMARY_FAILED];
         $grouped = $this->mandateViewQuery($filters)
-            ->select(DB::raw('MONTH(created_at) as month_number'), 'lifecycle_status')
+            ->select('mandate_created_month as month_number', 'lifecycle_status')
             ->selectRaw('COALESCE(SUM(total_amount), 0) as total_amount')
             ->whereIn('lifecycle_status', array_merge(...array_values(DebitOrder::lifecycleSummaryMap())))
-            ->whereYear('created_at', $year)
-            ->groupBy(DB::raw('MONTH(created_at)'), 'lifecycle_status')
+            ->where('mandate_created_year', $year)
+            ->groupBy('mandate_created_month', 'lifecycle_status')
             ->get()
             ->groupBy('month_number');
 
@@ -328,33 +364,44 @@ class DashboardController extends Controller
 
     protected function collectedMandatesChart(array $filters, int $year): array
     {
-        $expectedByMonth = $this->collectionViewQuery($filters)
-            ->select(DB::raw('MONTH(payment_date) as month_number'))
-            ->selectRaw('COALESCE(COUNT(installment_id), 0) as all_mandates')
+        $expectedByMonth = $this->expectedCollectionViewQuery($filters)
+            ->select('expected_month as month_number')
             ->selectRaw('COALESCE(SUM(installment_amount), 0) as expected_amount')
-            ->whereYear('payment_date', $year)
-            ->groupBy(DB::raw('MONTH(payment_date)'))
+            ->where('expected_year', $year)
+            ->groupBy('expected_month')
             ->get()
             ->keyBy('month_number');
 
-        $paidByMonth = $this->collectionViewQuery($filters)
-            ->select(DB::raw('MONTH(effective_payment_date) as month_number'))
-            ->selectRaw('COALESCE(COUNT(installment_id), 0) as paid_mandates')
-            ->selectRaw('COALESCE(SUM(current_balance), 0) as paid_amount')
-            ->whereYear('effective_payment_date', $year)
-            ->whereIn('collection_status', $this->paidStatuses())
-            ->groupBy(DB::raw('MONTH(effective_payment_date)'))
+        $postedByMonth = $this->reporting->collectionPostings($this->authenticatedUser, $filters)
+            ->select('posted_month as month_number')
+            ->selectRaw('COUNT(DISTINCT debit_order_id) as posted_mandates')
+            ->where('posted_year', $year)
+            ->groupBy('posted_month')
             ->get()
             ->keyBy('month_number');
 
-        return collect(range(1, 12))->map(function ($month) use ($expectedByMonth, $paidByMonth) {
+        $paidByMonth = $this->paymentCollectionViewQuery($filters)
+            ->select('collected_month as month_number')
+            ->selectRaw('COUNT(DISTINCT debit_order_id) as deducted_mandates')
+            ->selectRaw('COALESCE(SUM(paid_amount), 0) as paid_amount')
+            ->where('collected_year', $year)
+            ->groupBy('collected_month')
+            ->get()
+            ->keyBy('month_number');
+
+        return collect(range(1, 12))->map(function ($month) use ($expectedByMonth, $postedByMonth, $paidByMonth) {
             $expected = $expectedByMonth->get($month);
+            $posted = $postedByMonth->get($month);
             $paid = $paidByMonth->get($month);
+            $postedMandates = (int) ($posted->posted_mandates ?? 0);
+            $deductedMandates = (int) ($paid->deducted_mandates ?? 0);
 
             return [
                 'month' => Carbon::create(null, $month, 1)->format('M'),
-                'total' => (int) ($expected->all_mandates ?? 0),
-                'paid' => (int) ($paid->paid_mandates ?? 0),
+                'posted' => $postedMandates,
+                'deducted' => $deductedMandates,
+                'total' => $postedMandates,
+                'paid' => $deductedMandates,
                 'total_amount' => (float) ($expected->expected_amount ?? 0),
                 'paid_amount' => (float) ($paid->paid_amount ?? 0),
             ];
@@ -367,19 +414,18 @@ class DashboardController extends Controller
         $startDate = min($dates);
         $endDate = max($dates);
 
-        $expectedByDate = $this->collectionViewQuery($filters)
-            ->select(DB::raw('DATE(payment_date) as day_date'))
+        $expectedByDate = $this->expectedCollectionViewQuery($filters)
+            ->select('expected_date as day_date')
             ->selectRaw('COALESCE(SUM(installment_amount), 0) as total_amount')
-            ->whereBetween('payment_date', [$startDate, $endDate])
-            ->groupBy(DB::raw('DATE(payment_date)'))
+            ->whereBetween('expected_date', [$startDate, $endDate])
+            ->groupBy('expected_date')
             ->pluck('total_amount', 'day_date');
 
-        $paidByDate = $this->collectionViewQuery($filters)
-            ->select(DB::raw('DATE(effective_payment_date) as day_date'))
-            ->selectRaw('COALESCE(SUM(current_balance), 0) as paid_amount')
-            ->whereBetween('effective_payment_date', [$startDate, $endDate])
-            ->whereIn('collection_status', $this->paidStatuses())
-            ->groupBy(DB::raw('DATE(effective_payment_date)'))
+        $paidByDate = $this->paymentCollectionViewQuery($filters)
+            ->select('collected_date as day_date')
+            ->selectRaw('COALESCE(SUM(paid_amount), 0) as paid_amount')
+            ->whereBetween('collected_date', [$startDate, $endDate])
+            ->groupBy('collected_date')
             ->pluck('paid_amount', 'day_date');
 
         return collect($dates)->map(fn ($day) => [
@@ -403,8 +449,8 @@ class DashboardController extends Controller
                     ->where('account_id', $account->id)
                     ->whereIn('lifecycle_status', array_merge(...array_values(DebitOrder::lifecycleSummaryMap())))
                     ->when($month, function ($query) use ($month, $year) {
-                        $query->whereMonth('created_at', $month)
-                            ->whereYear('created_at', $year);
+                        $query->where('mandate_created_month', $month)
+                            ->where('mandate_created_year', $year);
                     })
                     ->groupBy('lifecycle_status')
                     ->get();
@@ -428,101 +474,40 @@ class DashboardController extends Controller
 
     protected function mandateViewQuery(array $filters): QueryBuilder
     {
-        $query = DB::table('vw_dashboard_mandates')
-            ->where('partner_approved', 1);
-
-        $this->applyUserScope($query);
-        $this->applyDashboardFilters($query, $filters);
-
-        return $query;
+        return $this->reporting->mandates($this->authenticatedUser, $filters);
     }
 
-    protected function collectionViewQuery(array $filters): QueryBuilder
+    protected function expectedCollectionViewQuery(array $filters): QueryBuilder
     {
-        $query = DB::table('vw_dashboard_collections')
-            ->where('partner_approved', 1)
-            ->where('mandate_approved', 1);
-
-        $this->applyUserScope($query);
-        $this->applyDashboardFilters($query, $filters);
+        $query = $this->reporting->expectedCollections($this->authenticatedUser, $filters);
 
         if (!empty($filters['collection_status'])) {
-            $query->whereIn('collection_status', $this->normalizeCollectionStatuses($filters['collection_status']));
+            $query->whereIn('collection_status', $this->normalizeExpectedStatuses($filters['collection_status']));
         }
 
         return $query;
     }
 
-    protected function applyUserScope(QueryBuilder $query): void
+    protected function paymentCollectionViewQuery(array $filters): QueryBuilder
     {
-        $user = request()->user();
+        $query = $this->reporting->paymentCollections($this->authenticatedUser, $filters);
 
-        if (!$user) {
-            $query->whereRaw('1 = 0');
-            return;
+        if (!empty($filters['collection_status'])) {
+            $query->whereIn('collection_status', $this->normalizePaymentStatuses($filters['collection_status']));
         }
 
-        if ($user->hasRole('Partner')) {
-            $companyId = CompanyUser::where('user_id', $user->id)->value('company_id');
-            $companyId ? $query->where('company_id', $companyId) : $query->whereRaw('1 = 0');
-            return;
-        }
-
-        if ($user->hasRole('Company_Approver')) {
-            $partnerIds = $user->partners
-                ->where('authorize', 1)
-                ->pluck('partner_id')
-                ->values()
-                ->all();
-
-            $partnerIds ? $query->whereIn('partner_id', $partnerIds) : $query->whereRaw('1 = 0');
-            return;
-        }
-
-        if ($user->hasRole('Company_User')) {
-            $query->where('created_by', $user->id);
-        }
+        return $query;
     }
 
-    protected function applyDashboardFilters(QueryBuilder $query, array $filters): void
-    {
-        $query->when($filters['channel'] ?? null, function ($query, $channel) {
-            $query->where('channel', $channel);
-        });
-
-        $query->when($filters['partner_id'] ?? null, function ($query, $partnerId) {
-            $query->where('partner_id', $partnerId);
-        });
-
-        $query->when($filters['corporate_reference'] ?? null, function ($query, $corporateReference) {
-            $query->where('corporate_reference', $corporateReference);
-        });
-
-        $query->when($filters['mandate_type'] ?? null, function ($query, $mandateType) {
-            $query->whereRaw('LOWER(mandate_type) = ?', [strtolower($mandateType)]);
-        });
-
-        $query->when($filters['keyword'] ?? null, function ($query, $keyword) {
-            $lowered = strtolower($keyword);
-
-            $query->where(function ($searchQuery) use ($lowered) {
-                $searchQuery->whereRaw('LOWER(mandate_reference) LIKE ?', ["%{$lowered}%"])
-                    ->orWhereRaw('LOWER(corporate_reference) LIKE ?', ["%{$lowered}%"])
-                    ->orWhereRaw('LOWER(partner_name) LIKE ?', ["%{$lowered}%"])
-                    ->orWhereRaw('LOWER(account_name) LIKE ?', ["%{$lowered}%"])
-                    ->orWhereRaw('LOWER(account_number) LIKE ?', ["%{$lowered}%"])
-                    ->orWhereRaw('LOWER(payment_reference) LIKE ?', ["%{$lowered}%"]);
-            });
-        });
-    }
-
-    protected function normalizeCollectionStatuses($status): array
+    protected function normalizeExpectedStatuses($status): array
     {
         return collect(is_array($status) ? $status : explode(',', (string) $status))
             ->flatMap(function ($value) {
-                $normalized = strtoupper(trim((string) $value));
-
-                return $normalized === 'COLLECTED' ? $this->paidStatuses() : [$normalized];
+                return match (strtoupper(trim((string) $value))) {
+                    'COLLECTED', 'SUCCESS' => ['CLOSED', 'PARTIAL_PAID'],
+                    'PARTIAL' => ['PARTIAL_PAID'],
+                    default => [strtoupper(trim((string) $value))],
+                };
             })
             ->filter()
             ->unique()
@@ -530,9 +515,24 @@ class DashboardController extends Controller
             ->all();
     }
 
-    protected function paidStatuses(): array
+    protected function normalizePaymentStatuses($status): array
     {
-        return ['CLOSED', 'PARTIAL_PAID'];
+        return collect(is_array($status) ? $status : explode(',', (string) $status))
+            ->flatMap(function ($value) {
+                return match (strtoupper(trim((string) $value))) {
+                    'COLLECTED', 'CLOSED' => [
+                        PaymentSettlement::STATUS_SUCCESS,
+                        PaymentSettlement::STATUS_PARTIAL,
+                        PaymentSettlement::STATUS_REVERSED,
+                    ],
+                    'PARTIAL_PAID' => [PaymentSettlement::STATUS_PARTIAL],
+                    default => [strtoupper(trim((string) $value))],
+                };
+            })
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
     }
 
     protected function selectedToday(int $year): string

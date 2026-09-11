@@ -8,6 +8,7 @@ use App\Http\Resources\InstallmentResource;
 use App\Http\Resources\MandateResource;
 use App\Models\DebitOrder;
 use App\Models\Installment;
+use App\Services\DashboardReportingQueryService;
 use Carbon\Carbon;
 use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
@@ -501,8 +502,20 @@ class PaymentMandateController extends ExternalPaymentMandateController
 
         $summaryMap = $this->mandateSummaryMap($this->summaryMandateFilters($request, $currentYear, $currentMonth));
 
-        $thisMonth = Installment::thisMonthStats($currentMonth, $currentYear, $channel);
-        $today = Installment::todayStats(now()->toDateString(), $channel);
+        $reporting = app(DashboardReportingQueryService::class);
+        $user = Auth::user();
+        $viewFilters = ['channel' => $channel];
+        $monthExpected = $reporting->expectedCollections($user, $viewFilters)
+            ->where('expected_year', $currentYear)
+            ->where('expected_month', $currentMonth);
+        $monthPaid = $reporting->paymentCollections($user, $viewFilters)
+            ->where('collected_year', $currentYear)
+            ->where('collected_month', $currentMonth);
+        $todayDate = now()->toDateString();
+        $todayExpected = $reporting->expectedCollections($user, $viewFilters)
+            ->whereDate('payment_date', $todayDate);
+        $todayPaid = $reporting->paymentCollections($user, $viewFilters)
+            ->whereDate('effective_payment_date', $todayDate);
 
         return [
             'mandates' => [
@@ -518,17 +531,19 @@ class PaymentMandateController extends ExternalPaymentMandateController
                 'month' => [
                     'year' => $currentYear,
                     'month' => $currentMonth,
-                    'expected_count' => (int) ($thisMonth->total_collections ?? 0),
-                    'paid_count' => (int) ($thisMonth->successful_collections ?? 0),
-                    'expected_amount' => (float) ($thisMonth->total_amount ?? 0),
-                    'paid_amount' => (float) ($thisMonth->paid_amount ?? 0),
+                    'expected_count' => (clone $monthExpected)->count(),
+                    'paid_count' => (clone $monthPaid)->distinct()->count('installment_id'),
+                    'payment_event_count' => (clone $monthPaid)->count(),
+                    'expected_amount' => (float) (clone $monthExpected)->sum('installment_amount'),
+                    'paid_amount' => (float) (clone $monthPaid)->sum('paid_amount'),
                 ],
                 'today' => [
-                    'date' => now()->toDateString(),
-                    'expected_count' => (int) ($today->total_collections ?? 0),
-                    'paid_count' => (int) ($today->successful_collections ?? 0),
-                    'expected_amount' => (float) ($today->total_amount ?? 0),
-                    'paid_amount' => (float) ($today->paid_amount ?? 0),
+                    'date' => $todayDate,
+                    'expected_count' => (clone $todayExpected)->count(),
+                    'paid_count' => (clone $todayPaid)->distinct()->count('installment_id'),
+                    'payment_event_count' => (clone $todayPaid)->count(),
+                    'expected_amount' => (float) (clone $todayExpected)->sum('installment_amount'),
+                    'paid_amount' => (float) (clone $todayPaid)->sum('paid_amount'),
                 ],
             ],
             'filters' => $this->filterPayload($request->all()),
