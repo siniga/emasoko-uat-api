@@ -304,11 +304,12 @@ class SettlementPostingService
         }
 
         $paymentDate = $installment->payment_date;
-        $outstandingAmount = number_format((float) $debitOrder->outstanding_amount);
+        $installmentOutstandingAmount = max((float) $installment->outstanding_amount, 0);
+        $outstandingAmount = number_format($installmentOutstandingAmount);
         $paidAmount = number_format($paidAmount);
         $businessName = $debitOrder->partner?->business_name ?? 'mtoa huduma';
         $accountLastDigits = $this->smsTemplateService->accountLastDigits($debitOrder->customerAccount?->account_number);
-        $templateCode = strtoupper((string) $debitOrder->channel) === 'CRDB' && (float) $debitOrder->outstanding_amount > 0
+        $templateCode = strtoupper((string) $debitOrder->channel) === 'CRDB' && $installmentOutstandingAmount > 0
             ? 'partial_deduction'
             : 'deduction_success';
         $fallback = "Makato ya tarehe {$paymentDate} ya kiasi cha shilingi {$paidAmount} yamekamilishwa kwa {$businessName}. Kiasi kilichobaki ni Tsh {$outstandingAmount}.";

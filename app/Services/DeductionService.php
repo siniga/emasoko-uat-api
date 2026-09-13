@@ -764,7 +764,8 @@ class DeductionService
                 $payment_date = $installment->payment_date;
 
                 //format amount
-                $outstandingAmt = number_format($outstanding_amount);
+                $installmentOutstandingAmount = max((float) $installment->outstanding_amount, 0);
+                $outstandingAmt = number_format($installmentOutstandingAmount);
                 $paidAmt = number_format($paid_amount);
 
                 //business name
@@ -773,7 +774,7 @@ class DeductionService
                 //send message for outstanding amount and current balance from eMakato.
                 $phone = $installment->debitOrder->customerAccount->phone;
                 $accountLastDigits = $this->smsTemplateService->accountLastDigits($debitOrder->customerAccount?->account_number);
-                $templateCode = strtoupper((string) $debitOrder->channel) === 'CRDB' && (float) $outstanding_amount > 0
+                $templateCode = strtoupper((string) $debitOrder->channel) === 'CRDB' && $installmentOutstandingAmount > 0
                     ? 'partial_deduction'
                     : 'deduction_success';
                 $fallback = "Makato ya tarehe {$payment_date} ya kiasi cha shilingi {$paidAmt} yamekamilishwa kwa {$businessName}. Kiasi kilichobaki ni Tsh {$outstandingAmt}.";
