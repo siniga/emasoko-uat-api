@@ -967,13 +967,14 @@ class DeductionService
     //get collection reference
     public function getCollectionReference()
     {
-        $appVariable = $this->appVariable();
+        $appVariable = AppVariable::query()->lockForUpdate()->firstOrFail();
 
         $cur_collection_reference = ((int) $appVariable->cur_collection_reference) + 1;
 
         //update app variable
         $appVariable->cur_collection_reference = $cur_collection_reference;
         $appVariable->save();
+        $this->app_variable = $appVariable;
 
         return $cur_collection_reference;
     }

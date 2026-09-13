@@ -18,8 +18,7 @@
         <div class="row">
             <div class="col-lg-12">
                 <div class="sp-list-filter mb-3">
-                    {!! Form::open(['url' => route('collections.batches'), 'method' => 'POST', 'class' => 'form-horizontal']) !!}
-                    {{ Form::token() }}
+                    {!! Form::open(['url' => route('collections.batches'), 'method' => 'GET', 'class' => 'form-horizontal']) !!}
 
                     <div class="row">
                         <div class="col-lg-3">
@@ -50,27 +49,34 @@
                                     'cl_status',
                                     [
                                         '' => '-- Status --',
-                                        'uploaded' => 'Uploaded',
-                                        'processed' => 'Processed',
+                                        'ready' => 'Ready',
+                                        'in_progress' => 'In Progress',
+                                        'successful' => 'Successful',
                                         'failed' => 'Failed',
                                     ],
-                                    old('cl_status'),
+                                    old('cl_status', $post_data['cl_status']),
                                     ['class' => 'form-control select2', 'id' => 'cl_status'],
                                 ) }}
                             </div>
                         </div>
 
-                        <div class="col-lg-6">
+                        <div class="col-lg-3">
                             <div class="mb-3">
-                                {{ Form::text('mandate_reference', old('mandate_reference', $post_data['mandate_reference']), ['class' => 'form-control', 'placeholder' => 'Search by mandate reference or account number...']) }}
+                                {{ Form::text('collection_reference', old('collection_reference', $post_data['collection_reference']), ['class' => 'form-control', 'placeholder' => 'Collection reference...']) }}
                             </div>
                         </div>
 
-                        <div class="col-lg-6">
+                        <div class="col-lg-4">
+                            <div class="mb-3">
+                                {{ Form::text('mandate_reference', old('mandate_reference', $post_data['mandate_reference']), ['class' => 'form-control', 'placeholder' => 'Mandate reference or account number...']) }}
+                            </div>
+                        </div>
+
+                        <div class="col-lg-5">
                             <div class="mb-0 text-sm-end d-none d-sm-block">
-                                <button type="reset" name="reset" class="btn btn-outline-danger">
+                                <a href="{{ route('collections.batches') }}" class="btn btn-outline-danger">
                                     <i class='bx bx-reset'></i> Clear
-                                </button>
+                                </a>
 
                                 <button type="submit" name="filter" class="btn btn-secondary">
                                     <i class="bx bx-search"></i> Apply Filters
@@ -81,45 +87,8 @@
                     {{ Form::close() }}
                 </div>
 
-                <div class="row mb-3">
-                    <div class="col-md-2">
-                        <div class="detail-summary shadow h-96 py-2">
-                            <div class="detail-summary__label text-muted">Total Batches</div>
-                            <div class="detail-summary__value text-primary">
-                                {{ number_format($listStats['total'] ?? 0) }}</div>
-                        </div>
-                    </div>
-                    <div class="col-md-2">
-                        <div class="detail-summary shadow h-96 py-2">
-                            <div class="detail-summary__label text-muted">Uploaded</div>
-                            <div class="detail-summary__value text-secondary">
-                                {{ number_format($listStats['uploaded'] ?? 0) }}</div>
-                        </div>
-                    </div>
-                    <div class="col-md-2">
-                        <div class="detail-summary shadow h-96 py-2">
-                            <div class="detail-summary__label text-muted">Processed</div>
-                            <div class="detail-summary__value text-success">
-                                {{ number_format($listStats['processed'] ?? 0) }}</div>
-                        </div>
-                    </div>
-                    <div class="col-md-2">
-                        <div class="detail-summary shadow h-96 py-2">
-                            <div class="detail-summary__label text-muted">Failed</div>
-                            <div class="detail-summary__value text-danger">
-                                {{ number_format($listStats['failed'] ?? 0) }}</div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="detail-summary shadow h-96 py-2">
-                            <div class="detail-summary__label text-muted">Total No. of Collections</div>
-                            <div class="detail-summary__value text-draft">
-                                {{ number_format($listStats['collections'] ?? 0) }}</div>
-                        </div>
-                    </div>
-                </div>
-
                 <div class="card">
+
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-12">
@@ -155,9 +124,11 @@
                                             Create Failed {{ $monthlyFailedEligibility['month_label'] ?? '' }}
                                         </button>
                                     @endif --}}
-                                    <a class="btn btn-primary btn-sm" href="{{ route('collections.create') }}">
-                                        <i class="bx bx-list-plus"></i> Create Collection Batch
-                                    </a>
+                                    @if ($canManageBatches)
+                                        <a class="btn btn-primary btn-sm" href="{{ route('collections.create') }}">
+                                            <i class="bx bx-list-plus"></i> Create Collection Batch
+                                        </a>
+                                    @endif
 
                                     {{-- <a class="btn btn-secondary btn-sm" href="{{ route('collections.create-failed') }}">
                                         <i class="bx bx-list-check"></i> Create Failed Batches
@@ -165,12 +136,6 @@
                                 </div>
                             </div>
                         </div>
-
-                        @if (!empty($monthlyFailedEligibility['reason']))
-                            <div class="alert alert-info py-2 px-3 mb-3">
-                                {{ $monthlyFailedEligibility['reason'] }}
-                            </div>
-                        @endif
 
                         @if (isset($batches) && $batches->isNotEmpty())
                             <div class="table-responsive sp-list-table">
@@ -190,7 +155,7 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @php $serial = 1; @endphp
+                                        @php $serial = $batches->firstItem() ?? 1; @endphp
                                         @foreach ($batches as $values)
                                             <tr>
                                                 <td>{{ $serial }}</td>
@@ -218,17 +183,13 @@
                                                 <td>{{ date('d-m-Y', strtotime($values->collectionDate)) }}</td>
                                                 <td>{{ date('d-m-Y', strtotime($values->created_at)) }}</td>
                                                 <td class="text-center">
-                                                    <div class="dropdown sp-row-actions">
-                                                        <button class="btn dropdown-toggle" type="button"
-                                                            data-bs-toggle="dropdown" aria-expanded="false"
-                                                            title="Batch Actions">
-                                                            <i class="bx bx-dots-vertical-rounded fs-5"></i>
-                                                        </button>
-                                                        <div class="dropdown-menu dropdown-menu-end">
-                                                            <a href="{{ route('collections.show', $values->id) }}"
-                                                                class="dropdown-item">View</a>
-                                                        </div>
-                                                    </div>
+                                                    <a href="{{ route('collections.show', $values->id) }}"
+                                                        class="btn btn-xss"
+                                                        title="View batch details"
+                                                        aria-label="View batch details">
+                                                        <i class="bx bxs-folder-open font-size-14"
+                                                            aria-hidden="true"></i>
+                                                    </a>
                                                 </td>
                                             </tr>
                                             @php $serial++; @endphp

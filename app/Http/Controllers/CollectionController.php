@@ -53,158 +53,181 @@ class CollectionController extends Controller
         protected SettlementPostingService $settlementPostingService,
     ) {
         $this->middleware('auth');
+        $this->middleware(function ($request, $next) {
+            abort_unless($request->user()?->hasAnyRole([
+                'admin',
+                'Manager',
+                'manager',
+                'Partner',
+                'Company_Approver',
+                'Company_User',
+            ]), 403);
+
+            return $next($request);
+        })->only(['batches', 'show', 'export_created', 'export_processed']);
+        $this->middleware(function ($request, $next) {
+            abort_unless($request->user()?->hasAnyRole(['admin', 'Manager', 'manager']), 403);
+
+            return $next($request);
+        })->only([
+            'create',
+            'store',
+            'repair_failed_batch',
+            'upload',
+            'archive',
+            'create_failed',
+            'store_failed',
+            'create_monthly_failed',
+            'fetch_status',
+            'create_debit_orders',
+            'update_debit_orders',
+            'update_collection_date',
+        ]);
     }
 
     public function batches(Request $request)
     {
         $title = 'Mandate Collection';
+        $filters = $request->validate([
+            'start_at' => ['nullable', 'date_format:Y-m-d'],
+            'end_at' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:start_at'],
+            'partner_id' => ['nullable', 'integer', 'exists:partners,id'],
+            'cl_status' => ['nullable', 'in:ready,in_progress,successful,failed'],
+            'collection_reference' => ['nullable', 'string', 'max:100'],
+            'mandate_reference' => ['nullable', 'string', 'max:100'],
+        ]);
 
-        //collection batches
-        $number_of_batches = 0;
-        $batches = CollectionBatch::filterCondition();
-        $statsQuery = CollectionBatch::filterCondition();
+        $batchesQuery = CollectionBatch::filterCondition()
+            ->with('partner:id,business_name')
+            ->withFilters($filters);
+        $batches = $batchesQuery->paginate(50)->withQueryString();
+        $number_of_batches = $batches->total();
+        $providers = Partner::filterCondition()
+            ->where('approved', 1)
+            ->select('id', 'business_name')
+            ->get();
+        $post_data = array_merge([
+            'start_at' => null,
+            'end_at' => null,
+            'partner_id' => null,
+            'cl_status' => null,
+            'collection_reference' => null,
+            'mandate_reference' => null,
+        ], $filters);
+        $canManageBatches = $request->user()->hasAnyRole(['admin', 'Manager', 'manager']);
 
-        //providers
-        $providers = Partner::filterCondition();
-        $providers = $providers->get();
-
-        if (isset($_POST['filter'])) {
-            //all request
-            $requests = $request->all();
-
-            $batches = $batches->when($requests, function ($query) use ($requests) {
-                $query->withFilters($requests);
-            });
-
-            $statsQuery = $statsQuery->when($requests, function ($query) use ($requests) {
-                $query->withFilters($requests);
-            });
-
-            $number_of_batches = $batches->count();
-            $batches = $batches->get();
-        } else {
-            $number_of_batches = $batches->count();
-            $batches = $batches->paginate(50);
-        }
-
-        $listStats = [
-            'total' => (clone $statsQuery)->count(),
-            'uploaded' => (clone $statsQuery)->where('pushed', 1)->count(),
-            'processed' => (clone $statsQuery)->where('processed', 1)->count(),
-            'failed' => (clone $statsQuery)->where('failed', 1)->count(),
-            'collections' => (clone $statsQuery)->sum('number_of_collections'),
-        ];
-
-        $monthlyFailedEligibility = $this->collectionBatchService->lastMonthFailedBatchEligibility();
-
-        $post_data = [
-            'start_at' => $request->start_at ?? null,
-            'end_at' => $request->end_at ?? null,
-            'partner_id' => $request->partner_id ?? null,
-            'cl_status' => $request->cl_status ?? null,
-            'mandate_reference' => $request->mandate_reference ?? null,
-        ];
-
-        //render view
-        return view('collections.batches', compact('title', 'batches', 'providers', 'number_of_batches', 'post_data', 'listStats', 'monthlyFailedEligibility'));
+        return view('collections.batches', compact(
+            'title',
+            'batches',
+            'providers',
+            'number_of_batches',
+            'post_data',
+            'canManageBatches'
+        ));
     }
 
     public function create(Request $request)
     {
-        $title = 'Create Mandate Collection';
-
-        $limit = 250;
+        $title = "Create Mandate Collection";
         $partner_id = null;
-        $arr_accounts = [];
         $arr_installments = [];
+        $debit_date = $request->input("debit_date", now()->toDateString());
 
-        if (isset($_POST['filter'])) {
-            //all request
-            $requests = $request->all();
-            $partner_id =  $requests['partner_id'];
-            $debit_date =  $requests['debit_date'];
+        if ($request->has("filter")) {
+            $filters = $request->validate([
+                "partner_id" => ["required", "integer", "exists:partners,id"],
+                "debit_date" => ["required", "date_format:Y-m-d"],
+            ]);
+            $partner_id = (int) $filters["partner_id"];
+            $debit_date = $filters["debit_date"];
 
-            // initialize deduction service
-            $partner = Partner::whereHas('debitOrders', function ($query) use ($debit_date) {
-                return $query->eligibleForCollection('NMB')
-                    ->whereDate('next_debit_date', "=", $debit_date);
-            })->where(['partners.id' => $partner_id]);
+            $partner = Partner::whereHas("debitOrders", function ($query) use ($debit_date) {
+                $query->eligibleForCollection("NMB")
+                    ->whereDate("next_debit_date", $debit_date);
+            })->where("partners.id", $partner_id)->first();
 
-            if ($partner->count() > 0) {
-                $partner = $partner->first();
+            if ($partner) {
                 $arr_installments = $this->collectionBatchService->previewInstallments($partner, $debit_date, 250);
+            }
 
-                if (empty($arr_installments)) {
-                    return Redirect::route('collections.create')->with('danger', 'No any collection on this ' . $debit_date);
-                }
+            if (empty($arr_installments)) {
+                return Redirect::route("collections.create")->with("danger", "No eligible collections were found for {$debit_date}.");
             }
         }
 
-        //users
-        $user = User::findOrFail(Auth::user()->id);
+        $user = $request->user();
+        $provider = $user->partners->where("authorize", 1)->count() === 1
+            ? $user->partners->first()
+            : null;
+        $providers = Partner::filterCondition()->where("approved", 1)->get();
+        $max_date = Carbon::now()->addDays(5)->format("Y-m-d");
 
-        $provider = null;
-        if ($user->partners->where('authorize', '=', 1)->count() == 1)
-            $provider = $user->partners[0];
-
-        //service providers
-        $providers = Partner::filterCondition()->get();
-
-        //maximum date
-        $max_date = Carbon::now()->addDays(5)->format('Y-m-d');
-
-        //render view
-        return view('collections.create', compact('title', 'max_date', 'providers', 'provider', 'partner_id', 'arr_installments'));
+        return view("collections.create", compact(
+            "title", "max_date", "providers", "provider", "partner_id", "debit_date", "arr_installments"
+        ));
     }
 
     public function store(Request $request)
     {
-        if ($request->selected_partner_id && $request->installment_ids) {
-            $batch = $this->collectionBatchService->createManualBatch(
-                (int) $request->selected_partner_id,
-                array_map('intval', $request->installment_ids),
-                Auth::user()
-            );
+        $validated = $request->validate([
+            "selected_partner_id" => ["required", "integer", "exists:partners,id"],
+            "collection_date" => ["required", "date_format:Y-m-d", "before_or_equal:" . now()->addDays(5)->toDateString()],
+            "installment_ids" => ["required", "array", "min:1"],
+            "installment_ids.*" => ["required", "integer", "distinct", "exists:installments,id"],
+        ]);
 
-            //Batch Information
-            $collection_reference = $batch?->collectionReference;
+        $batches = $this->collectionBatchService->createManualBatches(
+            (int) $validated["selected_partner_id"],
+            $validated["installment_ids"],
+            $request->user(),
+            $validated["collection_date"]
+        );
 
-            //send Notification of batch creation
-            if ($batch) {
-                $message = "Collection batch number " . $collection_reference . " created. Review and approve to the next stage.";
-                $arr_phone = [255717705746, 255656314330];
-
-                //message id
-                $messageId = $this->messagingService->generateMessageId();
-
-                foreach ($arr_phone as $phone) {
-                    //save sms to database
-                    $sms_log = SmsLog::firstOrNew([
-                        'message_id' => $messageId,
-                        'phone' => $this->messagingService->castPhone(trim($phone)),
-                    ]);
-                    $sms_log->uuid = Str::uuid();
-                    $sms_log->message = $message;
-                    $sms_log->number_of_sms = $this->messagingService->countNumberOfSms($message);
-                    $sms_log->status = 'PENDING';
-                    $sms_log->created_by = Auth::user()->id;
-                    $sms_log->save();
-                }
-
-                //trigger background job for send SMS
-                dispatch(new SendSMSJob(['messageId' => $messageId]));
-            }
-
-            //redirect
-            if ($batch) {
-                return Redirect::route('collections.create')->with('success', 'Collection batch created, Preview and Approve to next stage.');
-            }
-
-            return Redirect::route('collections.create')->with('danger', 'No eligible collection selected.');
-        } else {
-            //redirect
-            return Redirect::route('collections.create')->with('danger', 'No any collection selected.');
+        if ($batches->isEmpty()) {
+            return Redirect::route("collections.create")
+                ->with("danger", "No eligible collection was created. Review duplicate and mandate validity checks.");
         }
+
+        $pushResults = $batches->map(function (CollectionBatch $batch) {
+            return [
+                'batch' => $batch,
+                'result' => $this->collectionBatchPushService->push($batch),
+            ];
+        });
+        $pushed = $pushResults->filter(fn (array $item) => (bool) ($item['result']['success'] ?? false));
+        $failed = $pushResults->reject(fn (array $item) => (bool) ($item['result']['success'] ?? false));
+        $references = $batches->pluck('collectionReference')->implode(', ');
+        $message = "Created {$batches->count()} collection batch(es): {$references}. "
+            . "Pushed {$pushed->count()} successfully"
+            . ($failed->isNotEmpty() ? "; {$failed->count()} remain ready for retry." : '.');
+        $messageId = $this->messagingService->generateMessageId();
+
+        foreach ([255717705746, 255656314330] as $phone) {
+            $smsLog = SmsLog::firstOrNew([
+                'message_id' => $messageId,
+                'phone' => $this->messagingService->castPhone((string) $phone),
+            ]);
+            $smsLog->uuid = Str::uuid();
+            $smsLog->message = $message;
+            $smsLog->number_of_sms = $this->messagingService->countNumberOfSms($message);
+            $smsLog->status = 'PENDING';
+            $smsLog->created_by = $request->user()->id;
+            $smsLog->save();
+        }
+
+        dispatch(new SendSMSJob(['messageId' => $messageId]));
+
+        $redirect = Redirect::route('collections.create');
+        if ($failed->isEmpty()) {
+            return $redirect->with('success', $message);
+        }
+
+        $failureDetails = $failed
+            ->map(fn (array $item) => $item['batch']->collectionReference . ': '
+                . ($item['result']['message'] ?? 'Bank push failed.'))
+            ->implode(' | ');
+
+        return $redirect->with('warning', $message . ' ' . $failureDetails);
     }
 
     public function show($id)
@@ -212,27 +235,26 @@ class CollectionController extends Controller
         $title = "Collection Batch Information";
 
         //batch
-        $batch = CollectionBatch::where(['id' => $id])->firstOrFail();
+        $batch = CollectionBatch::filterCondition()
+            ->with(['partner:id,business_name', 'createdUser:id,name', 'verifiedUser:id,name'])
+            ->whereKey($id)
+            ->firstOrFail();
 
         // validate the date before creating new collection dates
-        $current_month = now()->month; //current month
-        $batch_month = Carbon::parse($batch->collectionDate)->format('m');
-        $diff = $current_month - $batch_month;
-
-        $show_create_button = false;
-        if ($diff == 1)
-            $show_create_button = true;
+        $show_create_button = !empty($batch->collectionDate)
+            && Carbon::parse($batch->collectionDate)->isSameMonth(now()->subMonth(), true);
 
         //installments
         $arr_installments = [];
         $number_of_failed_installments = 0;
         $installment_ids = $batch->installment_id_list;
 
-        $installments = Installment::whereIn('id', $installment_ids);
+        $installments = Installment::with(['debitOrder.customerAccount'])
+            ->whereIn('id', $installment_ids);
 
-        if ($installments->count() > 0) {
-            //installments
-            $installments = $installments->get();
+        $installments = $installments->get();
+
+        if ($installments->isNotEmpty()) {
 
             //count number of failed installments
             $number_of_failed_installments = $installments->filter(function ($installment) {
@@ -261,6 +283,8 @@ class CollectionController extends Controller
         $repair_failed_batch_eligibility = $this->collectionBatchService->failedBankRepairEligibility($batch);
         $can_repair_failed_batch = $repair_failed_batch_eligibility['allowed'];
 
+        $canManageBatches = request()->user()->hasAnyRole(['admin', 'Manager', 'manager']);
+
         //render view
         return view('collections.show', compact(
             'title',
@@ -269,7 +293,8 @@ class CollectionController extends Controller
             'show_create_button',
             'number_of_failed_installments',
             'can_repair_failed_batch',
-            'repair_failed_batch_eligibility'
+            'repair_failed_batch_eligibility',
+            'canManageBatches'
         ));
     }
 
@@ -301,15 +326,16 @@ class CollectionController extends Controller
         $arr_installments = [];
 
         //batch
-        $batch = CollectionBatch::where(['id' => $id])->firstOrFail();
+        $batch = CollectionBatch::filterCondition()->whereKey($id)->firstOrFail();
 
         //installments
         $installment_ids = $batch->installment_id_list;
-        $installments = Installment::whereIn('id', $installment_ids);
+        $installments = Installment::with(['debitOrder.customerAccount'])
+            ->whereIn('id', $installment_ids);
 
-        if ($installments->count() > 0) {
-            //installments
-            $installments = $installments->get();
+        $installments = $installments->get();
+
+        if ($installments->isNotEmpty()) {
 
             foreach ($installments as $val) {
                 $arr_installments[] = [
@@ -337,15 +363,16 @@ class CollectionController extends Controller
         $arr_installments = [];
 
         //batch
-        $batch = CollectionBatch::where(['id' => $id])->firstOrFail();
+        $batch = CollectionBatch::filterCondition()->whereKey($id)->firstOrFail();
 
         //installments
         $installment_ids = $batch->installment_id_list;
-        $installments = Installment::whereIn('id', $installment_ids);
+        $installments = Installment::with(['debitOrder.customerAccount'])
+            ->whereIn('id', $installment_ids);
 
-        if ($installments->count() > 0) {
-            //installments
-            $installments = $installments->get();
+        $installments = $installments->get();
+
+        if ($installments->isNotEmpty()) {
 
             foreach ($installments as $val) {
                 // format status
@@ -380,7 +407,8 @@ class CollectionController extends Controller
 
     public function upload(Request $request)
     {
-        $collectionBatch = CollectionBatch::where('id', $request->batch_id)->firstOrFail();
+        $validated = $request->validate(['batch_id' => ['required', 'uuid']]);
+        $collectionBatch = CollectionBatch::filterCondition()->whereKey($validated['batch_id'])->firstOrFail();
         $result = $this->collectionBatchPushService->push($collectionBatch);
         $success = (bool) ($result['success'] ?? false);
         $message = $result['message'] ?? ($success
@@ -401,7 +429,16 @@ class CollectionController extends Controller
         $title = 'Archive collection batch';
 
         //batch
-        $batch = CollectionBatch::where(['id' => $id])->firstOrFail();
+        $batch = CollectionBatch::filterCondition()->whereKey($id)->firstOrFail();
+
+        if (in_array($batch->resolved_lifecycle_status, [
+            CollectionBatch::LIFECYCLE_QUEUED_FOR_PUSH,
+            CollectionBatch::LIFECYCLE_STATUS_PENDING,
+        ], true)) {
+            return Redirect::route('collections.show', $batch->id)
+                ->with('warning', 'This batch cannot be archived while a bank action is in progress.');
+        }
+
         $batch->deleted = 1;
         $batch->lifecycle_status = CollectionBatch::LIFECYCLE_ARCHIVED;
         $batch->save();
@@ -433,7 +470,7 @@ class CollectionController extends Controller
                 $currentMonth = now()->month;
                 $batchMonth = (int) Carbon::parse($batch->collectionDate)->format('m');
 
-                return ($currentMonth - $batchMonth) === 1;
+                return Carbon::parse($batch->collectionDate)->isSameMonth(now()->subMonth(), true);
             })
             ->values();
 
@@ -471,7 +508,7 @@ class CollectionController extends Controller
         $references = [];
 
         foreach ($batchIds as $batchId) {
-            $collectionBatch = CollectionBatch::find($batchId);
+            $collectionBatch = CollectionBatch::filterCondition()->whereKey($batchId)->first();
 
             if (!$collectionBatch) {
                 continue;
@@ -527,14 +564,22 @@ class CollectionController extends Controller
         $title = "Fetch Collection Status";
 
         //Collection batch
-        $collection_batch = CollectionBatch::where(['id' => $request->batch_id])->firstOrFail();
+        $validated = $request->validate(['batch_id' => ['required', 'uuid']]);
+        $collection_batch = CollectionBatch::filterCondition()->whereKey($validated['batch_id'])->firstOrFail();
 
-        if ($collection_batch->canFetchStatus()) {
-            dispatch(new CollectionStatusJob($collection_batch->id));
+        if (!$collection_batch->canFetchStatus()) {
+            return response()->json([
+                'success' => false,
+                'error_msg' => "Collection status cannot be fetched from {$collection_batch->lifecycle_label} state.",
+            ], 422);
         }
 
-        //response
-        return response()->json(['success' => true, 'success_msg' => "Collection status successful fetched."], 200);
+        dispatch(new CollectionStatusJob($collection_batch->id));
+
+        return response()->json([
+            'success' => true,
+            'success_msg' => 'Collection status request queued successfully.',
+        ]);
     }
 
     public function expected_monthly(Request $request)
@@ -1327,7 +1372,8 @@ class CollectionController extends Controller
         foreach ($batches as $batch) {
             //installments
             $installment_ids = explode(',', $batch->installment_ids);
-            $installments = Installment::whereIn('id', $installment_ids);
+            $installments = Installment::with(['debitOrder.customerAccount'])
+            ->whereIn('id', $installment_ids);
 
             if ($installments->count() > 0) {
                 //installments

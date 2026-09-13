@@ -15,6 +15,7 @@ class Kernel extends ConsoleKernel
     protected $commands = [
         Commands\AuditCollectionIntegrity::class,
         Commands\BackfillCollectionDebitOrderAccountMonthKeys::class,
+        Commands\BackfillCollectionBatchLines::class,
         Commands\BackfillSettlementsFromInstallmentPayments::class,
         Commands\CreateCollectionBatch::class,
         Commands\CreateCollectionBatchByMandate::class,
@@ -40,9 +41,9 @@ class Kernel extends ConsoleKernel
     {
         // collection batches 
         $schedule->command('debit-orders:sync-next-date')->monthlyOn(1, '00:10');
-        $schedule->command('create:batches')->dailyAt('01:00');
-        $schedule->command('push:batches')->dailyAt('02:00');
-        $schedule->command('collection:status')->dailyAt('03:00');
+        $schedule->command('create:batches')->dailyAt('01:00')->withoutOverlapping();
+        $schedule->command('push:batches')->dailyAt('02:00')->withoutOverlapping();
+        $schedule->command('collection:status')->dailyAt('03:00')->withoutOverlapping();
         $schedule->command('create:failed-collection')->monthlyOn(1, '04:00');
 
         // bank connectivity

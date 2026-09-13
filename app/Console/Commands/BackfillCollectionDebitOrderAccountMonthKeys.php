@@ -10,14 +10,14 @@ use Illuminate\Support\Facades\DB;
 class BackfillCollectionDebitOrderAccountMonthKeys extends Command
 {
     protected $signature = 'collection-debit-orders:backfill-account-month-keys
-                            {--only-null : Only update rows where account_month_unique_key is null}
+                            {--rebuild : Clear and rebuild every key instead of filling null values only}
                             {--dry-run : Show counts without updating rows}';
 
     protected $description = 'Backfill account number, payment month, and provider-scoped account-month keys on collection debit order lines';
 
     public function handle(): int
     {
-        $onlyNull = (bool) $this->option('only-null');
+        $onlyNull = !(bool) $this->option('rebuild');
         $dryRun = (bool) $this->option('dry-run');
         if (!$onlyNull && !$dryRun) {
             DB::table('collection_debit_orders')->update(['account_month_unique_key' => null]);
@@ -59,7 +59,7 @@ class BackfillCollectionDebitOrderAccountMonthKeys extends Command
                     $row->line_account_number ?: $row->customer_account_number
                 );
                 $paymentDate = $row->payment_at ?: $row->effective_payment_date ?: $row->payment_date;
-                $partnerId = $row->batch_partner_id ?: $row->mandate_partner_id;
+                $partnerId = $row->mandate_partner_id ?: $row->batch_partner_id;
 
                 if ($accountNumber === '' || empty($paymentDate) || empty($partnerId)) {
                     $stats['missing_data']++;

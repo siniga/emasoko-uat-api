@@ -44,6 +44,7 @@
                         <div class="pm-card__title">Batch Details</div>
                     </div>
 
+                    @if ($canManageBatches)
                     <div class="pm-actions">
                         @if ($can_repair_failed_batch)
                             <form id="repair-failed-batch-form" method="POST"
@@ -64,22 +65,27 @@
                         <template x-if="deleted==0">
                             <template
                                 x-if="status==100 || status ==200 || status ==230 || status ==235 || status ==239 || status==249 || status==403 || status==405 || status==500 || status==501">
-                                <a href="{{ route('collections.archive', $batch->id) }}" class="btn btn-warning btn-sm archive">
-                                    <i class="bx bx-archive-in font-size-12"></i> Archive Batch
-                                </a>
+                                <form id="archive-batch-form" method="POST" action="{{ route('collections.archive', $batch->id) }}">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="button" class="btn btn-warning btn-sm" x-on:click="confirmArchiveBatch();">
+                                        <i class="bx bx-archive-in font-size-12"></i> Archive Batch
+                                    </button>
+                                </form>
                             </template>
                         </template>
 
-                        @if (Auth::user()->hasRole(['admin']) && $batch->canBePushed())
+                        @if ($batch->canBePushed())
                             <button x-html="btnPush" class="btn btn-primary btn-sm"
                                 x-on:click="pushCollectionBatch();"></button>
                         @endif
 
-                        @if (Auth::user()->hasRole(['admin']) && $batch->canFetchStatus())
+                        @if ($batch->canFetchStatus())
                             <button x-html="btnStatus" class="btn btn-success btn-sm"
                                 x-on:click="fetchCollectionStatus();"></button>
                         @endif
                     </div>
+                    @endif
                 </div>
 
                 <div class="pm-grid">
@@ -291,6 +297,23 @@
             btnPush: '<i class="fa fa-file-import"></i> Upload Collection',
             btnStatus: '<i class="fa fa-check"></i> Fetch Status',
 
+            confirmArchiveBatch() {
+                Swal.fire({
+                    title: 'Archive collection batch?',
+                    text: 'The batch will be removed from active operational lists.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d97706',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Archive',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        document.getElementById('archive-batch-form').submit();
+                    }
+                });
+            },
+
             confirmFailedBatchRepair() {
                 Swal.fire({
                     title: 'Recreate failed batch?',
@@ -355,17 +378,23 @@
                             'X-CSRF-TOKEN': document.head.querySelector('meta[name=csrf-token]').content
                         },
                         body: JSON.stringify(this.formData),
-                    }).then(response => response.json())
-                    .then(() => {
-                        $('#message_wrp').html(
-                            "<div class='alert alert-success rounded-sm'>Collection status processed, wait for 2-5 minutes and refresh the page.</div>"
-                            );
+                    }).then(async response => {
+                        const data = await response.json();
+
+                        if (!response.ok || !data.success) {
+                            throw data;
+                        }
+
+                        return data;
+                    }).then((data) => {
+                        const message = data.success_msg || 'Collection status request queued successfully.';
+                        $('#message_wrp').html("<div class='alert alert-success rounded-sm'>" + message + "</div>");
                         setTimeout(function() {
                             location.reload();
                         }, 2000);
-                    }).catch(() => {
-                        $('#message_wrp').html(
-                            "<div class='alert alert-danger rounded-sm'>Something went wrong.</div>");
+                    }).catch((error) => {
+                        const message = error?.error_msg || error?.message || 'Collection status request failed.';
+                        $('#message_wrp').html("<div class='alert alert-danger rounded-sm'>" + message + "</div>");
                     }).finally(() => {
                         this.formLoading = false;
                         this.btnStatus = '<i class="fa fa-check"></i> Query Status';

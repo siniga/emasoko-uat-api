@@ -5,7 +5,6 @@ namespace App\Console\Commands;
 use App\Jobs\SendSMSJob;
 use App\Models\SmsLog;
 use App\Services\CollectionBatchService;
-use App\Services\DeductionService;
 use App\Services\MessagingService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
@@ -35,7 +34,6 @@ class CreateCollectionBatch extends Command
      * @return void
      */
     public function __construct(
-        protected DeductionService $deductionService,
         protected CollectionBatchService $collectionBatchService,
         protected MessagingService $messagingService
     ) {
@@ -57,28 +55,8 @@ class CreateCollectionBatch extends Command
 
         $this->info("== Collection for Current Date: '{$current_date}' ==");
 
-        $partners = $this->collectionBatchService->candidatePartnersForDate($current_date);
-
-        $success = 0;
-        foreach ($partners as $partner) {
-            $installments = $this->deductionService->getInstallments($partner, $current_date);
-
-            foreach ($installments->chunk(250) as $chunk) {
-                $batch = $this->collectionBatchService->createBatchFromInstallments(
-                    $partner,
-                    $chunk->values(),
-                    null,
-                    [
-                        'forced_collection_date' => $current_date,
-                        'batch_collection_date' => $current_date,
-                    ]
-                );
-
-                if ($batch) {
-                    $success += 1;
-                }
-            }
-        }
+        $batches = $this->collectionBatchService->createScheduledBatchesForDate($current_date);
+        $success = $batches->count();
 
         //send sms to the admin if any collection batch is created
         if ($success > 0) {

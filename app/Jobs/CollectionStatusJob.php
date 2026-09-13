@@ -5,7 +5,6 @@ namespace App\Jobs;
 use App\Classes\Authentication;
 use App\Events\CollectionStatus;
 use App\Models\CollectionBatch;
-use App\Models\CollectionDebitOrder;
 use App\Services\DeductionService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
@@ -13,26 +12,21 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Throwable;
 
 class CollectionStatusJob implements ShouldQueue, ShouldBeUnique
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    /**
-     * Create a new job instance.
-     *
-     * @return void
-     */
-    protected $batchId;
-    private $auth;
+    public int $tries = 3;
 
-    public function __construct(string $batchId)
+    public array $backoff = [60, 300, 900];
+
+    public function __construct(protected string $batchId)
     {
-        $this->batchId = $batchId;
-        $this->auth = new Authentication();
     }
 
     public function uniqueId(): string
@@ -40,143 +34,124 @@ class CollectionStatusJob implements ShouldQueue, ShouldBeUnique
         return $this->batchId;
     }
 
-    /**
-     * Execute the job.
-     *
-     * @return void
-     */
-    public function handle()
+    public function handle(Authentication $auth, DeductionService $deductionService): void
     {
-        //initialize deduction service
-        $deduction_service = new DeductionService();
-        $collection_batch = CollectionBatch::find($this->batchId);
+        $batch = CollectionBatch::find($this->batchId);
 
-        if (!$collection_batch || !$collection_batch->canFetchStatus()) {
+        if (!$batch || !$batch->canFetchStatus()) {
             return;
         }
 
-        //create authentication token
-        $AUTH_BEARER_TOKEN = $this->auth->generateToken();
+        $batch->lifecycle_status = CollectionBatch::LIFECYCLE_STATUS_PENDING;
+        $batch->save();
+        $correlationId = (string) Str::uuid();
 
-        //Create Headers
-        $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer ' . $AUTH_BEARER_TOKEN];
+        try {
+            $httpResponse = Http::connectTimeout(10)
+                ->timeout(60)
+                ->withHeaders([
+                    "Content-Type" => "application/json",
+                    "Authorization" => "Bearer " . $auth->generateToken(),
+                ])
+                ->post(config("services.nmb.api_url"), [
+                    "user" => "EMakato",
+                    "correlationId" => $correlationId,
+                    "targetService" => "CollectionStatus",
+                    "status" => "Check",
+                    "data" => [
+                        "collectionReference" => $batch->collectionReference,
+                    ],
+                ]);
 
-        //Create Payload
-        $payload = [
-            "user" => "EMakato",
-            "correlationId" => Str::uuid()->toString(),
-            "targetService" => "CollectionStatus",
-            "status" => "Check",
-            "data" => [
-                "collectionReference" => $collection_batch->collectionReference,
-            ]
-        ];
-
-        //Create Payload
-        Log::debug('== CollectionStatus Request ==');
-        Log::debug($payload);
-
-        //API URL 
-        $API_URL = config('services.nmb.api_url');
-
-        //response
-        $response = Http::withHeaders($headers)->post($API_URL, $payload);
-
-        // Log response metadata BEFORE decoding
-        Log::debug('== CollectionStatus HTTP Response ==', [
-            'status'  => $response->status(),
-            'headers' => $response->headers(),
-            'body'    => $response->body(),   // raw string
-        ]);
-
-        //decode the response 
-        $response = json_decode($response, true);
-
-        //logging response
-        Log::debug('== CollectionStatus Response ==');
-        Log::debug($response);
-
-        if ($response) {
-            if (strtolower($response['status']) == "success") {
-                $response_code = $response['data']['response'][0]['responseCode'];
-                $remarks = $response['data']['response'][0]['responseDescription'];
-
-                //update batch status
-                $collection_batch->status = $response_code;
-                $collection_batch->http_response_code = $response_code;
-                $collection_batch->remarks = $remarks;
-                $collection_batch->processed = 1;
-                $collection_batch->last_status_checked_at = now();
-
-                //check for batch processing or batch complete
-                if ($response_code == 230) {
-                    //1.0: Complete Success Batch 
-                    $data = base64_to_content($response['data']['file']['fileData']);
-                    Log::debug("== Complete Collection CSV ==");
-                    Log::debug($data);
-
-                    //1.1: response
-                    $response = $deduction_service->updateInstallments($collection_batch, $data);
-
-                    //1.3: process batch
-                    $collection_batch->number_of_success = $response[0];
-                    $collection_batch->number_of_failed = $response[1];
-                    $collection_batch->lifecycle_status = CollectionBatch::LIFECYCLE_PROCESSED_SUCCESS;
-                    $collection_batch->save();
-                } else if ($response_code == 235) {
-                    //2.0: Complete Failed Batch
-                    $data = base64_to_content($response['data']['file']['fileData']);
-                    Log::debug("== Failed Collection CSV ==");
-                    Log::debug($data);
-
-                    //2.1: response
-                    $response = $deduction_service->updateFailedInstallments($collection_batch, $data);
-
-                    //1.3: process batch
-                    $collection_batch->number_of_failed = $response[0];
-                    $collection_batch->failed = 1;
-                    $collection_batch->lifecycle_status = CollectionBatch::LIFECYCLE_PROCESSED_FAILED;
-                    $collection_batch->save();
-                } else if ($response_code == 239) {
-                    //3.0: Process Ongoing Batch
-                    $data = base64_to_content($response['data']['file']['fileData']);
-                    Log::debug("== Processing Collection CSV ==");
-                    Log::debug($data);
-
-                    //3.1: response
-                    $response = $deduction_service->updateInstallments($collection_batch, $data);
-
-                    //1.3: process batch
-                    $collection_batch->number_of_success += $response[0];
-                    $collection_batch->number_of_failed += $response[1];
-                    $collection_batch->lifecycle_status = CollectionBatch::LIFECYCLE_PARTIALLY_PROCESSED;
-                    $collection_batch->save();
-                }
-            } else if (strtolower($response['status']) == "fail") {
-                $response_code = $response['data']['response'][0]['responseCode'];
-                $remarks = $response['data']['response'][0]['responseDescription'];
-
-                //update collection status
-                $collection_batch->status = 501;
-                $collection_batch->http_response_code = $response_code;
-                $collection_batch->remarks = $remarks;
-                $collection_batch->last_status_checked_at = now();
-
-                if ($response_code == 235 || $response_code == 404)
-                    $collection_batch->processed = 1; //batch processed and failed
-
-                if ($response_code == 235) {
-                    $collection_batch->lifecycle_status = CollectionBatch::LIFECYCLE_PROCESSED_FAILED;
-                }
-
-                //save batch    
-                $collection_batch->save();
-
-                //TODO: Messaging Module
+            $response = $httpResponse->json();
+            if (!is_array($response)) {
+                throw new \RuntimeException("Bank returned an invalid JSON response.");
             }
+
+            Log::info("Collection status response received.", [
+                "collection_batch_id" => $batch->id,
+                "collection_reference" => $batch->collectionReference,
+                "correlation_id" => $correlationId,
+                "http_status" => $httpResponse->status(),
+                "bank_status" => data_get($response, "status"),
+                "response_code" => data_get($response, "data.response.0.responseCode"),
+            ]);
+
+            $this->applyResponse($batch, $response, $deductionService);
+            event(new CollectionStatus($batch->fresh()));
+        } catch (Throwable $exception) {
+            Log::error("Collection status request failed.", [
+                "collection_batch_id" => $batch->id,
+                "collection_reference" => $batch->collectionReference,
+                "correlation_id" => $correlationId,
+                "exception_class" => $exception::class,
+                "message" => $exception->getMessage(),
+            ]);
+
+            throw $exception;
+        }
+    }
+
+    protected function applyResponse(CollectionBatch $batch, array $response, DeductionService $deductionService): void
+    {
+        $status = strtolower((string) data_get($response, "status"));
+        $responseCode = data_get($response, "data.response.0.responseCode");
+        $remarks = data_get($response, "data.response.0.responseDescription")
+            ?: data_get($response, "message")
+            ?: "Collection status response received.";
+        $payloadHash = hash("sha256", json_encode($response));
+
+        if (hash_equals((string) $batch->status_payload_hash, $payloadHash)) {
+            $batch->last_status_checked_at = now();
+            $batch->save();
+            return;
         }
 
-        // Broadcast an event with the result
-        event(new CollectionStatus($collection_batch));
+        if (is_numeric($responseCode)) {
+            $batch->status = (int) $responseCode;
+            $batch->http_response_code = (string) $responseCode;
+        }
+        $batch->remarks = $remarks;
+        $batch->last_status_checked_at = now();
+
+        if ($status !== "success") {
+            if ((int) $responseCode === 235) {
+                $batch->processed = 1;
+                $batch->failed = 1;
+                $batch->lifecycle_status = CollectionBatch::LIFECYCLE_PROCESSED_FAILED;
+            }
+            $batch->status_payload_hash = $payloadHash;
+            $batch->save();
+            return;
+        }
+
+        $fileData = data_get($response, "data.file.fileData");
+        if (in_array((int) $responseCode, [230, 235, 239], true) && empty($fileData)) {
+            throw new \RuntimeException("Bank collection status response did not contain the result file.");
+        }
+
+        if ((int) $responseCode === 230) {
+            [$successful, $failed] = $deductionService->updateInstallments($batch, base64_to_content($fileData));
+            $batch->number_of_success = $successful;
+            $batch->number_of_failed = $failed;
+            $batch->processed = 1;
+            $batch->failed = 0;
+            $batch->lifecycle_status = CollectionBatch::LIFECYCLE_PROCESSED_SUCCESS;
+        } elseif ((int) $responseCode === 235) {
+            [$failed] = $deductionService->updateFailedInstallments($batch, base64_to_content($fileData));
+            $batch->number_of_failed = $failed;
+            $batch->processed = 1;
+            $batch->failed = 1;
+            $batch->lifecycle_status = CollectionBatch::LIFECYCLE_PROCESSED_FAILED;
+        } elseif ((int) $responseCode === 239) {
+            [$successful, $failed] = $deductionService->updateInstallments($batch, base64_to_content($fileData));
+            $batch->number_of_success = $successful;
+            $batch->number_of_failed = $failed;
+            $batch->processed = 0;
+            $batch->lifecycle_status = CollectionBatch::LIFECYCLE_PARTIALLY_PROCESSED;
+        }
+
+        $batch->status_payload_hash = $payloadHash;
+        $batch->save();
     }
 }

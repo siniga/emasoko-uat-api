@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class CollectionBatch extends Model
@@ -48,7 +49,7 @@ class CollectionBatch extends Model
 
     public static function filterCondition()
     {
-        $user = User::findOrFail(Auth::user()->id);
+        $user = Auth::user();
 
         $batches = static::orderBy('collection_batches.created_at', 'DESC');
 
@@ -59,6 +60,8 @@ class CollectionBatch extends Model
                 $batches = $batches->whereHas('partner', function ($query) use ($company_user) {
                     $query->where('partners.company_id', '=', $company_user->company_id);
                 });
+            } else {
+                $batches->whereRaw('1 = 0');
             }
         } else if ($user->hasRole('Company_Approver') || $user->hasRole('Company_User')) {
             $arr_partners = [];
@@ -67,8 +70,11 @@ class CollectionBatch extends Model
             foreach ($partners as $val)
                 array_push($arr_partners, $val->partner_id);
 
-            if ($arr_partners)
+            if ($arr_partners) {
                 $batches = $batches->whereIn('collection_batches.partner_id', $arr_partners);
+            } else {
+                $batches->whereRaw('1 = 0');
+            }
         }
 
         //filter where deleted = 0
@@ -81,6 +87,11 @@ class CollectionBatch extends Model
     {
         return $this->hasMany(CollectionDebitOrder::class, "collection_batch_id");
     }
+
+public function pushAttempts()
+{
+    return $this->hasMany(CollectionBatchPushAttempt::class, "collection_batch_id");
+}
 
     public function createdUser()
     {
@@ -174,7 +185,6 @@ class CollectionBatch extends Model
     {
         return in_array($this->resolved_lifecycle_status, [
             self::LIFECYCLE_READY,
-            self::LIFECYCLE_QUEUED_FOR_PUSH,
         ], true) && !empty($this->request_csv);
     }
 
@@ -255,68 +265,82 @@ class CollectionBatch extends Model
         ], true);
     }
 
-    public function scopeWithFilters($query, $request)
+    public function scopeWithFilters($query, array $filters)
     {
-        $start_date        = $request['start_at'] ?? null;
-        $end_date          = $request['end_at'] ?? null;
-        $partner_id        = $request['partner_id'] ?? null;
-        $status            = $request['cl_status'] ?? $request['status'] ?? null;
-        $mandate_reference = $request['mandate_reference'] ?? null;
+        $startDate = $filters['start_at'] ?? null;
+        $endDate = $filters['end_at'] ?? null;
+        $partnerId = $filters['partner_id'] ?? null;
+        $status = $filters['cl_status'] ?? $filters['status'] ?? null;
+        $collectionReference = trim((string) ($filters['collection_reference'] ?? ''));
+        $search = trim((string) ($filters['mandate_reference'] ?? ''));
+        $lifecycleExpression = static::lifecycleSqlExpression();
 
-        return $query->when($start_date, function ($query) use ($start_date, $end_date) {
-            if ($start_date != null || $end_date != null) {
-                //format dates
-                $start_date = Carbon::createFromFormat('Y-m-d', $start_date)->startOfDay();
-                $end_date = Carbon::createFromFormat('Y-m-d', $end_date)->endOfDay();
-
-                if ($start_date != null && $end_date != null)
-                    $query->whereBetween('collection_batches.created_at', [$start_date, $end_date]);
-
-                else if ($start_date != null)
-                    $query->where('collection_batches.created_at', '>=', $start_date);
-
-                else if ($end_date != null)
-                    $query->where('collection_batches.created_at', '<=', $end_date);
-            }
-        })
-            ->when($partner_id, function ($query) use ($partner_id) {
-                $query->where('collection_batches.partner_id', $partner_id);
+        return $query
+            ->when($startDate, function ($query, $value) {
+                $query->where('collection_batches.created_at', '>=', Carbon::createFromFormat('Y-m-d', $value)->startOfDay());
             })
-            ->when($status, function ($query) use ($status) {
-                if ($status === 'uploaded') {
-                    $query->where('collection_batches.pushed', 1);
-                } elseif ($status === 'processed') {
-                    $query->where('collection_batches.processed', 1);
-                } elseif ($status === 'failed') {
-                    $query->where('collection_batches.failed', 1);
-                }
+            ->when($endDate, function ($query, $value) {
+                $query->where('collection_batches.created_at', '<=', Carbon::createFromFormat('Y-m-d', $value)->endOfDay());
             })
-            ->when($mandate_reference, function ($query) use ($mandate_reference) {
-                $normalizedSearch = preg_replace('/\s+/', '', trim((string) $mandate_reference));
+            ->when($partnerId, function ($query, $value) {
+                $query->where('collection_batches.partner_id', $value);
+            })
+            ->when($collectionReference !== '', function ($query) use ($collectionReference) {
+                $query->where('collection_batches.collectionReference', 'like', "%{$collectionReference}%");
+            })
+            ->when($status, function ($query, $value) use ($lifecycleExpression) {
+                $statuses = match ($value) {
+                    'ready' => [self::LIFECYCLE_DRAFT, self::LIFECYCLE_READY],
+                    'in_progress' => [
+                        self::LIFECYCLE_QUEUED_FOR_PUSH,
+                        self::LIFECYCLE_PUSHED,
+                        self::LIFECYCLE_STATUS_PENDING,
+                        self::LIFECYCLE_PARTIALLY_PROCESSED,
+                    ],
+                    'successful' => [self::LIFECYCLE_PROCESSED_SUCCESS],
+                    'failed' => [self::LIFECYCLE_PROCESSED_FAILED],
+                    default => [$value],
+                };
 
-                $ids = \App\Models\Installment::query()
-                    ->join('debit_orders as d', 'd.id', '=', 'installments.debit_order_id')
-                    ->leftJoin('customer_accounts as ca', 'ca.id', '=', 'd.customer_account_id')
-                    ->where(function ($installmentQuery) use ($mandate_reference, $normalizedSearch) {
-                        $installmentQuery
-                            ->where('d.reference', trim((string) $mandate_reference))
-                            ->orWhereRaw("REPLACE(ca.account_number, ' ', '') = ?", [$normalizedSearch]);
-                    })
-                    ->pluck('installments.id')
-                    ->all();
+                $query->whereIn(DB::raw($lifecycleExpression), $statuses);
+            })
+            ->when($search !== '', function ($query) use ($search) {
+                $normalizedSearch = CollectionDebitOrder::normalizeAccountNumber($search);
 
-                // If none, return no results quickly
-                if (empty($ids)) {
-                    $query->whereRaw('1=0');
-                    return;
-                }
-
-                // Build: FIND_IN_SET(1, installment_ids) OR FIND_IN_SET(2, installment_ids) ...
-                $query->where(function ($q) use ($ids) {
-                    foreach ($ids as $id) {
-                        $q->orWhereRaw('FIND_IN_SET(?, collection_batches.installment_ids) > 0', [$id]);
-                    }
+                $query->where(function ($searchQuery) use ($search, $normalizedSearch) {
+                    $searchQuery->whereHas('debits', function ($lineQuery) use ($search, $normalizedSearch) {
+                            $lineQuery->where('account_number', $normalizedSearch)
+                                ->orWhereHas('debitOrder', function ($mandateQuery) use ($search) {
+                                    $mandateQuery->where('reference', $search);
+                                });
+                        })
+                        ->orWhere(function ($legacyQuery) use ($search, $normalizedSearch) {
+                            $legacyQuery->whereDoesntHave('debits')
+                                ->whereExists(function ($installmentQuery) use ($search, $normalizedSearch) {
+                                    $installmentQuery->selectRaw('1')
+                                        ->from('installments')
+                                        ->join('debit_orders as legacy_debit_orders', 'legacy_debit_orders.id', '=', 'installments.debit_order_id')
+                                        ->leftJoin('customer_accounts as legacy_accounts', 'legacy_accounts.id', '=', 'legacy_debit_orders.customer_account_id')
+                                        ->whereRaw('FIND_IN_SET(installments.id, collection_batches.installment_ids) > 0')
+                                        ->where(function ($matchQuery) use ($search, $normalizedSearch) {
+                                            $matchQuery->where('legacy_debit_orders.reference', $search)
+                                                ->orWhereRaw("REPLACE(legacy_accounts.account_number, ' ', '') = ?", [$normalizedSearch]);
+                                        });
+                                });
+                        });
                 });
             });
+    }
+
+    public static function lifecycleSqlExpression(): string
+    {
+        return "COALESCE(collection_batches.lifecycle_status, CASE
+            WHEN collection_batches.deleted = 1 THEN 'archived'
+            WHEN collection_batches.recreated = 1 THEN 'recreated'
+            WHEN collection_batches.failed = 1 THEN 'processed_failed'
+            WHEN collection_batches.processed = 1 THEN 'processed_success'
+            WHEN collection_batches.pushed = 1 THEN 'pushed'
+            ELSE 'ready'
+        END)";
     }
 }

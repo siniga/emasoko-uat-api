@@ -26,9 +26,7 @@
                         <div class="cc-section__title">Batch Filters</div>
                         <div class="cc-section__hint">Choose the provider and debit date you want to prepare for batching.</div>
 
-                        {{ Form::open(['url' => route('collections.create'), 'method' => 'POST', 'class' => 'form-horizontal needs-validation', 'novalidate']) }}
-                        {{ Form::token() }}
-
+                        {{ Form::open(['url' => route('collections.create'), 'method' => 'GET', 'class' => 'form-horizontal needs-validation', 'novalidate']) }}
                         <div class="row align-items-end">
                             <div class="col-lg-5">
                                 <div class="mb-3">
@@ -67,6 +65,8 @@
                     <div class="card-body">
                         @if (session()->get('success'))
                             <div class="alert alert-success mb-3">{{ session()->get('success') }}</div>
+                        @elseif(session()->get('warning'))
+                            <div class="alert alert-warning mb-3">{{ session()->get('warning') }}</div>
                         @elseif(session()->get('danger'))
                             <div class="alert alert-danger mb-3">{{ session()->get('danger') }}</div>
                         @endif
@@ -81,6 +81,7 @@
                             @method('POST')
                             {{ Form::token() }}
                             <input type="hidden" name="selected_partner_id" value="{{ $partner_id }}">
+                            <input type="hidden" name="collection_date" value="{{ $debit_date ?? '' }}">
 
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <div>
