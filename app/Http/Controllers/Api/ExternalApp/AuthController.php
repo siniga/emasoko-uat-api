@@ -49,7 +49,7 @@ class AuthController extends Controller
             return $this->errorResponse('Validation failed.', $validator->errors(), 422);
         }
 
-        if (Auth::attempt(['username' => $request->partnerId, 'password' => $request->password])) {
+        if (Auth::attempt(['username' => $request->partnerId, 'password' => $request->password, 'active' => 1])) {
             $user = User::findOrFail(Auth::user()->id);
             $linkedPartners = $this->getLinkedPartners($user);
             $partnerReference = $linkedPartners->first()['corporate_reference'] ?? null;

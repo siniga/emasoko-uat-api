@@ -106,7 +106,7 @@
                                         <div class="account-grid__col-3">
                                             <div class="mb-3">
                                                 <label>Customer Number <span class="text-danger">*</span></label>
-                                                {{ Form::text('customer_code', old('corporate_limit'), ['class="form-control"', 'placeholder="Customer number..."']) }}
+                                                {{ Form::text('customer_code', old('customer_code'), ['class="form-control"', 'placeholder="Customer number..."']) }}
                                                 <span class="formError"></span>
                                             </div>
                                         </div>
@@ -146,8 +146,7 @@
                                         <div class="d-flex gap-2">
                                             <a href="{{ route('companies.show', $company->uuid ?? '') }}"
                                                 class="btn btn-outline-danger btn-xs text-medium">Cancel</a>
-                                            <button type="submit" id="submitButton" class="btn btn-primary">Save
-                                                Account</button>
+                                            <button type="submit" id="submitButton" class="btn btn-primary">Save Account</button>
                                         </div>
                                     </div>
                                 </div>
@@ -226,7 +225,7 @@
                     // Post data
                     $.ajax({
                         type: "POST",
-                        url: "/companies/store-collection-account",
+                        url: "{{ route('companies.store-collection-account') }}",
                         data: formData,
                         processData: false,
                         contentType: false,
@@ -263,8 +262,8 @@
                                 });
                             } else {
                                 $('.form-message').html('<div class="alert alert-danger">' +
-                                    ((error.responseJSON && error.responseJSON
-                                        .errors) || 'Failed to save collection account.'
+                                    ((error.responseJSON && (error.responseJSON.message || error.responseJSON
+                                        .errors)) || 'Failed to save collection account.'
                                         ) + '</div>');
                             }
 

@@ -57,6 +57,9 @@ return [
         'username' => env('NMB_USERNAME'),
         'jwt_secret' => env('NMB_JWT_SECRET'),
         'jwt_algo' => env('NMB_JWT_ALGO', 'HS256'),
+        'connect_timeout' => env('NMB_CONNECT_TIMEOUT', 5),
+        'timeout' => env('NMB_REQUEST_TIMEOUT', 30),
+        'retry_times' => env('NMB_RETRY_TIMES', 2),
     ],
 
     'crdb' => [

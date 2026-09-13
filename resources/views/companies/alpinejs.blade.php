@@ -102,6 +102,10 @@
                             $('#message_wrp').html(
                                 "<div class='alert alert-success rounded-sm'>" + responseJson.message + "</div>"
                             );
+                        } else if (this.httpStatus == 202) {
+                            $('#message_wrp').html(
+                                "<div class='alert alert-warning rounded-sm'>" + responseJson.message + " " + (responseJson.remarks || "") + "</div>"
+                            );
                         } else if (this.httpStatus == 400) {
                             $('#message_wrp').html(
                                 "<div class='alert alert-danger rounded-sm'>" + responseJson.message + "</div>"
@@ -112,10 +116,11 @@
                             );
                         }
 
-                        //set timer
-                        setTimeout(function() {
-                            location.reload();
-                        }, 1000);
+                        if (this.httpStatus == 200) {
+                            setTimeout(function() {
+                                location.reload();
+                            }, 1000);
+                        }
                     }).catch(() => {
                         //display message
                         $('#message_wrp').html(
@@ -154,6 +159,10 @@
                             $('#message_wrp').html(
                                 "<div class='alert alert-success rounded-sm'>" + responseJson.message + "</div>"
                             );
+                        } else if (this.httpStatus == 202) {
+                            $('#message_wrp').html(
+                                "<div class='alert alert-warning rounded-sm'>" + responseJson.message + " " + (responseJson.remarks || "") + "</div>"
+                            );
                         } else if (this.httpStatus == 400) {
                             $('#message_wrp').html(
                                 "<div class='alert alert-danger rounded-sm'>" + responseJson.message + "</div>"
@@ -164,10 +173,11 @@
                             );
                         }
 
-                        //set timer
-                        setTimeout(function() {
-                            location.reload();
-                        }, 1000);
+                        if (this.httpStatus == 200 || this.httpStatus == 202) {
+                            setTimeout(function() {
+                                location.reload();
+                            }, 1800);
+                        }
 
                     }).catch(() => {
                         //display message
@@ -179,11 +189,6 @@
                         this.formLoading = false;
                         this.btnStatus = '<i class="fa fa-check"></i> Get Status';
                     });
-            },
-
-            //open partner account information
-            openPartnerAccountModal($partner_account_id) {
-                $('#partnerAccountModal').modal('show');
             },
         }
     }

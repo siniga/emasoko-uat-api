@@ -156,6 +156,10 @@ class CompanyService
                     ]);
 
                     $partner_account->send_verification = 1;
+                    $partner_account->is_verified = 0;
+                    $partner_account->verified_at = null;
+                    $partner_account->rejected_at = null;
+                    $partner_account->onboarding_status = PartnerAccount::ONBOARDING_PENDING_REVIEW;
                     $partner_account->customer_code = $data['customer_code'][$i];
                     $partner_account->corporate_limit = floatval(str_replace(',', '', $data['corporate_limit'][$i]));
                     $partner_account->branch_code = substr($data['account_number'][$i], 0, 3);

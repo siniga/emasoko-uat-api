@@ -24,7 +24,7 @@ class PaymentMandateCreateController extends BasePaymentMandateController
 
         if ($user->hasRole('Company_Approver') || $user->hasRole('Company_User')) {
             $partner_user = PartnerUser::whereHas('partner', function ($query) {
-                $query->where('approved', '=', 1);
+                $query->operational();
             })->where('user_id', '=', $user->id);
 
             if ($partner_user->count() == 0) {
@@ -105,7 +105,7 @@ class PaymentMandateCreateController extends BasePaymentMandateController
             $debit_order = DebitOrder::where(['uuid' => $debit_order_uuid])->first();
         }
 
-        $providers = Partner::filterCondition()->get();
+        $providers = Partner::filterCondition()->operational()->get();
 
         return view('payment_mandate.create.deduction_form', compact('title', 'customer_account', 'debit_order', 'providers', 'provider', 'arr_debit_orders', 'periodicity_options'));
     }

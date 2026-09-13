@@ -67,7 +67,7 @@ class Partner extends Model
     //where condition
     public static function filterCondition()
     {
-        $user = User::findOrFail(Auth::user()->id);
+        $user = Auth::user();
 
         //Partners
         $partners = static::orderBy('partners.business_name', 'ASC');
@@ -183,7 +183,10 @@ class Partner extends Model
 
                     if ($lifecycle_status === self::LIFECYCLE_ACTIVE) {
                         $statusQuery->orWhere(function ($legacy) {
-                            $legacy->where('approved', 1)
+                            $legacy->where(function ($status) {
+                                    $status->whereNull('lifecycle_status')->orWhere('lifecycle_status', '');
+                                })
+                                ->where('approved', 1)
                                 ->whereDoesntHave('partnerAccounts', function ($accountQuery) {
                                     $accountQuery->where('channel', 'NMB')
                                         ->where('is_verified', 0);
@@ -211,6 +214,13 @@ class Partner extends Model
             });
     }
 
+    public function scopeOperational($query)
+    {
+        return $query
+            ->where('approved', 1)
+            ->where('lifecycle_status', self::LIFECYCLE_ACTIVE);
+    }
+
     public function getResolvedLifecycleStatusAttribute(): string
     {
         if (!empty($this->lifecycle_status)) {
@@ -234,11 +244,21 @@ class Partner extends Model
 
     public function resolveApprovedLifecycleStatus(): string
     {
-        if ($this->hasFailedNmbAccount()) {
+        $accounts = $this->relationLoaded('partnerAccounts')
+            ? $this->partnerAccounts
+            : $this->partnerAccounts()->get();
+
+        if ($accounts->isEmpty()) {
+            return self::LIFECYCLE_PENDING_ACCOUNT_ACTIVATION;
+        }
+
+        if ($accounts->contains(fn (PartnerAccount $account) =>
+            $account->onboarding_status === PartnerAccount::ONBOARDING_REJECTED
+        )) {
             return self::LIFECYCLE_FAILED;
         }
 
-        if ($this->hasPendingNmbAccount()) {
+        if ($accounts->contains(fn (PartnerAccount $account) => !$account->isOperational())) {
             return self::LIFECYCLE_PENDING_ACCOUNT_ACTIVATION;
         }
 
@@ -248,18 +268,19 @@ class Partner extends Model
     public function hasPendingNmbAccount(): bool
     {
         return $this->partnerAccounts()
-            ->where('channel', 'NMB')
-            ->where('is_verified', 0)
-            ->whereNull('rejected_at')
+            ->where('channel', 'like', '%NMB%')
+            ->whereNotIn('onboarding_status', [
+                PartnerAccount::ONBOARDING_ACTIVE,
+                PartnerAccount::ONBOARDING_REJECTED,
+            ])
             ->exists();
     }
 
     public function hasFailedNmbAccount(): bool
     {
         return $this->partnerAccounts()
-            ->where('channel', 'NMB')
-            ->where('is_verified', 0)
-            ->whereNotNull('rejected_at')
+            ->where('channel', 'like', '%NMB%')
+            ->where('onboarding_status', PartnerAccount::ONBOARDING_REJECTED)
             ->exists();
     }
 

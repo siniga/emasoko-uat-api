@@ -21,7 +21,7 @@ class AuthController extends ExternalAuthController
             return $this->errorResponse('Validation failed.', $validator->errors(), 422);
         }
 
-        if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
+        if (Auth::attempt(['email' => $request->email, 'password' => $request->password, 'active' => 1])) {
             $user = User::findOrFail(Auth::user()->id);
             $linkedPartners = $this->getLinkedPartners($user);
             $userGroups = $this->userGroups($user);

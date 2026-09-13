@@ -292,3 +292,61 @@
         gap: 0.75rem;
     }
 }
+
+.collection-account-modal .modal-content {
+    border: 0;
+    border-radius: 8px;
+    box-shadow: 0 18px 45px rgba(20, 45, 82, 0.18);
+}
+
+.collection-account-modal .modal-header,
+.collection-account-modal .modal-footer {
+    padding: 1rem 1.25rem;
+}
+
+.collection-account-modal .modal-title {
+    color: var(--detail-primary);
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.collection-account-modal .modal-body {
+    padding: 1.25rem;
+}
+
+.collection-account-modal__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.collection-account-modal__wide {
+    grid-column: span 2;
+}
+
+.collection-account-modal .form-label {
+    color: #405570;
+    font-size: 0.82rem;
+    font-weight: 600;
+    margin-bottom: 0.35rem;
+}
+
+.collection-account-modal .form-control,
+.collection-account-modal .select2-container .select2-selection--single {
+    min-height: 38px;
+    border-radius: 4px;
+}
+
+.edit-account-message:empty {
+    display: none;
+}
+
+@media (max-width: 767.98px) {
+    .collection-account-modal__grid {
+        grid-template-columns: 1fr;
+    }
+
+    .collection-account-modal__wide {
+        grid-column: span 1;
+    }
+}

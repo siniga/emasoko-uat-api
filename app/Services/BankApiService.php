@@ -17,6 +17,7 @@ use App\Models\Partner;
 use App\Models\PartnerAccount;
 use Carbon\Carbon;
 use Exception;
+use Throwable;
 
 class BankApiService
 {
@@ -31,162 +32,243 @@ class BankApiService
         $this->deductionService = new DeductionService();
     }
 
-    //corporate registration
-    public function corporateRegistrationRequest($data, ?PartnerAccount $partnerAccount = null)
+    // NMB corporate registration. CRDB collection accounts are approved locally.
+    public function corporateRegistrationRequest(array $data, ?PartnerAccount $partnerAccount = null): array
     {
-        //declare code
-        $http_response_code = 200;
+        $partner = Partner::where('reference', data_get($data, 'corporateReference'))->firstOrFail();
+        $account = $partnerAccount
+            ?? $partner->partnerAccounts()->where('channel', 'like', '%NMB%')->firstOrFail();
 
-        //create authentication token
-        $AUTH_BEARER_TOKEN = $this->auth->generateToken();
-        Log::debug("Token : {$AUTH_BEARER_TOKEN}");
+        if (!str_contains(strtoupper((string) $account->channel), 'NMB')) {
+            return [422, 'Only NMB collection accounts require bank onboarding.'];
+        }
 
-        //Create Headers
-        $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer ' . $AUTH_BEARER_TOKEN];
-
-        //Create Payload
+        $correlationId = Str::uuid()->toString();
         $payload = [
-            "user" => "EMakato",
-            "correlationId" => Str::uuid()->toString(),
-            "targetService" => "CorporateRegistration",
-            "status" => "Create",
-            "data" => $data
+            'user' => 'EMakato',
+            'correlationId' => $correlationId,
+            'targetService' => 'CorporateRegistration',
+            'status' => 'Create',
+            'data' => $data,
         ];
 
-        //Create Payload
-        Log::debug('== CorporateRegistration Request == ');
-        Log::debug($payload);
+        try {
+            $response = $this->nmbRequest($payload);
+        } catch (Throwable $exception) {
+            return $this->recordNmbTechnicalFailure($partner, $account, $correlationId, $exception);
+        }
 
-        //API URL 
-        $API_URL = config('services.nmb.api_url');
+        $body = $response->json();
+        if (!$response->successful() || !is_array($body)) {
+            return $this->recordNmbTechnicalFailure(
+                $partner,
+                $account,
+                $correlationId,
+                new Exception('NMB returned an invalid HTTP response.')
+            );
+        }
 
-        //response
-        $response = Http::withHeaders($headers)->post($API_URL, $payload);
+        $status = strtolower((string) data_get($body, 'status'));
+        $responseCode = (string) data_get($body, 'data.response.0.responseCode', '');
+        $remarks = (string) data_get(
+            $body,
+            'data.response.0.responseDescription',
+            data_get($body, 'message', 'NMB did not provide a response description.')
+        );
 
-        //update the corporate
-        $partner = Partner::where('reference', '=', $payload['data']['corporateReference'])->first();
+        $account->fill([
+            'bank_response_code' => $responseCode ?: null,
+            'bank_correlation_id' => $correlationId,
+            'bank_response_payload' => $body,
+            'remarks' => $remarks,
+        ]);
 
-        //decode the response 
-        $response = json_decode($response, true);
-
-        //logging response
-        Log::debug('== CorporateRegistration Response ==');
-        Log::debug($response);
-
-        if ($response) {
-            if (strtolower($response['status']) == "success") {
-                $http_response_code = 201; //created
-                $remarks = $response['data']['response'][0]['responseDescription'];
-            } else if (strtolower($response['status']) == "fail") {
-                $http_response_code = 404; //failed
-                $remarks = $response['data']['response'][0]['responseDescription'];
-            }
-
-            //updated partner account
-            $partner_account = $partnerAccount
-                ?? PartnerAccount::where(['partner_id' => $partner->id, 'channel' => "NMB"])->firstOrFail();
-            $partner_account->remarks = $remarks;
-            if ($http_response_code === 201) {
-                $partner_account->send_verification = 2;
-                $partner_account->rejected_at = null;
-            } else {
-                $partner_account->send_verification = 0;
-                $partner_account->rejected_at = Carbon::now();
-            }
-            $partner_account->save();
-
+        if ($status === 'success') {
+            $account->forceFill([
+                'is_verified' => 0,
+                'send_verification' => 2,
+                'rejected_at' => null,
+                'onboarding_status' => PartnerAccount::ONBOARDING_SUBMITTED,
+                'bank_submitted_at' => now(),
+            ])->save();
             $partner->refreshLifecycleStatus()->save();
 
-            return [$http_response_code, $remarks];
-        } else {
-            Log::debug("No response from NMB end");
-            return [500, 'No response from NMB endpoint.'];
+            return [201, $remarks];
         }
+
+        if ($status === 'fail') {
+            $account->forceFill([
+                'is_verified' => 0,
+                'send_verification' => 0,
+                'verified_at' => null,
+                'rejected_at' => now(),
+                'onboarding_status' => PartnerAccount::ONBOARDING_REJECTED,
+            ])->save();
+            $partner->refreshLifecycleStatus()->save();
+
+            return [422, $remarks];
+        }
+
+        return $this->recordNmbTechnicalFailure(
+            $partner,
+            $account,
+            $correlationId,
+            new Exception('NMB returned an unrecognized registration response.'),
+            $body
+        );
     }
 
-    //corporate status
-    public function corporateStatusRequest($data)
+    public function corporateStatusRequest(array $data, ?PartnerAccount $partnerAccount = null): array
     {
-        //responce code
-        $is_verified = 0;
-        $http_status_code = 200;
-        $status = 'pending_approval';
-        $remarks = "";
-
-        //create authentication token
-        $AUTH_BEARER_TOKEN = $this->auth->generateToken();
-
-        //Create Headers
-        $headers = ['Content-Type' => 'application/json', 'Authorization' => 'Bearer ' . $AUTH_BEARER_TOKEN];
-
-        //Create Payload
+        $partner = Partner::where('reference', data_get($data, 'corporateReference'))->firstOrFail();
+        $account = $partnerAccount
+            ?? $partner->partnerAccounts()->where('channel', 'NMB')->firstOrFail();
+        $correlationId = Str::uuid()->toString();
         $payload = [
-            "user" => "EMakato",
-            "correlationId" => Str::uuid()->toString(),
-            "targetService" => "CorporateStatus",
-            "status" => "Check",
-            "data" => $data
+            'user' => 'EMakato',
+            'correlationId' => $correlationId,
+            'targetService' => 'CorporateStatus',
+            'status' => 'Check',
+            'data' => $data,
         ];
 
-        //Create Payload
-        Log::debug('== Corporate Status Request ==');
-        Log::debug($payload);
-
-        //API URL 
-        $API_URL = config('services.nmb.api_url');
-
-        //response
-        $response = Http::withHeaders($headers)->post($API_URL, $payload);
-
-        //update the corporate
-        $partner = Partner::where('reference', '=', $payload['data']['corporateReference'])->first();
-
-        //NMB partner account
-        $nmb_partner_account = PartnerAccount::where(['partner_id' => $partner->id, 'channel' => "NMB"])->first();
-
-        //Decode the response 
-        $response = json_decode($response, true);
-
-        //Logging response
-        Log::debug('== CorporateStatus Response  ==');
-        Log::debug($response);
-
-        if (strtolower($response['status']) == "success") {
-            $response_code = $response['data']['response'][0]['responseCode'];
-            $remarks = $response['data']['response'][0]['responseDescription'];
-
-            // check for response code
-            if ($response_code == 240) {
-                $is_verified = 1;
-                $status = 'active';
-            } else if ($response_code == 249) {
-                $status = 'not_active';
-            } else {
-                $http_status_code = 500;
-                $status = 'not_active';
-            }
-        } else if (strtolower($response['status']) == "fail") {
-            $http_status_code = 500;
-            $remarks = $response['data']['response'][0]['responseDescription'];
+        try {
+            $response = $this->nmbRequest($payload);
+        } catch (Throwable $exception) {
+            return $this->recordNmbTechnicalFailure($partner, $account, $correlationId, $exception);
         }
 
-        // update partner
-        $partner->status = $status;
-        $partner->http_response_code = $response['data']['response'][0]['responseCode'];
-        $partner->remarks = $response['data']['response'][0]['responseDescription'];
-        $partner->save();
+        $body = $response->json();
+        if (!$response->successful() || !is_array($body)) {
+            return $this->recordNmbTechnicalFailure(
+                $partner,
+                $account,
+                $correlationId,
+                new Exception('NMB returned an invalid HTTP response.')
+            );
+        }
 
-        //update partner account
-        $nmb_partner_account->is_verified = $is_verified;
-        $nmb_partner_account->verified_at = $is_verified ? Carbon::now() : null;
-        $nmb_partner_account->rejected_at = $http_status_code === 500 ? Carbon::now() : null;
-        $nmb_partner_account->send_verification = $is_verified ? 0 : 2;
-        $nmb_partner_account->remarks = $remarks;
-        $nmb_partner_account->save();
+        $status = strtolower((string) data_get($body, 'status'));
+        $responseCode = (string) data_get($body, 'data.response.0.responseCode', '');
+        $remarks = (string) data_get(
+            $body,
+            'data.response.0.responseDescription',
+            data_get($body, 'message', 'NMB did not provide a response description.')
+        );
 
+        $account->fill([
+            'bank_response_code' => $responseCode ?: null,
+            'bank_correlation_id' => $correlationId,
+            'bank_response_payload' => $body,
+            'bank_status_checked_at' => now(),
+            'remarks' => $remarks,
+        ]);
+
+        if ($status === 'success' && (int) $responseCode === 240) {
+            $account->forceFill([
+                'is_verified' => 1,
+                'send_verification' => 0,
+                'verified_at' => now(),
+                'rejected_at' => null,
+                'onboarding_status' => PartnerAccount::ONBOARDING_ACTIVE,
+            ])->save();
+            $partner->forceFill([
+                'status' => 'active',
+                'http_response_code' => $responseCode,
+                'remarks' => $remarks,
+            ])->refreshLifecycleStatus()->save();
+
+            return [200, $remarks];
+        }
+
+        if ($status === 'success' && (int) $responseCode === 249) {
+            $account->forceFill([
+                'is_verified' => 0,
+                'send_verification' => 2,
+                'verified_at' => null,
+                'rejected_at' => null,
+                'onboarding_status' => PartnerAccount::ONBOARDING_PENDING_ACTIVATION,
+            ])->save();
+            $partner->forceFill([
+                'status' => 'pending_approval',
+                'http_response_code' => $responseCode,
+                'remarks' => $remarks,
+            ])->refreshLifecycleStatus()->save();
+
+            return [202, $remarks];
+        }
+
+        if ($status === 'fail') {
+            $account->forceFill([
+                'is_verified' => 0,
+                'send_verification' => 0,
+                'verified_at' => null,
+                'rejected_at' => now(),
+                'onboarding_status' => PartnerAccount::ONBOARDING_REJECTED,
+            ])->save();
+            $partner->forceFill([
+                'status' => 'not_active',
+                'http_response_code' => $responseCode ?: null,
+                'remarks' => $remarks,
+            ])->refreshLifecycleStatus()->save();
+
+            return [422, $remarks];
+        }
+
+        $account->forceFill([
+            'is_verified' => 0,
+            'verified_at' => null,
+            'rejected_at' => null,
+            'onboarding_status' => PartnerAccount::ONBOARDING_REVIEW_REQUIRED,
+        ])->save();
         $partner->refreshLifecycleStatus()->save();
 
-        return [$http_status_code, $remarks];
+        return [409, $remarks];
+    }
+
+    protected function nmbRequest(array $payload)
+    {
+        $token = $this->auth->generateToken();
+
+        Log::info('NMB corporate request', [
+            'target_service' => $payload['targetService'],
+            'correlation_id' => $payload['correlationId'],
+            'corporate_reference' => data_get($payload, 'data.corporateReference'),
+        ]);
+
+        return Http::withToken($token)
+            ->acceptJson()
+            ->connectTimeout((int) config('services.nmb.connect_timeout', 5))
+            ->timeout((int) config('services.nmb.timeout', 30))
+            ->retry((int) config('services.nmb.retry_times', 2), 500, throw: false)
+            ->post(config('services.nmb.api_url'), $payload);
+    }
+
+    protected function recordNmbTechnicalFailure(
+        Partner $partner,
+        PartnerAccount $account,
+        string $correlationId,
+        Throwable $exception,
+        ?array $body = null
+    ): array {
+        Log::warning('NMB corporate request failed technically', [
+            'partner_id' => $partner->id,
+            'partner_account_id' => $account->id,
+            'correlation_id' => $correlationId,
+            'message' => $exception->getMessage(),
+        ]);
+
+        $account->forceFill([
+            'bank_correlation_id' => $correlationId,
+            'bank_response_payload' => $body,
+            'bank_status_checked_at' => now(),
+            'onboarding_status' => PartnerAccount::ONBOARDING_TECHNICAL_ERROR,
+            'remarks' => 'NMB is temporarily unavailable. Retry without rejecting the registration.',
+            'rejected_at' => null,
+        ])->save();
+        $partner->refreshLifecycleStatus()->save();
+
+        return [503, $account->remarks];
     }
 
     //mandate registartion

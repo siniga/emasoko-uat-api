@@ -99,17 +99,23 @@ class User extends Authenticatable
      */
     public function hasAnyRole($roles)
     {
-        return null !== $this->roles()->whereIn('name', $roles)->first();
+        $roles = is_array($roles) ? $roles : [$roles];
+
+        return $this->roles->whereIn('name', $roles)->isNotEmpty();
     }
 
     /**
-     * Check one role
-     * @param string $role
+     * Check one or more roles
+     * @param string|array $role
      * @return bool
      */
     public function hasRole($role)
     {
-        return null !== $this->roles()->where('name', $role)->first();
+        if (is_array($role)) {
+            return $this->hasAnyRole($role);
+        }
+
+        return $this->roles->contains('name', $role);
     }
 
     //rules

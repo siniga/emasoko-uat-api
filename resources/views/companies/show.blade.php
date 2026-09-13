@@ -134,10 +134,10 @@
                                             <i class="mdi mdi-chevron-down font-size-14"></i>
                                         </button>
                                         <div class="dropdown-menu dropdown-menu-end">
-                                            <a href="{{ route('companies.collection-account', $company->uuid) }}"
-                                                class="dropdown-item">
+                                            <button type="button" class="dropdown-item"
+                                                data-bs-toggle="modal" data-bs-target="#addCollectionAccountModal">
                                                 <i class="bx bx-plus me-2"></i> New Collection Account
-                                            </a>
+                                            </button>
 
                                             <template x-if="approved==0 || approved==99">
                                                 <a href="{{ route('companies.registration', $company->uuid) }}"
@@ -146,6 +146,7 @@
                                                 </a>
                                             </template>
 
+                                            @if ($canReviewRegistration)
                                             <template x-if="approved==0 || approved==99">
                                                 <button type="button" class="dropdown-item text-danger"
                                                     x-on:click="openRejectModal();" x-transition x-cloak>
@@ -153,18 +154,19 @@
                                                 </button>
                                             </template>
 
-                                            @if ($is_verified_false > 0)
+                                            @if ($is_verified_false)
                                                 <button type="button" class="dropdown-item text-success"
                                                     x-on:click="approveRegistration()">
                                                     <i class='bx bx-check-square me-2'></i> <span x-text="formLoading ? 'Approving Registration....' : 'Approve Registration'"></span>
                                                 </button>
                                             @endif
 
-                                            @if ($is_nmb_verified_false > 0)
+                                            @if ($is_nmb_verified_false)
                                                 <button type="button" class="dropdown-item"
                                                     x-on:click="fetchRegistrationStatus('{{ $company->uuid }}')">
                                                     <i class='bx bx-refresh me-2'></i> <span x-text="formLoading ? 'Fetch Registration status....' : 'Fetch Status'"></span>
                                                 </button>
+                                            @endif
                                             @endif
                                         </div>
                                     </div>
@@ -270,8 +272,11 @@
                                                 <th width="20%">Account Name</th>
                                                 <th width="10%">Account No.</th>
                                                 <th width="10%">Customer No.</th>
-                                                <th width="8%">Verified</th>
-                                                <th width="24%">Remarks</th>
+                                                <th width="14%">Onboarding Status</th>
+                                                <th width="21%">Remarks</th>
+                                                @if ($canReviewRegistration)
+                                                    <th width="3%" class="text-center">Action</th>
+                                                @endif
                                             </tr>
                                         </thead>
 
@@ -279,19 +284,58 @@
                                             @foreach ($company->partnerAccounts as $val)
                                                 <tr>
                                                     <td>{{ $loop->iteration }}</td>
-                                                    <td>{{ $val->accountType->name ?? '' }}</td>
+                                                    <td>{{ strtoupper($val->channel ?? '-') }}</td>
                                                     <td>{{ $val->account->name ?? '' }}</td>
                                                     <td>{{ $val->account_name ?? '' }}</td>
                                                     <td>{{ $val->account_number ?? '' }}</td>
                                                     <td>{{ $val->customer_code ?? '' }}</td>
                                                     <td>
-                                                        @if ($val->is_verified == 1)
-                                                            <span class="badge badge-soft-success">Yes</span>
-                                                        @elseif($val->is_verified == 0)
-                                                            <span class="badge badge-soft-danger">No</span>
-                                                        @endif
+                                                        @php
+                                                            $accountStatusClass = match ($val->onboarding_status) {
+                                                                \App\Models\PartnerAccount::ONBOARDING_ACTIVE,
+                                                                \App\Models\PartnerAccount::ONBOARDING_NOT_REQUIRED => 'success',
+                                                                \App\Models\PartnerAccount::ONBOARDING_REJECTED => 'danger',
+                                                                \App\Models\PartnerAccount::ONBOARDING_TECHNICAL_ERROR,
+                                                                \App\Models\PartnerAccount::ONBOARDING_REVIEW_REQUIRED => 'warning',
+                                                                default => 'info',
+                                                            };
+                                                        @endphp
+                                                        <span class="badge badge-soft-{{ $accountStatusClass }}">
+                                                            {{ $val->onboarding_status_label }}
+                                                        </span>
                                                     </td>
                                                     <td>{{ $val->remarks ?? '' }}</td>
+                                                    @if ($canReviewRegistration)
+                                                        <td>
+                                                            <div class="d-flex align-items-center justify-content-center gap-2">
+                                                            @if ($val->isBankApproved())
+                                                                <span class="text-muted" title="NMB-approved accounts cannot be edited">
+                                                                    <i class="bx bx-lock-alt font-size-18"></i>
+                                                                </span>
+                                                            @else
+                                                                <button type="button"
+                                                                    class="btn btn-link text-primary p-0 edit-collection-account"
+                                                                    title="Edit collection account"
+                                                                    data-update-url="{{ route('companies.collection-accounts.update', [$company->uuid, $val->id]) }}"
+                                                                    data-account-name="{{ $val->account_name }}"
+                                                                    data-account-number="{{ $val->account_number }}"
+                                                                    data-customer-code="{{ $val->customer_code }}"
+                                                                    data-corporate-limit="{{ $val->corporate_limit }}"
+                                                                    data-currency-id="{{ $val->currency_id }}">
+                                                                    <i class="bx bx-edit-alt font-size-18"></i>
+                                                                </button>
+                                                                @if ($val->canBeDeleted())
+                                                                    <button type="button"
+                                                                        class="btn btn-link text-danger p-0 delete-collection-account"
+                                                                        title="Delete collection account"
+                                                                        data-delete-url="{{ route('companies.collection-accounts.destroy', [$company->uuid, $val->id]) }}">
+                                                                        <i class="bx bx-trash font-size-18"></i>
+                                                                    </button>
+                                                                @endif
+                                                            @endif
+                                                            </div>
+                                                        </td>
+                                                    @endif
                                                 </tr>
                                             @endforeach
                                         </tbody>
@@ -386,15 +430,92 @@
                         @else
                             <div class="detail-empty">No authorized representative has been recorded for this service provider yet.</div>
                         @endif
+
+                        <div class="detail-section mt-4">
+                            <div class="detail-section__head">
+                                <div>
+                                    <h5>Partner Users</h5>
+                                </div>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table table-nowrap align-middle table-bordered mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th width="3%">#</th>
+                                            <th>Name</th>
+                                            <th>Email</th>
+                                            <th>Phone</th>
+                                            <th>Role</th>
+                                            <th>Login Status</th>
+                                            <th>Partner Access</th>
+                                            @if ($canReviewRegistration)
+                                                <th width="5%" class="text-center">Action</th>
+                                            @endif
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse ($partnerUsers as $link)
+                                            @if ($link->user)
+                                                <tr>
+                                                    <td>{{ $loop->iteration }}</td>
+                                                    <td>{{ $link->user->name ?? '-' }}</td>
+                                                    <td>{{ $link->user->email ?? '-' }}</td>
+                                                    <td>{{ $link->user->phone ?? '-' }}</td>
+                                                    <td>{{ $link->user->roles->pluck('name')->join(', ') ?: '-' }}</td>
+                                                    <td>
+                                                        @if ((int) $link->user->active === 1)
+                                                            <span class="badge badge-soft-success">Active</span>
+                                                        @else
+                                                            <span class="badge badge-soft-danger">Inactive</span>
+                                                        @endif
+                                                    </td>
+                                                    <td>
+                                                        @if ((int) $link->authorize === 1)
+                                                            <span class="badge badge-soft-success">Authorized</span>
+                                                        @else
+                                                            <span class="badge badge-soft-secondary">Disabled</span>
+                                                        @endif
+                                                    </td>
+                                                    @if ($canReviewRegistration)
+                                                        <td class="text-center">
+                                                            @if ((int) $link->user->active === 1 && (int) $link->user->id !== (int) Auth::id())
+                                                                <button type="button"
+                                                                    class="btn btn-link text-danger p-0 deactivate-partner-user"
+                                                                    title="Deactivate user login"
+                                                                    data-user-name="{{ $link->user->name }}"
+                                                                    data-deactivate-url="{{ route('companies.partner-users.deactivate', [$company->uuid, $link->id]) }}">
+                                                                    <i class="bx bx-user-x font-size-18"></i>
+                                                                </button>
+                                                            @else
+                                                                <span class="text-muted">-</span>
+                                                            @endif
+                                                        </td>
+                                                    @endif
+                                                </tr>
+                                            @endif
+                                        @empty
+                                            <tr>
+                                                <td colspan="{{ $canReviewRegistration ? 8 : 7 }}" class="text-center text-muted">
+                                                    No user login is linked to this service provider.
+                                                </td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
         @include('companies.modals.rejecting')
+        @include('companies.modals.collection_account')
     </div>
 @endsection
 
 @section('script')
     @include('companies.alpinejs')
+    @include('companies.modals.collection_account_script')
 @endsection

@@ -137,7 +137,7 @@ class PaymentMandateController extends Controller
         //populate data
         $account_types = AccountType::all();
         $accounts = Account::where('active', '=', 1)->get();
-        $partners = Partner::filterCondition()->where('approved', '=', 1)->get();
+        $partners = Partner::filterCondition()->operational()->get();
 
         //render view
         return view('payment_mandate.lists', compact('title', 'account_types', 'accounts', 'partners', 'debit_orders', 'number_of_debit_orders', 'post_data'));
@@ -176,7 +176,7 @@ class PaymentMandateController extends Controller
                 'created_by'
             )
             ->whereHas('partner', function ($q) {
-                $q->where('partners.status', 202);
+                $q->operational();
             });
 
         $debit_orders = $debit_orders->when($requests, function ($query) use ($requests) {
@@ -369,7 +369,7 @@ class PaymentMandateController extends Controller
             $debit_order = DebitOrder::where(['uuid' => $debit_order_uuid])->first();
 
         //providers
-        $providers = Partner::filterCondition();
+        $providers = Partner::filterCondition()->operational();
         $providers = $providers->get();
 
         //render view

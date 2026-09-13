@@ -50,7 +50,6 @@
                             'companies.preview',
                             'companies.details',
                             'companies.edit',
-                            'companies.collection-account',
                         ) ||
                         request()->is('companies') ||
                         request()->is('companies/*');

@@ -87,7 +87,7 @@ Route::middleware('auth')->group(function () {
     //After Login
     Route::any('dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::any('index', [DashboardController::class, 'index'])->name('index');
-    Route::any('bi/dashboard', [BIController::class, 'index'])->name('bi.dashboard');
+    Route::get('bi/dashboard', [BIController::class, 'index'])->name('bi.dashboard');
     Route::get('leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard.index');
     Route::get('payment-collections', [PaymentCollectionListController::class, 'index'])->name('payment-collections.index');
     Route::get('payment-collections/export', [PaymentCollectionListController::class, 'export'])->name('payment-collections.export');
@@ -147,8 +147,10 @@ Route::middleware('auth')->group(function () {
     Route::post('companies/store-accounts', [CompanyController::class, 'storeCompanyAccounts'])->name('companies.store-accounts');
 
     //new collection accounts
-    Route::get('companies/collection_account/{uuid}', [CompanyController::class, 'newCollectionAccountForm'])->name('companies.collection-account');
     Route::post('companies/store-collection-account', [CompanyController::class, 'storeCollectionAccount'])->name('companies.store-collection-account');
+    Route::put('companies/{uuid}/collection-accounts/{partnerAccount}', [CompanyController::class, 'updateCollectionAccount'])->name('companies.collection-accounts.update');
+    Route::delete('companies/{uuid}/collection-accounts/{partnerAccount}', [CompanyController::class, 'destroyCollectionAccount'])->name('companies.collection-accounts.destroy');
+    Route::patch('companies/{uuid}/partner-users/{partnerUser}/deactivate', [CompanyController::class, 'deactivatePartnerUser'])->name('companies.partner-users.deactivate');
 
     //company staff
     Route::get('companies/staff/{uuid}', [CompanyController::class, 'companyStaffForm'])->name('companies.register-staff');
@@ -249,8 +251,8 @@ Route::middleware('auth')->group(function () {
     //collection batches
     //Route::prefix('collections')->group(function () {});
 
-    Route::any('collections/batches', [CollectionController::class, 'batches'])->name('collections.batches');
-    Route::any('collections/create', [CollectionController::class, 'create'])->name('collections.create');
+    Route::get('collections/batches', [CollectionController::class, 'batches'])->name('collections.batches');
+    Route::get('collections/create', [CollectionController::class, 'create'])->name('collections.create');
     Route::post('collections/store', [CollectionController::class, 'store'])->name('collections.store');
     Route::get('collections/show/{id}', [CollectionController::class, 'show'])->name('collections.show');
     Route::post('collections/show/{id}/repair-failed', [CollectionController::class, 'repair_failed_batch'])->name('collections.repair-failed');
@@ -258,14 +260,14 @@ Route::middleware('auth')->group(function () {
     Route::get('collections/export-processed/{id}', [CollectionController::class, 'export_processed'])->name('collections.export-processed');
     Route::get('collections/create-failed/{id?}', [CollectionController::class, 'create_failed'])->name('collections.create-failed');
     Route::post('collections/store-failed', [CollectionController::class, 'store_failed'])->name('collections.store-failed');
-    Route::get('collections/create-monthly-failed', [CollectionController::class, 'create_monthly_failed'])->name('collections.create-monthly-failed');
-    Route::get('collections/archive/{id}', [CollectionController::class, 'archive'])->name('collections.archive');
+    Route::post('collections/create-monthly-failed', [CollectionController::class, 'create_monthly_failed'])->name('collections.create-monthly-failed');
+    Route::delete('collections/archive/{id}', [CollectionController::class, 'archive'])->name('collections.archive');
     Route::post('collections/upload', [CollectionController::class, 'upload'])->name('collections.upload');
     Route::post('collections/fetch-status', [CollectionController::class, 'fetch_status'])->name('collections.fetch-status');
 
-    Route::get('collections/create-debit-orders', [CollectionController::class, 'create_debit_orders'])->name('collections.create-debit-orders');
-    Route::get('collections/update-debit-orders', [CollectionController::class, 'update_debit_orders'])->name('collections.update-debit-orders');
-    Route::get('collections/update-collection-date', [CollectionController::class, 'update_collection_date'])->name('collections.update-collection-date');
+    Route::post('collections/create-debit-orders', [CollectionController::class, 'create_debit_orders'])->name('collections.create-debit-orders');
+    Route::post('collections/update-debit-orders', [CollectionController::class, 'update_debit_orders'])->name('collections.update-debit-orders');
+    Route::post('collections/update-collection-date', [CollectionController::class, 'update_collection_date'])->name('collections.update-collection-date');
     //Route::get('collections/update-collection-status', [CollectionController::class, 'update_collection_status'])->name('collections.update-collection-status');
     //Route::get('collections/create-collection-values', [CollectionController::class, 'create_collection_values'])->name('collections.create-collection-values');
     //Route::get('collections/update-collection-values', [CollectionController::class, 'update_collection_values'])->name('collections.update-collection-values');

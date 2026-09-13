@@ -8,6 +8,7 @@ use App\Models\CustomerPartner;
 use App\Models\DebitOrder;
 use App\Models\DebitOrderRequest;
 use App\Models\Installment;
+use App\Models\Partner;
 use App\Models\OtpRequest;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -36,6 +37,15 @@ class PaymentMandateWorkflowService
             $maxInstallmentAmount = $this->normalizeAmount($attributes['max_installment_amount'] ?? 0);
 
             $partnerId = $attributes['partner_id'] ?? $attributes['provider_id'] ?? null;
+            $partner = Partner::operational()->find($partnerId);
+
+            if (!$partner) {
+                throw ValidationException::withMessages([
+                    'provider_id' => 'The selected service provider is not approved or its collection account is not active.',
+                ]);
+            }
+
+            $partnerId = $partner->id;
             $customerAccountUuid = $attributes['customer_account_uuid'];
             $customerAccount = CustomerAccount::where('uuid', '=', $customerAccountUuid)->firstOrFail();
             $debitOrderUuid = $attributes['debit_order_uuid'] ?? (string) Str::uuid();

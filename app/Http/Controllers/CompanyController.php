@@ -18,6 +18,7 @@ use App\Models\PartnerAccount;
 use App\Models\PartnerCategory;
 use App\Models\PartnerDocument;
 use App\Models\PartnerStaff;
+use App\Models\PartnerUser;
 use App\Models\Region;
 use App\Services\BankApiService;
 use App\Services\CompanyService;
@@ -478,29 +479,12 @@ class CompanyController extends Controller
         return response()->json(['success' => true, 'uuid' => $uuid, 'message' => 'Authorised person saved'], 200);
     }
 
-    //new collection account
-    public function newCollectionAccountForm($uuid)
-    {
-        $title = 'New Collection Account';
-
-        //company
-        $company = $this->findAccessiblePartner($uuid);
-
-        //populate data
-        $account_types = AccountType::toBase()->get();
-        $accounts = Account::where(['active' => 1])->toBase()->get();
-        $currencies = Currency::toBase()->get();
-
-        //render view
-        return view('companies.collection_account', compact('title', 'company', 'account_types', 'accounts', 'currencies'));
-    }
-
+    //collection account actions
     public function storeCollectionAccount(Request $request)
     {
         $validated = $request->validate([
             'partner_id' => ['required', 'integer'],
             'partner_uuid' => ['required', 'uuid'],
-            'account_type_id' => ['required', 'integer'],
             'account_id' => ['required', 'integer', 'exists:accounts,id'],
             'customer_code' => ['required', 'string'],
             'account_name' => ['required', 'string'],
@@ -513,32 +497,31 @@ class CompanyController extends Controller
         $id = $partner->id;
         $uuid = $partner->uuid;
 
-        //check if partner account exists with account number, account type, currency, is_verified
-        $partner_account = PartnerAccount::where(
-            [
-                'partner_uuid' => $uuid,
-                'account_type_id' => $request->account_type_id,
-                'account_id' => $request->account_id,
-                'is_verified' => 1
-            ]
-        )->first();
+        $account = Account::where('active', 1)->findOrFail($validated['account_id']);
+        $existingAccount = PartnerAccount::where('partner_id', $id)
+            ->where('account_id', $account->id)
+            ->first();
 
-        if ($partner_account) {
-            return response()->json(['success' => false, 'message' => "{$partner_account->channel} Collection Account already exists"], 200);
+        if ($existingAccount) {
+            return response()->json([
+                'success' => false,
+                'message' => "{$existingAccount->channel} collection account already exists.",
+            ], 422);
         }
-
-        // detect account channel
-        $account = Account::findOrFail($validated['account_id']);
 
         $partner_account = DB::transaction(function () use ($account, $id, $request, $uuid) {
             $partnerAccount = PartnerAccount::firstOrNew([
                 'partner_id' => $id,
                 'partner_uuid' => $uuid,
-                'account_type_id' => $request->account_type_id,
+                'account_type_id' => $account->account_type_id,
                 'account_id' => $request->account_id,
             ]);
 
             $partnerAccount->send_verification = 1;
+            $partnerAccount->is_verified = 0;
+            $partnerAccount->verified_at = null;
+            $partnerAccount->rejected_at = null;
+            $partnerAccount->onboarding_status = PartnerAccount::ONBOARDING_PENDING_REVIEW;
             $partnerAccount->customer_code = $request->customer_code;
             $partnerAccount->account_name = $request->account_name;
             $partnerAccount->account_number = $request->account_number;
@@ -547,12 +530,138 @@ class CompanyController extends Controller
             $partnerAccount->currency_id = $request->currency_id;
             $partnerAccount->channel = $account->slug;
             $partnerAccount->save();
+            $partnerAccount->partner->refreshLifecycleStatus()->save();
 
             return $partnerAccount;
         });
 
         //response
-        return response()->json(['success' => true, 'uuid' => $uuid, 'message' => "{$partner_account->channel} collection account added"], 200);
+        return response()->json(['success' => true, 'uuid' => $uuid, 'message' => "{$partner_account->channel} collection account added and is pending eMakato review"], 200);
+    }
+
+    public function updateCollectionAccount(
+        Request $request,
+        string $uuid,
+        PartnerAccount $partnerAccount
+    ) {
+        $this->authorizeProviderApproval();
+
+        $company = $this->findAccessiblePartner($uuid);
+        abort_unless((int) $partnerAccount->partner_id === (int) $company->id, 404);
+
+        if ($partnerAccount->isBankApproved()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'An NMB collection account cannot be edited after bank approval.',
+            ], 422);
+        }
+
+        $validated = $request->validate([
+            'customer_code' => ['required', 'string'],
+            'account_name' => ['required', 'string'],
+            'account_number' => ['required', 'string'],
+            'corporate_limit' => ['required'],
+            'currency_id' => ['required', 'uuid', 'exists:currencies,id'],
+        ]);
+
+        $channel = strtoupper((string) $partnerAccount->channel);
+
+        DB::transaction(function () use ($validated, $channel, $company, $partnerAccount) {
+            $isLocallyOperational = str_contains($channel, 'CRDB') && (int) $company->approved === 1;
+
+            $partnerAccount->forceFill([
+                'customer_code' => $validated['customer_code'],
+                'account_name' => $validated['account_name'],
+                'account_number' => $validated['account_number'],
+                'corporate_limit' => floatval(str_replace(',', '', $validated['corporate_limit'])),
+                'branch_code' => substr($validated['account_number'], 0, 3),
+                'currency_id' => $validated['currency_id'],
+                'is_verified' => $isLocallyOperational ? 1 : 0,
+                'send_verification' => $isLocallyOperational ? 0 : 1,
+                'verified_at' => $isLocallyOperational ? now() : null,
+                'rejected_at' => null,
+                'onboarding_status' => $isLocallyOperational
+                    ? PartnerAccount::ONBOARDING_NOT_REQUIRED
+                    : PartnerAccount::ONBOARDING_PENDING_REVIEW,
+                'remarks' => $isLocallyOperational
+                    ? 'Updated and verified by eMakato. CRDB bank onboarding is not required.'
+                    : 'Collection account updated and pending eMakato review.',
+                'bank_response_code' => null,
+                'bank_correlation_id' => null,
+                'bank_response_payload' => null,
+                'bank_submitted_at' => null,
+                'bank_status_checked_at' => null,
+            ])->save();
+
+            $company->refreshLifecycleStatus()->save();
+        });
+
+        return response()->json([
+            'success' => true,
+            'uuid' => $company->uuid,
+            'message' => str_contains($channel, 'CRDB')
+                ? 'CRDB collection account updated successfully.'
+                : 'NMB collection account updated and returned for approval.',
+        ]);
+    }
+
+    public function destroyCollectionAccount(string $uuid, PartnerAccount $partnerAccount)
+    {
+        $this->authorizeProviderApproval();
+
+        $company = $this->findAccessiblePartner($uuid);
+        abort_unless((int) $partnerAccount->partner_id === (int) $company->id, 404);
+
+        if (!$partnerAccount->canBeDeleted()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'An approved collection account cannot be deleted.',
+            ], 422);
+        }
+
+        DB::transaction(function () use ($company, $partnerAccount) {
+            $partnerAccount->delete();
+            $company->refreshLifecycleStatus()->save();
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Collection account deleted successfully.',
+        ]);
+    }
+
+    public function deactivatePartnerUser(
+        string $uuid,
+        PartnerUser $partnerUser
+    ) {
+        $this->authorizeProviderApproval();
+
+        $company = $this->findAccessiblePartner($uuid);
+        abort_unless((int) $partnerUser->partner_id === (int) $company->id, 404);
+
+        $user = $partnerUser->user;
+        abort_unless($user, 404);
+
+        if ((int) $user->id === (int) Auth::id()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You cannot deactivate your own login.',
+            ], 422);
+        }
+
+        DB::transaction(function () use ($user) {
+            $user->active = 0;
+            $user->remember_token = null;
+            $user->save();
+
+            PartnerUser::where('user_id', $user->id)->update(['authorize' => 0]);
+            $user->tokens()->update(['revoked' => true]);
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => "{$user->name}'s login has been deactivated.",
+        ]);
     }
 
     //company info overview
@@ -646,16 +755,25 @@ class CompanyController extends Controller
         //service provider
         $company = $this->findAccessiblePartner($uuid);
 
-        //is_verified_false partner accounts
-        $is_verified_false = PartnerAccount::where(['partner_id' => $company->id, 'is_verified' => 0])->count();
+        $canReviewRegistration = Auth::user()->hasAnyRole(['admin', 'Manager']);
+        $accounts = Account::where('active', 1)->toBase()->get();
+        $currencies = Currency::toBase()->get();
+        $partnerUsers = $company->users()->with(['user.roles'])->get();
 
-        //nmb is verified_false partner accounts
-        $is_nmb_verified_false = PartnerAccount::where(['partner_id' => $company->id, 'is_verified' => 0, 'channel' => 'NMB'])->count();
+        $is_verified_false = $company->approved != 1
+            || $company->partnerAccounts()->where('onboarding_status', PartnerAccount::ONBOARDING_PENDING_REVIEW)->exists();
+        $is_nmb_verified_false = $company->partnerAccounts()
+            ->where('channel', 'like', '%NMB%')
+            ->whereNotIn('onboarding_status', [
+                PartnerAccount::ONBOARDING_ACTIVE,
+                PartnerAccount::ONBOARDING_REJECTED,
+            ])
+            ->exists();
 
         $summaryStats = $this->companySummaryService->forPartner($company);
 
         //render view
-        return view('companies.show', compact('title', 'company', 'is_verified_false', 'is_nmb_verified_false', 'summaryStats'));
+        return view('companies.show', compact('title', 'company', 'is_verified_false', 'is_nmb_verified_false', 'canReviewRegistration', 'accounts', 'currencies', 'partnerUsers', 'summaryStats'));
     }
 
     //create invoice
@@ -762,6 +880,8 @@ class CompanyController extends Controller
     //confirm/reject company approval
     public function confirmAssessment(Request $request)
     {
+        $this->authorizeProviderApproval();
+
         $validated = $request->validate([
             'uuid' => ['required', 'uuid'],
             'action' => ['required', 'in:APPROVE,REJECT'],
@@ -775,156 +895,197 @@ class CompanyController extends Controller
 
             return response()->json([
                 'error' => false,
-                'status' => 500,
+                'status' => 200,
+                'approved' => 99,
                 'remarks' => $validated['remarks'],
-                'message' => 'Service provider rejected and notification sent to service provider.',
+                'message' => 'Service provider rejected and notification sent.',
             ]);
         }
 
-        if (!$partner->partnerAccounts()->exists()) {
+        $readinessErrors = $this->approvalReadinessErrors($partner);
+        if ($readinessErrors !== []) {
             return response()->json([
                 'error' => true,
                 'status' => 422,
-                'message' => 'Add at least one collection account before approving this service provider.',
+                'message' => 'Complete the required registration information before approval: ' . implode(' ', $readinessErrors),
+                'errors' => $readinessErrors,
             ], 422);
-        }
-
-        $nmbAccounts = 0;
-        $crdbAccounts = 0;
-        $failedAccounts = 0;
-
-        foreach ($partner->partnerAccounts()->where('is_verified', 0)->get() as $partnerAccount) {
-            if ($partnerAccount->channel === 'CRDB') {
-                DB::transaction(function () use ($partnerAccount) {
-                    $partnerAccount->is_verified = 1;
-                    $partnerAccount->verified_at = now();
-                    $partnerAccount->rejected_at = null;
-                    $partnerAccount->remarks = 'Account processing completed successfully and is active.';
-                    $partnerAccount->save();
-                });
-                $crdbAccounts++;
-                continue;
-            }
-
-            if ($partnerAccount->channel === 'NMB') {
-                $payload = $this->payloadService->corporateRegistrationPayload($partner, $partnerAccount);
-                [$responseCode] = $this->bankApi->corporateRegistrationRequest($payload, $partnerAccount);
-
-                if ($responseCode === 201) {
-                    $nmbAccounts++;
-                } else {
-                    $failedAccounts++;
-                }
-                continue;
-            }
-
-            $failedAccounts++;
-        }
-
-        if ($failedAccounts > 0) {
-            $partner->refreshLifecycleStatus()->save();
-
-            return response()->json([
-                'error' => true,
-                'status' => 400,
-                'message' => 'Failed to approve service provider. Review account remarks and try again.',
-            ]);
         }
 
         DB::transaction(function () use ($partner, $validated) {
             $this->companyService->processAssessment($partner, $validated);
-            $partner->refresh()->refreshLifecycleStatus()->save();
+
+            foreach ($partner->partnerAccounts as $account) {
+                if (!str_contains(strtoupper((string) $account->channel), 'CRDB')) {
+                    continue;
+                }
+
+                $account->forceFill([
+                    'is_verified' => 1,
+                    'send_verification' => 0,
+                    'verified_at' => now(),
+                    'rejected_at' => null,
+                    'onboarding_status' => PartnerAccount::ONBOARDING_NOT_REQUIRED,
+                    'remarks' => 'Verified by eMakato. CRDB bank onboarding is not required.',
+                ])->save();
+            }
+
+            $partner->refreshLifecycleStatus()->save();
         });
 
-        $message = $nmbAccounts > 0
-            ? 'Service provider approved and pending approval from NMB.'
-            : 'Account processing completed successfully and is active.';
+        $submitted = 0;
+        $bankFailures = [];
+
+        foreach ($partner->partnerAccounts()->where('channel', 'like', '%NMB%')->get() as $account) {
+            if ($account->onboarding_status === PartnerAccount::ONBOARDING_ACTIVE) {
+                continue;
+            }
+
+            $payload = $this->payloadService->corporateRegistrationPayload($partner, $account);
+            [$responseCode, $remarks] = $this->bankApi->corporateRegistrationRequest($payload, $account);
+
+            if ($responseCode === 201) {
+                $submitted++;
+                continue;
+            }
+
+            $bankFailures[] = $remarks;
+        }
+
+        $partner->refresh()->refreshLifecycleStatus()->save();
+
+        $message = match (true) {
+            $bankFailures !== [] => 'Service provider approved by eMakato, but NMB onboarding needs attention: ' . implode(' ', array_unique($bankFailures)),
+            $submitted > 0 => 'Service provider approved by eMakato and submitted to NMB for activation.',
+            default => 'Service provider approved and collection accounts are active.',
+        };
 
         return response()->json([
             'error' => false,
             'status' => 200,
+            'approved' => 1,
             'message' => $message,
-            'processed_accounts' => $nmbAccounts + $crdbAccounts,
+            'nmb_accounts_submitted' => $submitted,
+            'bank_warnings' => $bankFailures,
         ]);
     }
 
-    //query status
-    function fetchCorporateStatus(Request $request)
+    public function fetchCorporateStatus(Request $request)
     {
+        $this->authorizeProviderApproval();
+
         $validated = $request->validate([
             'uuid' => ['required', 'uuid'],
         ]);
-        $uuid = $validated['uuid'];
 
-        //service provider
-        $partner = $this->findAccessiblePartner($uuid);
+        $partner = $this->findAccessiblePartner($validated['uuid']);
+        $accounts = $partner->partnerAccounts()
+            ->where('channel', 'NMB')
+            ->whereNotIn('onboarding_status', [
+                PartnerAccount::ONBOARDING_ACTIVE,
+                PartnerAccount::ONBOARDING_REJECTED,
+            ])
+            ->get();
 
-        $partner_account = PartnerAccount::where(['partner_id' => $partner->id, 'is_verified' => 0, 'channel' => 'NMB'])->first();
-
-        if (!$partner_account) {
-            return response()->json(
-                [
-                    "success" => false,
-                    'success_msg' => "No NMB account found",
-                    "status" => 400,
-                    "remarks" => "No NMB account found"
-                ],
-                200
-            );
+        if ($accounts->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'status' => 422,
+                'message' => 'No pending NMB collection account was found.',
+                'remarks' => 'No pending NMB collection account was found.',
+            ], 422);
         }
 
-        //create payload
-        $payload = $this->payloadService->corporateStatusPayload($partner);
+        $results = [];
+        foreach ($accounts as $account) {
+            $payload = $this->payloadService->corporateStatusPayload($partner);
+            [$responseCode, $remarks] = $this->bankApi->corporateStatusRequest($payload, $account);
+            $results[] = compact('responseCode', 'remarks');
+        }
 
-        //api service
-        $arr_response = $this->bankApi->corporateStatusRequest($payload);
+        $partner->refresh()->refreshLifecycleStatus()->save();
+        $hasFailure = collect($results)->contains(fn (array $result) => $result['responseCode'] >= 400);
+        $isPending = collect($results)->contains(fn (array $result) => $result['responseCode'] === 202);
+        $httpStatus = $hasFailure ? 422 : 200;
 
-        if ($arr_response) {
-            $http_status_code = $arr_response[0];
-            $remarks = $arr_response[1];
+        return response()->json([
+            'success' => !$hasFailure,
+            'status' => $hasFailure ? 422 : ($isPending ? 202 : 200),
+            'message' => $hasFailure
+                ? 'NMB status could not be confirmed for every account.'
+                : ($isPending ? 'NMB activation is still pending.' : 'NMB account status updated.'),
+            'remarks' => implode(' ', array_unique(array_column($results, 'remarks'))),
+        ], $httpStatus);
+    }
 
-            if ($http_status_code == 200) {
-                return response()->json(
-                    [
-                        "success" => true,
-                        'message' => "Corporate status updated",
-                        "status" => 200,
-                        "remarks" => $remarks
-                    ],
-                    200
-                );
-            } else if ($http_status_code == 500) {
-                return response()->json(
-                    [
-                        "success" => false,
-                        'message' => "Failed to update corporate status, Try again...",
-                        "status" => 400,
-                        "remarks" => $remarks
-                    ],
-                    200
-                );
-            } else {
-                return response()->json(
-                    [
-                        "success" => false,
-                        'message' => "Failed to update corporate status, Try again...",
-                        "status" => 400,
-                        "remarks" => $remarks
-                    ],
-                    200
-                );
+    protected function authorizeProviderApproval(): void
+    {
+        abort_unless(
+            Auth::user()?->hasAnyRole(['admin', 'Manager']),
+            403,
+            'Only eMakato administrators and managers can approve service providers.'
+        );
+    }
+
+    protected function approvalReadinessErrors(Partner $partner): array
+    {
+        $errors = [];
+        $requiredFields = [
+            'business_name' => 'Business name',
+            'tin_number' => 'TIN number',
+            'partner_category_id' => 'Business category',
+            'year_of_incorporation' => 'Year of incorporation',
+            'region_id' => 'Region',
+            'phone' => 'Phone number',
+            'email' => 'Email address',
+            'physical_address' => 'Physical address',
+        ];
+
+        foreach ($requiredFields as $field => $label) {
+            if (blank($partner->{$field})) {
+                $errors[] = $label . ' is missing.';
             }
-        } else {
-            return response()->json(
-                [
-                    "success" => false,
-                    'message' => "Failed to update corporate status, Try again...",
-                    "status" => 404,
-                    "remarks" => "API does not response, Kindly try again or contact support."
-                ],
-                200
-            );
         }
+
+        $requiredDocumentKeys = DocumentCategory::where('required', 1)->pluck('key');
+        $uploadedDocumentKeys = $partner->partnerDocuments()
+            ->whereIn('key', $requiredDocumentKeys)
+            ->whereNotNull('attachment')
+            ->where('attachment', '!=', '')
+            ->pluck('key');
+
+        foreach ($requiredDocumentKeys->diff($uploadedDocumentKeys) as $key) {
+            $errors[] = 'Required document missing: '
+                . (DocumentCategory::where('key', $key)->value('name') ?? $key) . '.';
+        }
+
+        if (!$partner->partnerStaff()->exists()) {
+            $errors[] = 'Add at least one authorized representative.';
+        }
+
+        $accounts = $partner->partnerAccounts()->with('account')->get();
+        if ($accounts->isEmpty()) {
+            $errors[] = 'Add at least one collection account.';
+        }
+
+        foreach ($accounts as $account) {
+            $channel = strtoupper((string) $account->channel);
+            if (!in_array($channel, ['NMB', 'CRDB'], true)) {
+                $errors[] = "Collection account {$account->account_number} must use NMB or CRDB.";
+            }
+
+            if (!$account->account || !$account->account->active) {
+                $errors[] = "Collection account {$account->account_number} uses an inactive bank.";
+            }
+
+            foreach (['account_name', 'account_number', 'customer_code', 'currency_id', 'corporate_limit'] as $field) {
+                if (blank($account->{$field})) {
+                    $errors[] = "Collection account {$account->id} is missing {$field}.";
+                }
+            }
+        }
+
+        return array_values(array_unique($errors));
     }
 
     protected function findAccessiblePartner(string $uuid): Partner
