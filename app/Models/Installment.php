@@ -28,7 +28,7 @@ class Installment extends Model
     //filter condition
     public static function filterCondition()
     {
-        $user = User::findOrFail(Auth::user()->id);
+        $user = Auth::user();
 
         //installments
         $installments = static::query();

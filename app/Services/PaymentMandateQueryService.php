@@ -6,10 +6,15 @@ use App\Models\DebitOrder;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Facades\Schema;
 
 class PaymentMandateQueryService
 {
+    public function __construct(private DashboardReportingQueryService $dashboardReporting)
+    {
+    }
+
     public function baseQuery(array $filters = [], ?User $user = null): Builder
     {
         $query = DebitOrder::filterCondition(includeDeleted: true)
@@ -116,21 +121,91 @@ class PaymentMandateQueryService
 
     public function stats(array $filters = [], ?User $user = null): array
     {
-        $query = $this->baseQuery($filters, $user);
-        $stats = ['total' => (clone $query)->count()];
-
-        foreach (DebitOrder::lifecycleStatusLabels() as $status => $label) {
-            if ($status === DebitOrder::SUMMARY_PENDING) {
-                $stats[$status] = (clone $query)
-                    ->whereIn('lifecycle_status', DebitOrder::lifecycleStatusesForSummary(DebitOrder::SUMMARY_PENDING))
-                    ->count();
-                continue;
-            }
-
-            $stats[$status] = (clone $query)->where('lifecycle_status', $status)->count();
+        if (!$user) {
+            return $this->emptyStats();
         }
 
-        return $stats;
+        $query = $this->dashboardReporting->mandates($user, [
+            'channel' => $filters['payment_channel'] ?? null,
+            'partner_id' => $filters['partner_id'] ?? null,
+            'corporate_reference' => $filters['corporate_reference'] ?? null,
+            'keyword' => $filters['keyword'] ?? null,
+        ]);
+
+        $this->applyReportingStatsFilters($query, $filters);
+
+        $inactiveStatuses = [
+            DebitOrder::LIFECYCLE_CANCELLED,
+            DebitOrder::LIFECYCLE_CLOSED,
+            DebitOrder::LIFECYCLE_ARCHIVED,
+        ];
+        $inactivePlaceholders = implode(', ', array_fill(0, count($inactiveStatuses), '?'));
+
+        $stats = $query
+            ->whereIn('mandate_approved', [0, 1, 2])
+            ->selectRaw('COUNT(*) as total')
+            ->selectRaw('SUM(CASE WHEN mandate_approved = 0 THEN 1 ELSE 0 END) as pending')
+            ->selectRaw('SUM(CASE WHEN mandate_approved = 1 THEN 1 ELSE 0 END) as approved')
+            ->selectRaw('SUM(CASE WHEN mandate_approved = 2 THEN 1 ELSE 0 END) as failed')
+            ->selectRaw('SUM(CASE WHEN lifecycle_status = ? THEN 1 ELSE 0 END) as active', [DebitOrder::LIFECYCLE_ACTIVE])
+            ->selectRaw('SUM(CASE WHEN lifecycle_status = ? THEN 1 ELSE 0 END) as awaiting_otp', [DebitOrder::LIFECYCLE_AWAITING_OTP])
+            ->selectRaw('SUM(CASE WHEN lifecycle_status = ? THEN 1 ELSE 0 END) as cancellation_requested', [DebitOrder::LIFECYCLE_CANCELLATION_REQUESTED])
+            ->selectRaw("SUM(CASE WHEN lifecycle_status IN ({$inactivePlaceholders}) THEN 1 ELSE 0 END) as inactive", $inactiveStatuses)
+            ->selectRaw('SUM(CASE WHEN lifecycle_status = ? THEN 1 ELSE 0 END) as processing_failed', [DebitOrder::LIFECYCLE_FAILED])
+            ->first();
+
+        return array_merge(
+            $this->emptyStats(),
+            collect((array) $stats)->map(fn ($value) => (int) $value)->all()
+        );
+    }
+
+    protected function applyReportingStatsFilters(QueryBuilder $query, array $filters): void
+    {
+        $startDate = $filters['start_at'] ?? null;
+        $endDate = $filters['end_at'] ?? null;
+
+        if ($startDate && $endDate) {
+            $query->whereBetween('created_at', [
+                Carbon::createFromFormat('Y-m-d', $startDate)->startOfDay(),
+                Carbon::createFromFormat('Y-m-d', $endDate)->endOfDay(),
+            ]);
+        } elseif ($startDate) {
+            $query->where('created_at', '>=', Carbon::createFromFormat('Y-m-d', $startDate)->startOfDay());
+        } elseif ($endDate) {
+            $query->where('created_at', '<=', Carbon::createFromFormat('Y-m-d', $endDate)->endOfDay());
+        }
+
+        if (($filters['approval_status'] ?? null) !== null && $filters['approval_status'] !== '') {
+            $query->where('mandate_approved', (int) $filters['approval_status']);
+        }
+
+        $lifecycleStatus = $filters['lifecycle_status'] ?? $filters['status'] ?? null;
+        if (!$lifecycleStatus) {
+            return;
+        }
+
+        $lifecycleStatus = DebitOrder::normalizeLifecycleStatus($lifecycleStatus);
+        $statuses = DebitOrder::lifecycleStatusesForSummary($lifecycleStatus);
+
+        $statuses
+            ? $query->whereIn('lifecycle_status', $statuses)
+            : $query->where('lifecycle_status', $lifecycleStatus);
+    }
+
+    protected function emptyStats(): array
+    {
+        return [
+            'total' => 0,
+            'pending' => 0,
+            'approved' => 0,
+            'failed' => 0,
+            'active' => 0,
+            'awaiting_otp' => 0,
+            'cancellation_requested' => 0,
+            'inactive' => 0,
+            'processing_failed' => 0,
+        ];
     }
 
     protected function applyFilters(Builder $query, array $filters): Builder
@@ -164,6 +239,9 @@ class PaymentMandateQueryService
             ->when($filters['partner_id'] ?? null, function ($query, $partnerId) {
                 $query->where('debit_orders.partner_id', $partnerId);
             })
+            ->when(isset($filters['approval_status']), function ($query) use ($filters) {
+                $query->where('debit_orders.approved', (int) $filters['approval_status']);
+            })
             ->when($filters['corporate_reference'] ?? null, function ($query, $corporateReference) {
                 $query->whereHas('partner', function ($partnerQuery) use ($corporateReference) {
                     $partnerQuery->where('partners.reference', $corporateReference);
@@ -177,6 +255,10 @@ class PaymentMandateQueryService
 
                 $query->where(function ($query) use ($lowered) {
                     $query->whereRaw('LOWER(reference) LIKE ?', ["%{$lowered}%"])
+                        ->orWhereHas('partner', function ($partnerQuery) use ($lowered) {
+                            $partnerQuery->whereRaw('LOWER(reference) LIKE ?', ["%{$lowered}%"])
+                                ->orWhereRaw('LOWER(business_name) LIKE ?', ["%{$lowered}%"]);
+                        })
                         ->orWhereHas('customerAccount', function ($customerAccountQuery) use ($lowered) {
                             $customerAccountQuery->where(function ($accountQuery) use ($lowered) {
                                 $accountQuery->whereRaw('LOWER(account_name) LIKE ?', ["%{$lowered}%"])

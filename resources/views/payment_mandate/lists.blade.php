@@ -19,6 +19,9 @@
             <div class="col-lg-12">
                 <div class="sp-list-filter mb-3">
                     {!! Form::open(['url' => route('payment-mandate.lists'), 'method' => 'GET', 'class' => 'form-horizontal']) !!}
+                    @if (($post_data['approval_status'] ?? null) !== null)
+                        {{ Form::hidden('approval_status', $post_data['approval_status']) }}
+                    @endif
 
                     <div class="row">
                         <div class="col-lg-2">
@@ -112,52 +115,42 @@
                     {{ Form::close() }}
                 </div>
 
+                <h6 class="text-muted mb-2">Current Lifecycle</h6>
                 <div class="row mb-3">
-                    <div class="col-md-2">
-                        <div class="detail-summary shadow h-96 py-2">
-                            <div class="detail-summary__label text-muted">Total Mandates</div>
-                            <div class="detail-summary__value text-primary">{{ number_format($listStats['total'] ?? 0) }}
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-2">
-                        <div class="detail-summary shadow h-96 py-2">
-                            <div class="detail-summary__label">Draft</div>
-                            <div class="detail-summary__value text-draft">{{ number_format($listStats['draft'] ?? 0) }}
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-2">
-                        <div class="detail-summary shadow h-96 py-2">
-                            <div class="detail-summary__label">Submitted</div>
-                            <div class="detail-summary__value text-secondary">
-                                {{ number_format($listStats['submitted'] ?? 0) }}</div>
-                        </div>
-                    </div>
-                    <div class="col-md-2">
-                        <div class="detail-summary shadow h-96 py-2">
-                            <div class="detail-summary__label">Awaiting OTP</div>
-                            <div class="detail-summary__value text-warning">
-                                {{ number_format($listStats['awaiting_otp'] ?? 0) }}</div>
-                        </div>
-                    </div>
-                    <div class="col-md-2">
+                    <div class="col-xl col-md-4 col-sm-6">
                         <div class="detail-summary shadow h-96 py-2">
                             <div class="detail-summary__label">Active</div>
-                            <div class="detail-summary__value text-success">{{ number_format($listStats['active'] ?? 0) }}
-                            </div>
+                            <div class="detail-summary__value text-success">{{ number_format($listStats['active'] ?? 0) }}</div>
                         </div>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-xl col-md-4 col-sm-6">
                         <div class="detail-summary shadow h-96 py-2">
-                            <div class="detail-summary__label">Failed</div>
-                            <div class="detail-summary__value text-danger">{{ number_format($listStats['failed'] ?? 0) }}
-                            </div>
+                            <div class="detail-summary__label">Awaiting OTP</div>
+                            <div class="detail-summary__value text-warning">{{ number_format($listStats['awaiting_otp'] ?? 0) }}</div>
+                        </div>
+                    </div>
+                    <div class="col-xl col-md-4 col-sm-6">
+                        <div class="detail-summary shadow h-96 py-2">
+                            <div class="detail-summary__label">Cancellation Requested</div>
+                            <div class="detail-summary__value text-warning">{{ number_format($listStats['cancellation_requested'] ?? 0) }}</div>
+                        </div>
+                    </div>
+                    <div class="col-xl col-md-4 col-sm-6">
+                        <div class="detail-summary shadow h-96 py-2">
+                            <div class="detail-summary__label">Inactive</div>
+                            <div class="detail-summary__value text-secondary">{{ number_format($listStats['inactive'] ?? 0) }}</div>
+                        </div>
+                    </div>
+                    <div class="col-xl col-md-4 col-sm-6">
+                        <div class="detail-summary shadow h-96 py-2">
+                            <div class="detail-summary__label">Processing Failed</div>
+                            <div class="detail-summary__value text-danger">{{ number_format($listStats['processing_failed'] ?? 0) }}</div>
                         </div>
                     </div>
                 </div>
 
                 <div class="card">
+
                     <div class="card-body">
                         <div class="table-responsive">
                             <div class="row">
@@ -218,7 +211,7 @@
                                             </a>
 
                                             <a title="Export" class="btn btn-outline-success btn-sm"
-                                                href="{{ route('payment-mandate.export-xls', ['start_at' => $post_data['start_at'] ?? null, 'end_at' => $post_data['end_at'] ?? null, 'payment_channel' => $post_data['payment_channel'] ?? null, 'partner_id' => $post_data['partner_id'] ?? null, 'lifecycle_status' => $post_data['lifecycle_status'] ?? null, 'keyword' => $post_data['keyword'] ?? null]) }}">
+                                                href="{{ route('payment-mandate.export-xls', ['start_at' => $post_data['start_at'] ?? null, 'end_at' => $post_data['end_at'] ?? null, 'payment_channel' => $post_data['payment_channel'] ?? null, 'partner_id' => $post_data['partner_id'] ?? null, 'lifecycle_status' => $post_data['lifecycle_status'] ?? null, 'approval_status' => $post_data['approval_status'] ?? null, 'keyword' => $post_data['keyword'] ?? null]) }}">
                                                 <i class="bx bx-export"></i> Export XLS
                                             </a>
                                         </div>

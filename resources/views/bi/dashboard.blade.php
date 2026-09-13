@@ -6,7 +6,7 @@
 
 @section('css')
     <link href="{{ URL::asset('/assets/css/dashboard.css') }}" rel="stylesheet" type="text/css" />
-    <link href="{{ URL::asset('/assets/css/bi-dashboard.css') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ URL::asset('/assets/css/bi-dashboard.css') }}?v={{ filemtime(public_path('assets/css/bi-dashboard.css')) }}" rel="stylesheet" type="text/css" />
 @endsection
 
 @section('content')
@@ -56,7 +56,7 @@
                 </div>
 
                 <div class="col-xl-2 col-lg-3 col-md-6">
-                    <select class="form-select" id="bi_channel" name="channel">
+                    <select class="form-control select2" id="bi_channel" name="channel">
                         <option value="">-- All Channels --</option>
                         @foreach ($paymentChannels as $paymentChannel)
                             <option value="{{ $paymentChannel->slug }}"
@@ -68,23 +68,24 @@
                 </div>
 
                 <div class="col-xl-4 col-lg-4 col-md-6">
-                    <select class="form-select" id="subscriber_id" name="subscriber_id">
+                    <select class="form-control select2" id="partner_id" name="partner_id">
                         <option value="">-- All Service Providers --</option>
-                        @foreach ($subscriberOptions as $subscriberOption)
-                            <option value="{{ $subscriberOption->id }}"
-                                {{ (int) ($reconciliationFilters['subscriber_id'] ?? 0) === (int) $subscriberOption->id ? 'selected' : '' }}>
-                                {{ $subscriberOption->business_name }}
+                        @foreach ($serviceProviderOptions as $serviceProviderOption)
+                            <option value="{{ $serviceProviderOption->id }}"
+                                {{ (int) ($filters['partner_id'] ?? 0) === (int) $serviceProviderOption->id ? 'selected' : '' }}>
+                                {{ $serviceProviderOption->business_name }}
                             </option>
                         @endforeach
                     </select>
                 </div>
 
-                <div class="col-xl-2 col-lg-3 col-md-6">
-                    <select class="form-select" id="recon_status" name="recon_status">
+                <div class="col-xl-2 col-lg-3 col-md-6" data-bi-reconciliation-filter>
+                    <select class="form-control select2" id="recon_status" name="recon_status">
                         <option value="">-- All Statuses --</option>
                         <option value="COLLECTED" {{ ($reconciliationFilters['recon_status'] ?? '') === 'COLLECTED' ? 'selected' : '' }}>Collected</option>
+                        <option value="PARTIAL" {{ ($reconciliationFilters['recon_status'] ?? '') === 'PARTIAL' ? 'selected' : '' }}>Partially Paid</option>
                         <option value="FAILED" {{ ($reconciliationFilters['recon_status'] ?? '') === 'FAILED' ? 'selected' : '' }}>Failed</option>
-                        <option value="PENDING" {{ ($reconciliationFilters['recon_status'] ?? '') === 'PENDING' ? 'selected' : '' }}>Pending</option>
+                        <option value="PENDING" {{ ($reconciliationFilters['recon_status'] ?? '') === 'PENDING' ? 'selected' : '' }}>Unreconciled</option>
                     </select>
                 </div>
 
@@ -94,7 +95,7 @@
                             <i class='bx bx-reset'></i> Clear
                         </a>
                         <button type="submit" class="btn btn-secondary">
-                            <i class="bx bx-search"></i> Apply Filters
+                            <i class="bx bx-filter-alt"></i> Apply Filters
                         </button>
                     </div>
                 </div>
@@ -111,7 +112,7 @@
         <div class="row mb-3">
             <div class="col-md-3">
                 <div class="detail-summary shadow h-96 py-2">
-                    <div class="detail-summary__label text-muted">Approved Service Providers</div>
+                    <div class="detail-summary__label text-muted">Approved Providers Registered</div>
                     <div class="detail-summary__value text-primary">{{ number_format($growthSummary['partners_count']) }}
                     </div>
                 </div>
@@ -119,10 +120,10 @@
 
             <div class="col-md-3">
                 <div class="detail-summary shadow h-96 py-2">
-                    <div class="detail-summary__label text-muted">Approved Mandates</div>
+                    <div class="detail-summary__label text-muted">Approved Mandates Created</div>
                     <div class="detail-summary__value text-success">
-                        {{ number_format($growthSummary['active_mandate_count']) }}</div>
-                    <div class="detail-summary__meta">Value {{ number_format($growthSummary['active_mandate_value']) }} TZS
+                        {{ number_format($growthSummary['approved_mandate_count']) }}</div>
+                    <div class="detail-summary__meta">Value {{ number_format($growthSummary['approved_mandate_value']) }} TZS
                     </div>
                 </div>
             </div>
@@ -130,18 +131,29 @@
             <div class="col-md-3">
                 <div class="detail-summary shadow h-96 py-2">
                     <div class="detail-summary__label text-muted">Expected Collections</div>
-                    <div class="detail-summary__value text-primary">{{ number_format($growthSummary['period_expected']) }}
-                    </div>
+                    <div class="detail-summary__value text-primary">{{ number_format($growthSummary['period_expected']) }}</div>
+                    <div class="detail-summary__meta">TZS due ·
+    @if ($growthSummary['expected_change'] === null)
+        no baseline
+    @else
+        {{ $growthSummary['expected_change'] > 0 ? '+' : '' }}{{ number_format($growthSummary['expected_change'], 2) }}%
+    @endif
+</div>
                 </div>
             </div>
 
             <div class="col-md-3">
                 <div class="detail-summary shadow h-96 py-2">
                     <div class="detail-summary__label text-muted" title="Net posted settlement cash received in the selected period.">Cash Received</div>
-                    <div class="detail-summary__value text-success">{{ number_format($growthSummary['period_collected']) }}
+                    <div class="detail-summary__value text-success">{{ number_format($growthSummary['period_collected']) }}</div>
+                    <div class="detail-summary__meta">
+                        {{ number_format($growthSummary['period_realization_rate'], 2) }}% realized ·
+@if ($growthSummary['collected_change'] === null)
+    no baseline
+@else
+    {{ $growthSummary['collected_change'] > 0 ? '+' : '' }}{{ number_format($growthSummary['collected_change'], 2) }}%
+@endif
                     </div>
-                    <div class="detail-summary__meta">{{ number_format($growthSummary['period_success_rate'], 2) }}%
-                        success rate</div>
                 </div>
             </div>
         </div>
@@ -152,16 +164,15 @@
                     <div class="card-body">
                         <div class="dashboard-report-panel__head">
                             <div>
-                                <div class="card-title" id="bi-growth-title">Expected vs collected</div>
-                                <p class="dashboard-report-panel__hint">Switch between collection, mandate value, success
-                                    rate, and new mandate views.</p>
+                                <div class="card-title" id="bi-growth-title">Expected collections vs cash received</div>
+                                <p class="dashboard-report-panel__hint">Expected follows installment due dates; cash received follows settlement dates.</p>
                             </div>
 
                             <select id="bi-growth-view" class="form-select form-select-sm bi-inline-select">
-                                <option value="collections">Expected vs collected</option>
-                                <option value="mandates">Mandate values</option>
-                                <option value="success_rate">Collection success rate</option>
-                                <option value="new_mandates">New mandates</option>
+                                <option value="collections">Expected vs cash received</option>
+                                <option value="mandates">Mandate approval values</option>
+                                <option value="success_rate">Cash realization rate</option>
+                                <option value="new_mandates">New mandates created</option>
                             </select>
                         </div>
 
@@ -175,7 +186,7 @@
             <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
                 <div class="card dashboard-report-panel">
                     <div class="card-body">
-                        <div class="card-title mb-4">Mandate Pipeline</div>
+                        <div class="card-title mb-4">Mandate Approval Pipeline</div>
 
                         <div class="dashboard-pipeline">
                             @foreach ($mandatePipeline as $item)
@@ -183,9 +194,12 @@
                                     <div class="dashboard-pipeline__row">
                                         <span class="dashboard-pipeline__label">{{ $item['label'] }}</span>
                                         <span class="dashboard-pipeline__value pipeline-{{ $item['tone'] }}">
-                                            {{ format_short_amount($item['amount']) }} TZS ·
-                                            {{ number_format($item['percent'], 1) }}%
+                                            {{ format_short_amount($item['amount']) }} TZS
                                         </span>
+                                    </div>
+                                    <div class="dashboard-pipeline__meta">
+                                        <span>{{ number_format($item['count']) }} mandates</span>
+                                        <span>{{ number_format($item['percent'], 1) }}%</span>
                                     </div>
                                     <div class="dashboard-pipeline__track">
                                         <div class="dashboard-pipeline__bar pipeline-{{ $item['tone'] }}"
@@ -199,8 +213,8 @@
                                 <strong>{{ format_short_amount(collect($mandatePipeline)->sum('amount')) }}
                                     TZS</strong><br>
                                 Highest single: <strong>{{ format_short_amount($highestSingleMandate) }} TZS</strong><br>
-                                Overall success:
-                                <strong>{{ number_format($growthSummary['year_success_rate'], 2) }}%</strong>
+                                Cash realization:
+                                <strong>{{ number_format($growthSummary['selected_realization_rate'], 2) }}%</strong>
                             </div>
                         </div>
                     </div>
@@ -212,8 +226,8 @@
                     <div class="card-body">
                         <div class="dashboard-report-panel__head">
                             <div>
-                                <div class="card-title">Payment Channel Mix</div>
-                                <p class="dashboard-report-panel__hint">Active mandate distribution by payment channel.</p>
+                                <div class="card-title">Approved Mandates by Payment Channel</div>
+                                <p class="dashboard-report-panel__hint">Mandates approved and created within the selected period.</p>
                             </div>
                         </div>
 
@@ -231,25 +245,24 @@
                 <div class="detail-summary__value text-primary">{{ number_format($reconciliationSummary['total_count']) }}</div>
             </div>
             <div class="detail-summary shadow h-96 py-2">
-                <div class="detail-summary__label text-muted">Paid Schedule Lines</div>
+                <div class="detail-summary__label text-muted">Fully Paid</div>
                 <div class="detail-summary__value text-success">{{ number_format($reconciliationSummary['collected_count']) }}</div>
-                <div class="detail-summary__sub">
-                {{-- {{ number_format($reconciliationSummary['collected_percent'], 1) }}% · --}}
-                    TZS {{ number_format($reconciliationSummary['collected_amount']) }}</div>
+                <div class="detail-summary__sub">TZS {{ number_format($reconciliationSummary['collected_amount']) }}</div>
+            </div>
+            <div class="detail-summary shadow h-96 py-2">
+                <div class="detail-summary__label text-muted">Partially Paid</div>
+                <div class="detail-summary__value text-warning">{{ number_format($reconciliationSummary['partial_count']) }}</div>
+                <div class="detail-summary__sub">TZS {{ number_format($reconciliationSummary['partial_amount']) }}</div>
             </div>
             <div class="detail-summary shadow h-96 py-2">
                 <div class="detail-summary__label text-muted">Failed</div>
                 <div class="detail-summary__value text-danger">{{ number_format($reconciliationSummary['failed_count']) }}</div>
-                <div class="detail-summary__sub">
-                {{-- {{ number_format($reconciliationSummary['failed_percent'], 1) }}% · --}}
-                    TZS {{ number_format($reconciliationSummary['failed_amount']) }}</div>
+                <div class="detail-summary__sub">TZS {{ number_format($reconciliationSummary['failed_amount']) }}</div>
             </div>
             <div class="detail-summary shadow h-96 py-2">
-                <div class="detail-summary__label text-muted">Pending</div>
+                <div class="detail-summary__label text-muted">Unreconciled</div>
                 <div class="detail-summary__value text-warning">{{ number_format($reconciliationSummary['pending_count']) }}</div>
-                <div class="detail-summary__sub">
-                {{-- {{ number_format($reconciliationSummary['pending_percent'], 1) }}% · --}}
-                    TZS {{ number_format($reconciliationSummary['pending_amount']) }}</div>
+                <div class="detail-summary__sub">TZS {{ number_format($reconciliationSummary['pending_amount']) }}</div>
             </div>
         </div>
 
@@ -258,7 +271,7 @@
                 <div class="dashboard-report-panel__head">
                     <div>
                         <div class="card-title">
-                            {{ $selectedSubscriberName ?: 'All Service Providers' }} - {{ $headerMeta }} scheduled-installment reconciliation
+                            {{ $selectedServiceProviderName ?: 'All Service Providers' }} - {{ $headerMeta }} scheduled-installment reconciliation
                         </div>
                     </div>
                 </div>
@@ -267,6 +280,7 @@
                     <table class="table table-bordered align-middle mb-0 bi-recon-table">
                         <thead>
                             <tr>
+                                <th>Service Provider</th>
                                 <th>Borrower</th>
                                 <th>Loan #</th>
                                 <th class="text-end">Scheduled (TZS)</th>
@@ -281,6 +295,7 @@
                         <tbody>
                             @forelse ($reconciliationDetail as $detail)
                                 <tr>
+                                    <td>{{ $detail['service_provider_name'] }}</td>
                                     <td class="fw-semibold">
                                         {{ strtoupper($detail['borrower_name']) }}<br/>
                                         {{ $detail['national_id'] }}
@@ -293,7 +308,7 @@
                                     <td>{{ $detail['emakato_reference'] }}</td>
                                     <td>
                                         <span
-                                            class="badge {{ in_array($detail['status'], ['CLOSED', 'PARTIAL_PAID'], true) ? 'badge-soft-success' : (in_array($detail['status'], ['FAILED', 'FUNDSCHECK'], true) ? 'badge-soft-danger' : 'badge-soft-warning') }}">
+                                            class="badge {{ $detail['status'] === 'CLOSED' ? 'badge-soft-success' : (in_array($detail['status'], ['FAILED', 'FUNDSCHECK'], true) ? 'badge-soft-danger' : 'badge-soft-warning') }}">
                                             {{ str_replace('_', ' ', $detail['status']) }}
                                         </span>
                                     </td>
@@ -312,6 +327,12 @@
                         </tbody>
                     </table>
                 </div>
+
+                @if ($reconciliationDetail->hasPages())
+                    <div class="mt-3">
+                        {{ $reconciliationDetail->links() }}
+                    </div>
+                @endif
             </div>
         </div>
     </div>
@@ -322,5 +343,5 @@
     <script>
         window.BI_DASHBOARD_PAYLOAD = @json($chartPayload);
     </script>
-    <script src="{{ URL::asset('/assets/js/bi-dashboard.js') }}"></script>
+    <script src="{{ URL::asset('/assets/js/bi-dashboard.js') }}?v={{ filemtime(public_path('assets/js/bi-dashboard.js')) }}"></script>
 @endsection

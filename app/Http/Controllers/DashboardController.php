@@ -100,7 +100,7 @@ class DashboardController extends Controller
         $form_action = route('dashboard');
         $cacheKey = implode(':', [
             'dashboard',
-            'supplementary-v4',
+            'supplementary-v6',
             $user->id,
             $channel ?: 'all',
             $selected_year ?: 'all-years',
@@ -128,6 +128,7 @@ class DashboardController extends Controller
                 ->where('expected_year', $collection_year)
                 ->where('expected_month', $current_month)
                 ->select('channel')
+                ->selectRaw('COUNT(installment_id) as expected_count')
                 ->selectRaw('COALESCE(SUM(installment_amount), 0) as expected_amount')
                 ->groupBy('channel')
                 ->get()
@@ -137,6 +138,7 @@ class DashboardController extends Controller
                 ->where('collected_year', $collection_year)
                 ->where('collected_month', $current_month)
                 ->select('channel')
+                ->selectRaw('COUNT(settlement_id) as collection_count')
                 ->selectRaw('COALESCE(SUM(paid_amount), 0) as paid_amount')
                 ->groupBy('channel')
                 ->get()
@@ -144,20 +146,11 @@ class DashboardController extends Controller
 
             $channelKeys = $expectedByChannel->keys()->merge($paidByChannel->keys())->unique();
             $channelAmounts = $channelKeys->mapWithKeys(fn ($key) => [$key => [
+                'expected_count' => (int) ($expectedByChannel->get($key)->expected_count ?? 0),
+                'collection_count' => (int) ($paidByChannel->get($key)->collection_count ?? 0),
                 'expected_amount' => (float) ($expectedByChannel->get($key)->expected_amount ?? 0),
                 'paid_amount' => (float) ($paidByChannel->get($key)->paid_amount ?? 0),
             ]])->all();
-
-            $mandatesByChannel = $this->reporting->mandates($user, $filters)
-                ->where('mandate_approved', 1)
-                ->select('channel')
-                ->selectRaw('COUNT(debit_order_id) as mandates')
-                ->groupBy('channel')
-                ->get()
-                ->mapWithKeys(fn ($row) => [
-                    $this->normalizeChannelLookupKey($row->channel) => (int) $row->mandates,
-                ])
-                ->all();
 
             return [
                 'year_summary' => [
@@ -166,9 +159,10 @@ class DashboardController extends Controller
                 ],
                 'service_provider_count' => Partner::filterCondition()->count(),
                 'active_service_provider_count' => Partner::filterCondition()->where('approved', 1)->count(),
-                'highest_single_mandate' => (float) ($this->reporting->mandates($user, $filters)->max('total_amount') ?? 0),
+                'highest_single_mandate' => (float) ($this->reporting->mandates($user, $filters)
+                    ->when($selected_year, fn ($query, $year) => $query->where('mandate_created_year', $year))
+                    ->max('total_amount') ?? 0),
                 'channel_amounts' => $channelAmounts,
-                'channel_mandates' => $mandatesByChannel,
             ];
         });
 
@@ -182,17 +176,15 @@ class DashboardController extends Controller
         $pipelineTotal = (float) $stats['total_mandate_value'];
 
         $mandate_pipeline = collect([
-            ['label' => 'Total Mandate', 'key' => 'total_mandate_value', 'tone' => 'primary'],
-            ['label' => 'Approved', 'key' => 'approved_mandate_value', 'tone' => 'success'],
-            ['label' => 'Pending', 'key' => 'pending_mandate_value', 'tone' => 'warning'],
-            ['label' => 'Failed', 'key' => 'failed_mandate_value', 'tone' => 'danger'],
-        ])->map(function ($item) use ($stats, $pipelineTotal) {
-            $amount = (float) $stats[$item['key']];
-            $item['amount'] = $amount;
-            $item['percent'] = $item['key'] === 'total_mandate_value'
+            ['label' => 'Total Mandates', 'amount' => $stats['total_mandate_value'], 'count' => $stats['total_number_of_mandate'], 'tone' => 'primary', 'is_total' => true],
+            ['label' => 'Approved', 'amount' => $stats['approved_mandate_value'], 'count' => $stats['number_of_approved_mandate'], 'tone' => 'success'],
+            ['label' => 'Pending', 'amount' => $stats['pending_mandate_value'], 'count' => $stats['number_of_pending_mandate'], 'tone' => 'warning'],
+            ['label' => 'Failed', 'amount' => $stats['failed_mandate_value'], 'count' => $stats['number_of_failed_mandate'], 'tone' => 'danger'],
+        ])->map(function ($item) use ($pipelineTotal) {
+            $item['percent'] = ($item['is_total'] ?? false)
                 ? 100
-                : ($pipelineTotal > 0 ? round(($amount / $pipelineTotal) * 100, 1) : 0);
-            unset($item['key']);
+                : ($pipelineTotal > 0 ? round(($item['amount'] / $pipelineTotal) * 100, 1) : 0);
+            unset($item['is_total']);
 
             return $item;
         })->all();
@@ -203,7 +195,8 @@ class DashboardController extends Controller
                 $key = $this->normalizeChannelLookupKey($paymentChannel->slug ?: $paymentChannel->name);
                 $expected = (float) ($dashboardSupplementary['channel_amounts'][$key]['expected_amount'] ?? 0);
                 $paid = (float) ($dashboardSupplementary['channel_amounts'][$key]['paid_amount'] ?? 0);
-                $mandates = (int) ($dashboardSupplementary['channel_mandates'][$key] ?? 0);
+                $expectedCount = (int) ($dashboardSupplementary['channel_amounts'][$key]['expected_count'] ?? 0);
+                $collectionCount = (int) ($dashboardSupplementary['channel_amounts'][$key]['collection_count'] ?? 0);
                 $rate = $expected > 0 ? round(($paid / $expected) * 100, 1) : null;
                 $isLive = $expected > 0 || $paid > 0;
 
@@ -211,7 +204,8 @@ class DashboardController extends Controller
                     'slug' => strtoupper(substr((string) ($paymentChannel->slug ?: $paymentChannel->name), 0, 3)),
                     'logo' => $paymentChannel->logo ? asset($paymentChannel->logo) : null,
                     'name' => $paymentChannel->name,
-                    'mandates' => $mandates,
+                    'expected_count' => $expectedCount,
+                    'collection_count' => $collectionCount,
                     'expected_amount' => $expected,
                     'paid_amount' => $paid,
                     'rate' => $rate,

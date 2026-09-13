@@ -7,6 +7,8 @@ const handleBarClick = (
     //console.log(dataPointIndex);
 };
 
+let mandatesPostedVsDeductedChart = null;
+
 const renderMandatesPostedVsDeductedChart = (selector, data) => {
     if (!document.querySelector(selector)) {
         return;
@@ -25,11 +27,11 @@ const renderMandatesPostedVsDeductedChart = (selector, data) => {
     const options = {
         series: [
             {
-                name: "Posted",
+                name: "Sent to bank",
                 data: arr_posted,
             },
             {
-                name: "Deducted",
+                name: "Successfully deducted",
                 data: arr_deducted,
             },
         ],
@@ -74,20 +76,16 @@ const renderMandatesPostedVsDeductedChart = (selector, data) => {
                 rotate: -35,
             },
         },
-        colors: ["#2E7D32", "#EF5350"],
+        colors: ["#1565C0", "#2E7D32"],
     };
 
-    $(selector).html("");
-    const chart = new ApexCharts(document.querySelector(selector), options);
-    chart.render();
-};
+    if (mandatesPostedVsDeductedChart) {
+        mandatesPostedVsDeductedChart.destroy();
+    }
 
-const fetchMandatesPostedVsDeducted = (year) => {
-    $.getJSON("charts/collected-mandate", { year: year, channel: channel }, (data) => {
-        if (data.error == false) {
-            renderMandatesPostedVsDeductedChart("#mandates-posted-vs-deducted-chart", data);
-        }
-    });
+    $(selector).html("");
+    mandatesPostedVsDeductedChart = new ApexCharts(document.querySelector(selector), options);
+    mandatesPostedVsDeductedChart.render();
 };
 
 //Filters
@@ -327,360 +325,245 @@ $.getJSON("charts/mandate-percentages", { channel: channel }, (data) => {
     }
 });
 
-//Expected and collected Mandates
-$.getJSON("charts/collected-mandate", { channel: channel, year: selectedYear }, (data) => {
-    if (data.error == false) {
-        var arr_month = [];
-        var arr_total = [];
-        var arr_paid = [];
+let expectedVsCollectedChart = null;
 
-        for (k = 0; k < data.chart.length; k++) {
-            arr_month.push(data.chart[k].month);
-            arr_total.push(data.chart[k].total_amount || 0);
-            arr_paid.push(data.chart[k].paid_amount || 0);
-        }
+const renderExpectedVsCollectedChart = (data) => {
+    const selector = "#collected-mandate-value-chart";
+    const chartElement = document.querySelector(selector);
 
-        var options = {
-            series: [
-                {
-                    name: "Expected",
-                    data: arr_total,
-                },
-                {
-                    name: "Collected",
-                    data: arr_paid,
-                },
-            ],
-            chart: {
-                type: "bar",
-                height: 350,
-                events: {
-                    click: handleBarClick,
-                },
-            },
-            plotOptions: {
-                bar: {
-                    borderRadius: 4,
-                    horizontal: false,
-                    columnWidth: "75%",
-                    endingShape: "rounded",
-                    dataLabels: {
-                        position: "bottom",
-                    },
-                },
-            },
-            dataLabels: {
-                enabled: !1,
-            },
-            stroke: {
-                show: true,
-                curve: "smooth",
-                width: 3,
-                colors: ["transparent"],
-            },
-            fill: {
-                opacity: 1,
-            },
-            yaxis: {
-                labels: {
-                    formatter: function (value) {
-                        return value.toLocaleString();
-                    },
-                },
-            },
-            xaxis: {
-                labels: {
-                    show: true,
-                    rotate: -45,
-                    rotateAlways: false,
-                },
-                crosshair: true,
-                categories: arr_month,
-            },
-            colors: ["#01579B", "#66BB6A"],
-        };
-
-        //render chart
-        var chart = new ApexCharts(
-            document.querySelector("#collected-mandate-value-chart"),
-            options
-        );
-        chart.render();
+    if (!chartElement) {
+        return;
     }
-});
 
-//Select Year => expected and collected mandate
-$("#collected-mandate-value-select-year").on("change", function (e) {
-    e.preventDefault;
+    const options = {
+        series: [
+            {
+                name: "Expected amount",
+                data: data.chart.map((item) => Number(item.total_amount || 0)),
+            },
+            {
+                name: "Collected amount",
+                data: data.chart.map((item) => Number(item.paid_amount || 0)),
+            },
+        ],
+        chart: {
+            type: "bar",
+            height: 350,
+            toolbar: { show: false },
+        },
+        plotOptions: {
+            bar: {
+                borderRadius: 3,
+                columnWidth: "58%",
+            },
+        },
+        dataLabels: { enabled: false },
+        legend: {
+            position: "top",
+            horizontalAlign: "left",
+        },
+        grid: {
+            borderColor: "#edf1f7",
+            strokeDashArray: 3,
+        },
+        xaxis: {
+            categories: data.chart.map((item) => item.month),
+        },
+        yaxis: {
+            labels: {
+                formatter: (value) => new Intl.NumberFormat("en-US", {
+                    notation: "compact",
+                    maximumFractionDigits: 1,
+                }).format(Number(value || 0)),
+            },
+        },
+        tooltip: {
+            y: {
+                formatter: (value) => Number(value).toLocaleString() + " TZS",
+            },
+        },
+        colors: ["#1565C0", "#2E7D32"],
+    };
 
-    //variables
-    var yearName = $(this).val();
+    if (expectedVsCollectedChart) {
+        expectedVsCollectedChart.destroy();
+    }
 
-    $.getJSON("charts/collected-mandate", { year: yearName, channel: channel }, (data) => {
-        if (data.error == false) {
-            var arr_month = [];
-            var arr_total = [];
-            var arr_paid = [];
+    $(selector).html("");
+    expectedVsCollectedChart = new ApexCharts(chartElement, options);
+    expectedVsCollectedChart.render();
+};
 
-            for (k = 0; k < data.chart.length; k++) {
-                arr_month.push(data.chart[k].month);
-                arr_total.push(data.chart[k].total_amount || 0);
-                arr_paid.push(data.chart[k].paid_amount || 0);
+const showCollectionChartError = () => {
+    const message = '<div class="dashboard-chart-state">Unable to load chart data.</div>';
+    $("#collected-mandate-value-chart").html(message);
+    $("#mandates-posted-vs-deducted-chart").html(message);
+};
+
+const fetchMonthlyCollectionCharts = (year) => {
+    $.getJSON("charts/collected-mandate", { year: year, channel: channel })
+        .done((data) => {
+            if (data.error === false && Array.isArray(data.chart)) {
+                renderExpectedVsCollectedChart(data);
+                renderMandatesPostedVsDeductedChart("#mandates-posted-vs-deducted-chart", data);
+                return;
             }
 
-            var options = {
-                series: [
-                    {
-                        name: "Expected",
-                        data: arr_total,
-                    },
-                    {
-                        name: "Collected",
-                        data: arr_paid,
-                    },
-                ],
-                chart: {
-                    type: "bar",
-                    height: 350,
-                    events: {
-                        click: handleBarClick,
-                    },
-                },
-                plotOptions: {
-                    bar: {
-                        borderRadius: 4,
-                        horizontal: false,
-                        columnWidth: "75%",
-                        endingShape: "rounded",
-                        dataLabels: {
-                            position: "bottom",
-                        },
-                    },
-                },
-                dataLabels: {
-                    enabled: !1,
-                },
-                stroke: {
-                    show: true,
-                    curve: "smooth",
-                    width: 3,
-                    colors: ["transparent"],
-                },
-                fill: {
-                    opacity: 1,
-                },
-                yaxis: {
-                    labels: {
-                        formatter: function (value) {
-                            return value.toLocaleString();
-                        },
-                    },
-                },
-                xaxis: {
-                    labels: {
-                        show: true,
-                        rotate: -45,
-                        rotateAlways: false,
-                    },
-                    crosshair: true,
-                    categories: arr_month,
-                },
-                colors: ["#01579B", "#66BB6A"],
-            };
+            showCollectionChartError();
+        })
+        .fail(showCollectionChartError);
+};
 
-            //clear the chart
-            $("#collected-mandate-value-chart").html("");
+fetchMonthlyCollectionCharts(selectedYear);
 
-            //render chart
-            var chart = new ApexCharts(
-                document.querySelector("#collected-mandate-value-chart"),
-                options
-            );
-            chart.render();
-        }
-    });
+$("#collected-mandate-value-select-year, #mandates-posted-vs-deducted-select-year").on("change", function () {
+    const year = $(this).val();
+    $("#collected-mandate-value-select-year, #mandates-posted-vs-deducted-select-year").val(year);
+    fetchMonthlyCollectionCharts(year);
 });
 
-fetchMandatesPostedVsDeducted(selectedYear);
+// 7-day collection trend
+let weeklyCollectionChart = null;
 
-$("#mandates-posted-vs-deducted-select-year").on("change", function (e) {
-    e.preventDefault;
-    var yearName = $(this).val();
-    fetchMandatesPostedVsDeducted(yearName);
-});
+const formatWeeklyAmount = (value) => {
+    return new Intl.NumberFormat("en-US", {
+        notation: "compact",
+        maximumFractionDigits: 1,
+    }).format(Number(value || 0));
+};
 
-//Expected and collected Mandates
-$.getJSON("charts/weekly-collected-mandate", { channel: channel }, (data) => {
-    if (data.error == false) {
-        var arr_dates = [];
-        var arr_total = [];
-        var arr_paid = [];
+const updateWeeklyCollectionSummary = (data) => {
+    const summary = data.summary || {};
+    const change = summary.change_percentage;
+    const changeElement = $("#weekly-change");
 
-        for (k = 0; k < data.chart.length; k++) {
-            arr_dates.push(data.chart[k].date);
-            arr_total.push(data.chart[k].total);
-            arr_paid.push(data.chart[k].paid);
-        }
+    $("#weekly-total-collected").text(formatWeeklyAmount(summary.total_collected) + " TZS");
+    $("#weekly-previous-total").text(formatWeeklyAmount(summary.previous_total) + " TZS");
+    $("#weekly-collection-period").text(data.period.label);
 
-        var options = {
-            series: [
-                {
-                    name: "Expected",
-                    data: arr_total,
-                },
-                {
-                    name: "Collected",
-                    data: arr_paid,
-                },
-            ],
-            chart: {
-                type: "bar",
-                height: 350,
-                events: {
-                    click: handleBarClick,
-                },
-            },
-            plotOptions: {
-                bar: {
-                    borderRadius: 4,
-                    horizontal: false,
-                    columnWidth: "75%",
-                    endingShape: "rounded",
-                    dataLabels: {
-                        position: "bottom",
-                    },
-                },
-            },
-            dataLabels: {
-                enabled: !1,
-            },
-            stroke: {
-                show: true,
-                curve: "smooth",
-                width: 3,
-                colors: ["transparent"],
-            },
-            fill: {
-                opacity: 1,
-            },
-            yaxis: {
-                labels: {
-                    formatter: function (value) {
-                        return value.toLocaleString();
-                    },
-                },
-            },
-            xaxis: {
-                labels: {
-                    show: true,
-                    rotate: -45,
-                    rotateAlways: true,
-                },
-                crosshair: true,
-                categories: arr_dates,
-            },
-            colors: ["#01579B", "#66BB6A"],
-        };
+    changeElement.removeClass("trend-positive trend-negative trend-neutral");
 
-        //render chart
-        var chart = new ApexCharts(
-            document.querySelector("#collected-mandate-value-weekly-chart"),
-            options
-        );
-        chart.render();
+    if (change === null || typeof change === "undefined") {
+        changeElement.text("No prior data").addClass("trend-neutral");
+    } else {
+        const prefix = change > 0 ? "+" : "";
+        changeElement
+            .text(prefix + Number(change).toLocaleString() + "%")
+            .addClass(change > 0 ? "trend-positive" : (change < 0 ? "trend-negative" : "trend-neutral"));
     }
-});
+};
 
-//change date
-$("#collected-mandate-value-weekly-date").on("change", function (e) {
-    e.preventDefault;
+const renderWeeklyCollectionTrend = (data) => {
+    const selector = "#collected-mandate-value-weekly-chart";
+    const chartElement = document.querySelector(selector);
 
-    //variables
-    var currentDate = $(this).val();
+    if (!chartElement) {
+        return;
+    }
 
-    $.getJSON("charts/weekly-collected-mandate", { curr_date: currentDate, channel: channel }, (data) => {
-        if (data.error == false) {
-            var arr_dates = [];
-            var arr_total = [];
-            var arr_paid = [];
+    updateWeeklyCollectionSummary(data);
 
-            for (k = 0; k < data.chart.length; k++) {
-                arr_dates.push(data.chart[k].date);
-                arr_total.push(data.chart[k].total);
-                arr_paid.push(data.chart[k].paid);
-            }
+    const hasData = Boolean(data.summary && data.summary.has_data);
+    $(selector).toggleClass("d-none", !hasData);
+    $("#weekly-collection-empty").toggleClass("d-none", hasData);
 
-            var options = {
-                series: [
-                    {
-                        name: "Expected",
-                        data: arr_total,
-                    },
-                    {
-                        name: "Collected",
-                        data: arr_paid,
-                    },
-                ],
-                chart: {
-                    type: "bar",
-                    height: 350,
-                    events: {
-                        click: handleBarClick,
-                    },
-                },
-                plotOptions: {
-                    bar: {
-                        borderRadius: 4,
-                        horizontal: false,
-                        columnWidth: "75%",
-                        endingShape: "rounded",
-                        dataLabels: {
-                            position: "bottom",
-                        },
-                    },
-                },
-                dataLabels: {
-                    enabled: !1,
-                },
-                stroke: {
-                    show: true,
-                    curve: "smooth",
-                    width: 3,
-                    colors: ["transparent"],
-                },
-                fill: {
-                    opacity: 1,
-                },
-                yaxis: {
-                    labels: {
-                        formatter: function (value) {
-                            return value.toLocaleString();
-                        },
-                    },
-                },
-                xaxis: {
-                    labels: {
-                        show: true,
-                        rotate: -45,
-                        rotateAlways: true,
-                    },
-                    crosshair: true,
-                    categories: arr_dates,
-                },
-                colors: ["#01579B", "#66BB6A"],
-            };
+    if (weeklyCollectionChart) {
+        weeklyCollectionChart.destroy();
+        weeklyCollectionChart = null;
+    }
 
-            //clear the chart
-            $("#collected-mandate-value-weekly-chart").html("");
+    if (!hasData) {
+        return;
+    }
 
-            //render chart
-            var chart = new ApexCharts(
-                document.querySelector("#collected-mandate-value-weekly-chart"),
-                options
-            );
-            chart.render();
+    const options = {
+        series: [{
+            name: "Collected",
+            data: data.chart.map((item) => item.paid),
+        }],
+        chart: {
+            type: "bar",
+            height: 235,
+            toolbar: {
+                show: false,
+            },
+            events: {
+                dataPointSelection: function (event, chartContext, config) {
+                    const selected = data.chart[config.dataPointIndex];
+
+                    if (!selected || !window.DASHBOARD_ROUTES?.paymentCollections) {
+                        return;
+                    }
+
+                    const url = new URL(window.DASHBOARD_ROUTES.paymentCollections, window.location.origin);
+                    url.searchParams.set("start_at", selected.full_date);
+                    url.searchParams.set("end_at", selected.full_date);
+
+                    if (channel) {
+                        url.searchParams.set("channel", channel);
+                    }
+
+                    window.location.href = url.toString();
+                },
+            },
+        },
+        plotOptions: {
+            bar: {
+                borderRadius: 3,
+                columnWidth: "52%",
+            },
+        },
+        dataLabels: {
+            enabled: false,
+        },
+        grid: {
+            borderColor: "#edf1f7",
+            strokeDashArray: 3,
+        },
+        xaxis: {
+            categories: data.chart.map((item) => item.date),
+            labels: {
+                rotate: 0,
+                style: {
+                    fontSize: "10px",
+                },
+            },
+        },
+        yaxis: {
+            labels: {
+                formatter: formatWeeklyAmount,
+            },
+        },
+        tooltip: {
+            y: {
+                formatter: function (value) {
+                    return Number(value).toLocaleString() + " TZS";
+                },
+            },
+        },
+        colors: ["#2E7D32"],
+    };
+
+    weeklyCollectionChart = new ApexCharts(chartElement, options);
+    weeklyCollectionChart.render();
+};
+
+const fetchWeeklyCollectionTrend = (periodEnd) => {
+    $.getJSON("charts/weekly-collected-mandate", {
+        curr_date: periodEnd,
+        channel: channel,
+    }, (data) => {
+        if (data.error === false) {
+            renderWeeklyCollectionTrend(data);
         }
     });
+};
+
+const weeklyPeriodEnd = $("#collected-mandate-value-weekly-date").val();
+fetchWeeklyCollectionTrend(weeklyPeriodEnd);
+
+$("#collected-mandate-value-weekly-date").on("change", function () {
+    fetchWeeklyCollectionTrend($(this).val());
 });
 
 //pending and approved by payment channel

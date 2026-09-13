@@ -122,33 +122,60 @@ class DashboardChartController extends Controller
 
     public function weekly_collected_mandates(Request $request)
     {
-        $currentDate = $request->filled('curr_date')
-            ? Carbon::parse($request->curr_date)->toDateString()
-            : now()->toDateString();
-        $dates = $this->get_dates($currentDate);
-        $filters = $this->filters($request);
+        $request->validate([
+            'curr_date' => ['nullable', 'date'],
+        ]);
 
-        $expected = $this->reporting->expectedCollections($request->user(), $filters)
-            ->select('expected_date as day_date')
-            ->selectRaw('COALESCE(SUM(installment_amount), 0) as total_amount')
-            ->whereBetween('expected_date', [min($dates), max($dates)])
-            ->groupBy('expected_date')
-            ->pluck('total_amount', 'day_date');
+        $latestCompletedDay = now()->subDay()->startOfDay();
+        $requestedEnd = $request->filled('curr_date')
+            ? Carbon::parse($request->curr_date)->startOfDay()
+            : $latestCompletedDay->copy();
+        $periodEnd = ($requestedEnd->gt($latestCompletedDay) ? $latestCompletedDay : $requestedEnd)
+            ->toDateString();
+        $dates = $this->get_dates($periodEnd);
+        $periodStart = min($dates);
+        $filters = $this->filters($request);
 
         $paid = $this->reporting->paymentCollections($request->user(), $filters)
             ->select('collected_date as day_date')
             ->selectRaw('COALESCE(SUM(paid_amount), 0) as paid_amount')
-            ->whereBetween('collected_date', [min($dates), max($dates)])
+            ->whereBetween('collected_date', [$periodStart, $periodEnd])
             ->groupBy('collected_date')
             ->pluck('paid_amount', 'day_date');
 
-        $chart = collect($dates)->map(fn ($date) => [
-            'date' => Carbon::parse($date)->format('d-m'),
-            'total' => (float) ($expected[$date] ?? 0),
-            'paid' => (float) ($paid[$date] ?? 0),
-        ])->all();
+        $previousEnd = Carbon::parse($periodStart)->subDay();
+        $previousStart = $previousEnd->copy()->subDays(6);
+        $previousTotal = (float) $this->reporting->paymentCollections($request->user(), $filters)
+            ->whereBetween('collected_date', [$previousStart->toDateString(), $previousEnd->toDateString()])
+            ->sum('paid_amount');
 
-        return response()->json(['error' => false, 'chart' => $chart]);
+        $chart = collect($dates)->map(fn ($date) => [
+            'date' => Carbon::parse($date)->format('d M'),
+            'full_date' => $date,
+            'paid' => (float) ($paid[$date] ?? 0),
+        ])->values();
+        $totalCollected = (float) $chart->sum('paid');
+        $changePercentage = $previousTotal > 0
+            ? round((($totalCollected - $previousTotal) / $previousTotal) * 100, 1)
+            : null;
+
+        return response()->json([
+            'error' => false,
+            'period' => [
+                'start' => $periodStart,
+                'end' => $periodEnd,
+                'label' => Carbon::parse($periodStart)->format('d M')
+                    . ' - ' . Carbon::parse($periodEnd)->format('d M Y'),
+            ],
+            'summary' => [
+                'total_collected' => $totalCollected,
+                'daily_average' => $totalCollected / count($dates),
+                'previous_total' => $previousTotal,
+                'change_percentage' => $changePercentage,
+                'has_data' => $totalCollected > 0,
+            ],
+            'chart' => $chart->all(),
+        ]);
     }
 
     public function mandate_channel(Request $request)

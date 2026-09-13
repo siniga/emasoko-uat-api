@@ -4,10 +4,27 @@
     const panes = document.querySelectorAll("[data-bi-pane]");
     const activeTabInputs = document.querySelectorAll("[data-bi-active-tab-input]");
     const clearLinks = document.querySelectorAll("[data-bi-clear-link]");
+    const reconciliationFilters = document.querySelectorAll("[data-bi-reconciliation-filter]");
     const charts = {};
 
     function formatNumber(value) {
         return Number(value || 0).toLocaleString();
+    }
+
+    function formatCompactNumber(value) {
+        return new Intl.NumberFormat("en-US", {
+            notation: "compact",
+            maximumFractionDigits: 1,
+        }).format(Number(value || 0));
+    }
+
+    function formatChartValue(value, unit, compact = false) {
+        if (unit === "percent") {
+            return Number(value || 0).toLocaleString(undefined, { maximumFractionDigits: 1 }) + "%";
+        }
+
+        const formatted = compact ? formatCompactNumber(value) : formatNumber(value);
+        return unit === "money" ? formatted + " TZS" : formatted;
     }
 
     function currentUrl() {
@@ -39,11 +56,11 @@
             pane.classList.toggle("is-active", pane.dataset.biPane === tab);
         });
 
-        syncActiveTabState(tab);
+        reconciliationFilters.forEach((filter) => {
+            filter.classList.toggle("d-none", tab !== "reconciliation");
+        });
 
-        if (tab === "reconciliation") {
-            renderReconciliationStatusChart();
-        }
+        syncActiveTabState(tab);
     }
 
     function renderGrowthChart(viewKey) {
@@ -61,14 +78,13 @@
         }
 
         const isLine = config.type === "line";
-        const isStacked = config.type === "stacked-bar";
 
         charts.growth = new ApexCharts(target, {
             series: config.series || [],
             chart: {
                 type: isLine ? "line" : "bar",
                 height: 360,
-                stacked: isStacked,
+                stacked: false,
                 toolbar: {
                     show: false,
                 },
@@ -86,7 +102,7 @@
                 bar: {
                     borderRadius: 4,
                     horizontal: false,
-                    columnWidth: isStacked ? "58%" : "72%",
+                    columnWidth: "65%",
                 },
             },
             fill: {
@@ -97,7 +113,7 @@
                 horizontalAlign: "left",
             },
             xaxis: {
-                categories: payload.growth.months || [],
+                categories: payload.growth.categories || [],
                 labels: {
                     rotate: -35,
                 },
@@ -105,14 +121,14 @@
             yaxis: {
                 labels: {
                     formatter(value) {
-                        return formatNumber(value);
+                        return formatChartValue(value, config.unit, true);
                     },
                 },
             },
             tooltip: {
                 y: {
                     formatter(value) {
-                        return formatNumber(value);
+                        return formatChartValue(value, config.unit);
                     },
                 },
             },
@@ -157,61 +173,6 @@
         charts.channelMix.render();
     }
 
-    function renderReconciliationStatusChart() {
-        const target = document.querySelector("#bi-reconciliation-status-chart");
-        if (!target || !payload.status_breakdown) {
-            return;
-        }
-
-        if (charts.statusBreakdown) {
-            charts.statusBreakdown.destroy();
-        }
-
-        charts.statusBreakdown = new ApexCharts(target, {
-            series: payload.status_breakdown.series || [],
-            chart: {
-                type: "bar",
-                height: 320,
-                toolbar: {
-                    show: false,
-                },
-            },
-            colors: payload.status_breakdown.colors || ["#153567"],
-            plotOptions: {
-                bar: {
-                    borderRadius: 4,
-                    distributed: true,
-                    columnWidth: "55%",
-                },
-            },
-            legend: {
-                show: false,
-            },
-            dataLabels: {
-                enabled: false,
-            },
-            xaxis: {
-                categories: payload.status_breakdown.categories || [],
-            },
-            yaxis: {
-                labels: {
-                    formatter(value) {
-                        return formatNumber(value);
-                    },
-                },
-            },
-            tooltip: {
-                y: {
-                    formatter(value) {
-                        return formatNumber(value);
-                    },
-                },
-            },
-        });
-
-        charts.statusBreakdown.render();
-    }
-
     tabButtons.forEach((button) => {
         button.addEventListener("click", function () {
             activateTab(this.dataset.biTab);
@@ -225,7 +186,10 @@
         });
     }
 
-    const activeTab = currentUrl().searchParams.get("active_tab") || "growth";
+    const requestedActiveTab = currentUrl().searchParams.get("active_tab");
+    const activeTab = ["growth", "reconciliation"].includes(requestedActiveTab)
+        ? requestedActiveTab
+        : "growth";
     activateTab(activeTab);
     renderGrowthChart(growthSelector ? growthSelector.value : "collections");
     renderChannelMixChart();

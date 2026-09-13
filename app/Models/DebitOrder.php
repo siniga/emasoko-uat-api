@@ -32,7 +32,7 @@ class DebitOrder extends Model
     //filter condition
     public static function filterCondition(bool $includeDeleted = false)
     {
-        $user = User::findOrFail(Auth::user()->id);
+        $user = Auth::user();
 
         //debit orders
         $debit_orders = static::query()

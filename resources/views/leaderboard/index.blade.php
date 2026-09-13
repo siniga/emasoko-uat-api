@@ -66,8 +66,8 @@
                             <input type="search" name="keyword" class="form-control" value="{{ $filters['keyword'] ?? '' }}" placeholder="Name or reference">
                         </div>
                         <div class="col-xl-4 col-md-6 d-flex gap-2">
-                            <button type="submit" class="btn btn-primary"><i class="bx bx-filter-alt"></i> Filter</button>
-                            <a href="{{ route('leaderboard.index') }}" class="btn btn-light">Reset</a>
+                            <button type="submit" class="btn btn-secondary"><i class="bx bx-filter-alt"></i> Apply Filter</button>
+                            <a href="{{ route('leaderboard.index') }}" class="btn btn-outline-danger">Clear</a>
                         </div>
                     </div>
                 </form>

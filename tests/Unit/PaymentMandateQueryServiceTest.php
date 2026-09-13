@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use App\Models\DebitOrder;
+use App\Services\DashboardReportingQueryService;
 use App\Services\PaymentMandateQueryService;
 use Illuminate\Database\Eloquent\Builder;
 use Mockery;
@@ -24,20 +25,7 @@ class PaymentMandateQueryServiceTest extends TestCase
         $this->service()->applyStatus($query, DebitOrder::SUMMARY_PENDING);
     }
 
-    public function test_active_and_failed_filter_lifecycle_status_directly(): void
-    {
-        foreach ([DebitOrder::LIFECYCLE_ACTIVE, DebitOrder::LIFECYCLE_FAILED] as $status) {
-            $query = Mockery::mock(Builder::class);
-            $query->shouldReceive('where')
-                ->once()
-                ->with('debit_orders.lifecycle_status', $status)
-                ->andReturnSelf();
-
-            $this->service()->applyStatus($query, $status);
-        }
-    }
-
-    public function test_approved_remains_a_legacy_alias_for_active(): void
+    public function test_active_filters_the_lifecycle_status_directly(): void
     {
         $query = Mockery::mock(Builder::class);
         $query->shouldReceive('where')
@@ -45,12 +33,28 @@ class PaymentMandateQueryServiceTest extends TestCase
             ->with('debit_orders.lifecycle_status', DebitOrder::LIFECYCLE_ACTIVE)
             ->andReturnSelf();
 
-        $this->service()->applyStatus($query, DebitOrder::SUMMARY_APPROVED);
+        $this->service()->applyStatus($query, DebitOrder::LIFECYCLE_ACTIVE);
+    }
+
+    public function test_failed_and_approved_filters_use_their_summary_lifecycle_groups(): void
+    {
+        foreach ([DebitOrder::SUMMARY_FAILED, DebitOrder::SUMMARY_APPROVED] as $status) {
+            $query = Mockery::mock(Builder::class);
+            $query->shouldReceive('whereIn')
+                ->once()
+                ->with(
+                    'debit_orders.lifecycle_status',
+                    DebitOrder::lifecycleStatusesForSummary($status)
+                )
+                ->andReturnSelf();
+
+            $this->service()->applyStatus($query, $status);
+        }
     }
 
     private function service(): PaymentMandateQueryService
     {
-        return new class extends PaymentMandateQueryService
+        return new class(app(DashboardReportingQueryService::class)) extends PaymentMandateQueryService
         {
             public function applyStatus(Builder $query, string $status): void
             {
