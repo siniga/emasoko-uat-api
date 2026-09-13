@@ -6,6 +6,7 @@ use App\Classes\Messaging;
 use App\Http\Controllers\Controller;
 use App\Jobs\SendEmailJob;
 use App\Jobs\SendSMSJob;
+use App\Models\Account;
 use App\Models\OtpRequest;
 use App\Models\PartnerUser;
 use App\Models\SmsLog;
@@ -68,7 +69,9 @@ class AuthOtpController extends Controller
             }
         }
 
-        return view('auth.otp-login', compact('title'));
+        $integratedBanks = $this->integratedBanks();
+
+        return view('auth.otp-login', compact('title', 'integratedBanks'));
     }
 
     // Generate OTP
@@ -174,13 +177,25 @@ class AuthOtpController extends Controller
     //verification
     public function verification($uuid)
     {
-        $user = User::where('uuid', $uuid)->first();
+        $user = User::where('uuid', $uuid)->firstOrFail();
 
-        //render view
-        return view('auth.otp-verification')->with([
+        return view('auth.otp-verification', [
             'uuid' => $uuid,
-            'user_id' => $user->id
+            'user_id' => $user->id,
+            'integratedBanks' => $this->integratedBanks(),
         ]);
+    }
+
+    protected function integratedBanks()
+    {
+        return Account::query()
+            ->select(['accounts.id', 'accounts.name', 'accounts.slug', 'accounts.logo'])
+            ->where('accounts.active', 1)
+            ->whereHas('accountType', function ($query) {
+                $query->where('name', 'BANK');
+            })
+            ->orderBy('accounts.name')
+            ->get();
     }
 
     //login with otp

@@ -6,128 +6,136 @@
 
 @section('css')
     <link href="{{ URL::asset('/assets/css/auth-otp-login.css') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ URL::asset('/assets/css/auth-login-split.css') }}" rel="stylesheet" type="text/css" />
 @endsection
 
 @section('content')
-    <div class="auth-shell">
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-xl-10 col-lg-11">
-                    <div class="card auth-panel">
-                        <div class="row g-0">
-                            <div class="col-lg-6 d-none d-lg-block">
-                                <div class="auth-story">
-                                    <div class="auth-story-top">
-                                         <span class="auth-badge">
-                                            <i class="mdi mdi-shield-check-outline"></i>
-                                            Direct Debit Platform
+    <main class="login-screen">
+        <section class="login-promo" aria-labelledby="otp-promo-title">
+            <div class="login-promo__content">
+                <a class="login-promo__brand" href="https://emakato.co.tz" aria-label="eMakato website">
+                    <img src="{{ URL::asset('assets/images/emakato_logo_white.png') }}" alt="eMakato">
+                </a>
+
+                <p class="login-promo__eyebrow">Tanzania's direct debit infrastructure</p>
+                <h1 id="otp-promo-title" class="login-promo__title">
+                    Create mandates.<br>
+                    Collect payments.<br>
+                    <span>Reconcile clearly.</span>
+                </h1>
+                <p class="login-promo__copy">
+                    One secure platform for service providers to manage customer consent, scheduled collections,
+                    settlement, and reporting.
+                </p>
+
+                <div class="login-capabilities" aria-label="Platform capabilities">
+                    <div class="login-capability">
+                        <i class="mdi mdi-shield-check-outline" aria-hidden="true"></i>
+                        <span><strong>Secure</strong> Mandates</span>
+                    </div>
+                    <div class="login-capability">
+                        <i class="mdi mdi-calendar-check-outline" aria-hidden="true"></i>
+                        <span><strong>Scheduled</strong> Collections</span>
+                    </div>
+                    <div class="login-capability">
+                        <i class="mdi mdi-chart-box-outline" aria-hidden="true"></i>
+                        <span><strong>Clear</strong> Reporting</span>
+                    </div>
+                </div>
+
+                @if ($integratedBanks->isNotEmpty())
+                    <div class="login-banks">
+                        <p class="login-banks__label">Collection Partners</p>
+                        <div class="login-banks__list">
+                            @foreach ($integratedBanks as $bank)
+                                @php
+                                    $bankSlug = strtoupper((string) $bank->slug);
+                                    $configuredLogo = $bank->logo && file_exists(public_path($bank->logo))
+                                        ? URL::asset(ltrim($bank->logo, '/'))
+                                        : null;
+                                    $bankLogo = $configuredLogo ?: ($bankSlug === 'NMB'
+                                        ? URL::asset('assets/images/clients/nmb.webp')
+                                        : null);
+                                @endphp
+                                <div class="login-bank" title="{{ $bank->name }}">
+                                    @if ($bankLogo)
+                                        <img src="{{ $bankLogo }}" alt="{{ $bank->name }} logo">
+                                    @else
+                                        <span class="login-bank__fallback" aria-hidden="true">
+                                            <i class="mdi mdi-bank-outline"></i>
                                         </span>
-
-                                        <h2 class="auth-story-title">Manage mandates and collections from one secure workspace.</h2>
-
-                                        <p class="auth-story-copy">
-                                            Built for teams handling direct debit operations with clear approvals,
-                                            secure access, and reliable payment workflows.
-                                        </p>
-                                    </div>
-
-                                    <div class="auth-story-bottom">
-                                        <ul class="auth-points">
-                                            <li>
-                                                <i class='bx bxs-badge-check'></i>
-                                                <span>
-                                                    <span class="auth-point-title">Secure Mandate</span>
-                                                    <span class="auth-point-copy">Secure way to create debit debit.</span>
-                                                </span>
-                                            </li>
-                                            <li>
-                                                <i class='bx bxs-chart'></i>
-                                                <span>
-                                                    <span class="auth-point-title">Collections oversight</span>
-                                                    <span class="auth-point-copy">Track mandate activity, schedules, and payment progress in one place.</span>
-                                                </span>
-                                            </li>
-                                            <li>
-                                                <i class='bx bxs-chart'></i>
-                                                <span>
-                                                    <span class="auth-point-title">Built for providers</span>
-                                                    <span class="auth-point-copy">Designed for service providers managing direct debit operations at scale.</span>
-                                                </span>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col-lg-6">
-                                <div class="auth-form-wrap">
-                                    <div class="auth-brand">
-                                        <img src="{{ URL::asset('assets/images/emakato_logo_colored.png') }}" alt="eMakato">
-                                    </div>
-
-                                    <h1 class="auth-form-title">Enter verification code</h1>
-                                    <p class="auth-form-copy">
-                                        Confirm the OTP sent to your registered contacts so we can securely complete your sign-in.
-                                    </p>
-
-                                    @if (session()->get('success'))
-                                        <div class="alert alert-success py-2">{{ session()->get('success') }}</div>
-                                    @elseif(session()->get('danger'))
-                                        <div class="alert alert-danger py-2">{{ session()->get('danger') }}</div>
-                                    @elseif(session()->get('error'))
-                                        <div class="alert alert-danger py-2">{{ session()->get('error') }}</div>
+                                        <span>{{ $bank->name }}</span>
                                     @endif
-
-                                    <div class="auth-form-card">
-                                        <form class="form-horizontal needs-validation" method="POST"
-                                            action="{{ route('otp.getlogin') }}" novalidate>
-                                            @csrf
-                                            <input type="hidden" name="user_id" value="{{ $user_id }}" />
-                                            <input type="hidden" name="uuid" value="{{ $uuid }}" />
-
-                                            <div class="mb-3">
-                                                <label for="otp" class="form-label">OTP Pin</label>
-                                                <input name="otp" type="text"
-                                                    class="form-control auth-otp-input @error('otp') is-invalid @enderror"
-                                                    value="{{ old('otp') }}" id="otp" placeholder="00000"
-                                                    autocomplete="one-time-code" inputmode="numeric" maxlength="5"
-                                                    required>
-                                                @error('otp')
-                                                    <span class="invalid-feedback" role="alert">{{ $message }}</span>
-                                                @enderror
-                                                <div class="invalid-feedback">OTP Pin required</div>
-                                            </div>
-
-                                            <div class="d-grid">
-                                                <button class="btn btn-primary auth-submit waves-effect waves-light"
-                                                    type="submit">
-                                                    Verify and Continue
-                                                </button>
-                                            </div>
-
-                                            <div class="mt-4 text-start">
-                                                <a href="{{ route('otp.login') }}" class="auth-link text-decoration-none">
-                                                    <i class="mdi mdi-arrow-left me-1"></i>
-                                                    Back to sign in
-                                                </a>
-                                            </div>
-                                        </form>
-                                    </div>
-
-                                    <div class="auth-footer text-center mt-4">
-                                        &copy; Copyright
-                                        <script>
-                                            document.write(new Date().getFullYear())
-                                        </script>
-                                        All rights reserved.<br>
-                                        A product of <a href="#">Solocodes</a>.
-                                    </div>
                                 </div>
-                            </div>
+                            @endforeach
                         </div>
+                    </div>
+                @endif
+
+                <div class="login-assurance">
+                    <i class="mdi mdi-lock-check-outline" aria-hidden="true"></i>
+                    <div>
+                        <strong>Built for trusted payment operations</strong>
+                        <span>Protected access, traceable approvals, and consistent collection records.</span>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
+        </section>
+
+        <section class="login-main" aria-labelledby="otp-form-title">
+            <div class="login-form-panel">
+                <div class="login-mobile-brand">
+                    <img src="{{ URL::asset('assets/images/emakato_logo_colored.png') }}" alt="eMakato">
+                </div>
+
+                <h2 id="otp-form-title" class="login-form-title">Verify your sign in</h2>
+                <p class="login-form-copy">Enter the verification code sent to your registered contacts.</p>
+
+                @if (session()->get('success'))
+                    <div class="alert alert-success">{{ session()->get('success') }}</div>
+                @elseif(session()->get('danger'))
+                    <div class="alert alert-danger">{{ session()->get('danger') }}</div>
+                @elseif(session()->get('error'))
+                    <div class="alert alert-danger">{{ session()->get('error') }}</div>
+                @endif
+
+                <form class="needs-validation" method="POST" action="{{ route('otp.getlogin') }}" novalidate>
+                    @csrf
+                    <input type="hidden" name="user_id" value="{{ $user_id }}">
+                    <input type="hidden" name="uuid" value="{{ $uuid }}">
+
+                    <div class="mb-4">
+                        <label for="otp" class="form-label">Verification code</label>
+                        <input name="otp" type="text"
+                            class="form-control login-otp-input @error('otp') is-invalid @enderror"
+                            value="{{ old('otp') }}" id="otp" placeholder="Enter 5-digit code"
+                            autocomplete="one-time-code" inputmode="numeric" pattern="[0-9]*" maxlength="5"
+                            required autofocus>
+                        @error('otp')
+                            <span class="invalid-feedback" role="alert">{{ $message }}</span>
+                        @enderror
+                        <div class="invalid-feedback">Verification code is required.</div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button class="btn btn-primary login-submit waves-effect waves-light" type="submit">
+                            Verify and continue
+                            <i class="mdi mdi-arrow-right" aria-hidden="true"></i>
+                        </button>
+                    </div>
+
+                    <p class="login-register">
+                        <a href="{{ route('otp.login') }}" class="login-link">
+                            <i class="mdi mdi-arrow-left" aria-hidden="true"></i>
+                            Back to sign in
+                        </a>
+                    </p>
+                </form>
+
+                <p class="login-footer">
+                    A product of <a href="https://solocodes.co.tz" target="_blank" rel="noopener">Solocodes</a>
+                </p>
+            </div>
+        </section>
+    </main>
 @endsection
