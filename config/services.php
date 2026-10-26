@@ -152,5 +152,12 @@ return [
             explode(',', env('MONTHLY_REPORT_PARTNER_IDS', '6'))
         ))),
     ],
+    'cybersource' => [
+    'checkout_origin' => env('CYBERSOURCE_CHECKOUT_ORIGIN', 'https://localhost:3000'),
+    'environment' => env('CYBERSOURCE_ENVIRONMENT', 'apitest.cybersource.com'),
+    'merchant_id' => env('CYBERSOURCE_MERCHANT_ID'),
+    'key_id' => env('CYBERSOURCE_KEY_ID'),
+    'secret_key' => env('CYBERSOURCE_SECRET_KEY'),
+],
 
 ];

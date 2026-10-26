@@ -3,6 +3,8 @@
 namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -36,6 +38,24 @@ class Handler extends ExceptionHandler
     {
         $this->reportable(function (Throwable $e) {
             //
+        });
+
+        $this->renderable(function (HttpException $e, Request $request) {
+            if ($e->getStatusCode() !== 419 || $request->expectsJson()) {
+                return null;
+            }
+
+            $loginUrl = route('otp.login');
+            $redirectTo = $request->headers->get('referer') ?: $loginUrl;
+
+            if ($request->is('otp/generate', 'otp/login') || $request->routeIs('otp.generate', 'otp.getlogin')) {
+                $redirectTo = $loginUrl;
+            }
+
+            return redirect()
+                ->to($redirectTo)
+                ->withInput($request->except($this->dontFlash))
+                ->with('error', 'Your session expired. Please try signing in again.');
         });
     }
 }

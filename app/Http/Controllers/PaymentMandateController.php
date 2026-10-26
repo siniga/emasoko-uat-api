@@ -33,6 +33,7 @@ use App\Services\MandateActionService;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
@@ -1434,8 +1435,12 @@ class PaymentMandateController extends Controller
         //create filename
         $filename = "{$debitOrder->reference}.pdf";
 
-        $path = 'assets/uploads/pdf/';
-        $pdf->save($path  . $filename);
+        $directory = public_path('assets/uploads/pdf');
+        if (!File::isDirectory($directory)) {
+            File::makeDirectory($directory, 0775, true);
+        }
+
+        $pdf->save($directory . DIRECTORY_SEPARATOR . $filename);
 
         return $filename;
     }

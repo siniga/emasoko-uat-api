@@ -64,3 +64,24 @@ Route::post('v1/mandate/yas/callback', [YasMandateController::class, 'callback']
 //api v1 for mobile and external apps
 Route::prefix('v1')->group(base_path('routes/api_external.php'));
 Route::prefix('v1')->group(base_path('routes/api_mobile.php'));
+
+// Subscriber wallet APIs (kept separate from bank integration routes).
+Route::prefix('v1/wallet')->name('wallet.')->group(base_path('routes/api_wallet.php'));
+
+//Cybersource APIs
+Route::post('/cybersource/checkout/context', [\App\Http\Controllers\EquityCheckoutController::class, 'context'])
+    ->middleware('throttle:10,1');
+Route::post('/cybersource/checkout/authorize', [\App\Http\Controllers\EquityCheckoutController::class, 'authorizeToken'])
+    ->middleware('throttle:10,1');
+
+use App\Http\Controllers\CybersourceTestController;
+
+Route::post(
+    '/cybersource/capture-context',
+    [CybersourceTestController::class, 'captureContext']
+)->middleware('throttle:10,1');
+
+Route::post(
+    '/cybersource/authorize',
+    [CybersourceTestController::class, 'authorizePayment']
+)->middleware('throttle:10,1');

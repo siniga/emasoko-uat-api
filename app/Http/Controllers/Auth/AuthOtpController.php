@@ -71,7 +71,10 @@ class AuthOtpController extends Controller
 
         $integratedBanks = $this->integratedBanks();
 
-        return view('auth.otp-login', compact('title', 'integratedBanks'));
+        return response()
+            ->view('auth.otp-login', compact('title', 'integratedBanks'))
+            ->header('Cache-Control', 'private, no-store, no-cache, must-revalidate, max-age=0')
+            ->header('Pragma', 'no-cache');
     }
 
     // Generate OTP
@@ -179,11 +182,14 @@ class AuthOtpController extends Controller
     {
         $user = User::where('uuid', $uuid)->firstOrFail();
 
-        return view('auth.otp-verification', [
-            'uuid' => $uuid,
-            'user_id' => $user->id,
-            'integratedBanks' => $this->integratedBanks(),
-        ]);
+        return response()
+            ->view('auth.otp-verification', [
+                'uuid' => $uuid,
+                'user_id' => $user->id,
+                'integratedBanks' => $this->integratedBanks(),
+            ])
+            ->header('Cache-Control', 'private, no-store, no-cache, must-revalidate, max-age=0')
+            ->header('Pragma', 'no-cache');
     }
 
     protected function integratedBanks()

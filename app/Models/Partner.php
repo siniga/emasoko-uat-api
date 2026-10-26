@@ -15,6 +15,11 @@ class Partner extends Model
     protected $guarded = [];
     protected $hidden = ['callback_secret'];
 
+    public function wallet(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(Wallet::class);
+    }
+
     public const LIFECYCLE_DRAFT = 'draft';
     public const LIFECYCLE_SUBMITTED = 'submitted';
     public const LIFECYCLE_UNDER_REVIEW = 'under_review';
@@ -61,6 +66,10 @@ class Partner extends Model
             $model->reference = Partner::document_number("reference", "CO", 4, true, false);
             $model->short_code = $shortCode;
             $model->client_code = $clientCode;
+        });
+
+        static::created(function (self $partner) {
+            Wallet::forPartner($partner->id);
         });
     }
 

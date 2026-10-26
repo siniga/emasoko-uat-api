@@ -99,15 +99,15 @@
                     <div class="alert alert-danger">{{ session()->get('error') }}</div>
                 @endif
 
-                <form class="needs-validation" method="POST" action="{{ route('otp.generate') }}" novalidate>
+                <form class="needs-validation" method="POST" action="{{ route('otp.generate', absolute: false) }}" novalidate>
                     @csrf
 
                     <div class="mb-3">
                         <label for="username" class="form-label">Email address</label>
                         <input name="email" type="email"
                             class="form-control @error('email') is-invalid @enderror"
-                            value="{{ old('email') }}" id="username" placeholder="you@company.com"
-                            autocomplete="email" required autofocus>
+                            value="{{ old('email', app()->environment('local') ? config('local_login.email') : '') }}" id="username" placeholder="you@company.com"
+                            autocomplete="username" required autofocus>
                         @error('email')
                             <span class="invalid-feedback" role="alert">{{ $message }}</span>
                         @enderror
@@ -125,7 +125,8 @@
                             <input type="password" name="password"
                                 class="form-control @error('password') is-invalid @enderror"
                                 id="userpassword" placeholder="Enter your password" aria-label="Password"
-                                aria-describedby="password-addon" required>
+                                value="{{ app()->environment('local') ? config('local_login.password') : '' }}"
+                                autocomplete="current-password" aria-describedby="password-addon" required>
                             <button class="btn login-password__toggle" type="button" id="password-addon"
                                 aria-label="Show password" title="Show password">
                                 <i class="mdi mdi-eye-outline" aria-hidden="true"></i>

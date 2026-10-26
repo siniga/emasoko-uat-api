@@ -2,14 +2,26 @@
 
 namespace App\Classes;
 
-use Exception;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class Checksum
 {
+    public function validateConfiguration(): void
+    {
+        foreach (['token_url' => 'CRDB_TOKEN_URL', 'consumer_key' => 'CRDB_CONSUMER_KEY', 'consumer_secret' => 'CRDB_CONSUMER_SECRET'] as $key => $environmentKey) {
+            $value = config('services.crdb.' . $key);
+            if (!is_string($value) || trim($value) === '') {
+                throw ValidationException::withMessages([
+                    'crdb' => "CRDB integration is not configured: {$environmentKey} is missing. Contact your administrator.",
+                ]);
+            }
+        }
+    }
+
     public function generateToken()
     {
+        $this->validateConfiguration();
         //headers
         $headers = [
             'Content-Type' => 'application/x-www-form-urlencoded',
@@ -21,17 +33,22 @@ class Checksum
         $API_URL = config('services.crdb.token_url');
 
         // Send the POST request using Laravel's HTTP client
-        $response = Http::withHeaders($headers)->asForm()->post($API_URL, 
+        $response = Http::withHeaders($headers)->asForm()->post($API_URL,
         [
             'grant_type' => 'client_credentials',
             'scope' => 'common'
         ]);
 
         //json object
-        $response = $response->json();
-        Log::debug($response);
+        $response->throw();
+        $token = $response->json('access_token');
+        if (!is_string($token) || trim($token) === '') {
+            throw ValidationException::withMessages([
+                'crdb' => 'CRDB authentication did not return an access token. Contact your administrator.',
+            ]);
+        }
 
-        return $response['access_token'];
+        return $token;
     }
 
 

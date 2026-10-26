@@ -13,6 +13,7 @@ use App\Models\OtpRequest;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -116,6 +117,15 @@ class PaymentMandateWorkflowService
     public function submit(string $uuid): array
     {
         $debitOrder = DebitOrder::where('uuid', $uuid)->firstOrFail();
+        if ($debitOrder->channel === 'CRDB') {
+            (new \App\Classes\Checksum())->validateConfiguration();
+            $apiUrl = config('services.crdb.api_url');
+            if (!is_string($apiUrl) || trim($apiUrl) === '') {
+                throw ValidationException::withMessages([
+                    'crdb' => 'CRDB integration is not configured: CRDB_API_URL is missing. Contact your administrator.',
+                ]);
+            }
+        }
         $debitOrder->status = 200;
         $debitOrder->lifecycle_status = DebitOrder::LIFECYCLE_SUBMITTED;
         $debitOrder->save();
@@ -662,7 +672,12 @@ class PaymentMandateWorkflowService
         $pdf = Pdf::loadView('payment_mandate.pdf.evidence');
         $filename = "{$debitOrder->reference}.pdf";
 
-        $pdf->save('assets/uploads/pdf/' . $filename);
+        $directory = public_path('assets/uploads/pdf');
+        if (!File::isDirectory($directory)) {
+            File::makeDirectory($directory, 0775, true);
+        }
+
+        $pdf->save($directory . DIRECTORY_SEPARATOR . $filename);
 
         return $filename;
     }

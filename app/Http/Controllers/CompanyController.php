@@ -791,8 +791,12 @@ class CompanyController extends Controller
         //create filename
         $filename = "{$company->reference}.pdf";
 
-        $path = 'assets/uploads/pdf/';
-        $pdf->save($path  . $filename);
+        $directory = public_path('assets/uploads/pdf');
+        if (!File::isDirectory($directory)) {
+            File::makeDirectory($directory, 0775, true);
+        }
+
+        $pdf->save($directory . DIRECTORY_SEPARATOR . $filename);
 
         return $filename;
     }

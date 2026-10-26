@@ -99,7 +99,7 @@
                     <div class="alert alert-danger">{{ session()->get('error') }}</div>
                 @endif
 
-                <form class="needs-validation" method="POST" action="{{ route('otp.getlogin') }}" novalidate>
+                <form class="needs-validation" method="POST" action="{{ route('otp.getlogin', absolute: false) }}" novalidate>
                     @csrf
                     <input type="hidden" name="user_id" value="{{ $user_id }}">
                     <input type="hidden" name="uuid" value="{{ $uuid }}">

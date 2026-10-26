@@ -149,9 +149,12 @@
                 }).catch(error => {
                     console.error("Error caught:", error);
                     let message = "Something went wrong.";
+                    if (error.status === 422) {
+                        message = Object.values(error.data.errors || {}).flat().join(' ') || error.data.message || message;
+                    }
 
-                    $('#message_wrp').html(
-                        "<div class='alert alert-danger py-3 px-2'>" + message + "</div>"
+                    $('#message_wrp').empty().append(
+                        $('<div>').addClass('alert alert-danger py-3 px-2').text(message)
                     );
                 }).finally(() => {
                     this.submitLoading = false;
