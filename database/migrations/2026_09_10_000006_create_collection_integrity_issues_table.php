@@ -23,8 +23,8 @@ return new class extends Migration
             $table->date('event_date')->nullable()->index();
             $table->text('description');
             $table->json('context')->nullable();
-            $table->timestamp('detected_at');
-            $table->timestamp('last_detected_at');
+            $table->timestamp('detected_at')->useCurrent();
+            $table->timestamp('last_detected_at')->useCurrent();
             $table->timestamp('resolved_at')->nullable()->index();
             $table->text('resolution_note')->nullable();
             $table->timestamps();

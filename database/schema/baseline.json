@@ -1,0 +1,449 @@
+{
+    "format": 1,
+    "driver": "mysql",
+    "captured_on": "2026-10-26",
+    "migrations": [
+        "0001_01_01_000001_create_account_types_table",
+        "0001_01_01_000002_create_accounts_table",
+        "0001_01_01_000003_create_acquisition_table",
+        "0001_01_01_000004_create_app_variables_table",
+        "0001_01_01_000005_create_audit_logs_table",
+        "0001_01_01_000006_create_back_logs_table",
+        "0001_01_01_000007_create_collection_batches_table",
+        "0001_01_01_000008_create_collection_debit_orders_table",
+        "0001_01_01_000009_create_companies_table",
+        "0001_01_01_000010_create_company_partner_categories_table",
+        "0001_01_01_000011_create_company_users_table",
+        "0001_01_01_000012_create_countries_table",
+        "0001_01_01_000013_create_currencies_table",
+        "0001_01_01_000014_create_customer_accounts_table",
+        "0001_01_01_000015_create_customer_partners_table",
+        "0001_01_01_000016_create_customers_table",
+        "0001_01_01_000017_create_debit_order_requests_table",
+        "0001_01_01_000018_create_debit_orders_table",
+        "0001_01_01_000019_create_document_categories_table",
+        "0001_01_01_000020_create_external_callback_logs_table",
+        "0001_01_01_000021_create_failed_jobs_table",
+        "0001_01_01_000022_create_gender_table",
+        "0001_01_01_000023_create_gepg_bill_payments_table",
+        "0001_01_01_000024_create_gepg_tariffs_table",
+        "0001_01_01_000025_create_id_types_table",
+        "0001_01_01_000026_create_installment_payments_table",
+        "0001_01_01_000027_create_installments_table",
+        "0001_01_01_000028_create_jobs_table",
+        "0001_01_01_000029_create_loan_purposes_table",
+        "0001_01_01_000030_create_luku_payment_purchases_table",
+        "0001_01_01_000031_create_mandate_service_partner_table",
+        "0001_01_01_000032_create_mandate_services_table",
+        "0001_01_01_000033_create_marital_status_table",
+        "0001_01_01_000034_create_notifications_table",
+        "0001_01_01_000035_create_oauth_access_tokens_table",
+        "0001_01_01_000036_create_oauth_auth_codes_table",
+        "0001_01_01_000037_create_oauth_clients_table",
+        "0001_01_01_000038_create_oauth_personal_access_clients_table",
+        "0001_01_01_000039_create_oauth_refresh_tokens_table",
+        "0001_01_01_000040_create_occupations_table",
+        "0001_01_01_000041_create_otp_requests_table",
+        "0001_01_01_000042_create_partner_accounts_table",
+        "0001_01_01_000043_create_partner_approvals_table",
+        "0001_01_01_000044_create_partner_categories_table",
+        "0001_01_01_000045_create_partner_documents_table",
+        "0001_01_01_000046_create_partner_staff_table",
+        "0001_01_01_000047_create_partner_users_table",
+        "0001_01_01_000048_create_partners_table",
+        "0001_01_01_000049_create_password_resets_table",
+        "0001_01_01_000050_create_payment_histories_table",
+        "0001_01_01_000051_create_payment_logs_table",
+        "0001_01_01_000052_create_payment_settlement_backfill_archives_table",
+        "0001_01_01_000053_create_payment_settlements_table",
+        "0001_01_01_000054_create_payments_table",
+        "0001_01_01_000055_create_perm_classes_table",
+        "0001_01_01_000056_create_perm_methods_table",
+        "0001_01_01_000057_create_perm_roles_table",
+        "0001_01_01_000058_create_perm_users_table",
+        "0001_01_01_000059_create_personal_access_tokens_table",
+        "0001_01_01_000060_create_regions_table",
+        "0001_01_01_000061_create_role_user_table",
+        "0001_01_01_000062_create_roles_table",
+        "0001_01_01_000063_create_sectors_table",
+        "0001_01_01_000064_create_sms_categories_table",
+        "0001_01_01_000065_create_sms_logs_table",
+        "0001_01_01_000066_create_sms_templates_table",
+        "0001_01_01_000067_create_subscriber_mandate_requests_table",
+        "0001_01_01_000068_create_subscriber_users_table",
+        "0001_01_01_000069_create_subscribers_table",
+        "0001_01_01_000070_create_tb_occupations_table",
+        "0001_01_01_000071_create_user_otps_table",
+        "0001_01_01_000072_create_users_table",
+        "0001_01_01_000073_create_wallets_table",
+        "0001_01_01_000074_add_baseline_foreign_keys",
+        "0001_01_01_000075_create_baseline_reporting_views"
+    ],
+    "tables": {
+        "account_types": {
+            "migration": "0001_01_01_000001_create_account_types_table",
+            "sha256": "d25ffbc70acbf2c5dffceb77ebb57f07a33d81ca3bef4392fdeebf6642ad6735"
+        },
+        "accounts": {
+            "migration": "0001_01_01_000002_create_accounts_table",
+            "sha256": "c5e822c396bd77aaa7685c9affbb2b0d237683fe085c76d9648d678e9363b12b"
+        },
+        "acquisition": {
+            "migration": "0001_01_01_000003_create_acquisition_table",
+            "sha256": "be7219f2408c9d83a9e1dbdc9ab0d5dd2391b5c978bd6c8ea02207b2dfffbd2d"
+        },
+        "app_variables": {
+            "migration": "0001_01_01_000004_create_app_variables_table",
+            "sha256": "f167ca0a37c546cee24985015bd69693e37cf3ed97956c3e95407d77f8c189dd"
+        },
+        "audit_logs": {
+            "migration": "0001_01_01_000005_create_audit_logs_table",
+            "sha256": "c5558323b50e7f128748d990a41b03eea2d087c918054b83bafe77150e5b07c4"
+        },
+        "back_logs": {
+            "migration": "0001_01_01_000006_create_back_logs_table",
+            "sha256": "7aff1005fa278ea42b3858cdc9d675c25c31d8f3abc1daefc40c41a5e1845c5f"
+        },
+        "collection_batches": {
+            "migration": "0001_01_01_000007_create_collection_batches_table",
+            "sha256": "067d2deb2a9f5e07e29db3bed3bee31ba70ce2fa3f4eb4fec076a13ef0e7fd4f"
+        },
+        "collection_debit_orders": {
+            "migration": "0001_01_01_000008_create_collection_debit_orders_table",
+            "sha256": "facac43e4d62f84491219e040007a1d4c2f0ddc730d5d661c045dd042cf366bf"
+        },
+        "companies": {
+            "migration": "0001_01_01_000009_create_companies_table",
+            "sha256": "a51f92e05eee53836438b71d1f3c1b93612bd8b1d21badbe6bb5ca659e0a915a"
+        },
+        "company_partner_categories": {
+            "migration": "0001_01_01_000010_create_company_partner_categories_table",
+            "sha256": "b758773e526b1a5fe4d3b592f2dc2bcd4a389be9717c4c4a3d0d18ef9cb2d61e"
+        },
+        "company_users": {
+            "migration": "0001_01_01_000011_create_company_users_table",
+            "sha256": "0d5cdaedaf5b97c718713766afb7cf8bba3d935bf1a25964d5fc87615f6e7987"
+        },
+        "countries": {
+            "migration": "0001_01_01_000012_create_countries_table",
+            "sha256": "9f2429c129d40e48ea308bb75753e09e77730461bb41589ca34abbdde55e415e"
+        },
+        "currencies": {
+            "migration": "0001_01_01_000013_create_currencies_table",
+            "sha256": "8fe311cc5d3fa4a46c2c6805659a896eb6563cb0de8b2c6c8f705c7215edefc7"
+        },
+        "customer_accounts": {
+            "migration": "0001_01_01_000014_create_customer_accounts_table",
+            "sha256": "ef59f43fa91426e5d64e0ffdda994dfc84233b2cd4d78a4d0a5172703bee0d6a"
+        },
+        "customer_partners": {
+            "migration": "0001_01_01_000015_create_customer_partners_table",
+            "sha256": "feb3604f01ae25a1c696d2bac75c2598d2bc9847f1e20b9e2f82d34c2a5b88bc"
+        },
+        "customers": {
+            "migration": "0001_01_01_000016_create_customers_table",
+            "sha256": "aa4636a72d025560b9d252d9f8aa38e0936cccc13e878d2debe5ccd3cd951131"
+        },
+        "debit_order_requests": {
+            "migration": "0001_01_01_000017_create_debit_order_requests_table",
+            "sha256": "77c39f9eb0c1e43f375e73bbdb5e50a6dbc59eea035b259964d4b41230d2130f"
+        },
+        "debit_orders": {
+            "migration": "0001_01_01_000018_create_debit_orders_table",
+            "sha256": "3fa7eee7c0db7682fa252fe7dff0d306cb9ed5d98aa7eedcf4215fa93d5b051c"
+        },
+        "document_categories": {
+            "migration": "0001_01_01_000019_create_document_categories_table",
+            "sha256": "f5ba8be5004c1da680ed637697ab452af4a9fd8a0013f06cf934de13a88def3c"
+        },
+        "external_callback_logs": {
+            "migration": "0001_01_01_000020_create_external_callback_logs_table",
+            "sha256": "d3c9a73675a8dd848e74212931035eda59bc132665465fc9e3abf51cc74e8308"
+        },
+        "failed_jobs": {
+            "migration": "0001_01_01_000021_create_failed_jobs_table",
+            "sha256": "b127f9eb758bac1cab313e4c8f8e0cc3c4a11c8c7a6ccd3e30f0208e642d9fce"
+        },
+        "gender": {
+            "migration": "0001_01_01_000022_create_gender_table",
+            "sha256": "44cb2fb09dbeeed005b9036a01ec56e592b592c29d53c199dd2f5cdcccc9f31a"
+        },
+        "gepg_bill_payments": {
+            "migration": "0001_01_01_000023_create_gepg_bill_payments_table",
+            "sha256": "74274d00bf64c3692464f4956d39d8f8dffaf92474ea0d2962c659d8e358d542"
+        },
+        "gepg_tariffs": {
+            "migration": "0001_01_01_000024_create_gepg_tariffs_table",
+            "sha256": "4aca577e7eaa6fd9a83eece63ad3433c0645431d04e5791ed00716536a5f03a3"
+        },
+        "id_types": {
+            "migration": "0001_01_01_000025_create_id_types_table",
+            "sha256": "01ea4ff877712e945aac3983673f0e618e4d2e3a3528c62e1e2633d5ac4819b1"
+        },
+        "installment_payments": {
+            "migration": "0001_01_01_000026_create_installment_payments_table",
+            "sha256": "79b7de782c3dbf6486ba37e407cbcf7ed58952f2786dba2d23ff55eb102b5092"
+        },
+        "installments": {
+            "migration": "0001_01_01_000027_create_installments_table",
+            "sha256": "9d5333daa502c39fa656e09eb2b2e6dba0dc95bb70ee8d9f5eab3fef92f5d74e"
+        },
+        "jobs": {
+            "migration": "0001_01_01_000028_create_jobs_table",
+            "sha256": "8ca889e29b9b10c3c72d321dcb3bb560ed8aec6a02b3314e390b0b88ee725ff2"
+        },
+        "loan_purposes": {
+            "migration": "0001_01_01_000029_create_loan_purposes_table",
+            "sha256": "c4b078f428713918a85542d0579253747ee9bd2fb4f9a70d206f10ca391695f0"
+        },
+        "luku_payment_purchases": {
+            "migration": "0001_01_01_000030_create_luku_payment_purchases_table",
+            "sha256": "e6b0db5bad77464d95d18c3ff3882fb8395b6c03b05ee3122e3dee9948ed820d"
+        },
+        "mandate_service_partner": {
+            "migration": "0001_01_01_000031_create_mandate_service_partner_table",
+            "sha256": "3b2f3f892b8bd309166a8a9f6cd4c23dff7c4c862b84690a8f6ce4fa99bbc89d"
+        },
+        "mandate_services": {
+            "migration": "0001_01_01_000032_create_mandate_services_table",
+            "sha256": "b7760e7969836fe8c5924042d07251176fde3ddd7c037c1be60d547eaf6e0ee3"
+        },
+        "marital_status": {
+            "migration": "0001_01_01_000033_create_marital_status_table",
+            "sha256": "44e1771986784216685dfc2bbdc206feb38b474af98b1291717945f60e6aa595"
+        },
+        "notifications": {
+            "migration": "0001_01_01_000034_create_notifications_table",
+            "sha256": "b99d6c7351af927cdad7d34647f7c78ff5ad3f932533beb080071876f2c819eb"
+        },
+        "oauth_access_tokens": {
+            "migration": "0001_01_01_000035_create_oauth_access_tokens_table",
+            "sha256": "8a16df1fc45cbca3c10be87a598f64ccb6612172463e7558ac4f5cb3e666445b"
+        },
+        "oauth_auth_codes": {
+            "migration": "0001_01_01_000036_create_oauth_auth_codes_table",
+            "sha256": "9177a1ee9b9cd8e8f675f48999e34502aadb998ef7cd74590fdfce43148873ee"
+        },
+        "oauth_clients": {
+            "migration": "0001_01_01_000037_create_oauth_clients_table",
+            "sha256": "be752b8ac71c04638819c05d51334dcd8f292a754870ff7142e2a76083f3ab87"
+        },
+        "oauth_personal_access_clients": {
+            "migration": "0001_01_01_000038_create_oauth_personal_access_clients_table",
+            "sha256": "d348f966fc8c8719671f6f1c4be301bdf35d6d2c24e9fffae96fe17d17cee28b"
+        },
+        "oauth_refresh_tokens": {
+            "migration": "0001_01_01_000039_create_oauth_refresh_tokens_table",
+            "sha256": "4cd120726cbc4c04ea9fbaf0fd05973146f654140c44be8751c089cfcae92fbe"
+        },
+        "occupations": {
+            "migration": "0001_01_01_000040_create_occupations_table",
+            "sha256": "a22295c4814d7b88dd38ae316b0127ef6c5e118585ae053db4630c33e8649db3"
+        },
+        "otp_requests": {
+            "migration": "0001_01_01_000041_create_otp_requests_table",
+            "sha256": "ee4ebb9d18d198b83a23752c1e349ff305af38e20b0848c8d6d39d8f722b75b6"
+        },
+        "partner_accounts": {
+            "migration": "0001_01_01_000042_create_partner_accounts_table",
+            "sha256": "36ca03977105db6f12cbbf3244713e676c858277a7127c4cb87aac286e369778"
+        },
+        "partner_approvals": {
+            "migration": "0001_01_01_000043_create_partner_approvals_table",
+            "sha256": "88344ea984bcbc52186ae220acf94d8ec6455c07a18e35c178b83f90fc129675"
+        },
+        "partner_categories": {
+            "migration": "0001_01_01_000044_create_partner_categories_table",
+            "sha256": "44e9dd273d88a8437f83f6e1b2266cef405e50f85c4ee8ecdce84820cb34933c"
+        },
+        "partner_documents": {
+            "migration": "0001_01_01_000045_create_partner_documents_table",
+            "sha256": "4e39be8007b29901956df43e78a43d272dffd96ad8fc868c50fe15da29b4040b"
+        },
+        "partner_staff": {
+            "migration": "0001_01_01_000046_create_partner_staff_table",
+            "sha256": "3e2aad138041b33727abfd2a045d10e01c61a3dc087d85c1ae29cf3043712ffd"
+        },
+        "partner_users": {
+            "migration": "0001_01_01_000047_create_partner_users_table",
+            "sha256": "5163eeed567e72fd3523365ca3dc2b843d53b74644f53395ebe2f1328b749c67"
+        },
+        "partners": {
+            "migration": "0001_01_01_000048_create_partners_table",
+            "sha256": "fb6ba1785f86562d39285180ffa266e08b756b58b9e972502c17d80158bfe5e6"
+        },
+        "password_resets": {
+            "migration": "0001_01_01_000049_create_password_resets_table",
+            "sha256": "321331cee38276caa0f764ff612c4961f2ad7ece0a0c8606241cb37d9e2fefd1"
+        },
+        "payment_histories": {
+            "migration": "0001_01_01_000050_create_payment_histories_table",
+            "sha256": "483a1f71dba6992d408450a9ba4e53db4dd88dc099bf0a11e7d3a116209dc531"
+        },
+        "payment_logs": {
+            "migration": "0001_01_01_000051_create_payment_logs_table",
+            "sha256": "835473681029dde828c8410c16d524b07a5d18356c196e160bed3612ae688a32"
+        },
+        "payment_settlement_backfill_archives": {
+            "migration": "0001_01_01_000052_create_payment_settlement_backfill_archives_table",
+            "sha256": "8ac61ecfd3a2d9e2eb07253eff01836762466c0e691b2b111acd71fdfb08c33f"
+        },
+        "payment_settlements": {
+            "migration": "0001_01_01_000053_create_payment_settlements_table",
+            "sha256": "dcc2ddd587cd0e0129d6fbb626c8d1733b33286fc916f8dba151364d47b3fca8"
+        },
+        "payments": {
+            "migration": "0001_01_01_000054_create_payments_table",
+            "sha256": "36d063c2206067c5e3033d0621bf9a766be76f886b716d4742254bcb1fa527c2"
+        },
+        "perm_classes": {
+            "migration": "0001_01_01_000055_create_perm_classes_table",
+            "sha256": "8619aebf9f90c2920dee7cf939bb853badd5412a513aa8c74dc913e01204f4ee"
+        },
+        "perm_methods": {
+            "migration": "0001_01_01_000056_create_perm_methods_table",
+            "sha256": "bc3ee877e5c13f2cd2f8c84a7e77c249d9aaa8cb37f7aa0b9e3c9968f56d6f28"
+        },
+        "perm_roles": {
+            "migration": "0001_01_01_000057_create_perm_roles_table",
+            "sha256": "0ae6aaef6a7ad8bed614fd6cfcf9652e7cf3dadefba39a5bea54c4cf137ac53b"
+        },
+        "perm_users": {
+            "migration": "0001_01_01_000058_create_perm_users_table",
+            "sha256": "33c916366cbc843cd688be5788c83206827152327e2ded9cba301e98f8609b39"
+        },
+        "personal_access_tokens": {
+            "migration": "0001_01_01_000059_create_personal_access_tokens_table",
+            "sha256": "ad16a7d28087bf1d1134b15998d6d38b16bc7a9d2b10b184ad4280e45a2adc16"
+        },
+        "regions": {
+            "migration": "0001_01_01_000060_create_regions_table",
+            "sha256": "d8d4f5da0c7ff917d219bfda43822751cb94b07625e4fce9629c5786a5227138"
+        },
+        "role_user": {
+            "migration": "0001_01_01_000061_create_role_user_table",
+            "sha256": "042282277a6e29cdab8fd2b561543990b2d0e368f35482bf6e665ab06a53b97f"
+        },
+        "roles": {
+            "migration": "0001_01_01_000062_create_roles_table",
+            "sha256": "de0050c9a703a6e63cbd3aeb85837d3d4b1899e751ddd3c91d6be3ab03e79efb"
+        },
+        "sectors": {
+            "migration": "0001_01_01_000063_create_sectors_table",
+            "sha256": "e6bdbf86995a78f67585edbb212112fbee463c695104cb7e3e37822a01ff1540"
+        },
+        "sms_categories": {
+            "migration": "0001_01_01_000064_create_sms_categories_table",
+            "sha256": "9dc29819962e62488c1df96cae59b2bdb5ad401df8af05da76ed5034aa3ceeac"
+        },
+        "sms_logs": {
+            "migration": "0001_01_01_000065_create_sms_logs_table",
+            "sha256": "794165e2db7a702bfb29e1e539726682c49f49df8164e88ec5b69909625bcd80"
+        },
+        "sms_templates": {
+            "migration": "0001_01_01_000066_create_sms_templates_table",
+            "sha256": "953a197cfb7fd908cda5649242dd19ba95513c0937eafd4a5fd0bf97f545776d"
+        },
+        "subscriber_mandate_requests": {
+            "migration": "0001_01_01_000067_create_subscriber_mandate_requests_table",
+            "sha256": "99f8b255565611e0cc90ab96b0a24c40c939e49a13c90458625ac77ebebfb543"
+        },
+        "subscriber_users": {
+            "migration": "0001_01_01_000068_create_subscriber_users_table",
+            "sha256": "7f1611204dd7731062aee7b3d466b56d3b939057a9b2c7b82d58b3d6bd6d5035"
+        },
+        "subscribers": {
+            "migration": "0001_01_01_000069_create_subscribers_table",
+            "sha256": "d416420baa3388612bb104449dadb2d0a59c608b10a9cf0e558cfddf6c56daf3"
+        },
+        "tb_occupations": {
+            "migration": "0001_01_01_000070_create_tb_occupations_table",
+            "sha256": "2d0aceebbab67fede791bcd0263e740202e71231d8182a8e7f4b35dd9bac4a4b"
+        },
+        "user_otps": {
+            "migration": "0001_01_01_000071_create_user_otps_table",
+            "sha256": "4ccf45c74f0c15d55bf3590be7894f369f8c4c804011868f08be4ad6bc2943c0"
+        },
+        "users": {
+            "migration": "0001_01_01_000072_create_users_table",
+            "sha256": "69ff9e7505ec3925b11f3d273934d47e6fe172faa61559cccf77b519e3b45d8f"
+        },
+        "wallets": {
+            "migration": "0001_01_01_000073_create_wallets_table",
+            "sha256": "468d07052a170a61db9b028d3601c40510ff54e998281a4c1442d104ee0132c1"
+        }
+    },
+    "views": {
+        "vw_dashboard_mandates": {
+            "migration": "0001_01_01_000075_create_baseline_reporting_views",
+            "sha256": "a304b3a87c23bd171e131234739b1ecac78a0721137c65a510809ce320d04afa"
+        },
+        "vw_dashboard_collection_postings": {
+            "migration": "0001_01_01_000075_create_baseline_reporting_views",
+            "sha256": "2a337bdeeb1756bebf59ef625ffab38c9c1b2b8f582e4413cadd53ea005473ec"
+        },
+        "vw_dashboard_collections": {
+            "migration": "0001_01_01_000075_create_baseline_reporting_views",
+            "sha256": "9d8f3f528c2cea60f683d425ca0f6d148d6442d88667064076159647b0a25a98"
+        },
+        "vw_dashboard_expected_collections": {
+            "migration": "0001_01_01_000075_create_baseline_reporting_views",
+            "sha256": "35dd3364267c5331bb33281025f1e941977cb0f0961d5788bbc388bdbd3d6c59"
+        },
+        "vw_dashboard_payment_collections": {
+            "migration": "0001_01_01_000075_create_baseline_reporting_views",
+            "sha256": "d2785d393e831c52617a0414c56b4c6ffcf188a34b71051fd72db74557df6518"
+        }
+    },
+    "archived_migrations": [
+        "2016_06_01_000001_create_oauth_auth_codes_table",
+        "2016_06_01_000002_create_oauth_access_tokens_table",
+        "2016_06_01_000003_create_oauth_refresh_tokens_table",
+        "2016_06_01_000004_create_oauth_clients_table",
+        "2016_06_01_000005_create_oauth_personal_access_clients_table",
+        "2024_06_08_051337_alter_table_add_column",
+        "2024_06_08_162403_alter_table_add_column_in_partners",
+        "2024_06_09_115354_alter_table_add_column_in_debit_orders",
+        "2024_06_09_121401_create_collection_batches",
+        "2024_06_12_085043_alter_add_column_in_debit_orders",
+        "2024_08_08_101845_create_jobs_table",
+        "2026_04_07_000001_add_collection_lifecycle_columns",
+        "2026_04_07_000002_create_payment_settlements_table",
+        "2026_04_07_000003_add_reconciliation_fields_to_payment_settlements",
+        "2026_04_07_000004_add_unique_cycle_constraint_to_collection_debit_orders",
+        "2026_04_09_000005_create_external_callback_logs_table",
+        "2026_04_09_000006_add_allowed_periodicities_to_accounts_table",
+        "2026_05_04_000007_add_logo_to_accounts_table",
+        "2026_05_05_113158_create_sms_categories_table",
+        "2026_05_05_113211_create_sms_templates_table",
+        "2026_05_05_113507_create_sms_logs_table",
+        "2026_05_06_163510_add_debit_order_id_sms_logs",
+        "2026_06_01_000001_create_audit_logs_table",
+        "2026_06_10_000002_create_notifications_table",
+        "2026_06_10_000003_add_lifecycle_status_to_partners_table",
+        "2026_06_11_000001_add_callback_secret_to_partners_table",
+        "2026_06_26_000001_add_account_month_key_to_collection_debit_orders",
+        "2026_06_27_000001_add_registration_source_to_partners_table",
+        "2026_06_27_000002_restore_cancelled_mandates_visibility",
+        "2026_06_27_000003_add_audit_users_to_users_table",
+        "2026_07_09_000001_add_metadata_to_sms_templates_table",
+        "2026_07_23_000001_scope_collection_account_month_key_by_partner",
+        "2026_09_08_000001_create_dashboard_reporting_views",
+        "2026_09_09_000002_create_payment_settlement_backfill_archives_table",
+        "2026_09_09_000003_add_run_tracking_to_payment_settlement_backfills",
+        "2026_09_09_000004_create_dashboard_collection_event_views",
+        "2026_09_09_000005_create_dashboard_collection_postings_view",
+        "2026_10_22_000001_create_wallets_table",
+        "2026_10_22_000002_provision_default_business_wallets"
+    ],
+    "remaining_upgrades": [
+        "2026_09_09_000001_create_system_health_checks_table",
+        "2026_09_10_000006_create_collection_integrity_issues_table",
+        "2026_09_10_000007_harden_collection_reporting_storage",
+        "2026_09_10_000008_index_reporting_freshness_columns",
+        "2026_09_13_000001_add_onboarding_state_to_partner_accounts",
+        "2026_09_13_000002_harden_collection_batch_storage",
+        "2026_09_13_000003_create_collection_batch_push_attempts_table"
+    ],
+    "foreign_key_migration": "0001_01_01_000074_add_baseline_foreign_keys"
+}

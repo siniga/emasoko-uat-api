@@ -45,8 +45,8 @@ class WalletContextTest extends TestCase
             $table->boolean('authorize');
         });
 
-        // Exercise the actual new migration, not a hand-written test wallet schema.
-        (require database_path('migrations/2026_10_22_000001_create_wallets_table.php'))->up();
+        // SQLite uses the archived Blueprint definition; MariaDB has a separate baseline verifier.
+        (require database_path('migrations/archive/2026_10_22_000001_create_wallets_table.php'))->up();
     }
 
     public function test_guests_cannot_read_wallet_context(): void
@@ -237,7 +237,7 @@ class WalletContextTest extends TestCase
         $existing->update(['status' => 'FROZEN']);
         $original = $existing->fresh()->getAttributes();
 
-        $migration = require database_path('migrations/2026_10_22_000002_provision_default_business_wallets.php');
+        $migration = require database_path('migrations/archive/2026_10_22_000002_provision_default_business_wallets.php');
         $migration->up();
         $migration->up();
 
