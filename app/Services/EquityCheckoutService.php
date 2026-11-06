@@ -84,6 +84,12 @@ class EquityCheckoutService
                 'type' => 'CAPTURE', 'consumerAuthentication' => true,
             ]),
             'data' => new Model\Upv1capturecontextsData([
+                // The API rejects data combined with legacy top-level orderInformation.
+                'orderInformation' => new Model\Upv1capturecontextsDataOrderInformation([
+                    'amountDetails' => new Model\Upv1capturecontextsDataOrderInformationAmountDetails([
+                        'totalAmount' => $amount, 'currency' => $currency,
+                    ]),
+                ]),
                 'clientReferenceInformation' => new Model\Upv1capturecontextsDataClientReferenceInformation([
                     'code' => $reference,
                 ]),
@@ -91,11 +97,6 @@ class EquityCheckoutService
             'captureMandate' => new Model\Upv1capturecontextsCaptureMandate([
                 'billingType' => 'FULL', 'requestEmail' => true,
                 'requestPhone' => false, 'requestShipping' => false,
-            ]),
-            'orderInformation' => new Model\Upv1capturecontextsOrderInformation([
-                'amountDetails' => new Model\Upv1capturecontextsOrderInformationAmountDetails([
-                    'totalAmount' => $amount, 'currency' => $currency,
-                ]),
             ]),
         ]);
     }

@@ -31,7 +31,10 @@ class EquityCheckoutSaleTest extends TestCase
         $this->assertSame('CAPTURE', $data['completeMandate']['type']);
         $this->assertTrue($data['completeMandate']['consumerAuthentication']);
         $this->assertSame('EQUITY-test', $data['data']['clientReferenceInformation']['code']);
-        $this->assertSame('1000.00', $data['orderInformation']['amountDetails']['totalAmount']);
+        $this->assertSame('1000.00', $data['data']['orderInformation']['amountDetails']['totalAmount']);
+        $this->assertSame('TZS', $data['data']['orderInformation']['amountDetails']['currency']);
+        // Regression: both request forms together cause UNIFIEDPAYMENTS_VALIDATION_FIELDS.
+        $this->assertArrayNotHasKey('orderInformation', $data);
     }
 
     public function test_only_verified_settlement_marks_payment_paid(): void
