@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use CyberSource\Api\PaymentsApi;
+use CyberSource\Api\TransactionDetailsApi;
 use CyberSource\Api\UnifiedCheckoutCaptureContextApi;
 use CyberSource\ApiClient;
 use CyberSource\Authentication\Core\MerchantConfiguration;
@@ -19,8 +19,8 @@ class EquityCheckoutService
     private function client(): ApiClient
     {
         $settings = config('services.cybersource');
-        abort_unless(($settings['environment'] ?? '') === 'api.cybersource.com', 400,
-            'Equity Checkout requires the configured Cybersource production environment.');
+        abort_unless(in_array($settings['environment'] ?? '', ['api.cybersource.com', 'apitest.cybersource.com'], true), 400,
+            'Unsupported Cybersource environment.');
         foreach (['merchant_id', 'key_id', 'secret_key'] as $key) {
             abort_if(empty($settings[$key]), 503, "Missing Cybersource setting: {$key}");
         }
@@ -39,24 +39,7 @@ class EquityCheckoutService
 
     public function captureContext(string $amount, string $currency, string $reference): array
     {
-        $payload = new Model\GenerateUnifiedCheckoutCaptureContextRequest([
-            // Keep the Accept SDK flow used by the existing integration.
-            'clientVersion' => '0.23',
-            'targetOrigins' => [config('services.cybersource.checkout_origin')],
-            'allowedCardNetworks' => ['VISA', 'MASTERCARD'],
-            'allowedPaymentTypes' => ['PANENTRY'],
-            'country' => 'TZ',
-            'locale' => 'en_US',
-            'captureMandate' => new Model\Upv1capturecontextsCaptureMandate([
-                'billingType' => 'FULL', 'requestEmail' => true,
-                'requestPhone' => false, 'requestShipping' => false,
-            ]),
-            'orderInformation' => new Model\Upv1capturecontextsOrderInformation([
-                'amountDetails' => new Model\Upv1capturecontextsOrderInformationAmountDetails([
-                    'totalAmount' => $amount, 'currency' => $currency,
-                ]),
-            ]),
-        ]);
+        $payload = $this->captureContextRequest($amount, $currency, $reference);
         [$context] = (new UnifiedCheckoutCaptureContextApi($this->client()))
             ->generateUnifiedCheckoutCaptureContext($payload);
 
@@ -65,8 +48,9 @@ class EquityCheckoutService
         if (($header->alg ?? '') !== 'RS256' || empty($header->kid)) {
             throw new UnexpectedValueException('Unexpected capture-context signature.');
         }
+        $host = config('services.cybersource.environment');
         $jwk = Http::acceptJson()->connectTimeout(5)->timeout(15)
-            ->get('https://api.cybersource.com/flex/v2/public-keys/'.rawurlencode($header->kid))
+            ->get('https://'.$host.'/flex/v2/public-keys/'.rawurlencode($header->kid))
             ->throw()->json();
         $claims = JWT::decode($context, JWK::parseKey($jwk, 'RS256'));
         if (($claims->iss ?? '') !== 'Flex API' || ($claims->exp ?? 0) <= time()) {
@@ -87,6 +71,35 @@ class EquityCheckoutService
         ];
     }
 
+    public function captureContextRequest(string $amount, string $currency, string $reference): Model\GenerateUnifiedCheckoutCaptureContextRequest
+    {
+        return new Model\GenerateUnifiedCheckoutCaptureContextRequest([
+            'clientVersion' => '0.28',
+            'targetOrigins' => [config('services.cybersource.checkout_origin')],
+            'allowedCardNetworks' => ['VISA', 'MASTERCARD'],
+            'allowedPaymentTypes' => ['PANENTRY'],
+            'country' => 'TZ',
+            'locale' => 'en_US',
+            'completeMandate' => new Model\Upv1capturecontextsCompleteMandate([
+                'type' => 'CAPTURE', 'consumerAuthentication' => true,
+            ]),
+            'data' => new Model\Upv1capturecontextsData([
+                'clientReferenceInformation' => new Model\Upv1capturecontextsDataClientReferenceInformation([
+                    'code' => $reference,
+                ]),
+            ]),
+            'captureMandate' => new Model\Upv1capturecontextsCaptureMandate([
+                'billingType' => 'FULL', 'requestEmail' => true,
+                'requestPhone' => false, 'requestShipping' => false,
+            ]),
+            'orderInformation' => new Model\Upv1capturecontextsOrderInformation([
+                'amountDetails' => new Model\Upv1capturecontextsOrderInformationAmountDetails([
+                    'totalAmount' => $amount, 'currency' => $currency,
+                ]),
+            ]),
+        ]);
+    }
+
     public function verifyToken(string $token, array $key): void
     {
         // Decode verifies the signature, expiry and not-before/issued-at claims.
@@ -97,39 +110,39 @@ class EquityCheckoutService
         }
     }
 
-    public function authorize(string $token, array $checkout): array
+    public function paymentStatus(string $paymentId, array $checkout): array
     {
-        $payload = new Model\CreatePaymentRequest([
-            'clientReferenceInformation' => new Model\Ptsv2paymentsClientReferenceInformation([
-                'code' => $checkout['reference'],
-            ]),
-            'processingInformation' => new Model\Ptsv2paymentsProcessingInformation([
-                'capture' => false, 'commerceIndicator' => 'internet',
-            ]),
-            'tokenInformation' => new Model\Ptsv2paymentsTokenInformation([
-                'transientTokenJwt' => $token,
-            ]),
-            'orderInformation' => new Model\Ptsv2paymentsOrderInformation([
-                'amountDetails' => new Model\Ptsv2paymentsOrderInformationAmountDetails([
-                    // Use the amount saved when checkout began, never a second client amount.
-                    'totalAmount' => $checkout['amount'], 'currency' => $checkout['currency'],
-                ]),
-            ]),
-        ]);
-        [$payment, $status] = (new PaymentsApi($this->client()))->createPayment($payload);
-        $paymentStatus = $payment->getStatus();
+        [$payment] = (new TransactionDetailsApi($this->client()))->getTransaction($paymentId);
+        $data = json_decode(json_encode(ObjectSerializer::sanitizeForSerialization($payment)), true);
+        return $this->verifiedResult($paymentId, $data, $checkout);
+    }
+
+    public function verifiedResult(string $paymentId, array $data, array $checkout): array
+    {
+        $amount = $data['orderInformation']['amountDetails'] ?? [];
+        if (($data['id'] ?? '') !== $paymentId
+            || ($data['merchantId'] ?? '') !== config('services.cybersource.merchant_id')
+            || ($data['clientReferenceInformation']['code'] ?? '') !== $checkout['reference']
+            || ($amount['currency'] ?? '') !== $checkout['currency']
+            || !isset($amount['totalAmount']) || !is_numeric($amount['totalAmount'])
+            || number_format((float) $amount['totalAmount'], 2, '.', '') !== $checkout['amount']) {
+            throw new UnexpectedValueException('Transaction does not match checkout.');
+        }
+        $status = strtoupper($data['applicationInformation']['status'] ?? $data['status'] ?? 'UNKNOWN');
+        // Authorization or a successful HTTP response is never evidence of settlement.
+        $paid = $status === 'SETTLED';
 
         return [
-            'success' => $paymentStatus === 'AUTHORIZED',
-            'upstream_status' => $status,
+            'success' => $paid,
+            'verified' => true,
+            'paid' => $paid,
             'reference' => $checkout['reference'],
             'amount' => $checkout['amount'],
             'currency' => $checkout['currency'],
-            'payment_id' => $payment->getId(),
-            'payment_status' => $paymentStatus,
-            'authorization_hold_possible' => in_array($paymentStatus,
-                ['AUTHORIZED', 'PARTIAL_AUTHORIZED', 'AUTHORIZED_RISK_DECLINED', 'AUTHORIZED_PENDING_REVIEW'], true),
-            'error_information' => ObjectSerializer::sanitizeForSerialization($payment->getErrorInformation()),
+            'payment_id' => $paymentId,
+            'payment_status' => $status,
+            'message' => $paid ? 'Payment settled.' : 'Payment status verified. Pending or authorized payments are not yet confirmed as collected.',
+            'error_information' => $data['errorInformation'] ?? null,
         ];
     }
 }

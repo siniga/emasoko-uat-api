@@ -1,0 +1,743 @@
+{
+    "version": 1,
+    "reference": "Local schema and non-personal reference values; synthetic business fixtures",
+    "default_workflows": 30,
+    "tables": {
+        "account_types": {
+            "migration": "0001_01_01_000001_create_account_types_table",
+            "seeder": "Database\\Seeders\\Testing\\ReferenceDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": []
+        },
+        "accounts": {
+            "migration": "0001_01_01_000002_create_accounts_table",
+            "seeder": "Database\\Seeders\\Testing\\ReferenceDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": {
+                "account_type_id": "account_types.id"
+            }
+        },
+        "acquisition": {
+            "migration": "0001_01_01_000003_create_acquisition_table",
+            "seeder": "Database\\Seeders\\Testing\\ReferenceDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": []
+        },
+        "app_variables": {
+            "migration": "0001_01_01_000004_create_app_variables_table",
+            "seeder": "Database\\Seeders\\Testing\\ReferenceDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": []
+        },
+        "audit_logs": {
+            "migration": "0001_01_01_000005_create_audit_logs_table",
+            "seeder": "Database\\Seeders\\Testing\\ObservabilityDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": {
+                "user_id": "users.id",
+                "auditable_id": "debit_orders.id (DebitOrder morph type)"
+            }
+        },
+        "back_logs": {
+            "migration": "0001_01_01_000006_create_back_logs_table",
+            "seeder": "Database\\Seeders\\Testing\\ObservabilityDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": {
+                "loggable_id": "collection_batches.id (CollectionBatch morph type)"
+            }
+        },
+        "collection_batch_push_attempts": {
+            "migration": "2026_09_13_000003_create_collection_batch_push_attempts_table",
+            "seeder": "Database\\Seeders\\Testing\\CollectionDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": {
+                "collection_batch_id": "collection_batches.id"
+            }
+        },
+        "collection_batches": {
+            "migration": "0001_01_01_000007_create_collection_batches_table",
+            "seeder": "Database\\Seeders\\Testing\\CollectionDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": {
+                "partner_id": "partners.id",
+                "bank_sponsor_partner_id": "partners.id",
+                "createdBy": "users.id",
+                "verifiedBy": "users.id",
+                "installment_ids": "installments.id (JSON list)"
+            }
+        },
+        "collection_debit_orders": {
+            "migration": "0001_01_01_000008_create_collection_debit_orders_table",
+            "seeder": "Database\\Seeders\\Testing\\CollectionDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": {
+                "collection_batch_id": "collection_batches.id",
+                "debit_order_id": "debit_orders.id",
+                "installment_id": "installments.id"
+            }
+        },
+        "collection_integrity_issues": {
+            "migration": "2026_09_10_000006_create_collection_integrity_issues_table",
+            "seeder": "Database\\Seeders\\Testing\\ObservabilityDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": {
+                "debit_order_id": "debit_orders.id",
+                "installment_id": "installments.id",
+                "mandate_reference": "debit_orders.reference"
+            }
+        },
+        "companies": {
+            "migration": "0001_01_01_000009_create_companies_table",
+            "seeder": "Database\\Seeders\\Testing\\IdentityDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": {
+                "created_by": "users.id",
+                "updated_by": "users.id"
+            }
+        },
+        "company_partner_categories": {
+            "migration": "0001_01_01_000010_create_company_partner_categories_table",
+            "seeder": "Database\\Seeders\\Testing\\IdentityDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": {
+                "company_id": "companies.id",
+                "partner_category_id": "partner_categories.id"
+            }
+        },
+        "company_users": {
+            "migration": "0001_01_01_000011_create_company_users_table",
+            "seeder": "Database\\Seeders\\Testing\\IdentityDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": {
+                "company_id": "companies.id",
+                "user_id": "users.id"
+            }
+        },
+        "countries": {
+            "migration": "0001_01_01_000012_create_countries_table",
+            "seeder": "Database\\Seeders\\Testing\\ReferenceDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": []
+        },
+        "currencies": {
+            "migration": "0001_01_01_000013_create_currencies_table",
+            "seeder": "Database\\Seeders\\Testing\\ReferenceDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": []
+        },
+        "customer_accounts": {
+            "migration": "0001_01_01_000014_create_customer_accounts_table",
+            "seeder": "Database\\Seeders\\Testing\\CustomerDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": {
+                "customer_id": "customers.id",
+                "account_type_id": "account_types.id",
+                "account_id": "accounts.id",
+                "created_by": "users.id",
+                "updated_by": "users.id"
+            }
+        },
+        "customer_partners": {
+            "migration": "0001_01_01_000015_create_customer_partners_table",
+            "seeder": "Database\\Seeders\\Testing\\CustomerDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": {
+                "customer_id": "customers.id",
+                "partner_id": "partners.id",
+                "created_by": "users.id",
+                "updated_by": "users.id"
+            }
+        },
+        "customers": {
+            "migration": "0001_01_01_000016_create_customers_table",
+            "seeder": "Database\\Seeders\\Testing\\CustomerDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": {
+                "created_by": "users.id",
+                "updated_by": "users.id"
+            }
+        },
+        "debit_order_requests": {
+            "migration": "0001_01_01_000017_create_debit_order_requests_table",
+            "seeder": "Database\\Seeders\\Testing\\MandateDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": {
+                "debit_order_id": "debit_orders.id",
+                "requested_by": "users.id",
+                "approved_by": "users.id",
+                "rejected_by": "users.id"
+            }
+        },
+        "debit_orders": {
+            "migration": "0001_01_01_000018_create_debit_orders_table",
+            "seeder": "Database\\Seeders\\Testing\\MandateDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": {
+                "partner_id": "partners.id",
+                "bank_sponsor_partner_id": "partners.id",
+                "bank_sponsor_partner_account_id": "partner_accounts.id",
+                "subscriber_id": "subscribers.id",
+                "luku_payment_purchase_id": "luku_payment_purchases.id",
+                "customer_account_id": "customer_accounts.id",
+                "approved_by": "users.id",
+                "created_by": "users.id",
+                "cancellationStartedBy": "users.id",
+                "cancellationApprovedBy": "users.id",
+                "otp_reference": "otp_requests.reference"
+            }
+        },
+        "document_categories": {
+            "migration": "0001_01_01_000019_create_document_categories_table",
+            "seeder": "Database\\Seeders\\Testing\\ReferenceDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": []
+        },
+        "external_callback_logs": {
+            "migration": "0001_01_01_000020_create_external_callback_logs_table",
+            "seeder": "Database\\Seeders\\Testing\\ObservabilityDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": {
+                "partner_id": "partners.id",
+                "debit_order_id": "debit_orders.id"
+            }
+        },
+        "failed_jobs": {
+            "migration": "0001_01_01_000021_create_failed_jobs_table",
+            "seeder": null,
+            "policy": "runtime",
+            "reason": "Failed serialized jobs must come from real test executions.",
+            "dependencies": []
+        },
+        "gender": {
+            "migration": "0001_01_01_000022_create_gender_table",
+            "seeder": "Database\\Seeders\\Testing\\ReferenceDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": []
+        },
+        "gepg_bill_payments": {
+            "migration": "0001_01_01_000023_create_gepg_bill_payments_table",
+            "seeder": "Database\\Seeders\\Testing\\PaymentDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": {
+                "debit_order_id": "debit_orders.id",
+                "payment_settlement_id": "payment_settlements.id",
+                "mandate_reference": "debit_orders.reference"
+            }
+        },
+        "gepg_tariffs": {
+            "migration": "0001_01_01_000024_create_gepg_tariffs_table",
+            "seeder": "Database\\Seeders\\Testing\\ReferenceDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": []
+        },
+        "id_types": {
+            "migration": "0001_01_01_000025_create_id_types_table",
+            "seeder": "Database\\Seeders\\Testing\\ReferenceDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": []
+        },
+        "installment_payments": {
+            "migration": "0001_01_01_000026_create_installment_payments_table",
+            "seeder": "Database\\Seeders\\Testing\\PaymentDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": {
+                "mandate_reference": "debit_orders.reference",
+                "installment_id": "installments.id"
+            }
+        },
+        "installments": {
+            "migration": "0001_01_01_000027_create_installments_table",
+            "seeder": "Database\\Seeders\\Testing\\MandateDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": {
+                "debit_order_id": "debit_orders.id"
+            }
+        },
+        "jobs": {
+            "migration": "0001_01_01_000028_create_jobs_table",
+            "seeder": null,
+            "policy": "runtime",
+            "reason": "Jobs are created by application actions, not by fixtures.",
+            "dependencies": []
+        },
+        "loan_purposes": {
+            "migration": "0001_01_01_000029_create_loan_purposes_table",
+            "seeder": "Database\\Seeders\\Testing\\ReferenceDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": []
+        },
+        "luku_payment_purchases": {
+            "migration": "0001_01_01_000030_create_luku_payment_purchases_table",
+            "seeder": "Database\\Seeders\\Testing\\PaymentDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": {
+                "partner_id": "partners.id",
+                "subscriber_id": "subscribers.id",
+                "created_by": "users.id",
+                "debit_order_id": "debit_orders.id"
+            }
+        },
+        "mandate_service_partner": {
+            "migration": "0001_01_01_000031_create_mandate_service_partner_table",
+            "seeder": "Database\\Seeders\\Testing\\PartnerDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": {
+                "mandate_service_id": "mandate_services.id",
+                "partner_id": "partners.id"
+            }
+        },
+        "mandate_services": {
+            "migration": "0001_01_01_000032_create_mandate_services_table",
+            "seeder": "Database\\Seeders\\Testing\\ReferenceDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": []
+        },
+        "marital_status": {
+            "migration": "0001_01_01_000033_create_marital_status_table",
+            "seeder": "Database\\Seeders\\Testing\\ReferenceDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": []
+        },
+        "migrations": {
+            "migration": null,
+            "seeder": null,
+            "policy": "framework",
+            "reason": "Migration history is owned by Laravel, never seeded.",
+            "dependencies": []
+        },
+        "notifications": {
+            "migration": "0001_01_01_000034_create_notifications_table",
+            "seeder": "Database\\Seeders\\Testing\\ObservabilityDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": {
+                "notifiable_id": "users.id (User morph type)"
+            }
+        },
+        "oauth_access_tokens": {
+            "migration": "0001_01_01_000035_create_oauth_access_tokens_table",
+            "seeder": null,
+            "policy": "runtime",
+            "reason": "Passport issues signed access tokens after authentication.",
+            "dependencies": {
+                "user_id": "users.id",
+                "client_id": "oauth_clients.id"
+            }
+        },
+        "oauth_auth_codes": {
+            "migration": "0001_01_01_000036_create_oauth_auth_codes_table",
+            "seeder": null,
+            "policy": "runtime",
+            "reason": "OAuth authorization codes are issued by the authorization flow.",
+            "dependencies": {
+                "user_id": "users.id",
+                "client_id": "oauth_clients.id"
+            }
+        },
+        "oauth_clients": {
+            "migration": "0001_01_01_000037_create_oauth_clients_table",
+            "seeder": "Database\\Seeders\\Testing\\IdentityDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": {
+                "user_id": "users.id"
+            }
+        },
+        "oauth_personal_access_clients": {
+            "migration": "0001_01_01_000038_create_oauth_personal_access_clients_table",
+            "seeder": "Database\\Seeders\\Testing\\IdentityDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": {
+                "client_id": "oauth_clients.id"
+            }
+        },
+        "oauth_refresh_tokens": {
+            "migration": "0001_01_01_000039_create_oauth_refresh_tokens_table",
+            "seeder": null,
+            "policy": "runtime",
+            "reason": "OAuth refresh tokens are issued with authenticated grants.",
+            "dependencies": {
+                "access_token_id": "oauth_access_tokens.id"
+            }
+        },
+        "occupations": {
+            "migration": "0001_01_01_000040_create_occupations_table",
+            "seeder": "Database\\Seeders\\Testing\\ReferenceDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": []
+        },
+        "otp_requests": {
+            "migration": "0001_01_01_000041_create_otp_requests_table",
+            "seeder": "Database\\Seeders\\Testing\\MandateDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": {
+                "created_by": "users.id"
+            }
+        },
+        "partner_accounts": {
+            "migration": "0001_01_01_000042_create_partner_accounts_table",
+            "seeder": "Database\\Seeders\\Testing\\PartnerDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": {
+                "partner_id": "partners.id",
+                "partner_uuid": "partners.uuid",
+                "account_type_id": "account_types.id",
+                "account_id": "accounts.id",
+                "mapped_partner_account_id": "partner_accounts.id",
+                "currency_id": "currencies.id"
+            }
+        },
+        "partner_approvals": {
+            "migration": "0001_01_01_000043_create_partner_approvals_table",
+            "seeder": "Database\\Seeders\\Testing\\PartnerDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": {
+                "partner_id": "partners.id"
+            }
+        },
+        "partner_categories": {
+            "migration": "0001_01_01_000044_create_partner_categories_table",
+            "seeder": "Database\\Seeders\\Testing\\ReferenceDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": []
+        },
+        "partner_documents": {
+            "migration": "0001_01_01_000045_create_partner_documents_table",
+            "seeder": "Database\\Seeders\\Testing\\PartnerDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": {
+                "partner_id": "partners.id",
+                "partner_uuid": "partners.uuid"
+            }
+        },
+        "partner_staff": {
+            "migration": "0001_01_01_000046_create_partner_staff_table",
+            "seeder": "Database\\Seeders\\Testing\\PartnerDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": {
+                "partner_id": "partners.id",
+                "partner_uuid": "partners.uuid"
+            }
+        },
+        "partner_users": {
+            "migration": "0001_01_01_000047_create_partner_users_table",
+            "seeder": "Database\\Seeders\\Testing\\PartnerDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": {
+                "user_id": "users.id",
+                "partner_id": "partners.id",
+                "partner_uuid": "partners.uuid"
+            }
+        },
+        "partners": {
+            "migration": "0001_01_01_000048_create_partners_table",
+            "seeder": "Database\\Seeders\\Testing\\PartnerDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": {
+                "partner_category_id": "partner_categories.id",
+                "region_id": "regions.id",
+                "created_by": "users.id",
+                "updated_by": "users.id",
+                "company_id": "companies.id"
+            }
+        },
+        "password_resets": {
+            "migration": "0001_01_01_000049_create_password_resets_table",
+            "seeder": null,
+            "policy": "runtime",
+            "reason": "Password reset tokens are generated on request.",
+            "dependencies": []
+        },
+        "payment_histories": {
+            "migration": "0001_01_01_000050_create_payment_histories_table",
+            "seeder": "Database\\Seeders\\Testing\\PaymentDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": {
+                "debit_order_id": "debit_orders.id"
+            }
+        },
+        "payment_logs": {
+            "migration": "0001_01_01_000051_create_payment_logs_table",
+            "seeder": "Database\\Seeders\\Testing\\PaymentDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": []
+        },
+        "payment_settlement_backfill_archives": {
+            "migration": "0001_01_01_000052_create_payment_settlement_backfill_archives_table",
+            "seeder": "Database\\Seeders\\Testing\\PaymentDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": {
+                "payment_settlement_id": "payment_settlements.id",
+                "debit_order_id": "debit_orders.id"
+            }
+        },
+        "payment_settlements": {
+            "migration": "0001_01_01_000053_create_payment_settlements_table",
+            "seeder": "Database\\Seeders\\Testing\\PaymentDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": {
+                "collection_batch_id": "collection_batches.id",
+                "collection_debit_order_id": "collection_debit_orders.id",
+                "debit_order_id": "debit_orders.id",
+                "installment_id": "installments.id",
+                "mandate_reference": "debit_orders.reference",
+                "reverses_settlement_id": "payment_settlements.id"
+            }
+        },
+        "payments": {
+            "migration": "0001_01_01_000054_create_payments_table",
+            "seeder": "Database\\Seeders\\Testing\\PaymentDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": []
+        },
+        "perm_classes": {
+            "migration": "0001_01_01_000055_create_perm_classes_table",
+            "seeder": "Database\\Seeders\\Testing\\IdentityDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": []
+        },
+        "perm_methods": {
+            "migration": "0001_01_01_000056_create_perm_methods_table",
+            "seeder": "Database\\Seeders\\Testing\\IdentityDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": {
+                "class_id": "perm_classes.id"
+            }
+        },
+        "perm_roles": {
+            "migration": "0001_01_01_000057_create_perm_roles_table",
+            "seeder": "Database\\Seeders\\Testing\\IdentityDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": {
+                "role_id": "roles.id"
+            }
+        },
+        "perm_users": {
+            "migration": "0001_01_01_000058_create_perm_users_table",
+            "seeder": "Database\\Seeders\\Testing\\IdentityDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": {
+                "user_id": "users.id"
+            }
+        },
+        "personal_access_tokens": {
+            "migration": "0001_01_01_000059_create_personal_access_tokens_table",
+            "seeder": null,
+            "policy": "runtime",
+            "reason": "Sanctum issues access tokens on request.",
+            "dependencies": []
+        },
+        "regions": {
+            "migration": "0001_01_01_000060_create_regions_table",
+            "seeder": "Database\\Seeders\\Testing\\ReferenceDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": []
+        },
+        "role_user": {
+            "migration": "0001_01_01_000061_create_role_user_table",
+            "seeder": "Database\\Seeders\\Testing\\IdentityDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": {
+                "user_id": "users.id",
+                "role_id": "roles.id"
+            }
+        },
+        "roles": {
+            "migration": "0001_01_01_000062_create_roles_table",
+            "seeder": "Database\\Seeders\\Testing\\ReferenceDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": []
+        },
+        "sectors": {
+            "migration": "0001_01_01_000063_create_sectors_table",
+            "seeder": "Database\\Seeders\\Testing\\ReferenceDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": []
+        },
+        "sms_categories": {
+            "migration": "0001_01_01_000064_create_sms_categories_table",
+            "seeder": "Database\\Seeders\\Testing\\ReferenceDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": []
+        },
+        "sms_logs": {
+            "migration": "0001_01_01_000065_create_sms_logs_table",
+            "seeder": "Database\\Seeders\\Testing\\ObservabilityDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": {
+                "debit_order_id": "debit_orders.id",
+                "created_by": "users.id",
+                "updated_by": "users.id"
+            }
+        },
+        "sms_templates": {
+            "migration": "0001_01_01_000066_create_sms_templates_table",
+            "seeder": "Database\\Seeders\\Testing\\ReferenceDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": {
+                "category_id": "sms_categories.id",
+                "created_by": "users.id",
+                "updated_by": "users.id"
+            }
+        },
+        "subscriber_mandate_requests": {
+            "migration": "0001_01_01_000067_create_subscriber_mandate_requests_table",
+            "seeder": "Database\\Seeders\\Testing\\PaymentDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": {
+                "subscriber_id": "subscribers.id",
+                "partner_id": "partners.id",
+                "debit_order_id": "debit_orders.id",
+                "created_by": "users.id"
+            }
+        },
+        "subscriber_users": {
+            "migration": "0001_01_01_000068_create_subscriber_users_table",
+            "seeder": "Database\\Seeders\\Testing\\CustomerDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": {
+                "user_id": "users.id",
+                "partner_id": "partners.id",
+                "subscriber_id": "subscribers.id"
+            }
+        },
+        "subscribers": {
+            "migration": "0001_01_01_000069_create_subscribers_table",
+            "seeder": "Database\\Seeders\\Testing\\CustomerDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": {
+                "partner_id": "partners.id",
+                "account_id": "accounts.id",
+                "account_type_id": "account_types.id",
+                "created_by": "users.id",
+                "approved_by": "users.id"
+            }
+        },
+        "system_health_checks": {
+            "migration": "2026_09_09_000001_create_system_health_checks_table",
+            "seeder": "Database\\Seeders\\Testing\\ObservabilityDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": []
+        },
+        "tb_occupations": {
+            "migration": "0001_01_01_000070_create_tb_occupations_table",
+            "seeder": "Database\\Seeders\\Testing\\ReferenceDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": []
+        },
+        "user_otps": {
+            "migration": "0001_01_01_000071_create_user_otps_table",
+            "seeder": "Database\\Seeders\\Testing\\IdentityDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": {
+                "user_id": "users.id"
+            }
+        },
+        "users": {
+            "migration": "0001_01_01_000072_create_users_table",
+            "seeder": "Database\\Seeders\\Testing\\IdentityDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": {
+                "created_by": "users.id",
+                "updated_by": "users.id"
+            }
+        },
+        "wallets": {
+            "migration": "0001_01_01_000073_create_wallets_table",
+            "seeder": "Database\\Seeders\\Testing\\PartnerDataSeeder",
+            "policy": "seeded",
+            "reason": "Insert synthetic/reference fixtures; reuse existing keys without updates.",
+            "dependencies": {
+                "partner_id": "partners.id"
+            }
+        }
+    },
+    "views": {
+        "vw_dashboard_mandates": {
+            "migration": "0001_01_01_000075_create_baseline_reporting_views",
+            "policy": "migration-managed view over seeded tables"
+        },
+        "vw_dashboard_collection_postings": {
+            "migration": "0001_01_01_000075_create_baseline_reporting_views",
+            "policy": "migration-managed view over seeded tables"
+        },
+        "vw_dashboard_collections": {
+            "migration": "0001_01_01_000075_create_baseline_reporting_views",
+            "policy": "migration-managed view over seeded tables"
+        },
+        "vw_dashboard_expected_collections": {
+            "migration": "0001_01_01_000075_create_baseline_reporting_views",
+            "policy": "migration-managed view over seeded tables"
+        },
+        "vw_dashboard_payment_collections": {
+            "migration": "0001_01_01_000075_create_baseline_reporting_views",
+            "policy": "migration-managed view over seeded tables"
+        }
+    }
+}

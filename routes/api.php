@@ -3,7 +3,7 @@
 use App\Http\Controllers\Api\Airtel\CollectionController as AirtelCollectionController;
 use App\Http\Controllers\Api\Airtel\MandateController as AirtelMandateController;
 use App\Http\Controllers\Api\CompanyController;
-use App\Http\Controllers\Api\Crdb\DisbursementController;
+use App\Http\Controllers\Api\CRDB\DisbursementController;
 use App\Http\Controllers\Api\CRDB\MandateController as CRDBMandateController;
 use App\Http\Controllers\Api\Yas\MandateController as YasMandateController;
 use Illuminate\Http\Request;
@@ -69,19 +69,21 @@ Route::prefix('v1')->group(base_path('routes/api_mobile.php'));
 Route::prefix('v1/wallet')->name('wallet.')->group(base_path('routes/api_wallet.php'));
 
 //Cybersource APIs
+Route::post('/cybersource/checkout/begin', [\App\Http\Controllers\EquityCheckoutController::class, 'begin'])
+    ->middleware('throttle:10,1');
+Route::post('/cybersource/checkout/status', [\App\Http\Controllers\EquityCheckoutController::class, 'status'])
+    ->middleware('throttle:10,1');
 Route::post('/cybersource/checkout/context', [\App\Http\Controllers\EquityCheckoutController::class, 'context'])
     ->middleware('throttle:10,1');
 Route::post('/cybersource/checkout/authorize', [\App\Http\Controllers\EquityCheckoutController::class, 'authorizeToken'])
     ->middleware('throttle:10,1');
 
-use App\Http\Controllers\CybersourceTestController;
-
 Route::post(
     '/cybersource/capture-context',
-    [CybersourceTestController::class, 'captureContext']
+    [\App\Http\Controllers\EquityCheckoutController::class, 'context']
 )->middleware('throttle:10,1');
 
 Route::post(
     '/cybersource/authorize',
-    [CybersourceTestController::class, 'authorizePayment']
+    [\App\Http\Controllers\EquityCheckoutController::class, 'authorizeToken']
 )->middleware('throttle:10,1');

@@ -1,0 +1,654 @@
+{
+    "roles": [
+        {
+            "id": 1,
+            "name": "admin",
+            "description": "Administrator"
+        },
+        {
+            "id": 2,
+            "name": "Company_Approver",
+            "description": "Service Provider Approver"
+        },
+        {
+            "id": 4,
+            "name": "Company_User",
+            "description": "Service Provider User"
+        },
+        {
+            "id": 6,
+            "name": "Partner",
+            "description": "eMakato Partner"
+        },
+        {
+            "id": 7,
+            "name": "Manager",
+            "description": "eMakato Manager"
+        },
+        {
+            "id": 8,
+            "name": "Subscriber_Admin",
+            "description": "Subscriber Admin"
+        },
+        {
+            "id": 9,
+            "name": "Subscriber_User",
+            "description": "Subscriber User"
+        }
+    ],
+    "account_types": [
+        {
+            "id": 1,
+            "name": "BANK",
+            "description": "bank"
+        },
+        {
+            "id": 2,
+            "name": "MNO",
+            "description": "mno"
+        }
+    ],
+    "accounts": [
+        {
+            "id": 1,
+            "account_type_id": 1,
+            "name": "NMB Bank",
+            "description": "NMB Bank",
+            "allowed_periodicities": "[\"MONTHLY\"]",
+            "mask": "99999999999",
+            "active": 1,
+            "slug": "NMB"
+        },
+        {
+            "id": 2,
+            "account_type_id": 2,
+            "name": "Vodacom",
+            "description": "vodacom",
+            "allowed_periodicities": "[\"MONTHLY\"]",
+            "mask": null,
+            "active": 0,
+            "slug": "VODACOM"
+        },
+        {
+            "id": 3,
+            "account_type_id": 1,
+            "name": "CRDB Bank",
+            "description": "CRDB Bank",
+            "allowed_periodicities": "[\"MONTHLY\"]",
+            "mask": null,
+            "active": 1,
+            "slug": "CRDB"
+        },
+        {
+            "id": 5,
+            "account_type_id": 2,
+            "name": "Tigo",
+            "description": "Tigo Pesa",
+            "allowed_periodicities": "[\"MONTHLY\"]",
+            "mask": null,
+            "active": 0,
+            "slug": "TIGO"
+        }
+    ],
+    "acquisition": [
+        {
+            "id": 1,
+            "name": "WEB",
+            "description": "Acquired from web portal"
+        },
+        {
+            "id": 2,
+            "name": "USSD",
+            "description": "Acquired from USSD"
+        },
+        {
+            "id": 3,
+            "name": "MOBILE APP",
+            "description": "Acquired from MOBILE APP"
+        }
+    ],
+    "countries": [
+        {
+            "id": 1,
+            "code": "+255",
+            "name": "TANZANIA",
+            "initial": "TZ"
+        }
+    ],
+    "currencies": [
+        {
+            "id": "5902315d-bd37-4dbb-84ab-43400846f7e3",
+            "name": "Tanzania Shilling",
+            "short_code": "TZS",
+            "symbol": "TZS"
+        },
+        {
+            "id": "5bcf597f-a3e1-420e-ba7a-5fc62290c930",
+            "name": "US Dollar",
+            "short_code": "USD",
+            "symbol": "$"
+        },
+        {
+            "id": "79225c6f-cf62-4be8-ab97-5be8a6236525",
+            "name": "Euro",
+            "short_code": "Euro",
+            "symbol": "Euro"
+        }
+    ],
+    "document_categories": [
+        {
+            "id": 1,
+            "name": "Business Licence",
+            "key": "Business_Licence",
+            "required": 1
+        },
+        {
+            "id": 2,
+            "name": "Certificate of incorporation",
+            "key": "Certificate_of_incorporation",
+            "required": 1
+        },
+        {
+            "id": 3,
+            "name": "TIN Certificate",
+            "key": "TIN_Certificate",
+            "required": 1
+        },
+        {
+            "id": 4,
+            "name": "BRELA report for shareholders",
+            "key": "BRELA_report_for_shareholders",
+            "required": 0
+        },
+        {
+            "id": 5,
+            "name": "Audited financial statement",
+            "key": "Audited_financial_statement",
+            "required": 0
+        },
+        {
+            "id": 6,
+            "name": "Introduction letter introducing director as a custodian of the account.",
+            "key": "Introduction_letter",
+            "required": 0
+        },
+        {
+            "id": 7,
+            "name": "Annual return",
+            "key": "Annual_return",
+            "required": 0
+        }
+    ],
+    "gender": [
+        {
+            "id": 1,
+            "name": "Male"
+        },
+        {
+            "id": 2,
+            "name": "Female"
+        }
+    ],
+    "gepg_tariffs": [
+        {
+            "id": 1,
+            "lower_amount": "100.00",
+            "upper_amount": "999.00",
+            "tariff_amount": "10.00",
+            "active": 1
+        },
+        {
+            "id": 2,
+            "lower_amount": "1000.00",
+            "upper_amount": "1999.00",
+            "tariff_amount": "20.00",
+            "active": 1
+        },
+        {
+            "id": 3,
+            "lower_amount": "2000.00",
+            "upper_amount": "2999.00",
+            "tariff_amount": "40.00",
+            "active": 1
+        },
+        {
+            "id": 4,
+            "lower_amount": "3000.00",
+            "upper_amount": "3999.00",
+            "tariff_amount": "60.00",
+            "active": 1
+        },
+        {
+            "id": 5,
+            "lower_amount": "4000.00",
+            "upper_amount": "4999.00",
+            "tariff_amount": "80.00",
+            "active": 1
+        },
+        {
+            "id": 6,
+            "lower_amount": "5000.00",
+            "upper_amount": "9999.00",
+            "tariff_amount": "100.00",
+            "active": 1
+        },
+        {
+            "id": 7,
+            "lower_amount": "10000.00",
+            "upper_amount": "19999.00",
+            "tariff_amount": "200.00",
+            "active": 1
+        },
+        {
+            "id": 8,
+            "lower_amount": "20000.00",
+            "upper_amount": "29999.00",
+            "tariff_amount": "400.00",
+            "active": 1
+        },
+        {
+            "id": 9,
+            "lower_amount": "30000.00",
+            "upper_amount": "39999.00",
+            "tariff_amount": "600.00",
+            "active": 1
+        },
+        {
+            "id": 10,
+            "lower_amount": "40000.00",
+            "upper_amount": "49999.00",
+            "tariff_amount": "800.00",
+            "active": 1
+        },
+        {
+            "id": 11,
+            "lower_amount": "50000.00",
+            "upper_amount": "99999.00",
+            "tariff_amount": "1000.00",
+            "active": 1
+        },
+        {
+            "id": 12,
+            "lower_amount": "100000.00",
+            "upper_amount": "199999.00",
+            "tariff_amount": "2000.00",
+            "active": 1
+        },
+        {
+            "id": 13,
+            "lower_amount": "200000.00",
+            "upper_amount": "299999.00",
+            "tariff_amount": "4000.00",
+            "active": 1
+        },
+        {
+            "id": 14,
+            "lower_amount": "300000.00",
+            "upper_amount": "399999.00",
+            "tariff_amount": "5000.00",
+            "active": 1
+        },
+        {
+            "id": 15,
+            "lower_amount": "400000.00",
+            "upper_amount": "499999.00",
+            "tariff_amount": "6000.00",
+            "active": 1
+        },
+        {
+            "id": 16,
+            "lower_amount": "500000.00",
+            "upper_amount": null,
+            "tariff_amount": "7000.00",
+            "active": 1
+        }
+    ],
+    "id_types": [
+        {
+            "id": 1,
+            "name": "NIDA",
+            "description": "National Identity Card Number"
+        },
+        {
+            "id": 2,
+            "name": "DRIVING LICENCE",
+            "description": "Driving licence card"
+        }
+    ],
+    "loan_purposes": [
+        {
+            "id": 1,
+            "name": "Emergencies"
+        },
+        {
+            "id": 2,
+            "name": "Debt consolidation"
+        },
+        {
+            "id": 3,
+            "name": "Home improvements or repairs"
+        },
+        {
+            "id": 4,
+            "name": "Child-related costs"
+        },
+        {
+            "id": 5,
+            "name": "Major life milestones"
+        }
+    ],
+    "mandate_services": [
+        {
+            "id": 1,
+            "code": "normal_mandate",
+            "name": "Normal Mandate",
+            "mandate_source": "NORMAL",
+            "description": "Standard direct debit mandate workflow.",
+            "is_default": 1,
+            "active": 1,
+            "sort_order": 1
+        },
+        {
+            "id": 2,
+            "code": "gepg_mandate",
+            "name": "GEPG Mandate",
+            "mandate_source": "GEPG_SUBSCRIBER",
+            "description": "GEPG control number verification before mandate submission.",
+            "is_default": 0,
+            "active": 1,
+            "sort_order": 2
+        },
+        {
+            "id": 3,
+            "code": "luku_mandate",
+            "name": "LUKU Mandate",
+            "mandate_source": "LUKU_PAYMENT",
+            "description": "LUKU meter verification before mandate submission.",
+            "is_default": 0,
+            "active": 1,
+            "sort_order": 3
+        }
+    ],
+    "marital_status": [
+        {
+            "id": 1,
+            "name": "Married"
+        },
+        {
+            "id": 2,
+            "name": "Single"
+        },
+        {
+            "id": 3,
+            "name": "Divorce"
+        }
+    ],
+    "occupations": [
+        {
+            "id": 1,
+            "name": "Accountant",
+            "description": "Accountant"
+        },
+        {
+            "id": 2,
+            "name": "Architect",
+            "description": "Architect"
+        },
+        {
+            "id": 3,
+            "name": "Engineer",
+            "description": "Engineer"
+        },
+        {
+            "id": 4,
+            "name": " Medical Practitioner",
+            "description": " Medical Practitioner"
+        }
+    ],
+    "partner_categories": [
+        {
+            "id": 1,
+            "name": "Financial Institution",
+            "description": "Shop owned by Vodacom"
+        },
+        {
+            "id": 2,
+            "name": "Trading Business",
+            "description": "Other Shop which are not owned by MNO"
+        },
+        {
+            "id": 3,
+            "name": "Insurance Company",
+            "description": "Insurance Companies which issues IPF"
+        },
+        {
+            "id": 4,
+            "name": "Real Estate Company",
+            "description": "Real Estate business"
+        },
+        {
+            "id": 5,
+            "name": "Subscription Company",
+            "description": "Subscription companies"
+        }
+    ],
+    "regions": [
+        {
+            "id": 1,
+            "name": "ARUSHA"
+        },
+        {
+            "id": 2,
+            "name": "DAR ES SALAAM"
+        },
+        {
+            "id": 3,
+            "name": "DODOMA"
+        },
+        {
+            "id": 4,
+            "name": "GEITA"
+        },
+        {
+            "id": 5,
+            "name": "IRINGA"
+        },
+        {
+            "id": 6,
+            "name": "KAGERA"
+        },
+        {
+            "id": 7,
+            "name": "KATAVI"
+        },
+        {
+            "id": 8,
+            "name": "KIGOMA"
+        },
+        {
+            "id": 9,
+            "name": "KILIMANJARO"
+        },
+        {
+            "id": 10,
+            "name": "LINDI"
+        },
+        {
+            "id": 11,
+            "name": "MANYARA"
+        },
+        {
+            "id": 12,
+            "name": "MARA"
+        },
+        {
+            "id": 13,
+            "name": "MBEYA"
+        },
+        {
+            "id": 14,
+            "name": "MOROGORO"
+        },
+        {
+            "id": 15,
+            "name": "MTWARA"
+        },
+        {
+            "id": 16,
+            "name": "MWANZA"
+        },
+        {
+            "id": 17,
+            "name": "NJOMBE"
+        },
+        {
+            "id": 18,
+            "name": "PWANI"
+        },
+        {
+            "id": 19,
+            "name": "RUKWA"
+        },
+        {
+            "id": 20,
+            "name": "RUVUMA"
+        },
+        {
+            "id": 21,
+            "name": "SHINYANGA"
+        },
+        {
+            "id": 22,
+            "name": "SIMIYU"
+        },
+        {
+            "id": 23,
+            "name": "SINGIDA"
+        },
+        {
+            "id": 24,
+            "name": "SONGWE"
+        },
+        {
+            "id": 25,
+            "name": "TABORA"
+        },
+        {
+            "id": 26,
+            "name": "TANGA"
+        },
+        {
+            "id": 27,
+            "name": "KASKAZINI PEMBA"
+        },
+        {
+            "id": 28,
+            "name": "KASKAZINI UNGUJA"
+        },
+        {
+            "id": 29,
+            "name": "KUSINI PEMBA"
+        },
+        {
+            "id": 30,
+            "name": "KUSINI UNGUJA"
+        },
+        {
+            "id": 31,
+            "name": "MJINIMAGHARIBI"
+        }
+    ],
+    "sectors": [
+        {
+            "id": 1,
+            "name": "GOVERNMENT",
+            "description": "Government employees"
+        },
+        {
+            "id": 2,
+            "name": "PRIVATE",
+            "description": "SME"
+        }
+    ],
+    "sms_categories": [
+        {
+            "id": 1,
+            "name": "Customer Notifications"
+        }
+    ],
+    "sms_templates": [
+        {
+            "id": 1,
+            "name": "Mandate Creation Successful Confirmation - NMB",
+            "code": "mandate_created",
+            "channel": "NMB",
+            "category_id": 1,
+            "message": "Habari, huduma ya makato kwenda {service_provider} imeanzishwa kikamilifu kwenye akaunti yako inayoishia {account_last_digits}. Asante kwa kutumia eMakato.",
+            "is_active": 1
+        },
+        {
+            "id": 2,
+            "name": "Mandate Creation Successful Confirmation - CRDB",
+            "code": "mandate_created",
+            "channel": "CRDB",
+            "category_id": 1,
+            "message": "Habari, huduma ya makato kupitia SoloCodes kwenda {service_provider} imeanzishwa kikamilifu kwenye akaunti yako inayoishia {account_last_digits}. Asante",
+            "is_active": 1
+        },
+        {
+            "id": 3,
+            "name": "Batch Uploading - NMB",
+            "code": "collection_batch_uploaded",
+            "channel": "NMB",
+            "category_id": 1,
+            "message": "Habari, ombi la makato la TSh {amount} la tarehe {payment_date} kutoka kwenye akaunti yako inayoishia {account_last_digits} kwenda {service_provider} limewasilishwa Benki.",
+            "is_active": 1
+        },
+        {
+            "id": 4,
+            "name": "Successful Deduction",
+            "code": "deduction_success",
+            "channel": "ALL",
+            "category_id": 1,
+            "message": "Makato ya tarehe {payment_date}, kiasi cha shilingi {amount} yamekamilishwa kwa {service_provider}. Kiasi kilichobaki ni Tsh {outstanding_amount}.",
+            "is_active": 1
+        },
+        {
+            "id": 5,
+            "name": "Unsuccessful Deduction",
+            "code": "deduction_failed",
+            "channel": "ALL",
+            "category_id": 1,
+            "message": "Makato ya tarehe {payment_date} ya TSh {amount} kwenda {service_provider} hayakufanikiwa. Tafadhali weka fedha za kutosha kwenye akaunti yako inayoishia {account_last_digits}. Asante",
+            "is_active": 1
+        },
+        {
+            "id": 6,
+            "name": "CRDB Partial Deduction",
+            "code": "partial_deduction",
+            "channel": "CRDB",
+            "category_id": 1,
+            "message": "Kiasi cha TSh {amount} kimekatwa kwenda {service_provider}. Tafadhali weka TSh {outstanding_amount} kwenye akaunti yako ili kukamilisha makato ya mwezi. Asante.",
+            "is_active": 1
+        },
+        {
+            "id": 7,
+            "name": "Closed/Canceled Mandate - NMB",
+            "code": "mandate_cancelled",
+            "channel": "NMB",
+            "category_id": 1,
+            "message": "Habari, makato yenye namba ya kumbukumbu {mandate_reference} kwenda kwa {service_provider} yamefungwa kikamilifu. Asante kwa kutumia eMakato.",
+            "is_active": 1
+        },
+        {
+            "id": 8,
+            "name": "Closed/Canceled Mandate - CRDB",
+            "code": "mandate_cancelled",
+            "channel": "CRDB",
+            "category_id": 1,
+            "message": "Habari, makato yenye namba ya kumbukumbu {mandate_reference} kwenda kwa {service_provider} yamefungwa kikamilifu. Asante kwa kutumia eMakato.",
+            "is_active": 1
+        }
+    ],
+    "tb_occupations": []
+}

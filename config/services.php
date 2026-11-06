@@ -153,6 +153,7 @@ return [
         ))),
     ],
     'cybersource' => [
+    'checkout_enabled' => env('CHECKOUT_ENABLED', false),
     'checkout_origin' => env('CYBERSOURCE_CHECKOUT_ORIGIN', 'https://localhost:3000'),
     'environment' => env('CYBERSOURCE_ENVIRONMENT', 'apitest.cybersource.com'),
     'merchant_id' => env('CYBERSOURCE_MERCHANT_ID'),

@@ -1,0 +1,122 @@
+ app/Console/Commands/AdoptSchemaBaseline.php       |  77 [32m++++[m
+ app/Support/SchemaBaseline.php                     |  27 [32m++[m
+ database/MIGRATIONS.md                             |  87 [32m++++[m
+ ...001_01_01_000001_create_account_types_table.php |  36 [32m++[m
+ .../0001_01_01_000002_create_accounts_table.php    |  34 [32m++[m
+ .../0001_01_01_000003_create_acquisition_table.php |  28 [32m++[m
+ ...001_01_01_000004_create_app_variables_table.php |  29 [32m++[m
+ .../0001_01_01_000005_create_audit_logs_table.php  |  44 [32m++[m
+ .../0001_01_01_000006_create_back_logs_table.php   |  33 [32m++[m
+ ...1_01_000007_create_collection_batches_table.php |  61 [32m+++[m
+ ...000008_create_collection_debit_orders_table.php |  41 [32m++[m
+ .../0001_01_01_000009_create_companies_table.php   |  32 [32m++[m
+ ...010_create_company_partner_categories_table.php |  26 [32m++[m
+ ...001_01_01_000011_create_company_users_table.php |  29 [32m++[m
+ .../0001_01_01_000012_create_countries_table.php   |  29 [32m++[m
+ .../0001_01_01_000013_create_currencies_table.php  |  29 [32m++[m
+ ...01_01_000014_create_customer_accounts_table.php |  39 [32m++[m
+ ...01_01_000015_create_customer_partners_table.php |  30 [32m++[m
+ .../0001_01_01_000016_create_customers_table.php   |  39 [32m++[m
+ ...01_000017_create_debit_order_requests_table.php |  35 [32m++[m
+ ...0001_01_01_000018_create_debit_orders_table.php |  90 [32m+++++[m
+ ..._01_000019_create_document_categories_table.php |  27 [32m++[m
+ ..._000020_create_external_callback_logs_table.php |  44 [32m++[m
+ .../0001_01_01_000021_create_failed_jobs_table.php |  31 [32m++[m
+ .../0001_01_01_000022_create_gender_table.php      |  27 [32m++[m
+ ...1_01_000023_create_gepg_bill_payments_table.php |  49 [32m+++[m
+ ...0001_01_01_000024_create_gepg_tariffs_table.php |  32 [32m++[m
+ .../0001_01_01_000025_create_id_types_table.php    |  27 [32m++[m
+ ...01_000026_create_installment_payments_table.php |  31 [32m++[m
+ ...0001_01_01_000027_create_installments_table.php |  44 [32m++[m
+ .../0001_01_01_000028_create_jobs_table.php        |  31 [32m++[m
+ ...001_01_01_000029_create_loan_purposes_table.php |  25 [32m++[m
+ ..._000030_create_luku_payment_purchases_table.php |  52 [32m+++[m
+ ...000031_create_mandate_service_partner_table.php |  29 [32m++[m
+ ..._01_01_000032_create_mandate_services_table.php |  35 [32m++[m
+ ...01_01_01_000033_create_marital_status_table.php |  26 [32m++[m
+ ...001_01_01_000034_create_notifications_table.php |  32 [32m++[m
+ ..._01_000035_create_oauth_access_tokens_table.php |  33 [32m++[m
+ ..._01_01_000036_create_oauth_auth_codes_table.php |  30 [32m++[m
+ ...001_01_01_000037_create_oauth_clients_table.php |  35 [32m++[m
+ ..._create_oauth_personal_access_clients_table.php |  27 [32m++[m
+ ...01_000039_create_oauth_refresh_tokens_table.php |  28 [32m++[m
+ .../0001_01_01_000040_create_occupations_table.php |  27 [32m++[m
+ ...0001_01_01_000041_create_otp_requests_table.php |  35 [32m++[m
+ ..._01_01_000042_create_partner_accounts_table.php |  46 [32m+++[m
+ ...01_01_000043_create_partner_approvals_table.php |  30 [32m++[m
+ ...1_01_000044_create_partner_categories_table.php |  28 [32m++[m
+ ...01_01_000045_create_partner_documents_table.php |  29 [32m++[m
+ ...001_01_01_000046_create_partner_staff_table.php |  34 [32m++[m
+ ...001_01_01_000047_create_partner_users_table.php |  30 [32m++[m
+ .../0001_01_01_000048_create_partners_table.php    |  60 [32m+++[m
+ ...1_01_01_000049_create_password_resets_table.php |  26 [32m++[m
+ ...01_01_000050_create_payment_histories_table.php |  29 [32m++[m
+ ...0001_01_01_000051_create_payment_logs_table.php |  37 [32m++[m
+ ..._payment_settlement_backfill_archives_table.php |  35 [32m++[m
+ ..._01_000053_create_payment_settlements_table.php |  63 [32m+++[m
+ .../0001_01_01_000054_create_payments_table.php    |  32 [32m++[m
+ ...0001_01_01_000055_create_perm_classes_table.php |  27 [32m++[m
+ ...0001_01_01_000056_create_perm_methods_table.php |  28 [32m++[m
+ .../0001_01_01_000057_create_perm_roles_table.php  |  28 [32m++[m
+ .../0001_01_01_000058_create_perm_users_table.php  |  28 [32m++[m
+ ..._000059_create_personal_access_tokens_table.php |  34 [32m++[m
+ .../0001_01_01_000060_create_regions_table.php     |  26 [32m++[m
+ .../0001_01_01_000061_create_role_user_table.php   |  28 [32m++[m
+ .../0001_01_01_000062_create_roles_table.php       |  27 [32m++[m
+ .../0001_01_01_000063_create_sectors_table.php     |  28 [32m++[m
+ ...01_01_01_000064_create_sms_categories_table.php |  29 [32m++[m
+ .../0001_01_01_000065_create_sms_logs_table.php    |  42 [32m++[m
+ ...001_01_01_000066_create_sms_templates_table.php |  36 [32m++[m
+ ...67_create_subscriber_mandate_requests_table.php |  43 [32m++[m
+ ..._01_01_000068_create_subscriber_users_table.php |  33 [32m++[m
+ .../0001_01_01_000069_create_subscribers_table.php |  60 [32m+++[m
+ ...01_01_01_000070_create_tb_occupations_table.php |  25 [32m++[m
+ .../0001_01_01_000071_create_user_otps_table.php   |  31 [32m++[m
+ .../0001_01_01_000072_create_users_table.php       |  45 [32m+++[m
+ .../0001_01_01_000073_create_wallets_table.php     |  30 [32m++[m
+ ...0001_01_01_000074_add_baseline_foreign_keys.php |  71 [32m++++[m
+ ...1_01_000075_create_baseline_reporting_views.php |  41 [32m++[m
+ ...06_create_collection_integrity_issues_table.php |   4 [32m+[m[31m-[m
+ ..._06_01_000001_create_oauth_auth_codes_table.php |   0
+ ..._01_000002_create_oauth_access_tokens_table.php |   0
+ ...01_000003_create_oauth_refresh_tokens_table.php |   0
+ ...016_06_01_000004_create_oauth_clients_table.php |   0
+ ..._create_oauth_personal_access_clients_table.php |   0
+ .../2024_06_08_051337_alter_table_add_column.php   |   0
+ ...8_162403_alter_table_add_column_in_partners.php |   0
+ ...5354_alter_table_add_column_in_debit_orders.php |   0
+ ...2024_06_09_121401_create_collection_batches.php |   0
+ ..._12_085043_alter_add_column_in_debit_orders.php |   0
+ .../2024_08_08_101845_create_jobs_table.php        |   0
+ ..._07_000001_add_collection_lifecycle_columns.php |   0
+ ..._07_000002_create_payment_settlements_table.php |   0
+ ...econciliation_fields_to_payment_settlements.php |   0
+ ...cycle_constraint_to_collection_debit_orders.php |   0
+ ..._000005_create_external_callback_logs_table.php |   0
+ ...add_allowed_periodicities_to_accounts_table.php |   0
+ ...026_05_04_000007_add_logo_to_accounts_table.php |   0
+ ...26_05_05_113158_create_sms_categories_table.php |   0
+ ...026_05_05_113211_create_sms_templates_table.php |   0
+ .../2026_05_05_113507_create_sms_logs_table.php    |   0
+ ...26_05_06_163510_add_debit_order_id_sms_logs.php |   0
+ .../2026_06_01_000001_create_audit_logs_table.php  |   0
+ ...026_06_10_000002_create_notifications_table.php |   0
+ ...0003_add_lifecycle_status_to_partners_table.php |   0
+ ...00001_add_callback_secret_to_partners_table.php |   0
+ ...ccount_month_key_to_collection_debit_orders.php |   0
+ ...1_add_registration_source_to_partners_table.php |   0
+ ...00002_restore_cancelled_mandates_visibility.php |   0
+ ...06_27_000003_add_audit_users_to_users_table.php |   0
+ ..._000001_add_metadata_to_sms_templates_table.php |   0
+ ...ope_collection_account_month_key_by_partner.php |   0
+ ..._08_000001_create_dashboard_reporting_views.php |   0
+ ..._payment_settlement_backfill_archives_table.php |   0
+ ...un_tracking_to_payment_settlement_backfills.php |   0
+ ...004_create_dashboard_collection_event_views.php |   0
+ ...5_create_dashboard_collection_postings_view.php |   0
+ .../2026_10_22_000001_create_wallets_table.php     |   0
+ ...2_000002_provision_default_business_wallets.php |   0
+ database/schema/baseline.json                      | 449 [32m+++++++++++++++++++++[m
+ scripts/verify_migration_baseline.php              | 135 [32m+++++++[m
+ tests/Feature/WalletContextTest.php                |   6 [32m+[m[31m-[m
+ 121 files changed, 3440 insertions(+), 5 deletions(-)
